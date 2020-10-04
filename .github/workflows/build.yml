@@ -1,0 +1,281 @@
+name: Build CREXX
+
+on: [push]
+
+jobs:
+
+#**************************************************#
+  build-cms:
+    name: Build for CMS
+    runs-on: [ubuntu-latest]
+    container: adriansutherland/vm370:builder
+   
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Move Source
+      run: |
+        mkdir /opt/hercules/vm370/io
+        mv * /opt/hercules/vm370/io
+      shell: bash
+
+    - name: Build
+      working-directory: /opt/hercules/vm370     
+      run: |
+        chmod -R ugo+rw *
+        hercules -f hercules.conf -d >/dev/null 2>/dev/null &
+        cd io
+        chmod +x *.sh
+        echo "Running CMSBUILD"
+        ./cmsbuild.sh
+      shell: bash
+
+    - name: Get Executable
+      run: |
+        mkdir -p exe
+        cp /opt/hercules/vm370/io/crexxbin.aws exe
+        cp /opt/hercules/vm370/io/crexxsrc.aws exe
+        cp /opt/hercules/vm370/io/crexxbin.vmarc exe
+        cp /opt/hercules/vm370/io/crexxsrc.vmarc exe
+        cp /opt/hercules/vm370/io/LICENSE exe
+        cp /opt/hercules/vm370/io/README.md exe
+        cp /opt/hercules/vm370/io/cmsinstall.sh exe
+        cp /opt/hercules/vm370/io/history.txt exe
+        chmod -R ugo+r exe
+      shell: bash
+
+    - name: Upload Executable
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v2
+      with:
+        name: CREXX-CMS
+        path: ./exe
+
+#**************************************************#
+  build-ubuntu:
+    name: Build for Ubuntu
+    runs-on: [ubuntu-latest]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Run CMAKE
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: MinSizeRel # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/build"
+
+    - name: Get Executable
+      run: |
+        mkdir -p "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/packcc/rxpackcc" "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
+        cp LICENSE "${{ runner.temp }}/exe"
+        cp README.md "${{ runner.temp }}/exe"
+        cp history.txt "${{ runner.temp }}/exe"
+        ls "${{ runner.temp }}/exe"
+      shell: bash
+
+    - name: Sanity Check
+      working-directory: ${{ runner.temp }}/exe
+      run: | 
+        ./rxas -v
+      shell: bash
+
+    - name: Upload Executable
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v2
+      with:
+        name: CREXX-Ubuntu
+        path: "${{ runner.temp }}/exe"
+
+#**************************************************#
+  build-windows:
+    name: Build for Windows
+    runs-on: [windows-latest]
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Run CMAKE
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: MinSizeRel # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/build"
+
+    - name: Get Executable
+      run: |
+        mkdir -p "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/packcc/rxpackcc.exe" "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/assembler/rxas.exe" "${{ runner.temp }}/exe"
+        cp LICENSE "${{ runner.temp }}/exe"
+        cp README.md "${{ runner.temp }}/exe"
+        cp history.txt "${{ runner.temp }}/exe"
+        ls "${{ runner.temp }}/exe"
+      shell: bash
+
+    - name: Sanity Check
+      working-directory: ${{ runner.temp }}/exe
+      run: | 
+        ./rxas -v
+      shell: bash
+
+    - name: Upload Executable
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v2
+      with:
+        name: CREXX-Windows
+        path: "${{ runner.temp }}/exe"
+
+  #**************************************************#
+  build-macos:
+    name: Build for MacOS
+    runs-on: [macos-latest]
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run CMAKE
+        uses: lukka/run-cmake@v3
+        with:
+          # Select the build configuration, typically Debug or Release.
+          cmakeBuildType: MinSizeRel # optional, default is Debug
+          buildDirectory: "${{ runner.temp }}/build"
+
+      - name: Get Executable
+        run: |
+          mkdir -p "${{ runner.temp }}/exe"
+          cp "${{ runner.temp }}/build/packcc/rxpackcc" "${{ runner.temp }}/exe"
+          cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
+          cp LICENSE "${{ runner.temp }}/exe"
+          cp README.md "${{ runner.temp }}/exe"
+          cp history.txt "${{ runner.temp }}/exe"
+          ls "${{ runner.temp }}/exe"
+        shell: bash
+
+      - name: Sanity Check
+        working-directory: ${{ runner.temp }}/exe
+        run: |
+          ./rxas -v
+        shell: bash
+
+      - name: Upload Executable
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v2
+        with:
+          name: CREXX-MacOS
+          path: "${{ runner.temp }}/exe"
+
+#**************************************************#
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    name: Release
+    needs: [build-ubuntu, build-windows, build-cms, build-macos]
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get CMS binary 
+        uses: actions/download-artifact@v2
+        with:
+          name: CREXX-CMS
+          path: CREXX-CMS
+
+      - name: ZIP CMS binary 
+        run: 
+          zip -r CREXX-CMS.zip CREXX-CMS
+
+      - name: Get ubuntu binary 
+        uses: actions/download-artifact@v2
+        with:
+          name: CREXX-Ubuntu
+          path: CREXX-Ubuntu
+
+      - name: ZIP ubuntu binary 
+        run: 
+          zip -r CREXX-Ubuntu.zip CREXX-Ubuntu
+
+      - name: Get windows binary 
+        uses: actions/download-artifact@v2
+        with:
+          name: CREXX-Windows
+          path: CREXX-Windows
+
+      - name: ZIP windows binary 
+        run: 
+          zip -r CREXX-Windows.zip CREXX-Windows
+
+      - name: Get MacOS binary
+        uses: actions/download-artifact@v2
+        with:
+          name: CREXX-MacOS
+          path: CREXX-MacOS
+
+      - name: ZIP MacOS binary
+        run:
+          zip -r CREXX-MacOS.zip CREXX-MacOS
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+
+      - name: Upload Release Asset - CMS
+        id: upload-release-asset-CMS 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./CREXX-CMS.zip
+          asset_name: CREXX-CMS.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset - Ubuntu
+        id: upload-release-asset-ubuntu 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./CREXX-Ubuntu.zip
+          asset_name: CREXX-Ubuntu.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset - Windows
+        id: upload-release-asset-windows 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./CREXX-Windows.zip
+          asset_name: CREXX-Windows.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset - MacOS
+        id: upload-release-asset-macos
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./CREXX-MacOS.zip
+          asset_name: CREXX-MacOS.zip
+          asset_content_type: application/zip
