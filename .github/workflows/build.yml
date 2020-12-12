@@ -75,7 +75,7 @@ jobs:
     - name: Get Executable
       run: |
         mkdir -p "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/packcc/rxpackcc" "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/compiler/rexx" "${{ runner.temp }}/exe"
         cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
@@ -118,7 +118,7 @@ jobs:
     - name: Get Executable
       run: |
         mkdir -p "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/packcc/rxpackcc.exe" "${{ runner.temp }}/exe"
+        cp "${{ runner.temp }}/build/compiler/rexx.exe" "${{ runner.temp }}/exe"
         cp "${{ runner.temp }}/build/assembler/rxas.exe" "${{ runner.temp }}/exe"
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
@@ -161,7 +161,7 @@ jobs:
       - name: Get Executable
         run: |
           mkdir -p "${{ runner.temp }}/exe"
-          cp "${{ runner.temp }}/build/packcc/rxpackcc" "${{ runner.temp }}/exe"
+          cp "${{ runner.temp }}/build/compiler/rexx" "${{ runner.temp }}/exe"
           cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
