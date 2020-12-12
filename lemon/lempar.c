@@ -256,13 +256,16 @@ void ParseTrace(FILE *TraceFILE, char *zTracePrompt){
 }
 #endif /* NDEBUG */
 
+/* Changed for REXX Always include yyTokenName for error reporting
 #if defined(YYCOVERAGE) || !defined(NDEBUG)
+*/
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
 static const char *const yyTokenName[] = { 
 %%
 };
-#endif /* defined(YYCOVERAGE) || !defined(NDEBUG) */
+/* Changed for REXX Always include yyTokenName for error reporting
+#endif */ /* defined(YYCOVERAGE) || !defined(NDEBUG) */
 
 #ifndef NDEBUG
 /* For tracing reduce actions, the names of all rules are required.

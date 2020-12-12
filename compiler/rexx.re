@@ -240,8 +240,9 @@ int main(int argc, char *argv[]) {
 
     /* Create parser and set up tracing */
     parser = ParseAlloc(malloc);
+#ifndef NDEBUG
     ParseTrace(traceFile, "parser >> ");
-
+#endif
     while((token_type = scan(&scanner, buff_end))) {
         // Skip Scanner Errors
         if (token_type < 0) continue;

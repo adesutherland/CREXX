@@ -2455,7 +2455,9 @@ void ParseTrace(FILE *TraceFILE, char *zTracePrompt){
 }
 #endif /* NDEBUG */
 
+/* Changed for REXX Always include yyTokenName for error reporting
 #if defined(YYCOVERAGE) || !defined(NDEBUG)
+*/
 /* For tracing shifts, the names of all terminals and nonterminals
 ** are required.  The following table supplies these names */
 static const char *const yyTokenName[] = { 
@@ -2640,7 +2642,8 @@ static const char *const yyTokenName[] = {
   /*  178 */ "program_instruction",
   /*  179 */ "program",
 };
-#endif /* defined(YYCOVERAGE) || !defined(NDEBUG) */
+/* Changed for REXX Always include yyTokenName for error reporting
+#endif */ /* defined(YYCOVERAGE) || !defined(NDEBUG) */
 
 #ifndef NDEBUG
 /* For tracing reduce actions, the names of all rules are required.
@@ -3857,7 +3860,7 @@ static YYACTIONTYPE yy_reduce(
       case 199: /* program_instruction ::= label */ yytestcase(yyruleno==199);
 #line 60 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = yymsp[0].minor.yy93; }
-#line 3860 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3863 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 1: /* term ::= TK_CONST */
@@ -3892,14 +3895,14 @@ static YYACTIONTYPE yy_reduce(
       case 198: /* label ::= TK_LABEL */ yytestcase(yyruleno==198);
 #line 61 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[0].minor.yy0); }
-#line 3895 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3898 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 5: /* bracket ::= TK_BOPEN expression TK_BCLOSE */
       case 63: /* function_parameters ::= TK_BOPEN expression_list TK_BCLOSE */ yytestcase(yyruleno==63);
 #line 66 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[-2].minor.yy93 = yymsp[-1].minor.yy93; }
-#line 3902 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3905 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 7: /* prefix_expression ::= TK_PLUS prefix_expression */
       case 8: /* prefix_expression ::= TK_MINUS prefix_expression */ yytestcase(yyruleno==8);
@@ -3939,7 +3942,7 @@ static YYACTIONTYPE yy_reduce(
       case 165: /* otherwise ::= TK_OTHERWISE program_instructions */ yytestcase(yyruleno==165);
 #line 69 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-1].minor.yy0); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 3942 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3945 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 11: /* power_expression ::= power_expression TK_POWER prefix_expression */
@@ -3967,13 +3970,13 @@ static YYACTIONTYPE yy_reduce(
       case 40: /* and_expression ::= and_expression TK_AND or_expression */ yytestcase(yyruleno==40);
 #line 75 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-1].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93);}
-#line 3970 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3973 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 21: /* concatenation ::= concatenation term */
 #line 95 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_CONCAT); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 3976 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3979 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 43: /* expression0 ::= */
@@ -3981,13 +3984,13 @@ static YYACTIONTYPE yy_reduce(
       case 155: /* do_cond ::= */ yytestcase(yyruleno==155);
 #line 139 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[1].minor.yy93 = ast_ft(TK_NULL); }
-#line 3984 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3987 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 45: /* expression_list ::= */
       case 64: /* template_list ::= */ yytestcase(yyruleno==64);
 #line 142 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[1].minor.yy93 = ast_ft(TK_LIST); }
-#line 3990 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 3993 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 47: /* expression_list1 ::= expression */
       case 52: /* var_symbol_list1 ::= var_symbol */ yytestcase(yyruleno==52);
@@ -3999,14 +4002,14 @@ static YYACTIONTYPE yy_reduce(
       case 201: /* program_instructions ::= program_instruction */ yytestcase(yyruleno==201);
 #line 144 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_LIST); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4002 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4005 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 48: /* expression_list1 ::= expression_list1 TK_COMMA expression */
       case 66: /* template_list ::= template_list TK_COMMA templates */ yytestcase(yyruleno==66);
 #line 145 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = yymsp[-2].minor.yy93; add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4009 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4012 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 53: /* var_symbol_list1 ::= var_symbol_list1 var_symbol */
@@ -4017,31 +4020,31 @@ static YYACTIONTYPE yy_reduce(
       case 203: /* program_instructions ::= program_instructions program_instruction */ yytestcase(yyruleno==203);
 #line 152 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = yymsp[-1].minor.yy93; add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4020 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4023 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 56: /* vref ::= TK_BOPEN var_symbol TK_BCLOSE */
 #line 156 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[-2].minor.yy93 = ast_ft(TK_VREF); add_ast(yymsp[-2].minor.yy93,yymsp[-1].minor.yy93); }
-#line 4026 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4029 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 59: /* function ::= taken_constant function_parameters */
 #line 162 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_FUNCTION); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4031 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4034 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 81: /* address ::= TK_ADDRESS taken_constant expression */
       case 85: /* call ::= TK_CALL taken_constant expression_list */ yytestcase(yyruleno==85);
 #line 189 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4038 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4041 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 87: /* callon_spec ::= TK_ON callable_condition TK_NAME taken_constant */
 #line 198 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-3].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4044 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4047 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-3].minor.yy93 = yylhsminor.yy93;
         break;
       case 100: /* numeric ::= TK_NUMERIC TK_DIGITS expression0 */
@@ -4053,7 +4056,7 @@ static YYACTIONTYPE yy_reduce(
       case 130: /* signal ::= TK_SIGNAL TK_OFF condition */ yytestcase(yyruleno==130);
 #line 215 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(add_ast(yylhsminor.yy93, ast_f(yymsp[-1].minor.yy0)), yymsp[0].minor.yy93); }
-#line 4056 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4059 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 101: /* numeric ::= TK_NUMERIC TK_FORM */
@@ -4062,145 +4065,145 @@ static YYACTIONTYPE yy_reduce(
       case 138: /* trace ::= TK_TRACE TK_OFF */ yytestcase(yyruleno==138);
 #line 216 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-1].minor.yy0); add_ast(yylhsminor.yy93,ast_f(yymsp[0].minor.yy0)); }
-#line 4065 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4068 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 102: /* numeric ::= TK_NUMERIC TK_FORM TK_ENGINEERING */
       case 103: /* numeric ::= TK_NUMERIC TK_FORM TK_SCIENTIFIC */ yytestcase(yyruleno==103);
 #line 217 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(yylhsminor.yy93,ast_f(yymsp[0].minor.yy0)); }
-#line 4072 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4075 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 108: /* parse ::= TK_PARSE parse_type template_list */
 #line 229 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93);}
-#line 4078 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4081 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 109: /* parse ::= TK_PARSE TK_UPPER parse_type template_list */
 #line 231 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-3].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); add_ast(yylhsminor.yy93,ast_f(yymsp[-2].minor.yy0)); }
-#line 4084 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4087 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-3].minor.yy93 = yylhsminor.yy93;
         break;
       case 117: /* parse_type ::= TK_VALUE expression0 TK_WITH */
 #line 240 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); }
-#line 4090 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4093 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 128: /* signal ::= TK_SIGNAL TK_ON condition TK_NAME taken_constant */
 #line 255 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-4].minor.yy0); add_ast(add_ast(yylhsminor.yy93, ast_f(yymsp[-3].minor.yy0)), yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93, yymsp[0].minor.yy93); }
-#line 4096 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4099 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-4].minor.yy93 = yylhsminor.yy93;
         break;
       case 140: /* do ::= TK_DO do_rep do_cond delim program_instructions TK_END */
 #line 271 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-5].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-4].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-3].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,ast_ft(TK_NULL)); }
-#line 4102 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4105 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-5].minor.yy93 = yylhsminor.yy93;
         break;
       case 141: /* do ::= TK_DO do_rep do_cond delim program_instructions TK_END var_symbol */
 #line 273 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-6].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-5].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-4].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4108 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4111 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-6].minor.yy93 = yylhsminor.yy93;
         break;
       case 143: /* do_rep ::= assignment do_cnt */
 #line 275 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_REP); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4114 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4117 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 144: /* do_rep ::= assignment */
       case 146: /* do_rep ::= expression */ yytestcase(yyruleno==146);
 #line 276 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_REP); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4121 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4124 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 145: /* do_rep ::= TK_FOREVER */
 #line 277 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_REP); add_ast(yylhsminor.yy93,ast_f(yymsp[0].minor.yy0)); }
-#line 4127 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4130 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 158: /* if ::= TK_IF expression delim0 TK_THEN ncl0 instruction */
 #line 292 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-5].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-4].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93);}
-#line 4133 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4136 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-5].minor.yy93 = yylhsminor.yy93;
         break;
       case 159: /* else ::= TK_ELSE ncl0 instruction */
 #line 294 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-2].minor.yy0); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4139 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4142 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 160: /* select ::= TK_SELECT delim0 when_list TK_END */
 #line 296 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-3].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); add_ast(yylhsminor.yy93,ast_ft(TK_NULL)); }
-#line 4145 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4148 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-3].minor.yy93 = yylhsminor.yy93;
         break;
       case 161: /* select ::= TK_SELECT delim0 when_list otherwise TK_END */
 #line 298 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-4].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); }
-#line 4151 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4154 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-4].minor.yy93 = yylhsminor.yy93;
         break;
       case 164: /* when ::= TK_WHEN expression delim0 TK_THEN ncl0 instruction ncl0 */
 #line 303 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-6].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-5].minor.yy93); add_ast(yylhsminor.yy93,yymsp[-1].minor.yy93); }
-#line 4157 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4160 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-6].minor.yy93 = yylhsminor.yy93;
         break;
       case 166: /* command ::= expression */
 #line 305 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_ft(TK_ADDRESS); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4163 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4166 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[0].minor.yy93 = yylhsminor.yy93;
         break;
       case 188: /* assignment ::= var_symbol TK_EQUAL expression */
 #line 330 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-1].minor.yy0); add_ast(yylhsminor.yy93,yymsp[-2].minor.yy93); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4169 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4172 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 189: /* assignment ::= TK_SYMBOL_COMPOUND TK_EQUAL expression */
 #line 332 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = ast_f(yymsp[-1].minor.yy0); add_ast(yylhsminor.yy93,ast_f(yymsp[-2].minor.yy0)); add_ast(yylhsminor.yy93,yymsp[0].minor.yy93); }
-#line 4175 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4178 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-2].minor.yy93 = yylhsminor.yy93;
         break;
       case 197: /* instruction ::= error */
 #line 341 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[0].minor.yy93 = ast_ft(TK_PARSEERROR); }
-#line 4181 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4184 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 200: /* program_instruction ::= instruction delim */
       case 204: /* program_instructions ::= program_instructions delim */ yytestcase(yyruleno==204);
 #line 360 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = yymsp[-1].minor.yy93; }
-#line 4187 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4190 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       case 202: /* program_instructions ::= delim */
 #line 363 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[0].minor.yy93 = ast_ft(TK_LIST); }
-#line 4193 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4196 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 205: /* program ::= TK_EOF */
 #line 367 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yymsp[0].minor.yy93 = ast_ft(TK_NULL); context->ast = yymsp[0].minor.yy93; }
-#line 4198 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4201 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
         break;
       case 206: /* program ::= program_instructions TK_EOF */
 #line 368 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
 { yylhsminor.yy93 = yymsp[-1].minor.yy93;  context->ast = yylhsminor.yy93; }
-#line 4203 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4206 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
   yymsp[-1].minor.yy93 = yylhsminor.yy93;
         break;
       default:
@@ -4257,7 +4260,7 @@ static void yy_parse_failed(
 /************ Begin %parse_failure code ***************************************/
 #line 38 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
  fprintf(stderr, "Parse failure\n"); 
-#line 4260 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4263 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
 /************ End %parse_failure code *****************************************/
   ParseARG_STORE /* Suppress warning about unused %extra_argument variable */
   ParseCTX_STORE
@@ -4288,7 +4291,7 @@ static void yy_syntax_error(
                 }
         }
         fprintf(stderr, "\n");
-#line 4291 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4294 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
 /************ End %syntax_error code ******************************************/
   ParseARG_STORE /* Suppress warning about unused %extra_argument variable */
   ParseCTX_STORE
@@ -4316,7 +4319,7 @@ static void yy_accept(
 /*********** Begin %parse_accept code *****************************************/
 #line 23 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.y"
  printf("The parser has completed successfully.\n"); 
-#line 4319 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4322 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
 /*********** End %parse_accept code *******************************************/
   ParseARG_STORE /* Suppress warning about unused %extra_argument variable */
   ParseCTX_STORE
@@ -4529,4 +4532,4 @@ int ParseFallback(int iToken){
     const char* token_type_name(int type) {
         return yyTokenName[type];
     }
-#line 4532 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
+#line 4535 "C:/Users/adria/CLionProjects/CREXX/compiler/rexxgrmr.c"
