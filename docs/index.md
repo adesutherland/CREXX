@@ -15,6 +15,6 @@ I will be adding design assets to the repository over the next few days.
 
 Adrian Sutherland
 
-## PackCC - Compiler Compiler
+## The Lemon Parser Generator
 
-See [PackCC Readme](PackCC-README.md)
+See [Lemon Documentation](lemon.md)

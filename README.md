@@ -1,16 +1,33 @@
 # CREXX
-REXX Language Implementation
 
-## News - 30 Sept 2020
+## REXX Language Implementation Architecture
 
-After the successful presentation of CREXX concepts and plans to the 2020 REXX Symposium on Tuesday, and encouragement from René Jansen (President) and other members, including Mike Cowlishaw. We can announce that this project will start in earnest based on the work done to date (e.g. on BREXX/370) and the presented designs concepts.
+Project to develop a modern ground up implementation of a REXX 
+interpreter and compiler, and experiments with language improvements.
+To implement REXX using the best language tools available 
+today, including the LLVM Compiler Infrastructure. These tools will 
+allow a REXX compiler to be produced supporting multiple backends 
+(including 64 bit architectures). 
 
-Rene and I will be organising fortnightly ZOOM update calls.
+One aspect of the project is to revisit the REXX language - what can be
+improved? And most importantly how can it be improved while keeping the
+essence of REXX:
 
-The initial work is to confirm a common toolset (hopefully from including an IDE from JetBrains) that will provide an cross platform DevOps experience for contributors.
+> to make programming easier than before
 
-The first ZOOM call will discuss toolset and DevOps processes, and location of skeleton components.
+And yes, CREXX will be targeted to run on VM/370 (a nod to its heritage)
+and it will also run on Linux, Windows, OSX, and z/Architecture.
 
-I will be adding design assets to the repository over the next few days.
+General documentation, support and discussions are hosted on Github:
 
-Adrian Sutherland
+- [Wiki Home](https://github.com/adesutherland/CREXX/wiki "CREXX Wiki Home")
+- [Issues](https://github.com/adesutherland/CREXX/issues "CREXX Issues")
+- [Discussions](https://github.com/adesutherland/CREXX/discussions "CREXX Discussions")
+- [Project Kanban](https://github.com/adesutherland/CREXX/projects/1 "CREXX Kanban")
+- And of course the [Github Home (this page)](https://github.com/adesutherland/CREXX "CREXX Github Home")
+
+"As Built" documentation is stored in the code/branch under the
+[/doc](https://github.com/adesutherland/CREXX/tree/develop/docs)
+directory. It is also presented as a
+[Github web site](https://adesutherland.github.io/CREXX/).
+
