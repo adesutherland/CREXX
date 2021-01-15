@@ -15,17 +15,6 @@ herccontrol "/cp disc" -w "^VM/370 Online"
 herccontrol "/logon cmsuser cmsuser" -w "^CMS VERSION"
 herccontrol "/" -w "^Ready;"
 
-# Get PackCC
-#yata -c -d packcc
-#herccontrol -m >tmp; read mark <tmp; rm tmp
-#echo "USERID  CMSUSER\n:READ  YATA     TXT     " > tmp
-#cat yata.txt >> tmp
-#netcat -q 0 localhost 3505 < tmp
-#rm tmp
-#herccontrol -w "HHCRD012I" -f $mark
-#herccontrol "/" -w "RDR FILE"
-#herccontrol "/yata -x -f READER -d f" -w "^Ready;"
-
 # Get Assembler
 yata -c -d assembler
 herccontrol -m >tmp; read mark <tmp; rm tmp
