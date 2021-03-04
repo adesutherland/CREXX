@@ -1,3 +1,7 @@
+/* cREXX Phase 0 (PoC) Compiler */
+/* (c) Adrian Sutherland 2021   */
+/* Scanner / Lexer              */
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -10,13 +14,7 @@
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
-/* functions to interface the lemon parser */
-void *ParseAlloc();
-void Parse();
-void ParseFree();
-void ParseTrace(FILE *stream, char *zPrefix);
-
-int scan(Assembler_Context* s, char *buff_end) {
+int scan(Scanner* s, char *buff_end) {
     int depth;
 
     regular:
@@ -53,35 +51,35 @@ int scan(Assembler_Context* s, char *buff_end) {
     depth = 1;
     goto comment;
   }
-  "|" ob "|" { return(TK_CONCAT); }
-  "+" { return(TK_PLUS); }
-  "-" { return(TK_MINUS); }
-  "*" { return(TK_MULT); }
-  "/" { return(TK_DIV); }
-  "%" { return(TK_IDIV); }
-  "/" ob "/" { return(TK_REMAIN); }
-  "*" ob "*" { return(TK_POWER); }
-  "=" { return(TK_EQUAL); }
-  not ob "=" | "<" ob ">" | ">" ob "<" { return(TK_NOT_EQUAL); }
-  ">" { return(TK_GT); }
-  "<" { return(TK_LT); }
-  ">" ob "=" | not ob "<" { return(TK_GE); }
-  "<" ob "=" | not ob ">" { return(TK_LE); }
-  "=" ob "=" { return(TK_EQUAL_EQUAL); }
-  not ob "=" ob "=" { return(TK_NOT_EQUAL_EQUAL); }
-  ">" ob ">" { return(TK_GT_STRICT); }
-  "<" ob "<" { return(TK_LT_STRICT); }
-  ">" ob ">" ob "=" | not ob "<" ob "<" { return(TK_GE_STRICT); }
-  "<" ob "<" ob "=" | not ob ">" ob ">" { return(TK_LE_STRICT); }
-  "&" { return(TK_AND); }
-  "|" { return(TK_OR); }
-  "&" ob "&" { return(TK_XOR); }
-  not { return(TK_NOT); }
-  "," { return(TK_COMMA); }
-  "." { return(TK_STOP); }
-  "(" { return(TK_BOPEN); }
-  ")" { return(TK_BCLOSE); }
-  ";" { return(TK_EOC); }
+  "|" ob "|" { return(OP_CONCAT); }
+  "+" { return(OP_PLUS); }
+  "-" { return(OP_MINUS); }
+  "*" { return(OP_MULT); }
+  "/" { return(OP_DIV); }
+  "%" { return(OP_IDIV); }
+  "/" ob "/" { return(OP_MODULO); }
+  "*" ob "*" { return(OP_POWER); }
+  "=" { return(OP_EQUAL); }
+  not ob "=" | "<" ob ">" | ">" ob "<" { return(OP_NEQ); }
+  ">" { return(OP_GT); }
+  "<" { return(OP_LT); }
+  ">" ob "=" | not ob "<" { return(OP_GTE); }
+  "<" ob "=" | not ob ">" { return(OP_LTE); }
+  "=" ob "=" { return(OP_S_EQ); }
+  not ob "=" ob "=" { return(OP_S_NEQ); }
+  ">" ob ">" { return(OP_S_GT); }
+  "<" ob "<" { return(OP_S_LT); }
+  ">" ob ">" ob "=" | not ob "<" ob "<" { return(OP_S_GTE); }
+  "<" ob "<" ob "=" | not ob ">" ob ">" { return(OP_S_LTE); }
+  "&" { return(OP_AND); }
+  "|" { return(OP_OR); }
+  "&" ob "&" { return(TK_OR); } /* TODO Check */
+  not { return(OP_NOT); }
+  "," { return(SY_COMMA); }
+  "." { return(SY_STOP); }
+  "(" { return(SY_OPEN_BRACKET); }
+  ")" { return(SY_CLOSE_BRACKET); }
+  ";" { return(SY_EOC); }
   'ADDRESS' { return(TK_ADDRESS); }
   'ARG' { return(TK_ARG); }
   'CALL' { return(TK_CALL); }
@@ -151,12 +149,12 @@ int scan(Assembler_Context* s, char *buff_end) {
   "\r\n" {
      s->line++;
      s->linestart = s->cursor+2;
-     return(TK_EOL);
+     return(SY_EOC);
   }
   "\n" {
      s->line++;
      s->linestart = s->cursor+1;
-     return(TK_EOL);
+     return(SY_EOC);
   }
 
   any { printf("unexpected character: %c\n", *s->cursor); return(-1); }
@@ -185,253 +183,4 @@ int scan(Assembler_Context* s, char *buff_end) {
   eof { printf("EOF before comment closed (comment depth %d): %c\n", depth); return(-1); }
   any { goto comment; }
 */
-}
-
-int main(int argc, char *argv[]) {
-
-    FILE *fp, *traceFile;
-    char *buff, *buff_end;
-    size_t bytes;
-    int token_type;
-    Token *token;
-    Assembler_Context scanner;
-    void *parser;
-
-    /* Open input file */
-    if (argc==2)   fp = fopen(argv[1], "r");
-    else fp = fopen("test.rexx", "r");
-    if(fp == NULL) {
-        fprintf(stderr, "Can't open input file\n");
-        exit(-1);
-    }
-
-    /* Open trace file */
-    traceFile = fopen("trace.out", "w");
-    if(traceFile == NULL) {
-        fprintf(stderr, "Can't open trace file\n");
-        exit(-1);
-    }
-
-    /* Get file size */
-    fseek(fp, 0, SEEK_END);
-    bytes = ftell(fp);
-    rewind(fp);
-
-    /* Allocate buffer and read */
-    buff = (char*) malloc(bytes * sizeof(char));
-    bytes = fread(buff, 1, bytes, fp);
-    if (!bytes) {
-        fprintf(stderr, "Error reading input file\n");
-        exit(-1);
-    }
-
-    /* Initialize scanner */
-    scanner.top = buff;
-    scanner.cursor = buff;
-    scanner.linestart = buff;
-    scanner.line = 0;
-    scanner.token_head = 0;
-    scanner.token_tail = 0;
-    scanner.token_counter = 0;
-    scanner.ast = 0;
-
-    /* Pointer to the end of the buffer */
-    buff_end = (char*) (((char*)buff) + bytes);
-
-    /* Create parser and set up tracing */
-    parser = ParseAlloc(malloc);
-#ifndef NDEBUG
-    ParseTrace(traceFile, "parser >> ");
-#endif
-    while((token_type = scan(&scanner, buff_end))) {
-        // Skip Scanner Errors
-        if (token_type < 0) continue;
-
-        // Setup and parse token
-        token = token_f(&scanner, token_type);
-        Parse(parser, token_type, token, &scanner);
-
-        // Execute Parse for the last time
-        if(token_type == TK_EOF) {
-            Parse(parser, 0, NULL, &scanner);
-            break;
-        }
-    }
-
-    /* Deallocate parser */
-    ParseFree(parser, free);
-
-    if (scanner.ast) {
-        prnt_ast(scanner.ast);
-        printf("\n");
-    }
-
-    if (scanner.ast) {
-        int counter = 0;
-        printf("digraph REXX {\n");
-        pdot_ast(scanner.ast, -1, &counter);
-        printf("\n}\n");
-    }
-
-    /* Deallocate AST */
-    if (scanner.ast) free_ast(scanner.ast);
-
-    /* Deallocate Tokens */
-    free_tok(&scanner);
-
-    /* Close files and deallocate */
-    fclose(fp);
-    fclose(traceFile);
-    free(buff);
-    return(0);
-}
-
-/* Token Factory */
-Token* token_f(Assembler_Context* context, int type) {
-    Token* token = malloc(sizeof(Token));
-    token->token_type = type;
-
-    /* Link it up */
-    if (context->token_tail) {
-        token->token_next = 0;
-        token->token_prev = context->token_tail;
-        context->token_tail->token_next = token;
-        context->token_tail = token;
-    }
-    else {
-        context->token_head = token;
-        context->token_tail = token;
-        token->token_next = 0;
-        token->token_prev = 0;
-    }
-    token->token_number = ++(context->token_counter);
-    token->token_subtype = 0; /* TODO */
-    token->length = context->cursor - context->top;
-    token->line = context->line;
-    token->column = context->top - context->linestart + 1;
-    token->token_source = context->top;
-
-    return token;
-}
-
-void prnt_tok(Token* token) {
-/*
-    printf("%d.%d %s \"%.*s\"",token->line+1,token->column+1,
-           token_type_name(token->token_type),token->length,token->token_source);
-*/
-    printf("%s \"%.*s\"",
-           token_type_name(token->token_type),token->length,token->token_source);
-
-}
-
-void free_tok(Assembler_Context* context) {
-    Token *t = context->token_head;
-    Token *n;
-    while (t) {
-        n = t->token_next;
-        free(t);
-        t = n;
-    }
-}
-
-/* ASTNode Factory */
-ASTNode* ast_f(Token *token) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->parent = 0;
-    node->child = 0;
-    node->sibling = 0;
-    node->token = token;
-    node->node_type = token->token_type;
-    return node;
-}
-
-ASTNode* ast_ft(int type) {
-    ASTNode* node = malloc(sizeof(ASTNode));
-    node->parent = 0;
-    node->child = 0;
-    node->sibling = 0;
-    node->token = 0;
-    node->node_type = type;
-    return node;
-
-}
-
-void prnt_ast(ASTNode* node) {
-    printf("[");
-    if (node->token) prnt_tok(node->token);
-    else printf("%s", token_type_name(node->node_type));
-    if (node->child) {
-        printf(" (");
-        prnt_ast(node->child);
-        printf(")");
-    }
-    printf("]");
-    if (node->sibling) {
-        printf(" ");
-        prnt_ast(node->sibling);
-    }
-}
-
-ASTNode* add_ast(ASTNode* parent, ASTNode* child) {
-    ASTNode* s = parent->child;
-    if (s) {
-        while (s->sibling) s = s->sibling;
-        s->sibling = child;
-    }
-    else parent->child = child;
-    child->parent = parent;
-    return child;
-}
-
-void free_ast(ASTNode* node) {
-    if (node->child) free_ast(node->child);
-    if (node->sibling) free_ast(node->sibling);
-    free(node);
-}
-
-void print_unescaped(char* ptr, int len) {
-    int i;
-    if (!ptr) return;
-    for (i = 0; i < len; i++, ptr++) {
-        switch (*ptr) {
-            case '\0': printf("\\0");  break;
-            case '\a': printf("\\a");  break;
-            case '\b': printf("\\b");  break;
-            case '\f': printf("\\f");  break;
-            case '\n': printf("\\n");  break;
-            case '\r': printf("\\r");  break;
-            case '\t': printf("\\t");  break;
-            case '\v': printf("\\v");  break;
-            case '\\': printf("\\\\"); break;
-            case '\?': printf("\\\?"); break;
-            case '\'': printf("\\\'"); break;
-            case '\"': printf("\\\""); break;
-            default:   printf("%c",     *ptr);
-        }
-    }
-}
-
-void pdot_ast(ASTNode* node, int parent, int *counter) {
-    int me = *counter;
-    if (node->token) {
-        printf("n%d[label=\"%s\\n", *counter,
-               token_type_name(node->token->token_type));
-
-        print_unescaped(node->token->token_source, node->token->length);
-
-        printf("\"]\n");
-    }
-    else printf("n%d[label=\"%s\"]\n", *counter,
-                token_type_name(node->node_type));
-
-    if (node->child) {
-        (*counter)++;
-        printf("n%d -> n%d\n", me, *counter);
-        pdot_ast(node->child, me, counter);
-    }
-    if (node->sibling) {
-        (*counter)++;
-        printf("n%d -> n%d\n", parent, *counter);
-        pdot_ast(node->sibling, parent, counter);
-    }
 }

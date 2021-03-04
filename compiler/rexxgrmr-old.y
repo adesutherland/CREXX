@@ -1,16 +1,11 @@
-/* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
-/* Grammar                      */
-
 %token_type { Token* }
 
 %default_type { ASTNode* }
 
-%include {
-/* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
-/* Grammar                      */
+// Token only used in AST
+%nonassoc TK_NULL TK_VREF TK_LIST TK_FUNCTION TK_REP TK_PARSEERROR.
 
+%include {
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +18,7 @@
     }
 }
 
-%extra_argument { Assembler_Context *context }
+%extra_argument { Scanner *context }
 
 %parse_accept { printf("The parser has completed successfully.\n"); }
 
@@ -44,274 +39,23 @@
 
 %start_symbol program
 
-%wildcard ANYTHING.
+// Symbols can be keywords
+%fallback TK_SYMBOL
+          TK_ADDRESS TK_ARG TK_BY TK_CALL TK_DIGITS TK_DO TK_DROP  TK_END
+          TK_ENGINEERING TK_ERROR TK_EXIT TK_EXPOSE TK_EXTERNAL TK_FAILURE TK_FOR
+          TK_FOREVER TK_FORM TK_FUZZ TK_HALT  TK_INTERPRET TK_ITERATE TK_LEAVE
+          TK_NAME TK_NOP TK_NOVALUE TK_NUMERIC TK_OFF TK_ON TK_OPTIONS TK_OTHERWISE
+          TK_PARSE TK_PROCEDURE TK_PULL TK_PUSH TK_QUEUE TK_RETURN TK_SAY TK_SCIENTIFIC
+          TK_SELECT TK_SIGNAL TK_SOURCE TK_STOP TK_SYNTAX TK_TO TK_TRACE TK_UNTIL
+          TK_UPPER TK_VALUE TK_VAR TK_VERSION TK_WHEN TK_WHILE TK_WITH.
 
-/*
+// TK_IF TK_THEN TK_ELSE
+
+
 // Make TK_EQUAL (for assignments) have higher priority
 %nonassoc TK_SYMBOL TK_SYMBOL_STEM TK_SYMBOL_COMPOUND.
 %nonassoc TK_EQUAL.
-*/
 
-/* Strings */
-string(A)        ::= SY_STRING(S). { A = ast_f(STRING,S); }
-
-/* Number */
-number(A)        ::= SY_NUMBER(S). { A = ast_f(NUMBER,S); }
-
-/* Symbols */
-const_symbol(A)  ::= SY_CONST_SYMBOL(S). { A = ast_f(CONST_SYMBOL, S); }
-
-var_symbol(A)    ::= SY_VAR_SYMBOL(S). { A = ast_f(VAR_SYMBOL, S); }
-
-label(A)         ::= SY_LABEL(S). { A = ast_f(LABEL, S); }
-value(A)         ::= var_symbol(B). { A = B; }
-value(A)         ::= const_symbol(B). { A = B; }
-value(A)         ::= number(B). { A = B; }
-value(A)         ::= string(B). { A = B; }
-
-/* Program & Structure */
-
-program(P)       ::= rexx_options(R) instruction_list(I) SY_EOS.
-                     {
-                        P = ast_ft(PROGRAM_FILE); context->ast = P;
-                        add_ast(P,R);
-                        add_ast(P,I);
-                     }
-program(P)       ::= rexx_options(R) SY_EOS.
-                     {
-                        P = ast_ft(PROGRAM_FILE); context->ast = P;
-                        add_ast(P,R);
-                     }
-
-ncl(N)              ::= SY_EOC. { N = 0; }
-ncl(N)              ::= ANYTHING(T) resync. { N = ast_error("21.1", T); }
-
-resync           ::= SY_EOC.
-resync           ::= junk SY_EOC.
-
-junk             ::= junk ANYTHING.
-junk             ::= ANYTHING.
-
-instruction_list(I)  ::= labeled_instruction(L).
-                         { I = ast_ft(INSTRUCTIONS); add_ast(I,L); }
-instruction_list(I)  ::= instruction_list(I1) labeled_instruction(L).
-                         { I = I1; add_ast(I,L); }
-
-labeled_instruction(I) ::= group(B). { I = B; }
-labeled_instruction(I) ::= single_instruction(B). { I = B; }
-labeled_instruction(I) ::= label(B). { I = B; }
-labeled_instruction(I) ::= ncl(B). { I = B; }
-
-instruction(I) ::= group(B). { I = B; }
-instruction(I) ::= single_instruction(B). { I = B; }
-
-single_instruction(I) ::= assignment(B). { I = B; }
-single_instruction(I) ::= keyword_instruction(B). { I = B; }
-single_instruction(I) ::= command(B). { I = B; }
-
-assignment(I) ::=  var_symbol(V) OP_EQUAL expression(E) ncl(ER).
-    { I = ast_f(ASSIGN, T); add_ast(I,V); add_ast(I,E); add_ast(I,ER);}
-
-assignment(I) ::=  SY_NUMBER(T) OP_EQUAL expression(E) ncl(ER).
-    { I = ast_f(ASSIGN, T); add_ast(I,ast_error("31.1", T));
-      add_ast(I,E); add_ast(I,ER);}
-
-assignment(I) ::=  SY_CONST_SYMBOL(T) OP_EQUAL expression(E) ncl(ER).
-    { I = ast_f(ASSIGN, T); add_ast(I,ast_error("31.2", T));
-      add_ast(I,E); add_ast(I,ER);}
-
-keyword_instruction(I) ::= address(K). { I = K; }
-keyword_instruction(I) ::= arg(K). { I = K; }
-keyword_instruction(I) ::= call(K). { I = K; }
-keyword_instruction(I) ::= iterate(K). { I = K; }
-keyword_instruction(I) ::= leave(K). { I = K; }
-keyword_instruction(I) ::= nop(K). { I = K; }
-keyword_instruction(I) ::= parse(K). { I = K; }
-keyword_instruction(I) ::= procedure(K). { I = K; }
-keyword_instruction(I) ::= pull(K). { I = K; }
-keyword_instruction(I) ::= return(K). { I = K; }
-keyword_instruction(I) ::= say(K). { I = K; }
-keyword_instruction(I) ::= KW_THEN(T) resync. { I = ast_error("8.1", T); }
-keyword_instruction(I) ::= KW_ELSE(T) resync. { I = ast_error("8.2", T); }
-keyword_instruction(I) ::= KW_WHEN(T) resync. { I = ast_error("9.1", T); }
-keyword_instruction(I) ::= KW_OTHERWISE(T) resync. { I = ast_error("9.2", T); }
-keyword_instruction(I) ::= KW_END(T) resync. { I = ast_error("10.1", T); }
-
-command(I)             ::= expression(E). { I = ast_ft(ADDRESS); add_ast(I,E); }
-
-group(I) ::= simple_do(K). { I = K; }
-group(I) ::= do(K). { I = K; }
-group(I) ::= if(K). { I = K; }
-
-/* Language Options (Level B) */
-rexx_options(I) ::= KW_REXXLEVEL const_symbol(L) ncl(ER1)
-                    KW_REXXOPTION const_symbol(O) ncl(ER2). TODO multiple options
-                    {    -> (REXX L options);
-
-
-/*
-
-## Language Options (Level B)
-    rexx_options ::= 'REXXLEVEL' const_symbol(L) end_of_clause
-                       'REXXOPTION' options:CONST_SYMBOL* end_of_clause
-                        -> (REXX level options);
-
-## Groups
-
-### Simple DO Group
-    do ::= 'DO' (ncl / t:. resync -> (ERROR[27.1] t)) i:instruction_list? simple_do_ending
-       -> i;
-
-    simple_do_ending ::= 'END' ncl
-		 / EOS -> ERROR[14.1]
-		 / t:. resync -> (ERROR[35.1] t);
-
-### DO Group
-    do ::= 'DO' r:dorep (ncl / t:. resync -> (ERROR[27.1] t)) i:instruction_list? do_ending
-       -> (DO r i);
-
-    do_ending ::= 'END' VAR_SYMBOL? ncl
-		 / EOS -> ERROR[14.1]
-		 / t:. resync -> (ERROR[35.1] t);
-
-    dorep ::= ( a:assignment {? t:dot b:dob f:dof} )
-          -> (REPEAT a t? b? f?);
-    dot ::= 'TO' e:expression -> (TO e);
-    dob ::= 'BY' e:expression -> (BY e);
-    dof ::= 'FOR' e:expression -> (FOR e);
-
-### IF Group
-    if ::= 'IF' e:expression ncl* (t:then / ((. -> ERROR[18.1]) resync )) f:else?
-    -> (IF e t f?);
-
-    then ::= 'THEN' ncl* (i:instruction -> (INSTRUCTIONS i) / eos -> ERROR{14.3] / 'END' -> ERROR[10.5] ) ;
-
-    else ::= 'ELSE' ncl* (i:instruction -> (INSTRUCTIONS i) / eos -> ERROR[14.4] / 'END' -> ERROR[10.6] ) ;
-
-## Instructions
-
-### ADDRESS
-    address ::= 'ADDRESS' e:taken_constant c:expression? -> (ADDRESS ENVIRONMENT[e] c);
-
-### Arg
-    arg ::= 'ARG' t:template_list?
-        -> (PARSE (OPTIONS UPPER?) ARG t?)
-
-### Call
-    call ::= 'CALL' (f:taken_constant / ( (. -> ERROR[19.2]) resync) ) e:expression_list?
-         -> (CALL CONST_SYMBOL[f] e);
-    expression_list ::= expr (',' expr)*;
-
-### Iterate
-    iterate ::= 'ITERATE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-            -> (ITERATE v?)
-
-### Leave
-    leave ::= 'LEAVE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-          -> (LEAVE v?);
-
-### Nop
-    nop ::= 'NOP';
-
-### Parse
-    parse ::= ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
-             -> (PARSE OPTIONS in out)
-
-           / ('PARSE' 'op:UPPER' (in:parse_type / (. -> ERROR[25.13]) resync)) out:template_list?)
-             -> (PARSE (OPTIONS op) in out);
-
-    parse_type ::= parse_key;
-    parse_key ::= 'ARG'->ARG / 'PULL'->PULL;
-
-### Procedure
-    procedure ::= LABEL 'PROCEDURE' ncl
-                 ( !(EOS / procedure) i:labeled_instruction )*
-              -> (PROCEDURE LABEL (INSTRUCTIONS i));
-
-
-### Pull
-    pull ::= 'PULL' t:template_list?
-         -> (PARSE (OPTIONS UPPER?) PULL t?);
-
-### Return
-    return ::= 'RETURN' e:expression?
-           -> (RETURN e?);
-
-### Say
-    say ::= 'SAY' e:expression?
-        -> (SAY e?);
-
-### Parse Templates
-    template_list ::= t:template (',' t:template)*
-                  -> (TEMPLATES t+);
-    template ::= (trigger / target / ((. -> ERROR[38.1]) resync)+;
-    target ::= (VAR_SYMBOL / '.')
-           -> TARGET;
-    trigger ::= pattern / positional;
-    pattern ::= STRING / vrefp
-            -> PATTERN;
-    vrefp ::= '('
-                ( VAR_SYMBOL / ((. -> ERROR[19.7]) resync) )
-                ( ')' / ((. -> ERROR[46.1]) resync) );
-    positional ::= absolute_positional / relative_positional;
-    absolute_positional ::= (NUMBER / '=' position)
-                        -> ABS_POS;
-    position ::= NUMBER / vrefp / ((. -> ERROR[38.2]) resync);
-    relative_positional ::= s:('+' / '-') position
-                        -> (REL_POS SIGN[s] position);
-
-## Expressions
-    expression ::= expr
-               ( (',' -> ERROR[37.1] resync) / (')' -> ERROR[37.2] resync) )? ;
-
-    expr ::= and_expression /
-            ( (a:expr op:or_operator b:and_expression)->(op a b) );
-    or_operator ::= ('|' / '&&') -> OP_OR ;
-
-    and_expression ::= comparison /
-            ( (a:and_expression op:and_operator b:comparison)->(op a b) );
-    and_operator ::= ('&') -> OP_AND ;
-
-    comparison ::= concatenation /
-            ( (a: comparison op:comparison_operator b:concatenation)->(op a b) );
-    comparison_operator ::= (normal_compare / strict_compare) -> OP_COMPARE;
-    normal_compare::= '=' / '\\=' / '<>' / '><' / '>' / '<' / '>=' / '<=' / '\\>' / '\\<';
-    strict_compare::= '==' / '\\==' / '>>' / '<<' / '>>=' / '<<=' / '\\>>' / '\\<<';
-
-    concatenation ::= addition
-                    / ( (a:concatenation &| b:addition)->(OP_CONCAT a b) )
-                    / ( (a:concatenation b:addition)->(OP_SCONCAT a b) )
-                    / ( (a:concatenation op:concat_operator b:addition)->(op a b) );
-    concat_operator ::= '||' -> OP_CONCAT ;
-
-    addition ::= multiplication
-                    / ( (a:addition op:additive_operator b:multiplication)->(op a b) );
-    additive_operator ::= ('+' / '\-')->OP_ADD;
-
-    multiplication ::= power_expression
-                    / (a:multiplication op:multiplicative_operator b:power_expression)->(op a b) );
-    multiplicative_operator ::= ('*' / '/' / '//' / '%')->OP_MULT;
-
-    power_expression ::= prefix_expression
-                    / ( (a:power_expression op:power_operator b:prefix_expression)->(op a b) );
-    power_operator ::= '**' -> OP_POWER ;
-
-    prefix_expression ::= ( (op:prefix_operator a:prefix_expression)->(op a) )
-               / term
-               / ( ( e:.->(ERROR["35.1"] e) ) resync);
-    prefix_operator ::= ('+' / '-' / '\') -> OP_PREFIX ;
-
-    term ::= value
-          / function
-          / '(' expr ( (e:',' -> (ERROR["37.1"] e) ) resync) / ')'
-          / ( ( e:. -> (ERROR["36"] e) ) resync) );
-
-    function ::= (f:taken_constant '(' p:expression_list? (')') -> (FUNCTION[f] p)
-              / ((e:. -> (ERROR["36"] e)) resync);
-
-*/
-
-/*
 // EXPRESSIONS
 term(T)                ::= var_symbol(V). [TK_SYMBOL] { T = V; }
 term(T)                ::= TK_CONST(C). { T = ast_f(C); }
@@ -622,4 +366,3 @@ program_instructions(I)::= program_instructions(I1) delim. { I = I1; }
 
 program(P)             ::= TK_EOF. { P = ast_ft(TK_NULL); context->ast = P; }
 program(P)             ::= program_instructions(I) TK_EOF. { P = I;  context->ast = P; }
-*/

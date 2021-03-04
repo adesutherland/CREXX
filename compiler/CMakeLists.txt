@@ -18,6 +18,6 @@ add_custom_command(
         COMMENT "Create REXX Lexer..."
 )
 
-add_executable(rexx rexx.c rexxgrmr.c rexxgrmr.h compiler.h)
+add_executable(rexx compiler.c ast.c rexx.c rexxgrmr.c rexxgrmr.h compiler.h)
 add_dependencies(rexx re2c lemon)
 target_include_directories(rexx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
