@@ -9,7 +9,7 @@ typedef struct Assembler_Context {
     Token* token_head;
     Token* token_tail;
     ASTNode* ast;
-} Scanner;
+} Assembler_Context;
 
 struct Token {
     int token_type;
