@@ -80,6 +80,7 @@ jobs:
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
         cp history.txt "${{ runner.temp }}/exe"
+        cp assembler/test.rxas "${{ runner.temp }}/exe"
         ls "${{ runner.temp }}/exe"
       shell: bash
 
@@ -123,6 +124,7 @@ jobs:
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
         cp history.txt "${{ runner.temp }}/exe"
+        cp assembler/test.rxas "${{ runner.temp }}/exe"
         ls "${{ runner.temp }}/exe"
       shell: bash
 
@@ -166,6 +168,7 @@ jobs:
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp history.txt "${{ runner.temp }}/exe"
+          cp assembler/test.rxas "${{ runner.temp }}/exe"
           ls "${{ runner.temp }}/exe"
         shell: bash
 
