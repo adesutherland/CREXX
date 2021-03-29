@@ -70,3 +70,5 @@ _deps
 
 * idea / clion
 .idea/
+/compiler/rexxgrmr.c
+/compiler/rexxgrmr.h
