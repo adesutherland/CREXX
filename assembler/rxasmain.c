@@ -8,6 +8,7 @@
 #include "rxas.h"
 #include "operands.h"
 #include "rxasassm.h"
+#include "rx_intrp.h"
 
 int main(int argc, char *argv[]) {
 
@@ -132,6 +133,13 @@ int main(int argc, char *argv[]) {
     /* Disassemble */
     printf("Running Disassembler\n\n");
     disassemble(&scanner, stdout);
+
+    /* Run */
+    printf("\nRunning Program\n");
+    run(&(scanner.binary));
+
+    /* That's it */
+    printf("\nShutting Down\n");
 
     /* Deallocate Binary */
     free(scanner.binary.binary);

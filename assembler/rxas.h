@@ -10,9 +10,15 @@ typedef struct Error Error;
 typedef struct bin_space bin_space;
 struct avl_tree_node;
 
+/* cREXX Instruction Coding */
+typedef struct instruction_coding {
+    int opcode;
+    int no_ops;
+} instruction_coding;
+
 /* Single cREXX Binary Code Entry */
 typedef union bin_code {
-    int opcode;
+    instruction_coding instruction;
     void* impl_address;
     double fconst;
     long long iconst;

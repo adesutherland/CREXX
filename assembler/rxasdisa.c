@@ -168,8 +168,12 @@ void disassemble(Assembler_Context* context, FILE *stream) {
     /* Pass 1 - Go through the code, decode and flag destination labels */
     while (i < context->binary.inst_size) {
         j = i;
-        int opcode = context->binary.binary[i++].opcode;
+        int opcode = context->binary.binary[i++].instruction.opcode;
         Instruction *inst = get_inst(opcode);
+
+        if (inst->operands != context->binary.binary[j].instruction.no_ops) {
+            printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
+        }
 
         switch(inst->operands) {
             case 0:

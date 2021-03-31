@@ -176,7 +176,8 @@ void rxas_setglobals(Assembler_Context *context, Token *globalsToken) {
 }
 
 static void gen_instr(Assembler_Context *context, Instruction *inst) {
-    context->binary.binary[context->binary.inst_size++].opcode = inst->opcode;
+    context->binary.binary[context->binary.inst_size].instruction.opcode = inst->opcode;
+    context->binary.binary[context->binary.inst_size++].instruction.no_ops = inst->operands;
 }
 
 static void gen_operand(Assembler_Context *context, Token *operandToken) {
