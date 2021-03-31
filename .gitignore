@@ -72,3 +72,5 @@ _deps
 .idea/
 /compiler/rexxgrmr.c
 /compiler/rexxgrmr.h
+/assembler/rxasgrmr.c
+/assembler/rxasgrmr.h

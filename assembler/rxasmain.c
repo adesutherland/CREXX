@@ -135,8 +135,9 @@ int main(int argc, char *argv[]) {
     disassemble(&scanner, stdout);
 
     /* Run */
-    printf("\nRunning Program\n");
-    run(&(scanner.binary));
+    printf("\nRunning Program \"main(Hello Rene - REXX Assembler is born)\"\n");
+    char *prog_argv[1]; prog_argv[0] = "Hello Rene - REXX Assembler is born!";
+    run(&(scanner.binary), 1, prog_argv);
 
     /* That's it */
     printf("\nShutting Down\n");

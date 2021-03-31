@@ -274,7 +274,7 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                                             entry_index);
                 centry->locals = 0;
                 centry->start = 0;
-                memcpy(centry->name, operandToken->token_value.string, strlen(operandToken->token_value.string));
+                memcpy(centry->name, operandToken->token_value.string, strlen(operandToken->token_value.string) + 1 );
 
                 ref_header->defined = 0;
                 ref_header->index = entry_index;
@@ -482,7 +482,7 @@ void rxas_proc(Assembler_Context *context, Token *funcToken, Token *localsToken)
                                       PROC_CONST);
         centry = (proc_constant *) (context->binary.const_pool +
                                     entry_index);
-        memcpy(centry->name, funcToken->token_value.string, strlen(funcToken->token_value.string));
+        memcpy(centry->name, funcToken->token_value.string, strlen(funcToken->token_value.string) + 1);
         ref_header->refs = 0;
         ref_header->index = entry_index;
     }

@@ -6,7 +6,7 @@
 #define CREXX_RX_INTRP_H
 
 /* Signals an error - this function does not return */
-void signal(int code);
-int run(bin_space *program);
+void dosignal(int code);
+int run(bin_space *program, int argc, char *argv[]);
 
 #endif //CREXX_RX_INTRP_H

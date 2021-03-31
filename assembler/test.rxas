@@ -5,6 +5,7 @@
 .globals=4                           * number of global registers - concept TBC
 
 main()    .locals=4                  * begin exec here
+          say a1                     * Print the first argument
           load r0,101
           say r0
           exit

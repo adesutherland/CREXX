@@ -38,12 +38,41 @@ struct value {
     /* Value */
     long long int int_value;
     double float_value;
-    void *decimal_value;
+    void *decimal_value; /* TODO */
     char string_value[SMALL_STRING_BUFFER];
     size_t string_length;
-    string_extend_buffer string_extend; /* TODO */
+    string_extend_buffer *string_extend; /* TODO */
     void *object_value;
 };
+
+/* value factories */
+static value* value_f() {
+    value* this = calloc(1,sizeof(value)); /* Zeros data */
+    return this;
+}
+
+/* value factories - int value */
+static value* value_int_f(long long initial_value) {
+    value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->status.primed_int = 1;
+    this->int_value = initial_value;
+    return this;
+}
+
+/* value factories - null string value */
+static value* value_nullstring_f(char *initial_value) {
+    /* TODO Handle strings > 24 characters! */
+    value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->status.primed_string = 1;
+    this->string_length = strlen(initial_value);
+    memcpy(this->string_value, initial_value,  this->string_length);
+    return this;
+}
+
+static void free_value(value *v) {
+    /* TODO string extensions and other complexities */
+    free(v);
+}
 
 static void set_int(value *v, long long value) {
     v->status.all_flags = 0;
@@ -53,12 +82,12 @@ static void set_int(value *v, long long value) {
 
 static void prime_string(value *v) {
     if (v->status.primed_string) return;
-    if (v->status.primed_string) {
+    if (v->status.primed_int) {
         /* TODO clear extended string data */
         v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%lld",v->int_value);
         v->status.primed_string = 1;
     }
-    if (v->status.primed_float) {
+    else if (v->status.primed_float) {
         /* TODO clear extended string data */
         v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%f",v->float_value);
         v->status.primed_string = 1;
