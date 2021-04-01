@@ -10,8 +10,8 @@ main()    .locals=4                  * begin exec here
 *                                      MIkeG test cases
 *
 *                                      test LOAD_REG_STRING
-*          load r0,"First test"
-*          say r0
+          load r0,"Starting MIkeG test suite"
+          say r0
 *                                      test IMULT_REG_REG_REG
           load r0,42
           load r1,2
