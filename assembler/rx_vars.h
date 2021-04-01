@@ -59,6 +59,16 @@ static value* value_int_f(long long initial_value) {
     return this;
 }
 
+/* value factories - constant string value */
+static value* value_conststring_f(string_constant *initial_value) {
+    /* TODO Handle strings > 24 characters! */
+    value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->status.primed_string = 1;
+    this->string_length = initial_value->string_len;
+    memcpy(this->string_value, initial_value->string,  this->string_length);
+    return this;
+}
+
 /* value factories - null string value */
 static value* value_nullstring_f(char *initial_value) {
     /* TODO Handle strings > 24 characters! */
@@ -78,6 +88,13 @@ static void set_int(value *v, long long value) {
     v->status.all_flags = 0;
     v->status.primed_int = 1;
     v->int_value = value;
+}
+
+static void set_conststring(value *v, string_constant *value) {
+    v->status.all_flags = 0;
+    v->status.primed_string = 1;
+    v->string_length = value->string_len;
+    memcpy(v->string_value, value->string,  v->string_length);
 }
 
 static void prime_string(value *v) {

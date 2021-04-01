@@ -33,6 +33,7 @@ struct stack_frame {
 #define REG_OP(n) current_frame->locals[(pc+(n))->index]
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
+#define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
 
 /* Stack Frame Factory */
 stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
@@ -67,6 +68,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     stack_frame *current_frame = 0;
     value *v1, *v2, *v3;
     long long i1, i2, i3;
+    string_constant *s1, *s2;
 
     /*
      * Temporary Solution to load Instruction database and instruction map
@@ -160,9 +162,13 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     LOAD_REG_STRING:
         CALC_DISPATCH(2);
-        printf("TRACE - LOAD_REG_STRING R%llu %.s\n", REG_IDX(1), "DUMMY");
+        printf("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n", REG_IDX(1), (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
 
         v1 = REG_OP(1);
+        s1 = CONSTSTRING_OP(2);
+
+        if(v1) set_conststring(v1, s1);
+        else REG_OP(1) = value_conststring_f(s1);
 
         DISPATCH;
 
