@@ -87,6 +87,11 @@ int run(bin_space *program, int argc, char *argv[]) {
     instruction = src_inst("load", OP_REG, OP_INT, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&LOAD_REG_INT;
     else printf("Instruction LOAD_REG_INT not found\n");
+
+    instruction = src_inst("imult", OP_REG, OP_REG, OP_REG);
+    if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_REG;
+    else printf("Instruction IMULT_REG_REG_REG not found\n");
+
     /* Finished making instruction map done  - temporary approach */
 
     /* Thread code - simples! */
@@ -147,6 +152,24 @@ int run(bin_space *program, int argc, char *argv[]) {
         }
         prime_string(v1);
         printf("> %.*s\n", v1->string_length, v1->string_value);
+        DISPATCH;
+
+    IMULT_REG_REG_REG:
+        CALC_DISPATCH(3);
+        printf("TRACE - IMULT_REG_REG_REG\n");
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        v3 = REG_OP(3);
+
+        if (!v2 || !v3) {
+            printf("register not initialized\n");
+            goto SIGNAL;
+        }
+
+        if (v1) set_int(v1, v2->int_value * v3->int_value);
+        else REG_OP(1) = value_int_f(v2->int_value * v3->int_value);
+
         DISPATCH;
 
     EXIT:
