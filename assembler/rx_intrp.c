@@ -31,6 +31,7 @@ struct stack_frame {
 #define CALC_DISPATCH0 {next_pc = pc; next_inst = (next_pc)->impl_address;}
 #define DISPATCH {pc = next_pc; goto *next_inst;}
 #define REG_OP(n) current_frame->locals[(pc+(n))->index]
+#define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
 
 /* Stack Frame Factory */
@@ -88,10 +89,25 @@ int run(bin_space *program, int argc, char *argv[]) {
     if (instruction) address_map[instruction->opcode] = &&LOAD_REG_INT;
     else printf("Instruction LOAD_REG_INT not found\n");
 
+    instruction = src_inst("load", OP_REG, OP_STRING, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&LOAD_REG_STRING;
+    else printf("Instruction LOAD_REG_STRING not found\n");
+
     instruction = src_inst("imult", OP_REG, OP_REG, OP_REG);
     if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_REG;
     else printf("Instruction IMULT_REG_REG_REG not found\n");
 
+    instruction = src_inst("imult", OP_REG, OP_REG, OP_INT);
+    if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_INT;
+    else printf("Instruction IMULT_REG_REG_INT not found\n");
+
+    instruction = src_inst("iadd", OP_REG, OP_REG, OP_REG);
+    if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_REG;
+    else printf("Instruction IADD_REG_REG_REG not found\n");
+
+    instruction = src_inst("iadd", OP_REG, OP_REG, OP_INT);
+    if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_INT;
+    else printf("Instruction IADD_REG_REG_INT not found\n");
     /* Finished making instruction map done  - temporary approach */
 
     /* Thread code - simples! */
@@ -135,16 +151,24 @@ int run(bin_space *program, int argc, char *argv[]) {
     /* Instruction implementations */
     LOAD_REG_INT:
         CALC_DISPATCH(2);
-        printf("TRACE - LOAD_REG_INT\n");
+        printf("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
         v1 = REG_OP(1);
         i2 = INT_OP(2);
         if (v1) set_int(v1,i2);
         else REG_OP(1) = value_int_f(i2);
         DISPATCH;
 
+    LOAD_REG_STRING:
+        CALC_DISPATCH(2);
+        printf("TRACE - LOAD_REG_STRING R%llu %.s\n", REG_IDX(1), "DUMMY");
+
+        v1 = REG_OP(1);
+
+        DISPATCH;
+
     SAY_REG:
         CALC_DISPATCH(1);
-        printf("TRACE - SAY_REG\n");
+        printf("TRACE - SAY_REG R%llu\n", REG_IDX(1));
         v1 = REG_OP(1);
         if (!v1) {
             printf("register not initialised\n");
@@ -156,7 +180,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     IMULT_REG_REG_REG:
         CALC_DISPATCH(3);
-        printf("TRACE - IMULT_REG_REG_REG\n");
+        printf("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
@@ -169,6 +193,60 @@ int run(bin_space *program, int argc, char *argv[]) {
 
         if (v1) set_int(v1, v2->int_value * v3->int_value);
         else REG_OP(1) = value_int_f(v2->int_value * v3->int_value);
+
+        DISPATCH;
+
+    IMULT_REG_REG_INT:
+        CALC_DISPATCH(3);
+        printf("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        i3 = INT_OP(3);
+
+        if (!v2) {
+            printf("register not initialized\n");
+            goto SIGNAL;
+        }
+
+        if (v1) set_int(v1, v2->int_value * i3);
+        else REG_OP(1) = value_int_f(v2->int_value * i3);
+
+        DISPATCH;
+
+    IADD_REG_REG_REG:
+        CALC_DISPATCH(3);
+        printf("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        v3 = REG_OP(3);
+
+        if (!v2 || !v3) {
+            printf("register not initialized\n");
+            goto SIGNAL;
+        }
+
+        if (v1) set_int(v1, v2->int_value + v3->int_value);
+        else REG_OP(1) = value_int_f(v2->int_value + v3->int_value);
+
+        DISPATCH;
+
+    IADD_REG_REG_INT:
+        CALC_DISPATCH(3);
+        printf("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        i3 = INT_OP(3);
+
+        if (!v2) {
+            printf("register not initialized\n");
+            goto SIGNAL;
+        }
+
+        if (v1) set_int(v1, v2->int_value + i3);
+        else REG_OP(1) = value_int_f(v2->int_value + i3);
 
         DISPATCH;
 

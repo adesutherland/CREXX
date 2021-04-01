@@ -6,11 +6,33 @@
 
 main()    .locals=4                  * begin exec here
           say a1                     * Print the first argument
+*
+*                                      MIkeG test cases
+*
+*                                      test LOAD_REG_STRING
+*          load r0,"First test"
+*          say r0
+*                                      test IMULT_REG_REG_REG
           load r0,42
           load r1,2
           imult r2,r1,r0
           say r2
+*                                      test IMULT_REG_REG_INT
+          load r1,42
+          imult r2,r1,4
+          say r2
+*                                      test IADD_REG_REG_REG
+          load r0,21
+          load r1,21
+          iadd r2,r1,r0
+          say r2
+*                                      test IADD_REG_REG_INT
+          load r1,42
+          iadd r2,r1,42
+          say r2
+*
           exit
+
 /*
           call r1,f()
           iadd r2,r1,3               * Add 3
