@@ -4,10 +4,12 @@
 
 .globals=4                           * number of global registers - concept TBC
 
-main()    .locals=4                  * begin exec here
+main()    .locals=5                  * begin exec here
           say a1                     * Print the first argument
-          load r0,101
-          say r0
+          load r0,42
+          load r1,2
+          imult r2,r1,r0
+          say r2
           exit
 /*
           call r1,f()
