@@ -4,34 +4,58 @@
 
 .globals=4                           * number of global registers - concept TBC
 
-main()    .locals=4                  * begin exec here
+main()    .locals=3                  * begin exec here
           say a1                     * Print the first argument
+          say "\n\n"
+          say "Calling func()\n"
+          call func()
+          say "Returned\n"
+
 *
 *                                      MIkeG test cases
 *
 *                                      test LOAD_REG_STRING
-          load r0,"Starting MIkeG test suite"
-          say r0
+          say "\nStarting MIkeG test suite\n"
 *                                      test IMULT_REG_REG_REG
           load r0,42
           load r1,2
           imult r2,r1,r0
+          say r1
+          say " * "
+          say r0
+          say " = "
           say r2
+          say "\n"
 *                                      test IMULT_REG_REG_INT
           load r1,42
           imult r2,r1,4
+          say r1
+          say " * 4 = "
           say r2
+          say "\n"
 *                                      test IADD_REG_REG_REG
           load r0,21
           load r1,21
           iadd r2,r1,r0
+          say r1
+          say " + "
+          say r0
+          say " = "
           say r2
+          say "\n"
 *                                      test IADD_REG_REG_INT
           load r1,42
           iadd r2,r1,42
+          say r1
+          say " + 42 = "
           say r2
+          say "\n"
 *
           exit
+
+func()    .locals=1
+          say " ... in func(), now returning\n"
+          ret
 
 /*
           call r1,f()

@@ -9,6 +9,24 @@
 #include "operands.h"
 #include "rx_vars.h"
 
+#include <stdarg.h>
+
+//#define NDEBUG
+
+#ifndef NDEBUG
+#define print_debug(...) printf_err(__VA_ARGS__)
+#else
+#define print_debug(...) (void)0
+#endif
+
+void printf_err(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+}
+
 /* Signals an error - this function does not return */
 void dosignal(int code) {
     printf("signal %d\n", code);
@@ -20,10 +38,11 @@ typedef struct stack_frame stack_frame;
 
 struct stack_frame {
     stack_frame *parent;
-    void* return_address;
+    void *return_inst;
+    bin_code *return_pc;
     size_t number_locals;
 //    var_pool pool;
-    value *locals[1];
+    value *locals[1]; /* Must be last member */
 };
 
 /* Macros */
@@ -34,19 +53,23 @@ struct stack_frame {
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
 #define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
+#define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
 
 /* Stack Frame Factory */
 stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
-                     stack_frame *parent, void* return_address) {
+                     stack_frame *parent, bin_code *return_pc, void* return_inst) {
     stack_frame *this;
     int num_locals;
 
-    num_locals = procedure->locals + program->globals + no_args;
+    num_locals = procedure->locals + program->globals + no_args + 1;
     this = (stack_frame*)calloc(1,sizeof(stack_frame)
-            + (sizeof(value *) * num_locals));
+            + (sizeof(value *) * (num_locals)));
     this->parent = parent;
-    this->return_address = return_address;
-    this->number_locals = num_locals + 1;
+    this->return_inst = return_inst;
+    this->return_pc = return_pc;
+    this->number_locals = num_locals;
+
+    /* TODO Globals */
     return this;
 }
 
@@ -65,10 +88,11 @@ int run(bin_space *program, int argc, char *argv[]) {
     size_t i, j;
     bin_code *pc, *next_pc;
     void* next_inst;
-    stack_frame *current_frame = 0;
+    stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
     long long i1, i2, i3;
-    string_constant *s1, *s2;
+    string_constant *s1, *s2, *s3;
+    proc_constant *p1, *p2, *p3;
 
     /*
      * Temporary Solution to load Instruction database and instruction map
@@ -81,35 +105,67 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     instruction = src_inst("say", OP_REG, OP_NONE, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&SAY_REG;
-    else printf("Instruction SAY_REG not found\n");
+    else print_debug("Instruction SAY_REG not found\n");
 
     instruction = src_inst("exit", OP_NONE, OP_NONE, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&EXIT;
-    else printf("Instruction EXIT not found\n");
+    else print_debug("Instruction EXIT not found\n");
 
     instruction = src_inst("load", OP_REG, OP_INT, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&LOAD_REG_INT;
-    else printf("Instruction LOAD_REG_INT not found\n");
+    else print_debug("Instruction LOAD_REG_INT not found\n");
 
     instruction = src_inst("load", OP_REG, OP_STRING, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&LOAD_REG_STRING;
-    else printf("Instruction LOAD_REG_STRING not found\n");
+    else print_debug("Instruction LOAD_REG_STRING not found\n");
 
     instruction = src_inst("imult", OP_REG, OP_REG, OP_REG);
     if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_REG;
-    else printf("Instruction IMULT_REG_REG_REG not found\n");
+    else print_debug("Instruction IMULT_REG_REG_REG not found\n");
 
     instruction = src_inst("imult", OP_REG, OP_REG, OP_INT);
     if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_INT;
-    else printf("Instruction IMULT_REG_REG_INT not found\n");
+    else print_debug("Instruction IMULT_REG_REG_INT not found\n");
 
     instruction = src_inst("iadd", OP_REG, OP_REG, OP_REG);
     if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_REG;
-    else printf("Instruction IADD_REG_REG_REG not found\n");
+    else print_debug("Instruction IADD_REG_REG_REG not found\n");
 
     instruction = src_inst("iadd", OP_REG, OP_REG, OP_INT);
     if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_INT;
-    else printf("Instruction IADD_REG_REG_INT not found\n");
+    else print_debug("Instruction IADD_REG_REG_INT not found\n");
+
+    instruction = src_inst("call", OP_REG, OP_FUNC, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&CALL_REG_FUNC;
+    else print_debug("Instruction CALL_REG_FUNC not found\n");
+
+    instruction = src_inst("call", OP_REG, OP_FUNC, OP_REG);
+    if (instruction) address_map[instruction->opcode] = &&CALL_REG_FUNC_REG;
+    else print_debug("Instruction CALL_REG_FUNC_REG not found\n");
+
+    instruction = src_inst("call", OP_FUNC, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&CALL_FUNC;
+    else print_debug("Instruction CALL_FUNC not found\n");
+
+    instruction = src_inst("move", OP_REG, OP_REG, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&MOVE_REG_REG;
+    else print_debug("Instruction MOVE_REG_REG not found\n");
+
+    instruction = src_inst("ret", OP_NONE, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&RET;
+    else print_debug("Instruction RET not found\n");
+
+    instruction = src_inst("ret", OP_REG, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&RET_REG;
+    else print_debug("Instruction RET_REG not found\n");
+
+    instruction = src_inst("ret", OP_INT, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&RET_INT;
+    else print_debug("Instruction RET_INT not found\n");
+
+    instruction = src_inst("say", OP_STRING, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&SAY_STRING;
+    else print_debug("Instruction SAY_STRING not found\n");
     /* Finished making instruction map done  - temporary approach */
 
     /* Thread code - simples! */
@@ -133,12 +189,11 @@ int run(bin_space *program, int argc, char *argv[]) {
     }
 
     if (!procedure) {
-        printf("main() not found\n");
+        print_debug("main() not found\n");
         goto interprt_finished;
     }
 
-    current_frame = frame_f(program, procedure, argc, 0, 0);
-    /* TODO Globals */
+    current_frame = frame_f(program, procedure, argc, 0, 0, 0);
     /* Arguments */
     current_frame->locals[program->globals + procedure->locals] = value_int_f(argc);
     for (i = 0, j = program->globals + procedure->locals + 1; i<argc; i++, j++) {
@@ -153,7 +208,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     /* Instruction implementations */
     LOAD_REG_INT:
         CALC_DISPATCH(2);
-        printf("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
+        print_debug("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
         v1 = REG_OP(1);
         i2 = INT_OP(2);
         if (v1) set_int(v1,i2);
@@ -162,7 +217,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     LOAD_REG_STRING:
         CALC_DISPATCH(2);
-        printf("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n", REG_IDX(1), (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
+        print_debug("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n", REG_IDX(1), (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
 
         v1 = REG_OP(1);
         s1 = CONSTSTRING_OP(2);
@@ -174,26 +229,33 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     SAY_REG:
         CALC_DISPATCH(1);
-        printf("TRACE - SAY_REG R%llu\n", REG_IDX(1));
+        print_debug("TRACE - SAY_REG R%llu\n", REG_IDX(1));
         v1 = REG_OP(1);
         if (!v1) {
-            printf("register not initialised\n");
+            print_debug("register not initialised\n");
             goto SIGNAL;
         }
         prime_string(v1);
-        printf("> %.*s\n", v1->string_length, v1->string_value);
+        printf("%.*s", v1->string_length, v1->string_value);
+        DISPATCH;
+
+    SAY_STRING:
+        CALC_DISPATCH(1);
+        print_debug("TRACE - SAY_STRING R%llu\n", REG_IDX(1));
+        s1 = CONSTSTRING_OP(1);
+        printf("%.*s", s1->string_len, s1->string);
         DISPATCH;
 
     IMULT_REG_REG_REG:
         CALC_DISPATCH(3);
-        printf("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+        print_debug("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
         v3 = REG_OP(3);
 
         if (!v2 || !v3) {
-            printf("register not initialized\n");
+            print_debug("register not initialized\n");
             goto SIGNAL;
         }
 
@@ -204,14 +266,14 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     IMULT_REG_REG_INT:
         CALC_DISPATCH(3);
-        printf("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
+        print_debug("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
         i3 = INT_OP(3);
 
         if (!v2) {
-            printf("register not initialized\n");
+            print_debug("register not initialized\n");
             goto SIGNAL;
         }
 
@@ -222,14 +284,14 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     IADD_REG_REG_REG:
         CALC_DISPATCH(3);
-        printf("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+        print_debug("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
         v3 = REG_OP(3);
 
         if (!v2 || !v3) {
-            printf("register not initialized\n");
+            print_debug("register not initialized\n");
             goto SIGNAL;
         }
 
@@ -240,14 +302,14 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     IADD_REG_REG_INT:
         CALC_DISPATCH(3);
-        printf("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
+        print_debug("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
         i3 = INT_OP(3);
 
         if (!v2) {
-            printf("register not initialized\n");
+            print_debug("register not initialized\n");
             goto SIGNAL;
         }
 
@@ -256,18 +318,43 @@ int run(bin_space *program, int argc, char *argv[]) {
 
         DISPATCH;
 
-    EXIT:
-        printf("TRACE - EXIT\n");
+    CALL_FUNC:
+        CALC_DISPATCH(1);
+        p1 = PROC_OP(1);
+        current_frame = frame_f(program, p1, 0, current_frame, next_pc, next_inst);
+        print_debug("TRACE - CALL_FUNC %s\n",p1->name);
+        /* Prepare dispatch to procedure as early as possible */
+        pc = &(program->binary[p1->start]);
+        CALC_DISPATCH0;
+        /* Arguments - none */
+        current_frame->locals[program->globals + p1->locals] = value_int_f(0);
+        DISPATCH;
+
+    RET:
+        print_debug("TRACE - RET\n");
+        next_pc = current_frame->return_pc;
+        next_inst = current_frame->return_inst;
+        temp_frame = current_frame;
+        current_frame = current_frame->parent;
+        free_frame(temp_frame);
+        DISPATCH;
+
+    CALL_REG_FUNC:
+    CALL_REG_FUNC_REG:
+    MOVE_REG_REG:
+    RET_REG:
+    RET_INT:
+    UNKNOWN:
+        print_debug("ERROR - Unimplemented instruction - aborting\n");
         goto interprt_finished;
 
-    UNKNOWN:
-        printf("ERROR - Unimplemented instruction - aborting\n");
-        goto interprt_finished;
+    EXIT:
+    print_debug("TRACE - EXIT\n");
+    goto interprt_finished;
 
     SIGNAL:
-        printf("TRACE - Signal Received - aborting\n");
+        print_debug("TRACE - Signal Received - aborting\n");
         goto interprt_finished;
-
 
     interprt_finished:
     if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...

@@ -51,15 +51,15 @@ typedef struct chameleon_constant {
 typedef struct string_constant {
     chameleon_constant base;
     size_t string_len;
-    char string[1];
+    char string[1]; /* Must be last member */
 } string_constant;
 
 /* cREXX Procedure entry in the constant pool */
 typedef struct proc_constant {
     chameleon_constant base;
     int locals;
-    char name[1];
     size_t start;
+    char name[1]; /* Must be last member */
 } proc_constant;
 
 typedef struct Assembler_Context {
