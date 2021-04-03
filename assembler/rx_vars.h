@@ -43,16 +43,28 @@ struct value {
     size_t string_length;
     string_extend_buffer *string_extend; /* TODO */
     void *object_value;
+
+    /*
+     * Each value can either be owned by a stack frame or a variable pool
+     * The owner is responsible for freeing the value, but because value can
+     * be linked other stack frames and variable pools it is important that
+     * none of these free its memory when they are being freed themselves.
+     * The owner member is only used by parents to see if they are the real
+     * parent - if you like a paternity test!
+     * This also allows a value to be adopted by another parent (e.g. for a
+     * returned register from a procedure)
+     */
+    void *owner;
 };
 
 /* value factories */
-static value* value_f() {
+static value* value_f(void* parent) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     return this;
 }
 
 /* value factories - int value */
-static value* value_int_f(long long initial_value) {
+static value* value_int_f(void* parent, long long initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->status.primed_int = 1;
     this->int_value = initial_value;
@@ -60,7 +72,7 @@ static value* value_int_f(long long initial_value) {
 }
 
 /* value factories - constant string value */
-static value* value_conststring_f(string_constant *initial_value) {
+static value* value_conststring_f(void* parent, string_constant *initial_value) {
     /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->status.primed_string = 1;
@@ -70,7 +82,7 @@ static value* value_conststring_f(string_constant *initial_value) {
 }
 
 /* value factories - null string value */
-static value* value_nullstring_f(char *initial_value) {
+static value* value_nullstring_f(void* parent, char *initial_value) {
     /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->status.primed_string = 1;
@@ -79,9 +91,11 @@ static value* value_nullstring_f(char *initial_value) {
     return this;
 }
 
-static void free_value(value *v) {
-    /* TODO string extensions and other complexities */
-    free(v);
+static void free_value(void* parent, value *v) {
+    if (v && v->owner == parent) {
+        /* TODO string extensions and other complexities */
+        free(v);
+    }
 }
 
 static void set_int(value *v, long long value) {

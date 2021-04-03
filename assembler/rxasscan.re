@@ -27,7 +27,7 @@ int scan(Assembler_Context* s, char *buff_end) {
   float = [-+]? (digit* "." digit+ | digit+ ".");
   integer = [-+]? digit+;
   reg = ('r' | 'a' | 'g') digit+;
-  id = letter (letter | digit)*;
+  id = (letter | [_]) (letter | digit | [_-.])*;
 
   "/*" {
     depth = 1;
