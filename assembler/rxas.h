@@ -87,7 +87,7 @@ struct Token {
     size_t line, column, length;
     char* token_source;
     union {
-        int integer;
+        long long integer;
         char string[1];
         char character;
         double real;

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "rxas.h"
 #include "operands.h"
 #include "rx_vars.h"
@@ -48,7 +49,7 @@ struct stack_frame {
 
 /* Macros */
 #define CALC_DISPATCH(n) {next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address;}
-#define CALC_DISPATCH0 {next_pc = pc; next_inst = (next_pc)->impl_address;}
+#define CALC_DISPATCH_MANUAL {next_inst = (next_pc)->impl_address;}
 #define DISPATCH {pc = next_pc; goto *next_inst;}
 #define REG_OP(n) current_frame->locals[(pc+(n))->index]
 #define REG_IDX(n) (pc+(n))->index
@@ -134,6 +135,10 @@ int run(bin_space *program, int argc, char *argv[]) {
     if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_REG;
     else print_debug("Instruction IADD_REG_REG_REG not found\n");
 
+    instruction = src_inst("isub", OP_REG, OP_REG, OP_REG);
+    if (instruction) address_map[instruction->opcode] = &&ISUB_REG_REG_REG;
+    else print_debug("Instruction ISUB_REG_REG_REG not found\n");
+
     instruction = src_inst("iadd", OP_REG, OP_REG, OP_INT);
     if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_INT;
     else print_debug("Instruction IADD_REG_REG_INT not found\n");
@@ -169,6 +174,35 @@ int run(bin_space *program, int argc, char *argv[]) {
     instruction = src_inst("say", OP_STRING, OP_NONE, OP_NONE);
     if (instruction) address_map[instruction->opcode] = &&SAY_STRING;
     else print_debug("Instruction SAY_STRING not found\n");
+
+    instruction = src_inst("br", OP_ID, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&BR_ID;
+    else print_debug("Instruction BR_ID not found\n");
+
+    instruction = src_inst("brt", OP_ID, OP_REG, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&BRT_ID_REG;
+    else print_debug("Instruction BRT_ID_REG not found\n");
+
+    instruction = src_inst("brf", OP_ID, OP_REG, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&BRF_ID_REG;
+    else print_debug("Instruction BRF_ID_REG not found\n");
+
+    instruction = src_inst("dec", OP_REG, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&DEC_REG;
+    else print_debug("Instruction DEC_REG not found\n");
+
+    instruction = src_inst("dec0", OP_NONE, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&DEC0;
+    else print_debug("Instruction DEC0 not found\n");
+
+    instruction = src_inst("imaster", OP_REG, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&IMASTER_REG;
+    else print_debug("Instruction IMASTER_REG not found\n");
+
+    instruction = src_inst("time", OP_REG, OP_NONE, OP_NONE);
+    if (instruction) address_map[instruction->opcode] = &&TIME_REG;
+    else print_debug("Instruction TIME_REG not found\n");
+
     /* Finished making instruction map done  - temporary approach */
 
     /* Thread code - simples! */
@@ -204,8 +238,8 @@ int run(bin_space *program, int argc, char *argv[]) {
     }
 
     /* Start */
-    pc = &(program->binary[procedure->start]);
-    CALC_DISPATCH0;
+    next_pc = &(program->binary[procedure->start]);
+    CALC_DISPATCH_MANUAL;
     DISPATCH;
 
     /* Instruction implementations */
@@ -303,7 +337,24 @@ int run(bin_space *program, int argc, char *argv[]) {
 
         DISPATCH;
 
-    IADD_REG_REG_INT:
+    ISUB_REG_REG_REG:
+        CALC_DISPATCH(3);
+        print_debug("TRACE - ISUB_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        v3 = REG_OP(3);
+
+        if (!v2 || !v3) {
+            print_debug("register not initialized\n");
+            goto SIGNAL;
+        }
+
+        if (v1) set_int(v1, v2->int_value - v3->int_value);
+        else REG_OP(1) = value_int_f(current_frame, v2->int_value - v3->int_value);
+        DISPATCH;
+
+IADD_REG_REG_INT:
         CALC_DISPATCH(3);
         print_debug("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
@@ -330,8 +381,8 @@ int run(bin_space *program, int argc, char *argv[]) {
                                 next_inst, 0);
         print_debug("TRACE - CALL_FUNC %s()\n",p1->name);
         /* Prepare dispatch to procedure as early as possible */
-        pc = &(program->binary[p1->start]);
-        CALC_DISPATCH0;
+        next_pc = &(program->binary[p1->start]);
+        CALC_DISPATCH_MANUAL;
 
         /* Arguments - none */
         current_frame->locals[program->globals + p1->locals] = value_int_f(current_frame, 0);
@@ -353,8 +404,8 @@ int run(bin_space *program, int argc, char *argv[]) {
         print_debug("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
 
         /* Prepare dispatch to procedure as early as possible */
-        pc = &(program->binary[p2->start]);
-        CALC_DISPATCH0;
+        next_pc = &(program->binary[p2->start]);
+        CALC_DISPATCH_MANUAL;
 
         /* Arguments - none */
         current_frame->locals[program->globals + p2->locals] = value_int_f(current_frame, 0);
@@ -382,17 +433,17 @@ int run(bin_space *program, int argc, char *argv[]) {
         print_debug("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
                     p2->name, REG_IDX(3));
 
+        /* Prepare dispatch to procedure as early as possible */
+        next_pc = &(program->binary[p2->start]);
+        CALC_DISPATCH_MANUAL;
+
         /* Arguments - complex lets never have to change this code! */
         current_frame->locals[program->globals + p2->locals] =
                 current_frame->parent->locals[(pc + (3))->index];
-       for (i=0; i<v3->int_value; i++) {
+        for (i=0; i<v3->int_value; i++) {
             current_frame->locals[program->globals + p2->locals + i + 1] =
                     current_frame->parent->locals[(pc + (3))->index + i + 1];
         }
-
-        /* Prepare dispatch to procedure as early as possible */
-        pc = &(program->binary[p2->start]);
-        CALC_DISPATCH0;
 
         /* This gotos the start of the called procedure */
         DISPATCH;
@@ -468,21 +519,77 @@ int run(bin_space *program, int argc, char *argv[]) {
 
         DISPATCH;
 
+    DEC0:
+        /* TODO This is really idec0 - i.e. it does not prime the int */
+        CALC_DISPATCH(0);
+        print_debug("TRACE - DEC0\n", REG_IDX(1));
+        (current_frame->locals[0]->int_value)--;
+        DISPATCH;
+
+    DEC_REG:
+        /* TODO This is really idec reg - i.e. it does not prime the int */
+        CALC_DISPATCH(1);
+        print_debug("TRACE - DEC_REG R%llu\n", REG_IDX(1));
+        (REG_OP(1)->int_value)--;
+        DISPATCH;
+
+    BR_ID:
+        next_pc = program->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL;
+        DISPATCH;
+
+    /* For these we optimise for condition to NOT be met because in a loop
+     * these ae used to jump out of the loop when the end condition it met
+     * (and every little bit helps to improve performance!)
+     */
+    BRT_ID_REG:
+        CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
+                                the real CPUs branch prediction (in theory) */
+        if (REG_OP(2)->int_value) {
+            next_pc = program->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+        DISPATCH;
+
+    BRF_ID_REG:
+        CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
+                                  the real CPUs branch prediction (in theory) */
+        if (!(REG_OP(2)->int_value)) {
+            next_pc = program->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+        DISPATCH;
+
+    IMASTER_REG:
+        CALC_DISPATCH(1);
+        print_debug("TRACE - IMASTER_REG R%llu\n", REG_IDX(1));
+        v1 = REG_OP(1);
+        master_int(v1);
+        DISPATCH;
+
+    TIME_REG:
+        CALC_DISPATCH(1);
+        print_debug("TRACE - TIME R%llu\n", REG_IDX(1));
+        v1 = REG_OP(1);
+        if (v1) set_int(v1,time(NULL));
+        else REG_OP(1) = value_int_f(current_frame, time(NULL));
+        DISPATCH;
+
     UNKNOWN:
-        print_debug("ERROR - Unimplemented instruction - aborting\n");
+        printf("ERROR - Unimplemented instruction - aborting\n");
         goto interprt_finished;
 
     EXIT:
-    print_debug("TRACE - EXIT\n");
-    goto interprt_finished;
+        printf("TRACE - EXIT\n");
+        goto interprt_finished;
 
     SIGNAL:
-        print_debug("TRACE - Signal Received - aborting\n");
+        printf("TRACE - Signal Received - aborting\n");
         goto interprt_finished;
 
     interprt_finished:
-    if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
-    printf("Interpreter Finished\n");
+        if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
+        printf("Interpreter Finished\n");
 
  //   free_ops();
 

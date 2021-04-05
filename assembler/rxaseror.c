@@ -38,7 +38,7 @@ Error* error_f(Assembler_Context* context, int line, int column,
             context->error_tail = error;
         }
         else {
-            j = i;
+            j = context->error_tail;
             i = (context->error_tail)->prev_error;
             while (i && compare_error(error,i) < 0) {
                 j = i;
@@ -46,7 +46,7 @@ Error* error_f(Assembler_Context* context, int line, int column,
             }
             j->prev_error = error;
             error->prev_error = i;
-        }
+         }
     }
     else {
         error->prev_error = 0;

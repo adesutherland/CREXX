@@ -107,6 +107,9 @@ void init_ops() {
     instr_f("sprime", "String Prime op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("cprime", "Char Prime op1", OP_REG, OP_NONE, OP_NONE);
 
+    instr_f("imaster", "Make int the master value for op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
+
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("map", "Map op1 to var name op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("pmap", "Map op1 to parent var name in op2", OP_REG, OP_REG, OP_NONE);

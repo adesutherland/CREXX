@@ -22,7 +22,10 @@
 
 // %parse_accept { printf("The parser has completed successfully.\n"); }
 
-%parse_failure { fprintf(stderr, "0:0 - Error super completely confused - aborted!\n"); }
+%parse_failure {
+printf("parse_failure()\n");
+    error_f(context, 0, 0, 1, "Error parse failure - completely confused");
+}
 
 %start_symbol program
 
@@ -36,9 +39,9 @@ program ::= functions EOS.
 program ::= EOS.
 
 // Program error messages
-program ::= ANYTHING(T). {err_at(context, T, "really confused - aborted!");}
-program ::= headers ANYTHING(T). {err_at(context, T, "totally confused - aborted!");}
-program ::= error. { error_f(context, 0, 0, 1, "Error completely confused - aborted!");}
+program ::= ANYTHING(T). {err_at(context, T, "Error really confused");}
+program ::= headers ANYTHING(T). {err_at(context, T, "totally confused after headers");}
+program ::= error. { error_f(context, 0, 0, 1, "Error completely confused");}
 
 // Header directives
 headers ::= header.

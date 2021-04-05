@@ -107,16 +107,24 @@ int main(int argc, char *argv[]) {
         // Skip Scanner Errors
         if (token_type < 0) continue;
 
-        // Setup and parse token
-        token = token_f(&scanner, token_type);
-//prnt_tok(token); /* printf("\n"); */
-        Parse(parser, token_type, token, &scanner);
-
-        // Execute Parse for the last time
+        // EOS Special Processing
         if(token_type == EOS) {
+            // Send a NEWLINE
+            token = token_f(&scanner, NEWLINE);
+            Parse(parser, NEWLINE, token, &scanner);
+
+            // Send EOS
+            token = token_f(&scanner, token_type);
+            Parse(parser, token_type, token, &scanner);
+
+            // Send a null
             Parse(parser, 0, NULL, &scanner);
             break;
         }
+
+        // Setup and parse token
+        token = token_f(&scanner, token_type);
+        Parse(parser, token_type, token, &scanner);
     }
 
     /* Backpatch and check references */
@@ -130,14 +138,18 @@ int main(int argc, char *argv[]) {
 
     printf("Assembler Complete\n\n");
 
-    /* Disassemble */
-    printf("Running Disassembler\n\n");
-    disassemble(&scanner, stdout);
+    if (scanner.severity == 0) {
 
-    /* Run */
-    printf("\nRunning Program \"main(Hello Rene - REXX Assembler is born)\"\n");
-    char *prog_argv[1]; prog_argv[0] = "Hello Rene - REXX Assembler is born!";
-    run(&(scanner.binary), 1, prog_argv);
+        /* Disassemble */
+        printf("Running Disassembler\n\n");
+        disassemble(&scanner, stdout);
+
+        /* Run */
+        printf("\nRunning Program \"main(Hello Rene - REXX Assembler is born)\"\n");
+        char *prog_argv[1];
+        prog_argv[0] = "Hello Rene - REXX Assembler is born!";
+        run(&(scanner.binary), 1, prog_argv);
+    }
 
     /* That's it */
     printf("\nShutting Down\n");

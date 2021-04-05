@@ -59,7 +59,7 @@ Token* token_f(Assembler_Context* context, int type) {
             buffer = malloc(token->length + 1);
             memcpy(buffer, token->token_source, token->length);
             buffer[token->length] = 0;
-            token->token_value.integer = atoi(buffer);
+            token->token_value.integer = atoll(buffer);
             free(buffer);
             break;
         case FLOAT:

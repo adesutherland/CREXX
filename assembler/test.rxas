@@ -11,11 +11,65 @@ main()    .locals=5                  * begin exec here
           say a1                     * Print the first argument
           say "\n\n"
 
+          * br test
+          say "br test: "
+          br l1
+          load r0,"Failed\n"
+          say r0
+l1:       say "Success\n"
+
+          * dec0 test
+          load r0, 100
+          dec0
+          say "dec0 test (should return 99), returned: "
+          say r0
+          say "\n"
+
+          * dec test
+          load r1, 89
+          dec r1
+          say "dec test (should return 88), returned: "
+          say r1
+          say "\n"
+
+          * brt test
+          load r0,0
+          say "brt test1: "
+          brt brt1,r0
+          say "Success\n"
+          br brt2
+brt1:     say "Failed\n"
+brt2:     load r0,1
+          say "brt test2: "
+          brt brt3,r0
+          say "Failed\n"
+          br brt4
+brt3:     say "Success\n"
+brt4:
+
+          * brf test
+          load r0,1
+          say "brf test1: "
+          brf brf1,r0
+          say "Success\n"
+          br brf2
+brf1:     say "Failed\n"
+brf2:     load r0,0
+          say "brf test2: "
+          brf brf3,r0
+          say "Failed\n"
+          br brf4
+brf3:     say "Success\n"
+brf4:
+
+
+          * call / ret tests
           say "Calling func_test1()\n"
           call func_test1()
           say "Returned\n"
 
           say "Calling func_test2()\n"
+          load r1,"Failed\n"
           call r1,func_test2()
           say "Returned: "
           say r1
@@ -78,6 +132,8 @@ main()    .locals=5                  * begin exec here
           say r2
           say "\n"
 *
+          * Loop Performance
+          call loop()
           exit
 
 func_test1()    .locals=1
@@ -108,4 +164,24 @@ move_test()     .locals=2
                 load r0,"Success\n"
                 move r1,r0
                 say r1
+                ret
+
+loop()          .locals=4
+                say "looping "
+                time r1
+*                load r0,10000000000
+                load r0,700000000
+                say r0
+                say " times (may take a minute or so)\n"
+loopstart:      brf loopend,r0
+*                imaster r0
+*                say r0
+*                say "\n"
+                dec0
+                br loopstart
+loopend:        time r2
+                say "loop finished in "
+                isub r3,r2,r1
+                say r3
+                say " seconds\n"
                 ret

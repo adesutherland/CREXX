@@ -104,6 +104,17 @@ static void set_int(value *v, long long value) {
     v->int_value = value;
 }
 
+/* This resets the variable flag so that only the integer flag is set.
+ * This allow the value to have multiple fast integer updates without
+ * having to consider the status. When the series of changes are done the flags
+ * can be reset to allow another buffer to be primed (like string for printing)
+ */
+static void master_int(value *v) {
+    v->status.all_flags = 0;
+    v->status.primed_int = 1;
+}
+
+
 static void set_conststring(value *v, string_constant *value) {
     v->status.all_flags = 0;
     v->status.primed_string = 1;
@@ -111,6 +122,7 @@ static void set_conststring(value *v, string_constant *value) {
     memcpy(v->string_value, value->string,  v->string_length);
 }
 
+/* Calculate the string value */
 static void prime_string(value *v) {
     if (v->status.primed_string) return;
     if (v->status.primed_int) {
