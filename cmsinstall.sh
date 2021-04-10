@@ -24,8 +24,8 @@ herccontrol "/savesys cms" -w "^CMS VERSION"
 herccontrol "/" -w "^Ready;"
 herccontrol "/logoff" -w "^VM/370 Online"
 
-# LOGON CMSUSER
-herccontrol "/logon cmsuser cmsuser" -w "^CMS VERSION"
+# LOGON maintc
+herccontrol "/logon maintc maintc" -w "^CMS VERSION"
 herccontrol "/" -w "^Ready;"
 
 # Sanity test

@@ -3,7 +3,7 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-path="C:\Users\PeterJ\CLionProjects\CREXX\assembler\"
+path=".\assembler\"
 file=path"operands.c"
 ofile=path"instrset.h"
 
@@ -116,7 +116,7 @@ alreadyDefined:
 	end
 
 	call inc_miss '    // Add your coding '
-    call inc_miss '    REG_OP(1)="?????";'
+    call inc_miss '    /* REG_OP(1)="?????"; */'
 
  	call inc_miss '  DISPATCH;'
     call inc_miss '  '
@@ -136,7 +136,7 @@ addCode:
        call inc_miss '    f'cnum' = FLOAT_OP('cnum');'
 	end
 	else if word(instr,cnum+1)='STRING' then do
-       call inc_miss '    s'cnum' = ONSTSTRING_OP('cnum');'
+       call inc_miss '    s'cnum' = CONSTSTRING_OP('cnum');'
 	end
 return
 

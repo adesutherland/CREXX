@@ -13,7 +13,7 @@ ADDI_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ ADDI_REG_REG_INT: // label not yet defined
     if (!v2) REG_NOT();
     i3 = INT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ SUBI_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ SUBI_REG_REG_INT: // label not yet defined
     if (!v2) REG_NOT();
     i3 = INT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ MULTI_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ MULTI_REG_REG_INT: // label not yet defined
     if (!v2) REG_NOT();
     i3 = INT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ IDIV_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ IDIV_REG_REG_INT: // label not yet defined
     if (!v2) REG_NOT();
     i3 = INT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ DIVI_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -170,7 +170,7 @@ DIVI_REG_REG_INT: // label not yet defined
     if (!v2) REG_NOT();
     i3 = INT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ FADD_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -205,7 +205,7 @@ FADD_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -223,7 +223,7 @@ ADDF_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -240,7 +240,7 @@ ADDF_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -258,7 +258,7 @@ FSUB_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -275,7 +275,7 @@ FSUB_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ FSUB_REG_FLOAT_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -310,7 +310,7 @@ SUBF_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -327,7 +327,7 @@ SUBF_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -344,7 +344,7 @@ SUBF_REG_FLOAT_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ FMULT_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -379,7 +379,7 @@ FMULT_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -397,7 +397,7 @@ MULTF_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -414,7 +414,7 @@ MULTF_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -432,7 +432,7 @@ FDIV_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -449,7 +449,7 @@ FDIV_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ FDIV_REG_FLOAT_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -484,7 +484,7 @@ DIVF_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -501,7 +501,7 @@ DIVF_REG_REG_FLOAT: // label not yet defined
     if (!v2) REG_NOT();
     f3 = FLOAT_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -518,7 +518,7 @@ DIVF_REG_FLOAT_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -536,7 +536,7 @@ SCONCAT_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -551,9 +551,9 @@ SCONCAT_REG_REG_STRING: // label not yet defined
     if (!v1) REG_NOT();
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
-    s3 = ONSTSTRING_OP(3);
+    s3 = CONSTSTRING_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -566,11 +566,11 @@ SCONCAT_REG_STRING_REG: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -588,7 +588,7 @@ CONCATS_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -603,9 +603,9 @@ CONCATS_REG_REG_STRING: // label not yet defined
     if (!v1) REG_NOT();
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
-    s3 = ONSTSTRING_OP(3);
+    s3 = CONSTSTRING_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -618,11 +618,11 @@ CONCATS_REG_STRING_REG: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -638,7 +638,7 @@ STRLEN_REG_REG: // label not yet defined
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -656,7 +656,7 @@ STR2CHAR_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -674,7 +674,7 @@ STR2INT_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -688,7 +688,7 @@ IPRIME_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -702,7 +702,7 @@ FPRIME_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -716,7 +716,7 @@ SPRIME_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -730,7 +730,7 @@ CPRIME_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -746,7 +746,7 @@ MAP_REG_REG: // label not yet defined
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -759,9 +759,9 @@ MAP_REG_STRING: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -777,7 +777,7 @@ PMAP_REG_REG: // label not yet defined
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -790,9 +790,9 @@ PMAP_REG_STRING: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -808,7 +808,7 @@ GMAP_REG_REG: // label not yet defined
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -821,9 +821,9 @@ GMAP_REG_STRING: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -841,7 +841,7 @@ NSMAP_REG_REG_REG: // label not yet defined
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -856,9 +856,9 @@ NSMAP_REG_REG_STRING: // label not yet defined
     if (!v1) REG_NOT();
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
-    s3 = ONSTSTRING_OP(3);
+    s3 = CONSTSTRING_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -871,10 +871,10 @@ NSMAP_REG_STRING_STRING: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
-    s3 = ONSTSTRING_OP(3);
+    s2 = CONSTSTRING_OP(2);
+    s3 = CONSTSTRING_OP(3);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -887,11 +887,11 @@ NSMAP_REG_STRING_REG: // label not yet defined
     goto SIGNAL;
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
-    s2 = ONSTSTRING_OP(2);
+    s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
     if (!v3) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -905,7 +905,7 @@ UNMAP_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -918,7 +918,7 @@ RET_FLOAT: // label not yet defined
     goto SIGNAL;
     f1 = FLOAT_OP(1);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -930,7 +930,7 @@ RET_CHAR: // label not yet defined
     print_debug("RET_CHAR not yet defined\n");
     goto SIGNAL;
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -941,9 +941,9 @@ RET_STRING: // label not yet defined
   CALC_DISPATCH(1);
     print_debug("RET_STRING not yet defined\n");
     goto SIGNAL;
-    s1 = ONSTSTRING_OP(1);
+    s1 = CONSTSTRING_OP(1);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -959,7 +959,7 @@ LINK_REG_REG: // label not yet defined
     v2 = REG_OP(2);
     if (!v2) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -973,7 +973,7 @@ UNLINK_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -987,7 +987,7 @@ NULL_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1002,7 +1002,7 @@ LOAD_REG_FLOAT: // label not yet defined
     if (!v1) REG_NOT();
     f2 = FLOAT_OP(2);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1016,7 +1016,7 @@ LOAD_REG_CHAR: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1029,7 +1029,7 @@ SAY_INT: // label not yet defined
     goto SIGNAL;
     i1 = INT_OP(1);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1042,7 +1042,7 @@ SAY_FLOAT: // label not yet defined
     goto SIGNAL;
     f1 = FLOAT_OP(1);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1054,7 +1054,7 @@ SAY_CHAR: // label not yet defined
     print_debug("SAY_CHAR not yet defined\n");
     goto SIGNAL;
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1068,7 +1068,7 @@ EXIT_REG: // label not yet defined
     v1 = REG_OP(1);
     if (!v1) REG_NOT();
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
@@ -1081,6 +1081,6 @@ EXIT_INT: // label not yet defined
     goto SIGNAL;
     i1 = INT_OP(1);
     // Add your coding 
-    REG_OP(1)="?????";
+    /* REG_OP(1)="?????"; */
   DISPATCH;
   

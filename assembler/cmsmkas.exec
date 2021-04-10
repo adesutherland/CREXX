@@ -2,10 +2,10 @@
 * This EXEC builds CREXX ASSEMBLER
 
 * Set &DISK to the mode of the disk containing the sources
-&DISK = F
+&DISK = A
 
 * Set &BDISK to the mode of the build outputs
-&BDISK = E
+&BDISK = A
 
 &RESULT = 0
 
@@ -37,8 +37,6 @@ GENMOD RXAS
 &IF &RETCODE > 0 &EXIT &RETCODE
 
 * CLEANUP
-COPYFILE RXAS MODULE A = = &BDISK (REPLACE
-ERASE RXAS MODULE A
 ERASE * TEXT A
 
 &EXIT
