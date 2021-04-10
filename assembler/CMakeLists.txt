@@ -20,6 +20,6 @@ add_custom_command(
 
 add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c
                rxasgrmr.c rxasgrmr.h rxas.h operands.c operands.h avl_tree.c
-               avl_tree.h rxasassm.h rxasassm.c rxasdisa.c strtree.h rx_vars.h rx_intrp.h rx_intrp.c)
+               avl_tree.h rxasassm.h rxasassm.c rxasdisa.c strtree.h rx_vars.h rx_intrp.h rx_intrp.c instrset.h instrmiss.h)
 add_dependencies(rxas re2c lemon)
 target_include_directories(rxas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

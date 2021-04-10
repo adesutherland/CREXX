@@ -5,6 +5,62 @@
 .globals=4                           * number of global registers - concept TBC
 
 main()    .locals=5                  * begin exec here
+
+          load r2,17
+          inc r2
+          say r2
+          say "'INC \n"
+          load r0,"my string"
+          copy r1,r0
+          say r1
+          say "'Result\n"
+          load r2,100
+          load r1,41
+          ine  r2,r0,r1
+          say r2
+          say "\n"
+          isub r1,r0,45
+          say r1
+          exit
+          inc0
+          say r0
+          say "\n"
+          load r1,4711
+          inc1
+          say r1
+          say "\n"
+          load r2,1847
+          inc2
+          say r2
+          say "\n"
+          load r0,41
+          dec0
+          say r0
+          say "\n"
+          load r1,4711
+          dec1
+          say r1
+          say "\n"
+          load r2,1847
+          dec2
+          say r2
+          say "\n"
+*
+          load r0," CREXX STRIP functions  "
+          say "\n Original '"
+          say r0
+          say "'\n"
+          load r1," "
+          triml r0,r1
+          say "\nLTrimmed '"
+          say r0
+          say "'\n"
+          trimr r0,r1
+          say "\nRTrimmed '"
+          say r0
+          say "'\n"
+          exit
+
           say "number of arguments = "
           say a0
           say "\nArg 1 = "
@@ -170,7 +226,7 @@ loop()          .locals=4
                 say "looping "
                 time r1
 *                load r0,10000000000
-                load r0,700000000
+                load r0,5
                 say r0
                 say " times (may take a minute or so)\n"
 loopstart:      brf loopend,r0
@@ -179,8 +235,8 @@ loopstart:      brf loopend,r0
 *                say "\n"
                 dec0
                 br loopstart
-loopend:        time r2
-                say "loop finished in "
+loopend:       time r2
+                 say "loop finished in "
                 isub r3,r2,r1
                 say r3
                 say " seconds\n"

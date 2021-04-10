@@ -20,6 +20,7 @@
 #define print_debug(...) (void)0
 #endif
 
+
 void printf_err(const char *format, ...)
 {
     va_list args;
@@ -52,10 +53,16 @@ struct stack_frame {
 #define CALC_DISPATCH_MANUAL {next_inst = (next_pc)->impl_address;}
 #define DISPATCH {pc = next_pc; goto *next_inst;}
 #define REG_OP(n) current_frame->locals[(pc+(n))->index]
+#define REG_RETINT(val) {v1=REG_OP(1);if (v1) set_int(v1,val); else REG_OP(1) = value_int_f(current_frame,val);}
+#define REG_VAL(n) current_frame->locals[n]
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
+#define REG_OP_TEST(v,n) v = REG_OP(n); if (!v) REG_NOT();
+#define FLOAT_OP(n) (pc+(n))->fconst
 #define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
 #define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
+#define REG_NOT() {print_debug("register not initialised\n"); goto SIGNAL;}
+#define INT_VAL(vx) vx->int_value
 
 /* Stack Frame Factory */
 stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
@@ -95,6 +102,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
     long long i1, i2, i3;
+    float f1,f2,f3;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
 
@@ -102,106 +110,16 @@ int run(bin_space *program, int argc, char *argv[]) {
      * Temporary Solution to load Instruction database and instruction map
      * in future this will be via generated C source code - so instant
     */
+
     Instruction *instruction;
     #define NO_OPCODES 200
     void* address_map[NO_OPCODES];
     for (i=0; i<NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
-
-    instruction = src_inst("say", OP_REG, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&SAY_REG;
-    else print_debug("Instruction SAY_REG not found\n");
-
-    instruction = src_inst("exit", OP_NONE, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&EXIT;
-    else print_debug("Instruction EXIT not found\n");
-
-    instruction = src_inst("load", OP_REG, OP_INT, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&LOAD_REG_INT;
-    else print_debug("Instruction LOAD_REG_INT not found\n");
-
-    instruction = src_inst("load", OP_REG, OP_STRING, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&LOAD_REG_STRING;
-    else print_debug("Instruction LOAD_REG_STRING not found\n");
-
-    instruction = src_inst("imult", OP_REG, OP_REG, OP_REG);
-    if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_REG;
-    else print_debug("Instruction IMULT_REG_REG_REG not found\n");
-
-    instruction = src_inst("imult", OP_REG, OP_REG, OP_INT);
-    if (instruction) address_map[instruction->opcode] = &&IMULT_REG_REG_INT;
-    else print_debug("Instruction IMULT_REG_REG_INT not found\n");
-
-    instruction = src_inst("iadd", OP_REG, OP_REG, OP_REG);
-    if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_REG;
-    else print_debug("Instruction IADD_REG_REG_REG not found\n");
-
-    instruction = src_inst("isub", OP_REG, OP_REG, OP_REG);
-    if (instruction) address_map[instruction->opcode] = &&ISUB_REG_REG_REG;
-    else print_debug("Instruction ISUB_REG_REG_REG not found\n");
-
-    instruction = src_inst("iadd", OP_REG, OP_REG, OP_INT);
-    if (instruction) address_map[instruction->opcode] = &&IADD_REG_REG_INT;
-    else print_debug("Instruction IADD_REG_REG_INT not found\n");
-
-    instruction = src_inst("call", OP_REG, OP_FUNC, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&CALL_REG_FUNC;
-    else print_debug("Instruction CALL_REG_FUNC not found\n");
-
-    instruction = src_inst("call", OP_REG, OP_FUNC, OP_REG);
-    if (instruction) address_map[instruction->opcode] = &&CALL_REG_FUNC_REG;
-    else print_debug("Instruction CALL_REG_FUNC_REG not found\n");
-
-    instruction = src_inst("call", OP_FUNC, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&CALL_FUNC;
-    else print_debug("Instruction CALL_FUNC not found\n");
-
-    instruction = src_inst("move", OP_REG, OP_REG, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&MOVE_REG_REG;
-    else print_debug("Instruction MOVE_REG_REG not found\n");
-
-    instruction = src_inst("ret", OP_NONE, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&RET;
-    else print_debug("Instruction RET not found\n");
-
-    instruction = src_inst("ret", OP_REG, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&RET_REG;
-    else print_debug("Instruction RET_REG not found\n");
-
-    instruction = src_inst("ret", OP_INT, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&RET_INT;
-    else print_debug("Instruction RET_INT not found\n");
-
-    instruction = src_inst("say", OP_STRING, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&SAY_STRING;
-    else print_debug("Instruction SAY_STRING not found\n");
-
-    instruction = src_inst("br", OP_ID, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&BR_ID;
-    else print_debug("Instruction BR_ID not found\n");
-
-    instruction = src_inst("brt", OP_ID, OP_REG, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&BRT_ID_REG;
-    else print_debug("Instruction BRT_ID_REG not found\n");
-
-    instruction = src_inst("brf", OP_ID, OP_REG, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&BRF_ID_REG;
-    else print_debug("Instruction BRF_ID_REG not found\n");
-
-    instruction = src_inst("dec", OP_REG, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&DEC_REG;
-    else print_debug("Instruction DEC_REG not found\n");
-
-    instruction = src_inst("dec0", OP_NONE, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&DEC0;
-    else print_debug("Instruction DEC0 not found\n");
-
-    instruction = src_inst("imaster", OP_REG, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&IMASTER_REG;
-    else print_debug("Instruction IMASTER_REG not found\n");
-
-    instruction = src_inst("time", OP_REG, OP_NONE, OP_NONE);
-    if (instruction) address_map[instruction->opcode] = &&TIME_REG;
-    else print_debug("Instruction TIME_REG not found\n");
+/* ----------------------------------------------------------------------------
+ * load instruction code generated from the instruction table pej 8. April 2021
+ * ----------------------------------------------------------------------------
+ */
+    #include "instrset.h"
 
     /* Finished making instruction map done  - temporary approach */
 
@@ -302,23 +220,24 @@ int run(bin_space *program, int argc, char *argv[]) {
         DISPATCH;
 
     IMULT_REG_REG_INT:
+    {
         CALC_DISPATCH(3);
         print_debug("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
         v1 = REG_OP(1);
         v2 = REG_OP(2);
         i3 = INT_OP(3);
-
         if (!v2) {
             print_debug("register not initialized\n");
             goto SIGNAL;
         }
 
         if (v1) set_int(v1, v2->int_value * i3);
-        else REG_OP(1) = value_int_f(current_frame, v2->int_value * i3);
+        else
+            REG_OP(1) = value_int_f(current_frame, v2->int_value * i3);
 
         DISPATCH;
-
+    }
     IADD_REG_REG_REG:
         CALC_DISPATCH(3);
         print_debug("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -522,8 +441,28 @@ IADD_REG_REG_INT:
     DEC0:
         /* TODO This is really idec0 - i.e. it does not prime the int */
         CALC_DISPATCH(0);
-        print_debug("TRACE - DEC0\n", REG_IDX(1));
+        print_debug("TRACE - DEC0\n", REG_IDX(0));
         (current_frame->locals[0]->int_value)--;
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DEC1   R1++                                                       pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DEC1:
+    /* TODO This is really idec1 - i.e. it does not prime the int */
+        CALC_DISPATCH(0);
+         print_debug("TRACE - DEC1\n", REG_IDX(1));
+         (current_frame->locals[1]->int_value)--;
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DEC2   R2++                                                       pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DEC2:
+    /* TODO This is really idec2 - i.e. it does not prime the int */
+        CALC_DISPATCH(0);
+         print_debug("TRACE - DEC2\n", REG_IDX(2));
+         (current_frame->locals[2]->int_value)--;
         DISPATCH;
 
     DEC_REG:
@@ -574,8 +513,342 @@ IADD_REG_REG_INT:
         if (v1) set_int(v1,time(NULL));
         else REG_OP(1) = value_int_f(current_frame, time(NULL));
         DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  TRIMR  Trim right                                                 pej 7. April 2021
+ * ------------------------------------------------------------------------------------
+ */
+    TRIMR_REG_REG:
+      CALC_DISPATCH(2);
+        v1 = REG_OP(1);
+        if (!v1) REG_NOT()
+        prime_string(v1);
 
-    UNKNOWN:
+        i = v1->string_length - 1;
+        while (i >= 0 && v1->string_value[i] == ' ') {
+            v1->string_value[i] = '\0';
+            i--;
+        }
+        v1->string_length=i+1;
+        REG_OP(1)=v1;
+      DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  TRIML  Trim left                                                 pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    TRIML_REG_REG:
+      CALC_DISPATCH(2);
+        v1 = REG_OP(1);
+        if (!v1) REG_NOT()
+        prime_string(v1);
+
+        j = v1->string_length - 1;
+        i=0;
+        while (i <= j && v1->string_value[i] == ' ') i++;
+        if (i>=j) {
+            v1->string_length=0;
+            v1->string_value[0] = '\0';
+        } else {
+            v1->string_length= v1->string_length-i;
+            memcpy(v1->string_value,v1->string_value+i,v1->string_length);
+            v1->string_value[v1->string_length] = '\0';
+        }
+      DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INC0   R0++                                                       pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+   INC0:
+      CALC_DISPATCH(0);
+        print_debug("TRACE - INC0\n");
+        REG_VAL(0)->int_value++;
+      DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INC1   R1++                                                       pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+  INC1:
+    CALC_DISPATCH(0);
+      print_debug("TRACE - INC1\n", REG_IDX(1));
+      (current_frame->locals[1]->int_value)++;
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INC2   R2++                                                       pej 7. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+  INC2:
+    CALC_DISPATCH(0);
+      print_debug("TRACE - INC2\n", REG_IDX(2));
+      (current_frame->locals[2]->int_value)++;
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+  ISUB_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);     // value in v2
+    i3 = INT_OP(3);
+    REG_RETINT(v2->int_value+i3);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+  IEQ_REG_REG_REG:
+   CALC_DISPATCH(3);
+     REG_OP_TEST(v2,2);
+     REG_OP_TEST(v3,3);
+
+     if (INT_VAL(v2)==INT_VAL(v3)) i=1;
+        else i=0;
+     REG_RETINT(i);  // return in first register
+   DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IEQ_REG_REG_INT: // label not yet defined
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+
+    if (INT_VAL(v3)==i3) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IEQ_REG_INT_REG  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IEQ_REG_INT_REG: // label not yet defined
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+
+    if (i2==INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    INE_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+
+    if (INT_VAL(v2)!=INT_VAL(v3)) i=0;
+    else i=1;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    INE_REG_REG_INT:
+    CALC_DISPATCH(3);
+    v2 = REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+    if (INT_VAL(v3)!=i3) i=0;
+    else i=1;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INE_REG_INT_REG  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    INE_REG_INT_REG:
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+
+    if (i2!=INT_VAL(v3)) i=1;
+    else i=1;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGT_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+
+    if (INT_VAL(v2)>INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGT_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+
+    if (INT_VAL(v2)>i3) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGT_REG_INT_REG:
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+
+    if (i2>INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILT_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+
+    if (INT_VAL(v2)<INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILT_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+
+    if (INT_VAL(v2)<i3) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILT_REG_INT_REG:
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+
+    if (i2<INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGTE_REG_REG_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGTE_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+
+    if (INT_VAL(v2)>=INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGTE_REG_REG_INT  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGTE_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+
+    if (INT_VAL(v2)>=i3) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IGTE_REG_INT_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IGTE_REG_INT_REG:
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+
+    if (i2>=INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILTE_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+
+    if (INT_VAL(v2)<=INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILTE_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST(v2,2);
+    i3 = INT_OP(3);
+
+    if (INT_VAL(v2)<=i3) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ILTE_REG_INT_REG:
+    CALC_DISPATCH(3);
+    i2 = INT_OP(2);
+    REG_OP_TEST(v3,3);
+    if (i2<=INT_VAL(v3)) i=1;
+    else i=0;
+    REG_RETINT(i);  // return in first register
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  COPY_REG_REG  Copy op2 to op1              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    COPY_REG_REG: // label not yet defined
+    CALC_DISPATCH(2);
+    REG_OP(1)=REG_OP(2);
+    v2=REG_OP(1);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  INC_REG  Increment Int (op1++)              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    INC_REG: // label not yet defined
+    CALC_DISPATCH(1);
+    REG_OP_TEST(v1,1);
+    INT_VAL(v1)++;
+    DISPATCH;
+/* ---------------------------------------------------------------------------
+ * load instructions not yet implemented generated from the instruction table
+ *      and scan of this module                              pej 8. April 2021
+ * ---------------------------------------------------------------------------
+ */
+#include "instrmiss.h"
+
+
+UNKNOWN:
         printf("ERROR - Unimplemented instruction - aborting\n");
         goto interprt_finished;
 
