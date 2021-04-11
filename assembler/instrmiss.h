@@ -103,41 +103,7 @@ MULTI_REG_REG_INT: // label not yet defined
     /* REG_OP(1)="?????"; */
   DISPATCH;
   
-/* ------------------------------------------------------------------------------------
- *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-IDIV_REG_REG_REG: // label not yet defined
-  CALC_DISPATCH(3);
-    print_debug("IDIV_REG_REG_REG not yet defined\n");
-    goto SIGNAL;
-    v1 = REG_OP(1);
-    if (!v1) REG_NOT();
-    v2 = REG_OP(2);
-    if (!v2) REG_NOT();
-    v3 = REG_OP(3);
-    if (!v3) REG_NOT();
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-IDIV_REG_REG_INT: // label not yet defined
-  CALC_DISPATCH(3);
-    print_debug("IDIV_REG_REG_INT not yet defined\n");
-    goto SIGNAL;
-    v1 = REG_OP(1);
-    if (!v1) REG_NOT();
-    v2 = REG_OP(2);
-    if (!v2) REG_NOT();
-    i3 = INT_OP(3);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
+
 /* ------------------------------------------------------------------------------------
  *  DIVI_REG_REG_REG  Convert and Divide to Integer (op1=op2/op3)              pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------

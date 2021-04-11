@@ -58,11 +58,15 @@ struct stack_frame {
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
 #define REG_OP_TEST(v,n) v = REG_OP(n); if (!v) REG_NOT();
+#define REG_OP_TEST_INT(v,n) v = REG_OP(n); if (!v) REG_NOT();  \
+        if (v->status.primed_int==0)  print_Error("Parameter is not an integer\n");
+
 #define FLOAT_OP(n) (pc+(n))->fconst
 #define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
 #define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
 #define REG_NOT() {print_debug("register not initialised\n"); goto SIGNAL;}
 #define INT_VAL(vx) vx->int_value
+#define print_Error(ms){print_debug(ms); goto SIGNAL;}
 
 /* Stack Frame Factory */
 stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
@@ -839,6 +843,28 @@ IADD_REG_REG_INT:
     CALC_DISPATCH(1);
     REG_OP_TEST(v1,1);
     INT_VAL(v1)++;
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IDIV_REG_REG_INT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_INT(v2,2);
+    i3 = INT_OP(3);
+    v2->int_value=v2->int_value/i3;
+    REG_RETINT(v2->int_value);
+    DISPATCH;
+ /* ------------------------------------------------------------------------------------
+ *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IDIV_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_INT(v2,2);
+    REG_OP_TEST_INT(v3,3);
+    v2->int_value=v2->int_value/v3->int_value;
+    REG_RETINT(v2->int_value);
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
