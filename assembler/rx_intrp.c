@@ -57,11 +57,10 @@ struct stack_frame {
 #define REG_VAL(n) current_frame->locals[n]
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
+#define FLOAT_OP(n) (pc +(n))->fconst;
 #define REG_OP_TEST(v,n) v = REG_OP(n); if (!v) REG_NOT();
 #define REG_OP_TEST_INT(v,n) v = REG_OP(n); if (!v) REG_NOT();  \
         if (v->status.primed_int==0)  print_Error("Parameter is not an integer\n");
-
-#define FLOAT_OP(n) (pc+(n))->fconst
 #define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
 #define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
 #define REG_NOT() {print_debug("register not initialised\n"); goto SIGNAL;}
@@ -106,7 +105,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
     long long i1, i2, i3;
-    float f1,f2,f3;
+    double f1,f2,f3;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
 
@@ -866,6 +865,32 @@ IADD_REG_REG_INT:
     v2->int_value=v2->int_value/v3->int_value;
     REG_RETINT(v2->int_value);
     DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  SAY_INT  Say op1              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SAY_INT:
+    CALC_DISPATCH(1);
+    printf("%d", INT_OP(1));
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  SAY_CHAR  Say op1              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SAY_CHAR:
+    CALC_DISPATCH(1);
+    printf("%c", (pc+(1))->cconst);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  SAY_FLOAT  Say op1              pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SAY_FLOAT:
+    CALC_DISPATCH(1);
+    f1=FLOAT_OP(1);
+    printf("%g", f1);
+    DISPATCH;
+
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021

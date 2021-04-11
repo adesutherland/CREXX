@@ -984,45 +984,7 @@ LOAD_REG_CHAR: // label not yet defined
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  SAY_INT  Say op1              pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-SAY_INT: // label not yet defined
-  CALC_DISPATCH(1);
-    print_debug("SAY_INT not yet defined\n");
-    goto SIGNAL;
-    i1 = INT_OP(1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  SAY_FLOAT  Say op1              pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-SAY_FLOAT: // label not yet defined
-  CALC_DISPATCH(1);
-    print_debug("SAY_FLOAT not yet defined\n");
-    goto SIGNAL;
-    f1 = FLOAT_OP(1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  SAY_CHAR  Say op1              pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-SAY_CHAR: // label not yet defined
-  CALC_DISPATCH(1);
-    print_debug("SAY_CHAR not yet defined\n");
-    goto SIGNAL;
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
+
 /* ------------------------------------------------------------------------------------
  *  EXIT_REG  Exit op1              pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
