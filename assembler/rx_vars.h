@@ -70,6 +70,12 @@ static value* value_int_f(void* parent, long long initial_value) {
     this->int_value = initial_value;
     return this;
 }
+static value* value_float_f(void* parent, double initial_value) {
+    value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->status.primed_float = 1;
+    this->float_value = initial_value;
+    return this;
+}
 
 /* value factories - constant string value */
 static value* value_conststring_f(void* parent, string_constant *initial_value) {
@@ -103,6 +109,11 @@ static void set_int(value *v, long long value) {
     v->status.primed_int = 1;
     v->int_value = value;
 }
+static void set_float(value *v, double value) {
+    v->status.all_flags = 0;
+    v->status.primed_float = 1;
+    v->float_value = value;
+}
 
 /* This resets the variable flag so that only the integer flag is set.
  * This allow the value to have multiple fast integer updates without
@@ -132,7 +143,7 @@ static void prime_string(value *v) {
     }
     else if (v->status.primed_float) {
         /* TODO clear extended string data */
-        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%f",v->float_value);
+        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%g",v->float_value);
         v->status.primed_string = 1;
     }
 }

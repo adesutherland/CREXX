@@ -53,7 +53,10 @@ struct stack_frame {
 #define CALC_DISPATCH_MANUAL {next_inst = (next_pc)->impl_address;}
 #define DISPATCH {pc = next_pc; goto *next_inst;}
 #define REG_OP(n) current_frame->locals[(pc+(n))->index]
-#define REG_RETINT(val) {v1=REG_OP(1);if (v1) set_int(v1,val); else REG_OP(1) = value_int_f(current_frame,val);}
+#define REG_RET_INT(val) {v1=REG_OP(1);if (v1) set_int(v1,val); else REG_OP(1) = value_int_f(current_frame,val);}
+#define REG_RET_FLOAT(val) {v1=REG_OP(1);if (v1) set_float(v1,val); else REG_OP(1) = value_float_f(current_frame,val);}
+#define REG_RET_CHAR(val) {v1=REG_OP(1);if (v1) set_char(v1,val); else REG_OP(1) = value_char_f(current_frame,val);}
+
 #define REG_VAL(n) current_frame->locals[n]
 #define REG_IDX(n) (pc+(n))->index
 #define INT_OP(n) (pc+(n))->iconst
@@ -61,6 +64,8 @@ struct stack_frame {
 #define REG_OP_TEST(v,n) v = REG_OP(n); if (!v) REG_NOT();
 #define REG_OP_TEST_INT(v,n) v = REG_OP(n); if (!v) REG_NOT();  \
         if (v->status.primed_int==0)  print_Error("Parameter is not an integer\n");
+#define REG_OP_TEST_FLOAT(v,n) v = REG_OP(n); if (!v) REG_NOT();  \
+        if (v->status.primed_float==0)  print_Error("Parameter is not a float\n");
 #define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
 #define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
 #define REG_NOT() {print_debug("register not initialised\n"); goto SIGNAL;}
@@ -425,6 +430,30 @@ IADD_REG_REG_INT:
         }
         free_frame(temp_frame);
         DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  RET_FLOAT                                                        pej 12. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    RET_FLOAT:
+    print_debug("TRACE - RET_FLOAT\n");
+    f1 = FLOAT_OP(1);
+    /* Where we return to */
+    next_pc = current_frame->return_pc;
+    next_inst = current_frame->return_inst;
+    /* Set the result register */
+    if (current_frame->return_reg)
+        *(current_frame->return_reg) = value_float_f(current_frame->parent,f1);
+    /* back to the parents stack frame */
+    temp_frame = current_frame;
+    current_frame = current_frame->parent;
+    if (!current_frame) {
+        print_debug("ERROR - Past top of procedure stack - aborting\n");
+        goto SIGNAL;
+    }
+    free_frame(temp_frame);
+    DISPATCH;
+
+
 
     MOVE_REG_REG:
         CALC_DISPATCH(2);
@@ -535,7 +564,7 @@ IADD_REG_REG_INT:
         REG_OP(1)=v1;
       DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  TRIML  Trim left                                                 pej 7. April 2021
+ *  TRIML  Trim left                                                  pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
     TRIML_REG_REG:
@@ -591,10 +620,10 @@ IADD_REG_REG_INT:
     CALC_DISPATCH(3);
     REG_OP_TEST(v2,2);     // value in v2
     i3 = INT_OP(3);
-    REG_RETINT(v2->int_value+i3);  // return in first register
+    REG_RET_INT(v2->int_value+i3);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
   IEQ_REG_REG_REG:
@@ -604,10 +633,10 @@ IADD_REG_REG_INT:
 
      if (INT_VAL(v2)==INT_VAL(v3)) i=1;
         else i=0;
-     REG_RETINT(i);  // return in first register
+     REG_RET_INT(i);  // return in first register
    DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IEQ_REG_REG_INT: // label not yet defined
@@ -617,10 +646,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v3)==i3) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IEQ_REG_INT_REG  Int Equals op1=(op2==op3)              pej 9 Apr 2021
+ *  IEQ_REG_INT_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IEQ_REG_INT_REG: // label not yet defined
@@ -630,10 +659,10 @@ IADD_REG_REG_INT:
 
     if (i2==INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     INE_REG_REG_REG:
@@ -643,10 +672,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)!=INT_VAL(v3)) i=0;
     else i=1;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     INE_REG_REG_INT:
@@ -655,10 +684,10 @@ IADD_REG_REG_INT:
     i3 = INT_OP(3);
     if (INT_VAL(v3)!=i3) i=0;
     else i=1;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  INE_REG_INT_REG  Int Equals op1=(op2!=op3)              pej 9 Apr 2021
+ *  INE_REG_INT_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     INE_REG_INT_REG:
@@ -668,10 +697,10 @@ IADD_REG_REG_INT:
 
     if (i2!=INT_VAL(v3)) i=1;
     else i=1;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IGT_REG_REG_REG:
@@ -681,10 +710,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)>INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IGT_REG_REG_INT:
@@ -694,10 +723,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)>i3) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)              pej 9 Apr 2021
+ *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IGT_REG_INT_REG:
@@ -707,10 +736,10 @@ IADD_REG_REG_INT:
 
     if (i2>INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILT_REG_REG_REG:
@@ -720,10 +749,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)<INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILT_REG_REG_INT:
@@ -733,10 +762,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)<i3) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)              pej 9 Apr 2021
+ *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILT_REG_INT_REG:
@@ -746,7 +775,7 @@ IADD_REG_REG_INT:
 
     if (i2<INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -759,7 +788,7 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)>=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_INT  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -772,7 +801,7 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)>=i3) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_INT_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -785,10 +814,10 @@ IADD_REG_REG_INT:
 
     if (i2>=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILTE_REG_REG_REG:
@@ -798,10 +827,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)<=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILTE_REG_REG_INT:
@@ -811,10 +840,10 @@ IADD_REG_REG_INT:
 
     if (INT_VAL(v2)<=i3) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)              pej 9 Apr 2021
+ *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     ILTE_REG_INT_REG:
@@ -823,10 +852,10 @@ IADD_REG_REG_INT:
     REG_OP_TEST(v3,3);
     if (i2<=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RETINT(i);  // return in first register
+    REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  COPY_REG_REG  Copy op2 to op1              pej 10 Apr 2021
+ *  COPY_REG_REG  Copy op2 to op1                                       pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     COPY_REG_REG: // label not yet defined
@@ -835,7 +864,7 @@ IADD_REG_REG_INT:
     v2=REG_OP(1);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  INC_REG  Increment Int (op1++)              pej 10 Apr 2021
+ *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     INC_REG: // label not yet defined
@@ -844,7 +873,7 @@ IADD_REG_REG_INT:
     INT_VAL(v1)++;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
+ *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IDIV_REG_REG_INT:
@@ -852,10 +881,10 @@ IADD_REG_REG_INT:
     REG_OP_TEST_INT(v2,2);
     i3 = INT_OP(3);
     v2->int_value=v2->int_value/i3;
-    REG_RETINT(v2->int_value);
+    REG_RET_INT(v2->int_value);
     DISPATCH;
- /* ------------------------------------------------------------------------------------
- *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)              pej 10 Apr 2021
+ /* -----------------------------------------------------------------------------------
+ *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     IDIV_REG_REG_REG:
@@ -863,10 +892,10 @@ IADD_REG_REG_INT:
     REG_OP_TEST_INT(v2,2);
     REG_OP_TEST_INT(v3,3);
     v2->int_value=v2->int_value/v3->int_value;
-    REG_RETINT(v2->int_value);
+    REG_RET_INT(v2->int_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  SAY_INT  Say op1              pej 10 Apr 2021
+ *  SAY_INT  Say op1                                                    pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     SAY_INT:
@@ -874,7 +903,7 @@ IADD_REG_REG_INT:
     printf("%d", INT_OP(1));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  SAY_CHAR  Say op1              pej 10 Apr 2021
+ *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     SAY_CHAR:
@@ -882,13 +911,171 @@ IADD_REG_REG_INT:
     printf("%c", (pc+(1))->cconst);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  SAY_FLOAT  Say op1              pej 10 Apr 2021
+ *  SAY_FLOAT  Say op1                                                  pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
     SAY_FLOAT:
     CALC_DISPATCH(1);
     f1=FLOAT_OP(1);
     printf("%g", f1);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  LOAD_REG_FLOAT  Load op1 with op2                                   pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    LOAD_REG_FLOAT:
+    CALC_DISPATCH(2);
+    f2 = FLOAT_OP(2);
+    REG_RET_FLOAT(f2);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FADD_REG_REG_REG  Float Add (op1=op2+op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FADD_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    REG_OP_TEST_FLOAT(v3,3);
+    REG_RET_FLOAT(v2->float_value+v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FSUB_REG_REG_REG  Float Sub (op1=op2-op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FSUB_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    REG_OP_TEST_FLOAT(v3,3);
+    REG_RET_FLOAT(v2->float_value-v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FDIV_REG_REG_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FDIV_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    REG_OP_TEST_FLOAT(v3,3);
+    REG_RET_FLOAT(v2->float_value/v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FMULT_REG_REG_REG:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    REG_OP_TEST_FLOAT(v3,3);
+    REG_RET_FLOAT(v2->float_value*v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FADD_REG_REG_FLOAT  Float Add (op1=op2+op3)                          pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FADD_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    f3 = FLOAT_OP(3);
+    REG_RET_FLOAT(v2->float_value+f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FSUB_REG_REG_FLOAT  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FSUB_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    f3 = FLOAT_OP(3)
+    REG_RET_FLOAT(v2->float_value-f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FDIV_REG_REG_FLOAT  Float Div (op1=op2/op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FDIV_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    f3 = FLOAT_OP(3);
+    REG_RET_FLOAT(v2->float_value/f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FMULT_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    REG_OP_TEST_FLOAT(v2,2);
+    f3 = FLOAT_OP(3);
+    REG_RET_FLOAT(v2->float_value*f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FADD_REG_FLOAT_REG  Float Add (op1=op2+op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FADD_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST_FLOAT(v3,2);
+    REG_RET_FLOAT(f2+v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FSUB_REG_FLOAT_REG  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FSUB_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST_FLOAT(v3,2);
+    REG_RET_FLOAT(f2-v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FDIV_REG_FLOAT_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FDIV_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST_FLOAT(v3,2);
+    REG_RET_FLOAT(f2/v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FMULT_REG_FLOAT_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FMULT_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST_FLOAT(v3,2);
+    REG_RET_FLOAT(f2*v3->float_value);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    STR2INT_REG_REG_REG: // label not yet defined
+    print_debug("IPRIME_REG not yet defined\n");
+    goto SIGNAL;
+    CALC_DISPATCH(3);
+    v2 = REG_OP(2);
+    if (!v2) REG_NOT();
+    v3 = REG_OP(3);
+    if (!v3) REG_NOT();
+    {
+        int rc, result;
+        char *eptr;
+        /* Convert the provided value to a decimal long */
+        i1 = strtol(v2->string_value, &eptr,0);
+
+        /* If the result is 0, test for an error */
+        if (result == 0 || *eptr!=NULL) {
+            print_debug("Conversion error occurred: %d\n");
+            goto interprt_finished;
+        }
+
+       /* Display the converted result */
+        printf("%ld decimal\n", i1);
+    }
+    endstr:
     DISPATCH;
 
 /* ---------------------------------------------------------------------------
