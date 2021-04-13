@@ -170,9 +170,6 @@ void disassemble(Assembler_Context* context, FILE *stream) {
         int opcode = context->binary.binary[i++].instruction.opcode;
         Instruction *inst = get_inst(opcode);
 
-        if (inst == NULL)
-            break;
-
         if (inst->operands != context->binary.binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
         }

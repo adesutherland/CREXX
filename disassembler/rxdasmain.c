@@ -26,10 +26,10 @@ int main(int argc, char *argv[]) {
         bytesRead = fread(&pgm.inst_size,  1, sizeof(size_t), inFile);
         bytesRead = fread(&pgm.const_size, 1, sizeof(size_t), inFile);
 
-        pgm.binary     = malloc(pgm.inst_size);
-        pgm.const_pool = malloc(pgm.const_size);
+        pgm.binary     = calloc(pgm.inst_size, sizeof(bin_code));
+        pgm.const_pool = calloc(pgm.const_size, 1);
 
-        bytesRead = fread(pgm.binary,     1, pgm.inst_size, inFile);
+        bytesRead = fread(pgm.binary, sizeof(bin_code), pgm.inst_size, inFile);
         bytesRead = fread(pgm.const_pool, 1, pgm.const_size, inFile);
 
         fclose(inFile);

@@ -152,8 +152,8 @@ int main(int argc, char *argv[]) {
         fwrite(&pgm->inst_size,  sizeof(pgm->inst_size),  1, outFile);
         fwrite(&pgm->const_size, sizeof(pgm->const_size), 1, outFile);
 
-        fwrite(pgm->binary,      pgm->inst_size,          1, outFile );
-        fwrite(pgm->const_pool,  pgm->const_size,         1, outFile);
+        fwrite(pgm->binary, sizeof(bin_code), pgm->inst_size, outFile );
+        fwrite(pgm->const_pool, pgm->const_size, 1, outFile);
 
         fclose(outFile);
     }

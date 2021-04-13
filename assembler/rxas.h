@@ -11,12 +11,15 @@ typedef struct bin_space bin_space;
 struct avl_tree_node;
 
 /* cREXX Instruction Coding */
+#pragma pack(push,4)
 typedef struct instruction_coding {
     int opcode;
     int no_ops;
 } instruction_coding;
+#pragma pack(pop)
 
 /* Single cREXX Binary Code Entry */
+#pragma pack(push,4)
 typedef union bin_code {
     instruction_coding instruction;
     void* impl_address;
@@ -25,9 +28,10 @@ typedef union bin_code {
     char cconst;
     unsigned long long index;
 } bin_code;
+#pragma pack(pop)
 
 /* cREXX Binary Program */
-#pragma pack(4)
+#pragma pack(push,4)
 struct bin_space {
     int globals;
     size_t inst_size;
@@ -35,6 +39,7 @@ struct bin_space {
     bin_code *binary;
     unsigned char *const_pool;
 };
+#pragma pack(pop)
 
 enum const_pool_type {
     STRING_CONST, PROC_CONST
