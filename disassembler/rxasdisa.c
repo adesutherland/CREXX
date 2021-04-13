@@ -3,8 +3,7 @@
 
 #include "rxas.h"
 #include "operands.h"
-#include "rxasassm.h"
-
+#include "rxasdisa.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -170,6 +169,9 @@ void disassemble(Assembler_Context* context, FILE *stream) {
         j = i;
         int opcode = context->binary.binary[i++].instruction.opcode;
         Instruction *inst = get_inst(opcode);
+
+        if (inst == NULL)
+            break;
 
         if (inst->operands != context->binary.binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);

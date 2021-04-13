@@ -6,13 +6,12 @@
 #include <string.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
-#include "operands.h"
+#include "../machine/operands.h"
 #include "rxasassm.h"
-#include "rx_intrp.h"
 
 int main(int argc, char *argv[]) {
 
-    FILE *fp, *traceFile;
+    FILE *fp, *traceFile, *outFile;
     char *buff, *buff_end;
     size_t bytes;
     int token_type;
@@ -138,17 +137,25 @@ int main(int argc, char *argv[]) {
 
     printf("Assembler Complete\n\n");
 
-    if (scanner.severity == 0) {
+    /* TODO: temp. writing to disk, must be made stable */
+    strcat(file_name, ".out");
+    printf("DBG> Writing file %s\n",file_name);
 
-        /* Disassemble */
-        printf("Running Disassembler\n\n");
-        disassemble(&scanner, stdout);
+    {
+        bin_space *pgm;
 
-        /* Run */
-        printf("\nRunning Program \"main(Hello Rene - REXX Assembler is born)\"\n");
-        char *prog_argv[1];
-        prog_argv[0] = "Hello Rene - REXX Assembler is born!";
-        run(&(scanner.binary), 1, prog_argv);
+        pgm = &scanner.binary;
+
+        outFile = fopen(file_name, "wb");
+
+        fwrite(&pgm->globals,    sizeof(pgm->globals),    1, outFile);
+        fwrite(&pgm->inst_size,  sizeof(pgm->inst_size),  1, outFile);
+        fwrite(&pgm->const_size, sizeof(pgm->const_size), 1, outFile);
+
+        fwrite(pgm->binary,      pgm->inst_size,          1, outFile );
+        fwrite(pgm->const_pool,  pgm->const_size,         1, outFile);
+
+        fclose(outFile);
     }
 
     /* That's it */

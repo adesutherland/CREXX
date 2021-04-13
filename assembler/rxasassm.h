@@ -24,7 +24,4 @@ void backpatch(Assembler_Context *context);
 /* Free Resources */
 void free_assembler(Assembler_Context *context);
 
-/* Disasembler */
-void disassemble(Assembler_Context* context, FILE *stream);
-
 #endif //CREXX_RXASASSM_H

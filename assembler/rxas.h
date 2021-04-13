@@ -27,6 +27,7 @@ typedef union bin_code {
 } bin_code;
 
 /* cREXX Binary Program */
+#pragma pack(4)
 struct bin_space {
     int globals;
     size_t inst_size;

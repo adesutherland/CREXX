@@ -14,10 +14,13 @@ typedef struct value value;
 typedef struct string_extend_buffer string_extend_buffer;
 
 struct string_extend_buffer {
+    size_t buffer_size;
+    char buffer[EXTEND_STRING_BUFFER];
+    /*
     char buffer[EXTEND_STRING_BUFFER];
     string_extend_buffer *next;
     string_extend_buffer *prev;
-    value *owning_value;
+    value *owning_value;*/
 };
 
 typedef union {

@@ -2,7 +2,7 @@
 /* The Assembler itself         */
 #include <string.h>
 #include "rxasassm.h"
-#include "operands.h"
+#include "../machine/operands.h"
 //#include "rxas.h"
 #include "strtree.h"
 

@@ -288,7 +288,7 @@ int run(bin_space *program, int argc, char *argv[]) {
         else REG_OP(1) = value_int_f(current_frame, v2->int_value - v3->int_value);
         DISPATCH;
 
-IADD_REG_REG_INT:
+    IADD_REG_REG_INT:
         CALC_DISPATCH(3);
         print_debug("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
