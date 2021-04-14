@@ -1,43 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <operands.h>
+#include <string.h>
+#include "operands.h"
 #include "rx_intrp.h"
 #include "rxas.h"
 
 int main(int argc, char *argv[]) {
 
-
-    FILE *inFile;
+    FILE *fp;
 
     bin_space pgm;
 
-    size_t fileSize;
-    size_t bytesRead;
+    char *fileName;
 
-    /* TODO: temp. writing to disk, must be made stable */
-    printf("DBG> Reading file %s\n", argv[1]);
+    printf("REXX Interpreter Testbed Version: PoC 2\n\n");
 
-    inFile = fopen(argv[1], "rb");
+    if (argc < 2) {
+        printf("Invalid Arguments\nFormat: rxdas file_name\n");
+        exit (-1);
+    }
+    if (strcmp(argv[1],"-v") == 0) {
+        printf("Version: PoC 2 Build 2\n");
+        exit (0);
+    }
+    fileName = argv[1];
 
-    bytesRead = fread(&pgm.globals,    1, sizeof(int),    inFile);
-    bytesRead = fread(&pgm.inst_size,  1, sizeof(size_t), inFile);
-    bytesRead = fread(&pgm.const_size, 1, sizeof(size_t), inFile);
+    fp = fopen(fileName, "rb");
+
+    fread(&pgm.globals, 1, sizeof(int), fp);
+    fread(&pgm.inst_size, 1, sizeof(size_t), fp);
+    fread(&pgm.const_size, 1, sizeof(size_t), fp);
 
     pgm.binary     = calloc(pgm.inst_size, sizeof(bin_code));
     pgm.const_pool = calloc(pgm.const_size, 1);
 
-    bytesRead = fread(pgm.binary, sizeof(bin_code), pgm.inst_size, inFile);
-    bytesRead = fread(pgm.const_pool, 1, pgm.const_size, inFile);
+    fread(pgm.binary, sizeof(bin_code), pgm.inst_size, fp);
+    fread(pgm.const_pool, 1, pgm.const_size, fp);
 
-    fclose(inFile);
-
+    fclose(fp);
 
     init_ops();
 
-    printf("Running byte code \n");
-    char *prog_argv[1];
-    prog_argv[0] = "Hello Rene - REXX Assembler is born!";
 
 
-    run(&pgm, 1 , prog_argv);
+
+    run(&pgm, argc-2 , argv+2);
 }

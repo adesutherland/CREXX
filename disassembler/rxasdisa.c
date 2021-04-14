@@ -79,7 +79,7 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
  *
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
-static size_t disassemble_operand(Assembler_Context *context, char* buffer, size_t buffer_len,
+static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_len,
                                   OperandType type, int index, int globals, int locals) {
 
     size_t ix, i;
@@ -90,10 +90,10 @@ static size_t disassemble_operand(Assembler_Context *context, char* buffer, size
 
     switch(type) {
         case OP_ID:
-            out_len = snprintf(buffer, buffer_len, "lb_%x", (int)context->binary.binary[index].index);
+            out_len = snprintf(buffer, buffer_len, "lb_%x", (int)pgm->binary[index].index);
             break;
         case OP_REG:
-            r = (int)context->binary.binary[index].index;
+            r = (int)pgm->binary[index].index;
             if (r < locals)
                 out_len = snprintf(buffer, buffer_len, "r%d", r);
             else if (r < locals + globals)
@@ -102,22 +102,22 @@ static size_t disassemble_operand(Assembler_Context *context, char* buffer, size
                 out_len = snprintf(buffer, buffer_len, "a%d /* aka r%d */", r - locals - globals, r);
             break;
         case OP_FUNC:
-            out_len = snprintf(buffer, buffer_len, "%s()", ((proc_constant*)(context->binary.const_pool
-            + context->binary.binary[index].index))->name);
+            out_len = snprintf(buffer, buffer_len, "%s()", ((proc_constant*)(pgm->const_pool
+            + pgm->binary[index].index))->name);
             break;
         case OP_INT:
-            out_len = snprintf(buffer, buffer_len, "%d", (unsigned int)context->binary.binary[index].iconst);
+            out_len = snprintf(buffer, buffer_len, "%d", (unsigned int)pgm->binary[index].iconst);
             break;
         case OP_FLOAT:
-            out_len = snprintf(buffer, buffer_len, "%f", context->binary.binary[index].fconst);
+            out_len = snprintf(buffer, buffer_len, "%f", pgm->binary[index].fconst);
             break;
         case OP_CHAR:
-            out_len = snprintf(buffer, buffer_len, "\'%c\'", context->binary.binary[index].cconst);
+            out_len = snprintf(buffer, buffer_len, "\'%c\'", pgm->binary[index].cconst);
             break;
         case OP_STRING:
-            ix = context->binary.binary[index].index;
-            c = ((string_constant *)(context->binary.const_pool + ix))->string;
-            sz = ((string_constant *)(context->binary.const_pool + ix))->string_len;
+            ix = pgm->binary[index].index;
+            c = ((string_constant *)(pgm->const_pool + ix))->string;
+            sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
 
             out_len++; if (buffer_len) { *(buffer++) = '\"'; buffer_len--; };
             i = encode_print(buffer, buffer_len, c, sz);
@@ -151,7 +151,7 @@ typedef struct code_line {
  * So we have to run through the code and flag where to add label and procedure
  * details - in sum, 2 passes */
 #define MAX_LINE_SIZE 5000
-void disassemble(Assembler_Context* context, FILE *stream) {
+void disassemble(bin_space *pgm, FILE *stream) {
     size_t i, j;
     chameleon_constant* entry;
     proc_constant* pentry;
@@ -162,15 +162,15 @@ void disassemble(Assembler_Context* context, FILE *stream) {
     i = 0;
 
     /* calloc() so values will be zeroed */
-    code_line *source = calloc(context->binary.inst_size, sizeof(code_line));
+    code_line *source = calloc(pgm->inst_size, sizeof(code_line));
 
     /* Pass 1 - Go through the code, decode and flag destination labels */
-    while (i < context->binary.inst_size) {
+    while (i < pgm->inst_size) {
         j = i;
-        int opcode = context->binary.binary[i++].instruction.opcode;
+        int opcode = pgm->binary[i++].instruction.opcode;
         Instruction *inst = get_inst(opcode);
 
-        if (inst->operands != context->binary.binary[j].instruction.no_ops) {
+        if (inst->operands != pgm->binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
         }
 
@@ -179,21 +179,21 @@ void disassemble(Assembler_Context* context, FILE *stream) {
                 break;
             case 1:
                 /* Flag the destination (e.g. of a br) to be shown as a label in the listing */
-                if (inst->op1_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
                 break;
             case 2:
-                if (inst->op1_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
-                if (inst->op2_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op2_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
                 break;
             case 3:
-                if (inst->op1_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
-                if (inst->op2_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op2_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
-                if (inst->op3_type == OP_ID) source[context->binary.binary[i].index].flags = show_label;
+                if (inst->op3_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
                 i++;
                 break;
             default: ;
@@ -204,10 +204,10 @@ void disassemble(Assembler_Context* context, FILE *stream) {
     }
 
     /* Pass 1b - Print Constant Pool and add Proc entry flags to the code listing */
-    fprintf(stream, "* CONSTANT POOL - Size 0x%x\n\n", (unsigned int)context->binary.const_size);
+    fprintf(stream, "* CONSTANT POOL - Size 0x%x\n\n", (unsigned int)pgm->const_size);
     i = 0;
-    while (i < context->binary.const_size) {
-        entry = (chameleon_constant *)(context->binary.const_pool + i);
+    while (i < pgm->const_size) {
+        entry = (chameleon_constant *)(pgm->const_pool + i);
         switch(entry->type) {
             case STRING_CONST:
                 encode_print(line_buffer, MAX_LINE_SIZE, ((string_constant*)entry)->string,
@@ -232,14 +232,14 @@ void disassemble(Assembler_Context* context, FILE *stream) {
     }
 
     /* Pass 2 - Generate listing output */
-    int globals = context->binary.globals;
+    int globals = pgm->globals;
     int locals = 0;
-    fprintf(stream, "\n* CODE SEGMENT - Size 0x%x\n", (unsigned int)context->binary.inst_size);
+    fprintf(stream, "\n* CODE SEGMENT - Size 0x%x\n", (unsigned int)pgm->inst_size);
     fprintf(stream, "\n.globals=%d\n", globals);
     i = 0;
-    while (i < context->binary.inst_size) {
+    while (i < pgm->inst_size) {
         if (source[i].flags == show_proc) {
-            pentry = (proc_constant *)(context->binary.const_pool +
+            pentry = (proc_constant *)(pgm->const_pool +
                                        source[i].proc_index);
             locals = pentry->locals;
             snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
@@ -258,19 +258,19 @@ void disassemble(Assembler_Context* context, FILE *stream) {
                 case 0:
                     break;
                 case 1:
-                    disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
+                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
                     break;
                 case 2:
-                    line_len += disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
+                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
                     line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
+                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
                     break;
                 case 3:
-                    line_len += disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
+                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
                     line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    line_len += disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
+                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
                     line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    disassemble_operand(context, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op3_type, i++, globals, locals);
+                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op3_type, i++, globals, locals);
                     break;
                 default:
                     snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len,"*INTERNAL_ERROR_NUM_OPS*");

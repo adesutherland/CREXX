@@ -6,7 +6,7 @@
 #include <string.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
-#include "../machine/operands.h"
+#include "operands.h"
 #include "rxasassm.h"
 
 int main(int argc, char *argv[]) {
@@ -18,19 +18,19 @@ int main(int argc, char *argv[]) {
     Token *token;
     Assembler_Context scanner;
     void *parser;
-    char* file_name;
+    char* fileName;
 
     printf("REXX Assembler Testbed Version: PoC 2\n\n");
 
     if (argc !=2) {
-        printf("Invalid Arguments\nFormat: rxas file_name\n");
+        printf("Invalid Arguments\nFormat: rxas fileName\n");
         exit (-1);
     }
     if (strcmp(argv[1],"-v") == 0) {
-        printf("Version: PoC 2 Build 1\n");
+        printf("Version: PoC 2 Build 2\n");
         exit (0);
     }
-    file_name = argv[1];
+    fileName = argv[1];
 
     /* Print - Architecture */
     printf("OS Architecture Details\n");
@@ -42,11 +42,11 @@ int main(int argc, char *argv[]) {
     print_ops();
 
     /* Opening and Assemble file */
-    printf("Assembling %s\n", file_name);
+    printf("Assembling %s\n", fileName);
 
     /* Open input file */
     if (argc==2)   fp = fopen(argv[1], "r");
-    else fp = fopen(file_name, "r");
+    else fp = fopen(fileName, "r");
     if(fp == NULL) {
         fprintf(stderr, "Can't open input file\n");
         exit(-1);
@@ -138,15 +138,14 @@ int main(int argc, char *argv[]) {
     printf("Assembler Complete\n\n");
 
     /* TODO: temp. writing to disk, must be made stable */
-    strcat(file_name, ".out");
-    printf("DBG> Writing file %s\n",file_name);
+    strcat(fileName, ".out");
 
     {
         bin_space *pgm;
 
         pgm = &scanner.binary;
 
-        outFile = fopen(file_name, "wb");
+        outFile = fopen(fileName, "wb");
 
         fwrite(&pgm->globals,    sizeof(pgm->globals),    1, outFile);
         fwrite(&pgm->inst_size,  sizeof(pgm->inst_size),  1, outFile);

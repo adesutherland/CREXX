@@ -4,6 +4,6 @@
 #include "rxas.h"
 
 /* Disasembler */
-void disassemble(Assembler_Context* context, FILE *stream);
+void disassemble(bin_space *pgm, FILE *stream);
 
 #endif //CREXX_RXASDISA_H
