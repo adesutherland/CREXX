@@ -9,11 +9,12 @@ main()   .locals=3                  * begin exec here
          say "\nA0 = "
          say a0
          say "\n"
-         copy r0,a0
+         copy r0,a0     * would prefer load r0,a0
          say "\nentering the loop"
 args:    say "\nR0 = "
          say r0
          dec0
+         imaster r0     * would prefer to handle this directly in dec0...
          igt r1,r0,0
          brt args,r1
 *
