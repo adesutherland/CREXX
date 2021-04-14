@@ -17,7 +17,7 @@ args:    *
          say "\n A"
          say r1
          say " = "
-*        load_idx r2,r1 * would like to do something like load_reg_regidx
+*        amap r2,r1     * will map A(idx) e.g. A1 to R2
 *        say r2         * to do something useful with register A(n)
          inc1           * point to next argument idx
          imaster r1     * would prefer to handle this directly in inc1...
