@@ -8,11 +8,11 @@ SCONCAT_REG_REG_REG: // label not yet defined
     print_debug("SCONCAT_REG_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -27,9 +27,9 @@ SCONCAT_REG_REG_STRING: // label not yet defined
     print_debug("SCONCAT_REG_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     s3 = CONSTSTRING_OP(3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -45,10 +45,10 @@ SCONCAT_REG_STRING_REG: // label not yet defined
     print_debug("SCONCAT_REG_STRING_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -63,11 +63,11 @@ CONCATS_REG_REG_REG: // label not yet defined
     print_debug("CONCATS_REG_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -82,9 +82,9 @@ CONCATS_REG_REG_STRING: // label not yet defined
     print_debug("CONCATS_REG_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     s3 = CONSTSTRING_OP(3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -100,10 +100,10 @@ CONCATS_REG_STRING_REG: // label not yet defined
     print_debug("CONCATS_REG_STRING_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -118,9 +118,9 @@ STRLEN_REG_REG: // label not yet defined
     print_debug("STRLEN_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -135,11 +135,11 @@ STR2CHAR_REG_REG_REG: // label not yet defined
     print_debug("STR2CHAR_REG_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -154,7 +154,7 @@ IPRIME_REG: // label not yet defined
     print_debug("IPRIME_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -169,7 +169,7 @@ FPRIME_REG: // label not yet defined
     print_debug("FPRIME_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -184,7 +184,7 @@ SPRIME_REG: // label not yet defined
     print_debug("SPRIME_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -199,7 +199,7 @@ CPRIME_REG: // label not yet defined
     print_debug("CPRIME_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -214,9 +214,9 @@ MAP_REG_REG: // label not yet defined
     print_debug("MAP_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -231,7 +231,7 @@ MAP_REG_STRING: // label not yet defined
     print_debug("MAP_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -247,9 +247,9 @@ PMAP_REG_REG: // label not yet defined
     print_debug("PMAP_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -264,7 +264,7 @@ PMAP_REG_STRING: // label not yet defined
     print_debug("PMAP_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -280,9 +280,9 @@ GMAP_REG_REG: // label not yet defined
     print_debug("GMAP_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -297,7 +297,7 @@ GMAP_REG_STRING: // label not yet defined
     print_debug("GMAP_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -313,11 +313,11 @@ NSMAP_REG_REG_REG: // label not yet defined
     print_debug("NSMAP_REG_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -332,9 +332,9 @@ NSMAP_REG_REG_STRING: // label not yet defined
     print_debug("NSMAP_REG_REG_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     s3 = CONSTSTRING_OP(3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
@@ -350,7 +350,7 @@ NSMAP_REG_STRING_STRING: // label not yet defined
     print_debug("NSMAP_REG_STRING_STRING not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     s3 = CONSTSTRING_OP(3);
     // Add your coding 
@@ -367,10 +367,10 @@ NSMAP_REG_STRING_REG: // label not yet defined
     print_debug("NSMAP_REG_STRING_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     s2 = CONSTSTRING_OP(2);
     v3 = REG_OP(3);
-    REG_Test(!v3);
+    REG_TEST(!v3);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -385,7 +385,7 @@ UNMAP_REG: // label not yet defined
     print_debug("UNMAP_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -413,9 +413,9 @@ LINK_REG_REG: // label not yet defined
     print_debug("LINK_REG_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     v2 = REG_OP(2);
-    REG_Test(!v2);
+    REG_TEST(!v2);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -430,7 +430,7 @@ UNLINK_REG: // label not yet defined
     print_debug("UNLINK_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -445,7 +445,7 @@ NULL_REG: // label not yet defined
     print_debug("NULL_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -460,7 +460,7 @@ LOAD_REG_CHAR: // label not yet defined
     print_debug("LOAD_REG_CHAR not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
@@ -475,7 +475,7 @@ EXIT_REG: // label not yet defined
     print_debug("EXIT_REG not yet defined\n");
     goto SIGNAL;
     v1 = REG_OP(1);
-    REG_Test(!v1);
+    REG_TEST(!v1);
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
