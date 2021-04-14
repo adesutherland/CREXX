@@ -67,14 +67,24 @@ struct stack_frame {
 // PEJ Macros   April 2021
 #define print_Error(ms){print_debug(ms); goto SIGNAL;}
 #define REG_RET_INT(val) {v1=REG_OP(1);if (v1) set_int(v1,val); else REG_OP(1) = value_int_f(current_frame,val);}
-#define REG_RET_FLOAT(val) {v1=REG_OP(1);if (v1) set_float(v1,val); else REG_OP(1) = value_float_f(current_frame,val);}
+#define REG_RET_FLOAT(val) {v1=REG_OP(1);if (v1) set_float(v1,val); else REG_OP(1) = value_float_f(current_frame, val);}
+#define REG_RET_STRING(val) {v1=REG_OP(1);if (v1) set_conststring(value *val); else REG_OP(1) = value_fFstringfloat_f(current_frame,val);}
+
 #define REG_RET_CHAR(val) {v1=REG_OP(1);if (v1) set_char(v1,val); else REG_OP(1) = value_char_f(current_frame,val);}
 // TODO: String to integer just for real integers, or stop converting at "."
 // maximum size of long long is 20 digits plus sign
 // maximum size of double is about 16 decimal digits plus sign
-#define S2INT(t,s) if (s->string_length>20)  goto convlength; \
+#define S2INT(t,s) {if (s->string_length>20)  goto convlength; \
         s->string_value[s->string_length]='\0'; t = strtol(s->string_value, &converr, 0); \
-        if (converr[0] != '\0') goto converror;
+        if (converr[0] != '\0' && converr[0]!='.') goto converror;}
+#define S2FLOAT(t,s) {if (s->string_length>16)  goto convlength; \
+        s->string_value[s->string_length]='\0'; t = strtod(s->string_value, &converr); \
+        if (converr[0] != '\0') goto converror;}
+#define CONV2INT(i,v) if (v->status.primed_float) i=(long long) v->float_value; \
+        else if (v->status.primed_string) S2INT(i,v);
+#define CONV2FLOAT(i,v) if (v->status.primed_int) i=(double) v->int_value; \
+        else if (v->status.primed_string) S2FLOAT(i,v);
+
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v) if (!v) goto notreg;
 #define REG_OP_TEST(v,n) v = REG_OP(n); REG_TEST(v);
@@ -925,12 +935,12 @@ IADD_REG_REG_INT:
  *  COPY_REG_REG  Copy op2 to op1                                       pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    COPY_REG_REG:
+    COPY_REG_REG: // label not yet defined
     CALC_DISPATCH(2);
-    print_debug("TRACE - COPY_REG_REG\n") ;
-
-    REG_OP(1)=REG_OP(2);
-    v2=REG_OP(1);
+    REG_OP(1) = value_f(current_frame);
+    v1 = REG_OP(1);
+    v2 = REG_OP(2);
+    memcpy(v1, v2, sizeof(value));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
@@ -1022,6 +1032,7 @@ IADD_REG_REG_INT:
 
     REG_OP_TEST_FLOAT(v2,2);
     REG_OP_TEST_FLOAT(v3,3);
+
     REG_RET_FLOAT(v2->float_value+v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1132,18 +1143,7 @@ IADD_REG_REG_INT:
     REG_OP_TEST_FLOAT(v3,2);
     REG_RET_FLOAT(f2/v3->float_value);
     DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  FMULT_REG_FLOAT_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-    FMULT_REG_FLOAT_REG:
-    CALC_DISPATCH(3);
-    print_debug("TRACE - FMULT_REG_FLOAT_REG\n") ;
 
-    f2 = FLOAT_OP(2);
-    REG_OP_TEST_FLOAT(v3,2);
-    REG_RET_FLOAT(f2*v3->float_value);
-    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1160,6 +1160,283 @@ IADD_REG_REG_INT:
     REG_RET_INT(i1);
     DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  ADDI_REG_REG_INT  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ADDI_REG_REG_INT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - ADDI_REG_REG_INT");
+
+    REG_OP_TEST(v2,2);
+    CONV2INT(i2,v2)
+    i3 = INT_OP(3);
+
+    REG_RET_INT(i2+i3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ADDI_REG_REG_REG  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ADDI_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - ADDI_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2INT(i2,v2)
+    CONV2INT(i3,v3)
+
+    REG_RET_INT(i2+i3);
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBI_REG_REG_REG  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SUBI_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - SUBI_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2INT(i2,v2)
+    CONV2INT(i3,v3)
+
+    REG_RET_INT(i2-i3);
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBI_REG_REG_INT  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SUBI_REG_REG_INT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - SUBI_REG_REG_INT");
+
+    REG_OP_TEST(v2,2);
+    CONV2INT(i2,v2)
+    i3 = INT_OP(3);
+
+    REG_RET_INT(i2-i3);
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    MULTI_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - MULTI_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2INT(i2,v2)
+    CONV2INT(i3,v3)
+
+    REG_RET_INT(i2*i3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  MULTI_REG_REG_INT  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    MULTI_REG_REG_INT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - MULTI_REG_REG_INT");
+
+    REG_OP_TEST(v2,2);
+    CONV2INT(i2,v2)
+    i3 = INT_OP(3);
+
+    REG_RET_INT(i2*i3);
+
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  DIVI_REG_REG_REG  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DIVI_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - DIVI_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2INT(i2,v2)
+    CONV2INT(i3,v3)
+
+    REG_RET_INT(i2/i3);
+
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  DIVI_REG_REG_INT  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DIVI_REG_REG_INT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - DIVI_REG_REG_INT");
+
+    REG_OP_TEST(v2,2);
+    CONV2INT(i2,v2)
+    i3 = INT_OP(3);
+
+    REG_RET_INT(i2/i3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ADDF_REG_REG_FLOAT  Convert and Add to Float (op1=op2+op3)          pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ADDF_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - ADDF_REG_REG_FLOAT");
+
+    REG_OP_TEST(v2,2);
+    CONV2FLOAT(f2,v2)
+    f3 = FLOAT_OP(3);
+
+    REG_RET_FLOAT(f2+f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ADDF_REG_REG_REG  Convert and Add to Float (op1=op2+op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    ADDF_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - ADDF_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2FLOAT(f2,v2)
+    CONV2FLOAT(f3,v3)
+
+    REG_RET_FLOAT(f2+f3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  SUBF_REG_REG_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SUBF_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - SUBF_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2FLOAT(f2,v2)
+    CONV2FLOAT(f3,v3)
+
+    REG_RET_FLOAT(f2-f3);
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBF_REG_REG_FLOAT  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SUBF_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - SUBF_REG_REG_FLOAT");
+
+    REG_OP_TEST(v2,2);
+    CONV2FLOAT(f2,v2)
+    f3 = FLOAT_OP(3);
+
+    REG_RET_FLOAT(f2-f3);
+
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBF_REG_FLOAT_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SUBF_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - SUBF_REG_FLOAT_REG");
+
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST(v3,3);
+    CONV2FLOAT(f3,v3)
+
+    REG_RET_FLOAT(f2-f3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  MULTF_REG_REG_REG  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    MULTF_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - MULTF_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    CONV2FLOAT(f2,v2)
+    f3 = FLOAT_OP(3);
+
+    REG_RET_FLOAT(f2*f3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  MULTF_REG_REG_FLOAT  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    MULTF_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - MULTF_REG_REG_FLOAT");
+
+    REG_OP_TEST(v2,2);
+    CONV2FLOAT(f2,v2)
+    f3 = FLOAT_OP(3);
+
+    REG_RET_FLOAT(f2*f3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DIVF_REG_REG_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DIVF_REG_REG_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - DIVF_REG_REG_REG");
+
+    REG_OP_TEST(v2,2);
+    REG_OP_TEST(v3,3);
+    CONV2FLOAT(f2,v2)
+    CONV2FLOAT(f3,v3)
+
+    REG_RET_FLOAT(f2/f3);
+
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DIVF_REG_REG_FLOAT  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DIVF_REG_REG_FLOAT:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - DIVF_REG_REG_FLOAT");
+
+    REG_OP_TEST(v2,2);
+    CONV2FLOAT(f2,v2)
+    f3 = FLOAT_OP(3);
+
+    REG_RET_FLOAT(f2/f3);
+
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  DIVF_REG_FLOAT_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    DIVF_REG_FLOAT_REG:
+    CALC_DISPATCH(3);
+    print_debug("TRACE - DIVF_REG_FLOAT_REG");
+
+    f2 = FLOAT_OP(2);
+    REG_OP_TEST(v3,3);
+    CONV2FLOAT(f3,v3)
+    REG_RET_FLOAT(f2/f3);
+
+    DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021
