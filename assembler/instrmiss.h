@@ -692,20 +692,7 @@ RET_CHAR: // label not yet defined
     // Add your coding 
     /* REG_OP(1)="?????"; */
   DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  RET_STRING  Return op1              pej 12 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-RET_STRING: // label not yet defined
-  CALC_DISPATCH(1);
-    print_debug("RET_STRING not yet defined\n");
-    goto SIGNAL;
-    s1 = CONSTSTRING_OP(1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
+
 /* ------------------------------------------------------------------------------------
  *  LINK_REG_REG  Link op2 to op1              pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
