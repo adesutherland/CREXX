@@ -14,8 +14,9 @@ main()   .locals=3
          load r1,1      * point to first argument idx
 *
 args:    *
-         say "\n R1 = "
+         say "\n A"
          say r1
+         say " = "
 *        load_idx r2,r1 * would like to do something like load_reg_regidx
 *        say r2         * to do something useful with register A(n)
          inc1           * point to next argument idx
