@@ -2,26 +2,28 @@
  * REXX ASSEMBLER TEST
  */
 
-.globals=4                           * number of global registers - concept TBC
+.globals=4
 
-main()   .locals=3                  * begin exec here
+main()   .locals=3
 *
-         say "\nA0 = "
-         say a0
-         say "\n"
-         copy r0,a0     * would prefer load r0,a0
-         say "\nentering the loop"
-args:    say "\nR0 = "
-         say r0
-         dec0
-         imaster r0     * would prefer to handle this directly in dec0...
-         igt r1,r0,0
-         brt args,r1
+         ilte  r0,a0,0   * skip argument handling
+         brt  nargs,r0
+         say  " A0 = "
+         say  a0
+*        copy r2,a0     * would prefer load r2,a0
+         load r1,1      * point to first argument idx
 *
-         say "\nleaving the loop\n"
+args:    *
+         say "\n R1 = "
+         say r1
+*        load_idx r2,r1 * would like to do something like load_reg_regidx
+*        say r2         * to do something useful with register A(n)
+         inc1           * point to next argument idx
+         imaster r1     * would prefer to handle this directly in inc1...
+         ilte r0,r1,a0
+         brt args,r0
 *
-         say "\nA0 = "
-         say a0
-         say "\n\n"
+nargs:   *
+         say "\n\n Done \n\n"
 *
          exit
