@@ -128,7 +128,7 @@ addCode:
   parse arg cnum
     if word(instr,cnum+1)='REG' then do
         call inc_miss '    v'cnum' = REG_OP('cnum');'
-        call inc_miss '    REG_Test(!v'cnum');' 
+        call inc_miss '    REG_TEST(!v'cnum');' 
 	end
 	else if word(instr,cnum+1)='INT' then do
        call inc_miss '    i'cnum' = INT_OP('cnum');'
