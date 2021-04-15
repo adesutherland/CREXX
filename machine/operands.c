@@ -112,6 +112,8 @@ void init_ops() {
 
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("map", "Map op1 to var name op2", OP_REG, OP_STRING, OP_NONE);
+    instr_f("amap", "Map op1 to arg register index in op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("amap", "Map op1 to arg register index  op2", OP_REG, OP_INT, OP_NONE);
     instr_f("pmap", "Map op1 to parent var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("pmap", "Map op1 to parent var name op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("gmap", "Map op1 to global var name in op2", OP_REG, OP_REG, OP_NONE);

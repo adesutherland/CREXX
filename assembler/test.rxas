@@ -17,10 +17,10 @@ args:    *
          say "\n A"
          say r1
          say " = "
-*        amap r2,r1     * will map A(idx) e.g. A1 to R2
-*        say r2         * to do something useful with register A(n)
+         amap r2,r1     * will map A(idx) e.g. A1 to R2
+         say r2         * to do something useful with register A(n)
          inc1           * point to next argument idx
-         imaster r1     * would prefer to handle this directly in inc1...
+*        imaster r1     * I'm not sure, would I prefer ...
          ilte r0,r1,a0
          brt args,r0
 *

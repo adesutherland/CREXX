@@ -1397,6 +1397,22 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_RET_FLOAT(f2/f3);
 
     DISPATCH;
+
+    AMAP_REG_REG:
+    CALC_DISPATCH(2);
+    print_debug("TRACE - AMAP_REG_REG");
+
+    REG_OP(1) = current_frame->locals[REG_OP(2)->int_value + program->globals + procedure->locals];
+
+    DISPATCH;
+
+    AMAP_REG_INT:
+    CALC_DISPATCH(2);
+    print_debug("TRACE - AMAP_REG_INT");
+
+    REG_OP(1) = REG_VAL(INT_OP(2));
+
+    DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021
