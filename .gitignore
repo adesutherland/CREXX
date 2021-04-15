@@ -74,5 +74,5 @@ _deps
 /compiler/rexxgrmr.h
 /assembler/rxasgrmr.c
 /assembler/rxasgrmr.h
-/machine/instrmiss.h
-/machine/instrset.h
+#/machine/instrmiss.h
+#/machine/instrset.h
