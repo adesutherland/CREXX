@@ -695,21 +695,6 @@ IADD_REG_REG_INT:
     REG_RET_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  IEQ_REG_INT_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-    IEQ_REG_INT_REG: // label not yet defined
-    CALC_DISPATCH(3);
-    print_debug("TRACE - IEQ_INT_REG_INT\n") ;
-
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2==INT_VAL(v3)) i=1;
-    else i=0;
-    REG_RET_INT(i);  // return in first register
-    DISPATCH;
-/* ------------------------------------------------------------------------------------
  *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -733,21 +718,6 @@ IADD_REG_REG_INT:
     v2 = REG_OP_TEST(v2,2);
     i3 = INT_OP(3);
     if (INT_VAL(v3)!=i3) i=0;
-    else i=1;
-    REG_RET_INT(i);  // return in first register
-    DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  INE_REG_INT_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-    INE_REG_INT_REG:
-    CALC_DISPATCH(3);
-    print_debug("TRACE - IEQ_REG_INT_REG\n") ;
-
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2!=INT_VAL(v3)) i=1;
     else i=1;
     REG_RET_INT(i);  // return in first register
     DISPATCH;
@@ -1143,7 +1113,6 @@ IADD_REG_REG_INT:
     REG_OP_TEST_FLOAT(v3,2);
     REG_RET_FLOAT(f2/v3->float_value);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1159,7 +1128,6 @@ IADD_REG_REG_INT:
 
     REG_RET_INT(i1);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  ADDI_REG_REG_INT  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1189,7 +1157,6 @@ IADD_REG_REG_INT:
 
     REG_RET_INT(i2+i3);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  SUBI_REG_REG_REG  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1205,7 +1172,6 @@ IADD_REG_REG_INT:
 
     REG_RET_INT(i2-i3);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  SUBI_REG_REG_INT  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1220,7 +1186,6 @@ IADD_REG_REG_INT:
 
     REG_RET_INT(i2-i3);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1252,7 +1217,6 @@ IADD_REG_REG_INT:
     REG_RET_INT(i2*i3);
 
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  DIVI_REG_REG_REG  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1269,7 +1233,6 @@ IADD_REG_REG_INT:
     REG_RET_INT(i2/i3);
 
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  DIVI_REG_REG_INT  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1329,7 +1292,6 @@ IADD_REG_REG_INT:
 
     REG_RET_FLOAT(f2-f3);
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  SUBF_REG_REG_FLOAT  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1345,7 +1307,6 @@ IADD_REG_REG_INT:
     REG_RET_FLOAT(f2-f3);
 
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  SUBF_REG_FLOAT_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1422,7 +1383,6 @@ IADD_REG_REG_INT:
     REG_RET_FLOAT(f2/f3);
 
     DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  DIVF_REG_FLOAT_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------

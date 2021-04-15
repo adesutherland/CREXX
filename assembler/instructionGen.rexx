@@ -3,7 +3,7 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-path=".\assembler\"
+path="C:\Users\PeterJ\CLionProjects\CREXX\assembler\"
 file=path"operands.c"
 ofile=path"instrset.h"
 
@@ -108,6 +108,7 @@ alreadyDefined:
     call inc_miss ' */'
 	call inc_miss ucmd': // label not yet defined'
 	call inc_miss '  CALC_DISPATCH('numparm');'
+    call inc_miss '    print_debug("TRACE - 'ucmd'");' 
     call inc_miss '    print_debug("'ucmd' not yet defined\n");'
 	call inc_miss '    goto SIGNAL;'
 
@@ -127,7 +128,7 @@ addCode:
   parse arg cnum
     if word(instr,cnum+1)='REG' then do
         call inc_miss '    v'cnum' = REG_OP('cnum');'
-        call inc_miss '    if (!v'cnum') REG_NOT();'
+        call inc_miss '    REG_Test(!v'cnum');' 
 	end
 	else if word(instr,cnum+1)='INT' then do
        call inc_miss '    i'cnum' = INT_OP('cnum');'
