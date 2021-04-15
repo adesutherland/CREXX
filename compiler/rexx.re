@@ -16,7 +16,7 @@ void Parse();
 void ParseFree();
 void ParseTrace(FILE *stream, char *zPrefix);
 
-int scan(Scanner* s, char *buff_end) {
+int scan(Assembler_Context* s, char *buff_end) {
     int depth;
 
     regular:
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
     size_t bytes;
     int token_type;
     Token *token;
-    Scanner scanner;
+    Assembler_Context scanner;
     void *parser;
 
     /* Open input file */
@@ -287,7 +287,7 @@ int main(int argc, char *argv[]) {
 }
 
 /* Token Factory */
-Token* token_f(Scanner* context, int type) {
+Token* token_f(Assembler_Context* context, int type) {
     Token* token = malloc(sizeof(Token));
     token->token_type = type;
 
@@ -309,7 +309,7 @@ Token* token_f(Scanner* context, int type) {
     token->length = context->cursor - context->top;
     token->line = context->line;
     token->column = context->top - context->linestart + 1;
-    token->token_string = context->top;
+    token->token_source = context->top;
 
     return token;
 }
@@ -317,14 +317,14 @@ Token* token_f(Scanner* context, int type) {
 void prnt_tok(Token* token) {
 /*
     printf("%d.%d %s \"%.*s\"",token->line+1,token->column+1,
-           token_type_name(token->token_type),token->length,token->token_string);
+           token_type_name(token->token_type),token->length,token->token_source);
 */
     printf("%s \"%.*s\"",
-           token_type_name(token->token_type),token->length,token->token_string);
+           token_type_name(token->token_type),token->length,token->token_source);
 
 }
 
-void free_tok(Scanner* context) {
+void free_tok(Assembler_Context* context) {
     Token *t = context->token_head;
     Token *n;
     while (t) {
@@ -417,7 +417,7 @@ void pdot_ast(ASTNode* node, int parent, int *counter) {
         printf("n%d[label=\"%s\\n", *counter,
                token_type_name(node->token->token_type));
 
-        print_unescaped(node->token->token_string, node->token->length);
+        print_unescaped(node->token->token_source, node->token->length);
 
         printf("\"]\n");
     }

@@ -2,14 +2,14 @@
 typedef struct ASTNode ASTNode;
 typedef struct Token Token;
 
-typedef struct Scanner {
+typedef struct Assembler_Context {
     char *top, *cursor, *marker, *ctxmarker, *linestart;
     int line;
     int token_counter;
     Token* token_head;
     Token* token_tail;
     ASTNode* ast;
-} Scanner;
+} Assembler_Context;
 
 struct Token {
     int token_type;
@@ -18,7 +18,7 @@ struct Token {
     Token *token_next;
     Token *token_prev;
     size_t line, column, length;
-    char* token_string;
+    char* token_source;
 };
 
 struct ASTNode {
@@ -28,8 +28,8 @@ struct ASTNode {
 };
 
 /* Token Functions */
-Token* token_f(Scanner* context, int type);
-void free_tok(Scanner* context);
+Token* token_f(Assembler_Context* context, int type);
+void free_tok(Assembler_Context* context);
 void prnt_tok(Token* token);
 const char* token_type_name(int type); /* Get Token Type Name */
 

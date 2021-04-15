@@ -70,3 +70,9 @@ _deps
 
 * idea / clion
 .idea/
+/compiler/rexxgrmr.c
+/compiler/rexxgrmr.h
+/assembler/rxasgrmr.c
+/assembler/rxasgrmr.h
+#/machine/instrmiss.h
+#/machine/instrset.h

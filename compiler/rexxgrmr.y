@@ -18,7 +18,7 @@
     }
 }
 
-%extra_argument { Scanner *context }
+%extra_argument { Assembler_Context *context }
 
 %parse_accept { printf("The parser has completed successfully.\n"); }
 
