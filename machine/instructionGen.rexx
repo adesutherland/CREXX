@@ -3,15 +3,12 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-path=".\"
-file=path"operands.c"
-ofile=path"instrset.h"
+ parse arg path
+file=path"\machine\operands.c"
+ofile=path"\machine\instrset.h"
 
-  asm=path"..\interpreter\rx_intrp.c"
-  asmmiss=path"instrmiss.h"
-
-  ADDRESS SYSTEM 'DEL 'ofile
-  ADDRESS SYSTEM 'DEL 'asmmiss
+  asm=path"\interpreter\rx_intrp.c"
+  asmmiss=path"\machine\instrmiss.h"
 
   call inc_inst,'/* -------------------------------------------------------------------------------'
   call inc_inst,' * Generate Instruction Set, generated on 'date()' AT 'time()
