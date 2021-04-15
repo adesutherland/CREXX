@@ -3,11 +3,11 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-path="C:\Users\PeterJ\CLionProjects\CREXX\assembler\"
+path=".\"
 file=path"operands.c"
 ofile=path"instrset.h"
 
-  asm=path"rx_intrp.c"
+  asm=path"..\interpreter\rx_intrp.c"
   asmmiss=path"instrmiss.h"
 
   ADDRESS SYSTEM 'DEL 'ofile
