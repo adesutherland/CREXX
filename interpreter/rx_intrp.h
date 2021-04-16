@@ -1,9 +1,23 @@
-//
-// Created by adria on 29/03/2021.
-//
-
 #ifndef CREXX_RX_INTRP_H
 #define CREXX_RX_INTRP_H
+
+#define ERROR(...) {fprintf(stderr, __VA_ARGS__); goto SIGNAL;}
+
+#ifdef NDEBUG  // RELEASE
+    #define DEBUG(...)
+    #define MAP_ADDR(instr, op1, op2, op3, target, msg)         \
+                instruction = src_inst(instr, op1,op2,op3);     \
+                address_map[instruction->opcode] = target;
+#else          // DEBUG
+    #define DEBUG(...) fprintf(stderr, __VA_ARGS__)
+    #define MAP_ADDR(instr, op1, op2, op3, target, msg)         \
+                instruction = src_inst(instr, op1,op2,op3);     \
+                if (instruction) {                              \
+                    address_map[instruction->opcode] = target;  \
+                } else {                                        \
+                    DEBUG(msg);                                 \
+                }
+#endif
 
 typedef struct bin_space program;
 
