@@ -218,14 +218,14 @@ int run(bin_space *program, int argc, char *argv[]) {
         v1 = REG_OP(1);
         if (!v1) print_Error("register not initialised\n");
         prime_string(v1);
-        printf("%.*s", v1->string_length, v1->string_value);
+        printf("%.*s", (int) v1->string_length, v1->string_value);
         DISPATCH;
 
     SAY_STRING:
         CALC_DISPATCH(1);
         print_debug("TRACE - SAY_STRING constant index 0x%x\n", (pc+1)->index);
         s1 = CONSTSTRING_OP(1);
-        printf("%.*s", s1->string_len, s1->string);
+        printf("%.*s", (int) s1->string_len, s1->string);
         DISPATCH;
 
     IMULT_REG_REG_REG:
@@ -1437,7 +1437,7 @@ convlength:
         print_debug("maximum string length exceeded\n");
         goto SIGNAL;
 converror:
-        print_debug("Conversion error occurred: %d\n");
+        print_debug("Conversion error occurred\n");
         goto SIGNAL;
 
 
