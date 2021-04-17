@@ -15,15 +15,15 @@
 #define CALC_DISPATCH(n)        do { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }     while(0)
 #define CALC_DISPATCH_MANUAL    do { next_inst = (next_pc)->impl_address; }                             while(0)
 #define DISPATCH                do { pc = next_pc; goto *next_inst; }                                   while(0)
-#define REG_OP(n)                       current_frame->locals[(pc+(n))->index]
-#define REG_VAL(n)                      current_frame->locals[n]
-#define REG_IDX(n)                      (pc+(n))->index
-#define INT_OP(n)                       (pc+(n))->iconst
-#define FLOAT_OP(n)                     (pc +(n))->fconst
+#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
+#define REG_VAL(n)                   current_frame->locals[n]
+#define REG_IDX(n)                   (pc+(n))->index
+#define INT_OP(n)                    (pc+(n))->iconst
+#define FLOAT_OP(n)                  (pc +(n))->fconst
 
-#define CONSTSTRING_OP(n)               (string_constant *)(program->const_pool + (pc+(n))->index)
-#define PROC_OP(n)                      (proc_constant *)(program->const_pool + (pc+(n))->index)
-#define INT_VAL(vx)                     vx->int_value
+#define CONSTSTRING_OP(n)            (string_constant *)(program->const_pool + (pc+(n))->index)
+#define PROC_OP(n)                   (proc_constant *)(program->const_pool + (pc+(n))->index)
+#define INT_VAL(vx)                  vx->int_value
 
 //
 // PEJ Macros   April 2021
