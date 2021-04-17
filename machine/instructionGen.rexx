@@ -4,11 +4,12 @@
  * -------------------------------------------------------------------------------
  */
  parse arg path
-file=path"\machine\operands.c"
-ofile=path"\machine\instrset.h"
 
-  asm=path"\interpreter\rx_intrp.c"
-  asmmiss=path"\machine\instrmiss.h"
+file=path"/machine/operands.c"
+ofile=path"/machine/instrset.h"
+
+  asm=path"/interpreter/rx_intrp.c"
+  asmmiss=path"/machine/instrmiss.h"
 
   call inc_inst,'/* -------------------------------------------------------------------------------'
   call inc_inst,' * Generate Instruction Set, generated on 'date()' AT 'time()
@@ -58,9 +59,7 @@ instr_f:
      else parse value r3 with 'OP_'label3
 
   ucmd=translate(cmd)
-/* generate instruction */
-  call inc_inst '    // ----- 'cmd' Instruction 'txt' -----'
-  call inc_inst '    instruction = src_inst("'cmd'", 'r1','r2','r3');'
+
   if      label1='' then numparm=0
   else if label2='' then do
      ucmd=ucmd'_'label1
@@ -75,13 +74,8 @@ instr_f:
      numparm=3
   end
 
-  call inc_inst '    if (instruction) { '
-  call inc_inst '        address_map[instruction->opcode] = &&'ucmd';'
-  call inc_inst '    } else {'
-  call inc_inst '        DEBUG("Instruction 'ucmd' not found\n");'
-  call inc_inst '    }'
-  call inc_inst '  '
-
+  /* generate instruction */
+  call inc_inst 'MAP_ADDR("'cmd'", 'r1', 'r2', 'r3', &&'ucmd', "'txt'")'
   call alreadyDefined       /* cross check if label is defined or missing */
 return 0
 /* -------------------------------------------------------------------------------
@@ -90,7 +84,7 @@ return 0
  */
 alreadyDefined:
   found=0
- 
+
   do l=1 to label.0
      if ucmd=label.l then do
         found=1
@@ -108,7 +102,7 @@ alreadyDefined:
     call inc_miss ' */'
 	call inc_miss ucmd': // label not yet defined'
 	call inc_miss '  CALC_DISPATCH('numparm');'
-    call inc_miss '    DEBUG("TRACE - 'ucmd'");' 
+    call inc_miss '    DEBUG("TRACE - 'ucmd'");'
     call inc_miss '    DEBUG("'ucmd' not yet defined\n");'
 	call inc_miss '    goto SIGNAL;'
 

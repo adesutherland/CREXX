@@ -31,48 +31,7 @@ struct stack_frame {
 };
 /* Macros */
 
-#define CALC_DISPATCH(n) {next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address;}
-#define CALC_DISPATCH_MANUAL {next_inst = (next_pc)->impl_address;}
-#define DISPATCH {pc = next_pc; goto *next_inst;}
-#define REG_OP(n) current_frame->locals[(pc+(n))->index]
 
-#define REG_VAL(n) current_frame->locals[n]
-#define REG_IDX(n) (pc+(n))->index
-#define INT_OP(n) (pc+(n))->iconst
-#define FLOAT_OP(n) (pc +(n))->fconst;
-
-#define CONSTSTRING_OP(n)  (string_constant *)(program->const_pool + (pc+(n))->index)
-#define PROC_OP(n)  (proc_constant *)(program->const_pool + (pc+(n))->index)
-#define INT_VAL(vx) vx->int_value
-
-//
-// PEJ Macros   April 2021
-#define REG_RET_INT(val) {v1=REG_OP(1);if (v1) set_int(v1,val); else REG_OP(1) = value_int_f(current_frame,val);}
-#define REG_RET_FLOAT(val) {v1=REG_OP(1);if (v1) set_float(v1,val); else REG_OP(1) = value_float_f(current_frame, val);}
-#define REG_RET_STRING(val) {v1=REG_OP(1);if (v1) set_conststring(value *val); else REG_OP(1) = value_fFstringfloat_f(current_frame,val);}
-
-#define REG_RET_CHAR(val) {v1=REG_OP(1);if (v1) set_char(v1,val); else REG_OP(1) = value_char_f(current_frame,val);}
-// TODO: String to integer just for real integers, or stop converting at "."
-// maximum size of long long is 20 digits plus sign
-// maximum size of double is about 16 decimal digits plus sign
-#define S2INT(t,s) {if (s->string_length>20)  goto convlength; \
-        s->string_value[s->string_length]='\0'; t = strtol(s->string_value, &converr, 0); \
-        if (converr[0] != '\0' && converr[0]!='.') goto converror;}
-#define S2FLOAT(t,s) {if (s->string_length>16)  goto convlength; \
-        s->string_value[s->string_length]='\0'; t = strtod(s->string_value, &converr); \
-        if (converr[0] != '\0') goto converror;}
-#define CONV2INT(i,v) if (v->status.primed_float) i=(long long) v->float_value; \
-        else if (v->status.primed_string) S2INT(i,v);
-#define CONV2FLOAT(i,v) if (v->status.primed_int) i=(double) v->int_value; \
-        else if (v->status.primed_string) S2FLOAT(i,v);
-
-// TODO PEJ what kind of checks must be performed in runtime/debug mode
-#define REG_TEST(v) if (!v) goto notreg;
-#define REG_OP_TEST(v,n) v = REG_OP(n); REG_TEST(v);
-#define REG_OP_TEST_INT(v,n) v = REG_OP(n); REG_TEST(v);   \
-        if (v->status.primed_int==0)  goto notint;
-#define REG_OP_TEST_FLOAT(v,n) v = REG_OP(n); REG_TEST(v); \
-        if (v->status.primed_float==0)  goto notfloat;
 
 /* Stack Frame Factory */
 stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
@@ -126,15 +85,12 @@ int run(bin_space *program, int argc, char *argv[]) {
     #define NO_OPCODES 200
     void* address_map[NO_OPCODES];
     for (i=0; i<NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
-/* ----------------------------------------------------------------------------
- * load instruction code generated from the instruction table pej 8. April 2021
- * ----------------------------------------------------------------------------
- */
+
+    /* ----------------------------------------------------------------------------
+    * load instruction code generated from the instruction table pej 8. April 2021
+    * ----------------------------------------------------------------------------
+    */
     #include "instrset.h"
-
-    MAP_ADDR("EGON", OP_REG, OP_REG, OP_REG, &&IADD_REG_REG_REG, "Instruction IADD_REG_REG_REG not found\n")
-
-    /* Finished making instruction map done  - temporary approach */
 
     /* Thread code - simples! */
     i = 0;
@@ -185,7 +141,8 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     LOAD_REG_STRING:
         CALC_DISPATCH(2);
-        DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n", REG_IDX(1), (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
+        DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
+              REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
 
         v1 = REG_OP(1);
         s1 = CONSTSTRING_OP(2);
@@ -206,7 +163,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     SAY_STRING:
         CALC_DISPATCH(1);
-        DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (pc+1)->index);
+        DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (unsigned int) (pc+1)->index);
         s1 = CONSTSTRING_OP(1);
         printf("%.*s", (int) s1->string_len, s1->string);
         DISPATCH;
@@ -341,6 +298,7 @@ int run(bin_space *program, int argc, char *argv[]) {
         /* New stackframe */
         current_frame = frame_f(program, p2, v3->int_value, current_frame, next_pc,
                                 next_inst, &(REG_OP(1)));
+
         DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
                     p2->name, REG_IDX(3));
 
@@ -476,10 +434,8 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEC0:
         /* TODO This is really idec0 - i.e. it does not prime the int */
         CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC0\n", REG_IDX(0));
+        DEBUG("TRACE - DEC0\n");
         (current_frame->locals[0]->int_value)--;
-        (current_frame->locals[0]->status.all_flags) = 0;
-        (current_frame->locals[0]->status.primed_int) = 1;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEC1   R1--                                                       pej 7. April 2021
@@ -488,10 +444,8 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEC1:
     /* TODO This is really idec1 - i.e. it does not prime the int */
         CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC1\n", REG_IDX(1));
+        DEBUG("TRACE - DEC1\n");
         (current_frame->locals[1]->int_value)--;
-        (current_frame->locals[1]->status.all_flags) = 0;
-        (current_frame->locals[1]->status.primed_int) = 1;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEC2   R2--                                                       pej 7. April 2021
@@ -500,10 +454,8 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEC2:
     /* TODO This is really idec2 - i.e. it does not prime the int */
         CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC2\n", REG_IDX(2));
+        DEBUG("TRACE - DEC2\n");
         (current_frame->locals[2]->int_value)--;
-        (current_frame->locals[2]->status.all_flags) = 0;
-        (current_frame->locals[2]->status.primed_int) = 1;
     DISPATCH;
 
     DEC_REG:
@@ -511,9 +463,6 @@ int run(bin_space *program, int argc, char *argv[]) {
         CALC_DISPATCH(1);
         DEBUG("TRACE - DEC_REG R%llu\n", REG_IDX(1));
         (current_frame->locals[REG_IDX(1)]->int_value)--;
-        (current_frame->locals[REG_IDX(1)]->status.all_flags) = 0;
-        (current_frame->locals[REG_IDX(1)]->status.primed_int) = 1;
-
     DISPATCH;
 
     BR_ID:
@@ -537,7 +486,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     BRF_ID_REG:
         CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                   the real CPUs branch prediction (in theory) */
-        DEBUG("TRACE - BRF_ID_REG\n", REG_IDX(1));
+        DEBUG("TRACE - BRF_ID_REG R%llu\n", REG_IDX(1));
         if (!(REG_OP(2)->int_value)) {
             next_pc = program->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -606,24 +555,19 @@ int run(bin_space *program, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
    INC0:
-      CALC_DISPATCH(0);
+     CALC_DISPATCH(0);
         DEBUG("TRACE - INC0\n");
         REG_VAL(0)->int_value++;
         (current_frame->locals[0]->int_value)++;
-        (current_frame->locals[0]->status.all_flags) = 0;
-        (current_frame->locals[0]->status.primed_int) = 1;
-
-    DISPATCH;
+     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
   INC1:
     CALC_DISPATCH(0);
-      DEBUG("TRACE - INC1\n", REG_IDX(1));
+      DEBUG("TRACE - INC1\n");
       (current_frame->locals[1]->int_value)++;
-      (current_frame->locals[1]->status.all_flags) = 0;
-      (current_frame->locals[1]->status.primed_int) = 1;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC2   R2++                                                       pej 7. April 2021
@@ -631,10 +575,8 @@ int run(bin_space *program, int argc, char *argv[]) {
  */
   INC2:
     CALC_DISPATCH(0);
-      DEBUG("TRACE - INC2\n", REG_IDX(2));
+      DEBUG("TRACE - INC2\n");
       (current_frame->locals[2]->int_value)++;
-      (current_frame->locals[2]->status.all_flags) = 0;
-      (current_frame->locals[2]->status.primed_int) = 1;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
@@ -659,7 +601,8 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST(v3,3);
 
      if (INT_VAL(v2)==INT_VAL(v3)) i=1;
-        else i=0;
+     else i=0;
+
      REG_RET_INT(i);  // return in first register
    DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -698,7 +641,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     INE_REG_REG_INT:
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_INT\n") ;
-    v2 = REG_OP_TEST(v2,2);
+    REG_OP_TEST(v2,2);
     i3 = INT_OP(3);
     if (INT_VAL(v3)!=i3) i=0;
     else i=1;
@@ -903,9 +846,6 @@ int run(bin_space *program, int argc, char *argv[]) {
     CALC_DISPATCH(1);
     DEBUG("TRACE - INC_REG\n") ;
     (current_frame->locals[REG_IDX(1)]->int_value)++;
-    (current_frame->locals[REG_IDX(1)]->status.all_flags) = 0;
-    (current_frame->locals[REG_IDX(1)]->status.primed_int) = 1;
-
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
@@ -941,7 +881,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_INT\n") ;
 
-    printf("%d", INT_OP(1));
+    printf("%lld", INT_OP(1));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021
@@ -1045,7 +985,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - FSUB_REG_REG_FLOAT\n") ;
 
     REG_OP_TEST_FLOAT(v2,2);
-    f3 = FLOAT_OP(3)
+    f3 = FLOAT_OP(3);
     REG_RET_FLOAT(v2->float_value-f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1120,7 +1060,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - ADDI_REG_REG_INT");
 
     REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2)
+    CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
     REG_RET_INT(i2+i3);
@@ -1135,8 +1075,8 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST(v2,2);
     REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2)
-    CONV2INT(i3,v3)
+    CONV2INT(i2,v2);
+    CONV2INT(i3,v3);
 
     REG_RET_INT(i2+i3);
     DISPATCH;
@@ -1150,8 +1090,8 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST(v2,2);
     REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2)
-    CONV2INT(i3,v3)
+    CONV2INT(i2,v2);
+    CONV2INT(i3,v3);
 
     REG_RET_INT(i2-i3);
     DISPATCH;
@@ -1164,7 +1104,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - SUBI_REG_REG_INT");
 
     REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2)
+    CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
     REG_RET_INT(i2-i3);
@@ -1179,8 +1119,8 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST(v2,2);
     REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2)
-    CONV2INT(i3,v3)
+    CONV2INT(i2,v2);
+    CONV2INT(i3,v3);
 
     REG_RET_INT(i2*i3);
 
@@ -1194,7 +1134,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - MULTI_REG_REG_INT");
 
     REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2)
+    CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
     REG_RET_INT(i2*i3);
@@ -1210,8 +1150,8 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST(v2,2);
     REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2)
-    CONV2INT(i3,v3)
+    CONV2INT(i2,v2);
+    CONV2INT(i3,v3);
 
     REG_RET_INT(i2/i3);
 
@@ -1225,7 +1165,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - DIVI_REG_REG_INT");
 
     REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2)
+    CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
     REG_RET_INT(i2/i3);
