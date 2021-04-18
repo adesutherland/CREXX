@@ -79,14 +79,14 @@ int run(bin_space *program, int argc, char *argv[]) {
     /*
      * Temporary Solution to load Instruction database and instruction map
      * in future this will be via generated C source code - so instant
-    */
+     */
 
     Instruction *instruction;
     #define NO_OPCODES 200
     void* address_map[NO_OPCODES];
     for (i=0; i<NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
 
-    /* ----------------------------------------------------------------------------
+   /* ----------------------------------------------------------------------------
     * load instruction code generated from the instruction table pej 8. April 2021
     * ----------------------------------------------------------------------------
     */
@@ -588,7 +588,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST(v2,2);     // value in v2
     i3 = INT_OP(3);
 
-    REG_RET_INT(v2->int_value+i3);  // return in first register
+    REG_RETURN_INT(v2->int_value+i3);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
@@ -603,7 +603,7 @@ int run(bin_space *program, int argc, char *argv[]) {
      if (INT_VAL(v2)==INT_VAL(v3)) i=1;
      else i=0;
 
-     REG_RET_INT(i);  // return in first register
+     REG_RETURN_INT(i);  // return in first register
    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
@@ -618,7 +618,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v3)==i3) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
@@ -632,7 +632,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)!=INT_VAL(v3)) i=0;
     else i=1;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
@@ -645,7 +645,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     i3 = INT_OP(3);
     if (INT_VAL(v3)!=i3) i=0;
     else i=1;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
@@ -660,7 +660,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)>INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
@@ -675,7 +675,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)>i3) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
@@ -690,7 +690,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (i2>INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
@@ -705,7 +705,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)<INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
@@ -720,7 +720,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)<i3) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
@@ -735,7 +735,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (i2<INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -750,7 +750,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)>=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_INT  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -765,7 +765,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)>=i3) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_INT_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
@@ -780,7 +780,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (i2>=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
@@ -795,7 +795,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)<=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
@@ -810,7 +810,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (INT_VAL(v2)<=i3) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
@@ -825,7 +825,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     if (i2<=INT_VAL(v3)) i=1;
     else i=0;
-    REG_RET_INT(i);  // return in first register
+    REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  COPY_REG_REG  Copy op2 to op1                                       pej 10 Apr 2021
@@ -858,7 +858,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST_INT(v2,2);
     i3 = INT_OP(3);
     v2->int_value=v2->int_value/i3;
-    REG_RET_INT(v2->int_value);
+    REG_RETURN_INT(v2->int_value);
     DISPATCH;
  /* -----------------------------------------------------------------------------------
  *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
@@ -871,7 +871,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST_INT(v2,2);
     REG_OP_TEST_INT(v3,3);
     v2->int_value=v2->int_value/v3->int_value;
-    REG_RET_INT(v2->int_value);
+    REG_RETURN_INT(v2->int_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
@@ -913,7 +913,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     DEBUG("TRACE - LOAD_REG_FLOAT\n") ;
 
     f2 = FLOAT_OP(2);
-    REG_RET_FLOAT(f2);
+    REG_RETURN_FLOAT(f2);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_REG  Float Add (op1=op2+op3)                           pej 12 Apr 2021
@@ -926,7 +926,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST_FLOAT(v2,2);
     REG_OP_TEST_FLOAT(v3,3);
 
-    REG_RET_FLOAT(v2->float_value+v3->float_value);
+    REG_RETURN_FLOAT(v2->float_value + v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_REG  Float Sub (op1=op2-op3)                           pej 12 Apr 2021
@@ -938,7 +938,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     REG_OP_TEST_FLOAT(v3,3);
-    REG_RET_FLOAT(v2->float_value-v3->float_value);
+    REG_RETURN_FLOAT(v2->float_value - v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
@@ -950,7 +950,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     REG_OP_TEST_FLOAT(v3,3);
-    REG_RET_FLOAT(v2->float_value/v3->float_value);
+    REG_RETURN_FLOAT(v2->float_value / v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
@@ -962,7 +962,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     REG_OP_TEST_FLOAT(v3,3);
-    REG_RET_FLOAT(v2->float_value*v3->float_value);
+    REG_RETURN_FLOAT(v2->float_value * v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_FLOAT  Float Add (op1=op2+op3)                          pej 12 Apr 2021
@@ -974,7 +974,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     f3 = FLOAT_OP(3);
-    REG_RET_FLOAT(v2->float_value+f3);
+    REG_RETURN_FLOAT(v2->float_value + f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_FLOAT  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
@@ -986,7 +986,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     f3 = FLOAT_OP(3);
-    REG_RET_FLOAT(v2->float_value-f3);
+    REG_RETURN_FLOAT(v2->float_value - f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_FLOAT  Float Div (op1=op2/op3)                         pej 12 Apr 2021
@@ -998,7 +998,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     f3 = FLOAT_OP(3);
-    REG_RET_FLOAT(v2->float_value/f3);
+    REG_RETURN_FLOAT(v2->float_value / f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
@@ -1010,7 +1010,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     REG_OP_TEST_FLOAT(v2,2);
     f3 = FLOAT_OP(3);
-    REG_RET_FLOAT(v2->float_value*f3);
+    REG_RETURN_FLOAT(v2->float_value * f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_FLOAT_REG  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
@@ -1022,7 +1022,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     f2 = FLOAT_OP(2);
     REG_OP_TEST_FLOAT(v3,2);
-    REG_RET_FLOAT(f2-v3->float_value);
+    REG_RETURN_FLOAT(f2 - v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_FLOAT_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
@@ -1034,7 +1034,7 @@ int run(bin_space *program, int argc, char *argv[]) {
 
     f2 = FLOAT_OP(2);
     REG_OP_TEST_FLOAT(v3,2);
-    REG_RET_FLOAT(f2/v3->float_value);
+    REG_RETURN_FLOAT(f2 / v3->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
@@ -1049,7 +1049,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST_INT(v3,3);
     i1=v2->string_value[v3->int_value-1]-'0';
 
-    REG_RET_INT(i1);
+    REG_RETURN_INT(i1);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ADDI_REG_REG_INT  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
@@ -1063,7 +1063,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
-    REG_RET_INT(i2+i3);
+    REG_RETURN_INT(i2+i3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ADDI_REG_REG_REG  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
@@ -1078,7 +1078,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     CONV2INT(i3,v3);
 
-    REG_RET_INT(i2+i3);
+    REG_RETURN_INT(i2+i3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SUBI_REG_REG_REG  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
@@ -1093,7 +1093,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     CONV2INT(i3,v3);
 
-    REG_RET_INT(i2-i3);
+    REG_RETURN_INT(i2-i3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SUBI_REG_REG_INT  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
@@ -1107,7 +1107,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
-    REG_RET_INT(i2-i3);
+    REG_RETURN_INT(i2-i3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
@@ -1122,7 +1122,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     CONV2INT(i3,v3);
 
-    REG_RET_INT(i2*i3);
+    REG_RETURN_INT(i2*i3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1137,7 +1137,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
-    REG_RET_INT(i2*i3);
+    REG_RETURN_INT(i2*i3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1153,7 +1153,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     CONV2INT(i3,v3);
 
-    REG_RET_INT(i2/i3);
+    REG_RETURN_INT(i2/i3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1168,7 +1168,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2INT(i2,v2);
     i3 = INT_OP(3);
 
-    REG_RET_INT(i2/i3);
+    REG_RETURN_INT(i2/i3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1183,7 +1183,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     f3 = FLOAT_OP(3);
 
-    REG_RET_FLOAT(f2+f3);
+    REG_RETURN_FLOAT(f2 + f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ADDF_REG_REG_REG  Convert and Add to Float (op1=op2+op3)              pej 14 Apr 2021
@@ -1198,7 +1198,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     CONV2FLOAT(f3,v3)
 
-    REG_RET_FLOAT(f2+f3);
+    REG_RETURN_FLOAT(f2 + f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SUBF_REG_REG_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
@@ -1213,7 +1213,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     CONV2FLOAT(f3,v3)
 
-    REG_RET_FLOAT(f2-f3);
+    REG_RETURN_FLOAT(f2 - f3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SUBF_REG_REG_FLOAT  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
@@ -1227,7 +1227,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     f3 = FLOAT_OP(3);
 
-    REG_RET_FLOAT(f2-f3);
+    REG_RETURN_FLOAT(f2 - f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1242,7 +1242,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP_TEST(v3,3);
     CONV2FLOAT(f3,v3)
 
-    REG_RET_FLOAT(f2-f3);
+    REG_RETURN_FLOAT(f2 - f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1257,7 +1257,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     f3 = FLOAT_OP(3);
 
-    REG_RET_FLOAT(f2*f3);
+    REG_RETURN_FLOAT(f2 * f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1272,7 +1272,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     f3 = FLOAT_OP(3);
 
-    REG_RET_FLOAT(f2*f3);
+    REG_RETURN_FLOAT(f2 * f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1288,7 +1288,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     CONV2FLOAT(f3,v3)
 
-    REG_RET_FLOAT(f2/f3);
+    REG_RETURN_FLOAT(f2 / f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1303,7 +1303,7 @@ int run(bin_space *program, int argc, char *argv[]) {
     CONV2FLOAT(f2,v2)
     f3 = FLOAT_OP(3);
 
-    REG_RET_FLOAT(f2/f3);
+    REG_RETURN_FLOAT(f2 / f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1317,10 +1317,13 @@ int run(bin_space *program, int argc, char *argv[]) {
     f2 = FLOAT_OP(2);
     REG_OP_TEST(v3,3);
     CONV2FLOAT(f3,v3)
-    REG_RET_FLOAT(f2/f3);
+    REG_RETURN_FLOAT(f2 / f3);
 
     DISPATCH;
-
+/* ------------------------------------------------------------------------------------
+ *  AMAP_REG_REG  Int Prime op1              ???
+ *  -----------------------------------------------------------------------------------
+ */
     AMAP_REG_REG:
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_REG");
@@ -1328,13 +1331,54 @@ int run(bin_space *program, int argc, char *argv[]) {
     REG_OP(1) = current_frame->locals[REG_OP(2)->int_value + program->globals + procedure->locals];
 
     DISPATCH;
-
+/* ------------------------------------------------------------------------------------
+ *  AMAP_REG_INT  Int Prime op1              ???
+ *  -----------------------------------------------------------------------------------
+ */
     AMAP_REG_INT:
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_INT");
 
     REG_OP(1) = REG_VAL(INT_OP(2));
 
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IPRIME_REG  Int Prime op1                                           pej 17 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    IPRIME_REG:
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - IPRIME_REG");
+    REG_OP_TEST(v1,1);
+    CONV2INT(i1,v1);
+    REG_RETURN_INT(i1);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FPRIME_REG  Float Prime op1                                         pej 17 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    FPRIME_REG:
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - FPRIME_REG");
+    REG_OP_TEST(v1,1);
+    CONV2FLOAT(f1,v1);
+    REG_RETURN_FLOAT(f1);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  SPRIME_REG  String Prime op1                                        pej 17 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    SPRIME_REG:
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - FPRIME_REG");
+    REG_OP_TEST(v1,1);
+
+    if (!v1->status.primed_string) {
+        if (v1->status.primed_int) sprintf(s1->string, "%d", v1->int_value);
+        else if (v1->status.primed_float) sprintf(s1->string, "%g", v1->float_value);
+        s1->string_len=strlen(s1->string);
+        REG_RETURN_STRING(s1);
+    }
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table

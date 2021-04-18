@@ -1,7 +1,7 @@
-
-
-
-
+/* -------------------------------------------------------------------------------
+ * Generate Instruction Set, generated on 17 Apr 2021 AT 20:10:13
+ * -------------------------------------------------------------------------------
+ */
 MAP_ADDR("iadd", OP_REG, OP_REG, OP_REG, &&IADD_REG_REG_REG, "Integer Add (op1=op2+op3)")
 MAP_ADDR("iadd", OP_REG, OP_REG, OP_INT, &&IADD_REG_REG_INT, "Integer Add (op1=op2+op3)")
 MAP_ADDR("addi", OP_REG, OP_REG, OP_REG, &&ADDI_REG_REG_REG, "Convert and Add to Integer (op1=op2+op3)")

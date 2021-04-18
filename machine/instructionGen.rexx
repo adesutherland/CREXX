@@ -11,10 +11,10 @@ ofile=path"/machine/instrset.h"
   asm=path"/interpreter/rx_intrp.c"
   asmmiss=path"/machine/instrmiss.h"
 
-  call inc_inst,'/* -------------------------------------------------------------------------------'
-  call inc_inst,' * Generate Instruction Set, generated on 'date()' AT 'time()
-  call inc_inst,' * -------------------------------------------------------------------------------'
-  call inc_inst,' */'
+  call inc_inst '/* -------------------------------------------------------------------------------'
+  call inc_inst ' * Generate Instruction Set, generated on 'date()' AT 'time()
+  call inc_inst ' * -------------------------------------------------------------------------------'
+  call inc_inst ' */'
 
   call fetchLabel   /* Analyse defined labels in rx_intrp.c */
 

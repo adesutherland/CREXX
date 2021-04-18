@@ -27,16 +27,16 @@
 
 //
 // PEJ Macros   April 2021
-#define REG_RET_INT(val)        do { v1=REG_OP(1); if (v1) set_int(v1,val);                             \
+#define REG_RETURN_INT(val)        do { v1=REG_OP(1); if (v1) set_int(v1,val);                             \
                                     else REG_OP(1) = value_int_f(current_frame,val); }                  while(0)
 
-#define REG_RET_FLOAT(val)      do { v1=REG_OP(1); if (v1) set_float(v1,val);                           \
+#define REG_RETURN_FLOAT(val)      do { v1=REG_OP(1); if (v1) set_float(v1,val);                           \
                                     else REG_OP(1) = value_float_f(current_frame, val); }               while(0)
 
-#define REG_RET_STRING(val)     do { v1=REG_OP(1); if (v1) set_conststring(value val);                  \
-                                    else REG_OP(1) = value_fFstringfloat_f(current_frame,val); }        while(0)
+#define REG_RETURN_STRING(val)     do { v1=REG_OP(1); if (v1) set_conststring(v1, val);                    \
+                                    else REG_OP(1) = value_conststring_f(current_frame,val); }           while(0)
 
-#define REG_RET_CHAR(val)       do { v1=REG_OP(1); if (v1) set_char(v1,val);                            \
+#define REG_RET_CHAR(val)       do { v1=REG_OP(1); if (v1) set_char(v1,val);                               \
                                     else REG_OP(1) = value_char_f(current_frame,val); }                 while(0)
 
 // TODO: String to integer just for real integers, or stop converting at "."

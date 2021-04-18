@@ -145,51 +145,6 @@ STR2CHAR_REG_REG_REG: // label not yet defined
   DISPATCH;
   
 /* ------------------------------------------------------------------------------------
- *  IPRIME_REG  Int Prime op1              pej 17 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-IPRIME_REG: // label not yet defined
-  CALC_DISPATCH(1);
-    DEBUG("TRACE - IPRIME_REG");
-    DEBUG("IPRIME_REG not yet defined\n");
-    goto SIGNAL;
-    v1 = REG_OP(1);
-    REG_TEST(!v1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  FPRIME_REG  Float Prime op1              pej 17 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-FPRIME_REG: // label not yet defined
-  CALC_DISPATCH(1);
-    DEBUG("TRACE - FPRIME_REG");
-    DEBUG("FPRIME_REG not yet defined\n");
-    goto SIGNAL;
-    v1 = REG_OP(1);
-    REG_TEST(!v1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
- *  SPRIME_REG  String Prime op1              pej 17 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-SPRIME_REG: // label not yet defined
-  CALC_DISPATCH(1);
-    DEBUG("TRACE - SPRIME_REG");
-    DEBUG("SPRIME_REG not yet defined\n");
-    goto SIGNAL;
-    v1 = REG_OP(1);
-    REG_TEST(!v1);
-    // Add your coding 
-    /* REG_OP(1)="?????"; */
-  DISPATCH;
-  
-/* ------------------------------------------------------------------------------------
  *  CPRIME_REG  Char Prime op1              pej 17 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
