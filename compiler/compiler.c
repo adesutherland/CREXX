@@ -4,18 +4,16 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "rexxgrmr.h"
 #include "compiler.h"
-
 
 int main(int argc, char *argv[]) {
 
-    FILE *fp, *traceFile;
-    char *buff, *buff_end;
+    FILE *fp, *traceFile = 0;
+    char *buff;
     size_t bytes;
-    int token_type;
+    int token_type, last_token_type;
     Token *token;
-    Scanner scanner;
+    Context context;
     void *parser;
 
     /* Open input file */
@@ -27,11 +25,13 @@ int main(int argc, char *argv[]) {
     }
 
     /* Open trace file */
-    traceFile = fopen("trace.out", "w");
+#ifndef NDEBUG
+    traceFile = fopen("rxtrace.txt", "w");
     if(traceFile == NULL) {
         fprintf(stderr, "Can't open trace file\n");
         exit(-1);
     }
+#endif
 
     /* Get file size */
     fseek(fp, 0, SEEK_END);
@@ -46,64 +46,78 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    /* Initialize scanner */
-    scanner.top = buff;
-    scanner.cursor = buff;
-    scanner.linestart = buff;
-    scanner.line = 0;
-    scanner.token_head = 0;
-    scanner.token_tail = 0;
-    scanner.token_counter = 0;
-    scanner.ast = 0;
-    scanner.last_node = 0;
+    /* Initialize context */
+    context.traceFile = traceFile;
+    context.top = buff;
+    context.cursor = buff;
+    context.linestart = buff;
+    context.line = 0;
+    context.token_head = 0;
+    context.token_tail = 0;
+    context.token_counter = 0;
+    context.ast = 0;
+    context.free_list = 0;
+    context.level = UNKNOWN;
+    context.buff_end = (char*) (((char*)buff) + bytes);
 
-    /* Pointer to the end of the buffer */
-    buff_end = (char*) (((char*)buff) + bytes);
+    /* Create Options parser to work out required language level */
+    opt_pars(&context);
 
-    /* Create parser and set up tracing */
-    parser = ParseAlloc(malloc);
-#ifndef NDEBUG
-    ParseTrace(traceFile, "parser >> ");
-#endif
-    while((token_type = scan(&scanner, buff_end))) {
-        // Skip Scanner Errors - TODO
-        if (token_type < 0) continue;
+    /* Deallocate memory and reset context */
+    free_tok(&context);
+    context.top = buff;
+    context.cursor = buff;
+    context.linestart = buff;
+    context.line = 0;
+    context.token_head = 0;
+    context.token_tail = 0;
+    context.token_counter = 0;
+    context.ast = 0;
+    context.free_list = 0;
 
-        // Setup and parse token
-        token = token_f(&scanner, token_type);
-        Parse(parser, token_type, token, &scanner);
-
-        // Execute Parse for the last time
-        if(token_type == SY_EOS) {
-            Parse(parser, 0, NULL, &scanner);
+    /* Parse program for real */
+    switch (context.level){
+        case LEVELA:
+        case LEVELC:
+        case LEVELD:
+            printf("Classic Rexx - Not supported yet!\n");
             break;
-        }
+
+        case LEVELB:
+        case LEVELG:
+        case LEVELL:
+            printf("Rexx 2.0\n");
+            rexbpars(&context);
+            break;
+
+        default:
+            printf("Internal Error - Failed to determine REXX Level\n");
     }
 
-    /* Deallocate parser */
-    ParseFree(parser, free);
 
-    if (scanner.ast) {
-        prnt_ast(scanner.ast);
+    if (context.ast) {
+        prnt_ast(context.ast);
         printf("\n");
     }
 
-    if (scanner.ast) {
-        int counter = 0;
-        printf("digraph REXX {\n");
-        pdot_ast(scanner.ast, -1, &counter);
-        printf("\n}\n");
+
+    if (context.ast) {
+        pdot_tree(context.ast, "astgraph.dot");
+        /* Get dot from https://graphviz.org/download/ */
+        system("dot astgraph.dot -Tpng -o astgraph.png");
     }
 
     /* Deallocate AST */
-    if (scanner.ast) free_ast(scanner.ast);
+    free_ast(&context);
 
     /* Deallocate Tokens */
-    free_tok(&scanner);
+    free_tok(&context);
 
     /* Close files and deallocate */
     fclose(fp);
+#ifndef NDEBUG
     fclose(traceFile);
+#endif
     free(buff);
     return(0);
 }

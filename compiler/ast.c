@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rexxgrmr.h"
 #include "compiler.h"
 
 /* Token Factory */
-Token *token_f(Scanner *context, int type) {
+Token *token_f(Context *context, int type) {
     Token *token = malloc(sizeof(Token));
     token->token_type = type;
 
@@ -36,13 +35,13 @@ void prnt_tok(Token *token) {
     printf("%d.%d %s \"%.*s\"",token->line+1,token->column+1,
            token_type_name(token->token_type),token->length,token->token_string);
 */
-    printf("%s \"%.*s\"",
-           token_type_name(token->token_type), (int) token->length,
-           token->token_string);
-
+/*    printf("(%d \"", token->token_type); */
+    printf("(");
+    print_unescaped(stdout, token->token_string,(int)token->length);
+    printf(") ");
 }
 
-void free_tok(Scanner *context) {
+void free_tok(Context *context) {
     Token *t = context->token_head;
     Token *n;
     while (t) {
@@ -52,55 +51,51 @@ void free_tok(Scanner *context) {
     }
 }
 
-/* ASTNode Factory */
-ASTNode *ast_f(Scanner* context, NodeType type, Token *token) {
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->parent = 0;
-    node->child = 0;
-    node->sibling = 0;
-    node->token = token;
-    node->node_type = type;
-    node->context = context;
-    node->node_string = token->token_string;
-    node->length = token->length;
-    context->last_node = node;
-    return node;
-}
-
 /* ASTNode Factory - With node type*/
-ASTNode *ast_ft(Scanner* context, NodeType type) {
+ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->parent = 0;
     node->child = 0;
     node->sibling = 0;
     node->token = 0;
     node->node_type = type;
-    node->context = context;
     node->node_string = "";
-    node->length = 0;
-    context->last_node = node;
+    node->node_string_length = 0;
+    node->free_list = context->free_list;
+    if (node->free_list) node->node_number = node->free_list->node_number + 1;
+    else node->node_number = 1;
+    context->free_list = node;
+    return node;
+}
+
+/* ASTNode Factory */
+ASTNode *ast_f(Context* context, NodeType type, Token *token) {
+    ASTNode *node = ast_ft(context, type);
+    node->token = token;
+    node->node_string = token->token_string;
+    node->node_string_length = token->length;
     return node;
 }
 
 /* ASTNode Factory - With node type and string value */
-ASTNode *ast_ftt(Scanner* context, NodeType type, char *string) {
-    ASTNode *node = malloc(sizeof(ASTNode));
-    node->parent = 0;
-    node->child = 0;
-    node->sibling = 0;
-    node->token = 0;
-    node->node_type = type;
-    node->context = context;
+ASTNode *ast_ftt(Context* context, NodeType type, const char *string) {
+    ASTNode *node = ast_ft(context, type);
     node->node_string = string;
-    node->length = strlen(string);
-    context->last_node = node;
+    node->node_string_length = strlen(string);
     return node;
 }
 
 /* ASTNode Factory - Error Node */
-ASTNode *ast_error(Scanner* context, char *error_string, Token *token) {
+ASTNode *ast_error(Context* context, const char *error_string, Token *token) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, token));
+    return errorAST;
+}
+
+/* ASTNode Factory - Error at last Node */
+ASTNode *ast_error_here(Context* context, const char *error_string) {
+    ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
+    add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev));
     return errorAST;
 }
 
@@ -144,6 +139,8 @@ const char *ast_nodetype(NodeType type) {
             return "NUMBER";
         case OP_ADD:
             return "OP_ADD";
+        case OP_MINUS:
+            return "OP_MINUS";
         case OP_AND:
             return "OP_AND";
         case OP_COMPARE:
@@ -152,6 +149,12 @@ const char *ast_nodetype(NodeType type) {
             return "OP_CONCAT";
         case OP_MULT:
             return "OP_MULT";
+        case OP_DIV:
+            return "OP_DIV";
+        case OP_IDIV:
+            return "OP_IDIV";
+        case OP_MOD:
+            return "OP_MOD";
         case OP_OR:
             return "OP_OR";
         case OP_POWER:
@@ -178,8 +181,8 @@ const char *ast_nodetype(NodeType type) {
             return "REPEAT";
         case RETURN:
             return "RETURN";
-        case REXX:
-            return "REXX";
+        case REXX_OPTIONS:
+            return "REXX_OPTIONS";
         case SAY:
             return "SAY";
         case SIGN:
@@ -202,20 +205,34 @@ const char *ast_nodetype(NodeType type) {
     }
 }
 
+walker_result prnt_walker_handler(walker_direction direction,
+                                        ASTNode* node,
+                                  __attribute__((unused)) void *payload) {
+    if (direction == in) {
+        if (node->child) { /* Non-terminal node */
+            printf(" ^(");
+        } else printf(" ");
+        if (node->node_string_length) {
+            printf("%s=", ast_nodetype(node->node_type));
+            printf("\"");
+            print_unescaped(stdout, node->node_string,
+                            (int)node->node_string_length);
+            printf("\"");
+        }
+        else {
+            printf("%s", ast_nodetype(node->node_type));
+        }
+    }
+    else {
+        if (node->child) { /* Non-terminal node */
+            printf(")");
+        }
+    }
+    return result_normal;
+}
+
 void prnt_ast(ASTNode *node) {
-    printf("[");
-    printf("%s:", ast_nodetype(node->node_type));
-    printf("\"%.*s\"", (int) node->length, node->node_string);
-    if (node->child) {
-        printf(" (");
-        prnt_ast(node->child);
-        printf(")");
-    }
-    printf("]");
-    if (node->sibling) {
-        printf(" ");
-        prnt_ast(node->sibling);
-    }
+    ast_walker(node, prnt_walker_handler, NULL);
 }
 
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
@@ -229,74 +246,245 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     return child;
 }
 
-void free_ast(ASTNode *node) {
-    if (node->child) free_ast(node->child);
-    if (node->sibling) free_ast(node->sibling);
-    free(node);
+ASTNode *add_sibling_ast(ASTNode *older, ASTNode *younger) {
+    if (younger == 0 || older == 0) return younger;
+    ASTNode *parent = older->parent;
+    while (older->sibling) older = older->sibling;
+    older->sibling = younger;
+    younger->parent = parent;
+    return younger;
 }
 
-void print_unescaped(char *ptr, int len) {
+void free_ast(Context *context) {
+    ASTNode *t = context->free_list;
+    ASTNode *n;
+    while (t) {
+        n = t->free_list;
+        free(t);
+        t = n;
+    }
+}
+
+void print_unescaped(FILE* output, const char *ptr, int len) {
     int i;
     if (!ptr) return;
     for (i = 0; i < len; i++, ptr++) {
         switch (*ptr) {
             case '\0':
-                printf("\\0");
+                fprintf(output, "\\0");
                 break;
             case '\a':
-                printf("\\a");
+                fprintf(output, "\\a");
                 break;
             case '\b':
-                printf("\\b");
+                fprintf(output, "\\b");
                 break;
             case '\f':
-                printf("\\f");
+                fprintf(output, "\\f");
                 break;
             case '\n':
-                printf("\\n");
+                fprintf(output, "\\n");
                 break;
             case '\r':
-                printf("\\r");
+                fprintf(output, "\\r");
                 break;
             case '\t':
-                printf("\\t");
+                fprintf(output, "\\t");
                 break;
             case '\v':
-                printf("\\v");
+                fprintf(output, "\\v");
                 break;
             case '\\':
-                printf("\\\\");
+                fprintf(output, "\\\\");
                 break;
             case '\?':
-                printf("\\\?");
+                fprintf(output, "\\?");
                 break;
             case '\'':
-                printf("\\\'");
+                fprintf(output, "\\'");
                 break;
             case '\"':
-                printf("\\\"");
+                fprintf(output, "\\\"");
                 break;
             default:
-                printf("%c", *ptr);
+                fprintf(output, "%c", *ptr);
         }
     }
 }
 
-void pdot_ast(ASTNode *node, int parent, int *counter) {
-    int me = *counter;
+walker_result pdot_walker_handler(walker_direction direction,
+                                  ASTNode* node, void *payload) {
+    FILE* output = (FILE*)payload;
 
-    printf("n%d[label=\"%s\\n", *counter, ast_nodetype(node->node_type));
-    print_unescaped(node->token->token_string, node->token->length);
-    printf("\"]\n");
+    char *attributes;
+    int only_type = 0;
+    int only_label = 0;
 
-    if (node->child) {
-        (*counter)++;
-        printf("n%d -> n%d\n", me, *counter);
-        pdot_ast(node->child, me, counter);
+    if (direction == in) {
+        /* Attributes */
+        switch (node->node_type) {
+
+            /* Groupings */
+            case PROGRAM_FILE:
+            case INSTRUCTIONS:
+            case DO:
+            case BY:
+            case IF:
+            case REXX_OPTIONS:
+            case TO:
+                attributes = "color=blue";
+                only_type = 1;
+                break;
+
+            case ASSIGN:
+            case ARG:
+            case CALL:
+            case ENVIRONMENT:
+            case FOR:
+            case FUNCTION:
+            case ITERATE:
+            case LEAVE:
+            case OPTIONS:
+            case PROCEDURE:
+            case PULL:
+            case REPEAT:
+            case RETURN:
+            case SAY:
+            case UPPER:
+            case PARSE:
+                attributes = "color=green4";
+                only_type = 1;
+                break;
+
+                /* Address is often a sign of a parsing error */
+            case ADDRESS:
+                attributes = "style=filled fillcolor=orange";
+                only_type = 1;
+                break;
+
+            case OP_ADD:
+            case OP_MINUS:
+            case OP_AND:
+            case OP_COMPARE:
+            case OP_CONCAT:
+            case OP_MULT:
+            case OP_DIV:
+            case OP_IDIV:
+            case OP_MOD:
+            case OP_OR:
+            case OP_POWER:
+            case OP_PREFIX:
+            case OP_SCONCAT:
+                attributes = "color=darkcyan";
+                only_type = 1;
+                break;
+
+            case PATTERN:
+            case REL_POS:
+            case ABS_POS:
+            case SIGN:
+            case TARGET:
+            case TEMPLATES:
+                attributes = "color=green";
+                break;
+
+            case VAR_SYMBOL:
+            case CONST_SYMBOL:
+                attributes = "color=cyan3 shape=cds";
+                only_label = 1;
+                break;
+
+            case STRING:
+            case NUMBER:
+                attributes = "color=cyan3 shape=box";
+                only_label = 1;
+                break;
+
+            case LABEL:
+                attributes = "color=green4";
+                break;
+
+                /* Errors */
+            case TOKEN:
+                attributes = "style=filled fillcolor=indianred1";
+                only_label = 1;
+                break;
+
+//            case ERROR:
+//                attributes = "style=filled fillcolor=indianred1";
+//                //           only_type = 1;
+//                break;
+
+            default:
+                attributes = "style=filled fillcolor=indianred1";
+                break;
+        }
+
+        if (only_type) {
+            fprintf(output, "n%d[label=\"%s", node->node_number,
+                    ast_nodetype(node->node_type));
+        } else if (only_label) {
+            fprintf(output, "n%d[label=\"", node->node_number);
+            print_unescaped(output, node->node_string,
+                            (int)node->node_string_length);
+        } else {
+            fprintf(output, "n%d[label=\"%s\\n", node->node_number,
+                    ast_nodetype(node->node_type));
+            print_unescaped(output, node->node_string,
+                            (int)node->node_string_length);
+        }
+        fprintf(output, "\" %s]\n", attributes);
+
+        /* Link to Parent */
+        if (node->parent) {
+            fprintf(output,"n%d -> n%d\n", node->parent->node_number, node->node_number);
+        }
     }
-    if (node->sibling) {
-        (*counter)++;
-        printf("n%d -> n%d\n", parent, *counter);
-        pdot_ast(node->sibling, parent, counter);
-    }
+
+    return result_normal;
 }
+
+void pdot_tree(ASTNode *tree, char* output_file) {
+    FILE *output;
+
+    if (output_file) output = fopen(output_file, "w");
+    else output = stdout;
+
+    if (tree) {
+        fprintf(output, "digraph REXXAST {\n");
+        ast_walker(tree, pdot_walker_handler, (void*)output);
+        fprintf(output, "\n}\n");
+    }
+    if (output_file) fclose(output);
+}
+
+/* AST Walker
+ * It returns
+ *     result_normal - All OK - normal processing
+ *     result_abort - Walk Aborted by handler
+ *     result_error - error condition
+ */
+walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload) {
+    walker_result r;
+    ASTNode *child;
+
+    if (!tree) return result_error;
+    r = handler(in, tree, payload);
+    if (r == result_abort || r == result_error) return r;
+    else if (r == request_skip) return result_normal;
+
+    if ( (child = tree->child) ) {
+        r = ast_walker(child, handler, payload);
+        if (r == result_abort || r == result_error) return r;
+
+        while ( (child = child->sibling) ) {
+            r = ast_walker(child, handler, payload);
+            if (r == result_abort || r == result_error) return r;
+        }
+    }
+
+    r = handler(out, tree, payload);
+    if (r == result_abort || r == result_error) return r;
+
+    return result_normal;
+};
