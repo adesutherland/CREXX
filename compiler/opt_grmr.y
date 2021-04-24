@@ -21,8 +21,9 @@
 /* (c) Adrian Sutherland 2021     */
 /* OPTIONS Grammar                */
 
-#include "compiler.h"
+#include <assert.h>
 #include <stdio.h>
+#include "compiler.h"
 }
 
 /* Program Structure */

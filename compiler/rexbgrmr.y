@@ -13,6 +13,7 @@
 /* (c) Adrian Sutherland 2021   */
 /* Grammar                      */
 
+#include <assert.h>
 #include "compiler.h"
 }
 
