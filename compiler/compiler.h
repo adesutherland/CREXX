@@ -6,6 +6,13 @@
 
 #include "stdio.h"
 
+/* Typedefs */
+typedef struct ASTNode ASTNode;
+typedef struct Token Token;
+typedef struct Scope Scope;
+typedef struct Symbol Symbol;
+typedef struct OutputFragment OutputFragment;
+
 /* functions to interface the lemon parser */
 /* OPTIONS Parser */
 void *Opts_Alloc();
@@ -19,14 +26,15 @@ void RexxB();
 void RexxBFree();
 void RexxBTrace(FILE *stream, char *zPrefix);
 
-typedef struct ASTNode ASTNode;
-typedef struct Token Token;
-
 typedef enum RexxLevel {
     UNKNOWN, LEVELA, LEVELB, LEVELC, LEVELD, LEVELG, LEVELL
 } RexxLevel;
 
-/* Scanner */
+typedef enum ValueType {
+    TP_UNKNOWN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
+} ValueType;
+
+/* Compiler Context Object */
 typedef struct Context {
     FILE *traceFile;
     char *buff_end;
@@ -48,10 +56,11 @@ int opt_pars(Context *context);
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ASSIGN, BY, CALL, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    NUMBER, OP_ADD, OP_MINUS, OP_AND, OP_COMPARE, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    FLOAT, INTEGER, OP_ADD, OP_MINUS, OP_AND, OP_COMPARE, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_PREFIX,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
-    RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER, VAR_SYMBOL
+    RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
+    VAR_SYMBOL, VAR_TARGET
 } NodeType;
 
 struct Token {
@@ -60,20 +69,29 @@ struct Token {
     int token_subtype;
     Token *token_next;
     Token *token_prev;
-    size_t line, column, length;
+    int line, column, length;
     char* token_string;
 };
 
 struct ASTNode {
     NodeType node_type;
+    ValueType value_type;
+    ValueType target_type;
+    int register_num;
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
     Token *token;
+    Scope *scope;
+    Symbol *symbol;
     const char *node_string;
     size_t node_string_length;
     /* These are only valid after the set_source_location walker has run */
     char *source_start, *source_end;
+    int line, column;
+    OutputFragment *output;
+    OutputFragment *output2;
+    OutputFragment *output3;
 };
 
 /* Utilities */
@@ -126,5 +144,74 @@ typedef walker_result (*walker_handler)(walker_direction direction,
  *     result_error - error condition
  */
 walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload);
+
+/* Validator */
+void validate(Context *context);
+
+/* Scope and Symbols */
+struct Scope {
+    ASTNode *defining_node;
+    Scope *parent;
+    void *child_array;
+    void *symbols_tree;
+    size_t num_registers;
+    void *free_registers_array;
+};
+
+char* type_name(ValueType type);
+
+struct Symbol {
+    char *name;
+    void *ast_node_array;
+    Scope *scope;
+    ValueType type;
+    int register_num;
+};
+
+/* Scope Factory */
+Scope *scp_f(Scope *parent, ASTNode *node);
+
+/* Calls the handler for each symbol in scope */
+typedef void (*symbol_worker)(Symbol *symbol, void *payload);
+void scp_for_all(Scope *scope, symbol_worker worker, void *payload);
+
+/* To get sub-scopes */
+Scope* scope_child(Scope *scope, size_t index);
+size_t scope_num_children(Scope *scope);
+
+/* Get a free register from scope */
+int get_reg(Scope *scope);
+
+/* Return a no longer used register to the scope */
+void return_reg(Scope *scope, int reg);
+
+/* Frees scope and all its symbols */
+void scp_free(Scope *scope);
+
+/* Symbol Factory - define a symbol */
+Symbol *sym_f(Scope *scope, ASTNode *node);
+
+/* Resolve a Symbol */
+Symbol *sym_rslv(Scope *scope, ASTNode *node);
+
+/* Get a the index'th ASTNode using the symbol */
+ASTNode* symbol_astnode(Symbol *symbol, size_t index);
+
+/* Add a AST Node using the symbol */
+void symbol_add_astnode(Symbol *symbol, ASTNode* node);
+
+/* Get number of ASTNodes using the symbol */
+size_t symbol_num_astnodes(Symbol *symbol);
+
+/* Emit Assembler */
+void emit(Context *context, char *output_file);
+
+/* Output Marshalling */
+struct OutputFragment {
+    OutputFragment *before;
+    OutputFragment *after;
+    char *output;
+};
+void free_output(OutputFragment *output);
 
 #endif //CREXX_COMPILER_H

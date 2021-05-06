@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
 
     /* Open input file */
     if (argc==2)   fp = fopen(argv[1], "r");
-    else fp = fopen("test.rexx", "r");
-    if(fp == NULL) {
+    else fp = NULL;
+    if (fp == NULL) {
         fprintf(stderr, "Can't open input file\n");
         exit(-1);
     }
@@ -80,13 +80,13 @@ int main(int argc, char *argv[]) {
         case LEVELA:
         case LEVELC:
         case LEVELD:
-            printf("Classic Rexx - Not supported yet!\n");
+            printf("REXX Level A/C/D (Classic Rexx) - Not supported yet\n");
             break;
 
         case LEVELB:
         case LEVELG:
         case LEVELL:
-            printf("Rexx 2.0\n");
+            printf("REXX Level B/G/L (cREXX)\n");
             rexbpars(&context);
             break;
 
@@ -95,18 +95,34 @@ int main(int argc, char *argv[]) {
     }
 
 
-    if (context.ast) {
-        prnt_ast(context.ast);
-        printf("\n");
+    if (!context.ast) {
+        printf("Compiler Exiting - Failure\n");
+        goto finish;
     }
+/*
+    prnt_ast(context.ast);
+    printf("\n");
+*/
+    pdot_tree(context.ast, "astgraph0.dot");
+    /* Get dot from https://graphviz.org/download/ */
+    system("dot astgraph0.dot -Tpng -o astgraph0.png");
+
+    validate(&context);
+
+    pdot_tree(context.ast, "astgraph1.dot");
+    system("dot astgraph1.dot -Tpng -o astgraph1.png");
+
+    /* Generate Assembler */
+    printf("Generating Assembler\n");
+    emit(&context, "output.rxas");
+
+    pdot_tree(context.ast, "astgraph2.dot");
+    system("dot astgraph2.dot -Tpng -o astgraph2.png");
 
 
-    if (context.ast) {
-        pdot_tree(context.ast, "astgraph.dot");
-        /* Get dot from https://graphviz.org/download/ */
-        system("dot astgraph.dot -Tpng -o astgraph.png");
-    }
+    printf("Compiler Exiting - Success\n");
 
+    finish:
     /* Deallocate AST */
     free_ast(&context);
 
@@ -119,5 +135,7 @@ int main(int argc, char *argv[]) {
     fclose(traceFile);
 #endif
     free(buff);
+
+
     return(0);
 }

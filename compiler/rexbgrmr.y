@@ -44,10 +44,10 @@ program(P)       ::= rexx_options(R) TK_EOS.
                      }
 
 program(E)       ::= ANYTHING(T) error.
-                     { E = ast_error(context, "49", T); context->ast = E; }
+                     { E = ast_error(context, "49.1", T); context->ast = E; }
 
 program(E)       ::=  error.
-                     { E = ast_error_here(context, "49"); }
+                     { E = ast_error_here(context, "49.2"); }
 
 /* Optional EOC */
 ncl0             ::= TK_EOC.
@@ -57,7 +57,7 @@ ncl0             ::= .
 junk(J)          ::= . { J = 0; }
 junk(J)          ::= junk_list(L). { J = L; }
 junk_list(L)     ::= ANYTHING(L1).
-                   { L = ast_error(context, "49", L1); }
+                   { L = ast_error(context, "49.3", L1); }
 junk_list(L)     ::= junk_list(L1) ANYTHING.
                    { L = L1; } /* We are only reporting the first error */
 
@@ -100,14 +100,22 @@ single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
 single_instruction(E)  ::= error.
-                          { E = ast_error_here(context, "49"); }
+                          { E = ast_error_here(context, "49.4"); }
 
-assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,V); add_ast(I,E);}
+assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
+    {
+        I = ast_f(context, ASSIGN, T); add_ast(I,V); add_ast(I,E);
+        V->node_type = VAR_TARGET;
+    }
 
-assignment(I) ::=  TK_NUMBER(T) TK_EQUAL expression(E).
+assignment(I) ::=  TK_FLOAT(T) TK_EQUAL expression(E).
     { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.1", T));
       add_ast(I,E); }
+
+assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.1", T));
+      add_ast(I,E); }
+
 
 assignment(I) ::=  TK_CONST_SYMBOL(T) TK_EQUAL expression(E).
     { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.2", T));
@@ -267,181 +275,139 @@ say(I) ::= TK_SAY(T) expression(E).
                         -> (REL_POS SIGN[s] position);
 */
 
-/* Expressions */
-%nonassoc TK_OPEN_BRACKET.
-%nonassoc TK_CONST_SYMBOL TK_STRING TK_NUMBER TK_VAR_SYMBOL TK_COMMA TK_CLOSE_BRACKET.
-%left TK_AND.
-%left TK_OR.
-%nonassoc TK_EQUAL TK_NEQ TK_GT TK_LT TK_GTE TK_LTE
-          TK_S_EQ TK_S_NEQ TK_S_GT TK_S_LT TK_S_GTE TK_S_LTE.
-%left TK_CONCAT.
-%left TK_PLUS TK_MINUS.
-%left TK_MULT TK_DIV.
-
-
-expression(E) ::= TK_COMMA(S).
-                  { E = ast_error(context, "37.1", S); }
-expression(E) ::= TK_CLOSE_BRACKET(S).
-                  { E = ast_error(context, "37.2", S); }
-
-expression(A) ::= expression(B) TK_AND(O) expression(C).
-                  { A = ast_f(context, OP_AND, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_OR(O) expression(C).
-                  { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
-
-expression(A) ::= expression(B) TK_EQUAL(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_NEQ(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_GT(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_LT(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_GTE(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_LTE(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_EQ(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_NEQ(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_GT(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_LT(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_GTE(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_S_LTE(O) expression(C).
-                  { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
-
-expression(A) ::= expression(B) TK_CONCAT(O) expression(C).
-                  { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) expression(C). [TK_CONCAT]
-                  { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
-
-expression(A) ::= expression(B) TK_PLUS(O) expression(C).
-                  { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_MINUS(O) expression(C).
-                  { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_MULT(O) expression(C).
-                  { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
-expression(A) ::= expression(B) TK_DIV(O) expression(C).
-                  { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
-
-expression(A) ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
-                  { A = B; }
-
-expression(A)        ::= var_symbol(B). [TK_VAR_SYMBOL] { A = B; }
-expression(A)        ::= TK_CONST_SYMBOL(S).  { A = ast_f(context, CONST_SYMBOL, S); }
-expression(A)        ::= TK_NUMBER(S).  { A = ast_f(context, NUMBER,S); }
-expression(A)        ::= TK_STRING(S). { A = ast_f(context, STRING,S); }
-
+// EXPRESSIONS
+// precedence to disambiguate assignment vs equality
+%left TK_CONST_SYMBOL TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL.
+%nonassoc TK_EQUAL.
 
 /*
-                    / ( (a:concatenation &| b:addition)->(TK_CONCAT a b) )
-                    / ( (a:concatenation b:addition)->(TK_SCONCAT a b) )
-                    / ( (a:concatenation op:concat_operator b:addition)->(op a b) );
-    concat_operator ::= '||' -> TK_CONCAT ;
-
-
-    multiplicative_operator ::= ('*' / '/' / '//' / '%')->TK_MULT;
-
-    power_operator ::= '**' -> TK_POWER ;
-
-    prefix_expression ::= ( (op:prefix_operator a:prefix_expression)->(op a) )
-               / term
-               / ( ( e:.->(ERROR["35.1"] e) ) resync);
-    prefix_operator ::= ('+' / '-' / '\') -> TK_PREFIX ;
-
-    term ::= value
-          / function
-          / '(' expr ( (e:',' -> (ERROR["37.1"] e) ) resync) / ')'
-          / ( ( e:. -> (ERROR["36"] e) ) resync) );
-
     function ::= (f:taken_constant '(' p:expression_list? (')') -> (FUNCTION[f] p)
               / ((e:. -> (ERROR["36"] e)) resync);
-
 */
 
+
+term(A)              ::= var_symbol(B). [TK_VAR_SYMBOL]
+                         { A = B; }
+term(A)              ::= TK_CONST_SYMBOL(S).
+                         { A = ast_f(context, CONST_SYMBOL, S); }
+term(A)              ::= TK_FLOAT(S).
+                         { A = ast_f(context, FLOAT,S); }
+term(A)              ::= TK_INTEGER(S).
+                         { A = ast_f(context, INTEGER,S); }
+term(A)              ::= TK_STRING(S). { A = ast_f(context, STRING,S); }
+bracket(A)           ::= term(T).
+                         { A = T; }
+bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+
+/* These are the normal expression form in unambiguous form */
+prefix_expression(P) ::= bracket(B). { P = B; }
+prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
+                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_MINUS(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+power_expression(P)  ::= prefix_expression(E).
+                         { P = E; }
+power_expression(A)  ::= power_expression(B) TK_POWER(O) prefix_expression(C).
+                         { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+multiplication(P)    ::= power_expression(E).
+                         { P = E; }
+multiplication(A)    ::= multiplication(B) TK_MULT(O) power_expression(C).
+                         { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
+multiplication(A)    ::= multiplication(B) TK_DIV(O) power_expression(C).
+                         { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
+multiplication(A)    ::= multiplication(B) TK_IDIV(O) power_expression(C).
+                         { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
+multiplication(A)    ::= multiplication(B) TK_MOD(O) power_expression(C).
+                         { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+addition(P)          ::= multiplication(E).
+                         { P = E; }
+addition(A)          ::= addition(B) TK_PLUS(O) multiplication(C).
+                         { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
+addition(A)          ::= addition(B) TK_MINUS(O) multiplication(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+
+/* These are for expressions "after" a concat defined by a whitespace to avoid
+ * ambiguous issues with prefix operators (i.e. these miss out the +/- prefixes)
+ */
+prefix_expression_c(P) ::= bracket(B). { P = B; }
+
+prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
+                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+power_expression_c(P)::= prefix_expression_c(E).
+                         { P = E; }
+power_expression_c(A)::= power_expression_c(B) TK_POWER(O) prefix_expression_c(C).
+                         { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+multiplication_c(P)  ::= power_expression_c(E).
+                         { P = E; }
+multiplication_c(A)  ::= multiplication_c(B) TK_MULT(O) power_expression_c(C).
+                         { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
+multiplication_c(A)  ::= multiplication_c(B) TK_DIV(O) power_expression_c(C).
+                         { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
+multiplication_c(A)  ::= multiplication_c(B) TK_IDIV(O) power_expression_c(C).
+                         { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
+multiplication_c(A)  ::= multiplication_c(B) TK_MOD(O) power_expression_c(C).
+                         { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+addition_c(P)        ::= multiplication_c(E).
+                         { P = E; }
+addition_c(A)        ::= addition_c(B) TK_PLUS(O) multiplication_c(C).
+                         { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
+addition_c(A)        ::= addition_c(B) TK_MINUS(O) multiplication_c(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+
+/* Back to normal expressions in the usual unambiguous form */
+concatenation(P)     ::= addition(E).
+                         { P = E; }
+concatenation(A)     ::= concatenation(B) TK_CONCAT(O) addition(C).
+                         { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
+concatenation(A)     ::= concatenation(B) addition_c(C).  /* Note the addition_c */
+                         { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
+comparison(P)        ::= concatenation(E).
+                         { P = E; }
+comparison(A)        ::= comparison(B) TK_EQUAL(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_NEQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_GT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_LT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_GTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_LTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_EQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_NEQ(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_GT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_LT(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_GTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+comparison(A)        ::= comparison(B) TK_S_LTE(O) concatenation(C).
+                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+or_expression(P)     ::= comparison(E).
+                         { P = E; }
+or_expression(A)     ::= or_expression(B) TK_OR(O) comparison(C).
+                         { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+and_expression(P)    ::= or_expression(E).
+                         { P = E; }
+and_expression(A)    ::= and_expression(B) TK_AND(O) or_expression(C).
+                         { A = ast_f(context, OP_AND, O); add_ast(A,B); add_ast(A,C); }
+expression(P)        ::= and_expression(E).
+                         { P = E; }
+
+/* Support Standard REXX Errors */
+expression(E)        ::= TK_COMMA(S).
+                         { E = ast_error(context, "37.1", S); }
+expression(E)        ::= TK_CLOSE_BRACKET(S).
+                         { E = ast_error(context, "37.2", S); }
+
 /*
-// EXPRESSIONS
-term(T)                ::= var_symbol(V). [TK_SYMBOL] { T = V; }
-term(T)                ::= TK_CONST(C). { T = ast_f(C); }
-term(T)                ::= TK_STRING(S). { T = ast_f(S); }
-term(T)                ::= function(F). [TK_SYMBOL] { T = F; }
-
-bracket(B)             ::= term(T). { B = T; }
-bracket(B)             ::= TK_BOPEN expression(E) TK_BCLOSE. { B = E; }
-
-prefix_expression(P)   ::= bracket(B). { P = B; }
-prefix_expression(P)   ::= TK_PLUS(T) prefix_expression(E). { P = ast_f(T); add_ast(P,E); }
-prefix_expression(P)   ::= TK_MINUS(T) prefix_expression(E). { P = ast_f(T); add_ast(P,E); }
-prefix_expression(P)   ::= TK_NOT(T) prefix_expression(E). { P = ast_f(T); add_ast(P,E); }
-
-power_expression(P)    ::= prefix_expression(E). { P = E; }
-power_expression(P)    ::= power_expression(E1) TK_POWER(T) prefix_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-multiplication(P)      ::= power_expression(E). { P = E; }
-multiplication(P)      ::= multiplication(E1) TK_MULT(T) power_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-multiplication(P)      ::= multiplication(E1) TK_DIV(T) power_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-multiplication(P)      ::= multiplication(E1) TK_IDIV(T) power_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-multiplication(P)      ::= multiplication(E1) TK_REMAIN(T) power_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-addition(P)            ::= multiplication(E). { P = E; }
-addition(P)            ::= addition(E1) TK_PLUS(T) multiplication(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-addition(P)            ::= addition(E1) TK_MINUS(T) multiplication(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-concatenation(P)       ::= addition(E). { P = E; }
-concatenation(P)       ::= concatenation(E1) term(E2).
-                           { P = ast_ft(TK_CONCAT); add_ast(P,E1); add_ast(P,E2); }
-concatenation(P)       ::= concatenation(E1) TK_CONCAT(T) addition(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-comparison(P)          ::= concatenation(E). { P = E; }
-comparison(P)          ::= comparison(E1) TK_EQUAL(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_NOT_EQUAL(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_GT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_LT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_GE(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_LE(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_EQUAL_EQUAL(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_NOT_EQUAL_EQUAL(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_GT_STRICT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_LT_STRICT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_GE_STRICT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-comparison(P)          ::= comparison(E1) TK_LE_STRICT(T) concatenation(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-or_expression(P)       ::= comparison(E). { P = E; }
-or_expression(P)       ::= or_expression(E1) TK_OR(T) comparison(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-or_expression(P)       ::= or_expression(E1) TK_XOR(T) comparison(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-and_expression(P)      ::= or_expression(E). { P = E; }
-and_expression(P)      ::= and_expression(E1) TK_AND(T) or_expression(E2).
-                           { P = ast_f(T); add_ast(P,E1); add_ast(P,E2);}
-
-expression(P)          ::= and_expression(E). { P = E; }
-
 valueexp(P)            ::= TK_VALUE(T) expression(E). { P = ast_f(T); add_ast(P,E); }
 
 expression0(P)         ::= . { P = ast_ft(TK_NULL); }

@@ -35,7 +35,8 @@ int rexbscan(Context* s) {
   eof = [\000];
   any = all\eof;
   symchr = letter|digit|[.!?_];
-  const	= (digit|[.])symchr*([eE][+-]?digit+)?;
+  float	= (digit*)[.]digit+([eE][+-]?digit+)?;
+  integer = digit+;
   simple = (symchr\(digit|[.]))(symchr\[.])*;
   stem = simple [.];
   symbol = symchr+;
@@ -56,9 +57,9 @@ int rexbscan(Context* s) {
   "-" { return(TK_MINUS); }
   "*" { return(TK_MULT); }
   "/" { return(TK_DIV); }
-//  "%" { return(TK_IDIV); }
-//  "/" ob "/" { return(TK_MOD); }
-//  "*" ob "*" { return(TK_POWER); }
+  "%" { return(TK_IDIV); }
+  "/" ob "/" { return(TK_MOD); }
+  "*" ob "*" { return(TK_POWER); }
 
   "=" { return(TK_EQUAL); }
   not ob "=" | "<" ob ">" | ">" ob "<" { return(TK_NEQ); }
@@ -76,7 +77,7 @@ int rexbscan(Context* s) {
   "&" { return(TK_AND); }
   "|" { return(TK_OR); }
 //  "&" ob "&" { return(TK_OR); } // TODO Check
-//  not { return(TK_NOT); }
+  not { return(TK_NOT); }
   "," { return(TK_COMMA); }
 //  "." { return(TK_STOP); }
   "(" { return(TK_OPEN_BRACKET); }
@@ -139,7 +140,8 @@ int rexbscan(Context* s) {
 //  'VERSION' { return(TK_VERSION); }
 //  'WHILE' { return(TK_WHILE); }
 //  'WITH' { return(TK_WITH); }
-  const { return(TK_NUMBER); }
+  float { return(TK_FLOAT); }
+  integer { return(TK_INTEGER); }
   simple { return(TK_VAR_SYMBOL); }
 //  stem { return(TK_SYMBOL_STEM); }
   symbol ob ":" { return(TK_LABEL); }

@@ -58,9 +58,17 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->child = 0;
     node->sibling = 0;
     node->token = 0;
+    node->symbol = 0;
+    node->scope = 0;
+    node->output = 0;
+    node->output2 = 0;
+    node->output3 = 0;
     node->node_type = type;
+    node->value_type = TP_UNKNOWN;
+    node->target_type = TP_UNKNOWN;
     node->node_string = "";
     node->node_string_length = 0;
+    node->register_num = -1;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -135,8 +143,10 @@ const char *ast_nodetype(NodeType type) {
             return "LABEL";
         case LEAVE:
             return "LEAVE";
-        case NUMBER:
-            return "NUMBER";
+        case FLOAT:
+            return "FLOAT";
+        case INTEGER:
+            return "INTEGER";
         case OP_ADD:
             return "OP_ADD";
         case OP_MINUS:
@@ -201,6 +211,9 @@ const char *ast_nodetype(NodeType type) {
             return "UPPER";
         case VAR_SYMBOL:
             return "VAR_SYMBOL";
+        case VAR_TARGET:
+            return "VAR_TARGET";
+
         default: return "*UNKNOWN*";
     }
 }
@@ -260,6 +273,10 @@ void free_ast(Context *context) {
     ASTNode *n;
     while (t) {
         n = t->free_list;
+        if (t->scope) scp_free(t->scope);
+        if (t->output) free_output(t->output);
+        if (t->output2) free_output(t->output2);
+        if (t->output3) free_output(t->output3);
         free(t);
         t = n;
     }
@@ -312,6 +329,35 @@ void print_unescaped(FILE* output, const char *ptr, int len) {
     }
 }
 
+void pdot_scope(Symbol *symbol, void *payload) {
+    char reg[20];
+    if (symbol->register_num != -1)
+        sprintf(reg,"R%d",symbol->register_num);
+    else
+        reg[0] = 0;
+
+    fprintf((FILE*)payload,
+            "s%d_%s[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+            symbol->scope->defining_node->node_number,
+            symbol->name,
+            symbol->name,
+            type_name(symbol->type),
+            reg);
+}
+
+/* Works out the which child index a child has */
+static int get_child_index(ASTNode *node) {
+    int i = 1;
+    ASTNode *n = node->parent;
+    if (!n) return 0;
+    n = n->child;
+    while (n != node) {
+        n = n->sibling;
+        i++;
+    }
+    return i;
+}
+
 walker_result pdot_walker_handler(walker_direction direction,
                                   ASTNode* node, void *payload) {
     FILE* output = (FILE*)payload;
@@ -319,8 +365,20 @@ walker_result pdot_walker_handler(walker_direction direction,
     char *attributes;
     int only_type = 0;
     int only_label = 0;
+    int child_index;
+    ASTNode *first_node;
+    char value_type_buffer[40];
 
     if (direction == in) {
+        /* IN - TOP DOWN */
+
+        child_index = get_child_index(node);
+
+        /* Scope == DOT Subgraph */
+        if (node->scope) {
+            fprintf(output, "subgraph scope_%d {\n", node->node_number);
+        }
+
         /* Attributes */
         switch (node->node_type) {
 
@@ -389,13 +447,15 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
+            case VAR_TARGET:
             case CONST_SYMBOL:
                 attributes = "color=cyan3 shape=cds";
                 only_label = 1;
                 break;
 
             case STRING:
-            case NUMBER:
+            case INTEGER:
+            case FLOAT:
                 attributes = "color=cyan3 shape=box";
                 only_label = 1;
                 break;
@@ -420,24 +480,71 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
+        if (node->register_num != -1)
+            sprintf(value_type_buffer,"\nR%d",node->register_num);
+        else
+            value_type_buffer[0] = 0;
+
+        if (node->value_type != TP_UNKNOWN ||
+            node->target_type != TP_UNKNOWN) {
+            if (node->value_type == node->target_type) {
+                strcat(value_type_buffer, "\n(");
+                strcat(value_type_buffer, type_name(node->value_type));
+                strcat(value_type_buffer, ")");
+            } else {
+                strcat(value_type_buffer, "\n(");
+                strcat(value_type_buffer, type_name(node->value_type));
+                strcat(value_type_buffer, "->");
+                strcat(value_type_buffer, type_name(node->target_type));
+                strcat(value_type_buffer, ")");
+            }
+        }
+
         if (only_type) {
-            fprintf(output, "n%d[label=\"%s", node->node_number,
-                    ast_nodetype(node->node_type));
+            fprintf(output, "n%d[ordering=\"out\" label=\"%s%s", node->node_number,
+                    ast_nodetype(node->node_type), value_type_buffer);
         } else if (only_label) {
-            fprintf(output, "n%d[label=\"", node->node_number);
+            fprintf(output, "n%d[ordering=\"out\" label=\"", node->node_number);
             print_unescaped(output, node->node_string,
                             (int)node->node_string_length);
+            fprintf(output, "%s", value_type_buffer);
         } else {
-            fprintf(output, "n%d[label=\"%s\\n", node->node_number,
+            fprintf(output, "n%d[ordering=\"out\" label=\"%s\\n", node->node_number,
                     ast_nodetype(node->node_type));
             print_unescaped(output, node->node_string,
                             (int)node->node_string_length);
+            fprintf(output, "%s", value_type_buffer);
         }
         fprintf(output, "\" %s]\n", attributes);
 
         /* Link to Parent */
         if (node->parent) {
-            fprintf(output,"n%d -> n%d\n", node->parent->node_number, node->node_number);
+            fprintf(output,"n%d -> n%d [xlabel=\"%d\"]\n",
+                    node->parent->node_number,
+                    node->node_number, child_index);
+        }
+
+        /* Link to Symbol */
+        if (node->symbol) {
+            if (node->node_type == VAR_TARGET)
+                fprintf(output,"n%d -> s%d_%s [color=cyan]\n",
+                        node->node_number,
+                        node->symbol->scope->defining_node->node_number,
+                        node->symbol->name);
+            else
+                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"back\"]\n",
+                        node->node_number,
+                        node->symbol->scope->defining_node->node_number,
+                        node->symbol->name);
+        }
+    }
+
+    else {
+        /* OUT - Bottom Up */
+        /* Scope == DOT Subgraph */
+        if (node->scope) {
+            scp_for_all(node->scope, pdot_scope, output);
+            fprintf(output, "}\n");
         }
     }
 
@@ -451,7 +558,7 @@ void pdot_tree(ASTNode *tree, char* output_file) {
     else output = stdout;
 
     if (tree) {
-        fprintf(output, "digraph REXXAST {\n");
+        fprintf(output, "digraph REXXAST { pad=0.25\n");
         ast_walker(tree, pdot_walker_handler, (void*)output);
         fprintf(output, "\n}\n");
     }
