@@ -35,7 +35,8 @@ int main(int argc, char *argv[]) {
     /* Print - Architecture */
     printf("OS Architecture Details\n");
     printf("Type sizes: int=%d, char=%d, void*=%d, double=%d, long=%d, long long=%d size_t=%d\n",
-           sizeof(int), sizeof(char), sizeof(void*), sizeof(double), sizeof(long), sizeof(long long), sizeof(size_t));
+           (int) sizeof(int),  (int) sizeof(char),      (int) sizeof(void*), (int) sizeof(double),
+           (int) sizeof(long), (int) sizeof(long long), (int) sizeof(size_t));
 
     // Load and Print Instruction Database
     init_ops();
@@ -45,8 +46,8 @@ int main(int argc, char *argv[]) {
     printf("Assembling %s\n", fileName);
 
     /* Open input file */
-    if (argc==2)   fp = fopen(argv[1], "r");
-    else fp = fopen(fileName, "r");
+    fp = fopen(fileName, "r");
+
     if(fp == NULL) {
         fprintf(stderr, "Can't open input file\n");
         exit(-1);
