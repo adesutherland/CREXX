@@ -52,7 +52,7 @@ Token* token_f(Assembler_Context* context, int type) {
 
     /* Now we work out the useful token value */
     char *buffer;
-    char *c, *d;
+    char *c;
     switch (type) {
         case INT:
             /* Need to null terminate - sigh */
@@ -73,12 +73,12 @@ Token* token_f(Assembler_Context* context, int type) {
         case LABEL:
             memcpy(token->token_value.string, token->token_source, token->length);
             token->token_value.string[token->length-1] = 0; /* Remove the ":" */
-            for (c = token->token_value.string; *c; ++c) *c = tolower(*c);
+            for (c = token->token_value.string; *c; ++c) *c = (char) tolower(*c);
             break;
         case ID:
             memcpy(token->token_value.string, token->token_source, token->length);
             token->token_value.string[token->length] = 0;
-            for (c = token->token_value.string; *c; ++c) *c = tolower(*c);
+            for (c = token->token_value.string; *c; ++c) *c = (char) tolower(*c);
             break;
         case REG:
             /* Need to null terminate */
@@ -93,7 +93,7 @@ Token* token_f(Assembler_Context* context, int type) {
         case FUNC:
             memcpy(token->token_value.string, token->token_source, token->length);
             token->token_value.string[token->length-2] = 0; /* Remove the "()" */
-            for (c = token->token_value.string; *c; ++c) *c = tolower(*c);
+            for (c = token->token_value.string; *c; ++c) *c = (char) tolower(*c);
             break;
         case CHAR:
             /* TODO escape chars */
@@ -121,7 +121,7 @@ void prnt_tok(Token* token) {
     printf("%s", token_type_name(token->token_type));
     switch (token->token_type) {
         case INT:
-            printf("[%d] ", token->token_value.integer);
+            printf("[%d] ", (int) token->token_value.integer);
             break;
         case FLOAT:
             printf("[%f] ", token->token_value.real);
@@ -130,7 +130,7 @@ void prnt_tok(Token* token) {
             printf("[%c] ", token->token_value.character);
             break;
         case REG:
-            printf("[%c%d] ", token->token_subtype, token->token_value.integer);
+            printf("[%c%d] ", token->token_subtype, (int) token->token_value.integer);
             break;
         case LABEL:
         case ID:
