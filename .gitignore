@@ -76,3 +76,8 @@ _deps
 /assembler/rxasgrmr.h
 #/machine/instrmiss.h
 #/machine/instrset.h
+/compiler/rexbgrmr.h
+/compiler/rexbgrmr.c
+/compiler/rxtrace.txt
+/compiler/opt_grmr.h
+/compiler/opt_grmr.c

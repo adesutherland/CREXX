@@ -374,7 +374,7 @@ static walker_result emit_walker(walker_direction direction,
                 get_comment;
                 node->output = output_fs(comment);
                 if (child1->output) output_append(node->output, child1->output);
-                snprintf(temp, buf_len, "   say r%d\n",
+                snprintf(temp, buf_len, "   say r%d\n   say \"\\n\"\n",
                          node->register_num);
                 node->output2 = output_fs(temp);
                 output_append(node->output, node->output2);
