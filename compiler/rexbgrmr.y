@@ -2,6 +2,21 @@
 /* (c) Adrian Sutherland 2021   */
 /* Grammar                      */
 
+/*
+OP_COMPARE_EQUAL,
+OP_COMPARE_NEQ,
+OP_COMPARE_GT,
+OP_COMPARE_LT,
+OP_COMPARE_GTE,
+OP_COMPARE_LTE,
+OP_COMPARE_S_EQ,
+OP_COMPARE_S_NEQ,
+OP_COMPARE_S_GT,
+OP_COMPARE_S_LT,
+OP_COMPARE_S_GTE,
+OP_COMPARE_S_LTE,
+*/
+
 %name RexxB
 %token_type { Token* }
 %default_type { ASTNode* }
@@ -367,29 +382,29 @@ concatenation(A)     ::= concatenation(B) addition_c(C).  /* Note the addition_c
 comparison(P)        ::= concatenation(E).
                          { P = E; }
 comparison(A)        ::= comparison(B) TK_EQUAL(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_EQUAL, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_NEQ(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_NEQ, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_GT(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_GT, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_LT(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_LT, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_GTE(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_GTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_LTE(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_LTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_EQ(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_EQ, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_NEQ(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_NEQ, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_GT(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_GT, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_LT(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_LT, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_GTE(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_GTE, O); add_ast(A,B); add_ast(A,C); }
 comparison(A)        ::= comparison(B) TK_S_LTE(O) concatenation(C).
-                         { A = ast_f(context, OP_COMPARE, O); add_ast(A,B); add_ast(A,C); }
+                         { A = ast_f(context, OP_COMPARE_S_LTE, O); add_ast(A,B); add_ast(A,C); }
 or_expression(P)     ::= comparison(E).
                          { P = E; }
 or_expression(A)     ::= or_expression(B) TK_OR(O) comparison(C).

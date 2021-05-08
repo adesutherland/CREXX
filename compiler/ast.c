@@ -63,6 +63,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->output = 0;
     node->output2 = 0;
     node->output3 = 0;
+    node->output4 = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
     node->target_type = TP_UNKNOWN;
@@ -153,8 +154,30 @@ const char *ast_nodetype(NodeType type) {
             return "OP_MINUS";
         case OP_AND:
             return "OP_AND";
-        case OP_COMPARE:
-            return "OP_COMPARE";
+        case OP_COMPARE_EQUAL:
+            return "OP_COMPARE_EQUAL";
+        case OP_COMPARE_NEQ:
+            return "OP_COMPARE_NEQ";
+        case OP_COMPARE_GT:
+            return "OP_COMPARE_GT";
+        case OP_COMPARE_LT:
+            return "OP_COMPARE_LT";
+        case OP_COMPARE_GTE:
+            return "OP_COMPARE_GTE";
+        case OP_COMPARE_LTE:
+            return "OP_COMPARE_LTE";
+        case OP_COMPARE_S_EQ:
+            return "OP_COMPARE_S_EQ";
+        case OP_COMPARE_S_NEQ:
+            return "OP_COMPARE_S_NEQ";
+        case OP_COMPARE_S_GT:
+            return "OP_COMPARE_S_GT";
+        case OP_COMPARE_S_LT:
+            return "OP_COMPARE_S_LT";
+        case OP_COMPARE_S_GTE:
+            return "OP_COMPARE_S_GTE";
+        case OP_COMPARE_S_LTE:
+            return "OP_COMPARE_S_LTE";
         case OP_CONCAT:
             return "OP_CONCAT";
         case OP_MULT:
@@ -277,6 +300,7 @@ void free_ast(Context *context) {
         if (t->output) free_output(t->output);
         if (t->output2) free_output(t->output2);
         if (t->output3) free_output(t->output3);
+        if (t->output4) free_output(t->output4);
         free(t);
         t = n;
     }
@@ -423,7 +447,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_ADD:
             case OP_MINUS:
             case OP_AND:
-            case OP_COMPARE:
             case OP_CONCAT:
             case OP_MULT:
             case OP_DIV:
@@ -433,6 +456,18 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_POWER:
             case OP_PREFIX:
             case OP_SCONCAT:
+            case OP_COMPARE_EQUAL:
+            case OP_COMPARE_NEQ:
+            case OP_COMPARE_GT:
+            case OP_COMPARE_LT:
+            case OP_COMPARE_GTE:
+            case OP_COMPARE_LTE:
+            case OP_COMPARE_S_EQ:
+            case OP_COMPARE_S_NEQ:
+            case OP_COMPARE_S_GT:
+            case OP_COMPARE_S_LT:
+            case OP_COMPARE_S_GTE:
+            case OP_COMPARE_S_LTE:
                 attributes = "color=darkcyan";
                 only_type = 1;
                 break;

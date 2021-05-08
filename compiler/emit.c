@@ -7,6 +7,111 @@
 #include "compiler.h"
 #include "rexbgrmr.h"
 
+/* Encodes a string to a buffer. Like snprintf() it returns the number of characters
+ * that would have been written */
+#define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
+static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t length) {
+
+    size_t out_len = 0;
+    while (length) {
+        switch (*string) {
+            case '\\':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\\');
+                break;
+            case '\n':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('n');
+                break;
+            case '\t':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('t');
+                break;
+            case '\a':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('a');
+                break;
+            case '\b':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('b');
+                break;
+            case '\f':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('f');
+                break;
+            case '\r':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('r');
+                break;
+            case '\v':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('v');
+                break;
+            case '\'':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\'');
+                break;
+            case '\"':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\"');
+                break;
+            case 0:
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('0');
+                break;
+            case '\?':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('?');
+                break;
+            default:
+                ADD_CHAR_TO_BUFFER(*string);
+        }
+        string++;
+        length--;
+    }
+    if (buffer_len) *buffer = 0;
+    return out_len;
+}
+
+/* Encodes a string to a buffer - just handling line breaks etc for comment strings */
+static size_t encode_comment(char* buffer, size_t buffer_len, char* string, size_t length) {
+
+    size_t out_len = 0;
+    while (length) {
+        switch (*string) {
+            case '\n':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('n');
+                break;
+            case '\t':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('t');
+                break;
+            case '\f':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('f');
+                break;
+            case '\r':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('r');
+                break;
+            case 0:
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('0');
+                break;
+            default:
+                ADD_CHAR_TO_BUFFER(*string);
+        }
+        string++;
+        length--;
+    }
+    if (buffer_len) *buffer = 0;
+    return out_len;
+}
+
+#undef ADD_CHAR_TO_BUFFER
+
+
 /* Output Marshalling Functions */
 static OutputFragment *output_f(){
     OutputFragment *output = malloc(sizeof(OutputFragment));
@@ -58,6 +163,7 @@ static void print_output(FILE* file, OutputFragment* existing) {
 typedef struct walker_payload {
     Scope *current_scope;
     FILE *file;
+    int label_counter;
 } walker_payload;
 
 /* Assign registers */
@@ -90,9 +196,20 @@ static walker_result register_walker(walker_direction direction,
 
         switch (node->node_type) {
 
+            case OP_COMPARE_EQUAL:
+            case OP_COMPARE_NEQ:
+            case OP_COMPARE_GT:
+            case OP_COMPARE_LT:
+            case OP_COMPARE_GTE:
+            case OP_COMPARE_LTE:
+            case OP_COMPARE_S_EQ:
+            case OP_COMPARE_S_NEQ:
+            case OP_COMPARE_S_GT:
+            case OP_COMPARE_S_LT:
+            case OP_COMPARE_S_GTE:
+            case OP_COMPARE_S_LTE:
             case OP_AND:
             case OP_OR:
-            case OP_COMPARE:
             case OP_CONCAT:
             case OP_SCONCAT:
             case OP_ADD:
@@ -169,9 +286,27 @@ static walker_result register_walker(walker_direction direction,
 }
 
 #define buf_len 512
-#define get_comment snprintf(comment, buf_len, "   * Line %d: %.*s\n", node->line + 1,(int)(node->source_end - node->source_start) + 1, node->source_start)
+
+void get_comment(char* comment, ASTNode *node, char* prefix) {
+    char temp[buf_len];
+    encode_comment(temp, buf_len, node->source_start, (int)(node->source_end - node->source_start) + 1);
+    if (prefix)
+        snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line, prefix, temp);
+    else
+        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, temp);
+}
+
+/* Comment without quoting node text */
+void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
+    if (prefix)
+        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, prefix);
+    else
+        snprintf(comment, buf_len, "   * Line %d:\n", node->line);
+}
+
 
 void type_promotion(ASTNode *node) {
+
     char *op;
     char temp[buf_len];
 
@@ -203,7 +338,7 @@ static walker_result emit_walker(walker_direction direction,
                                   void *pl) {
 
     walker_payload *payload = (walker_payload*) pl;
-    ASTNode *child1, *child2, *n;
+    ASTNode *child1, *child2, *child3, *n;
     char *op;
     char *tp_prefix;
     OutputFragment *o;
@@ -283,12 +418,34 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
             break;
 
+            case OP_COMPARE_EQUAL:
+                if (!op) op="eq";
+            case OP_COMPARE_NEQ:
+                if (!op) op="ne";
+            case OP_COMPARE_GT:
+                if (!op) op="gt";
+            case OP_COMPARE_LT:
+                if (!op) op="lt";
+            case OP_COMPARE_GTE:
+                if (!op) op="gte";
+            case OP_COMPARE_LTE:
+                if (!op) op="lte";
+            case OP_COMPARE_S_EQ:
+                if (!op) op="eqs";
+            case OP_COMPARE_S_NEQ:
+                if (!op) op="nes";
+            case OP_COMPARE_S_GT:
+                if (!op) op="gts";
+            case OP_COMPARE_S_LT:
+                if (!op) op="lts";
+            case OP_COMPARE_S_GTE:
+                if (!op) op="gtes";
+            case OP_COMPARE_S_LTE:
+                if (!op) op="ltes";
             case OP_AND:
                 if (!op) op="and";
             case OP_OR:
                 if (!op) op="or";
-            case OP_COMPARE:
-                if (!op) op="compare"; /* TODO */
             case OP_ADD:
                 if (!op) op="add";
             case OP_MINUS:
@@ -348,9 +505,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case ASSIGN:
-                get_comment;
+                get_comment(comment,node, NULL);
                 node->output = output_fs(comment);
-                if (child2->output) output_append(node->output, child2->output);
+                output_append(node->output, child2->output);
                 if (child1->register_num != child2->register_num) {
                     snprintf(temp, buf_len, "   copy r%d,r%d\n",
                              child1->register_num,
@@ -361,9 +518,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case ADDRESS:
-                get_comment;
+                get_comment(comment,node,NULL);
                 node->output = output_fs(comment);
-                if (child1->output) output_append(node->output, child1->output);
+                output_append(node->output, child1->output);
                 snprintf(temp, buf_len, "   address r%d\n",
                          node->register_num);
                 node->output2 = output_fs(temp);
@@ -371,9 +528,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case SAY:
-                get_comment;
+                get_comment(comment,node, NULL);
                 node->output = output_fs(comment);
-                if (child1->output) output_append(node->output, child1->output);
+                output_append(node->output, child1->output);
                 snprintf(temp, buf_len, "   say r%d\n   say \"\\n\"\n",
                          node->register_num);
                 node->output2 = output_fs(temp);
@@ -381,6 +538,43 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case IF:
+                if (child2) child3 = child2->sibling;
+                else child3 = NULL;
+                get_comment(comment,child1, "{IF}");
+                node->output = output_fs(comment);
+                if (child1->output) output_append(node->output, child1->output);
+                get_comment_line_number_only(comment,child2,"{THEN}");
+                snprintf(temp, buf_len, "   brf l%d,r%d\n%s",
+                         payload->label_counter,
+                         node->register_num,
+                         comment);
+                node->output2 = output_fs(temp);
+                output_append(node->output, node->output2);
+                output_append(node->output,child2->output);
+                if (child3) {
+                    get_comment_line_number_only(comment,child3,"{ELSE}");
+                    snprintf(temp, buf_len, "   br l%d\n%sl%d:\n",
+                             payload->label_counter + 1,
+                             comment,
+                             payload->label_counter);
+                    payload->label_counter++;
+                    node->output3 = output_fs(temp);
+                    output_append(node->output, node->output3);
+                    output_append(node->output,child3->output);
+
+                    snprintf(temp, buf_len, "l%d:\n",
+                             payload->label_counter);
+                    payload->label_counter++;
+                    node->output4 = output_fs(temp);
+                    output_append(node->output, node->output4);
+                }
+                else {
+                    snprintf(temp, buf_len, "l%d:\n",
+                             payload->label_counter);
+                    payload->label_counter++;
+                    node->output3 = output_fs(temp);
+                    output_append(node->output, node->output3);
+                }
                 break;
 
             default:;
@@ -399,10 +593,12 @@ void emit(Context *context, char *output_file) {
     if (output_file) output = fopen(output_file, "w");
     else output = stdout;
 
-    payload.file = output;
     payload.current_scope = 0;
-
     ast_walker(context->ast, register_walker, (void*)&payload);
+
+    payload.file = output;
+    payload.label_counter = 0;
+    payload.current_scope = 0;
     ast_walker(context->ast, emit_walker, (void*)&payload);
 
     fclose(output);

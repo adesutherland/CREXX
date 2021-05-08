@@ -251,7 +251,18 @@ static walker_result step4_walker(walker_direction direction,
                 child2->target_type = TP_BOOLEAN;
                 break;
 
-            case OP_COMPARE:
+            case OP_COMPARE_EQUAL:
+            case OP_COMPARE_NEQ:
+            case OP_COMPARE_GT:
+            case OP_COMPARE_LT:
+            case OP_COMPARE_GTE:
+            case OP_COMPARE_LTE:
+            case OP_COMPARE_S_EQ:
+            case OP_COMPARE_S_NEQ:
+            case OP_COMPARE_S_GT:
+            case OP_COMPARE_S_LT:
+            case OP_COMPARE_S_GTE:
+            case OP_COMPARE_S_LTE:
                 node->value_type = TP_BOOLEAN;
                 child1->target_type = max_type;
                 child2->target_type = max_type;
