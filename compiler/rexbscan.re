@@ -115,13 +115,13 @@ int rexbscan(Context* s) {
 //  'WHEN' { return(TK_WHEN); }
 //  'OFF' { return(TK_OFF); }
 //  'ON' { return(TK_ON); }
-//  'BY' { return(TK_BY); }
+  'BY' { return(TK_BY); }
 //  'DIGITS' { return(TK_DIGITS); }
 //  'ENGINEERING' { return(TK_ENGINEERING); }
 //  'ERROR' { return(TK_ERROR); }
 //  'EXPOSE' { return(TK_EXPOSE); }
 //  'FAILURE' { return(TK_FAILURE); }
-//  'FOR' { return(TK_FOR); }
+  'FOR' { return(TK_FOR); }
 //  'FOREVER' { return(TK_FOREVER); }
 //  'FORM' { return(TK_FORM); }
 //  'FUZZ' { return(TK_FUZZ); }
@@ -132,7 +132,7 @@ int rexbscan(Context* s) {
 //  'SCIENTIFIC' { return(TK_SCIENTIFIC); }
 //  'SOURCE' { return(TK_SOURCE); }
 //  'SYNTAX' { return(TK_SYNTAX); }
-//  'TO' { return(TK_TO); }
+  'TO' { return(TK_TO); }
 //  'UNTIL' { return(TK_UNTIL); }
 //  'UPPER' { return(TK_UPPER); }
 //  'VALUE' { return(TK_VALUE); }

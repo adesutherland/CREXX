@@ -63,12 +63,12 @@ void init_ops() {
     instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
 
-    instr_f("sconcat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("sconcat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
-    instr_f("sconcat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
-    instr_f("concats", "Convert and Concat to String (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("concats", "Convert and Concat to String (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
-    instr_f("concats", "Convert and Concat to String (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
 
     instr_f("inc", "Increment Int (op1++)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dec", "Decrement Int (op1--)", OP_REG, OP_NONE, OP_NONE);
@@ -102,12 +102,15 @@ void init_ops() {
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_INT);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_INT, OP_REG);
 
-    instr_f("iprime", "Int Prime op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("fprime", "Float Prime op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("sprime", "String Prime op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("cprime", "Char Prime op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("iprime", "Int Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("fprime", "Float Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("sprime", "String Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("cprime", "Char Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
 
-    instr_f("imaster", "Make int the master value for op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("imaster", "Make int the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("fmaster", "Make float the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("smaster", "Make string the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);

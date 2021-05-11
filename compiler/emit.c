@@ -163,7 +163,6 @@ static void print_output(FILE* file, OutputFragment* existing) {
 typedef struct walker_payload {
     Scope *current_scope;
     FILE *file;
-    int label_counter;
 } walker_payload;
 
 /* Assign registers */
@@ -172,7 +171,7 @@ static walker_result register_walker(walker_direction direction,
                                  void *pl) {
 
     walker_payload *payload = (walker_payload*) pl;
-    ASTNode *child1, *child2;
+    ASTNode *child1, *child2, *c;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -265,6 +264,7 @@ static walker_result register_walker(walker_direction direction,
                 if (child2->register_num == -2)
                     /* Marked earlier so set the register to the target register */
                     child2->register_num = child1->register_num;
+                node->register_num = child1->register_num;
                 break;
 
             case ADDRESS:
@@ -274,6 +274,22 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 if (child1->symbol == 0)
                     return_reg(payload->current_scope, child1->register_num);
+                break;
+
+            case REPEAT:
+                node->register_num = child1->register_num;
+                break;
+
+            case DO:
+                /* We need to free temporary registers for the children
+                 * TO/BY/FOR which is under REPEAT (child1) */
+                c = child1->child->sibling; /* The second child under the REPEAT */
+                while (c) {
+                    c->register_num = c->child->register_num;
+                    if (c->child->symbol == 0)
+                        return_reg(payload->current_scope, c->register_num);
+                    c = c->sibling;
+                }
                 break;
 
             default:;
@@ -307,26 +323,45 @@ void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
 
 void type_promotion(ASTNode *node) {
 
-    char *op;
+    char *op1, *op2;
     char temp[buf_len];
 
     if (node->value_type != node->target_type) {
-        switch (node->target_type) {
+
+        switch (node->value_type) {
             case TP_INTEGER:
             case TP_BOOLEAN:
-                op = "iprime";
+                op1 = "imaster";
                 break;
 
             case TP_FLOAT:
-                op = "fprime";
+                op1 = "fmaster";
                 break;
 
             default:
-                op = "sprime";
+                op1 = "smaster";
                 break;
         }
-        snprintf(temp, buf_len, "   %s r%d\n",
-                 op,
+
+        switch (node->target_type) {
+            case TP_INTEGER:
+            case TP_BOOLEAN:
+                op2 = "iprime";
+                break;
+
+            case TP_FLOAT:
+                op2 = "fprime";
+                break;
+
+            default:
+                op2 = "sprime";
+                break;
+        }
+
+        snprintf(temp, buf_len, "   %s r%d\n   %s r%d\n",
+                 op1,
+                 node->register_num,
+                 op2,
                  node->register_num);
         node->output3 = output_fs(temp);
         output_append(node->output, node->output3);
@@ -403,8 +438,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_CONCAT:
-            case OP_SCONCAT: /* TODO */
-                op="concats";
+                op="concat";
+            case OP_SCONCAT:
+                if (!op) op="sconcat";
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
                 if (child2->output) output_append(node->output, child2->output);
@@ -545,7 +581,7 @@ static walker_result emit_walker(walker_direction direction,
                 if (child1->output) output_append(node->output, child1->output);
                 get_comment_line_number_only(comment,child2,"{THEN}");
                 snprintf(temp, buf_len, "   brf l%d,r%d\n%s",
-                         payload->label_counter,
+                         node->node_number,
                          node->register_num,
                          comment);
                 node->output2 = output_fs(temp);
@@ -554,27 +590,98 @@ static walker_result emit_walker(walker_direction direction,
                 if (child3) {
                     get_comment_line_number_only(comment,child3,"{ELSE}");
                     snprintf(temp, buf_len, "   br l%d\n%sl%d:\n",
-                             payload->label_counter + 1,
+                             child3->node_number,
                              comment,
-                             payload->label_counter);
-                    payload->label_counter++;
+                             node->node_number);
                     node->output3 = output_fs(temp);
                     output_append(node->output, node->output3);
                     output_append(node->output,child3->output);
 
                     snprintf(temp, buf_len, "l%d:\n",
-                             payload->label_counter);
-                    payload->label_counter++;
+                             child3->node_number);
                     node->output4 = output_fs(temp);
                     output_append(node->output, node->output4);
                 }
                 else {
                     snprintf(temp, buf_len, "l%d:\n",
-                             payload->label_counter);
-                    payload->label_counter++;
+                             node->node_number);
                     node->output3 = output_fs(temp);
                     output_append(node->output, node->output3);
                 }
+                break;
+
+            case DO: /* DO LOOP */
+                /* Loop Assignments REPEAT->output */
+                get_comment_line_number_only(comment,child1, "{DO}");
+                node->output = output_fs(comment);
+                output_append(node->output, child1->output);
+
+                /* Loop Start */
+                snprintf(temp, buf_len, "l%d:\n",
+                         node->node_number);
+                node->output2 = output_fs(temp);
+                output_append(node->output, node->output2);
+
+                /* Loop Checks REPEAT->output2 */
+                output_append(node->output, child1->output2);
+
+                /* Loop Body - instructions */
+                output_append(node->output,child2->output);
+
+                /* Loop increments REPEAT->output3 */
+                output_append(node->output, child1->output3);
+
+                /* Loop End */
+                get_comment_line_number_only(comment,child1, "{DO-END}");
+                node->output3 = output_fs(comment);
+                output_append(node->output, node->output3);
+                snprintf(temp, buf_len, "   br l%d\nl%d:\n",
+                         node->node_number, child1->node_number);
+                node->output4 = output_fs(temp);
+                output_append(node->output, node->output4);
+                break;
+
+            case REPEAT:
+                node->output = output_f();
+                output_append(node->output, child1->output);
+                node->output2 = output_f();
+                node->output3 = output_f();
+                while (child2) {
+                    if (child2->output) output_append(node->output, child2->output);
+                    if (child2->output2) output_append(node->output2, child2->output2);
+                    if (child2->output3) output_append(node->output3, child2->output3);
+                    child2 = child2->sibling;
+                }
+                break;
+
+            case TO:
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment);
+                output_append(node->output, child1->output);
+
+                node->output2 = output_fs(comment);
+                snprintf(temp, buf_len, "   %sgt r0,r%d,r%d\n   brt l%d,r0\n",
+                         tp_prefix,
+                         node->parent->register_num,
+                         node->child->register_num,
+                         node->parent->node_number);
+                node->output4 = output_fs(temp);
+                output_append(node->output2, node->output4);
+                break;
+
+            case BY:
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment);
+                output_append(node->output, child1->output);
+
+                node->output3 = output_fs(comment);
+                snprintf(temp, buf_len, "   %sadd r%d,r%d,r%d\n",
+                         tp_prefix,
+                         node->parent->register_num,
+                         node->child->register_num,
+                         node->parent->register_num);
+                node->output4 = output_fs(temp);
+                output_append(node->output3, node->output4);
                 break;
 
             default:;
@@ -597,7 +704,6 @@ void emit(Context *context, char *output_file) {
     ast_walker(context->ast, register_walker, (void*)&payload);
 
     payload.file = output;
-    payload.label_counter = 0;
     payload.current_scope = 0;
     ast_walker(context->ast, emit_walker, (void*)&payload);
 

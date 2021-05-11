@@ -68,7 +68,7 @@ Scope *scp_f(Scope *parent, ASTNode *node) {
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
-    scope->num_registers = 0;
+    scope->num_registers = 1; /* r0 is always available as a temp register */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();
     if (scope->parent) dpa_add((dpa*)(parent->child_array), scope);
@@ -121,11 +121,13 @@ int get_reg(Scope *scope) {
     else {
         reg = (int)((scope->num_registers)++);
     }
+//  printf("get %d\n", reg);
     return reg;
 }
 
 /* Return a no longer used register to the scope */
 void return_reg(Scope *scope, int reg) {
+//  printf("free %d\n", reg);
     dpa *free_array;
 
     free_array = (dpa*)(scope->free_registers_array);

@@ -122,6 +122,8 @@ void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Returns child for chaining */
 ASTNode *add_sibling_ast(ASTNode *older, ASTNode *younger); /* Returns younger for chaining */
+/* Turn a node to an ERROR */
+void make_node_an_error(ASTNode* node, const char *error_string);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file);
 
@@ -149,8 +151,8 @@ typedef walker_result (*walker_handler)(walker_direction direction,
  */
 walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload);
 
-/* Validator */
-void validate(Context *context);
+/* Validator - returns the number of errors */
+int validate(Context *context);
 
 /* Scope and Symbols */
 struct Scope {

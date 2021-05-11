@@ -168,6 +168,26 @@ int run(bin_space *program, int argc, char *argv[]) {
         printf("%.*s", (int) s1->string_len, s1->string);
         DISPATCH;
 
+    SCONCAT_REG_REG_REG:
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - SCONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        v3 = REG_OP(3);
+        string_sconcat(v1,v2,v3);
+        DISPATCH;
+
+    CONCAT_REG_REG_REG:
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - CONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+
+        v1 = REG_OP(1);
+        v2 = REG_OP(2);
+        v3 = REG_OP(3);
+        string_concat(v1,v2,v3);
+        DISPATCH;
+
     IMULT_REG_REG_REG:
         CALC_DISPATCH(3);
         DEBUG("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -500,7 +520,21 @@ int run(bin_space *program, int argc, char *argv[]) {
         master_int(v1);
         DISPATCH;
 
-    TIME_REG:
+    FMASTER_REG:
+        CALC_DISPATCH(1);
+        DEBUG("TRACE - FMASTER_REG R%llu\n", REG_IDX(1));
+        v1 = REG_OP(1);
+        master_float(v1);
+        DISPATCH;
+
+    SMASTER_REG:
+        CALC_DISPATCH(1);
+        DEBUG("TRACE - SMASTER_REG R%llu\n", REG_IDX(1));
+        v1 = REG_OP(1);
+        master_string(v1);
+        DISPATCH;
+
+TIME_REG:
         CALC_DISPATCH(1);
         DEBUG("TRACE - TIME R%llu\n", REG_IDX(1));
         v1 = REG_OP(1);

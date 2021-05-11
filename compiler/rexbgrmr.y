@@ -2,21 +2,6 @@
 /* (c) Adrian Sutherland 2021   */
 /* Grammar                      */
 
-/*
-OP_COMPARE_EQUAL,
-OP_COMPARE_NEQ,
-OP_COMPARE_GT,
-OP_COMPARE_LT,
-OP_COMPARE_GTE,
-OP_COMPARE_LTE,
-OP_COMPARE_S_EQ,
-OP_COMPARE_S_NEQ,
-OP_COMPARE_S_GT,
-OP_COMPARE_S_LT,
-OP_COMPARE_S_GTE,
-OP_COMPARE_S_LTE,
-*/
-
 %name RexxB
 %token_type { Token* }
 %default_type { ASTNode* }
@@ -157,7 +142,7 @@ keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_error(context, "9.2"
 keyword_instruction(I) ::= TK_END(T) error. { I = ast_error(context, "10.1", T); }
 
 group(I) ::= simple_do(K). { I = K; }
-//group(I) ::= do(K). { I = K; }
+group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
 
 /* Groups */
@@ -175,20 +160,28 @@ simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
           { G = I; add_ast(G,ast_error(context, "35.1", E)); }
 
 /* DO Group */
-/*
-    do ::= 'DO' r:dorep (ncl / t:. error -> (ERROR[27.1] t)) i:instruction_list? do_ending
-       -> (DO r i);
-
-    do_ending ::= 'END' VAR_SYMBOL? ncl
-		 / TK_EOS -> ERROR[14.1]
-		 / t:. resync -> (ERROR[35.1] t);
-
-    dorep ::= ( a:assignment {? t:dot b:dob f:dof} )
-          -> (REPEAT a t? b? f?);
-    dot ::= 'TO' e:expression -> (TO e);
-    dob ::= 'BY' e:expression -> (BY e);
-    dof ::= 'FOR' e:expression -> (FOR e);
-*/
+do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
+do(G)         ::= TK_DO dorep ANYTHING(E).
+                  { G = ast_error(context, "27.1", E); }
+do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
+                  { G = I; add_ast(G,ast_error(context, "14.1", E)); }
+do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
+                  { G = I; add_ast(G,ast_error(context, "35.1", E)); }
+dorep(R)      ::= assignment(A).
+                  { R = ast_ft(context, REPEAT); add_ast(R,A); }
+dorep(R)      ::= assignment(A) dorep_list(L).
+                  { R = ast_ft(context, REPEAT); add_ast(R,A); add_ast(R,L); }
+dorep_list(L) ::= dorep_item(L1).
+                  { L = L1; }
+dorep_list(L) ::= dorep_list(L1) dorep_item(L2).
+                  { L = L1; add_sibling_ast(L,L2); }
+dorep_item(R) ::= TK_TO(T) expression(E).
+                  { R = ast_f(context, TO, T); add_ast(R,E); }
+dorep_item(R) ::= TK_BY(T) expression(E).
+                  { R = ast_f(context, BY, T); add_ast(R,E); }
+dorep_item(R) ::= TK_FOR(T) expression(E).
+                  { R = ast_f(context, FOR, T); add_ast(R,E); }
 
 /* IF Group */
 %nonassoc TK_IF.

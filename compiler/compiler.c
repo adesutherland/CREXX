@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     Token *token;
     Context context;
     void *parser;
+    int errors;
 
     /* Open input file */
     if (argc==2)   fp = fopen(argv[1], "r");
@@ -107,20 +108,23 @@ int main(int argc, char *argv[]) {
     /* Get dot from https://graphviz.org/download/ */
     system("dot astgraph0.dot -Tpng -o astgraph0.png");
 
-    validate(&context);
+    errors = validate(&context);
+    if (errors) {
+        printf("%d error(s) in source file\n", errors);
+    }
+    else {
+        pdot_tree(context.ast, "astgraph1.dot");
+        system("dot astgraph1.dot -Tpng -o astgraph1.png");
 
-    pdot_tree(context.ast, "astgraph1.dot");
-    system("dot astgraph1.dot -Tpng -o astgraph1.png");
+        /* Generate Assembler */
+        printf("Generating Assembler\n");
+        emit(&context, "output.rxas");
 
-    /* Generate Assembler */
-    printf("Generating Assembler\n");
-    emit(&context, "output.rxas");
+        pdot_tree(context.ast, "astgraph2.dot");
+        system("dot astgraph2.dot -Tpng -o astgraph2.png");
 
-    pdot_tree(context.ast, "astgraph2.dot");
-    system("dot astgraph2.dot -Tpng -o astgraph2.png");
-
-
-    printf("Compiler Exiting - Success\n");
+        printf("Compiler Exiting - Success\n");
+    }
 
     finish:
     /* Deallocate AST */

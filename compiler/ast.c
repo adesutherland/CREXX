@@ -101,6 +101,13 @@ ASTNode *ast_error(Context* context, const char *error_string, Token *token) {
     return errorAST;
 }
 
+/* Turn a node to an ERROR */
+void make_node_an_error(ASTNode* node, const char *error_string) {
+    node->node_type = ERROR;
+    node->node_string = error_string;
+    node->node_string_length = strlen(error_string);
+}
+
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_error_here(Context* context, const char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
@@ -278,7 +285,11 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
         while (s->sibling) s = s->sibling;
         s->sibling = child;
     } else parent->child = child;
-    child->parent = parent;
+    s = child;
+    while (s) {
+        s->parent = parent;
+        s = s->sibling;
+    }
     return child;
 }
 

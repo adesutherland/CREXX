@@ -11,6 +11,9 @@ ofile=path"/machine/instrset.h"
   asm=path"/interpreter/rx_intrp.c"
   asmmiss=path"/machine/instrmiss.h"
 
+  'rm' ofile
+  'rm' asmmiss
+
   call inc_inst '/* -------------------------------------------------------------------------------'
   call inc_inst ' * Generate Instruction Set, generated on 'date()' AT 'time()
   call inc_inst ' * -------------------------------------------------------------------------------'
@@ -102,7 +105,7 @@ alreadyDefined:
     call inc_miss ' */'
 	call inc_miss ucmd': // label not yet defined'
 	call inc_miss '  CALC_DISPATCH('numparm');'
-    call inc_miss '    DEBUG("TRACE - 'ucmd'");'
+    call inc_miss '    DEBUG("TRACE - 'ucmd'\n");'
     call inc_miss '    DEBUG("'ucmd' not yet defined\n");'
 	call inc_miss '    goto SIGNAL;'
 

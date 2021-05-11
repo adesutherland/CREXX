@@ -17,8 +17,11 @@
 static walker_result step1_walker(walker_direction direction,
                                   ASTNode* node, __attribute__((unused)) void *payload) {
 
-    ASTNode* child;
+    ASTNode *child, *c;
     char *ch;
+    int has_to;
+    int has_for;
+    int has_by;
 
     if (direction == out) {
         if (node->token) {
@@ -66,14 +69,37 @@ static walker_result step1_walker(walker_direction direction,
 
         }
 */
+
         if (node->node_type == PROGRAM_FILE) {
             /* prune REXX_OPTIONS */
             if (node->child->node_type == REXX_OPTIONS) {
                 node->child = node->child->sibling;
             }
         }
-        if (node->value_type == REXX_OPTIONS) {
+        else if (node->node_type == REXX_OPTIONS) {
             /* TODO Process any REXX options */
+        }
+        else if (node->node_type == REPEAT) {
+            /* Validate Sub-commands - Error 27.1 */
+            has_to = 0;
+            has_for = 0;
+            has_by = 0;
+            child = node->child->sibling; /* Second Child - the first is the assignment */
+            while (child) {
+                if (child->node_type == BY) {
+                    if (has_by) make_node_an_error(child,"27.1");
+                    else has_by = 1;
+                }
+                else if (child->node_type == FOR) {
+                    if (has_for) make_node_an_error(child, "27.1");
+                    else has_for = 1;
+                }
+                else if (child->node_type == TO) {
+                        if (has_to) make_node_an_error(child,"27.1");
+                        else has_to = 1;
+                }
+                child = child->sibling;
+            }
         }
         else if (node->node_type == OP_SCONCAT) {
             /* We need to decide if there is white space between the tokens */
@@ -336,13 +362,30 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case ASSIGN:
-                child1->value_type = child2->value_type;
-                child1->target_type = child2->value_type;
-                child2->target_type = child2->value_type;
-                node->value_type = child2->value_type;
-                node->target_type = child2->value_type;
-                if (child1->symbol->type == TP_UNKNOWN)
-                    child1->symbol->type = child2->value_type;
+                if (child1->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet */
+                    if (node->parent->node_type == REPEAT) {
+                        /* Special logic for LOOP Assignment - type must be numeric */
+                        child1->value_type =
+                                promotion[child2->value_type][TP_INTEGER];
+                    } else {
+                        child1->value_type = child2->value_type;
+                    }
+                    child1->target_type = child1->value_type;
+                    child2->target_type = child1->value_type;
+                    node->value_type = child1->value_type;
+                    node->target_type = child1->value_type;
+                    child1->symbol->type = child1->value_type;
+                }
+                else {
+                    /* The Target Symbol has a type */
+                    child1->value_type = child1->symbol->type;
+                    child1->target_type = child1->symbol->type;
+                    child2->target_type = child1->symbol->type;
+                    node->value_type = child1->symbol->type;
+                    node->target_type = child1->symbol->type;
+                    child1->symbol->type = child1->value_type;
+                }
                 break;
 
             case ADDRESS:
@@ -352,6 +395,22 @@ static walker_result step4_walker(walker_direction direction,
 
             case IF:
                 if (child1) child1->target_type = TP_BOOLEAN;
+                break;
+
+            /* Loops */
+            case TO:
+            case BY:
+                /* The TO/BY value type needs to be the same as the assigment type */
+                child1->target_type = node->parent->child->value_type;
+                node->value_type = child1->target_type;
+                node->target_type = child1->target_type;
+                break;
+
+            case FOR:
+                /* The TO/BY value type needs to be the same as the assigment type */
+                child1->target_type = TP_INTEGER;
+                node->value_type = child1->target_type;
+                node->target_type = child1->target_type;
                 break;
 
             default:;
@@ -372,19 +431,24 @@ static walker_result step5_walker(walker_direction direction,
                                   ASTNode* node,
                                   __attribute__((unused)) void *payload) {
 
+    int *errors = (int*)payload;
+
     if (direction == in) {
         if (node->node_type == ERROR) {
-            printf("Error @ %d.%d - %s \"", node->line+1, node->column+1, node->node_string);
+            printf("Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
             print_unescaped(stdout, node->source_start,
                             (int)(node->source_end - node->source_start + 1));
             printf("\"\n");
+            (*errors)++;
         }
     }
     return result_normal;
 }
 
-void validate(Context *context) {
+/* Returns the number of errors */
+int validate(Context *context) {
     Scope *current_scope;
+    int errors = 0;
 
     /* Step 1
      * - Sets the source start / finish for eac node
@@ -413,5 +477,7 @@ void validate(Context *context) {
     /* Step 5
      * - Print errors
      */
-    ast_walker(context->ast, step5_walker, 0);
+    ast_walker(context->ast, step5_walker, &errors);
+
+    return errors;
 }
