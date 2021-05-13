@@ -1,6 +1,8 @@
 #ifndef CREXX_RX_INTRP_H
 #define CREXX_RX_INTRP_H
 
+#define rxversion "cREXX-Phase-0 v0.1.0"
+
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
 #else          // DEBUG

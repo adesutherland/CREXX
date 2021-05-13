@@ -4,6 +4,8 @@
 #ifndef CREXX_COMPILER_H
 #define CREXX_COMPILER_H
 
+#define rxversion "cREXX-Phase-0 v0.1.0"
+
 #include "stdio.h"
 
 /* Typedefs */

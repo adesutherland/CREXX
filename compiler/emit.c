@@ -285,9 +285,11 @@ static walker_result register_walker(walker_direction direction,
                  * TO/BY/FOR which is under REPEAT (child1) */
                 c = child1->child->sibling; /* The second child under the REPEAT */
                 while (c) {
-                    c->register_num = c->child->register_num;
-                    if (c->child->symbol == 0)
-                        return_reg(payload->current_scope, c->register_num);
+                    if (c->child) {
+                        c->register_num = c->child->register_num;
+                        if (c->child->symbol == 0)
+                            return_reg(payload->current_scope, c->register_num);
+                    }
                     c = c->sibling;
                 }
                 break;
@@ -670,18 +672,40 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case BY:
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                output_append(node->output, child1->output);
+                if (child1) {
+                    /* BY explicitly stated */
+                    get_comment(comment, node, NULL);
+                    node->output = output_fs(comment);
+                    output_append(node->output, child1->output);
 
-                node->output3 = output_fs(comment);
-                snprintf(temp, buf_len, "   %sadd r%d,r%d,r%d\n",
-                         tp_prefix,
-                         node->parent->register_num,
-                         node->child->register_num,
-                         node->parent->register_num);
-                node->output4 = output_fs(temp);
-                output_append(node->output3, node->output4);
+                    node->output3 = output_fs(comment);
+                    snprintf(temp, buf_len, "   %sadd r%d,r%d,r%d\n",
+                             tp_prefix,
+                             node->parent->register_num,
+                             node->child->register_num,
+                             node->parent->register_num);
+                    node->output4 = output_fs(temp);
+                    output_append(node->output3, node->output4);
+                }
+                else {
+                    /* BY Added implicitly - increment by 1 */
+                    get_comment_line_number_only(comment, node->parent, "{Implicit \"BY 1\"}");
+
+                    node->output3 = output_fs(comment);
+                    if (*tp_prefix == 'i') {
+                        snprintf(temp, buf_len, "   inc r%d\n",
+                                 node->parent->register_num);
+                    }
+                    else {
+                        snprintf(temp, buf_len, "   %sadd r%d,r%d,1.0\n",
+                                 tp_prefix,
+                                 node->parent->register_num,
+                                 node->child->register_num,
+                                 node->parent->register_num);
+                    }
+                    node->output4 = output_fs(temp);
+                    output_append(node->output3, node->output4);
+                }
                 break;
 
             default:;

@@ -70,13 +70,13 @@ void prnt_err(Assembler_Context* context) {
     }
 
     /* Print Errors - e is now the first error */
-    if (context->severity == 0) printf("\nNo Error\n");
-    else printf("\nError Severity %d\n", context->severity);
-    while (e) {
-        printf("%d:%d - %s\n", e->line, e->column, e->message);
-        e = e->next_error;
+    if (context->severity != 0) {
+        printf("\nError Severity %d\n", context->severity);
+        while (e) {
+            printf("%d:%d - %s\n", e->line, e->column, e->message);
+            e = e->next_error;
+        }
     }
-    printf("\n");
 }
 
 void free_err(Assembler_Context* context) {

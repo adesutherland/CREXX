@@ -23,6 +23,8 @@ static walker_result step1_walker(walker_direction direction,
     int has_for;
     int has_by;
 
+    Context *context = (Context*)payload;
+
     if (direction == out) {
         if (node->token) {
             node->source_start = node->token->token_string;
@@ -99,6 +101,10 @@ static walker_result step1_walker(walker_direction direction,
                         else has_to = 1;
                 }
                 child = child->sibling;
+            }
+            if (has_to && !has_by) {
+                /* Need to add implicit "BY" node - to avoid an infinite loop! */
+                add_ast(node, ast_ft(context, BY));
             }
         }
         else if (node->node_type == OP_SCONCAT) {
@@ -401,9 +407,9 @@ static walker_result step4_walker(walker_direction direction,
             case TO:
             case BY:
                 /* The TO/BY value type needs to be the same as the assigment type */
-                child1->target_type = node->parent->child->value_type;
-                node->value_type = child1->target_type;
-                node->target_type = child1->target_type;
+                if (child1) child1->target_type = node->parent->child->value_type;
+                node->value_type = node->parent->child->value_type;
+                node->target_type = node->parent->child->value_type;
                 break;
 
             case FOR:
@@ -455,7 +461,7 @@ int validate(Context *context) {
      * - Fixes SCONCAT to CONCAT
      * - Other AST fixups (TBC)
      */
-    ast_walker(context->ast, step1_walker, 0);
+    ast_walker(context->ast, step1_walker,(void*)context);
 
     /* Step 2
      * - Builds the Symbol Table

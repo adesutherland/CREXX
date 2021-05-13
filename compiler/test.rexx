@@ -2,7 +2,7 @@
 options levelb
 say "Development"
 a = 0
-do i = 1 to "10" by 2.0
+do i = 1 to 5
   a = a + i
   say "i=" i
   say "a=" a
