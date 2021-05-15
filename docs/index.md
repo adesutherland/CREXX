@@ -42,6 +42,8 @@ The documentation is stored in the code repository/branch under the [/doc](https
 
 # Current Component User Documentation
 
+Version 0.1.4
+
 ## Running a REXX program
 
 Assuming test.rexx is the source program
