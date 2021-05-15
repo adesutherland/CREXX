@@ -234,14 +234,14 @@ jobs:
       - name: Sanity Check
         working-directory: ${{ runner.temp }}/exe
         run: |
-        ./release/rxc -v
-        ./release/rxas -v
-        ./release/rxdas -v
-        ./release/rxvm -v
-        ./debug/rxc -v
-        ./debug/rxas -v
-        ./debug/rxdas -v
-        ./debug/rxvm -v
+          ./release/rxc -v
+          ./release/rxas -v
+          ./release/rxdas -v
+          ./release/rxvm -v
+          ./debug/rxc -v
+          ./debug/rxas -v
+          ./debug/rxdas -v
+          ./debug/rxvm -v
         shell: bash
 
       - name: Upload Executable
