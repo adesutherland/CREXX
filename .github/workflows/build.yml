@@ -159,6 +159,9 @@ jobs:
         cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
+        cp LICENSE "${{ runner.temp }}/exe"
+        cp README.md "${{ runner.temp }}/exe"
+        cp history.txt "${{ runner.temp }}/exe"
       shell: bash
 
     - name: Sanity Check
@@ -227,8 +230,6 @@ jobs:
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp history.txt "${{ runner.temp }}/exe"
-          cp assembler/test.rxas "${{ runner.temp }}/exe"
-          ls "${{ runner.temp }}/exe"
         shell: bash
 
       - name: Sanity Check
