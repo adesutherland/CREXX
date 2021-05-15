@@ -1,12 +1,12 @@
 #ifndef CREXX_RX_INTRP_H
 #define CREXX_RX_INTRP_H
 
-#define rxversion "cREXX-Phase-0 v0.1.0"
+#define rxversion "cREXX-Phase-0 v0.1.4"
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
 #else          // DEBUG
-    #define DEBUG(...) fprintf(stderr, __VA_ARGS__)
+    #define DEBUG(...) if (debug_mode) fprintf(stderr, __VA_ARGS__)
 #endif
 
 #define ERROR(...)   { fprintf(stderr, __VA_ARGS__); goto SIGNAL; }
@@ -79,6 +79,6 @@ void dosignal(int code);
 
 int initialize();
 int finalize();
-int run(program *program, int argc, char *argv[]);
+int run(program *program, int argc, char *argv[], int debug_mode);
 
 #endif //CREXX_RX_INTRP_H

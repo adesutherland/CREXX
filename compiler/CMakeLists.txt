@@ -32,10 +32,10 @@ add_custom_command(
         COMMENT "Create REXX B Lexer..."
 )
 
-add_executable(rexx compiler.c ast.c compiler.h
+add_executable(rxc compiler.c ast.c compiler.h
                opt_scan.c opt_grmr.c opt_pars.c opt_grmr.h
                rexbscan.c rexbgrmr.c rexbpars.c rexbgrmr.h rexbvald.c symbols.c
                ../avl_tree/avl_tree.c ../avl_tree/avl_tree.h
         pntraray.h emit.c)
-add_dependencies(rexx re2c lemon)
-target_include_directories(rexx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_dependencies(rxc re2c lemon)
+target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

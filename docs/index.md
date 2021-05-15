@@ -39,3 +39,58 @@ Key Links:
 This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is availabke as a website.
 
 The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
+
+# Current Component User Documentation
+
+## Running a REXX program
+
+Assuming test.rexx is the source program
+
+    rxc test
+    rxas test.rxas
+    rxvm test.rxbin
+
+## Compiler
+
+Handles REXX Level B subset 
+- Assignments / Expressions
+- SAY
+- IF/THEN/ELSE
+- DO/TO/BY
+- ADDRESS 
+
+Type 
+
+    rxc -h 
+
+for command format / options
+
+## Assembler
+
+Type
+
+    rxas -h 
+
+for command format / options
+
+Type 
+
+    rxas -i 
+
+for list of assembler instructions
+
+## Disassembler
+
+Type
+
+    rxdas -h 
+
+for command format / options
+
+## VM/Interpreter
+
+Type
+
+    rxvm -h 
+
+for command format / options

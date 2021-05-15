@@ -1,7 +1,10 @@
 CREXX History / Change Log
 
-F0007 - Assembler / Disassembler / VM PoC 2
+0.1.4   15 May 2021
+F0009 - PoC 2 VM
+F0007 - PoC 2 Assembler
+F0005 - PoC 2 Compiler
 F0003 - RE2C / Lemon PoC
 
-0.1.3 3 Oct 2020
+0.1.3   3 Oct 2020
 F0001 - Initial Stub & build script

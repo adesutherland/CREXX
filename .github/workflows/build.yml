@@ -65,29 +65,49 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Run CMAKE
+    - name: CMAKE Build Release
       uses: lukka/run-cmake@v3
       with:
         # Select the build configuration, typically Debug or Release.
         cmakeBuildType: MinSizeRel # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/build"
+        buildDirectory: "${{ runner.temp }}/release"
 
-    - name: Get Executable
+    - name: CMAKE Build Debug
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: Debug # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/debug"
+
+    - name: Get Executables
       run: |
         mkdir -p "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/compiler/rexx" "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
-        cp LICENSE "${{ runner.temp }}/exe"
-        cp README.md "${{ runner.temp }}/exe"
+        mkdir -p "${{ runner.temp }}/exe/release"
+        mkdir -p "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
+        cp LICENSE     "${{ runner.temp }}/exe"
+        cp README.md   "${{ runner.temp }}/exe"
         cp history.txt "${{ runner.temp }}/exe"
-        cp assembler/test.rxas "${{ runner.temp }}/exe"
-        ls "${{ runner.temp }}/exe"
       shell: bash
 
     - name: Sanity Check
       working-directory: ${{ runner.temp }}/exe
       run: | 
-        ./rxas -v
+        ./release/rxc -v
+        ./release/rxas -v
+        ./release/rxdas -v
+        ./release/rxvm -v
+        ./debug/rxc -v
+        ./debug/rxas -v
+        ./debug/rxdas -v
+        ./debug/rxvm -v
       shell: bash
 
     - name: Upload Executable
@@ -95,7 +115,10 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: CREXX-Ubuntu
-        path: "${{ runner.temp }}/exe"
+        path: |
+          "${{ runner.temp }}/exe"
+          "${{ runner.temp }}/exe/debug"
+          "${{ runner.temp }}/exe/release"
 
 #**************************************************#
   build-windows:
@@ -109,29 +132,46 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Run CMAKE
+    - name: CMAKE Build Release
       uses: lukka/run-cmake@v3
       with:
         # Select the build configuration, typically Debug or Release.
         cmakeBuildType: MinSizeRel # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/build"
+        buildDirectory: "${{ runner.temp }}/release"
+
+    - name: CMAKE Build Debug
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: Debug # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/debug"
 
     - name: Get Executable
       run: |
         mkdir -p "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/compiler/rexx.exe" "${{ runner.temp }}/exe"
-        cp "${{ runner.temp }}/build/assembler/rxas.exe" "${{ runner.temp }}/exe"
-        cp LICENSE "${{ runner.temp }}/exe"
-        cp README.md "${{ runner.temp }}/exe"
-        cp history.txt "${{ runner.temp }}/exe"
-        cp assembler/test.rxas "${{ runner.temp }}/exe"
-        ls "${{ runner.temp }}/exe"
+        mkdir -p "${{ runner.temp }}/exe/release"
+        mkdir -p "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/debug/compiler/rxc.exe"         "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
       shell: bash
 
     - name: Sanity Check
       working-directory: ${{ runner.temp }}/exe
-      run: | 
-        ./rxas -v
+      run: |
+        ./release/rxc -v
+        ./release/rxas -v
+        ./release/rxdas -v
+        ./release/rxvm -v
+        ./debug/rxc -v
+        ./debug/rxas -v
+        ./debug/rxdas -v
+        ./debug/rxvm -v
       shell: bash
 
     - name: Upload Executable
@@ -139,7 +179,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: CREXX-Windows
-        path: "${{ runner.temp }}/exe"
+        path: |
+          "${{ runner.temp }}/exe"
+          "${{ runner.temp }}/exe/debug"
+          "${{ runner.temp }}/exe/release"
+
 
   #**************************************************#
   build-macos:
@@ -153,18 +197,33 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Run CMAKE
+      - name: CMAKE Build Release
         uses: lukka/run-cmake@v3
         with:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: MinSizeRel # optional, default is Debug
-          buildDirectory: "${{ runner.temp }}/build"
+          buildDirectory: "${{ runner.temp }}/release"
+
+      - name: CMAKE Build Debug
+        uses: lukka/run-cmake@v3
+        with:
+          # Select the build configuration, typically Debug or Release.
+          cmakeBuildType: Debug # optional, default is Debug
+          buildDirectory: "${{ runner.temp }}/debug"
 
       - name: Get Executable
         run: |
           mkdir -p "${{ runner.temp }}/exe"
-          cp "${{ runner.temp }}/build/compiler/rexx" "${{ runner.temp }}/exe"
-          cp "${{ runner.temp }}/build/assembler/rxas" "${{ runner.temp }}/exe"
+          mkdir -p "${{ runner.temp }}/exe/release"
+          mkdir -p "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp history.txt "${{ runner.temp }}/exe"
@@ -175,7 +234,14 @@ jobs:
       - name: Sanity Check
         working-directory: ${{ runner.temp }}/exe
         run: |
-          ./rxas -v
+        ./release/rxc -v
+        ./release/rxas -v
+        ./release/rxdas -v
+        ./release/rxvm -v
+        ./debug/rxc -v
+        ./debug/rxas -v
+        ./debug/rxdas -v
+        ./debug/rxvm -v
         shell: bash
 
       - name: Upload Executable
@@ -183,7 +249,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: CREXX-MacOS
-          path: "${{ runner.temp }}/exe"
+          path: |
+            "${{ runner.temp }}/exe"
+            "${{ runner.temp }}/exe/debug"
+            "${{ runner.temp }}/exe/release"
 
 #**************************************************#
   release:

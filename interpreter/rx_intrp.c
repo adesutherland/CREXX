@@ -63,7 +63,7 @@ void free_frame(stack_frame *frame) {
 }
 
 /* Interpreter */
-int run(bin_space *program, int argc, char *argv[]) {
+int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
     bin_code *pc, *next_pc;
@@ -1437,7 +1437,10 @@ converror:
 
 
 EXIT:
-        printf("TRACE - EXIT\n");
+
+#ifndef NDEBUG
+        if (debug_mode) printf("TRACE - EXIT\n");
+#endif
         goto interprt_finished;
 
     SIGNAL:
@@ -1446,8 +1449,9 @@ EXIT:
 
     interprt_finished:
         if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
-        printf("Interpreter Finished\n");
-
+#ifndef NDEBUG
+        if (debug_mode) printf("Interpreter Finished\n");
+#endif
  //   free_ops();
 
     return 0;

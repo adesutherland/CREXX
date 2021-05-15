@@ -441,10 +441,10 @@ static walker_result step5_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
-            printf("Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
-            print_unescaped(stdout, node->source_start,
+            fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
+            print_unescaped(stderr, node->source_start,
                             (int)(node->source_end - node->source_start + 1));
-            printf("\"\n");
+            fprintf(stderr,"\"\n");
             (*errors)++;
         }
     }
