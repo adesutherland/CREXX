@@ -7,7 +7,8 @@
 
 //#include "rx_intrp.h"
 
-#define SMALL_STRING_BUFFER 24
+//#define SMALL_STRING_BUFFER 24
+#define SMALL_STRING_BUFFER 81
 #define EXTEND_STRING_BUFFER 300
 
 typedef struct value value;
@@ -118,16 +119,49 @@ static void set_float(value *v, double value) {
     v->float_value = value;
 }
 
-/* This resets the variable flag so that only the integer flag is set.
- * This allow the value to have multiple fast integer updates without
+static void string_concat(value *v1, value *v2, value *v3) {
+    int l;
+    memcpy(v1->string_value, v2->string_value, v2->string_length);
+    l = SMALL_STRING_BUFFER - v2->string_length;
+    if (v3->string_length < l) l = v3->string_length;
+
+    memcpy(v1->string_value + v2->string_length, v3->string_value, l);
+    v1->string_length = v2->string_length + l;
+}
+
+static void string_sconcat(value *v1, value *v2, value *v3) {
+    int l;
+    memcpy(v1->string_value, v2->string_value, v2->string_length);
+    l = SMALL_STRING_BUFFER - v2->string_length;
+    if (!l) return;
+    v1->string_value[v2->string_length] = ' ';
+    l--;
+    if (v3->string_length < l) l = v3->string_length;
+
+    memcpy(v1->string_value + v2->string_length + 1, v3->string_value, l);
+    v1->string_length = v2->string_length + l + 1;
+}
+
+/* This resets the variable flag so that only the matser type flag is set.
+ * This allow the value to have multiple fast updates without
  * having to consider the status. When the series of changes are done the flags
  * can be reset to allow another buffer to be primed (like string for printing)
+ * (Deprecated)
  */
 static void master_int(value *v) {
     v->status.all_flags = 0;
     v->status.primed_int = 1;
 }
 
+static void master_float(value *v) {
+    v->status.all_flags = 0;
+    v->status.primed_float = 1;
+}
+
+static void master_string(value *v) {
+    v->status.all_flags = 0;
+    v->status.primed_string = 1;
+}
 
 static void set_conststring(value *v, string_constant *value) {
     v->status.all_flags = 0;

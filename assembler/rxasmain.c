@@ -9,44 +9,140 @@
 #include "operands.h"
 #include "rxasassm.h"
 
+static void help() {
+    char* helpMessage =
+        "cREXX Assembler\n"
+        "Version : " rxversion "\n"
+        "Usage   : rxas [options] source_file\n"
+        "Options :\n"
+        "  -h              Prints help message\n"
+        "  -c              Prints Copyright & License Details\n"
+        "  -v              Prints Version\n"
+        "  -a              Print Architecture Details\n"
+        "  -i              Print Instructions\n"
+        "  -d              Debug/Verbose Mode\n"
+        "  -o output_file  Binary Output File\n";
+
+    printf("%s",helpMessage);
+}
+
+static void license() {
+    char *message =
+    "cREXX License (MIT)\n"
+    "Copyright (c) 2020-2021 Adrian Sutherland\n\n"
+
+    "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+    "of this software and associated documentation files (the \"Software\"), to deal\n"
+    "in the Software without restriction, including without limitation the rights\n"
+    "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+    "copies of the Software, and to permit persons to whom the Software is\n"
+    "furnished to do so, subject to the following conditions:\n\n"
+
+    "The above copyright notice and this permission notice shall be included in all\n"
+    "copies or substantial portions of the Software.\n\n"
+
+    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+    "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+    "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+    "SOFTWARE.\n\n"
+    "See https://github.com/adesutherland/CREXX for project details\n";
+
+    printf("%s",message);
+}
+
+static void error_and_exit(int rc, char* message) {
+
+    fprintf(stderr, "ERROR: %s - try \"rxas -h\"\n", message);
+    exit(rc);
+}
+
 int main(int argc, char *argv[]) {
 
-    FILE *fp, *traceFile, *outFile;
+    FILE *fp = 0, *traceFile = 0, *outFile = 0;
     char *buff, *buff_end;
     size_t bytes;
     int token_type;
     Token *token;
     Assembler_Context scanner;
     void *parser;
-    char* fileName;
+    char* file_name = 0;
+    char *output_file_name = 0;
+    char *extention;
+    int debug_mode = 0;
+    int i;
+    bin_space *pgm;
 
-    printf("REXX Assembler Testbed Version: PoC 2\n\n");
-
-    if (argc !=2) {
-        printf("Invalid Arguments\nFormat: rxas fileName\n");
-        exit (-1);
-    }
-    if (strcmp(argv[1],"-v") == 0) {
-        printf("Version: PoC 2 Build 2\n");
-        exit (0);
-    }
-    fileName = argv[1];
-
-    /* Print - Architecture */
-    printf("OS Architecture Details\n");
-    printf("Type sizes: int=%d, char=%d, void*=%d, double=%d, long=%d, long long=%d size_t=%d\n",
-           (int) sizeof(int),  (int) sizeof(char),      (int) sizeof(void*), (int) sizeof(double),
-           (int) sizeof(long), (int) sizeof(long long), (int) sizeof(size_t));
-
-    // Load and Print Instruction Database
+    // Load Instruction Database
     init_ops();
-    print_ops();
+
+    /* Parse arguments  */
+    for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strlen(argv[i]) > 2) {
+            error_and_exit(2, "Invalid argument");
+        }
+        switch (toupper((argv[i][1]))) {
+            case '-':
+                break;
+
+            case 'O': /* Output File */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing output file after -o");
+                }
+                output_file_name = argv[i];
+                break;
+
+            case 'V': /* Version */
+                printf("%s\n", rxversion);
+                exit(0);
+
+            case 'H': /* Help */
+            case '?':
+                help();
+                exit(0);
+
+            case 'C': /* License */
+                license();
+                exit(0);
+
+            case 'A': /* Architecture */
+                printf("OS Architecture Details\n");
+                printf("Type sizes: int=%d, char=%d, void*=%d, double=%d, long=%d, long long=%d size_t=%d\n",
+                       (int) sizeof(int),  (int) sizeof(char),      (int) sizeof(void*), (int) sizeof(double),
+                       (int) sizeof(long), (int) sizeof(long long), (int) sizeof(size_t));
+                exit(0);
+
+            case 'I': /* Instructions */
+                print_ops();
+                exit(0);
+
+            case 'D': /* Debug Mode */
+                debug_mode = 1;
+                break;
+
+            default:
+                error_and_exit(2, "Invalid argument");
+        }
+    }
+
+    if (i == argc) {
+        error_and_exit(2, "Missing input source file");
+    }
+
+    file_name = argv[i++];
+
+    if (i < argc) {
+        error_and_exit(2, "Unexpected Arguments");
+    }
 
     /* Opening and Assemble file */
-    printf("Assembling %s\n", fileName);
+    if (debug_mode) printf("Assembling %s\n", file_name);
 
     /* Open input file */
-    fp = fopen(fileName, "r");
+    fp = fopen(file_name, "r");
 
     if(fp == NULL) {
         fprintf(stderr, "Can't open input file\n");
@@ -54,10 +150,12 @@ int main(int argc, char *argv[]) {
     }
 
     /* Open trace file */
-    traceFile = fopen("trace.out", "w");
-    if(traceFile == NULL) {
-        fprintf(stderr, "Can't open trace file\n");
-        exit(-1);
+    if (debug_mode) {
+        traceFile = fopen("trace.out", "w");
+        if (traceFile == NULL) {
+            fprintf(stderr, "Can't open trace file\n");
+            exit(-1);
+        }
     }
 
     /* Get file size */
@@ -66,12 +164,13 @@ int main(int argc, char *argv[]) {
     rewind(fp);
 
     /* Allocate buffer and read */
-    buff = (char*) malloc(bytes * sizeof(char));
+    buff = (char*) malloc((bytes + 1) * sizeof(char) );
     bytes = fread(buff, 1, bytes, fp);
     if (!bytes) {
         fprintf(stderr, "Error reading input file\n");
         exit(-1);
     }
+    buff[bytes] = 0;
 
     /* Initialize scanner */
     scanner.top = buff;
@@ -87,8 +186,8 @@ int main(int argc, char *argv[]) {
     scanner.binary.globals = 0;
     scanner.binary.const_size = 0;
     scanner.binary.inst_size = 0;
-    scanner.binary.binary = malloc(sizeof(bin_code) * 5000);
-    scanner.binary.const_pool = malloc(sizeof(unsigned char) * 5000);
+    scanner.binary.binary = malloc(sizeof(bin_code) * 5000); /* todo */
+    scanner.binary.const_pool = malloc(sizeof(unsigned char) * 5000); /* TODO */
 
     scanner.string_constants_tree = 0;
     scanner.proc_constants_tree = 0;
@@ -100,7 +199,7 @@ int main(int argc, char *argv[]) {
     /* Create parser and set up tracing */
     parser = ParseAlloc(malloc);
 #ifndef NDEBUG
-    ParseTrace(traceFile, "parser >> ");
+    if (debug_mode) ParseTrace(traceFile, "parser >> ");
 #endif
     while((token_type = scan(&scanner, buff_end))) {
 
@@ -133,37 +232,60 @@ int main(int argc, char *argv[]) {
     /* Print Errors */
     prnt_err(&scanner);
 
-    /* Free Assembler Work Data */
-    free_assembler(&scanner);
+    if (debug_mode) printf("Assembler Complete\n");
 
-    printf("Assembler Complete\n\n");
+    if (scanner.severity == 0) {
 
-    /* TODO: temp. writing to disk, must be made stable */
-    strcat(fileName, ".out");
+        if (output_file_name == 0) {
+            extention = strrchr(file_name, '.');
+            if (extention) {
+                output_file_name = malloc(extention - file_name + 7);
+                memcpy(output_file_name, file_name, extention - file_name);
+                strcpy(output_file_name + (extention - file_name), ".rxbin");
+            } else {
+                output_file_name = malloc(strlen(file_name) + 7);
+                strcpy(output_file_name, file_name);
+                strcat(output_file_name, ".rxbin");
+            }
 
-    {
-        bin_space *pgm;
+            if (debug_mode) printf("Writing to %s\n", output_file_name);
+            outFile = fopen(output_file_name, "wb");
+            free(output_file_name);
+            if (outFile == NULL) {
+                fprintf(stderr, "Can't open output file: %s\n",
+                        output_file_name);
+                exit(-1);
+            }
+        } else {
+            if (debug_mode) printf("Writing to %s\n", output_file_name);
+            outFile = fopen(output_file_name, "wb");
+            if (outFile == NULL) {
+                fprintf(stderr, "Can't open output file: %s\n",
+                        output_file_name);
+                exit(-1);
+            }
+        }
 
         pgm = &scanner.binary;
-
-        outFile = fopen(fileName, "wb");
-
-        fwrite(&pgm->globals,    sizeof(pgm->globals),    1, outFile);
-        fwrite(&pgm->inst_size,  sizeof(pgm->inst_size),  1, outFile);
+        fwrite(&pgm->globals, sizeof(pgm->globals), 1, outFile);
+        fwrite(&pgm->inst_size, sizeof(pgm->inst_size), 1, outFile);
         fwrite(&pgm->const_size, sizeof(pgm->const_size), 1, outFile);
 
-        fwrite(pgm->binary, sizeof(bin_code), pgm->inst_size, outFile );
+        fwrite(pgm->binary, sizeof(bin_code), pgm->inst_size, outFile);
         fwrite(pgm->const_pool, pgm->const_size, 1, outFile);
 
         fclose(outFile);
     }
 
     /* That's it */
-    printf("\nShutting Down\n");
+    if (debug_mode) printf("Shutting Down\n");
 
     /* Deallocate Binary */
     free(scanner.binary.binary);
     free(scanner.binary.const_pool);
+
+    /* Free Assembler Work Data */
+    free_assembler(&scanner);
 
     /* Deallocate parser */
     ParseFree(parser, free);
@@ -179,7 +301,10 @@ int main(int argc, char *argv[]) {
 
     /* Close files and deallocate */
     fclose(fp);
-    fclose(traceFile);
-    free(buff);
+    if (traceFile) fclose(traceFile);
+
+    /* Free Binary Buffer */
+    if (buff) free(buff);
+
     return(0);
 }
