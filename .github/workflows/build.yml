@@ -116,9 +116,9 @@ jobs:
       with:
         name: CREXX-Ubuntu
         path: |
-          "${{ runner.temp }}/exe"
-          "${{ runner.temp }}/exe/debug"
-          "${{ runner.temp }}/exe/release"
+          ${{ runner.temp }}/exe
+          ${{ runner.temp }}/exe/debug
+          ${{ runner.temp }}/exe/release
 
 #**************************************************#
   build-windows:
@@ -180,9 +180,9 @@ jobs:
       with:
         name: CREXX-Windows
         path: |
-          "${{ runner.temp }}/exe"
-          "${{ runner.temp }}/exe/debug"
-          "${{ runner.temp }}/exe/release"
+          ${{ runner.temp }}/exe
+          ${{ runner.temp }}/exe/debug
+          ${{ runner.temp }}/exe/release
 
 
   #**************************************************#
@@ -250,9 +250,9 @@ jobs:
         with:
           name: CREXX-MacOS
           path: |
-            "${{ runner.temp }}/exe"
-            "${{ runner.temp }}/exe/debug"
-            "${{ runner.temp }}/exe/release"
+            ${{ runner.temp }}/exe
+            ${{ runner.temp }}/exe/debug
+            ${{ runner.temp }}/exe/release
 
 #**************************************************#
   release:
