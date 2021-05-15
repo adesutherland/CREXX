@@ -1,8 +1,8 @@
 /* cREXX Phase 0 (PoC) Compiler   */
 /* (c) Adrian Sutherland 2021     */
 /* Scanner / Lexer for OPTIONS    */
-#include "opt_grmr.h"
-#include "compiler.h"
+#include "rxcpopgr.h"
+#include "rxcpmain.h"
 
 #define   YYCTYPE     char
 #define   YYCURSOR    s->cursor

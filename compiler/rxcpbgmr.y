@@ -14,7 +14,7 @@
 /* Grammar                      */
 
 #include <assert.h>
-#include "compiler.h"
+#include "rxcpmain.h"
 }
 
 %token TK_UNKNOWN.

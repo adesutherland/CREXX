@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "rexbgrmr.h"
-#include "compiler.h"
+#include "rxcpbgmr.h"
+#include "rxcpmain.h"
 
 int rexbpars(Context *context) {
 

@@ -2,9 +2,9 @@
 /* The Assembler itself         */
 #include <string.h>
 #include "rxasassm.h"
-#include "../machine/operands.h"
+#include "../machine/rxvminst.h"
 //#include "rxas.h"
-#include "strtree.h"
+#include "rxastree.h"
 
 /* Structure to handle "backpatching" - fixing forward references */
 struct backpatching_references;

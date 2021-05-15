@@ -4,8 +4,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "compiler.h"
-#include "rexbgrmr.h"
+#include "rxcpmain.h"
+#include "rxcpbgmr.h"
 
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */

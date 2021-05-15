@@ -2,8 +2,8 @@
  * Simple Dynamic Pointer Array - super simple & naive!
  */
 
-#ifndef CREXX_PNTRARAY_H
-#define CREXX_PNTRARAY_H
+#ifndef CREXX_RXCPDARY_H
+#define CREXX_RXCPDARY_H
 
 #include <stdlib.h>
 
@@ -43,4 +43,4 @@ static void free_dpa(dpa *array) {
     free(array);
 }
 
-#endif //CREXX_PNTRARAY_H
+#endif //CREXX_RXCPDARY_H

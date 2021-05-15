@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "operands.h"
+#include "rxvminst.h"
 #include "../avl_tree/avl_tree.h"
 
 /* Internal Tree node structure */

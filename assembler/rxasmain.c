@@ -6,7 +6,7 @@
 #include <string.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
-#include "operands.h"
+#include "rxvminst.h"
 #include "rxasassm.h"
 
 static void help() {

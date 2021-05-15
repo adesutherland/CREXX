@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "rx_intrp.h"
+#include "rxvmintp.h"
 #include "rxas.h"
-#include "operands.h"
-#include "rx_vars.h"
+#include "rxvminst.h"
+#include "rxvmvars.h"
 
 /* Signals an error - this function does not return */
 void dosignal(int code) {

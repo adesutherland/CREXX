@@ -19,7 +19,7 @@ add_custom_command(
 )
 
 add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c
-               rxasgrmr.c rxasgrmr.h rxas.h ../machine/operands.c ../machine/operands.h ../avl_tree/avl_tree.c
-        ../avl_tree/avl_tree.h rxasassm.h rxasassm.c ../disassembler/rxasdisa.c strtree.h)
+               rxasgrmr.c rxasgrmr.h rxas.h ../machine/rxvminst.c ../machine/rxvminst.h ../avl_tree/avl_tree.c
+        ../avl_tree/avl_tree.h rxasassm.h rxasassm.c ../disassembler/rxdadism.c rxastree.h)
 add_dependencies(rxas re2c lemon)
 target_include_directories(rxas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../machine)

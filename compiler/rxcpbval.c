@@ -3,8 +3,8 @@
  * REXX Level B Validations
  */
 
-#include "compiler.h"
-#include "rexbgrmr.h"
+#include "rxcpmain.h"
+#include "rxcpbgmr.h"
 
 /* Step 1
  * - Sets the source start / finish position for each node

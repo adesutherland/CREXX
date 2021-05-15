@@ -1,5 +1,5 @@
-#ifndef CREXX_RX_INTRP_H
-#define CREXX_RX_INTRP_H
+#ifndef CREXX_RXVMINTP_H
+#define CREXX_RXVMINTP_H
 
 #define rxversion "cREXX-Phase-0 v0.1.4"
 
@@ -81,4 +81,4 @@ int initialize();
 int finalize();
 int run(program *program, int argc, char *argv[], int debug_mode);
 
-#endif //CREXX_RX_INTRP_H
+#endif //CREXX_RXVMINTP_H

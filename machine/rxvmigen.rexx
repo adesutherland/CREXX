@@ -3,12 +3,12 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
- parse arg path
+  parse arg path
 
-file=path"/machine/operands.c"
-ofile=path"/machine/instrset.h"
+  file=path"/machine/rxvminst.c"
+  ofile=path"/machine/instrset.h"
 
-  asm=path"/interpreter/rx_intrp.c"
+  asm=path"/interpreter/rxvmintp.c"
   asmmiss=path"/machine/instrmiss.h"
 
   'rm' ofile

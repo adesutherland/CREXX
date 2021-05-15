@@ -14,4 +14,4 @@ message("-- " "Generating instruction set include files")
 #        COMMENT "Generating Instructions Set for the Interpreter..."
 #)
 
-add_library(machine STATIC operands.h operands.c instrset.h instrmiss.h)
+add_library(machine STATIC rxvminst.h rxvminst.c instrset.h instrmiss.h)

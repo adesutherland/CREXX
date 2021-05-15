@@ -6,8 +6,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rexbgrmr.h"
-#include "compiler.h"
+#include "rxcpbgmr.h"
+#include "rxcpmain.h"
 
 #define   YYCTYPE     char
 #define   YYCURSOR    s->cursor

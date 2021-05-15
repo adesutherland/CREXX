@@ -2,8 +2,8 @@
  * RUNTIME Variable Support
  */
 
-#ifndef CREXX_RX_VARS_H
-#define CREXX_RX_VARS_H
+#ifndef CREXX_RXVMVARS_H
+#define CREXX_RXVMVARS_H
 
 //#include "rx_intrp.h"
 
@@ -185,4 +185,4 @@ static void prime_string(value *v) {
     }
 }
 
-#endif //CREXX_RX_VARS_H
+#endif //CREXX_RXVMVARS_H

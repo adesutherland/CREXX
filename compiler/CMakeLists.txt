@@ -5,37 +5,37 @@ project(Compiler C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -c ${CMAKE_CURRENT_SOURCE_DIR}/opt_grmr.y
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/opt_grmr.y lemon
-        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/opt_grmr.c ${CMAKE_CURRENT_SOURCE_DIR}/opt_grmr.h
+        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y lemon
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.h
         COMMENT "Create Options Parser..."
 )
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o opt_scan.c ${CMAKE_CURRENT_SOURCE_DIR}/opt_scan.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/opt_scan.re ${CMAKE_CURRENT_SOURCE_DIR}/opt_grmr.h re2c
+        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o opt_scan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.h re2c
         OUTPUT opt_scan.c
         COMMENT "Create Options Lexer..."
 )
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -p -s -c ${CMAKE_CURRENT_SOURCE_DIR}/rexbgrmr.y || (exit 0)
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rexbgrmr.y lemon
-        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/rexbgrmr.c ${CMAKE_CURRENT_SOURCE_DIR}/rexbgrmr.h
+        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -p -s -c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y || (exit 0)
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.y lemon
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.h
         COMMENT "Create REXX B Parser..."
 )
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o rexbscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rexbscan.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rexbscan.re ${CMAKE_CURRENT_SOURCE_DIR}/rexbgrmr.h re2c
+        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o rexbscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbscn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbscn.re ${CMAKE_CURRENT_SOURCE_DIR}/rxcpbgmr.h re2c
         OUTPUT rexbscan.c
         COMMENT "Create REXX B Lexer..."
 )
 
-add_executable(rxc compiler.c ast.c compiler.h
-               opt_scan.c opt_grmr.c opt_pars.c opt_grmr.h
-               rexbscan.c rexbgrmr.c rexbpars.c rexbgrmr.h rexbvald.c symbols.c
+add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
+               opt_scan.c rxcpopgr.c rxcpopar.c rxcpopgr.h
+               rexbscan.c rxcpbgmr.c rxcpbpar.c rxcpbgmr.h rxcpbval.c rxcpsymb.c
                ../avl_tree/avl_tree.c ../avl_tree/avl_tree.h
-        pntraray.h emit.c)
+        rxcpdary.h rxcpemit.c)
 add_dependencies(rxc re2c lemon)
 target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

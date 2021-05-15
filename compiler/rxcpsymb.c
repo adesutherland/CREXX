@@ -3,9 +3,9 @@
  */
 #include <string.h>
 #include <stdlib.h>
-#include "compiler.h"
+#include "rxcpmain.h"
 #include "../avl_tree/avl_tree.h"
-#include "pntraray.h"
+#include "rxcpdary.h"
 
 /* Frees a symbol */
 static void symbol_free(Symbol *symbol);

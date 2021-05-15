@@ -2,8 +2,8 @@
 // Operands Structures
 //
 
-#ifndef CREXX_OPERANDS_H
-#define CREXX_OPERANDS_H
+#ifndef CREXX_RXVMINST_H
+#define CREXX_RXVMINST_H
 
 typedef enum OperandType
 {
@@ -62,4 +62,4 @@ char* expected_operands(Instruction* inst, char* buffer, size_t buffer_len);
 /* Prints the instruction database */
 void print_ops();
 
-#endif //CREXX_OPERANDS_H
+#endif //CREXX_RXVMINST_H

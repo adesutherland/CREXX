@@ -2,8 +2,8 @@
 /* The Disassembler */
 
 #include "rxas.h"
-#include "operands.h"
-#include "rxasdisa.h"
+#include "rxvminst.h"
+#include "rxdadism.h"
 #include <stdlib.h>
 #include <string.h>
 

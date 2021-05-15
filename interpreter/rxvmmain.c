@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "operands.h"
-#include "rx_intrp.h"
+#include "rxvminst.h"
+#include "rxvmintp.h"
 #include "rxas.h"
 
 static void help() {

@@ -2,8 +2,8 @@
 /* (c) Adrian Sutherland 2021   */
 
 #include <stdlib.h>
-#include "opt_grmr.h"
-#include "compiler.h"
+#include "rxcpopgr.h"
+#include "rxcpmain.h"
 
 int opt_pars(Context *context) {
 

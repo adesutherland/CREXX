@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "rxasdisa.h"
-#include <operands.h>
+#include "rxdadism.h"
+#include <rxvminst.h>
 
 static void help() {
     char* helpMessage =

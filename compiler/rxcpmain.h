@@ -1,8 +1,8 @@
 /* cREXX Phase 0 (PoC) Compiler */
 /* (c) Adrian Sutherland 2021   */
 
-#ifndef CREXX_COMPILER_H
-#define CREXX_COMPILER_H
+#ifndef CREXX_RXCPMAIN_H
+#define CREXX_RXCPMAIN_H
 
 #define rxversion "cREXX-Phase-0 v0.1.4"
 
@@ -222,4 +222,4 @@ struct OutputFragment {
 };
 void free_output(OutputFragment *output);
 
-#endif //CREXX_COMPILER_H
+#endif //CREXX_RXCPMAIN_H
