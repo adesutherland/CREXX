@@ -1,0 +1,17 @@
+
+main()          .locals=4
+                say "looping "
+                time r1
+*               load r0,10000000000
+                load r0,10000000000
+                say r0
+                say " times (may take a minute or so)\n"
+loopstart:      brf loopend,r0
+                dec0
+                br loopstart
+loopend:        time r2
+                say "loop finished in "
+                isub r3,r2,r1
+                say r3
+                say " seconds\n"
+                ret

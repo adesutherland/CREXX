@@ -50,3 +50,34 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+* Lemon output
+*.out
+
+* CMAKE
+cmake*/
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+* idea / clion
+.idea/
+/compiler/rexxgrmr.c
+/compiler/rexxgrmr.h
+/assembler/rxasgrmr.c
+/assembler/rxasgrmr.h
+#/machine/instrmiss.h
+#/machine/instrset.h
+/compiler/rexbgrmr.h
+/compiler/rexbgrmr.c
+/compiler/rxtrace.txt
+/compiler/opt_grmr.h
+/compiler/opt_grmr.c

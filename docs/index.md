@@ -1,20 +1,98 @@
 # CREXX
-REXX Language Implementation
 
-## News - 30 Sept 2020
+_Release Documentation - 16 Jan 2021_
 
-After the successful presentation of CREXX concepts and plans to the 2020 REXX Symposium on Tuesday, and encouragement from René Jansen (President) and other members, including Mike Cowlishaw. We can announce that this project will start in earnest based on the work done to date (e.g. on BREXX/370) and the presented designs concepts.
+## REXX Language Implementation Architecture
 
-Rene and I will be organising fortnightly ZOOM update calls.
+Project to develop a modern ground up implementation of a REXX
+interpreter and compiler, and experiments with language improvements.
+To implement REXX using the best language tools available
+today, including the LLVM Compiler Infrastructure. These tools will
+allow a REXX compiler to be produced supporting multiple backends
+(including 64 bit architectures).
 
-The initial work is to confirm a common toolset (hopefully from including an IDE from JetBrains) that will provide an cross platform DevOps experience for contributors.
+One aspect of the project is to revisit the REXX language - what can be
+improved? And most importantly how can it be improved while keeping the
+essence of REXX:
 
-The first ZOOM call will discuss toolset and DevOps processes, and location of skeleton components.
+> to make programming easier than before
 
-I will be adding design assets to the repository over the next few days.
+CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
+and it will also run on Linux, Windows, OSX, and z/Architecture.
 
-Adrian Sutherland
+Please see our [project aims](Project-Aims).
 
-## PackCC - Compiler Compiler
+## Wiki Based Documentation
 
-See [PackCC Readme](PackCC-README.md)
+This represents the latest thoughts, aims, architecture, designs and details; some of this may have been built, some things may have been built to older designs and some may just be a future wish. This is the place where we are developing the cREXX Architecture.
+
+Key Links:
+
+- [Wiki Home](https://github.com/adesutherland/CREXX/wiki "CREXX Wiki Home")
+- [Issues](https://github.com/adesutherland/CREXX/issues "CREXX Issues")
+- [Discussions](https://github.com/adesutherland/CREXX/discussions "CREXX Discussions")
+- [Project Kanban](https://github.com/adesutherland/CREXX/projects/1 "CREXX Kanban")
+- And of course the [Github Home](https://github.com/adesutherland/CREXX "CREXX Github Home")
+
+## Release Based Documentation
+
+This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is availabke as a website.
+
+The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
+
+# Current Component User Documentation
+
+Version 0.1.4
+
+## Running a REXX program
+
+Assuming test.rexx is the source program
+
+    rxc test
+    rxas test.rxas
+    rxvm test.rxbin
+
+## Compiler
+
+Handles REXX Level B subset 
+- Assignments / Expressions
+- SAY
+- IF/THEN/ELSE
+- DO/TO/BY
+- ADDRESS 
+
+Type 
+
+    rxc -h 
+
+for command format / options
+
+## Assembler
+
+Type
+
+    rxas -h 
+
+for command format / options
+
+Type 
+
+    rxas -i 
+
+for list of assembler instructions
+
+## Disassembler
+
+Type
+
+    rxdas -h 
+
+for command format / options
+
+## VM/Interpreter
+
+Type
+
+    rxvm -h 
+
+for command format / options
