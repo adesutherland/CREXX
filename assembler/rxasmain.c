@@ -110,9 +110,9 @@ int main(int argc, char *argv[]) {
 
             case 'A': /* Architecture */
                 printf("OS Architecture Details\n");
-                printf("Type sizes: int=%d, char=%d, void*=%d, double=%d, long=%d, long long=%d size_t=%d\n",
+                printf("Type sizes: int=%d, char=%d, void*=%d, double=%d, long=%d, rxinteger(aka long long)=%d size_t=%d\n",
                        (int) sizeof(int),  (int) sizeof(char),      (int) sizeof(void*), (int) sizeof(double),
-                       (int) sizeof(long), (int) sizeof(long long), (int) sizeof(size_t));
+                       (int) sizeof(long), (int) sizeof(rxinteger), (int) sizeof(size_t));
                 exit(0);
 
             case 'I': /* Instructions */

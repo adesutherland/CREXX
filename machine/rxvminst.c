@@ -318,7 +318,8 @@ void free_ops() {
     struct instruction_wrapper *i;
 
     /* This walks the tree in post order which allows each node be freed */
-    avl_tree_for_each_in_postorder(i, instruction_root, struct instruction_wrapper, index_node) {
+    avl_tree_for_each_in_postorder(i, instruction_root,
+                                   struct instruction_wrapper, index_node) {
         free(i->data);
         free(i);
     }
@@ -336,7 +337,8 @@ void print_ops() {
 
     printf("\n* REXX Assembly Instruction List\n");
     /* This walks the tree in post order which allows each node be freed */
-    avl_tree_for_each_in_order(i, instruction_root, struct instruction_wrapper, index_node) {
+    avl_tree_for_each_in_order(i, instruction_root, struct instruction_wrapper,
+                               index_node) {
 
         expected_operands(i->data, buffer, 100);
         printf("0x%.4x %-10s %-20s %s\n",

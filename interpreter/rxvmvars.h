@@ -40,7 +40,7 @@ struct value {
     value_status status;
 
     /* Value */
-    long long int int_value;
+    rxinteger int_value;
     double float_value;
     void *decimal_value; /* TODO */
     char string_value[SMALL_STRING_BUFFER];
@@ -68,7 +68,7 @@ static value* value_f(void* parent) {
 }
 
 /* value factories - int value */
-static value* value_int_f(void* parent, long long initial_value) {
+static value* value_int_f(void* parent, rxinteger initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->status.primed_int = 1;
     this->int_value = initial_value;
@@ -108,7 +108,7 @@ static void free_value(void* parent, value *v) {
     }
 }
 
-static void set_int(value *v, long long value) {
+static void set_int(value *v, rxinteger value) {
     v->status.all_flags = 0;
     v->status.primed_int = 1;
     v->int_value = value;

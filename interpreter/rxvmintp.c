@@ -70,7 +70,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     void* next_inst;
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
-    long long i1, i2, i3;
+    rxinteger i1, i2, i3;
     double f1,f2,f3;
     char *converr;
     string_constant *s1, *s2, *s3;

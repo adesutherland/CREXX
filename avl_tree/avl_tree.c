@@ -44,9 +44,10 @@ avl_tree_first_or_last_in_order(const struct avl_tree_node *root, int sign)
 }
 
 /* Starts an in-order traversal of the tree: returns the least-valued node, or
- * NULL if the tree is empty.  */
+ * NULL if the tree is empty.
+ * Was avl_tree_first_in_order() */
 struct avl_tree_node *
-avl_tree_first_in_order(const struct avl_tree_node *root)
+avl_fino(const struct avl_tree_node *root)
 {
 	return avl_tree_first_or_last_in_order(root, -1);
 }
@@ -54,7 +55,7 @@ avl_tree_first_in_order(const struct avl_tree_node *root)
 /* Starts a *reverse* in-order traversal of the tree: returns the
  * greatest-valued node, or NULL if the tree is empty.  */
 struct avl_tree_node *
-avl_tree_last_in_order(const struct avl_tree_node *root)
+avl_lino(const struct avl_tree_node *root)
 {
 	return avl_tree_first_or_last_in_order(root, 1);
 }
@@ -80,7 +81,7 @@ avl_tree_next_or_prev_in_order(const struct avl_tree_node *node, int sign)
 /* Continues an in-order traversal of the tree: returns the next-greatest-valued
  * node, or NULL if there is none.  */
 struct avl_tree_node *
-avl_tree_next_in_order(const struct avl_tree_node *node)
+avl_nino(const struct avl_tree_node *node)
 {
 	return avl_tree_next_or_prev_in_order(node, 1);
 }
@@ -88,14 +89,14 @@ avl_tree_next_in_order(const struct avl_tree_node *node)
 /* Continues a *reverse* in-order traversal of the tree: returns the
  * previous-greatest-valued node, or NULL if there is none.  */
 struct avl_tree_node *
-avl_tree_prev_in_order(const struct avl_tree_node *node)
+avl_pino(const struct avl_tree_node *node)
 {
 	return avl_tree_next_or_prev_in_order(node, -1);
 }
 
 /* Starts a postorder traversal of the tree.  */
 struct avl_tree_node *
-avl_tree_first_in_postorder(const struct avl_tree_node *root)
+avl_finp(const struct avl_tree_node *root)
 {
 	const struct avl_tree_node *first = root;
 
@@ -111,8 +112,8 @@ avl_tree_first_in_postorder(const struct avl_tree_node *root)
  * parent node.  Returns NULL if there are no more nodes (i.e. @prev was the
  * root of the tree).  */
 struct avl_tree_node *
-avl_tree_next_in_postorder(const struct avl_tree_node *prev,
-			   const struct avl_tree_node *prev_parent)
+avl_ninp(const struct avl_tree_node *prev,
+         const struct avl_tree_node *prev_parent)
 {
 	const struct avl_tree_node *next = prev_parent;
 
@@ -459,8 +460,8 @@ avl_handle_subtree_growth(struct avl_tree_node ** const root_ptr,
 
 /* Rebalance the tree after insertion of the specified node.  */
 void
-avl_tree_rebalance_after_insert(struct avl_tree_node **root_ptr,
-				struct avl_tree_node *inserted)
+avl_bain(struct avl_tree_node **root_ptr,
+         struct avl_tree_node *inserted)
 {
 	struct avl_tree_node *node, *parent;
 	bool done;
@@ -731,7 +732,7 @@ avl_tree_swap_with_successor(struct avl_tree_node **root_ptr,
  * avl_tree_node_set_unlinked().
  */
 void
-avl_tree_remove(struct avl_tree_node **root_ptr, struct avl_tree_node *node)
+avl_remv(struct avl_tree_node **root_ptr, struct avl_tree_node *node)
 {
 	struct avl_tree_node *parent;
 	bool left_deleted = false;

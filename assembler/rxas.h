@@ -5,33 +5,40 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#ifdef __CMS__
+#include "cms.h"
+typedef long rxinteger;
+#else
+typedef long long rxinteger;
+#endif
+
 typedef struct Token Token;
 typedef struct Error Error;
 typedef struct bin_space bin_space;
 struct avl_tree_node;
 
 /* cREXX Instruction Coding */
-#pragma pack(push,4)
+//#pragma pack(push,4)
 typedef struct instruction_coding {
     int opcode;
     int no_ops;
 } instruction_coding;
-#pragma pack(pop)
+//#pragma pack(pop)
 
 /* Single cREXX Binary Code Entry */
-#pragma pack(push,4)
+//#pragma pack(push,4)
 typedef union bin_code {
     instruction_coding instruction;
     void* impl_address;
     double fconst;
-    long long iconst;
+    rxinteger iconst;
     char cconst;
-    unsigned long long index;
+    size_t index;
 } bin_code;
-#pragma pack(pop)
+//#pragma pack(pop)
 
 /* cREXX Binary Program */
-#pragma pack(push,4)
+//#pragma pack(push,4)
 struct bin_space {
     int globals;
     size_t inst_size;
@@ -39,7 +46,7 @@ struct bin_space {
     bin_code *binary;
     unsigned char *const_pool;
 };
-#pragma pack(pop)
+//#pragma pack(pop)
 
 enum const_pool_type {
     STRING_CONST, PROC_CONST
@@ -93,7 +100,7 @@ struct Token {
     size_t line, column, length;
     char* token_source;
     union {
-        long long integer;
+        rxinteger integer;
         char string[1];
         char character;
         double real;

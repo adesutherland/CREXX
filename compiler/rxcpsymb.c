@@ -95,7 +95,8 @@ void scp_free(Scope *scope) {
 
     if (scope->symbols_tree) {
         /* This walks the tree in post order which allows each node be freed */
-        avl_tree_for_each_in_postorder(i, scope->symbols_tree, struct symbol_wrapper,
+        avl_tree_for_each_in_postorder(i, scope->symbols_tree,
+                                       struct symbol_wrapper,
                                        index_node) {
             symbol_free(i->value);
             free(i);

@@ -26,7 +26,7 @@ jobs:
       run: |
         chmod -R ugo+rw *
         hercules -f hercules.conf -d >/dev/null 2>/dev/null &
-        cd io
+        cd io/S370
         chmod +x *.sh
         echo "Running CMSBUILD"
         ./cmsbuild.sh
@@ -41,6 +41,7 @@ jobs:
         cp /opt/hercules/vm370/io/crexxsrc.vmarc exe
         cp /opt/hercules/vm370/io/LICENSE exe
         cp /opt/hercules/vm370/io/README.md exe
+        cp /opt/hercules/vm370/io/SECURITY.md exe
         cp /opt/hercules/vm370/io/cmsinstall.sh exe
         cp /opt/hercules/vm370/io/history.txt exe
         chmod -R ugo+r exe
@@ -94,6 +95,7 @@ jobs:
         cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
         cp LICENSE     "${{ runner.temp }}/exe"
         cp README.md   "${{ runner.temp }}/exe"
+        cp SECURITY.md "${{ runner.temp }}/exe"
         cp history.txt "${{ runner.temp }}/exe"
       shell: bash
 
@@ -161,6 +163,7 @@ jobs:
         cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
+        cp SECURITY.md "${{ runner.temp }}/exe"
         cp history.txt "${{ runner.temp }}/exe"
       shell: bash
 
@@ -229,6 +232,7 @@ jobs:
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
+          cp SECURITY.md "${{ runner.temp }}/exe"
           cp history.txt "${{ runner.temp }}/exe"
         shell: bash
 

@@ -42,7 +42,7 @@
                                     else REG_OP(1) = value_char_f(current_frame,val); }
 
 // TODO: String to integer just for real integers, or stop converting at "."
-// maximum size of long long is 20 digits plus sign
+// maximum size of rxinteger is 20 digits plus sign
 // maximum size of double is about 16 decimal digits plus sign
 
 #define S2INT(t,s)                 { if ((s)->string_length>20)  goto convlength;                       \
@@ -56,7 +56,7 @@
                                     if (converr[0] != '\0') goto converror; }
 
 #define CONV2INT(i,v)             { if ((v)->status.primed_float)                                      \
-                                    (i) = (long long) (v)->float_value;                                 \
+                                    (i) = (rxinteger) (v)->float_value;                                 \
                                     else if ((v)->status.primed_string) S2INT(i,v); }
 
 #define CONV2FLOAT(i,v) if ((v)->status.primed_int) (i) = (double) (v)->int_value;                      \
