@@ -142,6 +142,8 @@ void init_ops() {
     instr_f("brt", "Branch to op1 if op2 true", OP_ID, OP_REG, OP_NONE);
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
 
+    instr_f("init", "Initialize op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("free", "Free op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("move", "Move op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("copy", "Copy op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);

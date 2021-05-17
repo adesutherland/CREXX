@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------------
- * Generate Instruction Set, generated on 11 May 2021 AT 21:39:39
+ * Generate Instruction Set, generated on 17 May 2021 AT 20:23:07
  * -------------------------------------------------------------------------------
  */
 MAP_ADDR("iadd", OP_REG, OP_REG, OP_REG, &&IADD_REG_REG_REG, "Integer Add (op1=op2+op3)")
@@ -106,6 +106,8 @@ MAP_ADDR("ret", OP_STRING, OP_NONE, OP_NONE, &&RET_STRING, "Return op1")
 MAP_ADDR("br", OP_ID, OP_NONE, OP_NONE, &&BR_ID, "Branch to op1")
 MAP_ADDR("brt", OP_ID, OP_REG, OP_NONE, &&BRT_ID_REG, "Branch to op1 if op2 true")
 MAP_ADDR("brf", OP_ID, OP_REG, OP_NONE, &&BRF_ID_REG, "Branch to op1 if op2 false")
+MAP_ADDR("init", OP_REG, OP_NONE, OP_NONE, &&INIT_REG, "Initialize op1")
+MAP_ADDR("free", OP_REG, OP_NONE, OP_NONE, &&FREE_REG, "Free op1")
 MAP_ADDR("move", OP_REG, OP_REG, OP_NONE, &&MOVE_REG_REG, "Move op2 to op1")
 MAP_ADDR("copy", OP_REG, OP_REG, OP_NONE, &&COPY_REG_REG, "Copy op2 to op1")
 MAP_ADDR("link", OP_REG, OP_REG, OP_NONE, &&LINK_REG_REG, "Link op2 to op1")

@@ -135,8 +135,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
         DEBUG("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
         v1 = REG_OP(1);
         i2 = INT_OP(2);
-        if (v1) set_int(v1,i2);
-        else REG_OP(1) = value_int_f(current_frame, i2);
+        set_int(v1,i2);
+
         DISPATCH;
 
     LOAD_REG_STRING:
@@ -435,19 +435,37 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     free_frame(temp_frame);
     DISPATCH;
 
+    INIT_REG: // label not yet defined
+        CALC_DISPATCH(1);
+        DEBUG("TRACE - INIT_REG R%llu \n", REG_IDX(1));
+
+        REG_OP(1) = value_f(current_frame);
+
+        DISPATCH;
+
+    FREE_REG: // label not yet defined
+        CALC_DISPATCH(1);
+        DEBUG("TRACE - FREE_REG R%llu \n", REG_IDX(1));
+
+        /* v1 needs to be deallocated */
+        free_value(current_frame, REG_OP(1));
+        REG_OP(1) = NULL;
+
+        DISPATCH;
 
     MOVE_REG_REG:
         CALC_DISPATCH(2);
         DEBUG("TRACE - MOVE_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
 
         v1 = REG_OP(1);
+        v2 = REG_OP(2);
 
         /* v1 needs to be deallocated */
-        free_value(current_frame, v1);
+        free_value(current_frame, REG_OP(1));
 
         /* Now move the register; if op2 is null, well so be it, no harm done */
         REG_OP(1) = REG_OP(2);
-        REG_OP(2) = 0;
+        REG_OP(2) = NULL;
 
         DISPATCH;
 
@@ -1444,7 +1462,7 @@ EXIT:
         goto interprt_finished;
 
     SIGNAL:
-        printf("TRACE - Signal Received - aborting\n");
+        printf("\n\nTRACE - Signal Received - aborting\n");
         goto interprt_finished;
 
     interprt_finished:

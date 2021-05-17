@@ -64,18 +64,21 @@ struct value {
 /* value factories */
 static value* value_f(void* parent) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->owner = parent;
     return this;
 }
 
 /* value factories - int value */
 static value* value_int_f(void* parent, long long initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->owner = parent;
     this->status.primed_int = 1;
     this->int_value = initial_value;
     return this;
 }
 static value* value_float_f(void* parent, double initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->owner = parent;
     this->status.primed_float = 1;
     this->float_value = initial_value;
     return this;
@@ -85,6 +88,7 @@ static value* value_float_f(void* parent, double initial_value) {
 static value* value_conststring_f(void* parent, string_constant *initial_value) {
     /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->owner = parent;
     this->status.primed_string = 1;
     this->string_length = initial_value->string_len;
     memcpy(this->string_value, initial_value->string,  this->string_length);
@@ -95,6 +99,7 @@ static value* value_conststring_f(void* parent, string_constant *initial_value) 
 static value* value_nullstring_f(void* parent, char *initial_value) {
     /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
+    this->owner = parent;
     this->status.primed_string = 1;
     this->string_length = strlen(initial_value);
     memcpy(this->string_value, initial_value,  this->string_length);
