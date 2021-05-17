@@ -42,7 +42,7 @@ jobs:
         cp /opt/hercules/vm370/io/LICENSE exe
         cp /opt/hercules/vm370/io/README.md exe
         cp /opt/hercules/vm370/io/SECURITY.md exe
-        cp /opt/hercules/vm370/io/cmsinstall.sh exe
+        cp /opt/hercules/vm370/io/S370/cmsinstall.sh exe
         cp /opt/hercules/vm370/io/history.txt exe
         chmod -R ugo+r exe
       shell: bash
