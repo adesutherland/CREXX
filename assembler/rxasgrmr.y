@@ -53,7 +53,7 @@ header ::= NEWLINE.
 header ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid header directive");}
 
 // Global directive
-globals ::= KW_GLOBALS EQUAL INT(G). {rxas_setglobals(context,G);}
+globals ::= KW_GLOBALS EQUAL INT(G). {rxassetg(context,G);}
 
 // Global directive error messages
 globals ::= KW_GLOBALS EQUAL(T) error. {err_aftr(context, T, "expecting integer");}
@@ -63,7 +63,7 @@ globals ::= KW_GLOBALS(T) error. {err_aftr(context, T, "expecting \"={integer}\"
 functions ::= function.
 functions ::= functions function.
 function ::= functionDeclaration NEWLINE instructions.
-functionDeclaration ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxas_proc(context,F,I);}
+functionDeclaration ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
 
 // Function declaration error messages
 functionDeclaration ::= FUNC(T) error. {err_aftr(context, T, "expecting \".locals={integer}\"");}
@@ -74,18 +74,18 @@ functionDeclaration ::= FUNC KW_LOCALS EQUAL INT ANYTHING(T) error.
 instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
-instruction ::= LABEL(L). {rxas_label(context,L);}
+instruction ::= LABEL(L). {rxaslabl(context,L);}
 instruction ::= NEWLINE.
 
 // Instruction error messages
 instruction ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid label, opcode or directive");}
 
 // operation/instruction
-instr ::= ID(IN). {rxas_gen0(context,IN);}
-instr ::= ID(IN) operand(OP1). {rxas_gen1(context,IN,OP1);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxas_gen2(context,IN,OP1,OP2);}
+instr ::= ID(IN). {rxasgen0(context,IN);}
+instr ::= ID(IN) operand(OP1). {rxasgen1(context,IN,OP1);}
+instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxasgen2(context,IN,OP1,OP2);}
 instr ::= ID(IN) operand(OP1) COMMA operand(OP2) COMMA operand(OP3).
-          {rxas_gen3(context,IN,OP1,OP2,OP3);}
+          {rxasgen3(context,IN,OP1,OP2,OP3);}
 
 // instr error messages
 instr ::= ID ANYTHING(T) error. {err_at(context, T, "expecting {operand} or {newline}");}

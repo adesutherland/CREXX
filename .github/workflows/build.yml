@@ -14,6 +14,15 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: CMAKE Build Debug
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: Debug # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/debug"
 
     - name: Move Source
       run: |
@@ -28,6 +37,9 @@ jobs:
         hercules -f hercules.conf -d >/dev/null 2>/dev/null &
         cd io/S370
         chmod +x *.sh
+        echo "Build Lexers / Parsers"
+        ${{ runner.temp }}/debug/re2c/re2c -e -o ./rxasscan.c ../assembler/rxasscan.re
+        ${{ runner.temp }}/debug/lemon/lemon -c -d. ../assembler/rxasgrmr.y
         echo "Running CMSBUILD"
         ./cmsbuild.sh
       shell: bash

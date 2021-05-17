@@ -22,7 +22,7 @@ struct backpatching_references {
 };
 
 /* Frees Assembler Work Data */
-void free_assembler(Assembler_Context *context) {
+void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
@@ -94,7 +94,7 @@ static void backpatch_labels(Assembler_Context *context) {
 }
 
 /* Backpatch, check references and free backpatch information */
-void backpatch(Assembler_Context *context) {
+void backptch(Assembler_Context *context) {
     backpatch_procedures(context);
     backpatch_labels(context);
 }
@@ -171,7 +171,7 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
 }
 
 /* Set the number of globals */
-void rxas_setglobals(Assembler_Context *context, Token *globalsToken) {
+void rxassetg(Assembler_Context *context, Token *globalsToken) {
     context->binary.globals = globalsToken->token_value.integer;
 }
 
@@ -390,7 +390,7 @@ static Instruction *validate_instruction(Assembler_Context* context, Token *inst
 }
 
 /** Generate code for an instruction with no operands */
-void rxas_gen0(Assembler_Context *context, Token *instrToken) {
+void rxasgen0(Assembler_Context *context, Token *instrToken) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            0,
@@ -402,7 +402,7 @@ void rxas_gen0(Assembler_Context *context, Token *instrToken) {
 }
 
 /** Generate code for an instruction with one operand */
-void rxas_gen1(Assembler_Context *context, Token *instrToken, Token *operand1Token) {
+void rxasgen1(Assembler_Context *context, Token *instrToken, Token *operand1Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -415,8 +415,8 @@ void rxas_gen1(Assembler_Context *context, Token *instrToken, Token *operand1Tok
 }
 
 /** Generate code for an instruction with two operand */
-void rxas_gen2(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-               Token *operand2Token) {
+void rxasgen2(Assembler_Context *context, Token *instrToken, Token *operand1Token,
+              Token *operand2Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -430,8 +430,8 @@ void rxas_gen2(Assembler_Context *context, Token *instrToken, Token *operand1Tok
 }
 
 /** Generate code for an instruction with three operands */
-void rxas_gen3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-               Token *operand2Token, Token *operand3Token) {
+void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
+              Token *operand2Token, Token *operand3Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -446,7 +446,7 @@ void rxas_gen3(Assembler_Context *context, Token *instrToken, Token *operand1Tok
 }
 
 /* Procedures Definition */
-void rxas_proc(Assembler_Context *context, Token *funcToken, Token *localsToken) {
+void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) {
 
     proc_constant *centry;
     size_t entry_index;
@@ -498,7 +498,7 @@ void rxas_proc(Assembler_Context *context, Token *funcToken, Token *localsToken)
 }
 
 /* Label Definition */
-void rxas_label(Assembler_Context *context, Token *labelToken) {
+void rxaslabl(Assembler_Context *context, Token *labelToken) {
     struct backpatching *ref_header;
     size_t tree_index;
 

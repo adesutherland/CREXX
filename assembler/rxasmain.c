@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Backpatch and check references */
-    backpatch(&scanner);
+    backptch(&scanner);
 
     /* Print Errors */
     prnt_err(&scanner);
@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
     free(scanner.binary.const_pool);
 
     /* Free Assembler Work Data */
-    free_assembler(&scanner);
+    freeasbl(&scanner);
 
     /* Deallocate parser */
     ParseFree(parser, free);

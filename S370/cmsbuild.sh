@@ -20,6 +20,7 @@ cp ../compiler/*.c src
 cp ../compiler/*.h src
 cp ./cmsmake.exec src
 cp ./*.h src
+cp ./*.c src
 cp ./*.parm src
 
 # IPL
