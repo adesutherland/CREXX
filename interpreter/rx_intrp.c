@@ -567,7 +567,6 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     INC0:
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC0\n");
-    REG_VAL(0)->int_value++;
     (current_frame->locals[0]->int_value)++;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1164,7 +1163,6 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DEBUG("TRACE - MULTF_REG_REG_REG\n");
 
     CONV2FLOAT(f2,R2)
-    f3 = FLOAT_OP(3);
 
     REG_RETURN_FLOAT(f2 * FLOAT_OP(3));
 
