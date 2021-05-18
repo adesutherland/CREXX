@@ -42,7 +42,7 @@ stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
 
     num_locals = procedure->locals + program->globals + no_args + 1;
     this = (stack_frame*)calloc(1,sizeof(stack_frame)
-            + (sizeof(value *) * (num_locals)));
+                                  + (sizeof(value *) * (num_locals)));
     this->parent = parent;
     this->return_inst = return_inst;
     this->return_pc = return_pc;
@@ -67,11 +67,11 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
     bin_code *pc, *next_pc;
-    void* next_inst;
+    void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
     long long i1, i2, i3;
-    double f1,f2,f3;
+    double f1, f2, f3;
     char *converr;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
@@ -82,15 +82,15 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
      */
 
     Instruction *instruction;
-    #define NO_OPCODES 200
-    void* address_map[NO_OPCODES];
-    for (i=0; i<NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
+#define NO_OPCODES 200
+    void *address_map[NO_OPCODES];
+    for (i = 0; i < NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
 
-   /* ----------------------------------------------------------------------------
-    * load instruction code generated from the instruction table pej 8. April 2021
-    * ----------------------------------------------------------------------------
-    */
-    #include "instrset.h"
+    /* ----------------------------------------------------------------------------
+     * load instruction code generated from the instruction table pej 8. April 2021
+     * ----------------------------------------------------------------------------
+     */
+#include "instrset.h"
 
     /* Thread code - simples! */
     i = 0;
@@ -120,10 +120,13 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
     /* Arguments */
     current_frame->locals[program->globals + procedure->locals] = value_int_f(current_frame, argc);
-    for (i = 0, j = program->globals + procedure->locals + 1; i<argc; i++, j++) {
+    for (i = 0, j = program->globals + procedure->locals + 1; i < argc; i++, j++) {
         current_frame->locals[j] = value_nullstring_f(current_frame, argv[i]);
     }
-
+    // TODO: Discuss with Adrian, intialise all registers used
+    for (i = 0; i < procedure->locals; i++) {
+        current_frame->locals[i] = value_int_f(current_frame, 0);
+    }
     /* Start */
     next_pc = &(program->binary[procedure->start]);
     CALC_DISPATCH_MANUAL;
@@ -131,264 +134,230 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     /* Instruction implementations */
     LOAD_REG_INT:
-        CALC_DISPATCH(2);
-        DEBUG("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
-        v1 = REG_OP(1);
-        i2 = INT_OP(2);
-        set_int(v1,i2);
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), INT_OP(2));
+    v1 = REG_OP(1);
+    i2 = INT_OP(2);
+    set_int(v1,i2);
 
-        DISPATCH;
+    DISPATCH;
 
     LOAD_REG_STRING:
-        CALC_DISPATCH(2);
-        DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
-              REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
+          REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
 
-        v1 = REG_OP(1);
-        s1 = CONSTSTRING_OP(2);
+    v1 = REG_OP(1);
+    s1 = CONSTSTRING_OP(2);
 
-        if(v1) set_conststring(v1, s1);
-        else REG_OP(1) = value_conststring_f(current_frame, s1);
+    if(v1) set_conststring(v1, s1);
+    else REG_OP(1) = value_conststring_f(current_frame, s1);
 
-        DISPATCH;
+    DISPATCH;
 
     SAY_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
-        v1 = REG_OP(1);
-        if (!v1) ERROR("register not initialised\n");
-        prime_string(v1);
-        printf("%.*s", (int) v1->string_length, v1->string_value);
-        DISPATCH;
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
+    v1 = REG_OP(1);
+    if (!v1) ERROR("register not initialised\n");
+    prime_string(v1);
+    printf("%.*s", (int) v1->string_length, v1->string_value);
+    DISPATCH;
 
     SAY_STRING:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (unsigned int) (pc+1)->index);
-        s1 = CONSTSTRING_OP(1);
-        printf("%.*s", (int) s1->string_len, s1->string);
-        DISPATCH;
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (unsigned int) (pc+1)->index);
+    s1 = CONSTSTRING_OP(1);
+    printf("%.*s", (int) s1->string_len, s1->string);
+    DISPATCH;
 
     SCONCAT_REG_REG_REG:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - SCONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - SCONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        v3 = REG_OP(3);
-        string_sconcat(v1,v2,v3);
-        DISPATCH;
+    v1 = REG_OP(1);
+    v2 = REG_OP(2);
+    v3 = REG_OP(3);
+    string_sconcat(v1,v2,v3);
+    DISPATCH;
 
     CONCAT_REG_REG_REG:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - CONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - CONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        v3 = REG_OP(3);
-        string_concat(v1,v2,v3);
-        DISPATCH;
+    v1 = REG_OP(1);
+    v2 = REG_OP(2);
+    v3 = REG_OP(3);
+    string_concat(v1,v2,v3);
+    DISPATCH;
 
     IMULT_REG_REG_REG:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        v3 = REG_OP(3);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))*INT_VAL(REG_OP(3)));
 
-        if (!v2 || !v3) ERROR("register not initialized\n");
-
-        if (v1) set_int(v1, v2->int_value * v3->int_value);
-        else REG_OP(1) = value_int_f(current_frame, v2->int_value * v3->int_value);
-
-        DISPATCH;
+    DISPATCH;
 
     IMULT_REG_REG_INT:
     {
         CALC_DISPATCH(3);
         DEBUG("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        i3 = INT_OP(3);
-        if (!v2) ERROR("register not initialized\n");
-
-        if (v1) set_int(v1, v2->int_value * i3);
-        else
-            REG_OP(1) = value_int_f(current_frame, v2->int_value * i3);
+        REG_RETURN_INT(INT_VAL(REG_OP(2))*INT_OP(3));
 
         DISPATCH;
     }
     IADD_REG_REG_REG:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        v3 = REG_OP(3);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))+INT_VAL(REG_OP(3)));
 
-        if (!v2 || !v3) ERROR("register not initialized\n");
-
-        if (v1) set_int(v1, v2->int_value + v3->int_value);
-        else REG_OP(1) = value_int_f(current_frame, v2->int_value + v3->int_value);
-
-        DISPATCH;
+    DISPATCH;
 
     ISUB_REG_REG_REG:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - ISUB_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - ISUB_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        v3 = REG_OP(3);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))-INT_VAL(REG_OP(3)));
 
-        if (!v2 || !v3) ERROR("register not initialized\n");
-
-        if (v1) set_int(v1, v2->int_value - v3->int_value);
-        else REG_OP(1) = value_int_f(current_frame, v2->int_value - v3->int_value);
-        DISPATCH;
+    DISPATCH;
 
     IADD_REG_REG_INT:
-        CALC_DISPATCH(3);
-        DEBUG("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), INT_OP(3));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
-        i3 = INT_OP(3);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))+INT_OP(3));
 
-        if (!v2) ERROR("register not initialized\n");
-
-        if (v1) set_int(v1, v2->int_value + i3);
-        else REG_OP(1) = value_int_f(current_frame, v2->int_value + i3);
-
-        DISPATCH;
+    DISPATCH;
 
     CALL_FUNC:
-        CALC_DISPATCH(1);
-        p1 = PROC_OP(1); /* This is the target */
+    CALC_DISPATCH(1);
+    p1 = PROC_OP(1); /* This is the target */
 
-        /* New stackframe */
-        current_frame = frame_f(program, p1, 0, current_frame, next_pc,
-                                next_inst, 0);
-        DEBUG("TRACE - CALL_FUNC %s()\n",p1->name);
-        /* Prepare dispatch to procedure as early as possible */
-        next_pc = &(program->binary[p1->start]);
-        CALC_DISPATCH_MANUAL;
+    /* New stackframe */
+    current_frame = frame_f(program, p1, 0, current_frame, next_pc,
+                            next_inst, 0);
+    DEBUG("TRACE - CALL_FUNC %s()\n",p1->name);
+    /* Prepare dispatch to procedure as early as possible */
+    next_pc = &(program->binary[p1->start]);
+    CALC_DISPATCH_MANUAL;
 
-        /* Arguments - none */
-        current_frame->locals[program->globals + p1->locals] = value_int_f(current_frame, 0);
-        /* This gotos the start of the called proceure */
-        DISPATCH;
+    /* Arguments - none */
+    current_frame->locals[program->globals + p1->locals] = value_int_f(current_frame, 0);
+    /* This gotos the start of the called proceure */
+    DISPATCH;
 
     CALL_REG_FUNC:
-        CALC_DISPATCH(2);
-        v1 = REG_OP(1);
-        p2 = PROC_OP(2); /* This is the target */
+    CALC_DISPATCH(2);
+    v1 = REG_OP(1);
+    p2 = PROC_OP(2); /* This is the target */
 
-        /* Clear target return value register */
-        free_value(current_frame, v1);
-        REG_OP(1) = 0;
+    /* Clear target return value register */
+    free_value(current_frame, v1);
+    REG_OP(1) = 0;
 
-        /* New stackframe */
-        current_frame = frame_f(program, p2, 0, current_frame, next_pc,
-                                next_inst, &(REG_OP(1)));
-        DEBUG("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
+    /* New stackframe */
+    current_frame = frame_f(program, p2, 0, current_frame, next_pc,
+                            next_inst, &(REG_OP(1)));
+    DEBUG("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
 
-        /* Prepare dispatch to procedure as early as possible */
-        next_pc = &(program->binary[p2->start]);
-        CALC_DISPATCH_MANUAL;
+    /* Prepare dispatch to procedure as early as possible */
+    next_pc = &(program->binary[p2->start]);
+    CALC_DISPATCH_MANUAL;
 
-        /* Arguments - none */
-        current_frame->locals[program->globals + p2->locals] = value_int_f(current_frame, 0);
-        /* This gotos the start of the called procedure */
-        DISPATCH;
+    /* Arguments - none */
+    current_frame->locals[program->globals + p2->locals] = value_int_f(current_frame, 0);
+    /* This gotos the start of the called procedure */
+    DISPATCH;
 
     CALL_REG_FUNC_REG:
-        CALC_DISPATCH(3);
-        v1 = REG_OP(1);
-        p2 = PROC_OP(2); /* This is the target */
-        v3 = REG_OP(3);
+    CALC_DISPATCH(3);
+    v1 = REG_OP(1);
+    p2 = PROC_OP(2); /* This is the target */
+    v3 = REG_OP(3);
 
-        if (!v3 || !v3->status.primed_int) ERROR("ERROR: CALL_REG_FUNC_REG Arg Reg not an integer");
+    if (!v3 || !v3->status.primed_int) ERROR("ERROR: CALL_REG_FUNC_REG Arg Reg not an integer");
 
-        /* Clear target return value register */
-        free_value(current_frame, v1);
-        REG_OP(1) = 0;
+    /* Clear target return value register */
+    free_value(current_frame, v1);
+    REG_OP(1) = 0;
 
-        /* New stackframe */
-        current_frame = frame_f(program, p2, v3->int_value, current_frame, next_pc,
-                                next_inst, &(REG_OP(1)));
+    /* New stackframe */
+    current_frame = frame_f(program, p2, v3->int_value, current_frame, next_pc,
+                            next_inst, &(REG_OP(1)));
 
-        DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
-                    p2->name, REG_IDX(3));
+    DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
+          p2->name, REG_IDX(3));
 
-        /* Prepare dispatch to procedure as early as possible */
-        next_pc = &(program->binary[p2->start]);
-        CALC_DISPATCH_MANUAL;
+    /* Prepare dispatch to procedure as early as possible */
+    next_pc = &(program->binary[p2->start]);
+    CALC_DISPATCH_MANUAL;
 
-        /* Arguments - complex lets never have to change this code! */
-        current_frame->locals[program->globals + p2->locals] =
-                current_frame->parent->locals[(pc + (3))->index];
-        for (i=0; i<v3->int_value; i++) {
-            current_frame->locals[program->globals + p2->locals + i + 1] =
-                    current_frame->parent->locals[(pc + (3))->index + i + 1];
-        }
+    /* Arguments - complex lets never have to change this code! */
+    current_frame->locals[program->globals + p2->locals] =
+            current_frame->parent->locals[(pc + (3))->index];
+    for (i=0; i<v3->int_value; i++) {
+        current_frame->locals[program->globals + p2->locals + i + 1] =
+                current_frame->parent->locals[(pc + (3))->index + i + 1];
+    }
 
-        /* This gotos the start of the called procedure */
-        DISPATCH;
+    /* This gotos the start of the called procedure */
+    DISPATCH;
 
     RET:
-        CALC_DISPATCH(0);
-        DEBUG("TRACE - RET\n");
-        /* Where we return to */
-        next_pc = current_frame->return_pc;
-        next_inst = current_frame->return_inst;
-        /* back to the parents stack frame */
-        temp_frame = current_frame;
-        current_frame = current_frame->parent;
-        if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
+    CALC_DISPATCH(0);
+    DEBUG("TRACE - RET\n");
+    /* Where we return to */
+    next_pc = current_frame->return_pc;
+    next_inst = current_frame->return_inst;
+    /* back to the parents stack frame */
+    temp_frame = current_frame;
+    current_frame = current_frame->parent;
+    if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
 
-       free_frame(temp_frame);
-        DISPATCH;
+    free_frame(temp_frame);
+    DISPATCH;
 
     RET_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - RET_REG\n");
-        v1 = REG_OP(1);
-        /* Where we return to */
-        next_pc = current_frame->return_pc;
-        next_inst = current_frame->return_inst;
-        /* Set the result register */
-        if (current_frame->return_reg) {
-            *(current_frame->return_reg) = v1;
-            if (v1) v1->owner = current_frame->parent;
-        }
-        /* back to the parents stack frame */
-        temp_frame = current_frame;
-        current_frame = current_frame->parent;
-        if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - RET_REG\n");
+    v1 = REG_OP(1);
+    /* Where we return to */
+    next_pc = current_frame->return_pc;
+    next_inst = current_frame->return_inst;
+    /* Set the result register */
+    if (current_frame->return_reg) {
+        *(current_frame->return_reg) = v1;
+        if (v1) v1->owner = current_frame->parent;
+    }
+    /* back to the parents stack frame */
+    temp_frame = current_frame;
+    current_frame = current_frame->parent;
+    if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
 
-        free_frame(temp_frame);
-        DISPATCH;
+    free_frame(temp_frame);
+    DISPATCH;
 
     RET_INT:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - RET_INT\n");
-        i1 = INT_OP(1);
-        /* Where we return to */
-        next_pc = current_frame->return_pc;
-        next_inst = current_frame->return_inst;
-        /* Set the result register */
-        if (current_frame->return_reg)
-            *(current_frame->return_reg) = value_int_f(current_frame->parent,
-                                                       i1);
-        /* back to the parents stack frame */
-        temp_frame = current_frame;
-        current_frame = current_frame->parent;
-        if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - RET_INT\n");
+    i1 = INT_OP(1);
+    /* Where we return to */
+    next_pc = current_frame->return_pc;
+    next_inst = current_frame->return_inst;
+    /* Set the result register */
+    if (current_frame->return_reg)
+        *(current_frame->return_reg) = value_int_f(current_frame->parent,
+                                                   i1);
+    /* back to the parents stack frame */
+    temp_frame = current_frame;
+    current_frame = current_frame->parent;
+    if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
 
-        free_frame(temp_frame);
-        DISPATCH;
+    free_frame(temp_frame);
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  RET_FLOAT                                                        pej 12. April 2021
  *  -----------------------------------------------------------------------------------
@@ -421,7 +390,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     s1 = CONSTSTRING_OP(1);
 
-   /* Where we return to */
+    /* Where we return to */
     next_pc = current_frame->return_pc;
     next_inst = current_frame->return_inst;
     /* Set the result register */
@@ -436,44 +405,44 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DISPATCH;
 
     INIT_REG: // label not yet defined
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - INIT_REG R%llu \n", REG_IDX(1));
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - INIT_REG R%llu \n", REG_IDX(1));
 
-        REG_OP(1) = value_f(current_frame);
+    REG_OP(1) = value_f(current_frame);
 
-        DISPATCH;
+    DISPATCH;
 
     FREE_REG: // label not yet defined
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - FREE_REG R%llu \n", REG_IDX(1));
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - FREE_REG R%llu \n", REG_IDX(1));
 
-        /* v1 needs to be deallocated */
-        free_value(current_frame, REG_OP(1));
-        REG_OP(1) = NULL;
+    /* v1 needs to be deallocated */
+    free_value(current_frame, REG_OP(1));
+    REG_OP(1) = NULL;
 
-        DISPATCH;
+    DISPATCH;
 
     MOVE_REG_REG:
-        CALC_DISPATCH(2);
-        DEBUG("TRACE - MOVE_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - MOVE_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
 
-        v1 = REG_OP(1);
-        v2 = REG_OP(2);
+    v1 = REG_OP(1);
+    v2 = REG_OP(2);
 
-        /* v1 needs to be deallocated */
-        free_value(current_frame, REG_OP(1));
+    /* v1 needs to be deallocated */
+    free_value(current_frame, REG_OP(1));
 
-        /* Now move the register; if op2 is null, well so be it, no harm done */
-        REG_OP(1) = REG_OP(2);
-        REG_OP(2) = NULL;
+    /* Now move the register; if op2 is null, well so be it, no harm done */
+    REG_OP(1) = REG_OP(2);
+    REG_OP(2) = NULL;
 
-        DISPATCH;
+    DISPATCH;
 
     DEC0:
-        /* TODO This is really idec0 - i.e. it does not prime the int */
-        CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC0\n");
-        (current_frame->locals[0]->int_value)--;
+    /* TODO This is really idec0 - i.e. it does not prime the int */
+    CALC_DISPATCH(0);
+    DEBUG("TRACE - DEC0\n");
+    (current_frame->locals[0]->int_value)--;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEC1   R1--                                                       pej 7. April 2021
@@ -481,9 +450,9 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  */
     DEC1:
     /* TODO This is really idec1 - i.e. it does not prime the int */
-        CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC1\n");
-        (current_frame->locals[1]->int_value)--;
+    CALC_DISPATCH(0);
+    DEBUG("TRACE - DEC1\n");
+    (current_frame->locals[1]->int_value)--;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEC2   R2--                                                       pej 7. April 2021
@@ -491,172 +460,166 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  */
     DEC2:
     /* TODO This is really idec2 - i.e. it does not prime the int */
-        CALC_DISPATCH(0);
-        DEBUG("TRACE - DEC2\n");
-        (current_frame->locals[2]->int_value)--;
+    CALC_DISPATCH(0);
+    DEBUG("TRACE - DEC2\n");
+    (current_frame->locals[2]->int_value)--;
     DISPATCH;
 
     DEC_REG:
-        /* TODO This is really idec reg - i.e. it does not prime the int */
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - DEC_REG R%llu\n", REG_IDX(1));
-        (current_frame->locals[REG_IDX(1)]->int_value)--;
+    /* TODO This is really idec reg - i.e. it does not prime the int */
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - DEC_REG R%llu\n", REG_IDX(1));
+    (current_frame->locals[REG_IDX(1)]->int_value)--;
     DISPATCH;
 
     BR_ID:
-        next_pc = program->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL;
-        DISPATCH;
+    next_pc = program->binary + REG_IDX(1);
+    CALC_DISPATCH_MANUAL;
+    DISPATCH;
 
     /* For these we optimise for condition to NOT be met because in a loop
      * these ae used to jump out of the loop when the end condition it met
      * (and every little bit helps to improve performance!)
      */
     BRT_ID_REG:
-        CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
+    CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                 the real CPUs branch prediction (in theory) */
-        if (REG_OP(2)->int_value) {
-            next_pc = program->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL;
-        }
-        DISPATCH;
+    if (INT_VAL(REG_OP(2))) {
+        next_pc = program->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL;
+    }
+    DISPATCH;
 
     BRF_ID_REG:
-        CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
+    CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                   the real CPUs branch prediction (in theory) */
-        DEBUG("TRACE - BRF_ID_REG R%llu\n", REG_IDX(1));
-        if (!(REG_OP(2)->int_value)) {
-            next_pc = program->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL;
-        }
-        DISPATCH;
+    DEBUG("TRACE - BRF_ID_REG R%llu\n", REG_IDX(1));
+    if (!(INT_VAL(REG_OP(2)))) {
+        next_pc = program->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL;
+    }
+    DISPATCH;
 
     IMASTER_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - IMASTER_REG R%llu\n", REG_IDX(1));
-        v1 = REG_OP(1);
-        master_int(v1);
-        DISPATCH;
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - IMASTER_REG R%llu\n", REG_IDX(1));
+    v1 = REG_OP(1);
+    master_int(v1);
+    DISPATCH;
 
     FMASTER_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - FMASTER_REG R%llu\n", REG_IDX(1));
-        v1 = REG_OP(1);
-        master_float(v1);
-        DISPATCH;
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - FMASTER_REG R%llu\n", REG_IDX(1));
+    v1 = REG_OP(1);
+    master_float(v1);
+    DISPATCH;
 
     SMASTER_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - SMASTER_REG R%llu\n", REG_IDX(1));
-        v1 = REG_OP(1);
-        master_string(v1);
-        DISPATCH;
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - SMASTER_REG R%llu\n", REG_IDX(1));
+    v1 = REG_OP(1);
+    master_string(v1);
+    DISPATCH;
 
-TIME_REG:
-        CALC_DISPATCH(1);
-        DEBUG("TRACE - TIME R%llu\n", REG_IDX(1));
-        v1 = REG_OP(1);
-        if (v1) set_int(v1,time(NULL));
-        else REG_OP(1) = value_int_f(current_frame, time(NULL));
-        DISPATCH;
+    TIME_REG:
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - TIME R%llu\n", REG_IDX(1));
+    v1 = REG_OP(1);
+    if (v1) set_int(v1,time(NULL));
+    else REG_OP(1) = value_int_f(current_frame, time(NULL));
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  TRIMR  Trim right                                                 pej 7. April 2021
  * ------------------------------------------------------------------------------------
  */
     TRIMR_REG_REG:
-      CALC_DISPATCH(2);
-        DEBUG("TRACE - TRIMR_REG_REG\n") ;
-        v1 = REG_OP(1);
-        REG_TEST(v1);
-        prime_string(v1);
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - TRIMR_REG_REG\n") ;
+    v1 = REG_OP(1);
+    prime_string(v1);
 
-        i = v1->string_length - 1;
-        while (i >= 0 && v1->string_value[i] == ' ') {
-            v1->string_value[i] = '\0';
-            i--;
-        }
-        v1->string_length=i+1;
-        REG_OP(1)=v1;
-      DISPATCH;
+    i = v1->string_length - 1;
+    while (i >= 0 && v1->string_value[i] == ' ') {
+        v1->string_value[i] = '\0';
+        i--;
+    }
+    v1->string_length=i+1;
+    REG_OP(1)=v1;
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  TRIML  Trim left                                                  pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
     TRIML_REG_REG:
-      CALC_DISPATCH(2);
-        DEBUG("TRACE - TRIML_REG_REG\n") ;
-        v1 = REG_OP(1);
-        REG_TEST(v1);
-        prime_string(v1);
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - TRIML_REG_REG\n") ;
+    v1 = REG_OP(1);
+    prime_string(v1);
 
-        j = v1->string_length - 1;
-        i=0;
-        while (i <= j && v1->string_value[i] == ' ') i++;
+    j = v1->string_length - 1;
+    i=0;
+    while (i <= j && v1->string_value[i] == ' ') i++;
 
-        if (i>=j) {
-            v1->string_length=0;
-            v1->string_value[0] = '\0';
-        } else {
-            v1->string_length= v1->string_length-i;
-            memcpy(v1->string_value,v1->string_value+i,v1->string_length);
-            v1->string_value[v1->string_length] = '\0';
-        }
-      DISPATCH;
+    if (i>=j) {
+        v1->string_length=0;
+        v1->string_value[0] = '\0';
+    } else {
+        v1->string_length= v1->string_length-i;
+        memcpy(v1->string_value,v1->string_value+i,v1->string_length);
+        v1->string_value[v1->string_length] = '\0';
+    }
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC0   R0++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-   INC0:
-     CALC_DISPATCH(0);
-        DEBUG("TRACE - INC0\n");
-        REG_VAL(0)->int_value++;
-        (current_frame->locals[0]->int_value)++;
-     DISPATCH;
+    INC0:
+    CALC_DISPATCH(0);
+    DEBUG("TRACE - INC0\n");
+    REG_VAL(0)->int_value++;
+    (current_frame->locals[0]->int_value)++;
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-  INC1:
+    INC1:
     CALC_DISPATCH(0);
-      DEBUG("TRACE - INC1\n");
-      (current_frame->locals[1]->int_value)++;
+    DEBUG("TRACE - INC1\n");
+    (current_frame->locals[1]->int_value)++;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC2   R2++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-  INC2:
+    INC2:
     CALC_DISPATCH(0);
-      DEBUG("TRACE - INC2\n");
-      (current_frame->locals[2]->int_value)++;
+    DEBUG("TRACE - INC2\n");
+    (current_frame->locals[2]->int_value)++;
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
  *  -----------------------------------------------------------------------------------
  */
-  ISUB_REG_REG_INT:
+    ISUB_REG_REG_INT:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_INT\n") ;
-    REG_OP_TEST(v2,2);     // value in v2
-    i3 = INT_OP(3);
 
-    REG_RETURN_INT(v2->int_value+i3);  // return in first register
+    REG_RETURN_INT(INT_VAL(REG_OP(2))+INT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-  IEQ_REG_REG_REG:
-   CALC_DISPATCH(3);
+    IEQ_REG_REG_REG:
+    CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_REG\n") ;
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
 
-     if (INT_VAL(v2)==INT_VAL(v3)) i=1;
-     else i=0;
+    if (INT_VAL(REG_OP(2))==INT_VAL(REG_OP(3))) i=1;
+    else i=0;
 
-     REG_RETURN_INT(i);  // return in first register
-   DISPATCH;
+    REG_RETURN_INT(i);  // return in first register
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -665,10 +628,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IEQ_REG_REG_INT\n") ;
 
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-
-    if (INT_VAL(v3)==i3) i=1;
+    if (INT_VAL(REG_OP(2))==INT_OP(3)) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -679,11 +639,10 @@ TIME_REG:
     INE_REG_REG_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_REG\n") ;
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
 
-    if (INT_VAL(v2)!=INT_VAL(v3)) i=0;
+    if (INT_VAL(REG_OP(2))!=INT_VAL(REG_OP(3))) i=0;
     else i=1;
+
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -693,10 +652,10 @@ TIME_REG:
     INE_REG_REG_INT:
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_INT\n") ;
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-    if (INT_VAL(v3)!=i3) i=0;
+
+    if (INT_VAL(REG_OP(2))!=INT_OP(3)) i=0;
     else i=1;
+
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -707,10 +666,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_REG_REG\n") ;
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-
-    if (INT_VAL(v2)>INT_VAL(v3)) i=1;
+    if (INT_VAL(REG_OP(2))>INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -722,10 +678,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_REG_INT\n") ;
 
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-
-    if (INT_VAL(v2)>i3) i=1;
+    if (INT_VAL(REG_OP(2))>INT_OP(3)) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -737,10 +690,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_INT_REG\n") ;
 
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2>INT_VAL(v3)) i=1;
+    if (INT_OP(2)>INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -752,10 +702,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_REG_REG\n") ;
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-
-    if (INT_VAL(v2)<INT_VAL(v3)) i=1;
+    if (INT_VAL(REG_OP(2))<INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -767,10 +714,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_REG_INT\n") ;
 
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-
-    if (INT_VAL(v2)<i3) i=1;
+    if (INT_VAL(REG_OP(2))<INT_OP(3)) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -782,10 +726,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_INT_REG\n") ;
 
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2<INT_VAL(v3)) i=1;
+    if (INT_OP(2)<INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -797,10 +738,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_REG_REG\n") ;
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-
-    if (INT_VAL(v2)>=INT_VAL(v3)) i=1;
+    if (INT_VAL(REG_OP(2))>=INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -812,10 +750,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_REG_INT\n") ;
 
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-
-    if (INT_VAL(v2)>=i3) i=1;
+    if (INT_VAL(REG_OP(2))>=INT_OP(3)) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -827,10 +762,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_INT_REG\n") ;
 
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2>=INT_VAL(v3)) i=1;
+    if (INT_OP(2)>=INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -842,10 +774,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_REG_REG\n") ;
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-
-    if (INT_VAL(v2)<=INT_VAL(v3)) i=1;
+    if (INT_VAL(REG_OP(2))<=INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -857,10 +786,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_REG_INT\n") ;
 
-    REG_OP_TEST(v2,2);
-    i3 = INT_OP(3);
-
-    if (INT_VAL(v2)<=i3) i=1;
+    if (INT_VAL(REG_OP(2))<=INT_OP(3)) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -872,10 +798,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_INT_REG\n") ;
 
-    i2 = INT_OP(2);
-    REG_OP_TEST(v3,3);
-
-    if (i2<=INT_VAL(v3)) i=1;
+    if (INT_OP(2)<=INT_VAL(REG_OP(3))) i=1;
     else i=0;
     REG_RETURN_INT(i);  // return in first register
     DISPATCH;
@@ -886,9 +809,8 @@ TIME_REG:
     COPY_REG_REG: // label not yet defined
     CALC_DISPATCH(2);
     REG_OP(1) = value_f(current_frame);
-    v1 = REG_OP(1);
-    v2 = REG_OP(2);
-    memcpy(v1, v2, sizeof(value));
+
+    memcpy(REG_OP(1) , REG_OP(2), sizeof(value));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
@@ -907,23 +829,17 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IDIV_REG_REG_INT\n") ;
 
-    REG_OP_TEST_INT(v2,2);
-    i3 = INT_OP(3);
-    v2->int_value=v2->int_value/i3;
-    REG_RETURN_INT(v2->int_value);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))/INT_OP(3));
     DISPATCH;
- /* -----------------------------------------------------------------------------------
- *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
+    /* -----------------------------------------------------------------------------------
+    *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
+    *  -----------------------------------------------------------------------------------
+    */
     IDIV_REG_REG_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - IDIV_REG_REG_REG\n") ;
 
-    REG_OP_TEST_INT(v2,2);
-    REG_OP_TEST_INT(v3,3);
-    v2->int_value=v2->int_value/v3->int_value;
-    REG_RETURN_INT(v2->int_value);
+    REG_RETURN_INT(INT_VAL(REG_OP(2))/INT_VAL(REG_OP(3)));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
@@ -953,8 +869,7 @@ TIME_REG:
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_FLOAT\n") ;
 
-    f1=FLOAT_OP(1);
-    printf("%g", f1);
+    printf("%g", FLOAT_OP(1));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_FLOAT  Load op1 with op2                                   pej 10 Apr 2021
@@ -964,8 +879,7 @@ TIME_REG:
     CALC_DISPATCH(2);
     DEBUG("TRACE - LOAD_REG_FLOAT\n") ;
 
-    f2 = FLOAT_OP(2);
-    REG_RETURN_FLOAT(f2);
+    REG_RETURN_FLOAT(FLOAT_OP(2));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_REG  Float Add (op1=op2+op3)                           pej 12 Apr 2021
@@ -975,10 +889,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FADD_REG_REG_REG\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    REG_OP_TEST_FLOAT(v3,3);
-
-    REG_RETURN_FLOAT(v2->float_value + v3->float_value);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value + REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_REG  Float Sub (op1=op2-op3)                           pej 12 Apr 2021
@@ -988,9 +899,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_REG_REG\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    REG_OP_TEST_FLOAT(v3,3);
-    REG_RETURN_FLOAT(v2->float_value - v3->float_value);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value - REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
@@ -1000,9 +909,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_REG_REG\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    REG_OP_TEST_FLOAT(v3,3);
-    REG_RETURN_FLOAT(v2->float_value / v3->float_value);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value / REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
@@ -1012,9 +919,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FMULT_REG_REG_REG\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    REG_OP_TEST_FLOAT(v3,3);
-    REG_RETURN_FLOAT(v2->float_value * v3->float_value);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value * REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_FLOAT  Float Add (op1=op2+op3)                          pej 12 Apr 2021
@@ -1024,9 +929,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FADD_REG_REG_FLOAT\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    f3 = FLOAT_OP(3);
-    REG_RETURN_FLOAT(v2->float_value + f3);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value + FLOAT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_FLOAT  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
@@ -1036,9 +939,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_REG_FLOAT\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    f3 = FLOAT_OP(3);
-    REG_RETURN_FLOAT(v2->float_value - f3);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value - FLOAT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_FLOAT  Float Div (op1=op2/op3)                         pej 12 Apr 2021
@@ -1048,9 +949,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_REG_FLOAT\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    f3 = FLOAT_OP(3);
-    REG_RETURN_FLOAT(v2->float_value / f3);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value / FLOAT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
@@ -1060,9 +959,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FMULT_REG_REG_FLOAT\n") ;
 
-    REG_OP_TEST_FLOAT(v2,2);
-    f3 = FLOAT_OP(3);
-    REG_RETURN_FLOAT(v2->float_value * f3);
+    REG_RETURN_FLOAT(REG_OP(2)->float_value * FLOAT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_FLOAT_REG  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
@@ -1072,9 +969,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_FLOAT_REG\n") ;
 
-    f2 = FLOAT_OP(2);
-    REG_OP_TEST_FLOAT(v3,2);
-    REG_RETURN_FLOAT(f2 - v3->float_value);
+    REG_RETURN_FLOAT(FLOAT_OP(2) - REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_FLOAT_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
@@ -1084,9 +979,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_FLOAT_REG\n") ;
 
-    f2 = FLOAT_OP(2);
-    REG_OP_TEST_FLOAT(v3,2);
-    REG_RETURN_FLOAT(f2 / v3->float_value);
+    REG_RETURN_FLOAT(FLOAT_OP(2) / REG_OP(3)->float_value);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
@@ -1097,8 +990,7 @@ TIME_REG:
     DEBUG("TRACE - STRINT_REG_REG_REG\n") ;
 
     v2 = REG_OP(2);
-    REG_TEST(v2);
-    REG_OP_TEST_INT(v3,3);
+    v3=REG_OP(3);
     i1=v2->string_value[v3->int_value-1]-'0';
 
     REG_RETURN_INT(i1);
@@ -1111,11 +1003,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDI_REG_REG_INT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2);
-    i3 = INT_OP(3);
+    CONV2INT(i2,REG_OP(2));
 
-    REG_RETURN_INT(i2+i3);
+    REG_RETURN_INT(i2+INT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ADDI_REG_REG_REG  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
@@ -1125,10 +1015,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDI_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2);
-    CONV2INT(i3,v3);
+    CONV2INT(i2,REG_OP(2));
+    CONV2INT(i3,REG_OP(3));
 
     REG_RETURN_INT(i2+i3);
     DISPATCH;
@@ -1140,10 +1028,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBI_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2);
-    CONV2INT(i3,v3);
+    CONV2INT(i2,REG_OP(2));
+    CONV2INT(i3,REG_OP(3));
 
     REG_RETURN_INT(i2-i3);
     DISPATCH;
@@ -1155,11 +1041,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBI_REG_REG_INT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2);
-    i3 = INT_OP(3);
+    CONV2INT(i2,REG_OP(2));
 
-    REG_RETURN_INT(i2-i3);
+    REG_RETURN_INT(i2-INT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
@@ -1169,10 +1053,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTI_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2);
-    CONV2INT(i3,v3);
+    CONV2INT(i2,REG_OP(2));
+    CONV2INT(i3,REG_OP(3));
 
     REG_RETURN_INT(i2*i3);
 
@@ -1185,8 +1067,7 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTI_REG_REG_INT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2);
+    CONV2INT(i2,REG_OP(2));
     i3 = INT_OP(3);
 
     REG_RETURN_INT(i2*i3);
@@ -1200,10 +1081,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVI_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2INT(i2,v2);
-    CONV2INT(i3,v3);
+    CONV2INT(i2,REG_OP(2));
+    CONV2INT(i3,REG_OP(3));
 
     REG_RETURN_INT(i2/i3);
 
@@ -1216,11 +1095,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVI_REG_REG_INT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2INT(i2,v2);
-    i3 = INT_OP(3);
+    CONV2INT(i2,REG_OP(2));
 
-    REG_RETURN_INT(i2/i3);
+    REG_RETURN_INT(i2/INT_OP(3));
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1231,11 +1108,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDF_REG_REG_FLOAT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2FLOAT(f2,v2)
-    f3 = FLOAT_OP(3);
+    CONV2FLOAT(f2,REG_OP(2))
 
-    REG_RETURN_FLOAT(f2 + f3);
+    REG_RETURN_FLOAT(f2 + FLOAT_OP(3));
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ADDF_REG_REG_REG  Convert and Add to Float (op1=op2+op3)              pej 14 Apr 2021
@@ -1245,10 +1120,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDF_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2FLOAT(f2,v2)
-    CONV2FLOAT(f3,v3)
+    CONV2FLOAT(f2,REG_OP(2))
+    CONV2FLOAT(f3,REG_OP(3))
 
     REG_RETURN_FLOAT(f2 + f3);
     DISPATCH;
@@ -1260,10 +1133,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2FLOAT(f2,v2)
-    CONV2FLOAT(f3,v3)
+    CONV2FLOAT(f2,REG_OP(2))
+    CONV2FLOAT(f3,REG_OP(3))
 
     REG_RETURN_FLOAT(f2 - f3);
     DISPATCH;
@@ -1275,11 +1146,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_REG_FLOAT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2FLOAT(f2,v2)
-    f3 = FLOAT_OP(3);
+    CONV2FLOAT(f2,REG_OP(2))
 
-    REG_RETURN_FLOAT(f2 - f3);
+    REG_RETURN_FLOAT(f2 - FLOAT_OP(3));
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1290,11 +1159,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_FLOAT_REG\n");
 
-    f2 = FLOAT_OP(2);
-    REG_OP_TEST(v3,3);
-    CONV2FLOAT(f3,v3)
+    CONV2FLOAT(f3,REG_OP(3))
 
-    REG_RETURN_FLOAT(f2 - f3);
+    REG_RETURN_FLOAT(FLOAT_OP(2) - f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1305,11 +1172,10 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTF_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2FLOAT(f2,v2)
+    CONV2FLOAT(f2,REG_OP(2))
     f3 = FLOAT_OP(3);
 
-    REG_RETURN_FLOAT(f2 * f3);
+    REG_RETURN_FLOAT(f2 * FLOAT_OP(3));
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1320,11 +1186,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTF_REG_REG_FLOAT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2FLOAT(f2,v2)
-    f3 = FLOAT_OP(3);
+    CONV2FLOAT(f2,REG_OP(2))
 
-    REG_RETURN_FLOAT(f2 * f3);
+    REG_RETURN_FLOAT(f2 * FLOAT_OP(3));
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1335,10 +1199,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_REG_REG\n");
 
-    REG_OP_TEST(v2,2);
-    REG_OP_TEST(v3,3);
-    CONV2FLOAT(f2,v2)
-    CONV2FLOAT(f3,v3)
+    CONV2FLOAT(f2,REG_OP(2))
+    CONV2FLOAT(f3,REG_OP(3))
 
     REG_RETURN_FLOAT(f2 / f3);
 
@@ -1351,11 +1213,9 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_REG_FLOAT\n");
 
-    REG_OP_TEST(v2,2);
-    CONV2FLOAT(f2,v2)
-    f3 = FLOAT_OP(3);
+    CONV2FLOAT(f2,REG_OP(2))
 
-    REG_RETURN_FLOAT(f2 / f3);
+    REG_RETURN_FLOAT(f2 / FLOAT_OP(3));
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1366,10 +1226,8 @@ TIME_REG:
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_FLOAT_REG\n");
 
-    f2 = FLOAT_OP(2);
-    REG_OP_TEST(v3,3);
-    CONV2FLOAT(f3,v3)
-    REG_RETURN_FLOAT(f2 / f3);
+    CONV2FLOAT(f3,REG_OP(3))
+    REG_RETURN_FLOAT(FLOAT_OP(2) / f3);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1380,7 +1238,7 @@ TIME_REG:
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_REG\n");
 
-    REG_OP(1) = current_frame->locals[REG_OP(2)->int_value + program->globals + procedure->locals];
+    REG_OP(1) = current_frame->locals[INT_VAL(REG_OP(2)) + program->globals + procedure->locals];
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1401,9 +1259,10 @@ TIME_REG:
     IPRIME_REG:
     CALC_DISPATCH(1);
     DEBUG("TRACE - IPRIME_REG\n");
-    REG_OP_TEST(v1,1);
-    CONV2INT(i1,v1);
+
+    CONV2INT(i1,REG_OP(1));
     REG_RETURN_INT(i1);
+
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FPRIME_REG  Float Prime op1                                         pej 17 Apr 2021
@@ -1412,9 +1271,10 @@ TIME_REG:
     FPRIME_REG:
     CALC_DISPATCH(1);
     DEBUG("TRACE - FPRIME_REG\n");
-    REG_OP_TEST(v1,1);
-    CONV2FLOAT(f1,v1);
+
+    CONV2FLOAT(f1,REG_OP(1));
     REG_RETURN_FLOAT(f1);
+
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SPRIME_REG  String Prime op1                                        pej 17 Apr 2021
@@ -1423,8 +1283,8 @@ TIME_REG:
     SPRIME_REG:
     CALC_DISPATCH(1);
     DEBUG("TRACE - SPRIME_REG\n");
-    REG_OP_TEST(v1,1);
-    prime_string(v1);
+
+    prime_string(REG_OP(1));
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
@@ -1434,43 +1294,43 @@ TIME_REG:
 #include "instrmiss.h"
 
 
-UNKNOWN:
-        printf("ERROR - Unimplemented instruction - aborting\n");
-        goto interprt_finished;
-notreg:
-        DEBUG("register not initialised\n");
-        goto SIGNAL;
-notint:
-        ERROR("Parameter is not an integer\n");
-        goto SIGNAL;
-notfloat:
-        ERROR("Parameter is not a float\n");
-        goto SIGNAL;
-convlength:
-        DEBUG("maximum string length exceeded\n");
-        goto SIGNAL;
-converror:
-        DEBUG("Conversion error occurred\n");
-        goto SIGNAL;
+    UNKNOWN:
+    printf("ERROR - Unimplemented instruction - aborting\n");
+    goto interprt_finished;
+    notreg:
+    DEBUG("register not initialised\n");
+    goto SIGNAL;
+    notint:
+    ERROR("Parameter is not an integer\n");
+    goto SIGNAL;
+    notfloat:
+    ERROR("Parameter is not a float\n");
+    goto SIGNAL;
+    convlength:
+    DEBUG("maximum string length exceeded\n");
+    goto SIGNAL;
+    converror:
+    DEBUG("Conversion error occurred\n");
+    goto SIGNAL;
 
 
-EXIT:
+    EXIT:
 
 #ifndef NDEBUG
-        if (debug_mode) printf("TRACE - EXIT\n");
+    if (debug_mode) printf("TRACE - EXIT\n");
 #endif
-        goto interprt_finished;
+    goto interprt_finished;
 
     SIGNAL:
-        printf("\n\nTRACE - Signal Received - aborting\n");
-        goto interprt_finished;
+    printf("\n\nTRACE - Signal Received - aborting\n");
+    goto interprt_finished;
 
     interprt_finished:
-        if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
+    if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
 #ifndef NDEBUG
-        if (debug_mode) printf("Interpreter Finished\n");
+    if (debug_mode) printf("Interpreter Finished\n");
 #endif
- //   free_ops();
+    //   free_ops();
 
     return 0;
 }

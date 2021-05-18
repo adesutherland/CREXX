@@ -29,18 +29,13 @@
 
 //
 // PEJ Macros   April 2021
-#define REG_RETURN_INT(val)        { v1=REG_OP(1); if (v1) set_int(v1,val);                             \
-                                    else REG_OP(1) = value_int_f(current_frame,val); }
 
-#define REG_RETURN_FLOAT(val)      { v1=REG_OP(1); if (v1) set_float(v1,val);                           \
-                                    else REG_OP(1) = value_float_f(current_frame, val); }
-
-#define REG_RETURN_STRING(val)     { v1=REG_OP(1); if (v1) set_conststring(v1, val);                    \
-                                    else REG_OP(1) = value_conststring_f(current_frame,val); }
+#define REG_RETURN_INT(val)        { set_int(REG_OP(1),val);}
+#define REG_RETURN_FLOAT(val)      { set_float(REG_OP(1),val);}
+#define REG_RETURN_STRING(val)     { set_conststring(REG_OP(1), val);}
 
 #define REG_RET_CHAR(val)          { v1=REG_OP(1); if (v1) set_char(v1,val);                               \
                                     else REG_OP(1) = value_char_f(current_frame,val); }
-
 // TODO: String to integer just for real integers, or stop converting at "."
 // maximum size of long long is 20 digits plus sign
 // maximum size of double is about 16 decimal digits plus sign
@@ -64,12 +59,13 @@
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }
-#define REG_OP_TEST(v,n)        { (v) = REG_OP(n); REG_TEST(v); }
-#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
-                                    if ((v)->status.primed_int==0)  goto notint; }
-#define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n); REG_TEST(v);                                      \
-                                    if ((v)->status.primed_float==0)  goto notfloat; }
-
+#define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}
+//#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
+//                                 if ((v)->status.primed_int==0)  goto notint; }
+//#define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n); REG_TEST(v);                                      \
+//                                   if ((v)->status.primed_float==0)  goto notfloat; }
+#define REG_OP_TEST_INT(v,n)    { (v) = REG_OP(n);}
+#define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
 
 typedef struct bin_space program;
