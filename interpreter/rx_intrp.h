@@ -59,6 +59,9 @@
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }
+#define R1                       REG_OP(1)
+#define R2                       REG_OP(2)
+#define R3                       REG_OP(3)
 #define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}
 //#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
 //                                 if ((v)->status.primed_int==0)  goto notint; }
