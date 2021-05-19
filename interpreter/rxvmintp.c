@@ -138,8 +138,34 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DISPATCH;
 
     /* Instruction implementations */
+    /* ----------------------------------------------------------------------------
+     * The following shortcut macros are used in the instruction implementation
+     *      op1R   address the first register operand
+     *      op2R   address the second register operand
+     *      op3R   address the third  register operand
+     *
+     *      op1RI  integer of first register operand
+     *      op2RI  integer of second register operand
+     *      op3RI  integer of third register operand
+     *
+     *      op1RF  float of first register operand
+     *      op2RF  float of second register operand
+     *      op3RF  float of third register operand
+     *
+     *      op1I   integer value of first operand (non-register value)
+     *      op2I   integer value of second operand (non-register value)
+     *      op3I   integer value of third  operand (non-register value)
+     *
+     *      op1F   float value of first operand (non-register value)
+     *      op2F   float value of second operand (non-register value)
+     *      op3F   float value of third  operand (non-register value)
+     *
+     *      CONV2INT(integer-result-variable,value-to-be-converted)
+     *      CONV2FLOAT(float-result-variable,value-to-be-converted)
+     * ----------------------------------------------------------------------------
+     */
     LOAD_REG_INT:
-    CALC_DISPATCH(2);
+    CALC_DISPATCH(2)
     DEBUG("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), op2I);
 
     set_int(op1R, op2I);
@@ -147,7 +173,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DISPATCH;
 
     LOAD_REG_STRING:
-    CALC_DISPATCH(2);
+    CALC_DISPATCH(2)
     DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
           REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
     set_conststring(op1R, CONSTSTRING_OP(2));
@@ -155,7 +181,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DISPATCH;
 
     SAY_REG:
-    CALC_DISPATCH(1);
+    CALC_DISPATCH(1)
     DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
 
     prime_string(op1R);
@@ -571,7 +597,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     INC0:
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC0\n");
-    (current_frame->locals[0]->int_value)++;
+    REG_VAL(0)->int_value++;
+
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
@@ -580,7 +607,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     INC1:
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC1\n");
-    (current_frame->locals[1]->int_value)++;
+    REG_VAL(1)->int_value++;
+
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  INC2   op2R++                                                       pej 7. April 2021
@@ -589,7 +617,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     INC2:
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC2\n");
-    (current_frame->locals[2]->int_value)++;
+    REG_VAL(2)->int_value++;
+
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
@@ -599,7 +628,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_INT\n") ;
 
-    REG_RETURN_INT(op2RI + op3I);
+    REG_RETURN_INT(op2RI - op3I);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
@@ -633,8 +662,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_REG\n") ;
 
-    if (op2RI != op3RI) REG_RETURN_INT(0)
-    else REG_RETURN_INT(1)
+    if (op2RI != op3RI) REG_RETURN_INT(1)
+    else REG_RETURN_INT(0)
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1059,9 +1088,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DEBUG("TRACE - MULTI_REG_REG_INT\n");
 
     CONV2INT(i2, op2R);
-    i3 = op3I;
 
-    REG_RETURN_INT(i2*i3);
+    REG_RETURN_INT(i2*op3I);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1163,9 +1191,10 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTF_REG_REG_REG\n");
 
-    CONV2FLOAT(f2,R2)
+    CONV2FLOAT(f2, op2R)
+    f3 = op3F;
 
-    REG_RETURN_FLOAT(f2 * op3F);
+    REG_RETURN_FLOAT(f2 * op3RF);
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1287,15 +1316,6 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     UNKNOWN:
     printf("ERROR - Unimplemented instruction - aborting\n");
     goto interprt_finished;
-    notreg:
-    DEBUG("register not initialised\n");
-    goto SIGNAL;
-    notint:
-    ERROR("Parameter is not an integer\n");
-    goto SIGNAL;
-    notfloat:
-    ERROR("Parameter is not a float\n");
-    goto SIGNAL;
     convlength:
     DEBUG("maximum string length exceeded\n");
     goto SIGNAL;
