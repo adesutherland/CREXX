@@ -26,12 +26,13 @@
 #define CONSTSTRING_OP(n)            (string_constant *)(program->const_pool + (pc+(n))->index)
 #define PROC_OP(n)                   (proc_constant *)(program->const_pool + (pc+(n))->index)
 #define INT_VAL(vx)                  vx->int_value
+#define FLOAT_VAL(vx)                vx->float_value
 
 //
 // PEJ Macros   April 2021
 
 #define REG_RETURN_INT(val)        { set_int(REG_OP(1),val);}
-#define REG_RETURN_FLOAT(val)      { set_float(REG_OP(1),val);}
+#define REG_RETURN_FLOAT(val)      { set_float(REG_OP(1),val);  }
 #define REG_RETURN_STRING(val)     { set_conststring(REG_OP(1), val);}
 
 #define REG_RET_CHAR(val)          { v1=REG_OP(1); if (v1) set_char(v1,val);                               \
@@ -59,9 +60,20 @@
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }
-#define R1                       REG_OP(1)
-#define R2                       REG_OP(2)
-#define R3                       REG_OP(3)
+#define op1R                     REG_OP(1)
+#define op2R                     REG_OP(2)
+#define op3R                     REG_OP(3)
+#define op1I                     INT_OP(1)
+#define op2I                     INT_OP(2)
+#define op3I                     INT_OP(3)
+#define op1F                     FLOAT_OP(1)
+#define op2F                     FLOAT_OP(2)
+#define op3F                     FLOAT_OP(3)
+#define op1RI                    INT_VAL(op1R)
+#define op2RI                    INT_VAL(op2R)
+#define op3RI                    INT_VAL(op3R)
+#define op2RF                    FLOAT_VAL(op2R)
+#define op3RF                    FLOAT_VAL(op3R)
 #define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}
 //#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
 //                                 if ((v)->status.primed_int==0)  goto notint; }
