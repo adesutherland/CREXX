@@ -1317,6 +1317,9 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     converror:
     DEBUG("Conversion error occurred\n");
     goto SIGNAL;
+    notreg:
+    DEBUG("Register not initialised\n");
+    goto SIGNAL;
 
 
     EXIT:
