@@ -15,12 +15,13 @@ static void help() {
         "Version : " rxversion "\n"
         "Usage   : rxas [options] source_file\n"
         "Options :\n"
-        "  -h              Prints help message\n"
-        "  -c              Prints Copyright & License Details\n"
-        "  -v              Prints Version\n"
-        "  -a              Print Architecture Details\n"
+        "  -h              Help Message\n"
+        "  -c              Copyright & License Details\n"
+        "  -v              Version\n"
+        "  -a              Architecture Details\n"
         "  -i              Print Instructions\n"
         "  -d              Debug/Verbose Mode\n"
+        "  -l location     Working Location (directory)\n"
         "  -o output_file  Binary Output File\n";
 
     printf("%s",helpMessage);
@@ -70,7 +71,7 @@ int main(int argc, char *argv[]) {
     void *parser;
     char* file_name = 0;
     char *output_file_name = 0;
-    char *extention;
+    char *location = 0;
     int debug_mode = 0;
     int i;
     bin_space *pgm;
@@ -95,6 +96,14 @@ int main(int argc, char *argv[]) {
                 output_file_name = argv[i];
                 break;
 
+            case 'L': /* Working Location / Directory */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing location after -l");
+                }
+                location = argv[i];
+                break;
+
             case 'V': /* Version */
                 printf("%s\n", rxversion);
                 exit(0);
@@ -116,7 +125,7 @@ int main(int argc, char *argv[]) {
                 exit(0);
 
             case 'I': /* Instructions */
-                print_ops();
+                prt_ops();
                 exit(0);
 
             case 'D': /* Debug Mode */
@@ -138,39 +147,31 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    /* Opening and Assemble file */
-    if (debug_mode) printf("Assembling %s\n", file_name);
-
-    /* Open input file */
-    fp = fopen(file_name, "r");
-
-    if(fp == NULL) {
-        fprintf(stderr, "Can't open input file\n");
-        exit(-1);
-    }
-
     /* Open trace file */
     if (debug_mode) {
-        traceFile = fopen("trace.out", "w");
+        traceFile = openfile("trace", "out", location, "w");
         if (traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
             exit(-1);
         }
     }
 
-    /* Get file size */
-    fseek(fp, 0, SEEK_END);
-    bytes = ftell(fp);
-    rewind(fp);
+    /* Opening and Assemble file */
+    if (debug_mode) printf("Assembling %s\n", file_name);
 
-    /* Allocate buffer and read */
-    buff = (char*) malloc((bytes + 1) * sizeof(char) );
-    bytes = fread(buff, 1, bytes, fp);
-    if (!bytes) {
-        fprintf(stderr, "Error reading input file\n");
+    /* Open input file */
+    fp = openfile(file_name, "rxas", location, "r");
+    if(fp == NULL) {
+        fprintf(stderr, "Can't open input file\n");
         exit(-1);
     }
-    buff[bytes] = 0;
+
+    buff = file2buf(fp);
+    if(buff == NULL) {
+        fprintf(stderr, "Can't read input file\n");
+        exit(-1);
+    }
+    bytes = strlen(buff);
 
     /* Initialize scanner */
     scanner.top = buff;
@@ -202,10 +203,8 @@ int main(int argc, char *argv[]) {
     if (debug_mode) ParseTrace(traceFile, "parser >> ");
 #endif
     while((token_type = scan(&scanner, buff_end))) {
-
         // Skip Scanner Errors
         if (token_type < 0) continue;
-
         // EOS Special Processing
         if(token_type == EOS) {
             // Send a NEWLINE
@@ -220,7 +219,6 @@ int main(int argc, char *argv[]) {
             Parse(parser, 0, NULL, &scanner);
             break;
         }
-
         // Setup and parse token
         token = token_f(&scanner, token_type);
         Parse(parser, token_type, token, &scanner);
@@ -236,34 +234,15 @@ int main(int argc, char *argv[]) {
 
     if (scanner.severity == 0) {
 
-        if (output_file_name == 0) {
-            extention = strrchr(file_name, '.');
-            if (extention) {
-                output_file_name = malloc(extention - file_name + 7);
-                memcpy(output_file_name, file_name, extention - file_name);
-                strcpy(output_file_name + (extention - file_name), ".rxbin");
-            } else {
-                output_file_name = malloc(strlen(file_name) + 7);
-                strcpy(output_file_name, file_name);
-                strcat(output_file_name, ".rxbin");
-            }
+        if (output_file_name == 0) output_file_name = file_name;
 
-            if (debug_mode) printf("Writing to %s\n", output_file_name);
-            outFile = fopen(output_file_name, "wb");
-            free(output_file_name);
-            if (outFile == NULL) {
-                fprintf(stderr, "Can't open output file: %s\n",
-                        output_file_name);
-                exit(-1);
-            }
-        } else {
-            if (debug_mode) printf("Writing to %s\n", output_file_name);
-            outFile = fopen(output_file_name, "wb");
-            if (outFile == NULL) {
-                fprintf(stderr, "Can't open output file: %s\n",
-                        output_file_name);
-                exit(-1);
-            }
+        if (debug_mode) printf("Writing to %s\n", output_file_name);
+
+        outFile = openfile(output_file_name, "rxbin", location, "wb");
+        if (outFile == NULL) {
+            fprintf(stderr, "Can't open output file: %s\n",
+                    output_file_name);
+            exit(-1);
         }
 
         pgm = &scanner.binary;

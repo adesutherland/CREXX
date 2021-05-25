@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "platform.h"
 #include "rxdadism.h"
-#include <rxvminst.h>
+#include "rxvminst.h"
 
 static void help() {
     char* helpMessage =
@@ -11,9 +12,10 @@ static void help() {
             "Version : " rxversion "\n"
             "Usage   : rxdas [options] binary_file\n"
             "Options :\n"
-            "  -h              Prints help message\n"
-            "  -c              Prints Copyright & License Details\n"
-            "  -v              Prints Version\n"
+            "  -h              Help message\n"
+            "  -c              Copyright & License Details\n"
+            "  -v              Version\n"
+            "  -l location     Working Location (directory)\n"
             "  -o output_file  Output File (default is stdout)\n";
 
     printf("%s",helpMessage);
@@ -57,6 +59,7 @@ int main(int argc, char *argv[]) {
     FILE *fp;
     bin_space pgm;
     char *file_name;
+    char *location = 0;
     char *output_file_name = 0;
     FILE *output = stdout;
     int i;
@@ -76,6 +79,14 @@ int main(int argc, char *argv[]) {
                     error_and_exit(2, "Missing output file after -o");
                 }
                 output_file_name = argv[i];
+                break;
+
+            case 'L': /* Working Location / Directory */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing location after -l");
+                }
+                location = argv[i];
                 break;
 
             case 'V': /* Version */
@@ -106,7 +117,7 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    fp = fopen(file_name, "rb");
+    fp = openfile(file_name, "rxbin", location, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening file %s\n", file_name);
         exit (-1);
@@ -127,7 +138,7 @@ int main(int argc, char *argv[]) {
     init_ops();
 
     if (output_file_name) {
-        output = fopen(output_file_name, "w");
+        output = openfile(output_file_name, "rxas", location, "w");
         if (!output) {
             fprintf(stderr, "ERROR: opening output file %s\n", output_file_name);
             exit(-1);

@@ -133,6 +133,9 @@ int main(int argc, char *argv[]) {
         full_file_name = malloc(strlen(file_name) + 6);
         strcpy(full_file_name, file_name);
         strcat(full_file_name, ".rexx");
+#ifdef __CMS__
+        cmsfname(full_file_name);
+#endif
         fp = fopen(full_file_name, "r");
         if (fp == NULL) {
             fprintf(stderr, "Can't open input file: %s\n", full_file_name);
@@ -140,6 +143,9 @@ int main(int argc, char *argv[]) {
         }
     }
     else {
+#ifdef __CMS__
+        cmsfname(file_name);
+#endif
         fp = fopen(file_name, "r");
         if (fp == NULL) {
             fprintf(stderr, "Can't open input file: %s\n", file_name);
@@ -150,7 +156,11 @@ int main(int argc, char *argv[]) {
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
+#ifdef __CMS__
+        traceFile = fopen("rxtrace txt a", "w");
+#else
         traceFile = fopen("rxtrace.txt", "w");
+#endif
         if (traceFile == NULL) {
             fprintf(stderr, "Can't open trace file: rxtrace.txt\n");
             exit(-1);
@@ -158,6 +168,14 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
+#ifdef __CMS__
+    buff = file2buf(fp);
+    if(buff == NULL) {
+        fprintf(stderr, "Can't open input file\n");
+        exit(-1);
+    }
+    bytes = strlen(buff);
+#else
     /* Get file size */
     fseek(fp, 0, SEEK_END);
     bytes = ftell(fp);
@@ -171,6 +189,7 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
     buff[bytes] = 0; /* Null terminate */
+#endif
 
     /* Initialize context */
     context.traceFile = traceFile;
@@ -226,20 +245,24 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
+#ifndef __CMS__
     if (debug_mode) {
         pdot_tree(context.ast, "astgraph0.dot");
         /* Get dot from https://graphviz.org/download/ */
         system("dot astgraph0.dot -Tpng -o astgraph0.png");
     }
+#endif
     errors = validate(&context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
     }
     else {
+#ifndef __CMS__
         if (debug_mode) {
             pdot_tree(context.ast, "astgraph1.dot");
             system("dot astgraph1.dot -Tpng -o astgraph1.png");
         }
+#endif
 
         /* Generate Assembler */
         if (output_file_name == 0) {
@@ -253,22 +276,29 @@ int main(int argc, char *argv[]) {
                 strcpy(output_file_name, file_name);
                 strcat(output_file_name, ".rxas");
             }
-
+#ifdef __CMS__
+            cmsfname(output_file_name);
+#endif
             if (debug_mode)
                 printf("Generating Assembler file %s\n", output_file_name);
             emit(&context, output_file_name);
             free(output_file_name);
         }
         else {
+#ifdef __CMS__
+            cmsfname(output_file_name);
+#endif
             if (debug_mode)
                 printf("Generating Assembler file %s\n", output_file_name);
             emit(&context, output_file_name);
         }
 
+#ifndef __CMS__
         if (debug_mode) {
             pdot_tree(context.ast, "astgraph2.dot");
             system("dot astgraph2.dot -Tpng -o astgraph2.png");
         }
+#endif
         if (debug_mode) printf("Compiler Exiting - Success\n");
     }
 

@@ -8,6 +8,10 @@
 
 #include "stdio.h"
 
+#ifdef __CMS__
+#include "cms.h"
+#endif
+
 /* Typedefs */
 typedef struct ASTNode ASTNode;
 typedef struct Token Token;
@@ -100,14 +104,14 @@ struct ASTNode {
     OutputFragment *output4;
 };
 
-/* Utilities */
-void print_unescaped(FILE* output, const char *ptr, int len);
+/* Print Unescaped*/
+void prt_unex(FILE* output, const char *ptr, int len);
 
 /* Token Functions */
 Token* token_f(Context* context, int type);
 void free_tok(Context* context);
 void prnt_tok(Token* token);
-const char* token_type_name(int type); /* Get Token Type Name */
+const char* tk_tp_nm(int type); /* Get Token Type Name */
 
 /* AST Function */
 ASTNode* ast_f(Context* context, NodeType type, Token *token);
@@ -116,16 +120,16 @@ ASTNode *ast_ft(Context* context, NodeType type);
 /* ASTNode Factory - With node type and string value */
 ASTNode *ast_ftt(Context* context, NodeType type, const char *string);
 /* ASTNode Factory - Error Node */
-ASTNode *ast_error(Context* context, const char *error_string, Token *token);
+ASTNode *ast_err(Context* context, const char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
-ASTNode *ast_error_here(Context* context, const char *error_string);
-const char *ast_nodetype(NodeType type);
+ASTNode *ast_errh(Context* context, const char *error_string);
+const char *ast_ndtp(NodeType type);
 void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Returns child for chaining */
-ASTNode *add_sibling_ast(ASTNode *older, ASTNode *younger); /* Returns younger for chaining */
+ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Returns younger for chaining */
 /* Turn a node to an ERROR */
-void make_node_an_error(ASTNode* node, const char *error_string);
+void mknd_err(ASTNode* node, const char *error_string);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file);
 
@@ -151,7 +155,7 @@ typedef walker_result (*walker_handler)(walker_direction direction,
  *     result_abort - Walk Aborted by handler
  *     result_error - error condition
  */
-walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload);
+walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload);
 
 /* Validator - returns the number of errors */
 int validate(Context *context);
@@ -166,7 +170,7 @@ struct Scope {
     void *free_registers_array;
 };
 
-char* type_name(ValueType type);
+char* type_nm(ValueType type);
 
 struct Symbol {
     char *name;
@@ -181,17 +185,17 @@ Scope *scp_f(Scope *parent, ASTNode *node);
 
 /* Calls the handler for each symbol in scope */
 typedef void (*symbol_worker)(Symbol *symbol, void *payload);
-void scp_for_all(Scope *scope, symbol_worker worker, void *payload);
+void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 
 /* To get sub-scopes */
-Scope* scope_child(Scope *scope, size_t index);
-size_t scope_num_children(Scope *scope);
+Scope* scp_chd(Scope *scope, size_t index);
+size_t scp_noch(Scope *scope);
 
 /* Get a free register from scope */
 int get_reg(Scope *scope);
 
 /* Return a no longer used register to the scope */
-void return_reg(Scope *scope, int reg);
+void ret_reg(Scope *scope, int reg);
 
 /* Frees scope and all its symbols */
 void scp_free(Scope *scope);
@@ -203,13 +207,13 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
 
 /* Get a the index'th ASTNode using the symbol */
-ASTNode* symbol_astnode(Symbol *symbol, size_t index);
+ASTNode* sym_trnd(Symbol *symbol, size_t index);
 
 /* Add a AST Node using the symbol */
-void symbol_add_astnode(Symbol *symbol, ASTNode* node);
+void sym_adnd(Symbol *symbol, ASTNode* node);
 
 /* Get number of ASTNodes using the symbol */
-size_t symbol_num_astnodes(Symbol *symbol);
+size_t sym_nond(Symbol *symbol);
 
 /* Emit Assembler */
 void emit(Context *context, char *output_file);
@@ -220,6 +224,6 @@ struct OutputFragment {
     OutputFragment *after;
     char *output;
 };
-void free_output(OutputFragment *output);
+void f_output(OutputFragment *output);
 
 #endif //CREXX_RXCPMAIN_H

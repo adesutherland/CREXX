@@ -13,7 +13,7 @@
 }
 
 %code {
-    const char* token_type_name(int type) {
+    const char* tk_tp_nm(int type) {
         return yyTokenName[type];
     }
 }

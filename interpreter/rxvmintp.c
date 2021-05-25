@@ -67,7 +67,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
     bin_code *pc, *next_pc;
-    void* next_inst;
+    void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3;
     rxinteger i1, i2, i3;
@@ -93,6 +93,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     #include "instrset.h"
 
     /* Thread code - simples! */
+    DEBUG("Threading\n");
     i = 0;
     while (i < program->inst_size) {
         j = i;
@@ -103,6 +104,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     /* Find the program's entry point
      * TODO The assembler should save this in the binary structure */
+    DEBUG("Find program entry point\n");
     i = 0;
     while (i < program->const_size) {
         procedure = (proc_constant *) (program->const_pool + i);
@@ -117,6 +119,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
         goto interprt_finished;
     }
 
+    DEBUG("Create first Stack Frame\n");
     current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
     /* Arguments */
     current_frame->locals[program->globals + procedure->locals] = value_int_f(current_frame, argc);
@@ -125,6 +128,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     }
 
     /* Start */
+    DEBUG("Starting inst# 0x%x\n", (int)procedure->start);
     next_pc = &(program->binary[procedure->start]);
     CALC_DISPATCH_MANUAL;
     DISPATCH;
@@ -143,7 +147,6 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
         CALC_DISPATCH(2);
         DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
               REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
-
         v1 = REG_OP(1);
         s1 = CONSTSTRING_OP(2);
 

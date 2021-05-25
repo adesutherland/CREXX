@@ -185,7 +185,10 @@ int rexbscan(Context* s) {
     ++depth;
     goto comment;
   }
-  eof { printf("EOF before comment closed (comment depth %d): %c\n", depth); return(-1); }
+  eof {
+    printf("EOF before comment closed (comment depth %d): %c\n", depth);
+    return(-1);
+    }
   any { goto comment; }
 */
 }

@@ -1,5 +1,5 @@
 //
-// Created by adria on 16/05/2021.
+// Fake inttypes.h for VM/370 Build
 //
 
 #ifndef INTTYPES_H

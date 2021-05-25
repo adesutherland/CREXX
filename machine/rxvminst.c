@@ -271,7 +271,7 @@ Instruction *src_inst(char* name, OperandType op1_type,
 
 /* Get the first instruction with a specific instruction name (ignoring operands) */
 /* returns null on no match */
-Instruction *first_inst(char* name) {
+Instruction *fst_inst(char* name) {
     struct avl_tree_node *result;
     Instruction *found;
     Instruction search_for;
@@ -299,7 +299,7 @@ Instruction *first_inst(char* name) {
 
 /* returns the next instruction with the same instruction name (ignoring operands) */
 /* returns null when there is not any more instructions with the same name */
-Instruction *next_inst(Instruction *inst) {
+Instruction *nxt_inst(Instruction *inst) {
     int i = inst->opcode + 1;
     if (instructions[i] == 0) return 0;
     if (strcmp(inst->instruction,instructions[i]->instruction) != 0) return 0;
@@ -331,7 +331,7 @@ void free_ops() {
 }
 
 /* Free Instruction Database */
-void print_ops() {
+void prt_ops() {
     struct instruction_wrapper *i;
     char buffer[100];
 
@@ -340,14 +340,14 @@ void print_ops() {
     avl_tree_for_each_in_order(i, instruction_root, struct instruction_wrapper,
                                index_node) {
 
-        expected_operands(i->data, buffer, 100);
+        exp_opds(i->data, buffer, 100);
         printf("0x%.4x %-10s %-20s %s\n",
                i->data->opcode, i->data->instruction, buffer, i->data->desc);
     }
     printf("\n");
 }
 
-char* operand_name(OperandType type) {
+char* opd_name(OperandType type) {
     switch(type) {
         case OP_ID: return "ID";
         case OP_REG: return "REG";
@@ -360,22 +360,22 @@ char* operand_name(OperandType type) {
     }
 }
 
-char* expected_operands(Instruction* inst, char* buffer, size_t buffer_len) {
+char* exp_opds(Instruction* inst, char* buffer, size_t buffer_len) {
     switch (inst->operands) {
         case 0:
             snprintf(buffer,buffer_len,"%s","no operand");
             break;
         case 1:
-            snprintf(buffer,buffer_len,"{%s}",operand_name(inst->op1_type));
+            snprintf(buffer, buffer_len, "{%s}", opd_name(inst->op1_type));
             break;
         case 2:
-            snprintf(buffer,buffer_len,"{%s,%s}",operand_name(inst->op1_type),
-                         operand_name(inst->op2_type));
+            snprintf(buffer, buffer_len, "{%s,%s}", opd_name(inst->op1_type),
+                     opd_name(inst->op2_type));
             break;
         case 3:
-            snprintf(buffer,buffer_len,"{%s,%s,%s}",
-                         operand_name(inst->op1_type),operand_name(inst->op2_type),
-                         operand_name(inst->op3_type));
+            snprintf(buffer, buffer_len, "{%s,%s,%s}",
+                     opd_name(inst->op1_type), opd_name(inst->op2_type),
+                     opd_name(inst->op3_type));
             break;
         default:
             snprintf(buffer,buffer_len,"{%s}","*Internal Error*");

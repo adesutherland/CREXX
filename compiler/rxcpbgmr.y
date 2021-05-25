@@ -2,7 +2,7 @@
 /* (c) Adrian Sutherland 2021   */
 /* Grammar                      */
 
-%name RexxB
+%name RexxB 
 %token_type { Token* }
 %default_type { ASTNode* }
 %extra_argument { Context *context }
@@ -44,10 +44,10 @@ program(P)       ::= rexx_options(R) TK_EOS.
                      }
 
 program(E)       ::= ANYTHING(T) error.
-                     { E = ast_error(context, "49.1", T); context->ast = E; }
+                     { E = ast_err(context, "49.1", T); context->ast = E; }
 
 program(E)       ::=  error.
-                     { E = ast_error_here(context, "49.2"); }
+                     { E = ast_errh(context, "49.2"); }
 
 /* Optional EOC */
 ncl0             ::= TK_EOC.
@@ -57,7 +57,7 @@ ncl0             ::= .
 junk(J)          ::= . { J = 0; }
 junk(J)          ::= junk_list(L). { J = L; }
 junk_list(L)     ::= ANYTHING(L1).
-                   { L = ast_error(context, "49.3", L1); }
+                   { L = ast_err(context, "49.3", L1); }
 junk_list(L)     ::= junk_list(L1) ANYTHING.
                    { L = L1; } /* We are only reporting the first error */
 
@@ -73,13 +73,13 @@ rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) TK_EOC.
 option_list(L)     ::= option(L1).
                    { L = L1; }
 option_list(L)     ::= option_list(L1) option(L2).
-                   { L = L1; add_sibling_ast(L,L2); }
+                   { L = L1; add_sbtr(L,L2); }
 option(C)          ::= TK_SYMBOL(S).
                    { C = ast_f(context, CONST_SYMBOL, S); }
 option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, CONST_SYMBOL, S); }
 option(E)          ::= error.
-                   { E = ast_error_here(context, "100.1"); }
+                   { E = ast_errh(context, "100.1"); }
 
 instruction_list(I)  ::= labeled_instruction(L).
                          { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
@@ -100,7 +100,7 @@ single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
 single_instruction(E)  ::= error.
-                          { E = ast_error_here(context, "49.4"); }
+                          { E = ast_errh(context, "49.4"); }
 
 assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
     {
@@ -109,16 +109,16 @@ assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
     }
 
 assignment(I) ::=  TK_FLOAT(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.1", T));
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
       add_ast(I,E); }
 
 assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.1", T));
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
       add_ast(I,E); }
 
 
 assignment(I) ::=  TK_CONST_SYMBOL(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_error(context, "31.2", T));
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.2", T));
       add_ast(I,E); }
 
 command(I)             ::= expression(E).
@@ -135,11 +135,11 @@ command(I)             ::= expression(E).
 //keyword_instruction(I) ::= pull(K). { I = K; }
 //keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
-keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_error(context, "8.1", T); }
-keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_error(context, "8.2", T); }
-keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_error(context, "9.1", T); }
-keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_error(context, "9.2", T); }
-keyword_instruction(I) ::= TK_END(T) error. { I = ast_error(context, "10.1", T); }
+keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "8.1", T); }
+keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
+keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "9.1", T); }
+keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "9.2", T); }
+keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "10.1", T); }
 
 group(I) ::= simple_do(K). { I = K; }
 group(I) ::= do(K). { I = K; }
@@ -151,23 +151,23 @@ group(I) ::= if(K). { I = K; }
 simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END TK_EOC.
           { G = I; }
 simple_do(G) ::= TK_DO ANYTHING(E).
-          { G = ast_error(context, "14.1", E); }
+          { G = ast_err(context, "14.1", E); }
 simple_do(G) ::= TK_DO(E) TK_EOS.
-          { G = ast_error(context, "35.1", E); }
+          { G = ast_err(context, "35.1", E); }
 simple_do(G) ::= TK_DO(E) TK_EOC instruction_list(I) TK_EOS.
-          { G = I; add_ast(G,ast_error(context, "14.1", E)); }
+          { G = I; add_ast(G,ast_err(context, "14.1", E)); }
 simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
-          { G = I; add_ast(G,ast_error(context, "35.1", E)); }
+          { G = I; add_ast(G,ast_err(context, "35.1", E)); }
 
 /* DO Group */
 do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
                   { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
 do(G)         ::= TK_DO dorep ANYTHING(E).
-                  { G = ast_error(context, "27.1", E); }
+                  { G = ast_err(context, "27.1", E); }
 do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
-                  { G = I; add_ast(G,ast_error(context, "14.1", E)); }
+                  { G = I; add_ast(G,ast_err(context, "14.1", E)); }
 do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
-                  { G = I; add_ast(G,ast_error(context, "35.1", E)); }
+                  { G = I; add_ast(G,ast_err(context, "35.1", E)); }
 dorep(R)      ::= assignment(A).
                   { R = ast_ft(context, REPEAT); add_ast(R,A); }
 dorep(R)      ::= assignment(A) dorep_list(L).
@@ -175,7 +175,7 @@ dorep(R)      ::= assignment(A) dorep_list(L).
 dorep_list(L) ::= dorep_item(L1).
                   { L = L1; }
 dorep_list(L) ::= dorep_list(L1) dorep_item(L2).
-                  { L = L1; add_sibling_ast(L,L2); }
+                  { L = L1; add_sbtr(L,L2); }
 dorep_item(R) ::= TK_TO(T) expression(E).
                   { R = ast_f(context, TO, T); add_ast(R,E); }
 dorep_item(R) ::= TK_BY(T) expression(E).
@@ -191,21 +191,21 @@ if(I) ::= TK_IF(K) expression(E) ncl0 then(T) else(F).
 if(I) ::= TK_IF(K) expression(E) ncl0 then(T).
           { I = ast_f(context, IF, K); add_ast(I,E); add_ast(I,T); }
 if(I) ::= TK_IF expression ncl0 ANYTHING(E).
-          { I = ast_error(context, "18.1", E); }
+          { I = ast_err(context, "18.1", E); }
 
 then(T) ::= TK_THEN ncl0 instruction(I).
             { T = I; }
 then(T) ::= TK_THEN(E) ncl0 TK_EOS.
-            { T = ast_error(context, "14.3", E); }
+            { T = ast_err(context, "14.3", E); }
 then(T) ::= TK_THEN ncl0 TK_END(E).
-            { T = ast_error(context, "10.5", E); }
+            { T = ast_err(context, "10.5", E); }
 
 else(T) ::= TK_ELSE ncl0 instruction(I).
             { T = I; }
 else(T) ::= TK_ELSE(E) ncl0 TK_EOS.
-            { T = ast_error(context, "14.4", E); }
+            { T = ast_err(context, "14.4", E); }
 else(T) ::= TK_ELSE ncl0 TK_END(E).
-            { T = ast_error(context, "10.6", E); }
+            { T = ast_err(context, "10.6", E); }
 
 /* Instructions */
 
@@ -411,9 +411,9 @@ expression(P)        ::= and_expression(E).
 
 /* Support Standard REXX Errors */
 expression(E)        ::= TK_COMMA(S).
-                         { E = ast_error(context, "37.1", S); }
+                         { E = ast_err(context, "37.1", S); }
 expression(E)        ::= TK_CLOSE_BRACKET(S).
-                         { E = ast_error(context, "37.2", S); }
+                         { E = ast_err(context, "37.2", S); }
 
 /*
 valueexp(P)            ::= TK_VALUE(T) expression(E). { P = ast_f(T); add_ast(P,E); }

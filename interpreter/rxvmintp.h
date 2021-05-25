@@ -77,7 +77,7 @@ typedef struct bin_space program;
 /* Signals an error - this function does not return */
 void dosignal(int code);
 
-int initialize();
+int initialz();
 int finalize();
 int run(program *program, int argc, char *argv[], int debug_mode);
 

@@ -77,7 +77,7 @@ Scope *scp_f(Scope *parent, ASTNode *node) {
 }
 
 /* Calls the handler for each symbol in scope */
-void scp_for_all(Scope *scope, symbol_worker worker, void *payload) {
+void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     struct symbol_wrapper *i;
 
     if (scope->symbols_tree) {
@@ -127,7 +127,7 @@ int get_reg(Scope *scope) {
 }
 
 /* Return a no longer used register to the scope */
-void return_reg(Scope *scope, int reg) {
+void ret_reg(Scope *scope, int reg) {
 //  printf("free %d\n", reg);
     dpa *free_array;
 
@@ -135,7 +135,7 @@ void return_reg(Scope *scope, int reg) {
     dpa_add(free_array, (void*)(size_t)reg);
 }
 
-char* type_name(ValueType type) {
+char* type_nm(ValueType type) {
     switch (type) {
         case TP_BOOLEAN: return "Boolean";
         case TP_INTEGER: return "Integer";
@@ -146,11 +146,11 @@ char* type_name(ValueType type) {
     }
 }
 
-Scope* scope_child(Scope *scope, size_t index) {
+Scope* scp_chd(Scope *scope, size_t index) {
     return (Scope*)((dpa*)(scope->child_array))->pointers[index];
 }
 
-size_t scope_num_children(Scope *scope) {
+size_t scp_noch(Scope *scope) {
     return ((dpa*)(scope->child_array))->size;
 }
 
@@ -199,14 +199,14 @@ static void symbol_free(Symbol *symbol) {
     free(symbol);
 }
 
-ASTNode* symbol_astnode(Symbol *symbol, size_t index) {
+ASTNode* sym_trnd(Symbol *symbol, size_t index) {
     return (ASTNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
 }
 
-void symbol_add_astnode(Symbol *symbol, ASTNode* node) {
+void sym_adnd(Symbol *symbol, ASTNode* node) {
     dpa_add((dpa*)(symbol->ast_node_array), node);
 }
 
-size_t symbol_num_astnodes(Symbol *symbol) {
+size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
 }

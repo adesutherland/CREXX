@@ -37,7 +37,7 @@ void prnt_tok(Token *token) {
 */
 /*    printf("(%d \"", token->token_type); */
     printf("(");
-    print_unescaped(stdout, token->token_string,(int)token->length);
+    prt_unex(stdout, token->token_string, (int) token->length);
     printf(") ");
 }
 
@@ -95,27 +95,27 @@ ASTNode *ast_ftt(Context* context, NodeType type, const char *string) {
 }
 
 /* ASTNode Factory - Error Node */
-ASTNode *ast_error(Context* context, const char *error_string, Token *token) {
+ASTNode *ast_err(Context* context, const char *error_string, Token *token) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, token));
     return errorAST;
 }
 
 /* Turn a node to an ERROR */
-void make_node_an_error(ASTNode* node, const char *error_string) {
+void mknd_err(ASTNode* node, const char *error_string) {
     node->node_type = ERROR;
     node->node_string = error_string;
     node->node_string_length = strlen(error_string);
 }
 
 /* ASTNode Factory - Error at last Node */
-ASTNode *ast_error_here(Context* context, const char *error_string) {
+ASTNode *ast_errh(Context* context, const char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev));
     return errorAST;
 }
 
-const char *ast_nodetype(NodeType type) {
+const char *ast_ndtp(NodeType type) {
     switch (type) {
         case ABS_POS:
             return "ABS_POS";
@@ -256,14 +256,14 @@ walker_result prnt_walker_handler(walker_direction direction,
             printf(" ^(");
         } else printf(" ");
         if (node->node_string_length) {
-            printf("%s=", ast_nodetype(node->node_type));
+            printf("%s=", ast_ndtp(node->node_type));
             printf("\"");
-            print_unescaped(stdout, node->node_string,
-                            (int)node->node_string_length);
+            prt_unex(stdout, node->node_string,
+                     (int) node->node_string_length);
             printf("\"");
         }
         else {
-            printf("%s", ast_nodetype(node->node_type));
+            printf("%s", ast_ndtp(node->node_type));
         }
     }
     else {
@@ -275,7 +275,7 @@ walker_result prnt_walker_handler(walker_direction direction,
 }
 
 void prnt_ast(ASTNode *node) {
-    ast_walker(node, prnt_walker_handler, NULL);
+    ast_wlkr(node, prnt_walker_handler, NULL);
 }
 
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
@@ -293,7 +293,7 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     return child;
 }
 
-ASTNode *add_sibling_ast(ASTNode *older, ASTNode *younger) {
+ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
     if (younger == 0 || older == 0) return younger;
     ASTNode *parent = older->parent;
     while (older->sibling) older = older->sibling;
@@ -308,16 +308,16 @@ void free_ast(Context *context) {
     while (t) {
         n = t->free_list;
         if (t->scope) scp_free(t->scope);
-        if (t->output) free_output(t->output);
-        if (t->output2) free_output(t->output2);
-        if (t->output3) free_output(t->output3);
-        if (t->output4) free_output(t->output4);
+        if (t->output) f_output(t->output);
+        if (t->output2) f_output(t->output2);
+        if (t->output3) f_output(t->output3);
+        if (t->output4) f_output(t->output4);
         free(t);
         t = n;
     }
 }
 
-void print_unescaped(FILE* output, const char *ptr, int len) {
+void prt_unex(FILE* output, const char *ptr, int len) {
     int i;
     if (!ptr) return;
     for (i = 0; i < len; i++, ptr++) {
@@ -376,7 +376,7 @@ void pdot_scope(Symbol *symbol, void *payload) {
             symbol->scope->defining_node->node_number,
             symbol->name,
             symbol->name,
-            type_name(symbol->type),
+            type_nm(symbol->type),
             reg);
 }
 
@@ -535,30 +535,30 @@ walker_result pdot_walker_handler(walker_direction direction,
             node->target_type != TP_UNKNOWN) {
             if (node->value_type == node->target_type) {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_name(node->value_type));
+                strcat(value_type_buffer, type_nm(node->value_type));
                 strcat(value_type_buffer, ")");
             } else {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_name(node->value_type));
+                strcat(value_type_buffer, type_nm(node->value_type));
                 strcat(value_type_buffer, "->");
-                strcat(value_type_buffer, type_name(node->target_type));
+                strcat(value_type_buffer, type_nm(node->target_type));
                 strcat(value_type_buffer, ")");
             }
         }
 
         if (only_type) {
             fprintf(output, "n%d[ordering=\"out\" label=\"%s%s", node->node_number,
-                    ast_nodetype(node->node_type), value_type_buffer);
+                    ast_ndtp(node->node_type), value_type_buffer);
         } else if (only_label) {
             fprintf(output, "n%d[ordering=\"out\" label=\"", node->node_number);
-            print_unescaped(output, node->node_string,
-                            (int)node->node_string_length);
+            prt_unex(output, node->node_string,
+                     (int) node->node_string_length);
             fprintf(output, "%s", value_type_buffer);
         } else {
             fprintf(output, "n%d[ordering=\"out\" label=\"%s\\n", node->node_number,
-                    ast_nodetype(node->node_type));
-            print_unescaped(output, node->node_string,
-                            (int)node->node_string_length);
+                    ast_ndtp(node->node_type));
+            prt_unex(output, node->node_string,
+                     (int) node->node_string_length);
             fprintf(output, "%s", value_type_buffer);
         }
         fprintf(output, "\" %s]\n", attributes);
@@ -589,7 +589,7 @@ walker_result pdot_walker_handler(walker_direction direction,
         /* OUT - Bottom Up */
         /* Scope == DOT Subgraph */
         if (node->scope) {
-            scp_for_all(node->scope, pdot_scope, output);
+            scp_4all(node->scope, pdot_scope, output);
             fprintf(output, "}\n");
         }
     }
@@ -605,7 +605,7 @@ void pdot_tree(ASTNode *tree, char* output_file) {
 
     if (tree) {
         fprintf(output, "digraph REXXAST { pad=0.25\n");
-        ast_walker(tree, pdot_walker_handler, (void*)output);
+        ast_wlkr(tree, pdot_walker_handler, (void *) output);
         fprintf(output, "\n}\n");
     }
     if (output_file) fclose(output);
@@ -617,7 +617,7 @@ void pdot_tree(ASTNode *tree, char* output_file) {
  *     result_abort - Walk Aborted by handler
  *     result_error - error condition
  */
-walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload) {
+walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
     walker_result r;
     ASTNode *child;
 
@@ -627,11 +627,11 @@ walker_result ast_walker(ASTNode *tree, walker_handler handler, void *payload) {
     else if (r == request_skip) return result_normal;
 
     if ( (child = tree->child) ) {
-        r = ast_walker(child, handler, payload);
+        r = ast_wlkr(child, handler, payload);
         if (r == result_abort || r == result_error) return r;
 
         while ( (child = child->sibling) ) {
-            r = ast_walker(child, handler, payload);
+            r = ast_wlkr(child, handler, payload);
             if (r == result_abort || r == result_error) return r;
         }
     }

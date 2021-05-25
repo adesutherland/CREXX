@@ -1,0 +1,43 @@
+/* REXX COMPILER PoC */
+
+.globals=0
+
+main()   .locals=4
+   * Line 2: say "Release"
+   load r1,"Release"
+   say r1
+   say "\n"
+   * Line 3: say "Rene - let's REXX"
+   load r1,"Rene - let's REXX"
+   say r1
+   say "\n"
+   * Line 4: a = 1
+   load r1,1
+   * Line 5: {DO}
+   * Line 5: i = 1
+   load r2,1
+   * Line 5: to 100
+   load r3,100
+l23:
+   * Line 5: to 100
+   igt r0,r2,r3
+   brt l16,r0
+   * Line 6: a = a + i
+   iadd r1,r1,r2
+   * Line 5: {Implicit "BY 1"}
+   inc r2
+   * Line 5: {DO-END}
+   br l23
+l16:
+   * Line 8: say "a =" a
+   load r3,"a ="
+   imaster r1
+   sprime r1
+   sconcat r3,r3,r1
+   say r3
+   say "\n"
+   * Line 9: say "BOOM"
+   load r3,"BOOM"
+   say r3
+   say "\n"
+   exit

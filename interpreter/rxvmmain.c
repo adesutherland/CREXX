@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef __CMS__
+#include "cms.h"
+#endif
 #include "rxvminst.h"
 #include "rxvmintp.h"
 #include "rxas.h"
@@ -102,6 +105,10 @@ int main(int argc, char *argv[]) {
 
     file_name = argv[i++];
 
+#ifdef __CMS__
+    cmsfname(file_name);
+#endif
+
     fp = fopen(file_name, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR opening file %s\n", file_name);
@@ -123,5 +130,9 @@ int main(int argc, char *argv[]) {
     init_ops(); /* TODO we need to remove this */
 
     /* Run the program */
+#ifndef NDEBUG
+    if (debug_mode) printf("Starting Execution\n");
+#endif
+
     run(&pgm, argc - i, argv + i, debug_mode);
 }

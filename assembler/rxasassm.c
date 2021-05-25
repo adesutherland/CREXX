@@ -369,19 +369,19 @@ static Instruction *validate_instruction(Assembler_Context* context, Token *inst
     if (inst) return inst;
 
     /* Make a useful error message */
-    possible_inst = first_inst(instrToken->token_value.string);
+    possible_inst = fst_inst(instrToken->token_value.string);
     if (!possible_inst) err_at(context, instrToken, "invalid instruction mnemonic");
     else {
         strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
         i = strlen(errorBuffer);
-        expected_operands(possible_inst, errorBuffer+i, MAX_ERROR_LENGTH - 1 - i);
-        possible_inst = next_inst(possible_inst);
+        exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
+        possible_inst = nxt_inst(possible_inst);
         while (possible_inst) {
-            next_possible_inst = next_inst(possible_inst);
+            next_possible_inst = nxt_inst(possible_inst);
             if (next_possible_inst) strncat(errorBuffer,", ", MAX_ERROR_LENGTH - 1);
             else strncat(errorBuffer," or ", MAX_ERROR_LENGTH - 1);
             i = strlen(errorBuffer);
-            expected_operands(possible_inst, errorBuffer+i, MAX_ERROR_LENGTH -1 - i);
+            exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
             possible_inst = next_possible_inst;
         }
         err_aftr(context, instrToken, errorBuffer);

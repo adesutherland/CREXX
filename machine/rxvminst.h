@@ -51,19 +51,19 @@ Instruction *get_inst(int opcode);
 
 /* Get the first instruction with a specific instruction name (ignoring operands) */
 /* returns null on no match */
-Instruction *first_inst(char* name);
+Instruction *fst_inst(char* name);
 
 /* returns the next instruction with the same instruction name (ignoring operands) */
 /* returns null when there is not any more instructions with the same name */
-Instruction *next_inst(Instruction *inst);
+Instruction *nxt_inst(Instruction *inst);
 
 /* Returns the operand name as a string */
-char* operand_name(OperandType type);
+char* opd_name(OperandType type);
 
 /* Returns the expected operands of a instruction in the provided buffer */
-char* expected_operands(Instruction* inst, char* buffer, size_t buffer_len);
+char* exp_opds(Instruction* inst, char* buffer, size_t buffer_len);
 
 /* Prints the instruction database */
-void print_ops();
+void prt_ops();
 
 #endif //CREXX_RXVMINST_H

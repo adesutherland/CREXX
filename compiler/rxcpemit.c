@@ -130,7 +130,7 @@ static OutputFragment *output_fs(char* text){
     return output;
 }
 
-void free_output(OutputFragment *output) {
+void f_output(OutputFragment *output) {
     if (output->output) free(output->output);
     free(output);
 }
@@ -220,9 +220,9 @@ static walker_result register_walker(walker_direction direction,
             case OP_MOD:
                 /* If it is a temporary mark the register for reuse */
                 if (child1->symbol == 0)
-                    return_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->current_scope, child1->register_num);
                 if (child2->symbol == 0)
-                    return_reg(payload->current_scope, child2->register_num);
+                    ret_reg(payload->current_scope, child2->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != -2)
@@ -233,7 +233,7 @@ static walker_result register_walker(walker_direction direction,
             case OP_PREFIX:
                 /* If it is a temporary mark the register for reuse */
                 if (child1->symbol == 0)
-                    return_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->current_scope, child1->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != -2)
@@ -273,7 +273,7 @@ static walker_result register_walker(walker_direction direction,
                 /* If it is a temporary mark the register for reuse */
                 node->register_num = child1->register_num;
                 if (child1->symbol == 0)
-                    return_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->current_scope, child1->register_num);
                 break;
 
             case REPEAT:
@@ -288,7 +288,7 @@ static walker_result register_walker(walker_direction direction,
                     if (c->child) {
                         c->register_num = c->child->register_num;
                         if (c->child->symbol == 0)
-                            return_reg(payload->current_scope, c->register_num);
+                            ret_reg(payload->current_scope, c->register_num);
                     }
                     c = c->sibling;
                 }
@@ -305,7 +305,7 @@ static walker_result register_walker(walker_direction direction,
 
 #define buf_len 512
 
-void get_comment(char* comment, ASTNode *node, char* prefix) {
+static void get_comment(char* comment, ASTNode *node, char* prefix) {
     char temp[buf_len];
     encode_comment(temp, buf_len, node->source_start, (int)(node->source_end - node->source_start) + 1);
     if (prefix)
@@ -315,15 +315,14 @@ void get_comment(char* comment, ASTNode *node, char* prefix) {
 }
 
 /* Comment without quoting node text */
-void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
+static void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
     if (prefix)
         snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, prefix);
     else
         snprintf(comment, buf_len, "   * Line %d:\n", node->line);
 }
 
-
-void type_promotion(ASTNode *node) {
+static void type_promotion(ASTNode *node) {
 
     char *op1, *op2;
     char temp[buf_len];
@@ -725,11 +724,11 @@ void emit(Context *context, char *output_file) {
     else output = stdout;
 
     payload.current_scope = 0;
-    ast_walker(context->ast, register_walker, (void*)&payload);
+    ast_wlkr(context->ast, register_walker, (void *) &payload);
 
     payload.file = output;
     payload.current_scope = 0;
-    ast_walker(context->ast, emit_walker, (void*)&payload);
+    ast_wlkr(context->ast, emit_walker, (void *) &payload);
 
     fclose(output);
 }

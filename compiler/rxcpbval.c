@@ -89,15 +89,15 @@ static walker_result step1_walker(walker_direction direction,
             child = node->child->sibling; /* Second Child - the first is the assignment */
             while (child) {
                 if (child->node_type == BY) {
-                    if (has_by) make_node_an_error(child,"27.1");
+                    if (has_by) mknd_err(child, "27.1");
                     else has_by = 1;
                 }
                 else if (child->node_type == FOR) {
-                    if (has_for) make_node_an_error(child, "27.1");
+                    if (has_for) mknd_err(child, "27.1");
                     else has_for = 1;
                 }
                 else if (child->node_type == TO) {
-                        if (has_to) make_node_an_error(child,"27.1");
+                        if (has_to) mknd_err(child, "27.1");
                         else has_to = 1;
                 }
                 child = child->sibling;
@@ -166,7 +166,7 @@ static walker_result step2_walker(walker_direction direction,
             }
 
             node->symbol = symbol;
-            symbol_add_astnode(symbol, node);
+            sym_adnd(symbol, node);
         }
     }
 
@@ -176,9 +176,9 @@ static walker_result step2_walker(walker_direction direction,
 /*
  * Step 3 - Validate Symbols
  */
-void validate_symbol_in_scope(Symbol *symbol, void *payload) {
+static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     /* For REXX Level B the variable type is defined by its first use */
-    ASTNode* n = symbol_astnode(symbol,0);
+    ASTNode* n = sym_trnd(symbol, 0);
     ASTNode* parent;
     ASTNode* expr;
     if (n->node_type == VAR_SYMBOL) {
@@ -218,9 +218,9 @@ static void validate_symbols(Scope* scope) {
                p->source_start);
     }
     */
-    scp_for_all(scope, validate_symbol_in_scope, NULL);
-    for (i=0; i < scope_num_children(scope); i++) {
-        validate_symbols(scope_child(scope,i));
+    scp_4all(scope, validate_symbol_in_scope, NULL);
+    for (i=0; i < scp_noch(scope); i++) {
+        validate_symbols(scp_chd(scope, i));
     }
 }
 
@@ -442,8 +442,8 @@ static walker_result step5_walker(walker_direction direction,
     if (direction == in) {
         if (node->node_type == ERROR) {
             fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
-            print_unescaped(stderr, node->source_start,
-                            (int)(node->source_end - node->source_start + 1));
+            prt_unex(stderr, node->source_start,
+                     (int) (node->source_end - node->source_start + 1));
             fprintf(stderr,"\"\n");
             (*errors)++;
         }
@@ -461,13 +461,13 @@ int validate(Context *context) {
      * - Fixes SCONCAT to CONCAT
      * - Other AST fixups (TBC)
      */
-    ast_walker(context->ast, step1_walker,(void*)context);
+    ast_wlkr(context->ast, step1_walker, (void *) context);
 
     /* Step 2
      * - Builds the Symbol Table
      */
     current_scope = 0;
-    ast_walker(context->ast, step2_walker, (void*)&current_scope);
+    ast_wlkr(context->ast, step2_walker, (void *) &current_scope);
 
     /* Step 3
      * - Validate Symbols
@@ -478,12 +478,12 @@ int validate(Context *context) {
      * - Type Safety
      */
     current_scope = 0;
-    ast_walker(context->ast, step4_walker, (void*)&current_scope);
+    ast_wlkr(context->ast, step4_walker, (void *) &current_scope);
 
     /* Step 5
      * - Print errors
      */
-    ast_walker(context->ast, step5_walker, &errors);
+    ast_wlkr(context->ast, step5_walker, &errors);
 
     return errors;
 }

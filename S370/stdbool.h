@@ -1,5 +1,5 @@
 //
-// Created by adria on 16/05/2021.
+// // Fake stdbool.h for VM/370 Build
 //
 #ifndef _STDBOOL_H
 #define _STDBOOL_H

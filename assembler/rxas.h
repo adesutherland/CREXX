@@ -5,12 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#ifdef __CMS__
-#include "cms.h"
-typedef long rxinteger;
-#else
-typedef long long rxinteger;
-#endif
+#include "platform.h"
 
 typedef struct Token Token;
 typedef struct Error Error;
@@ -18,15 +13,15 @@ typedef struct bin_space bin_space;
 struct avl_tree_node;
 
 /* cREXX Instruction Coding */
-//#pragma pack(push,4)
+#pragma pack(push,4)
 typedef struct instruction_coding {
     int opcode;
     int no_ops;
 } instruction_coding;
-//#pragma pack(pop)
+#pragma pack(pop)
 
 /* Single cREXX Binary Code Entry */
-//#pragma pack(push,4)
+#pragma pack(push,4)
 typedef union bin_code {
     instruction_coding instruction;
     void* impl_address;
@@ -35,10 +30,10 @@ typedef union bin_code {
     char cconst;
     size_t index;
 } bin_code;
-//#pragma pack(pop)
+#pragma pack(pop)
 
 /* cREXX Binary Program */
-//#pragma pack(push,4)
+#pragma pack(push,4)
 struct bin_space {
     int globals;
     size_t inst_size;
@@ -46,7 +41,7 @@ struct bin_space {
     bin_code *binary;
     unsigned char *const_pool;
 };
-//#pragma pack(pop)
+#pragma pack(pop)
 
 enum const_pool_type {
     STRING_CONST, PROC_CONST
@@ -101,8 +96,8 @@ struct Token {
     char* token_source;
     union {
         rxinteger integer;
-        char string[1];
-        char character;
+        unsigned char string[1];
+        unsigned char character;
         double real;
         void *pointer;
     } token_value;
@@ -111,16 +106,12 @@ struct Token {
 Token* token_f(Assembler_Context* context, int type);
 void free_tok(Assembler_Context* context);
 void prnt_tok(Token* token);
-const char* token_type_name(int type); /* Get Token Type Name */
+const char* tk_tp_nm(int type); /* Get Token Type Name */
 
 /* Scanner */
 int scan(Assembler_Context* s, char *buff_end);
 
 /* Interface the Lemon parser */
-#define   YYCTYPE     char
-#define   YYCURSOR    s->cursor
-#define   YYMARKER    s->marker
-#define   YYCTXMARKER s->ctxmarker
 void *ParseAlloc();
 void Parse();
 void ParseFree();
