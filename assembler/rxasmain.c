@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Can't read input file\n");
         exit(-1);
     }
-    bytes = strlen(buff);
+    bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize scanner */
     scanner.top = buff;

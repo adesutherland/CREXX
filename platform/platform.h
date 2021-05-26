@@ -5,6 +5,8 @@
 #ifndef CREXX_PLATFORM_H
 #define CREXX_PLATFORM_H
 
+#include <stdio.h>
+
 /* Load Platform Specific Headers */
 #ifdef __CMS__
 #include "cms.h"

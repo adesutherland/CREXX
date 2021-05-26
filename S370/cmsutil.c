@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "platform.h"
 
 /* Read a file into a buffer - this function mallocs the buffer to the right size */
 char *file2buf(FILE *file) {
@@ -64,7 +65,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
 
     file_name = malloc(len);
     snprintf(file_name, len,
-             "%s %s %s", dir, name, type, dir);
+             "%s %s %s", name, type, dir);
 
     stream = fopen(file_name, mode);
 

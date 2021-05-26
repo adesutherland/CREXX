@@ -1,9 +1,9 @@
 /* REXX ASSEMBLER               */
 /* The Assembler itself         */
 #include <string.h>
+#include "platform.h"
 #include "rxasassm.h"
-#include "../machine/rxvminst.h"
-//#include "rxas.h"
+#include "rxvminst.h"
 #include "rxastree.h"
 
 /* Structure to handle "backpatching" - fixing forward references */

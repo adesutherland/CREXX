@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#ifdef __CMS__
-#include "cms.h"
-#endif
+#include "platform.h"
 #include "rxvminst.h"
 #include "rxvmintp.h"
 #include "rxas.h"
@@ -20,6 +18,7 @@ static void help() {
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
 #endif
+            "  -l location     Working Location (directory)\n"
             "  -v              Prints Version\n";
 
     printf("%s",helpMessage);
@@ -65,6 +64,7 @@ int main(int argc, char *argv[]) {
     char *file_name;
     int debug_mode = 0;
     int i;
+    char *location = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -73,6 +73,14 @@ int main(int argc, char *argv[]) {
         }
         switch (toupper((argv[i][1]))) {
             case '-':
+                break;
+
+            case 'L': /* Working Location / Directory */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing location after -l");
+                }
+                location = argv[i];
                 break;
 
             case 'V': /* Version */
@@ -105,11 +113,7 @@ int main(int argc, char *argv[]) {
 
     file_name = argv[i++];
 
-#ifdef __CMS__
-    cmsfname(file_name);
-#endif
-
-    fp = fopen(file_name, "rb");
+    fp = openfile(file_name, "rxbin", location, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR opening file %s\n", file_name);
         exit(-1);

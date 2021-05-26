@@ -1,11 +1,12 @@
 /* REXX ASSEMBLER */
 /* The Disassembler */
 
+#include <stdlib.h>
+#include <string.h>
+#include "platform.h"
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxdadism.h"
-#include <stdlib.h>
-#include <string.h>
 
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */

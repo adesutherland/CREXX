@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "platform.h"
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
@@ -716,12 +717,8 @@ static walker_result emit_walker(walker_direction direction,
     return result_normal;
 }
 
-void emit(Context *context, char *output_file) {
+void emit(Context *context, FILE *output) {
     walker_payload payload;
-    FILE *output;
-
-    if (output_file) output = fopen(output_file, "w");
-    else output = stdout;
 
     payload.current_scope = 0;
     ast_wlkr(context->ast, register_walker, (void *) &payload);
@@ -729,7 +726,5 @@ void emit(Context *context, char *output_file) {
     payload.file = output;
     payload.current_scope = 0;
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
-
-    fclose(output);
 }
 

@@ -35,7 +35,10 @@ add_custom_command(
 add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
                opt_scan.c rxcpopgr.c rxcpopar.c rxcpopgr.h
                rexbscan.c rxcpbgmr.c rxcpbpar.c rxcpbgmr.h rxcpbval.c rxcpsymb.c
-               ../avl_tree/avl_tree.c ../avl_tree/avl_tree.h
-        rxcpdary.h rxcpemit.c)
+               rxcpdary.h rxcpemit.c)
+
 add_dependencies(rxc re2c lemon)
-target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(rxc avl_tree platform)
+
+target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../avl_tree ../platform)

@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform.h"
 #include "rxcpmain.h"
 
 static void help() {
@@ -21,6 +22,7 @@ static void help() {
             "                    AST diagrams require \"dot\" from\n"
             "                    https://graphviz.org/download/\n"
 #endif
+            "  -l location     Working Location (directory)\n"
             "  -o output_file  REXX Assembler Output File\n";
 
     printf("%s",helpMessage);
@@ -61,20 +63,16 @@ static void error_and_exit(int rc, char* message) {
 
 int main(int argc, char *argv[]) {
 
-    FILE *fp, *traceFile = 0;
+    FILE *fp, *traceFile = 0, *outFile = 0;
     char *buff;
     size_t bytes;
-    int token_type, last_token_type;
-    Token *token;
     Context context;
-    void *parser;
     int errors;
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
     char *file_name;
-    char *full_file_name = 0;
-    char *extention;
+    char *location = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -91,6 +89,14 @@ int main(int argc, char *argv[]) {
                     error_and_exit(2, "Missing REXX Assembler output file after -o");
                 }
                 output_file_name = argv[i];
+                break;
+
+            case 'L': /* Working Location / Directory */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing location after -l");
+                }
+                location = argv[i];
                 break;
 
             case 'V': /* Version */
@@ -127,69 +133,32 @@ int main(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
+    if (!output_file_name) output_file_name = file_name;
+
     /* Open input file */
-    extention = strrchr(file_name, '.');
-    if (!extention) {
-        full_file_name = malloc(strlen(file_name) + 6);
-        strcpy(full_file_name, file_name);
-        strcat(full_file_name, ".rexx");
-#ifdef __CMS__
-        cmsfname(full_file_name);
-#endif
-        fp = fopen(full_file_name, "r");
-        if (fp == NULL) {
-            fprintf(stderr, "Can't open input file: %s\n", full_file_name);
-            exit(-1);
-        }
-    }
-    else {
-#ifdef __CMS__
-        cmsfname(file_name);
-#endif
-        fp = fopen(file_name, "r");
-        if (fp == NULL) {
-            fprintf(stderr, "Can't open input file: %s\n", file_name);
-            exit(-1);
-        }
+    fp = openfile(file_name, "rexx", location, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Can't open input file: %s\n", file_name);
+        exit(-1);
     }
 
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
-#ifdef __CMS__
-        traceFile = fopen("rxtrace txt a", "w");
-#else
-        traceFile = fopen("rxtrace.txt", "w");
-#endif
+        traceFile = openfile(file_name, "trace", location, "w");
         if (traceFile == NULL) {
-            fprintf(stderr, "Can't open trace file: rxtrace.txt\n");
+            fprintf(stderr, "Can't open trace file\n");
             exit(-1);
         }
     }
 #endif
 
-#ifdef __CMS__
     buff = file2buf(fp);
     if(buff == NULL) {
-        fprintf(stderr, "Can't open input file\n");
+        fprintf(stderr, "Can't read input file\n");
         exit(-1);
     }
-    bytes = strlen(buff);
-#else
-    /* Get file size */
-    fseek(fp, 0, SEEK_END);
-    bytes = ftell(fp);
-    rewind(fp);
-
-    /* Allocate buffer and read */
-    buff = (char*) malloc((bytes + 1) * sizeof(char));
-    bytes = fread(buff, 1, bytes, fp);
-    if (!bytes) {
-        fprintf(stderr, "Error reading input file: %s\n", file_name);
-        exit(-1);
-    }
-    buff[bytes] = 0; /* Null terminate */
-#endif
+    bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize context */
     context.traceFile = traceFile;
@@ -265,33 +234,14 @@ int main(int argc, char *argv[]) {
 #endif
 
         /* Generate Assembler */
-        if (output_file_name == 0) {
-            extention = strrchr(file_name, '.');
-            if (extention) {
-                output_file_name = malloc(extention - file_name + 6);
-                memcpy(output_file_name, file_name, extention - file_name);
-                strcpy(output_file_name + (extention - file_name), ".rxas");
-            } else {
-                output_file_name = malloc(strlen(file_name) + 6);
-                strcpy(output_file_name, file_name);
-                strcat(output_file_name, ".rxas");
-            }
-#ifdef __CMS__
-            cmsfname(output_file_name);
-#endif
-            if (debug_mode)
-                printf("Generating Assembler file %s\n", output_file_name);
-            emit(&context, output_file_name);
-            free(output_file_name);
+        outFile = openfile(output_file_name, "rxas", location, "w");
+        if (outFile == NULL) {
+            fprintf(stderr, "Can't open output file %s\n", output_file_name);
+            exit(-1);
         }
-        else {
-#ifdef __CMS__
-            cmsfname(output_file_name);
-#endif
-            if (debug_mode)
-                printf("Generating Assembler file %s\n", output_file_name);
-            emit(&context, output_file_name);
-        }
+        if (debug_mode)
+            printf("Generating Assembler file %s\n", output_file_name);
+        emit(&context, outFile);
 
 #ifndef __CMS__
         if (debug_mode) {
@@ -303,6 +253,7 @@ int main(int argc, char *argv[]) {
     }
 
     finish:
+
     /* Deallocate AST */
     free_ast(&context);
 
@@ -310,7 +261,8 @@ int main(int argc, char *argv[]) {
     free_tok(&context);
 
     /* Close files and deallocate */
-    fclose(fp);
+    if (fp) fclose(fp);
+    if (outFile) fclose(outFile);
 #ifndef NDEBUG
     if (traceFile) fclose(traceFile);
 #endif

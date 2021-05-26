@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "platform.h"
 #include "rxvmintp.h"
 #include "rxas.h"
 #include "rxvminst.h"

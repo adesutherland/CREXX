@@ -4,13 +4,9 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX-Phase-0 v0.1.4"
+#define rxversion "cREXX-Phase-0 v0.1.5"
 
 #include "stdio.h"
-
-#ifdef __CMS__
-#include "cms.h"
-#endif
 
 /* Typedefs */
 typedef struct ASTNode ASTNode;
@@ -216,7 +212,7 @@ void sym_adnd(Symbol *symbol, ASTNode* node);
 size_t sym_nond(Symbol *symbol);
 
 /* Emit Assembler */
-void emit(Context *context, char *output_file);
+void emit(Context *context, FILE *output_file);
 
 /* Output Marshalling */
 struct OutputFragment {
