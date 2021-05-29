@@ -12,7 +12,7 @@ export MSYS2_ARG_CONV_EXCL="vm370:;/opt"
 # Build Lexers / Parsers
 ../cmake-build-release/re2c/re2c -o ./rxasscan.c ../assembler/rxasscan.re
 ../cmake-build-release/lemon/lemon -c -d. ../assembler/rxasgrmr.y
-../cmake-build-release/re2c/re2c -o ./opt_scan.c ../compiler/rxcposcn.re
+../cmake-build-release/re2c/re2c -o ./rxcposcn.c ../compiler/rxcposcn.re
 ../cmake-build-release/lemon/lemon -c -d. ../compiler/rxcpopgr.y
 ../cmake-build-release/re2c/re2c -o ./rexbscan.c ../compiler/rxcpbscn.re
 ../cmake-build-release/lemon/lemon -c -d. ../compiler/rxcpbgmr.y

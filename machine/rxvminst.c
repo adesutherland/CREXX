@@ -7,6 +7,7 @@
 #include "rxvminst.h"
 #include "../avl_tree/avl_tree.h"
 
+
 /* Internal Tree node structure */
 struct instruction_wrapper {
     Instruction* data;

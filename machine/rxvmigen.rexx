@@ -11,8 +11,8 @@
   asm=path"/interpreter/rxvmintp.c"
   asmmiss=path"/machine/instrmiss.h"
 
-  'rm' ofile
-  'rm' asmmiss
+  call lineout ofile,,1 /* truncation */
+  call lineout asmmiss,,1 /* truncation */
 
   call inc_inst '/* -------------------------------------------------------------------------------'
   call inc_inst ' * Generate Instruction Set, generated on 'date()' AT 'time()
