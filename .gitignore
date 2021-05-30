@@ -81,3 +81,9 @@ _deps
 /compiler/rxtrace.txt
 /compiler/opt_grmr.h
 /compiler/opt_grmr.c
+/machine/instrmiss.h
+/machine/instrset.h
+/compiler/rxcpbgmr.c
+/compiler/rxcpbgmr.h
+/compiler/rxcpopgr.c
+/compiler/rxcpopgr.h
