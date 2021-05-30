@@ -1,0 +1,81 @@
+language: cpp
+
+# speed up incremental builds
+cache: ccache
+
+compiler:
+  - gcc
+  - clang
+
+# preinstalled packages
+addons:
+  apt:
+    packages:
+    - bison
+    - python3-docutils
+
+# configurations: cmake/autotools, in-tree/out-of-tree, release/debug, etc.
+env:
+  - CMAKE=no  BUILD_DIR=.      CONFIG_DIR=.                                COMMON_FLAGS="-O2 -g"
+  - CMAKE=no  BUILD_DIR=.build CONFIG_DIR=.. CONFIG_FLAGS="--enable-debug" COMMON_FLAGS="-O2 -g"
+  - CMAKE=yes BUILD_DIR=.      CONFIG_DIR=.  BUILD_TYPE=Debug              COMMON_FLAGS="-O2 -g"
+  - CMAKE=yes BUILD_DIR=.build CONFIG_DIR=.. BUILD_TYPE=Debug              COMMON_FLAGS="-O2 -g" SKELETON=yes
+  - CMAKE=yes BUILD_DIR=.build CONFIG_DIR=.. BUILD_TYPE=Release
+  - CMAKE=yes BUILD_DIR=.build CONFIG_DIR=.. BUILD_TYPE=Debug              COMMON_FLAGS="-O2 -g -fsanitize=address"
+  - CMAKE=yes BUILD_DIR=.build CONFIG_DIR=.. BUILD_TYPE=Debug              COMMON_FLAGS="-O2 -g -fsanitize=undefined"
+
+script:
+  - |
+    function run_cmake() {
+        cmake \
+            -B . -S ${CONFIG_DIR} \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_C_FLAGS="${COMMON_FLAGS}" \
+            -DCMAKE_CXX_FLAGS="${COMMON_FLAGS}" \
+            -DCMAKE_EXE_LINKER_FLAGS="${COMMON_FLAGS}" \
+            -DCMAKE_SHARED_LINKER_FLAGS="${COMMON_FLAGS}" \
+            $@
+    }
+    function run_configure() {
+        ${CONFIG_DIR}/configure \
+            ${CONFIG_FLAGS} \
+            CFLAGS="${COMMON_FLAGS}" \
+            CXXFLAGS="${COMMON_FLAGS}" \
+            LDFLAGS="${COMMON_FLAGS}" \
+            $@
+    }
+  - |
+    if [ x${CMAKE} = "xyes" ]; then
+        mkdir -p ${BUILD_DIR} && cd ${BUILD_DIR}
+        run_cmake -DCMAKE_INSTALL_PREFIX="$(pwd)/install"
+    else
+        ./autogen.sh
+        mkdir -p ${BUILD_DIR} && cd ${BUILD_DIR}
+        run_configure --prefix="$(pwd)/install"
+    fi
+  - make -j$(nproc)
+  - make install
+  - |
+    if [ x${CMAKE} = "xyes" ]; then
+        run_cmake -DCMAKE_INSTALL_PREFIX="$(pwd)/install-2" \
+            -DRE2C_BUILD_RE2GO=on \
+            -DRE2C_BUILD_LIBS=on \
+            -DRE2C_REBUILD_DOCS=on \
+            -DRE2C_REBUILD_LEXERS=on \
+            -DRE2C_FOR_BUILD="$(pwd)/install/bin/re2c"
+    else
+        run_configure --prefix="$(pwd)/install-2" \
+            --enable-golang \
+            --enable-libs \
+            --enable-docs \
+            --enable-lexers \
+            RE2C_FOR_BUILD="$(pwd)/install/bin/re2c"
+    fi
+  - find ${CONFIG_DIR}/src -name '*.re' | xargs touch
+  - make -j$(nproc)
+  - |
+    if [ x${SKELETON} = "xyes" ]; then
+        ./run_tests.sh --skeleton
+    else
+        make -j$(nproc) check VERBOSE=1
+    fi

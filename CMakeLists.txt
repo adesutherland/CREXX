@@ -3,6 +3,7 @@ project(CREXX)
 
 add_subdirectory(re2c)
 add_subdirectory(lemon)
+add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(compiler)
 add_subdirectory(machine)

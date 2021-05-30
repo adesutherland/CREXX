@@ -34,61 +34,61 @@
 /* Node in an AVL tree.  Embed this in some other data structure.  */
 struct avl_tree_node {
 
-	/* Pointer to left child or NULL  */
-	struct avl_tree_node *left;
+    /* Pointer to left child or NULL  */
+    struct avl_tree_node *left;
 
-	/* Pointer to right child or NULL  */
-	struct avl_tree_node *right;
+    /* Pointer to right child or NULL  */
+    struct avl_tree_node *right;
 
-	/* Pointer to parent combined with the balance factor.  This saves 4 or
-	 * 8 bytes of memory depending on the CPU architecture.
-	 *
-	 * Low 2 bits:  One greater than the balance factor of this subtree,
-	 * which is equal to height(right) - height(left).  The mapping is:
-	 *
-	 * 00 => -1
-	 * 01 =>  0
-	 * 10 => +1
-	 * 11 => undefined
-	 *
-	 * The rest of the bits are the pointer to the parent node.  It must be
-	 * 4-byte aligned, and it will be NULL if this is the root node and
-	 * therefore has no parent.  */
-	uintptr_t parent_balance;
+    /* Pointer to parent combined with the balance factor.  This saves 4 or
+     * 8 bytes of memory depending on the CPU architecture.
+     *
+     * Low 2 bits:  One greater than the balance factor of this subtree,
+     * which is equal to height(right) - height(left).  The mapping is:
+     *
+     * 00 => -1
+     * 01 =>  0
+     * 10 => +1
+     * 11 => undefined
+     *
+     * The rest of the bits are the pointer to the parent node.  It must be
+     * 4-byte aligned, and it will be NULL if this is the root node and
+     * therefore has no parent.  */
+    uintptr_t parent_balance;
 };
 
 /* Cast an AVL tree node to the containing data structure.  */
 #define avl_tree_entry(entry, type, member) \
-	((type*) ((char *)(entry) - offsetof(type, member)))
+    ((type*) ((char *)(entry) - offsetof(type, member)))
 
 /* Returns a pointer to the parent of the specified AVL tree node, or NULL if it
  * is already the root of the tree.  */
 static AVL_INLINE struct avl_tree_node *
-avl_get_parent(const struct avl_tree_node *node)
-{
-	return (struct avl_tree_node *)(node->parent_balance & ~3);
+avl_get_parent(const struct avl_tree_node *node) {
+    return (struct avl_tree_node *) (node->parent_balance & ~3);
 }
 
 /* Marks the specified AVL tree node as unlinked from any tree.  */
 static AVL_INLINE void
-avl_tree_node_set_unlinked(struct avl_tree_node *node)
-{
-	node->parent_balance = (uintptr_t)node;
+avl_tree_node_set_unlinked(struct avl_tree_node *node) {
+    node->parent_balance = (uintptr_t) node;
 }
 
 /* Returns true iff the specified AVL tree node has been marked with
  * avl_tree_node_set_unlinked() and has not subsequently been inserted into a
  * tree.  */
-static AVL_INLINE bool
-avl_tree_node_is_unlinked(const struct avl_tree_node *node)
-{
-	return node->parent_balance == (uintptr_t)node;
+static AVL_INLINE
+
+        bool
+
+avl_tree_node_is_unlinked(const struct avl_tree_node *node) {
+    return node->parent_balance == (uintptr_t) node;
 }
 
 /* (Internal use only)  */
 extern void
-avl_tree_rebalance_after_insert(struct avl_tree_node **root_ptr,
-				struct avl_tree_node *inserted);
+avl_bain(struct avl_tree_node **root_ptr,
+         struct avl_tree_node *inserted);
 
 /*
  * Looks up an item in the specified AVL tree.
@@ -140,21 +140,20 @@ avl_tree_rebalance_after_insert(struct avl_tree_node **root_ptr,
  */
 static AVL_INLINE struct avl_tree_node *
 avl_tree_lookup(const struct avl_tree_node *root,
-		const void *cmp_ctx,
-		int (*cmp)(const void *, const struct avl_tree_node *))
-{
-	const struct avl_tree_node *cur = root;
+                const void *cmp_ctx,
+                int (*cmp)(const void *, const struct avl_tree_node *)) {
+    const struct avl_tree_node *cur = root;
 
-	while (cur) {
-		int res = (*cmp)(cmp_ctx, cur);
-		if (res < 0)
-			cur = cur->left;
-		else if (res > 0)
-			cur = cur->right;
-		else
-			break;
-	}
-	return (struct avl_tree_node*)cur;
+    while (cur) {
+        int res = (*cmp)(cmp_ctx, cur);
+        if (res < 0)
+            cur = cur->left;
+        else if (res > 0)
+            cur = cur->right;
+        else
+            break;
+    }
+    return (struct avl_tree_node *) cur;
 }
 
 /* Same as avl_tree_lookup(), but uses a more specific type for the comparison
@@ -163,22 +162,21 @@ avl_tree_lookup(const struct avl_tree_node *root,
  * embedded 'struct avl_tree_node'.  */
 static AVL_INLINE struct avl_tree_node *
 avl_tree_lookup_node(const struct avl_tree_node *root,
-		     const struct avl_tree_node *node,
-		     int (*cmp)(const struct avl_tree_node *,
-				const struct avl_tree_node *))
-{
-	const struct avl_tree_node *cur = root;
+                     const struct avl_tree_node *node,
+                     int (*cmp)(const struct avl_tree_node *,
+                                const struct avl_tree_node *)) {
+    const struct avl_tree_node *cur = root;
 
-	while (cur) {
-		int res = (*cmp)(node, cur);
-		if (res < 0)
-			cur = cur->left;
-		else if (res > 0)
-			cur = cur->right;
-		else
-			break;
-	}
-	return (struct avl_tree_node*)cur;
+    while (cur) {
+        int res = (*cmp)(node, cur);
+        if (res < 0)
+            cur = cur->left;
+        else if (res > 0)
+            cur = cur->right;
+        else
+            break;
+    }
+    return (struct avl_tree_node *) cur;
 }
 
 /*
@@ -243,54 +241,53 @@ avl_tree_lookup_node(const struct avl_tree_node *root,
  */
 static AVL_INLINE struct avl_tree_node *
 avl_tree_insert(struct avl_tree_node **root_ptr,
-		struct avl_tree_node *item,
-		int (*cmp)(const struct avl_tree_node *,
-			   const struct avl_tree_node *))
-{
-	struct avl_tree_node **cur_ptr = root_ptr, *cur = NULL;
-	int res;
+                struct avl_tree_node *item,
+                int (*cmp)(const struct avl_tree_node *,
+                           const struct avl_tree_node *)) {
+    struct avl_tree_node **cur_ptr = root_ptr, *cur = NULL;
+    int res;
 
-	while (*cur_ptr) {
-		cur = *cur_ptr;
-		res = (*cmp)(item, cur);
-		if (res < 0)
-			cur_ptr = &cur->left;
-		else if (res > 0)
-			cur_ptr = &cur->right;
-		else
-			return cur;
-	}
-	*cur_ptr = item;
-	item->parent_balance = (uintptr_t)cur | 1;
-	avl_tree_rebalance_after_insert(root_ptr, item);
-	return NULL;
+    while (*cur_ptr) {
+        cur = *cur_ptr;
+        res = (*cmp)(item, cur);
+        if (res < 0)
+            cur_ptr = &cur->left;
+        else if (res > 0)
+            cur_ptr = &cur->right;
+        else
+            return cur;
+    }
+    *cur_ptr = item;
+    item->parent_balance = (uintptr_t) cur | 1;
+    avl_bain(root_ptr, item);
+    return NULL;
 }
 
 /* Removes an item from the specified AVL tree.
  * See implementation for details.  */
 extern void
-avl_tree_remove(struct avl_tree_node **root_ptr, struct avl_tree_node *node);
+avl_remv(struct avl_tree_node **root_ptr, struct avl_tree_node *node);
 
 /* Nonrecursive AVL tree traversal functions  */
 
 extern struct avl_tree_node *
-avl_tree_first_in_order(const struct avl_tree_node *root);
+avl_fino(const struct avl_tree_node *root);
 
 extern struct avl_tree_node *
-avl_tree_last_in_order(const struct avl_tree_node *root);
+avl_lino(const struct avl_tree_node *root);
 
 extern struct avl_tree_node *
-avl_tree_next_in_order(const struct avl_tree_node *node);
+avl_nino(const struct avl_tree_node *node);
 
 extern struct avl_tree_node *
-avl_tree_prev_in_order(const struct avl_tree_node *node);
+avl_pino(const struct avl_tree_node *node);
 
 extern struct avl_tree_node *
-avl_tree_first_in_postorder(const struct avl_tree_node *root);
+avl_finp(const struct avl_tree_node *root);
 
 extern struct avl_tree_node *
-avl_tree_next_in_postorder(const struct avl_tree_node *prev,
-			   const struct avl_tree_node *prev_parent);
+avl_ninp(const struct avl_tree_node *prev,
+         const struct avl_tree_node *prev_parent);
 
 /*
  * Iterate through the nodes in an AVL tree in sorted order.
@@ -321,42 +318,42 @@ avl_tree_next_in_postorder(const struct avl_tree_node *prev,
  *		printf("%d\n", i->data);
  * }
  */
-#define avl_tree_for_each_in_order(child_struct, root,			\
-				   struct_name, struct_member)                       \
+#define avl_tree_for_each_in_order(child_struct, root, \
+                   struct_name, struct_member)                       \
     struct avl_tree_node *_cur; \
-	for (_cur =				\
-		avl_tree_first_in_order(root);				\
-	     _cur && ((child_struct) =					\
-		      avl_tree_entry(_cur, struct_name,			\
-				     struct_member), 1);		\
-	     _cur = avl_tree_next_in_order(_cur))
+    for (_cur =                \
+        avl_fino(root);                \
+         _cur && ((child_struct) =                    \
+              avl_tree_entry(_cur, struct_name,            \
+                     struct_member), 1);        \
+         _cur = avl_nino(_cur))
 
 /*
  * Like avl_tree_for_each_in_order(), but uses the reverse order.
  */
-#define avl_tree_for_each_in_reverse_order(child_struct, root,		\
-					   struct_name, struct_member)	\
+#define avl_tree_for_each_in_reverse_order(child_struct, root, \
+                       struct_name, struct_member)    \
     struct avl_tree_node *_cur;  \
-	for (_cur =				\
-		avl_tree_last_in_order(root);				\
-	     _cur && ((child_struct) =					\
-		      avl_tree_entry(_cur, struct_name,			\
-				     struct_member), 1);		\
-	     _cur = avl_tree_prev_in_order(_cur))
+    for (_cur =                \
+        avl_tree_last_in_order(root);                \
+         _cur && ((child_struct) =                    \
+              avl_tree_entry(_cur, struct_name,            \
+                     struct_member), 1);        \
+         _cur = avl_tree_prev_in_order(_cur))
 
 /*
  * Like avl_tree_for_each_in_order(), but iterates through the nodes in
  * postorder, so the current node may be deleted or freed.
  */
-#define avl_tree_for_each_in_postorder(child_struct, root,		\
-				       struct_name, struct_member)	\
+#define avl_tree_for_each_in_postorder(child_struct, root, \
+                       struct_name, struct_member)    \
     struct avl_tree_node *_cur, *_parent; \
     for (_cur =                \
-        avl_tree_first_in_postorder(root);        \
+        avl_finp(root);        \
          _cur && ((child_struct) =                    \
               avl_tree_entry(_cur, struct_name,            \
                      struct_member), 1)            \
               && (_parent = avl_get_parent(_cur), 1);        \
-         _cur = avl_tree_next_in_postorder(_cur, _parent))
+         _cur = avl_ninp(_cur, _parent))
 
 #endif /* _AVL_TREE_H_ */

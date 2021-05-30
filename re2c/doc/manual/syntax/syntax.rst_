@@ -1,0 +1,20 @@
+A re2c program consists of normal code intermixed with re2c blocks and `directives`_.
+Each re2c block may contain definitions, configurations and rules.
+Definitions are of the form ``name = regexp;``  where ``name`` is an identifier that
+consists of letters, digits and underscores, and ``regexp`` is a regular expression.
+`Regular expressions`_ may contain other definitions, but recursion is not allowed and each name should be defined before used.
+`Configurations`_ are of the form ``re2c:config = value;`` where ``config`` is the configuration descriptor
+and ``value`` can be a number, a string or a special word.
+Rules consist of a regular expression followed by a semantic action
+(a block of code enclosed in curly braces ``{`` and ``}``,
+or a raw one line of code preceded with ``:=`` and ended with a newline that is not followed by a whitespace).
+If the input matches the regular expression, the associated semantic action is executed.
+If multiple rules match, the longest match takes precedence.
+If multiple rules match the same string, the earlier rule takes precedence.
+There are two special rules: default rule ``*`` and EOF rule ``$``.
+Default rule should always be defined, it has the lowest priority regardless of its place and matches any code unit (not necessarily a valid character, see `encoding support`_).
+EOF rule matches the end of input, it should be defined if the corresponding method for `handling the end of input`_ is used.
+If `start conditions`_ are used, rules have more complex syntax.
+All rules of a single block are compiled into a deterministic finite-state automaton (DFA) and encoded in the form of a program in the target language.
+The generated code interfaces with the outer program by the means of a few user-defined primitives (see the `program interface`_ section).
+`Reusable blocks`_ allow sharing rules, definitions and configurations between different blocks.

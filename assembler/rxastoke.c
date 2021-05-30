@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "platform.h"
 #include "rxasgrmr.h"
 #include "rxas.h"
+
 
 /* Token Factory */
 Token* token_f(Assembler_Context* context, int type) {
@@ -59,7 +62,11 @@ Token* token_f(Assembler_Context* context, int type) {
             buffer = malloc(token->length + 1);
             memcpy(buffer, token->token_source, token->length);
             buffer[token->length] = 0;
+#ifdef __32BIT__
+            token->token_value.integer = atol(buffer);
+#else
             token->token_value.integer = atoll(buffer);
+#endif
             free(buffer);
             break;
         case FLOAT:
@@ -108,6 +115,7 @@ Token* token_f(Assembler_Context* context, int type) {
             token->token_value.integer = 0;
     }
 
+    context->top = context->cursor;
 
     return token;
 }
@@ -118,7 +126,7 @@ void prnt_tok(Token* token) {
            token_type_name(token->token_type),
            (int)token->length,token->token_source);
 */
-    printf("%s", token_type_name(token->token_type));
+    printf("%s", tk_tp_nm(token->token_type));
     switch (token->token_type) {
         case INT:
             printf("[%d] ", (int) token->token_value.integer);
