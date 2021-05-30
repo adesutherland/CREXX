@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxasscan.c
-          path: assembler/rxasscan.c
+          path: ${{ runner.temp }}/release/assembler/rxasscan.c
 
       - name: Upload rxasgrmr.c
         uses: actions/upload-artifact@v2
@@ -111,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxcposcn.c
-          path: compiler/rxcposcn.c
+          path: ${{ runner.temp }}/release/compiler/rxcposcn.c
 
       - name: Upload rxcpopgr.c
         uses: actions/upload-artifact@v2
@@ -129,7 +129,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rexbscan.c
-          path: compiler/rexbscan.c
+          path: ${{ runner.temp }}/release/compiler/rexbscan.c
 
       - name: Upload rxcpbgmr.c
         uses: actions/upload-artifact@v2
