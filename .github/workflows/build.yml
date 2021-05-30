@@ -234,10 +234,7 @@ jobs:
         hercules -f hercules.conf -d >/dev/null 2>/dev/null &
         cd io/S370
         chmod +x *.sh
-        echo "Build Lexers / Parsers"
-        ${{ runner.temp }}/debug/re2c/re2c -e -o ./rxasscan.c ../assembler/rxasscan.re
-        ${{ runner.temp }}/debug/lemon/lemon -c -d. ../assembler/rxasgrmr.y
-        echo "Running CMSBUILD"
+         echo "Running CMSBUILD"
         ./cmsbuild.sh
       shell: bash
 
