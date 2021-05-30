@@ -12,9 +12,9 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o opt_scan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re
+        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o rxcposcn.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcposcn.re ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.h re2c
-        OUTPUT opt_scan.c
+        OUTPUT rxcposcn.c
         COMMENT "Create Options Lexer..."
 )
 
@@ -33,7 +33,7 @@ add_custom_command(
 )
 
 add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
-               opt_scan.c rxcpopgr.c rxcpopar.c rxcpopgr.h
+               rxcposcn.c rxcpopgr.c rxcpopar.c rxcpopgr.h
                rexbscan.c rxcpbgmr.c rxcpbpar.c rxcpbgmr.h rxcpbval.c rxcpsymb.c
                rxcpdary.h rxcpemit.c)
 
