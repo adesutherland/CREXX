@@ -23,7 +23,6 @@ cp ./cmsmake.exec src
 cp ./*.h src
 cp ./*.c src
 cp ./*.parm src
-cp ./*.rxas src
 
 # IPL
 herccontrol -v
