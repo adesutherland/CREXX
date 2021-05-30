@@ -154,74 +154,72 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
 
     - name: Download instrmiss.h
       uses: actions/download-artifact@v2
       with:
         name: instrmiss.h
-        path: machine/instrmiss.h
+        path: machine
 
     - name: Download instrset.h
       uses: actions/download-artifact@v2
       with:
         name: instrset.h
-        path: machine/instrset.h
+        path: machine
 
     - name: Download rxasscan.c
       uses: actions/download-artifact@v2
       with:
         name: rxasscan.c
-        path: assembler/rxasscan.c
+        path: assembler
 
     - name: Download rxasgrmr.c
       uses: actions/download-artifact@v2
       with:
         name: rxasgrmr.c
-        path: assembler/rxasgrmr.c
+        path: assembler
 
     - name: Download rxasgrmr.h
       uses: actions/download-artifact@v2
       with:
         name: rxasgrmr.h
-        path: assembler/rxasgrmr.h
+        path: assembler
 
     - name: Download rxcposcn.c
       uses: actions/download-artifact@v2
       with:
         name: rxcposcn.c
-        path: compiler/rxcposcn.c
+        path: compiler
 
     - name: Download rxcpopgr.c
       uses: actions/download-artifact@v2
       with:
         name: rxcpopgr.c
-        path: compiler/rxcpopgr.c
+        path: compiler
 
     - name: Download rxcpopgr.h
       uses: actions/download-artifact@v2
       with:
         name: rxcpopgr.h
-        path: compiler/rxcpopgr.h
+        path: compiler
 
     - name: Download rexbscan.c
       uses: actions/download-artifact@v2
       with:
         name: rexbscan.c
-        path: compiler/rexbscan.c
+        path: compiler
 
     - name: Download rxcpbgmr.c
       uses: actions/download-artifact@v2
       with:
         name: rxcpbgmr.c
-        path: compiler/rxcpbgmr.c
+        path: compiler
 
     - name: Download rxcpbgmr.h
       uses: actions/download-artifact@v2
       with:
         name: rxcpbgmr.h
-        path: compiler/rxcpbgmr.h
+        path: compiler
 
     - name: Move Source
       run: |
@@ -282,13 +280,13 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: instrmiss.h
-        path: machine/instrmiss.h
+        path: machine
 
     - name: Download instrset.h
       uses: actions/download-artifact@v2
       with:
         name: instrset.h
-        path: machine/instrset.h
+        path: machine
 
     - name: CMAKE Build Release
       uses: lukka/run-cmake@v3
@@ -364,13 +362,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: instrmiss.h
-          path: machine/instrmiss.h
+          path: machine
 
       - name: Download instrset.h
         uses: actions/download-artifact@v2
         with:
           name: instrset.h
-          path: machine/instrset.h
+          path: machine
 
       - name: CMAKE Build Release
         uses: lukka/run-cmake@v3
