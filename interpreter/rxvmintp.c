@@ -78,20 +78,10 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     proc_constant *p1, *p2, *p3;
 
     /*
-     * Temporary Solution to load Instruction database and instruction map
-     * in future this will be via generated C source code - so instant
+     * Instruction database - loaded from a generated header file
      */
-
     Instruction *instruction;
-#define NO_OPCODES 200
-    void *address_map[NO_OPCODES];
-    for (i = 0; i < NO_OPCODES; i++) address_map[i] = &&UNKNOWN;
-
-    /* ----------------------------------------------------------------------------
-     * load instruction code generated from the instruction table pej 8. April 2021
-     * ----------------------------------------------------------------------------
-     */
-#include "instrset.h"
+    #include "instrset.h"  /* Set up void *address_map[] */
 
     /* Thread code - simples! */
     DEBUG("Threading\n");

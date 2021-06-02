@@ -166,29 +166,20 @@ void init_ops() {
     instr_f("exit", "Exit op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_INT, OP_NONE, OP_NONE);
 
-    /* This walks the tree in order, counts the number of instructions and assigns opcodes */
-    struct instruction_wrapper *i;
-    { /* In a block because the macro redefines a variable - C90 issue {sigh} */
-        avl_tree_for_each_in_order(i, instruction_root,
-                                   struct instruction_wrapper, index_node) {
-            i->data->opcode =
-                    ++no_instructions; /* "++" prefix, first instruction has opcode 1 */
-        }
-    }
-
-    /* space for the instructions plus instructions[0] and null termination */
+    /* Space for the instructions plus instructions[0] and null termination */
+    struct instruction_wrapper *i = 0;
     instructions = malloc(sizeof(Instruction) * (no_instructions + 2));
     instructions[0] = 0;
     instructions[no_instructions+1] = 0;
 
     /* Now populate instructions[] */
+    i = 0;
     { /* In a block because the macro redefines a variable - C90 issue {sigh} */
         avl_tree_for_each_in_order(i, instruction_root,
                                    struct instruction_wrapper, index_node) {
             instructions[i->data->opcode] = i->data;
         }
     }
-
 }
 
 static int compare(Instruction *n1, Instruction *n2) {
@@ -236,6 +227,7 @@ void instr_f(char *name, char *description,
              OperandType op1_type, OperandType op2_type, OperandType op3_type) {
 
     Instruction *data = malloc(sizeof(Instruction));
+    no_instructions++; /* First Instruction has opcode 1 */
     data->instruction = name;
     data->desc = description;
     data->op1_type = op1_type;
@@ -245,6 +237,7 @@ void instr_f(char *name, char *description,
     else if (op2_type == OP_NONE) data->operands = 1;
     else if (op3_type == OP_NONE) data->operands = 2;
     else data->operands = 3;
+    data->opcode = no_instructions;
 
     struct instruction_wrapper *i = malloc(sizeof(struct instruction_wrapper));
     i->data = data;

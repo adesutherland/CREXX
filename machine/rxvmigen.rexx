@@ -24,6 +24,9 @@
 /* find first instruction definition in operands.c */
   do until lines(file)=0 | pos('void init_ops()',linein(file))>0
   end
+
+  call inc_inst 'void *address_map[] = {  &&UNKNOWN,'
+
 /* run through all instruction definitions in operands.c */
   lino=0
   not=0
@@ -33,7 +36,10 @@
      if pos('instr_f(',line)=0 then leave  /* no more instructions end loop */
      lino=lino+1
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
-end
+  end
+
+  call inc_inst '                         &&UNKNOWN };'
+
 say lino-not' functions are defined'
 say not' functions are not yet defined'
 say lino' functions in total'
@@ -78,7 +84,9 @@ instr_f:
   end
 
   /* generate instruction */
-  call inc_inst 'MAP_ADDR("'cmd'", 'r1', 'r2', 'r3', &&'ucmd', "'txt'")'
+/* call inc_inst 'MAP_ADDR("'cmd'", 'r1', 'r2', 'r3', &&'ucmd', "'txt'")' */
+   call inc_inst '                         &&'ucmd','
+
   call alreadyDefined       /* cross check if label is defined or missing */
 return 0
 /* -------------------------------------------------------------------------------
@@ -154,6 +162,7 @@ fetchLabeL:
   end
   label.0=li
 return
+
 /* -------------------------------------------------------------------------------
  * Write to Instruction include file
  * -------------------------------------------------------------------------------
@@ -161,6 +170,7 @@ return
 inc_inst:
   call lineout ofile,arg(1)
 return
+
 /* -------------------------------------------------------------------------------
  * Write to Instruction include file
  * -------------------------------------------------------------------------------

@@ -131,8 +131,6 @@ int main(int argc, char *argv[]) {
 
     fclose(fp);
 
-    init_ops(); /* TODO we need to remove this */
-
     /* Run the program */
 #ifndef NDEBUG
     if (debug_mode) printf("Starting Execution\n");
