@@ -44,10 +44,12 @@ jobs:
           cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"   "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvm"     "${{ runner.temp }}/exe/debug"
           cp LICENSE     "${{ runner.temp }}/exe"
           cp README.md   "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
@@ -61,10 +63,12 @@ jobs:
           ./release/rxas -v
           ./release/rxdas -v
           ./release/rxvm -v
+          ./release/rxbvm -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
           ./debug/rxvm -v
+          ./debug/rxbvm -v
         shell: bash
 
       - name: Upload Executable
@@ -308,10 +312,12 @@ jobs:
         cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxbvm.exe"   "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/debug/compiler/rxc.exe"         "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxbvm.exe"     "${{ runner.temp }}/exe/debug"
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
         cp SECURITY.md "${{ runner.temp }}/exe"
@@ -325,10 +331,12 @@ jobs:
         ./release/rxas -v
         ./release/rxdas -v
         ./release/rxvm -v
+        ./release/rxbvm -v
         ./debug/rxc -v
         ./debug/rxas -v
         ./debug/rxdas -v
         ./debug/rxvm -v
+        ./debug/rxbvm -v
       shell: bash
 
     - name: Upload Executable
@@ -390,10 +398,12 @@ jobs:
           cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"   "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvm"     "${{ runner.temp }}/exe/debug"
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
@@ -407,10 +417,12 @@ jobs:
           ./release/rxas -v
           ./release/rxdas -v
           ./release/rxvm -v
+          ./release/rxbvm -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
           ./debug/rxvm -v
+          ./debug/rxbvm -v
         shell: bash
 
       - name: Upload Executable

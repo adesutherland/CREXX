@@ -14,9 +14,26 @@
                 instruction = src_inst(instr, op1,op2,op3);     \
                 address_map[instruction->opcode] = target;
 
+#ifdef NTHREADED
+
+#define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
+#define END_OF_INSTRUCTIONS }
+#define START_INSTRUCTION(inst) case INST_ ## inst:
+#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
+#define CALC_DISPATCH_MANUAL
+#define DISPATCH                   { pc = next_pc; goto CASE_START; }
+
+#else
+
+#define START_OF_INSTRUCTIONS
+#define END_OF_INSTRUCTIONS
+#define START_INSTRUCTION(inst) inst:
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
 #define DISPATCH                   { pc = next_pc; goto *next_inst; }
+
+#endif
+
 #define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index

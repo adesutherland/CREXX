@@ -84,6 +84,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     #include "instrset.h"  /* Set up void *address_map[] */
 
     /* Thread code - simples! */
+#ifndef NTHREADED
     DEBUG("Threading\n");
     i = 0;
     while (i < program->inst_size) {
@@ -92,6 +93,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
         program->binary[j].impl_address =
                 address_map[program->binary[j].instruction.opcode];
     }
+#endif
 
     /* Find the program's entry point
      * TODO The assembler should save this in the binary structure */
@@ -127,6 +129,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
+    START_OF_INSTRUCTIONS;
+
     /* Instruction implementations */
     /* ----------------------------------------------------------------------------
      * The following shortcut macros are used in the instruction implementation
@@ -154,7 +158,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
      *      CONV2FLOAT(float-result-variable,value-to-be-converted)
      * ----------------------------------------------------------------------------
      */
-    LOAD_REG_INT:
+START_INSTRUCTION(LOAD_REG_INT)
     CALC_DISPATCH(2)
     DEBUG("TRACE - LOAD_REG_INT R%llu %llu\n", REG_IDX(1), op2I);
 
@@ -162,7 +166,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    LOAD_REG_STRING:
+START_INSTRUCTION(LOAD_REG_STRING)
     CALC_DISPATCH(2)
     DEBUG("TRACE - LOAD_REG_STRING R%llu \"%.*s\"\n",
           REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
@@ -170,7 +174,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    SAY_REG:
+START_INSTRUCTION(SAY_REG)
     CALC_DISPATCH(1)
     DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
 
@@ -178,14 +182,14 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     printf("%.*s", (int) op1R->string_length, op1R->string_value);
     DISPATCH;
 
-    SAY_STRING:
+START_INSTRUCTION(SAY_STRING)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (unsigned int) (pc+1)->index);
     s1 = CONSTSTRING_OP(1);
     printf("%.*s", (int) s1->string_len, s1->string);
     DISPATCH;
 
-    SCONCAT_REG_REG_REG:
+START_INSTRUCTION(SCONCAT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SCONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
@@ -195,7 +199,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     string_sconcat(v1,v2,v3);
     DISPATCH;
 
-    CONCAT_REG_REG_REG:
+START_INSTRUCTION(CONCAT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - CONCAT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
@@ -205,7 +209,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     string_concat(v1,v2,v3);
     DISPATCH;
 
-    IMULT_REG_REG_REG:
+START_INSTRUCTION(IMULT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IMULT_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
@@ -213,7 +217,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    IMULT_REG_REG_INT:
+START_INSTRUCTION(IMULT_REG_REG_INT)
     {
         CALC_DISPATCH(3);
         DEBUG("TRACE - IMULT_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), op3I);
@@ -222,7 +226,8 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
         DISPATCH;
     }
-    IADD_REG_REG_REG:
+
+    START_INSTRUCTION(IADD_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IADD_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
@@ -230,7 +235,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    ISUB_REG_REG_REG:
+    START_INSTRUCTION(ISUB_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
 
@@ -238,7 +243,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    IADD_REG_REG_INT:
+    START_INSTRUCTION(IADD_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IADD_REG_REG_INT R%llu R%llu %llu\n", REG_IDX(1), REG_IDX(2), op3I);
 
@@ -246,7 +251,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    CALL_FUNC:
+    START_INSTRUCTION(CALL_FUNC)
     CALC_DISPATCH(1);
     p1 = PROC_OP(1); /* This is the target */
 
@@ -263,7 +268,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     /* This gotos the start of the called proceure */
     DISPATCH;
 
-    CALL_REG_FUNC:
+    START_INSTRUCTION(CALL_REG_FUNC)
     CALC_DISPATCH(2);
     v1 = op1R;
     p2 = PROC_OP(2); /* This is the target */
@@ -286,7 +291,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     /* This gotos the start of the called procedure */
     DISPATCH;
 
-    CALL_REG_FUNC_REG:
+    START_INSTRUCTION(CALL_REG_FUNC_REG)
     CALC_DISPATCH(3);
     v1 = op1R;
     p2 = PROC_OP(2); /* This is the target */
@@ -320,7 +325,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     /* This gotos the start of the called procedure */
     DISPATCH;
 
-    RET:
+    START_INSTRUCTION(RET)
     CALC_DISPATCH(0);
     DEBUG("TRACE - RET\n");
     /* Where we return to */
@@ -334,7 +339,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     free_frame(temp_frame);
     DISPATCH;
 
-    RET_REG:
+    START_INSTRUCTION(RET_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - RET_REG\n");
     v1 = op1R;
@@ -354,7 +359,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     free_frame(temp_frame);
     DISPATCH;
 
-    RET_INT:
+    START_INSTRUCTION(RET_INT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - RET_INT\n");
     i1 = op1I;
@@ -376,7 +381,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  RET_FLOAT                                                        pej 12. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    RET_FLOAT:
+    START_INSTRUCTION(RET_FLOAT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - RET_FLOAT\n");
 
@@ -398,7 +403,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     *  RET_FLOAT                                                        pej 12. April 2021
     *  -----------------------------------------------------------------------------------
     */
-    RET_STRING:
+    START_INSTRUCTION(RET_STRING)
     CALC_DISPATCH(1);
     DEBUG("TRACE - RET_FLOAT\n");
 
@@ -418,7 +423,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     free_frame(temp_frame);
     DISPATCH;
 
-    INIT_REG:
+    START_INSTRUCTION(INIT_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - INIT_REG R%llu \n", REG_IDX(1));
 
@@ -426,7 +431,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    FREE_REG: // label not yet defined
+    START_INSTRUCTION(FREE_REG) // label not yet defined
     CALC_DISPATCH(1);
     DEBUG("TRACE - FREE_REG R%llu \n", REG_IDX(1));
 
@@ -436,7 +441,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    MOVE_REG_REG:
+    START_INSTRUCTION(MOVE_REG_REG)
     CALC_DISPATCH(2);
     DEBUG("TRACE - MOVE_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
 
@@ -449,7 +454,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 
     DISPATCH;
 
-    DEC0:
+    START_INSTRUCTION(DEC0)
     /* TODO This is really idec0 - i.e. it does not prime the int */
     CALC_DISPATCH(0);
     DEBUG("TRACE - DEC0\n");
@@ -459,7 +464,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DEC1   R1--                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    DEC1:
+    START_INSTRUCTION(DEC1)
     /* TODO This is really idec1 - i.e. it does not prime the int */
     CALC_DISPATCH(0);
     DEBUG("TRACE - DEC1\n");
@@ -469,21 +474,21 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DEC2   op2R--                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    DEC2:
+    START_INSTRUCTION(DEC2)
     /* TODO This is really idec2 - i.e. it does not prime the int */
     CALC_DISPATCH(0);
     DEBUG("TRACE - DEC2\n");
     (current_frame->locals[2]->int_value)--;
     DISPATCH;
 
-    DEC_REG:
+    START_INSTRUCTION(DEC_REG)
     /* TODO This is really idec reg - i.e. it does not prime the int */
     CALC_DISPATCH(1);
     DEBUG("TRACE - DEC_REG R%llu\n", REG_IDX(1));
     (current_frame->locals[REG_IDX(1)]->int_value)--;
     DISPATCH;
 
-    BR_ID:
+    START_INSTRUCTION(BR_ID)
     next_pc = program->binary + REG_IDX(1);
     CALC_DISPATCH_MANUAL;
     DISPATCH;
@@ -492,7 +497,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
      * these ae used to jump out of the loop when the end condition it met
      * (and every little bit helps to improve performance!)
      */
-    BRT_ID_REG:
+    START_INSTRUCTION(BRT_ID_REG)
     CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                 the real CPUs branch prediction (in theory) */
     if (op2RI) {
@@ -501,7 +506,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     }
     DISPATCH;
 
-    BRF_ID_REG:
+    START_INSTRUCTION(BRF_ID_REG)
     CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                   the real CPUs branch prediction (in theory) */
     DEBUG("TRACE - BRF_ID_REG R%llu\n", REG_IDX(1));
@@ -511,28 +516,28 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     }
     DISPATCH;
 
-    IMASTER_REG:
+    START_INSTRUCTION(IMASTER_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - IMASTER_REG R%llu\n", REG_IDX(1));
 
     master_int(op1R);
     DISPATCH;
 
-    FMASTER_REG:
+    START_INSTRUCTION(FMASTER_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - FMASTER_REG R%llu\n", REG_IDX(1));
 
     master_float(op1R);
     DISPATCH;
 
-    SMASTER_REG:
+    START_INSTRUCTION(SMASTER_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SMASTER_REG R%llu\n", REG_IDX(1));
 
     master_string(op1R);
     DISPATCH;
 
-    TIME_REG:
+    START_INSTRUCTION(TIME_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - TIME R%llu\n", REG_IDX(1));
 
@@ -543,7 +548,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  TRIMR  Trim right                                                 pej 7. April 2021
  * ------------------------------------------------------------------------------------
  */
-    TRIMR_REG_REG:
+    START_INSTRUCTION(TRIMR_REG_REG)
     CALC_DISPATCH(2);
     DEBUG("TRACE - TRIMR_REG_REG\n") ;
     v1 = op1R;
@@ -561,7 +566,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  TRIML  Trim left                                                  pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    TRIML_REG_REG:
+    START_INSTRUCTION(TRIML_REG_REG)
     CALC_DISPATCH(2);
     DEBUG("TRACE - TRIML_REG_REG\n") ;
     v1 = op1R;
@@ -584,7 +589,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INC0   R0++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    INC0:
+    START_INSTRUCTION(INC0)
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC0\n");
     REG_VAL(0)->int_value++;
@@ -594,7 +599,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INC1   R1++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    INC1:
+    START_INSTRUCTION(INC1)
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC1\n");
     REG_VAL(1)->int_value++;
@@ -604,7 +609,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INC2   op2R++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    INC2:
+    START_INSTRUCTION(INC2)
     CALC_DISPATCH(0);
     DEBUG("TRACE - INC2\n");
     REG_VAL(2)->int_value++;
@@ -614,7 +619,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
  *  -----------------------------------------------------------------------------------
  */
-    ISUB_REG_REG_INT:
+    START_INSTRUCTION(ISUB_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_INT\n") ;
 
@@ -624,7 +629,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IEQ_REG_REG_REG:
+    START_INSTRUCTION(IEQ_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ISUB_REG_REG_REG\n") ;
 
@@ -636,7 +641,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IEQ_REG_REG_INT: // label not yet defined
+    START_INSTRUCTION(IEQ_REG_REG_INT) // label not yet defined
     CALC_DISPATCH(3);
     DEBUG("TRACE - IEQ_REG_REG_INT\n") ;
 
@@ -648,7 +653,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    INE_REG_REG_REG:
+    START_INSTRUCTION(INE_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_REG\n") ;
 
@@ -660,7 +665,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    INE_REG_REG_INT:
+    START_INSTRUCTION(INE_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - INE_REG_REG_INT\n") ;
 
@@ -672,7 +677,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGT_REG_REG_REG:
+    START_INSTRUCTION(IGT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_REG_REG\n") ;
 
@@ -684,7 +689,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGT_REG_REG_INT:
+    START_INSTRUCTION(IGT_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_REG_INT\n") ;
 
@@ -696,7 +701,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGT_REG_INT_REG:
+    START_INSTRUCTION(IGT_REG_INT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGT_REG_INT_REG\n") ;
 
@@ -708,7 +713,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILT_REG_REG_REG:
+    START_INSTRUCTION(ILT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_REG_REG\n") ;
 
@@ -720,7 +725,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILT_REG_REG_INT:
+    START_INSTRUCTION(ILT_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_REG_INT\n") ;
 
@@ -732,7 +737,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILT_REG_INT_REG:
+    START_INSTRUCTION(ILT_REG_INT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILT_REG_INT_REG\n") ;
 
@@ -744,7 +749,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGTE_REG_REG_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGTE_REG_REG_REG:
+    START_INSTRUCTION(IGTE_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_REG_REG\n") ;
 
@@ -756,7 +761,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGTE_REG_REG_INT  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGTE_REG_REG_INT:
+    START_INSTRUCTION(IGTE_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_REG_INT\n") ;
 
@@ -768,7 +773,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IGTE_REG_INT_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IGTE_REG_INT_REG:
+    START_INSTRUCTION(IGTE_REG_INT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IGTE_REG_INT_REG\n") ;
 
@@ -780,7 +785,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILTE_REG_REG_REG:
+    START_INSTRUCTION(ILTE_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_REG_REG\n") ;
 
@@ -792,7 +797,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILTE_REG_REG_INT:
+    START_INSTRUCTION(ILTE_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_REG_INT\n") ;
 
@@ -804,7 +809,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ILTE_REG_INT_REG:
+    START_INSTRUCTION(ILTE_REG_INT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ILTE_REG_INT_REG\n") ;
 
@@ -816,7 +821,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  COPY_REG_REG  Copy op2 to op1                                       pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    COPY_REG_REG: // label not yet defined
+    START_INSTRUCTION(COPY_REG_REG) // label not yet defined
     CALC_DISPATCH(2);
     op1R = value_f(current_frame);
 
@@ -826,7 +831,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    INC_REG: // label not yet defined
+    START_INSTRUCTION(INC_REG) // label not yet defined
     CALC_DISPATCH(1);
     DEBUG("TRACE - INC_REG\n") ;
     (current_frame->locals[REG_IDX(1)]->int_value)++;
@@ -835,7 +840,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IDIV_REG_REG_INT:
+    START_INSTRUCTION(IDIV_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IDIV_REG_REG_INT\n") ;
 
@@ -845,7 +850,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
     *  -----------------------------------------------------------------------------------
     */
-    IDIV_REG_REG_REG:
+    START_INSTRUCTION(IDIV_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - IDIV_REG_REG_REG\n") ;
 
@@ -855,7 +860,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SAY_INT:
+    START_INSTRUCTION(SAY_INT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_INT\n") ;
 
@@ -865,7 +870,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SAY_CHAR:
+    START_INSTRUCTION(SAY_CHAR)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_CHAR\n") ;
 
@@ -875,7 +880,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SAY_FLOAT  Say op1                                                  pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SAY_FLOAT:
+    START_INSTRUCTION(SAY_FLOAT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_FLOAT\n") ;
 
@@ -885,7 +890,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  LOAD_REG_FLOAT  Load op1 with op2                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    LOAD_REG_FLOAT:
+    START_INSTRUCTION(LOAD_REG_FLOAT)
     CALC_DISPATCH(2);
     DEBUG("TRACE - LOAD_REG_FLOAT\n") ;
 
@@ -895,7 +900,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FADD_REG_REG_REG  Float Add (op1=op2+op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FADD_REG_REG_REG:
+    START_INSTRUCTION(FADD_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FADD_REG_REG_REG\n") ;
 
@@ -905,7 +910,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FSUB_REG_REG_REG  Float Sub (op1=op2-op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FSUB_REG_REG_REG:
+    START_INSTRUCTION(FSUB_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_REG_REG\n") ;
 
@@ -915,7 +920,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FDIV_REG_REG_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FDIV_REG_REG_REG:
+    START_INSTRUCTION(FDIV_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_REG_REG\n") ;
 
@@ -925,7 +930,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FMULT_REG_REG_REG:
+    START_INSTRUCTION(FMULT_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FMULT_REG_REG_REG\n") ;
 
@@ -935,7 +940,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FADD_REG_REG_FLOAT  Float Add (op1=op2+op3)                          pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FADD_REG_REG_FLOAT:
+    START_INSTRUCTION(FADD_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FADD_REG_REG_FLOAT\n") ;
 
@@ -945,7 +950,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FSUB_REG_REG_FLOAT  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FSUB_REG_REG_FLOAT:
+    START_INSTRUCTION(FSUB_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_REG_FLOAT\n") ;
 
@@ -955,7 +960,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FDIV_REG_REG_FLOAT  Float Div (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FDIV_REG_REG_FLOAT:
+    START_INSTRUCTION(FDIV_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_REG_FLOAT\n") ;
 
@@ -965,7 +970,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FMULT_REG_REG_FLOAT:
+    START_INSTRUCTION(FMULT_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FMULT_REG_REG_FLOAT\n") ;
 
@@ -975,7 +980,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FSUB_REG_FLOAT_REG  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FSUB_REG_FLOAT_REG:
+    START_INSTRUCTION(FSUB_REG_FLOAT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FSUB_REG_FLOAT_REG\n") ;
 
@@ -985,7 +990,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FDIV_REG_FLOAT_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FDIV_REG_FLOAT_REG:
+    START_INSTRUCTION(FDIV_REG_FLOAT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - FDIV_REG_FLOAT_REG\n") ;
 
@@ -995,7 +1000,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  STR2INT_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    STR2INT_REG_REG_REG: // label not yet defined
+    START_INSTRUCTION(STR2INT_REG_REG_REG) // label not yet defined
     CALC_DISPATCH(3);
     DEBUG("TRACE - STRINT_REG_REG_REG\n") ;
 
@@ -1009,7 +1014,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ADDI_REG_REG_INT  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ADDI_REG_REG_INT:
+    START_INSTRUCTION(ADDI_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDI_REG_REG_INT\n");
 
@@ -1021,7 +1026,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ADDI_REG_REG_REG  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ADDI_REG_REG_REG:
+    START_INSTRUCTION(ADDI_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDI_REG_REG_REG\n");
 
@@ -1034,7 +1039,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SUBI_REG_REG_REG  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SUBI_REG_REG_REG:
+    START_INSTRUCTION(SUBI_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBI_REG_REG_REG\n");
 
@@ -1047,7 +1052,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SUBI_REG_REG_INT  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SUBI_REG_REG_INT:
+    START_INSTRUCTION(SUBI_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBI_REG_REG_INT\n");
 
@@ -1059,7 +1064,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    MULTI_REG_REG_REG:
+    START_INSTRUCTION(MULTI_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTI_REG_REG_REG\n");
 
@@ -1073,7 +1078,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  MULTI_REG_REG_INT  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    MULTI_REG_REG_INT:
+    START_INSTRUCTION(MULTI_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTI_REG_REG_INT\n");
 
@@ -1086,7 +1091,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DIVI_REG_REG_REG  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    DIVI_REG_REG_REG:
+    START_INSTRUCTION(DIVI_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVI_REG_REG_REG\n");
 
@@ -1100,7 +1105,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DIVI_REG_REG_INT  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    DIVI_REG_REG_INT:
+    START_INSTRUCTION(DIVI_REG_REG_INT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVI_REG_REG_INT\n");
 
@@ -1113,7 +1118,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ADDF_REG_REG_FLOAT  Convert and Add to Float (op1=op2+op3)          pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ADDF_REG_REG_FLOAT:
+    START_INSTRUCTION(ADDF_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDF_REG_REG_FLOAT\n");
 
@@ -1125,7 +1130,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  ADDF_REG_REG_REG  Convert and Add to Float (op1=op2+op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    ADDF_REG_REG_REG:
+    START_INSTRUCTION(ADDF_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - ADDF_REG_REG_REG\n");
 
@@ -1138,7 +1143,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SUBF_REG_REG_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SUBF_REG_REG_REG:
+    START_INSTRUCTION(SUBF_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_REG_REG\n");
 
@@ -1151,7 +1156,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SUBF_REG_REG_FLOAT  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SUBF_REG_REG_FLOAT:
+    START_INSTRUCTION(SUBF_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_REG_FLOAT\n");
 
@@ -1164,7 +1169,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SUBF_REG_FLOAT_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SUBF_REG_FLOAT_REG:
+    START_INSTRUCTION(SUBF_REG_FLOAT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - SUBF_REG_FLOAT_REG\n");
 
@@ -1177,7 +1182,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  MULTF_REG_REG_REG  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    MULTF_REG_REG_REG:
+    START_INSTRUCTION(MULTF_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTF_REG_REG_REG\n");
 
@@ -1191,7 +1196,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  MULTF_REG_REG_FLOAT  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    MULTF_REG_REG_FLOAT:
+    START_INSTRUCTION(MULTF_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - MULTF_REG_REG_FLOAT\n");
 
@@ -1204,7 +1209,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DIVF_REG_REG_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    DIVF_REG_REG_REG:
+    START_INSTRUCTION(DIVF_REG_REG_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_REG_REG\n");
 
@@ -1218,7 +1223,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DIVF_REG_REG_FLOAT  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    DIVF_REG_REG_FLOAT:
+    START_INSTRUCTION(DIVF_REG_REG_FLOAT)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_REG_FLOAT\n");
 
@@ -1231,7 +1236,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  DIVF_REG_FLOAT_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    DIVF_REG_FLOAT_REG:
+    START_INSTRUCTION(DIVF_REG_FLOAT_REG)
     CALC_DISPATCH(3);
     DEBUG("TRACE - DIVF_REG_FLOAT_REG\n");
 
@@ -1243,7 +1248,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  AMAP_REG_REG  Int Prime op1              ???
  *  -----------------------------------------------------------------------------------
  */
-    AMAP_REG_REG:
+    START_INSTRUCTION(AMAP_REG_REG)
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_REG\n");
 
@@ -1254,7 +1259,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  AMAP_REG_INT  Int Prime op1              ???
  *  -----------------------------------------------------------------------------------
  */
-    AMAP_REG_INT:
+    START_INSTRUCTION(AMAP_REG_INT)
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_INT\n");
 
@@ -1265,7 +1270,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  IPRIME_REG  Int Prime op1                                           pej 17 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    IPRIME_REG:
+    START_INSTRUCTION(IPRIME_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - IPRIME_REG\n");
 
@@ -1277,7 +1282,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  FPRIME_REG  Float Prime op1                                         pej 17 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    FPRIME_REG:
+    START_INSTRUCTION(FPRIME_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - FPRIME_REG\n");
 
@@ -1289,7 +1294,7 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  *  SPRIME_REG  String Prime op1                                        pej 17 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-    SPRIME_REG:
+    START_INSTRUCTION(SPRIME_REG)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SPRIME_REG\n");
 
@@ -1302,9 +1307,9 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
  */
 #include "instrmiss.h"
 
-
-    UNKNOWN:
-    printf("ERROR - Unimplemented instruction - aborting\n");
+    START_INSTRUCTION(IUNKNOWN)
+    START_INSTRUCTION(INULL)
+    printf("ERROR - Unknown instruction - aborting\n");
     goto interprt_finished;
     convlength:
     DEBUG("maximum string length exceeded\n");
@@ -1316,13 +1321,13 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     DEBUG("Register not initialised\n");
     goto SIGNAL;
 
-
-    EXIT:
-
+    START_INSTRUCTION(EXIT)
 #ifndef NDEBUG
     if (debug_mode) printf("TRACE - EXIT\n");
 #endif
     goto interprt_finished;
+
+END_OF_INSTRUCTIONS;
 
     SIGNAL:
     printf("\n\nTRACE - Signal Received - aborting\n");
@@ -1333,7 +1338,6 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
 #ifndef NDEBUG
     if (debug_mode) printf("Interpreter Finished\n");
 #endif
-    //   free_ops();
 
     return 0;
 }
