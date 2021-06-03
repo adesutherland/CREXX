@@ -1,5 +1,8 @@
 CREXX History / Change Log
 
+I0050 - Fix Issue 50 - VM/370 Printing Integers Fails
+
+0.1.5 - 3 June 2021
 F0012 - Classic Bytecode Interpreter mode (rxbvm executables)
       - VM/370 RXBVM runs
       - Instruction Database and generator optimisations
