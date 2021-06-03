@@ -34,6 +34,12 @@ jobs:
         # https://docs.github.com/en/free-pro-team@latest/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#changing-the-languages-that-are-analyzed
 
     steps:
+
+    - name: Get Regina
+      run: |
+        sudo apt-get install --no-install-recommends -y regina-rexx
+      shell: bash
+
     - name: Checkout repository
       uses: actions/checkout@v2
       with:

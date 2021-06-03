@@ -1,0 +1,264 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+
+        include:
+          # Linux
+          - name: linux-gcc-ubsan-ootree
+            os: ubuntu-latest
+            generator: Unix Makefiles
+            build-type: Ubsan
+            build-dir: .build
+            cxx-flags: -O2
+            skeleton: ${{ false }}
+
+          - name: linux-gcc-asan-ootree
+            os: ubuntu-latest
+            generator: Unix Makefiles
+            build-type: Asan
+            build-dir: .build
+            cxx-flags: -O2
+            skeleton: ${{ false }}
+
+          - name: linux-gcc-debug-ootree-skeleton
+            os: ubuntu-latest
+            generator: Unix Makefiles
+            build-type: Debug
+            build-dir: .build
+            cxx-flags: -O2
+            skeleton: ${{ true }}
+
+          - name: linux-gcc-debug-intree-m32-skeleton
+            os: ubuntu-latest
+            generator: Unix Makefiles
+            build-type: Debug
+            build-dir: .
+            cxx-flags: -O2 -m32
+            ld-flags: -m32
+            skeleton: ${{ true }}
+
+          - name: linux-gcc-release-ootree-skeleton
+            os: ubuntu-latest
+            generator: Unix Makefiles
+            build-type: Release
+            build-dir: .build
+            skeleton: ${{ true }}
+
+          # macOS
+          - name: macos-clang-debug-ootree-skeleton
+            os: macos-latest
+            generator: Unix Makefiles
+            build-type: Debug
+            build-dir: .build
+            cxx-flags: -O2
+            skeleton: ${{ true }}
+
+          - name: macos-clang-debug-intree-skeleton
+            os: macos-latest
+            generator: Unix Makefiles
+            build-type: Debug
+            build-dir: .
+            cxx-flags: -O2
+            skeleton: ${{ true }}
+
+          - name: macos-clang-release-ootree-skeleton
+            os: macos-latest
+            generator: Unix Makefiles
+            build-type: Release
+            build-dir: .build
+            skeleton: ${{ true }}
+
+          # Windows
+          - name: windows-msvc-debug-ootree
+            os: windows-latest
+            generator: Visual Studio 16 2019
+            build-type: Debug
+            build-dir: .build
+            skeleton: ${{ false }}
+
+          - name: windows-msvc-debug-intree
+            os: windows-latest
+            generator: Visual Studio 16 2019
+            build-type: Debug
+            build-dir: .
+            skeleton: ${{ false }}
+
+          - name: windows-msvc-release-ootree
+            os: windows-latest
+            generator: Visual Studio 16 2019
+            build-type: Release
+            build-dir: .build
+            skeleton: ${{ false }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup chocolatey Cache (Windows)
+        if: startsWith(runner.os, 'Windows')
+        uses: actions/cache@v2
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+          key: ${{ runner.os }}-chocolatey-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-chocolatey-${{ matrix.os }}-
+            ${{ runner.os }}-chocolatey-
+
+      - name: Setup Common Prerequisites
+        run: |
+          case ${{ runner.os }} in
+            Linux*)
+              sudo apt install gcc-multilib g++-multilib  # for -m32
+              echo "CC=gcc" >> $GITHUB_ENV
+              echo "CXX=g++" >> $GITHUB_ENV
+              ;;
+            macOS*)
+              sudo xcode-select -switch /Applications/Xcode.app
+
+              echo "CC=$(xcrun -f clang)" >> $GITHUB_ENV
+              echo "CXX=$(xcrun -f clang++)" >> $GITHUB_ENV
+              echo "SDKROOT=$(xcodebuild -version -sdk macosx Path)" >> $GITHUB_ENV
+
+              echo "$(xcodebuild -version -sdk macosx Path)" >> $GITHUB_PATH
+              ;;
+            Windows*)
+              choco install --no-progress -y winflexbison3
+              ;;
+          esac
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+          architecture: x64
+
+      - name: Get PIP Cache Key
+        id: pip-cache
+        run: |
+          python -c "from pip._internal.locations import USER_CACHE_DIR; \
+                     print('::set-output name=dir::' + USER_CACHE_DIR)"
+
+      - name: Install Python Dependencies
+        # Disabled until this https://github.com/skvadrik/re2c/issues/327
+        # will be implemented
+        if: startsWith(runner.os, 'Windows') == false
+        run: |
+          python -m pip install --upgrade pip
+          pip install docutils pygments
+
+      - name: Prepare Configure Command
+        id: configure-command
+        run: |
+          # Common CMake arguments
+          args=( -S . -B ${{ matrix.build-dir }} )
+
+          # Generator's specific stuff.
+          args+=( -G "${{ matrix.generator }}" )
+          case "${{ matrix.generator }}" in
+            'Visual Studio'*)
+              args+=( -A x64 )
+              ;;
+            *)
+              # CMAKE_BUILD_TYPE is not used by multi-config build
+              # types (e.g Visual Studio) at the configure time
+              # thus we add it only for single-config build types
+              args+=( -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} )
+              ;;
+          esac
+
+          # CFLAGS, CXXFLAGS, LDFLAGS
+          args+=( -DCMAKE_C_FLAGS="${{ matrix.cxx-flags }}" )
+          args+=( -DCMAKE_CXX_FLAGS="${{ matrix.cxx-flags }}" )
+          args+=( -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.ld-flags }}" )
+          args+=( -DCMAKE_SHARED_LINKER_FLAGS="${{ matrix.ld-flags }}" )
+
+          # Quote each argument to prevent word split.
+          echo "::set-output name=cmake::$(printf " '%s'" "${args[@]}")"
+
+      - name: Fast Configure
+        run: |
+          # Read prepared command into an array
+          args=( ${{ steps.configure-command.outputs.cmake }} )
+
+          # Amend Build Options
+          args+=( -DCMAKE_INSTALL_PREFIX="$(pwd)/install" )
+
+          # Disable some defaults for now to speed up the build as
+          # they are not necessary in a minimal installation
+          args+=( -DRE2C_BUILD_RE2GO=OFF )
+
+          # Print the resulting command line for debugging purposes
+          printf "cmake" && printf " '%s'" "${args[@]}" && printf "\n"
+
+          # Run CMake, pass quoted arguments to prevent word split.
+          printf " '%s'" "${args[@]}" | xargs cmake
+
+      - name: Fast Build
+        run: cmake --build ${{ matrix.build-dir }} --config ${{ matrix.build-type }}
+
+      - name: Install
+        run: |
+          cmake --build ${{ matrix.build-dir }} --config ${{ matrix.build-type }} --target install
+          echo -e "Install tree:\n$(find install | sed 's/^/-- /')"
+
+      - name: Minimal Install Test
+        working-directory: ./install/bin
+        run: ./re2c --version
+
+      - name: Full Configure
+        run: |
+          # Read prepared command into an array
+          args=( ${{ steps.configure-command.outputs.cmake }} )
+
+          # Amend Build Options
+          args+=( -DCMAKE_INSTALL_PREFIX="$(pwd)/install-2" -DRE2C_BUILD_RE2GO=ON -DRE2C_BUILD_LIBS=ON )
+          args+=( -DRE2C_REBUILD_LEXERS=ON -DRE2C_FOR_BUILD="$(pwd)/install/bin/re2c" )
+
+          # Windows does not have a native 'man' and 'sed' commands.
+          # Disabled until this https://github.com/skvadrik/re2c/issues/327
+          # will be implemented
+          case ${{ runner.os }} in
+            Windows*)
+              args+=( -DRE2C_REBUILD_DOCS=OFF )
+              ;;
+            *)
+              args+=( -DRE2C_REBUILD_DOCS=ON )
+              ;;
+          esac
+
+          # Print the resulting command line for debugging purposes
+          printf "cmake" && printf " '%s'" "${args[@]}" && printf "\n"
+
+          # Run CMake, pass quoted arguments to prevent word split.
+          printf " '%s'" "${args[@]}" | xargs cmake
+
+      - name: Full Build
+        run: |
+          find src -name '*.re' | xargs touch
+          cmake --build ${{ matrix.build-dir }} --config ${{ matrix.build-type }} --verbose
+
+      - name: Test
+        if: startsWith(runner.os, 'Windows') == false
+        working-directory: ${{ matrix.build-dir }}
+        run: |
+          # main test suite
+          cmake --build . --target check
+
+          # skeleton tests (if enabled)
+          if [[ "x${{ matrix.skeleton }}" == "xtrue" ]] ; then
+            ./run_tests.sh --skeleton
+          fi

@@ -2,14 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "operands.h"
-#include "rx_intrp.h"
+#include "platform.h"
+#include "rxvminst.h"
+#include "rxvmintp.h"
 #include "rxas.h"
 
 static void help() {
     char* helpMessage =
             "cREXX VM/Interpreter\n"
             "Version : " rxversion "\n"
+#ifdef NTHREADED
+            "        : Bytecode Mode\n"
+#else
+            "        : Threaded Mode\n"
+#endif
             "Usage   : rxvm [options] binary_file\n"
             "Options :\n"
             "  -h              Prints help message\n"
@@ -17,6 +23,7 @@ static void help() {
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
 #endif
+            "  -l location     Working Location (directory)\n"
             "  -v              Prints Version\n";
 
     printf("%s",helpMessage);
@@ -62,6 +69,7 @@ int main(int argc, char *argv[]) {
     char *file_name;
     int debug_mode = 0;
     int i;
+    char *location = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -72,8 +80,20 @@ int main(int argc, char *argv[]) {
             case '-':
                 break;
 
+            case 'L': /* Working Location / Directory */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing location after -l");
+                }
+                location = argv[i];
+                break;
+
             case 'V': /* Version */
-                printf("%s\n", rxversion);
+#ifdef NTHREADED
+                printf("%s (Bytecode Mode)\n", rxversion);
+#else
+                printf("%s (Threaded Mode)\n", rxversion);
+#endif
                 exit(0);
 
             case 'H': /* Help */
@@ -102,7 +122,7 @@ int main(int argc, char *argv[]) {
 
     file_name = argv[i++];
 
-    fp = fopen(file_name, "rb");
+    fp = openfile(file_name, "rxbin", location, "rb");
     if (!fp) {
         fprintf(stderr, "ERROR opening file %s\n", file_name);
         exit(-1);
@@ -120,8 +140,10 @@ int main(int argc, char *argv[]) {
 
     fclose(fp);
 
-    init_ops(); /* TODO we need to remove this */
-
     /* Run the program */
+#ifndef NDEBUG
+    if (debug_mode) printf("Starting Execution\n");
+#endif
+
     run(&pgm, argc - i, argv + i, debug_mode);
 }
