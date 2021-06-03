@@ -863,8 +863,11 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     START_INSTRUCTION(SAY_INT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_INT\n") ;
-
+#ifdef __32BIT__
+    printf("%ld", op1I);
+#else
     printf("%lld", op1I);
+#endif
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021

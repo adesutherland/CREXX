@@ -180,7 +180,11 @@ static void prime_string(value *v) {
     if (v->status.primed_string) return;
     if (v->status.primed_int) {
         /* TODO clear extended string data */
+#ifdef __32BIT__
+        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%ld",v->int_value);
+#else
         v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%lld",v->int_value);
+#endif
         v->status.primed_string = 1;
     }
     else if (v->status.primed_float) {
