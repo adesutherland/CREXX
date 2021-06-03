@@ -14,6 +14,9 @@
   call lineout ofile,,1 /* truncation */
   call lineout asmmiss,,1 /* truncation */
 
+  threaded_inst.0 = 0
+  bytecode_inst.0 = 0
+
   call inc_inst '/* -------------------------------------------------------------------------------'
   call inc_inst ' * Generate Instruction Set, generated on 'date()' AT 'time()
   call inc_inst ' * -------------------------------------------------------------------------------'
@@ -24,6 +27,10 @@
 /* find first instruction definition in operands.c */
   do until lines(file)=0 | pos('void init_ops()',linein(file))>0
   end
+
+  call add_threaded_inst 'void *address_map[] = {  &&INULL,'
+  call add_bytecode_inst 'enum instructions {      INST_INULL,'
+
 /* run through all instruction definitions in operands.c */
   lino=0
   not=0
@@ -33,7 +40,30 @@
      if pos('instr_f(',line)=0 then leave  /* no more instructions end loop */
      lino=lino+1
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
-end
+  end
+
+  call add_threaded_inst '                         &&IUNKNOWN };'
+  call add_bytecode_inst '                         INST_IUNKNOWN };'
+
+  call inc_inst ""
+  call inc_inst "#ifdef NTHREADED"
+  call inc_inst ""
+
+  do i = 1 to bytecode_inst.0
+    call inc_inst bytecode_inst.i
+  end
+
+  call inc_inst ""
+  call inc_inst "#else"
+  call inc_inst ""
+
+  do i = 1 to threaded_inst.0
+    call inc_inst threaded_inst.i
+  end
+
+  call inc_inst ""
+  call inc_inst "#endif"
+
 say lino-not' functions are defined'
 say not' functions are not yet defined'
 say lino' functions in total'
@@ -78,7 +108,9 @@ instr_f:
   end
 
   /* generate instruction */
-  call inc_inst 'MAP_ADDR("'cmd'", 'r1', 'r2', 'r3', &&'ucmd', "'txt'")'
+  call add_threaded_inst '                         &&'ucmd','
+  call add_bytecode_inst '                         INST_'ucmd','
+
   call alreadyDefined       /* cross check if label is defined or missing */
 return 0
 /* -------------------------------------------------------------------------------
@@ -103,7 +135,7 @@ alreadyDefined:
     call inc_miss ' *  'ucmd'  'txt'              pej 'date()
     call inc_miss ' *  -----------------------------------------------------------------------------------'
     call inc_miss ' */'
-	call inc_miss ucmd': // label not yet defined'
+	call inc_miss 'START_INSTRUCTION('ucmd') // label not yet defined'
 	call inc_miss '  CALC_DISPATCH('numparm');'
     call inc_miss '    DEBUG("TRACE - 'ucmd'\n");'
     call inc_miss '    DEBUG("'ucmd' not yet defined\n");'
@@ -146,14 +178,37 @@ fetchLabeL:
   li=0
   do while lines(asm)>0
      line=linein(asm)
-     if pos(':',line)=0 then iterate
+     if pos('START_INSTRUCTION(',line)=0 then iterate
      label=word(line,1)
-     parse value label with label':'remain
+     parse value label with 'START_INSTRUCTION(' label ')' .
      li=li+1
      label.li=translate(label)
   end
   label.0=li
 return
+
+/* -------------------------------------------------------------------------------
+ * Buffer Instruction (Threaded)
+ * -------------------------------------------------------------------------------
+ */
+add_threaded_inst: procedure expose threaded_inst.
+  parse arg line
+  i = threaded_inst.0 + 1
+  threaded_inst.0 = i
+  threaded_inst.i = line
+return
+
+/* -------------------------------------------------------------------------------
+ * Buffer Instruction (Bytecode)
+ * -------------------------------------------------------------------------------
+ */
+add_bytecode_inst: procedure expose bytecode_inst.
+  parse arg line
+  i = bytecode_inst.0 + 1
+  bytecode_inst.0 = i
+  bytecode_inst.i = line
+return
+
 /* -------------------------------------------------------------------------------
  * Write to Instruction include file
  * -------------------------------------------------------------------------------
@@ -161,6 +216,7 @@ return
 inc_inst:
   call lineout ofile,arg(1)
 return
+
 /* -------------------------------------------------------------------------------
  * Write to Instruction include file
  * -------------------------------------------------------------------------------

@@ -166,29 +166,20 @@ void init_ops() {
     instr_f("exit", "Exit op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_INT, OP_NONE, OP_NONE);
 
-    /* This walks the tree in order, counts the number of instructions and assigns opcodes */
-    struct instruction_wrapper *i;
-    { /* In a block because the macro redefines a variable - C90 issue {sigh} */
-        avl_tree_for_each_in_order(i, instruction_root,
-                                   struct instruction_wrapper, index_node) {
-            i->data->opcode =
-                    ++no_instructions; /* "++" prefix, first instruction has opcode 1 */
-        }
-    }
-
-    /* space for the instructions plus instructions[0] and null termination */
+    /* Space for the instructions plus instructions[0] and null termination */
+    struct instruction_wrapper *i = 0;
     instructions = malloc(sizeof(Instruction) * (no_instructions + 2));
     instructions[0] = 0;
     instructions[no_instructions+1] = 0;
 
     /* Now populate instructions[] */
+    i = 0;
     { /* In a block because the macro redefines a variable - C90 issue {sigh} */
         avl_tree_for_each_in_order(i, instruction_root,
                                    struct instruction_wrapper, index_node) {
             instructions[i->data->opcode] = i->data;
         }
     }
-
 }
 
 static int compare(Instruction *n1, Instruction *n2) {
@@ -236,6 +227,7 @@ void instr_f(char *name, char *description,
              OperandType op1_type, OperandType op2_type, OperandType op3_type) {
 
     Instruction *data = malloc(sizeof(Instruction));
+    no_instructions++; /* First Instruction has opcode 1 */
     data->instruction = name;
     data->desc = description;
     data->op1_type = op1_type;
@@ -245,6 +237,7 @@ void instr_f(char *name, char *description,
     else if (op2_type == OP_NONE) data->operands = 1;
     else if (op3_type == OP_NONE) data->operands = 2;
     else data->operands = 3;
+    data->opcode = no_instructions;
 
     struct instruction_wrapper *i = malloc(sizeof(struct instruction_wrapper));
     i->data = data;
@@ -276,6 +269,7 @@ Instruction *src_inst(char* name, OperandType op1_type,
 /* returns null on no match */
 Instruction *fst_inst(char* name) {
     struct avl_tree_node *result;
+    struct avl_tree_node *prev;
     Instruction *found;
     Instruction search_for;
     search_for.instruction = name;
@@ -283,17 +277,18 @@ Instruction *fst_inst(char* name) {
     result = avl_tree_lookup(instruction_root, &search_for, comp_nm_nv);
 
     if (result) {
-        found = avl_tree_entry(result, struct instruction_wrapper, index_node)->data;
-        /* "found" might very well not be the first instruction so we just
-         * work up the instructions[] to find the real first one
+        /* result might very well not be the first instruction so we just
+         * work backwards across the tree to find the real first one
          */
-        int i = found->opcode - 1;
-        while (i>0) {
-            if (strcmp(found->instruction, instructions[i]->instruction) != 0)
-                    return found;
-            found = instructions[i];
-            i = found->opcode - 1;
+        prev = avl_pino(result);
+        while (prev) {
+            found = avl_tree_entry(prev, struct instruction_wrapper, index_node)->data;
+            if (strcmp(found->instruction, name) != 0)
+                    break;
+            result = prev;
+            prev = avl_pino(result);
         }
+        found = avl_tree_entry(result, struct instruction_wrapper, index_node)->data;
         return found;
     }
 
@@ -303,10 +298,22 @@ Instruction *fst_inst(char* name) {
 /* returns the next instruction with the same instruction name (ignoring operands) */
 /* returns null when there is not any more instructions with the same name */
 Instruction *nxt_inst(Instruction *inst) {
-    int i = inst->opcode + 1;
-    if (instructions[i] == 0) return 0;
-    if (strcmp(inst->instruction,instructions[i]->instruction) != 0) return 0;
-    return instructions[i];
+    struct avl_tree_node *result;
+    struct avl_tree_node *next;
+    Instruction *found = 0;
+
+    result = avl_tree_lookup(instruction_root, inst, compare_nv);
+
+    if (result) {
+        next = avl_nino(result);
+        if (next) {
+            found = avl_tree_entry(next, struct instruction_wrapper, index_node)->data;
+            if (strcmp(found->instruction, inst->instruction) != 0)
+                found = 0;
+        }
+    }
+
+    return found;
 }
 
 // Lookup an instruction by opcode

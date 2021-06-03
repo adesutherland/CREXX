@@ -11,6 +11,11 @@ static void help() {
     char* helpMessage =
             "cREXX VM/Interpreter\n"
             "Version : " rxversion "\n"
+#ifdef NTHREADED
+            "        : Bytecode Mode\n"
+#else
+            "        : Threaded Mode\n"
+#endif
             "Usage   : rxvm [options] binary_file\n"
             "Options :\n"
             "  -h              Prints help message\n"
@@ -84,7 +89,11 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 'V': /* Version */
-                printf("%s\n", rxversion);
+#ifdef NTHREADED
+                printf("%s (Bytecode Mode)\n", rxversion);
+#else
+                printf("%s (Threaded Mode)\n", rxversion);
+#endif
                 exit(0);
 
             case 'H': /* Help */
@@ -130,8 +139,6 @@ int main(int argc, char *argv[]) {
     fread(pgm.const_pool, 1, pgm.const_size, fp);
 
     fclose(fp);
-
-    init_ops(); /* TODO we need to remove this */
 
     /* Run the program */
 #ifndef NDEBUG

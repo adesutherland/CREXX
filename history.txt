@@ -1,5 +1,9 @@
 CREXX History / Change Log
 
+F0012 - Classic Bytecode Interpreter mode (rxbvm executables)
+      - VM/370 RXBVM runs
+      - Instruction Database and generator optimisations
+F0011 - Interpreter Performance Improvements
 F0010 - VM/370 Target
       - CI/CD Change for Regina Step (Ubunto)
       - Known Issue - VM/370 RXVM does not run
