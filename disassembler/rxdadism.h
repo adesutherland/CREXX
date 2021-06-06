@@ -3,7 +3,7 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.6-i0041"
+#define rxversion "cREXX-Phase-0 v0.1.6-i0052"
 
 /* Disassembler */
 void disassemble(bin_space *pgm, FILE *stream);

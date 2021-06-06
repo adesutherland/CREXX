@@ -3,6 +3,7 @@
  */
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 #include "../avl_tree/avl_tree.h"
 #include "rxcpdary.h"
@@ -157,6 +158,7 @@ size_t scp_noch(Scope *scope) {
 /* Symbol Factory - define a symbol */
 /* Returns NULL if the symbol is a duplicate */
 Symbol *sym_f(Scope *scope, ASTNode *node) {
+    char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
     symbol->scope = scope;
@@ -165,6 +167,8 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->name = (char*)malloc(node->node_string_length + 1);
     memcpy(symbol->name, node->node_string, node->node_string_length);
     symbol->name[node->node_string_length] = 0;
+    /* Lowercase symbol name */
+    for (c = symbol->name ; *c; ++c) *c = (char)tolower(*c);
     symbol->ast_node_array = dpa_f();
 
     /* Returns 1 on duplicate */
@@ -180,10 +184,13 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
 /* Resolve a Symbol */
 Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     Symbol *result;
+    char *c;
     /* Sadly we are making a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
+    /* Lowercase symbol name */
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
 
     result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
 
