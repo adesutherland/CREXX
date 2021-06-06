@@ -11,7 +11,7 @@
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
-static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t length) {
+static size_t encode_print(char* buffer, size_t buffer_len, const char* string, size_t length) {
 
     size_t out_len = 0;
     while (length) {
@@ -379,7 +379,8 @@ static walker_result emit_walker(walker_direction direction,
     char *op;
     char *tp_prefix;
     OutputFragment *o;
-    char temp[buf_len];
+    char temp1[buf_len];
+    char temp2[buf_len];
     char comment[buf_len];
 
     if (direction == in) {
@@ -411,13 +412,13 @@ static walker_result emit_walker(walker_direction direction,
         switch (node->node_type) {
 
             case PROGRAM_FILE:
-                snprintf(temp, buf_len,"/* REXX COMPILER PoC */\n"
+                snprintf(temp1, buf_len, "/* REXX COMPILER PoC */\n"
                                          "\n"
                                          ".globals=0\n"
                                          "\n"
                                          "main()   .locals=%d\n",
-                                         node->scope->num_registers);
-                node->output = output_fs(temp);
+                         node->scope->num_registers);
+                node->output = output_fs(temp1);
                 n = child1;
                 while (n) {
                     if (n->output) output_append(node->output, n->output);
@@ -446,12 +447,12 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
                 if (child2->output) output_append(node->output, child2->output);
-                snprintf(temp, buf_len, "   %s r%d,r%d,r%d\n",
+                snprintf(temp1, buf_len, "   %s r%d,r%d,r%d\n",
                          op,
                          node->register_num,
                          child1->register_num,
                          child2->register_num);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);
             break;
@@ -501,13 +502,13 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
                 if (child2->output) output_append(node->output, child2->output);
-                snprintf(temp, buf_len, "   %s%s r%d,r%d,r%d\n",
+                snprintf(temp1, buf_len, "   %s%s r%d,r%d,r%d\n",
                          tp_prefix,
                          op,
                          node->register_num,
                          child1->register_num,
                          child2->register_num);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);
                 break;
@@ -515,9 +516,9 @@ static walker_result emit_walker(walker_direction direction,
             case OP_PREFIX:
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
-                snprintf(temp, buf_len, "   prefix_todo r%d\n",
+                snprintf(temp1, buf_len, "   prefix_todo r%d\n",
                          child1->register_num);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);
                 break;
@@ -531,14 +532,22 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case CONST_SYMBOL: /* TODO */
+            case STRING:
+                /* TODO - X and B suffix */
+                encode_print(temp2, buf_len, node->node_string + 1, node->node_string_length - 2);
+                snprintf(temp1, buf_len, "   load r%d,\"%s\"\n",
+                         node->register_num, temp2);
+                node->output = output_fs(temp1);
+                type_promotion(node);
+                break;
+
             case FLOAT:
             case INTEGER:
-            case STRING:
-                snprintf(temp, buf_len, "   load r%d,%.*s\n",
+                snprintf(temp1, buf_len, "   load r%d,%.*s\n",
                          node->register_num,
                          node->node_string_length,
                          node->node_string);
-                node->output = output_fs(temp);
+                node->output = output_fs(temp1);
                 type_promotion(node);
                 break;
 
@@ -547,10 +556,10 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment);
                 output_append(node->output, child2->output);
                 if (child1->register_num != child2->register_num) {
-                    snprintf(temp, buf_len, "   copy r%d,r%d\n",
+                    snprintf(temp1, buf_len, "   copy r%d,r%d\n",
                              child1->register_num,
                              child2->register_num);
-                    node->output2 = output_fs(temp);
+                    node->output2 = output_fs(temp1);
                     output_append(node->output, node->output2);
                 }
                 break;
@@ -559,9 +568,9 @@ static walker_result emit_walker(walker_direction direction,
                 get_comment(comment,node,NULL);
                 node->output = output_fs(comment);
                 output_append(node->output, child1->output);
-                snprintf(temp, buf_len, "   address r%d\n",
+                snprintf(temp1, buf_len, "   address r%d\n",
                          node->register_num);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 break;
 
@@ -569,9 +578,9 @@ static walker_result emit_walker(walker_direction direction,
                 get_comment(comment,node, NULL);
                 node->output = output_fs(comment);
                 output_append(node->output, child1->output);
-                snprintf(temp, buf_len, "   say r%d\n   say \"\\n\"\n",
+                snprintf(temp1, buf_len, "   say r%d\n   say \"\\n\"\n",
                          node->register_num);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 break;
 
@@ -582,32 +591,32 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment);
                 if (child1->output) output_append(node->output, child1->output);
                 get_comment_line_number_only(comment,child2,"{THEN}");
-                snprintf(temp, buf_len, "   brf l%d,r%d\n%s",
+                snprintf(temp1, buf_len, "   brf l%d,r%d\n%s",
                          node->node_number,
                          node->register_num,
                          comment);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 output_append(node->output,child2->output);
                 if (child3) {
                     get_comment_line_number_only(comment,child3,"{ELSE}");
-                    snprintf(temp, buf_len, "   br l%d\n%sl%d:\n",
+                    snprintf(temp1, buf_len, "   br l%d\n%sl%d:\n",
                              child3->node_number,
                              comment,
                              node->node_number);
-                    node->output3 = output_fs(temp);
+                    node->output3 = output_fs(temp1);
                     output_append(node->output, node->output3);
                     output_append(node->output,child3->output);
 
-                    snprintf(temp, buf_len, "l%d:\n",
+                    snprintf(temp1, buf_len, "l%d:\n",
                              child3->node_number);
-                    node->output4 = output_fs(temp);
+                    node->output4 = output_fs(temp1);
                     output_append(node->output, node->output4);
                 }
                 else {
-                    snprintf(temp, buf_len, "l%d:\n",
+                    snprintf(temp1, buf_len, "l%d:\n",
                              node->node_number);
-                    node->output3 = output_fs(temp);
+                    node->output3 = output_fs(temp1);
                     output_append(node->output, node->output3);
                 }
                 break;
@@ -619,9 +628,9 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output, child1->output);
 
                 /* Loop Start */
-                snprintf(temp, buf_len, "l%d:\n",
+                snprintf(temp1, buf_len, "l%d:\n",
                          node->node_number);
-                node->output2 = output_fs(temp);
+                node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
 
                 /* Loop Checks REPEAT->output2 */
@@ -637,9 +646,9 @@ static walker_result emit_walker(walker_direction direction,
                 get_comment_line_number_only(comment,child1, "{DO-END}");
                 node->output3 = output_fs(comment);
                 output_append(node->output, node->output3);
-                snprintf(temp, buf_len, "   br l%d\nl%d:\n",
+                snprintf(temp1, buf_len, "   br l%d\nl%d:\n",
                          node->node_number, child1->node_number);
-                node->output4 = output_fs(temp);
+                node->output4 = output_fs(temp1);
                 output_append(node->output, node->output4);
                 break;
 
@@ -662,12 +671,12 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output, child1->output);
 
                 node->output2 = output_fs(comment);
-                snprintf(temp, buf_len, "   %sgt r0,r%d,r%d\n   brt l%d,r0\n",
+                snprintf(temp1, buf_len, "   %sgt r0,r%d,r%d\n   brt l%d,r0\n",
                          tp_prefix,
                          node->parent->register_num,
                          node->child->register_num,
                          node->parent->node_number);
-                node->output4 = output_fs(temp);
+                node->output4 = output_fs(temp1);
                 output_append(node->output2, node->output4);
                 break;
 
@@ -679,12 +688,12 @@ static walker_result emit_walker(walker_direction direction,
                     output_append(node->output, child1->output);
 
                     node->output3 = output_fs(comment);
-                    snprintf(temp, buf_len, "   %sadd r%d,r%d,r%d\n",
+                    snprintf(temp1, buf_len, "   %sadd r%d,r%d,r%d\n",
                              tp_prefix,
                              node->parent->register_num,
                              node->child->register_num,
                              node->parent->register_num);
-                    node->output4 = output_fs(temp);
+                    node->output4 = output_fs(temp1);
                     output_append(node->output3, node->output4);
                 }
                 else {
@@ -693,17 +702,17 @@ static walker_result emit_walker(walker_direction direction,
 
                     node->output3 = output_fs(comment);
                     if (*tp_prefix == 'i') {
-                        snprintf(temp, buf_len, "   inc r%d\n",
+                        snprintf(temp1, buf_len, "   inc r%d\n",
                                  node->parent->register_num);
                     }
                     else {
-                        snprintf(temp, buf_len, "   %sadd r%d,r%d,1.0\n",
+                        snprintf(temp1, buf_len, "   %sadd r%d,r%d,1.0\n",
                                  tp_prefix,
                                  node->parent->register_num,
                                  node->child->register_num,
                                  node->parent->register_num);
                     }
-                    node->output4 = output_fs(temp);
+                    node->output4 = output_fs(temp1);
                     output_append(node->output3, node->output4);
                 }
                 break;

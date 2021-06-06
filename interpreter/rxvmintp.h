@@ -1,7 +1,7 @@
 #ifndef CREXX_RXVMINTP_H
 #define CREXX_RXVMINTP_H
 
-#define rxversion "cREXX-Phase-0 v0.1.6-i0050"
+#define rxversion "cREXX-Phase-0 v0.1.6-i0041"
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
