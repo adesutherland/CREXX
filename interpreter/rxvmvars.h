@@ -124,27 +124,40 @@ static void set_float(value *v, double value) {
     v->float_value = value;
 }
 
+/*
+ * TODO - Optimisation opportunity - keyhole optimiser can change to
+ * more specific instructions where there is no overlap or to do
+ * a prepend / append
+ */
 static void string_concat(value *v1, value *v2, value *v3) {
-    int l;
-    memcpy(v1->string_value, v2->string_value, v2->string_length);
-    l = SMALL_STRING_BUFFER - v2->string_length;
-    if (v3->string_length < l) l = v3->string_length;
+    size_t len = v2->string_length + v3->string_length;
+    char *buffer = malloc(len);
 
-    memcpy(v1->string_value + v2->string_length, v3->string_value, l);
-    v1->string_length = v2->string_length + l;
+    memcpy(buffer, v2->string_value, v2->string_length);
+    memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
+
+    /* TODO Need to fix for large strings */
+    if (len > SMALL_STRING_BUFFER) len = SMALL_STRING_BUFFER;
+
+    memcpy(v1->string_value, buffer, len);
+    v1->string_length = len;
+    free(buffer);
 }
 
 static void string_sconcat(value *v1, value *v2, value *v3) {
-    int l;
-    memcpy(v1->string_value, v2->string_value, v2->string_length);
-    l = SMALL_STRING_BUFFER - v2->string_length;
-    if (!l) return;
-    v1->string_value[v2->string_length] = ' ';
-    l--;
-    if (v3->string_length < l) l = v3->string_length;
+    size_t len = v2->string_length + v3->string_length + 1;
+    char *buffer = malloc(len);
 
-    memcpy(v1->string_value + v2->string_length + 1, v3->string_value, l);
-    v1->string_length = v2->string_length + l + 1;
+    memcpy(buffer, v2->string_value, v2->string_length);
+    buffer[v2->string_length] = ' ';
+    memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
+
+    /* TODO Need to fix for large strings */
+    if (len > SMALL_STRING_BUFFER) len = SMALL_STRING_BUFFER;
+
+    memcpy(v1->string_value, buffer, len);
+    v1->string_length = len;
+    free(buffer);
 }
 
 /* This resets the variable flag so that only the matser type flag is set.

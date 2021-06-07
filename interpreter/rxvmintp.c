@@ -174,11 +174,19 @@ START_INSTRUCTION(LOAD_REG_STRING)
 
     DISPATCH;
 
+    /* TODO Depreciated */
 START_INSTRUCTION(SAY_REG)
     CALC_DISPATCH(1)
     DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
 
     prime_string(op1R);
+    printf("%.*s", (int) op1R->string_length, op1R->string_value);
+    DISPATCH;
+
+/* String Say */
+START_INSTRUCTION(SSAY_REG)
+    CALC_DISPATCH(1)
+    DEBUG("TRACE - SSAY_REG R%llu\n", REG_IDX(1));
     printf("%.*s", (int) op1R->string_length, op1R->string_value);
     DISPATCH;
 
