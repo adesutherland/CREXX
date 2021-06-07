@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+F0017 - Feature - Linking Multiple Modules
 I0053 - Fix Issue 53 - String Concat Errors
       - Deprecate SAY REG and replace with SSAY REG (String only)
 I0052 - Fix Issue 52 - Variables are case sensitive
