@@ -1,6 +1,7 @@
 CREXX History / Change Log
 
 I0053 - Fix Issue 53 - String Concat Errors
+      - Deprecate SAY REG and replace with SSAY REG (String only)
 I0052 - Fix Issue 52 - Variables are case sensitive
 I0041 - Fix Issue 41 - Single Quote Strings Fails
 I0050 - Fix Issue 50 - VM/370 Printing Integers Fails
