@@ -47,6 +47,7 @@ program ::= error. { error_f(context, 0, 0, 1, "Error completely confused");}
 headers ::= header.
 headers ::= headers header.
 header ::= globals NEWLINE.
+header ::= global_reg NEWLINE.
 header ::= NEWLINE.
 
 // Header error messages
@@ -59,16 +60,40 @@ globals ::= KW_GLOBALS EQUAL INT(G). {rxassetg(context,G);}
 globals ::= KW_GLOBALS EQUAL(T) error. {err_aftr(context, T, "expecting integer");}
 globals ::= KW_GLOBALS(T) error. {err_aftr(context, T, "expecting \"={integer}\"");}
 
-// Function list an declaration
+// Global register directive
+global_reg ::= GREG(R) KW_EXPOSE EQUAL ID(I). {rxasexre(context,R,I);}
+
+// Global register error messages
+global_reg ::= AREG(R) KW_EXPOSE error. {err_at(context, R, "can only expose global registers");}
+global_reg ::= RREG(R) KW_EXPOSE error. {err_at(context, R, "can only expose global registers");}
+global_reg ::= GREG(T) error. {err_aftr(context, T, "expecting \".expose={id}\"");}
+global_reg ::= GREG KW_EXPOSE(T) error. {err_aftr(context, T, "expecting \"={id}\"");}
+
+// Function list and Declarations and Definitions
 functions ::= function.
 functions ::= functions function.
-function ::= functionDeclaration NEWLINE instructions.
-functionDeclaration ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
+function ::= functionDefinition NEWLINE instructions.
+function ::= functionDeclaration blank_lines.
+function ::= FUNC(T) error. {err_aftr(context, T, "expecting .locals or .expose");}
+blank_lines ::= NEWLINE.
+blank_lines ::= blank_lines NEWLINE.
+functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
+functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_EXPOSE EQUAL ID(D). {rxasexpc(context,F,I,D);}
+functionDeclaration ::= FUNC(F) KW_EXPOSE EQUAL ID(I). {rxasdecl(context,F,I);}
 
-// Function declaration error messages
-functionDeclaration ::= FUNC(T) error. {err_aftr(context, T, "expecting \".locals={integer}\"");}
-functionDeclaration ::= FUNC KW_LOCALS EQUAL INT ANYTHING(T) error.
+// Function Declaration error messages
+functionDeclaration ::= FUNC KW_EXPOSE(T) error.
+                        {err_aftr(context, T, "expecting \"={id}\"");}
+functionDeclaration ::= FUNC KW_EXPOSE EQUAL ID ANYTHING(T) error.
                         {err_at(context, T, "expecting {newline}");}
+
+// Function Definition error messages
+functionDefinition ::= FUNC KW_LOCALS(T) error.
+                        {err_aftr(context, T, "expecting \"={int}\"");}
+functionDefinition ::= FUNC KW_LOCALS EQUAL INT ANYTHING(T) error.
+                        {err_at(context, T, "expecting {newline} or .expose");}
+functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_EXPOSE(T) error.
+                        {err_aftr(context, T, "expecting \"={id}\"");}
 
 // Instructions in a function/procedure
 instructions ::= instruction.
@@ -100,7 +125,9 @@ instr ::= ID operand COMMA operand COMMA operand ANYTHING(T) error.
 
 // Operand Types
 operand ::= ID.
-operand ::= REG.
+operand ::= RREG.
+operand ::= AREG.
+operand ::= GREG.
 operand ::= FUNC.
 operand ::= INT.
 operand ::= FLOAT.

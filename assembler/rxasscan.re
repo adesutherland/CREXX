@@ -26,7 +26,9 @@ int scan(Assembler_Context* s, char *buff_end) {
     clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\['\n\r]) [']);
     float = [-+]? (digit* "." digit+ | digit+ ".");
     integer = [-+]? digit+;
-    reg = ('r' | 'a' | 'g') digit+;
+    rreg = 'r' digit+;
+    greg = 'g' digit+;
+    areg = 'a' digit+;
     id = (letter | [_]) (letter | digit | [_-.])*;
 
     "/*" {
@@ -49,7 +51,9 @@ int scan(Assembler_Context* s, char *buff_end) {
     integer {return(INT);}
     slit {return(STRING);}
     clit {return(CHAR);}
-    reg {return(REG);}
+    rreg {return(RREG);}
+    greg {return(GREG);}
+    areg {return(AREG);}
     id "()" {return(FUNC);}
     id ":" {return(LABEL);}
     id {return(ID);}
@@ -57,6 +61,7 @@ int scan(Assembler_Context* s, char *buff_end) {
     ',' {return(COMMA);}
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
+    '.expose' { return(KW_EXPOSE); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;

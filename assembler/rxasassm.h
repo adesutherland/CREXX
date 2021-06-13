@@ -19,6 +19,9 @@ void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken);
 void rxaslabl(Assembler_Context *context, Token *labelToken);
 void rxassetg(Assembler_Context *context, Token *globalsToken);
+void rxasexre(Assembler_Context *context, Token *registerToken, Token *exposeToken);
+void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken, Token *exposeToken);
+void rxasdecl(Assembler_Context *context, Token *funcToken, Token *exposeToken);
 
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context);
