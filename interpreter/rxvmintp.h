@@ -1,6 +1,8 @@
 #ifndef CREXX_RXVMINTP_H
 #define CREXX_RXVMINTP_H
 
+#include "rxas.h"
+
 #define rxversion "cREXX-Phase-0 v0.1.6-f0017"
 
 #ifdef NDEBUG  // RELEASE
@@ -34,14 +36,15 @@
 
 #endif
 
-#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
+//#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
+#define REG_OP(n)                    current_frame->locals[n]
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
 #define FLOAT_OP(n)                  (pc +(n))->fconst
 
-#define CONSTSTRING_OP(n)            (string_constant *)(program->const_pool + (pc+(n))->index)
-#define PROC_OP(n)                   (proc_constant *)(program->const_pool + (pc+(n))->index)
+#define CONSTSTRING_OP(n)            (string_constant *)(current_frame->module->const_pool + (pc+(n))->index)
+#define PROC_OP(n)                   (proc_constant *)(current_frame->module->const_pool + (pc+(n))->index)
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
@@ -100,13 +103,17 @@
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
 
-typedef struct bin_space program;
+/* Module Structure */
+typedef struct module {
+        bin_space segment;
+        char *name;
+} module;
 
 /* Signals an error - this function does not return */
 void dosignal(int code);
 
 int initialz();
 int finalize();
-int run(program *program, int argc, char *argv[], int debug_mode);
+int run(int num_modules, module *program, int argc, char *argv[], int debug_mode);
 
 #endif //CREXX_RXVMINTP_H

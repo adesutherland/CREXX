@@ -1,16 +1,18 @@
 //
-// Created by adria on 29/03/2021.
+// Created by adrian on 29/03/2021.
 //
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
 #include "platform.h"
 #include "rxvmintp.h"
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxvmvars.h"
+#include "rxastree.h"
 
 /* Signals an error - this function does not return */
 void dosignal(int code) {
@@ -23,6 +25,7 @@ typedef struct stack_frame stack_frame;
 
 struct stack_frame {
     stack_frame *parent;
+    bin_space *module;
     void *return_inst;
     bin_code *return_pc;
     value **return_reg;
@@ -32,16 +35,14 @@ struct stack_frame {
 };
 /* Macros */
 
-
-
 /* Stack Frame Factory */
-stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
+stack_frame *frame_f(proc_constant *procedure, int no_args,
                      stack_frame *parent, bin_code *return_pc, void* return_inst,
                      value **return_reg) {
     stack_frame *this;
     int num_locals;
 
-    num_locals = procedure->locals + program->globals + no_args + 1;
+    num_locals = procedure->locals + procedure->module->globals + no_args + 1;
     this = (stack_frame*)calloc(1,sizeof(stack_frame)
                                   + (sizeof(value *) * (num_locals)));
     this->parent = parent;
@@ -49,6 +50,7 @@ stack_frame *frame_f(bin_space *program, proc_constant *procedure, int no_args,
     this->return_pc = return_pc;
     this->number_locals = num_locals;
     this->return_reg = return_reg;
+    this->module = procedure->module;
 
     /* TODO Globals */
     return this;
@@ -64,9 +66,11 @@ void free_frame(stack_frame *frame) {
 }
 
 /* Interpreter */
-int run(bin_space *program, int argc, char *argv[], int debug_mode) {
+int run(int num_modules, module *program, int argc, char *argv[],
+        int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
+    int mod_index;
     bin_code *pc, *next_pc;
     void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
@@ -76,6 +80,10 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     char *converr;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
+    /* Linker Stuff */
+    chameleon_constant *c_entry;
+    proc_constant *p_entry, *p_entry_linked;
+    struct avl_tree_node *exposed_tree = 0;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -83,28 +91,97 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     Instruction *instruction;
     #include "instrset.h"  /* Set up void *address_map[] */
 
+    /* Link Modules Together */
+    DEBUG("Linking - Build Symbols\n");
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        i = 0;
+        while (i < program[mod_index].segment.const_size) {
+            c_entry = (chameleon_constant *)(program[mod_index].segment.const_pool + i);
+            switch(c_entry->type) {
+                case PROC_CONST:
+                    if ( ((proc_constant*)c_entry)->start != SIZE_MAX ) {
+                        ((proc_constant*)c_entry)->module = &program[mod_index].segment;
+                    }
+                    break;
+                case EXPOSE_CONST:
+                    p_entry = (proc_constant *)(program[mod_index].segment.const_pool
+                            + ((expose_constant*)c_entry)->procedure);
+
+                    if ( !((expose_constant *)c_entry)->imported ) {
+                        if (add_node(&exposed_tree, ((expose_constant *)c_entry)->index,
+                                     (size_t)p_entry)) {
+                            fprintf(stderr, "Duplicate exposed symbol: %s\n",
+                                    ((expose_constant *)c_entry)->index);
+                            exit(-1); /* Duplicate */
+                        }
+                    }
+                    break;
+
+                default: ;
+            }
+
+            i += c_entry->size_in_pool;
+        }
+    }
+
+    DEBUG("Linking - Resolve Symbols\n");
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        i = 0;
+        while (i < program[mod_index].segment.const_size) {
+            c_entry = (chameleon_constant *)(program[mod_index].segment.const_pool + i);
+            switch(c_entry->type) {
+                case EXPOSE_CONST:
+                    p_entry = (proc_constant *)(program[mod_index].segment.const_pool
+                                                + ((expose_constant*)c_entry)->procedure);
+                    if ( ((expose_constant *)c_entry)->imported ) {
+                        if (!src_node(exposed_tree, ((expose_constant *)c_entry)->index,
+                                      (size_t*)&p_entry_linked)) {
+                            fprintf(stderr, "Unimplemented symbol: %s\n",
+                                    ((expose_constant *) c_entry)->index);
+                            exit(-1); /* Unimplemented */
+                        }
+
+                        /* Patch the procedure entry with the linked one */
+                        p_entry->locals = p_entry_linked->locals;
+                        p_entry->start = p_entry_linked->start;
+                        p_entry->module = p_entry_linked->module;
+                    }
+                    break;
+
+                default: ;
+            }
+
+            i += c_entry->size_in_pool;
+        }
+    }
+
     /* Thread code - simples! */
 #ifndef NTHREADED
     DEBUG("Threading\n");
-    i = 0;
-    while (i < program->inst_size) {
-        j = i;
-        i += program->binary[i].instruction.no_ops + 1;
-        program->binary[j].impl_address =
-                address_map[program->binary[j].instruction.opcode];
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        i = 0;
+        while (i < program[mod_index].segment.inst_size) {
+            j = i;
+            i += program[mod_index].segment.binary[i].instruction.no_ops + 1;
+            program[mod_index].segment.binary[j].impl_address =
+                    address_map[program[mod_index].segment.binary[j].instruction.opcode];
+        }
     }
 #endif
 
     /* Find the program's entry point
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
-    i = 0;
-    while (i < program->const_size) {
-        procedure = (proc_constant *) (program->const_pool + i);
-        if (procedure->base.type == PROC_CONST &&
-            strcmp(procedure->name, "main") == 0)
-            break;
-        procedure = 0;
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        i = 0;
+        while (i < program[mod_index].segment.const_size) {
+            procedure = (proc_constant *) (program[mod_index].segment.const_pool + i);
+            if (procedure->base.type == PROC_CONST &&
+                strcmp(procedure->name, "main") == 0)
+                break;
+            procedure = 0;
+        }
+        if (procedure) break;
     }
 
     if (!procedure) {
@@ -113,10 +190,11 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
+    current_frame = frame_f(procedure, argc, 0, 0, 0, 0);
     /* Arguments */
-    current_frame->locals[program->globals + procedure->locals] = value_int_f(current_frame, argc);
-    for (i = 0, j = program->globals + procedure->locals + 1; i < argc; i++, j++) {
+    current_frame->locals[current_frame->module->globals + procedure->locals] =
+            value_int_f(current_frame, argc);
+    for (i = 0, j = current_frame->module->globals + procedure->locals + 1; i < argc; i++, j++) {
         current_frame->locals[j] = value_nullstring_f(current_frame, argv[i]);
     }
     // TODO: Discuss with Adrian, intialise all registers used
@@ -124,8 +202,9 @@ int run(bin_space *program, int argc, char *argv[], int debug_mode) {
         current_frame->locals[i] = value_int_f(current_frame, 0);
     }
     /* Start */
-    DEBUG("Starting inst# 0x%x\n", (int)procedure->start);
-    next_pc = &(program->binary[procedure->start]);
+    DEBUG("Starting inst# %s-0x%x\n", program[current_frame->module->module_index].name,
+          (int)procedure->start);
+    next_pc = &(current_frame->module->binary[procedure->start]);
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
@@ -264,16 +343,16 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     p1 = PROC_OP(1); /* This is the target */
 
     /* New stackframe */
-    current_frame = frame_f(program, p1, 0, current_frame, next_pc,
+    current_frame = frame_f(p1, 0, current_frame, next_pc,
                             next_inst, 0);
     DEBUG("TRACE - CALL_FUNC %s()\n",p1->name);
     /* Prepare dispatch to procedure as early as possible */
-    next_pc = &(program->binary[p1->start]);
+    next_pc = &(current_frame->module->binary[p1->start]);
     CALC_DISPATCH_MANUAL;
 
     /* Arguments - none */
-    current_frame->locals[program->globals + p1->locals] = value_int_f(current_frame, 0);
-    /* This gotos the start of the called proceure */
+    current_frame->locals[current_frame->module->globals + p1->locals] = value_int_f(current_frame, 0);
+    /* This gotos the start of the called procedure */
     DISPATCH;
 
     START_INSTRUCTION(CALL_REG_FUNC)
@@ -286,16 +365,16 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     op1R = 0;
 
     /* New stackframe */
-    current_frame = frame_f(program, p2, 0, current_frame, next_pc,
+    current_frame = frame_f(p2, 0, current_frame, next_pc,
                             next_inst, &(op1R));
     DEBUG("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
 
     /* Prepare dispatch to procedure as early as possible */
-    next_pc = &(program->binary[p2->start]);
+    next_pc = &(current_frame->module->binary[p2->start]);
     CALC_DISPATCH_MANUAL;
 
     /* Arguments - none */
-    current_frame->locals[program->globals + p2->locals] = value_int_f(current_frame, 0);
+    current_frame->locals[current_frame->module->globals + p2->locals] = value_int_f(current_frame, 0);
     /* This gotos the start of the called procedure */
     DISPATCH;
 
@@ -312,21 +391,21 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     op1R = 0;
 
     /* New stackframe */
-    current_frame = frame_f(program, p2, v3->int_value, current_frame, next_pc,
+    current_frame = frame_f(p2, v3->int_value, current_frame, next_pc,
                             next_inst, &(op1R));
 
     DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
           p2->name, REG_IDX(3));
 
     /* Prepare dispatch to procedure as early as possible */
-    next_pc = &(program->binary[p2->start]);
+    next_pc = &(current_frame->module->binary[p2->start]);
     CALC_DISPATCH_MANUAL;
 
     /* Arguments - complex lets never have to change this code! */
-    current_frame->locals[program->globals + p2->locals] =
+    current_frame->locals[current_frame->module->globals + p2->locals] =
             current_frame->parent->locals[(pc + (3))->index];
     for (i=0; i<v3->int_value; i++) {
-        current_frame->locals[program->globals + p2->locals + i + 1] =
+        current_frame->locals[current_frame->module->globals + p2->locals + i + 1] =
                 current_frame->parent->locals[(pc + (3))->index + i + 1];
     }
 
@@ -342,9 +421,11 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     /* back to the parents stack frame */
     temp_frame = current_frame;
     current_frame = current_frame->parent;
-    if (!current_frame) ERROR("ERROR - Past top of procedure stack - aborting\n");
-
     free_frame(temp_frame);
+    if (!current_frame) {
+        DEBUG("TRACE - RET FROM MAIN()\n");
+        goto interprt_finished;
+    }
     DISPATCH;
 
     START_INSTRUCTION(RET_REG)
@@ -497,7 +578,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     DISPATCH;
 
     START_INSTRUCTION(BR_ID)
-    next_pc = program->binary + REG_IDX(1);
+    next_pc = current_frame->module->binary + REG_IDX(1);
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
@@ -509,7 +590,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     CALC_DISPATCH(2); /* i.e. if the condition is not met - this helps the
                                 the real CPUs branch prediction (in theory) */
     if (op2RI) {
-        next_pc = program->binary + REG_IDX(1);
+        next_pc = current_frame->module->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL;
     }
     DISPATCH;
@@ -519,7 +600,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
                                   the real CPUs branch prediction (in theory) */
     DEBUG("TRACE - BRF_ID_REG R%llu\n", REG_IDX(1));
     if (!(op2RI)) {
-        next_pc = program->binary + REG_IDX(1);
+        next_pc = current_frame->module->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL;
     }
     DISPATCH;
@@ -1263,7 +1344,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     CALC_DISPATCH(2);
     DEBUG("TRACE - AMAP_REG_REG\n");
 
-    op1R = current_frame->locals[op2RI + program->globals + procedure->locals];
+    op1R = current_frame->locals[op2RI + current_frame->module->globals + procedure->locals];
 
     DISPATCH;
 /* ------------------------------------------------------------------------------------

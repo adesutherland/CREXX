@@ -1,0 +1,7 @@
+.globals=0
+
+func1()        .locals=1 .expose=global.func1
+               load r0,"test - in func1()"
+               ssay r0
+               say "\n"
+               ret

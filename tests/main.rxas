@@ -1,0 +1,16 @@
+.globals=0
+
+main()         .locals=1
+               load r0,"test - main() - calling func1()"
+               ssay r0
+               say "\n"
+               call func1()
+               load r0,"test - main() - calling func2()"
+               ssay r0
+               say "\n"
+               call func2()
+               ret
+
+func1()       .expose=global.func1
+
+func2()       .expose=global.func2

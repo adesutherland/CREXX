@@ -20,7 +20,8 @@ add_custom_command(
 
 add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c
         rxasgrmr.c rxasgrmr.h rxas.h
-        rxasassm.h rxasassm.c rxastree.h)
+        rxasassm.h rxasassm.c
+        ../avl_tree/rxastree.h)
 
 target_link_libraries(rxas machine avl_tree platform)
 

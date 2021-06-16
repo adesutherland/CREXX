@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "../avl_tree/avl_tree.h"
+#include "avl_tree.h"
 
 /* Internal Tree node structure */
 struct string_wrapper {

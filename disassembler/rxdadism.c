@@ -300,7 +300,6 @@ void disassemble(bin_space *pgm, FILE *stream) {
 
             case EXPOSE_CONST:
                 if (((expose_constant*)entry)->procedure == SIZE_MAX) {
-                    // g3 .expose=domain.variable2
                     fprintf(stream,
                             "g%d .expose=%s\n",
                             ((expose_constant *) entry)->global_reg,

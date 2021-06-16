@@ -38,6 +38,7 @@ struct bin_space {
     int globals;
     size_t inst_size;
     size_t const_size;
+    int module_index;
     bin_code *binary;
     unsigned char *const_pool;
 };
