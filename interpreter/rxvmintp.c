@@ -41,6 +41,7 @@ stack_frame *frame_f(proc_constant *procedure, int no_args,
                      value **return_reg) {
     stack_frame *this;
     int num_locals;
+    int i;
 
     num_locals = procedure->locals + procedure->module->globals + no_args + 1;
     this = (stack_frame*)calloc(1,sizeof(stack_frame)
@@ -51,6 +52,11 @@ stack_frame *frame_f(proc_constant *procedure, int no_args,
     this->number_locals = num_locals;
     this->return_reg = return_reg;
     this->module = procedure->module;
+
+    // TODO: Discuss with Adrian, intialise all registers used
+    for (i = 0; i < procedure->locals; i++) {
+        this->locals[i] = value_int_f(this, 0);
+    }
 
     /* TODO Globals */
     return this;
@@ -197,10 +203,6 @@ int run(int num_modules, module *program, int argc, char *argv[],
     for (i = 0, j = current_frame->module->globals + procedure->locals + 1; i < argc; i++, j++) {
         current_frame->locals[j] = value_nullstring_f(current_frame, argv[i]);
     }
-    // TODO: Discuss with Adrian, intialise all registers used
-    for (i = 0; i < procedure->locals; i++) {
-        current_frame->locals[i] = value_int_f(current_frame, 0);
-    }
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", program[current_frame->module->module_index].name,
           (int)procedure->start);
@@ -341,7 +343,6 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     START_INSTRUCTION(CALL_FUNC)
     CALC_DISPATCH(1);
     p1 = PROC_OP(1); /* This is the target */
-
     /* New stackframe */
     current_frame = frame_f(p1, 0, current_frame, next_pc,
                             next_inst, 0);
@@ -349,7 +350,6 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     /* Prepare dispatch to procedure as early as possible */
     next_pc = &(current_frame->module->binary[p1->start]);
     CALC_DISPATCH_MANUAL;
-
     /* Arguments - none */
     current_frame->locals[current_frame->module->globals + p1->locals] = value_int_f(current_frame, 0);
     /* This gotos the start of the called procedure */
@@ -359,20 +359,16 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     CALC_DISPATCH(2);
     v1 = op1R;
     p2 = PROC_OP(2); /* This is the target */
-
     /* Clear target return value register */
     free_value(current_frame, v1);
     op1R = 0;
-
     /* New stackframe */
     current_frame = frame_f(p2, 0, current_frame, next_pc,
                             next_inst, &(op1R));
     DEBUG("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
-
     /* Prepare dispatch to procedure as early as possible */
     next_pc = &(current_frame->module->binary[p2->start]);
     CALC_DISPATCH_MANUAL;
-
     /* Arguments - none */
     current_frame->locals[current_frame->module->globals + p2->locals] = value_int_f(current_frame, 0);
     /* This gotos the start of the called procedure */
@@ -383,24 +379,19 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     v1 = op1R;
     p2 = PROC_OP(2); /* This is the target */
     v3 = op3R;
-
     if (!v3 || !v3->status.primed_int) ERROR("ERROR: CALL_REG_FUNC_REG Arg Reg not an integer");
-
     /* Clear target return value register */
     free_value(current_frame, v1);
     op1R = 0;
-
     /* New stackframe */
     current_frame = frame_f(p2, v3->int_value, current_frame, next_pc,
                             next_inst, &(op1R));
 
     DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
           p2->name, REG_IDX(3));
-
     /* Prepare dispatch to procedure as early as possible */
     next_pc = &(current_frame->module->binary[p2->start]);
     CALC_DISPATCH_MANUAL;
-
     /* Arguments - complex lets never have to change this code! */
     current_frame->locals[current_frame->module->globals + p2->locals] =
             current_frame->parent->locals[(pc + (3))->index];
@@ -408,7 +399,6 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
         current_frame->locals[current_frame->module->globals + p2->locals + i + 1] =
                 current_frame->parent->locals[(pc + (3))->index + i + 1];
     }
-
     /* This gotos the start of the called procedure */
     DISPATCH;
 

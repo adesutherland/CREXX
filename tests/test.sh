@@ -19,5 +19,5 @@ echo "rxdas func1"
 echo "rxdas func2"
 ../cmake-build-debug/disassembler/rxdas func2
 
-echo "rxvm main func"
-../cmake-build-debug/interpreter/rxvm -d main func1 func2
+echo "rxvm main func1 func2"
+../cmake-build-debug/interpreter/rxvm main func1 func2

@@ -1,7 +1,9 @@
 .globals=0
 
-func2()        .locals=1 .expose=global.func2
-               load r0,"test - in func2()"
-               ssay r0
-               say "\n"
+log()          .expose=my.log
+
+func2()        .locals=3 .expose=global.func2
+               load r1,1
+               load r2,"In func2()"
+               call r0,log(),r1
                ret

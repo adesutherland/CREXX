@@ -36,8 +36,7 @@
 
 #endif
 
-//#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
-#define REG_OP(n)                    current_frame->locals[n]
+#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
