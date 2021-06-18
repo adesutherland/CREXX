@@ -158,6 +158,7 @@ int main(int argc, char *argv[]) {
         fread(pgm[j].segment.const_pool, 1, pgm[j].segment.const_size, fp);
 
         pgm[j].segment.module_index = j;
+        pgm[j].globals = calloc(pgm[j].segment.globals, sizeof(value));
 
         fclose(fp);
     }
@@ -173,6 +174,7 @@ int main(int argc, char *argv[]) {
     for (j=0; j<num_modules; j++) {
         free(pgm[j].segment.binary);
         free(pgm[j].segment.const_pool);
+        free(pgm[j].globals);
     }
     free(pgm);
     return 0;

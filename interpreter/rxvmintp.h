@@ -2,6 +2,7 @@
 #define CREXX_RXVMINTP_H
 
 #include "rxas.h"
+#include "rxvmvars.h"
 
 #define rxversion "cREXX-Phase-0 v0.1.6-f0017"
 
@@ -106,6 +107,7 @@
 typedef struct module {
         bin_space segment;
         char *name;
+        value **globals;
 } module;
 
 /* Signals an error - this function does not return */

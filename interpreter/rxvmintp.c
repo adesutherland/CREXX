@@ -36,12 +36,12 @@ struct stack_frame {
 /* Macros */
 
 /* Stack Frame Factory */
-stack_frame *frame_f(proc_constant *procedure, int no_args,
+stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
                      stack_frame *parent, bin_code *return_pc, void* return_inst,
                      value **return_reg) {
     stack_frame *this;
     int num_locals;
-    int i;
+    int i,j;
 
     num_locals = procedure->locals + procedure->module->globals + no_args + 1;
     this = (stack_frame*)calloc(1,sizeof(stack_frame)
@@ -53,12 +53,16 @@ stack_frame *frame_f(proc_constant *procedure, int no_args,
     this->return_reg = return_reg;
     this->module = procedure->module;
 
-    // TODO: Discuss with Adrian, intialise all registers used
+    /* Locals */
     for (i = 0; i < procedure->locals; i++) {
         this->locals[i] = value_int_f(this, 0);
     }
 
-    /* TODO Globals */
+    /* Globals */
+    for (j = 0; j < this->module->globals; i++, j++) {
+        this->locals[i] = program[this->module->module_index].globals[j];
+    }
+
     return this;
 }
 
@@ -161,7 +165,17 @@ int run(int num_modules, module *program, int argc, char *argv[],
         }
     }
 
-    /* Thread code - simples! */
+    /* Allocate Module Globals */
+    DEBUG("Allocate Module Globals\n");
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        for (i = 0; i < program[mod_index].segment.globals; i++ ) {
+            if (!program[mod_index].globals[i])
+                program[mod_index].globals[i] =
+                        value_int_f(program[mod_index].globals, 0);
+        }
+    }
+
+        /* Thread code - simples! */
 #ifndef NTHREADED
     DEBUG("Threading\n");
     for (mod_index=0; mod_index<num_modules; mod_index++) {
@@ -185,6 +199,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
             if (procedure->base.type == PROC_CONST &&
                 strcmp(procedure->name, "main") == 0)
                 break;
+            i += procedure->base.size_in_pool;
             procedure = 0;
         }
         if (procedure) break;
@@ -196,7 +211,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, argc, 0, 0, 0, 0);
+    current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
     /* Arguments */
     current_frame->locals[current_frame->module->globals + procedure->locals] =
             value_int_f(current_frame, argc);
@@ -344,7 +359,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     CALC_DISPATCH(1);
     p1 = PROC_OP(1); /* This is the target */
     /* New stackframe */
-    current_frame = frame_f(p1, 0, current_frame, next_pc,
+    current_frame = frame_f(program, p1, 0, current_frame, next_pc,
                             next_inst, 0);
     DEBUG("TRACE - CALL_FUNC %s()\n",p1->name);
     /* Prepare dispatch to procedure as early as possible */
@@ -363,7 +378,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     free_value(current_frame, v1);
     op1R = 0;
     /* New stackframe */
-    current_frame = frame_f(p2, 0, current_frame, next_pc,
+    current_frame = frame_f(program, p2, 0, current_frame, next_pc,
                             next_inst, &(op1R));
     DEBUG("TRACE - CALL_REG_FUNC R%llu=%s()\n", REG_IDX(1), p2->name);
     /* Prepare dispatch to procedure as early as possible */
@@ -384,7 +399,7 @@ START_INSTRUCTION(IMULT_REG_REG_INT)
     free_value(current_frame, v1);
     op1R = 0;
     /* New stackframe */
-    current_frame = frame_f(p2, v3->int_value, current_frame, next_pc,
+    current_frame = frame_f(program, p2, v3->int_value, current_frame, next_pc,
                             next_inst, &(op1R));
 
     DEBUG("TRACE - CALL_REG_FUNC_REG R%llu=%s(R%llu...)\n", REG_IDX(1),
@@ -1416,7 +1431,21 @@ END_OF_INSTRUCTIONS;
     goto interprt_finished;
 
     interprt_finished:
-    if (current_frame) free_frame(current_frame); // TODO need to delete all frames ...
+
+    /* Deallocate Frames */
+    while (current_frame) {
+        temp_frame = current_frame->parent;
+        free_frame(current_frame);
+        current_frame = temp_frame;
+    }
+
+    /* Deallocate Globals */
+    for (mod_index=0; mod_index<num_modules; mod_index++) {
+        for (i = 0; i < program[mod_index].segment.globals; i++ ) {
+            free_value(program[mod_index].globals, program[mod_index].globals[i]);
+        }
+    }
+
 #ifndef NDEBUG
     if (debug_mode) printf("Interpreter Finished\n");
 #endif

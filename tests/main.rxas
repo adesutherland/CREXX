@@ -1,13 +1,16 @@
-.globals=0
+.globals=2
 
-* g0 .expose=my.global
+g0 .expose=my.global
 
 main()         .locals=3
- load r1,"Hello"
- load r2,"Rene"
- sconcat r2,r1,r2
- ssay r2
- say "\n"
+               load r1,"Hello"
+               load r2,"Rene"
+               sconcat r2,r1,r2
+               ssay r2
+               say "\n"
+
+               load g1,100
+               call say_g1()
 
                load r0,"test - main() - calling func1()"
                ssay r0
@@ -23,6 +26,15 @@ log()          .locals=1 .expose=my.log
                load r0,"Log: "
                ssay r0
                ssay a1
+               say "\n"
+               ret
+
+say_g1()       .locals=1
+               load r0,"g1="
+               imaster g1
+               sprime g1
+               concat r0,r0,g1
+               ssay r0
                say "\n"
                ret
 
