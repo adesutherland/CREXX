@@ -1,6 +1,6 @@
 .globals=2
 
-g0 .expose=my.global
+g1 .expose=my.exposed_global
 
 main()         .locals=3
                load r1,"Hello"
@@ -9,11 +9,11 @@ main()         .locals=3
                ssay r2
                say "\n"
 
-               load g1,100
-               call say_g1()
+               load g0,100
+               call say_module_g()
 
-               load g0,101
-               call say_g0()
+               load g1,101
+               call say_exposed_g()
 
                load r0,"test - main() - calling func1()"
                ssay r0
@@ -33,16 +33,16 @@ log()          .locals=1 .expose=my.log
                ret
 
 
-say_g1()       .locals=1
-               load r0,"g1="
-               imaster g1
-               sprime g1
-               concat r0,r0,g1
+say_module_g()   .locals=1
+               load r0,"module global="
+               imaster g0
+               sprime g0
+               concat r0,r0,g0
                ssay r0
                say "\n"
                ret
 
-say_g0()      .expose=global.say_g0
+say_exposed_g()  .expose=global.say_exposed_g
 
 func1()       .expose=global.func1
 

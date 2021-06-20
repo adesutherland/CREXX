@@ -1,6 +1,6 @@
 .globals=1
 
-g0 .expose=my.global
+g0 .expose=my.exposed_global
 
 log()          .expose=my.log
 
@@ -10,8 +10,8 @@ func1()        .locals=3 .expose=global.func1
                call r0,log(),r1
                ret
 
-say_g0()       .locals=1 .expose=global.say_g0
-               load r0,"g0="
+say_exposed_g()       .locals=1 .expose=global.say_exposed_g
+               load r0,"exposed global="
                imaster g0
                sprime g0
                concat r0,r0,g0

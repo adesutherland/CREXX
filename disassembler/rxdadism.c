@@ -157,7 +157,7 @@ void disassemble(bin_space *pgm, FILE *stream) {
     size_t i, j;
     chameleon_constant *entry;
     proc_constant* pentry;
-    expose_constant* eentry;
+    expose_proc_constant* eentry;
     char line_buffer[MAX_LINE_SIZE];
     size_t line_len;
 
@@ -238,34 +238,32 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 }
                 break;
 
-            case EXPOSE_CONST:
-                if (((expose_constant*)entry)->procedure == SIZE_MAX) {
-                    fprintf(stream,
-                            "* 0x%.6x EXPOSED REG %d as %s\n",
-                            (unsigned int) i,
-                            ((expose_constant *) entry)->global_reg,
-                            ((expose_constant *) entry)->index
-                    );
-                }
-                else {
-                    pentry = (proc_constant *)(pgm->const_pool + ((expose_constant*)entry)->procedure);
+            case EXPOSE_REG_CONST:
+                fprintf(stream,
+                        "* 0x%.6x EXPOSED-REG g%d <-> as %s\n",
+                        (unsigned int) i,
+                        ((expose_reg_constant *) entry)->global_reg,
+                        ((expose_reg_constant *) entry)->index);
+                break;
 
-                    if (((expose_constant *)entry)->imported) {
-                        fprintf(stream,
-                                "* 0x%.6x EXPOSED PROC %s() <-- as %s\n",
-                                (unsigned int) i,
-                                pentry->name,
-                                ((expose_constant *) entry)->index
+            case EXPOSE_PROC_CONST:
+                pentry = (proc_constant *)(pgm->const_pool + ((expose_proc_constant*)entry)->procedure);
+
+                if (((expose_proc_constant *)entry)->imported) {
+                    fprintf(stream,
+                            "* 0x%.6x EXPOSED-PROC %s() <-- as %s\n",
+                            (unsigned int) i,
+                            pentry->name,
+                            ((expose_proc_constant *) entry)->index
                         );
                     }
-                    else {
-                        fprintf(stream,
-                                "* 0x%.6x EXPOSED PROC %s() --> as %s\n",
-                                (unsigned int) i,
-                                pentry->name,
-                                ((expose_constant *) entry)->index
-                        );
-                    }
+                else {
+                    fprintf(stream,
+                            "* 0x%.6x EXPOSED-PROC %s() --> as %s\n",
+                            (unsigned int) i,
+                            pentry->name,
+                            ((expose_proc_constant *) entry)->index
+                    );
                 }
                 break;
 
@@ -289,7 +287,7 @@ void disassemble(bin_space *pgm, FILE *stream) {
         switch(entry->type) {
             case PROC_CONST:
                 if ( ((proc_constant*)entry)->start == SIZE_MAX ) {
-                    eentry = (expose_constant *)(pgm->const_pool + ((proc_constant *) entry)->exposed);
+                    eentry = (expose_proc_constant *)(pgm->const_pool + ((proc_constant *) entry)->exposed);
                     fprintf(stream,
                             "%s() .expose=%s\n",
                             ((proc_constant *) entry)->name,
@@ -298,14 +296,12 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 }
                 break;
 
-            case EXPOSE_CONST:
-                if (((expose_constant*)entry)->procedure == SIZE_MAX) {
-                    fprintf(stream,
-                            "g%d .expose=%s\n",
-                            ((expose_constant *) entry)->global_reg,
-                            ((expose_constant *) entry)->index
-                    );
-                }
+            case EXPOSE_REG_CONST:
+                fprintf(stream,
+                        "g%d .expose=%s\n",
+                        ((expose_reg_constant *) entry)->global_reg,
+                        ((expose_reg_constant *) entry)->index
+                );
                 break;
 
             default: ;
@@ -327,7 +323,7 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 line_buffer[0] = 0;
             }
             else {
-                eentry = (expose_constant *)(pgm->const_pool +
+                eentry = (expose_proc_constant *)(pgm->const_pool +
                                              pentry->exposed);
                 locals = pentry->locals;
                 snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);

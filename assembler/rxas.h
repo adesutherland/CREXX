@@ -45,7 +45,7 @@ struct bin_space {
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, PROC_CONST, EXPOSE_CONST
+    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -73,14 +73,20 @@ typedef struct proc_constant {
     char name[1]; /* Must be last member */
 } proc_constant;
 
-/* cREXX External entry in the constant pool */
-typedef struct expose_constant {
+/* cREXX Exposed Register entry in the constant pool */
+typedef struct expose_reg_constant {
     chameleon_constant base;
     int global_reg;
+    char index[1]; /* Must be last member */
+} expose_reg_constant;
+
+/* cREXX Exposed Procedure entry in the constant pool */
+typedef struct expose_proc_constant {
+    chameleon_constant base;
     size_t procedure;
     unsigned char imported : 1;
     char index[1]; /* Must be last member */
-} expose_constant;
+} expose_proc_constant;
 
 typedef struct Assembler_Context {
     char *top, *cursor, *marker, *ctxmarker, *linestart;

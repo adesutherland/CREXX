@@ -209,7 +209,7 @@ void rxassetg(Assembler_Context *context, Token *globalsToken) {
 void rxasexre(Assembler_Context *context, Token *registerToken,
               Token *exposeToken) {
     size_t entry_size, entry_index;
-    expose_constant *centry;
+    expose_reg_constant *centry;
 
     if (registerToken->token_value.integer >= context->binary.globals)
         err_at(context, registerToken, "global register number bigger than the number of globals");
@@ -225,20 +225,18 @@ void rxasexre(Assembler_Context *context, Token *registerToken,
 
     /* Add the entry to the constants pool */
     entry_size =
-            sizeof(expose_constant) +
+            sizeof(expose_reg_constant) +
             strlen((char*)exposeToken->token_value.string);
 
     entry_index =
             reserve_in_const_pool(context, entry_size,
-                                  EXPOSE_CONST);
-    centry = (expose_constant *) (context->binary.const_pool +
+                                  EXPOSE_REG_CONST);
+    centry = (expose_reg_constant *) (context->binary.const_pool +
                                   entry_index);
     memcpy(centry->index, exposeToken->token_value.string,
            strlen((char*)exposeToken->token_value.string) + 1);
 
     centry->global_reg = (int)registerToken->token_value.integer;
-    centry->procedure = SIZE_MAX;
-    centry->imported = 0;
 }
 
 static void gen_instr(Assembler_Context *context, Instruction *inst) {
@@ -619,7 +617,7 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
 
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
-    expose_constant *centry;
+    expose_proc_constant *centry;
 
     /* Create Procedure Entry */
     pentry_index = define_proc(context, funcToken);
@@ -637,18 +635,17 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
 
     /* Add the entry to the constants pool */
     entry_size =
-            sizeof(expose_constant) +
+            sizeof(expose_proc_constant) +
             strlen((char*)exposeToken->token_value.string);
 
     entry_index =
             reserve_in_const_pool(context, entry_size,
-                                  EXPOSE_CONST);
-    centry = (expose_constant *) (context->binary.const_pool +
+                                  EXPOSE_PROC_CONST);
+    centry = (expose_proc_constant *) (context->binary.const_pool +
                                   entry_index);
     memcpy(centry->index, exposeToken->token_value.string,
            strlen((char*)exposeToken->token_value.string) + 1);
 
-    centry->global_reg = -1;
     centry->procedure = pentry_index;
     centry->imported = 0;
 
@@ -662,7 +659,7 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
 
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
-    expose_constant *centry;
+    expose_proc_constant *centry;
 
     /* Create Procedure Entry */
     pentry_index = define_proc(context, funcToken);
@@ -677,18 +674,17 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
 
     /* Add the entry to the constants pool */
     entry_size =
-            sizeof(expose_constant) +
+            sizeof(expose_proc_constant) +
             strlen((char*)exposeToken->token_value.string);
 
     entry_index =
             reserve_in_const_pool(context, entry_size,
-                                  EXPOSE_CONST);
-    centry = (expose_constant *) (context->binary.const_pool +
+                                  EXPOSE_PROC_CONST);
+    centry = (expose_proc_constant *) (context->binary.const_pool +
                                   entry_index);
     memcpy(centry->index, exposeToken->token_value.string,
            strlen((char*)exposeToken->token_value.string) + 1);
 
-    centry->global_reg = -1;
     centry->procedure = pentry_index;
     centry->imported = 1;
 
