@@ -94,6 +94,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     chameleon_constant *c_entry;
     proc_constant *p_entry, *p_entry_linked;
     struct avl_tree_node *exposed_tree = 0;
+    value *g_reg;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -110,19 +111,50 @@ int run(int num_modules, module *program, int argc, char *argv[],
             switch(c_entry->type) {
                 case PROC_CONST:
                     if ( ((proc_constant*)c_entry)->start != SIZE_MAX ) {
+                        /* Mark the owning module segment address */
                         ((proc_constant*)c_entry)->module = &program[mod_index].segment;
                     }
                     break;
                 case EXPOSE_CONST:
-                    p_entry = (proc_constant *)(program[mod_index].segment.const_pool
-                            + ((expose_constant*)c_entry)->procedure);
+                    if (((expose_constant*)c_entry)->procedure == SIZE_MAX) {
+                        /* Exposed Register */
+                        if (src_node(exposed_tree, ((expose_constant *)c_entry)->index,
+                                      (size_t*)&g_reg)) {
+                            /* Register already exposed / initialised */
+                            program[mod_index].globals[((expose_constant *)c_entry)->global_reg] =
+                                    g_reg;
+                        }
+                        else {
+                            /* Need to initialise a register and expose it in the search tree */
+                            program[mod_index].globals[i] =
+                                    value_int_f(program[mod_index].globals, 0);
+                            if (add_node(&exposed_tree,
+                                         ((expose_constant *) c_entry)->index,
+                                         (size_t)(program[mod_index].globals[i]))) {
+                                fprintf(stderr,
+                                        "Duplicate exposed register symbol: %s\n",
+                                        ((expose_constant *) c_entry)->index);
+                                exit(-1); /* Duplicate */
+                            }
+                        }
+                    }
+                    else {
+                        /* Exposed Procedure */
+                        p_entry =
+                                (proc_constant *) (
+                                        program[mod_index].segment.const_pool
+                                        + ((expose_constant *) c_entry)
+                                                ->procedure);
 
-                    if ( !((expose_constant *)c_entry)->imported ) {
-                        if (add_node(&exposed_tree, ((expose_constant *)c_entry)->index,
-                                     (size_t)p_entry)) {
-                            fprintf(stderr, "Duplicate exposed symbol: %s\n",
-                                    ((expose_constant *)c_entry)->index);
-                            exit(-1); /* Duplicate */
+                        if (!((expose_constant *) c_entry)->imported) {
+                            if (add_node(&exposed_tree,
+                                         ((expose_constant *) c_entry)->index,
+                                         (size_t) p_entry)) {
+                                fprintf(stderr,
+                                        "Duplicate exposed symbol: %s\n",
+                                        ((expose_constant *) c_entry)->index);
+                                exit(-1); /* Duplicate */
+                            }
                         }
                     }
                     break;

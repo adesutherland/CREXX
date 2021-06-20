@@ -12,6 +12,9 @@ main()         .locals=3
                load g1,100
                call say_g1()
 
+               load g0,101
+               call say_g0()
+
                load r0,"test - main() - calling func1()"
                ssay r0
                say "\n"
@@ -29,6 +32,7 @@ log()          .locals=1 .expose=my.log
                say "\n"
                ret
 
+
 say_g1()       .locals=1
                load r0,"g1="
                imaster g1
@@ -37,6 +41,8 @@ say_g1()       .locals=1
                ssay r0
                say "\n"
                ret
+
+say_g0()      .expose=global.say_g0
 
 func1()       .expose=global.func1
 

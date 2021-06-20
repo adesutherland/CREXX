@@ -1,4 +1,6 @@
-.globals=0
+.globals=1
+
+g0 .expose=my.global
 
 log()          .expose=my.log
 
@@ -6,4 +8,13 @@ func1()        .locals=3 .expose=global.func1
                load r1,1
                load r2,"In func1()"
                call r0,log(),r1
+               ret
+
+say_g0()       .locals=1 .expose=global.say_g0
+               load r0,"g0="
+               imaster g0
+               sprime g0
+               concat r0,r0,g0
+               ssay r0
+               say "\n"
                ret
