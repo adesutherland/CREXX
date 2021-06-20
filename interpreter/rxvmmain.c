@@ -16,7 +16,7 @@ static void help() {
 #else
             "        : Threaded Mode\n"
 #endif
-            "Usage   : rxvm [options] binary_file\n"
+            "Usage   : rxvm [options] binary_file [binary_file_2 ...] -a args ... \n"
             "Options :\n"
             "  -h              Prints help message\n"
             "  -c              Prints Copyright & License Details\n"
@@ -65,10 +65,11 @@ static void license() {
 int main(int argc, char *argv[]) {
 
     FILE *fp;
-    bin_space pgm;
+    module *pgm;
     char *file_name;
     int debug_mode = 0;
-    int i;
+    int i, j;
+    int num_modules;
     char *location = 0;
 
     /* Parse arguments  */
@@ -116,34 +117,65 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (i == argc) {
-        error_and_exit(2, "Missing input file");
+    num_modules = argc - i;
+    if (!num_modules) {
+        error_and_exit(2, "No input files");
     }
+    pgm = malloc(sizeof(module) * num_modules);
 
-    file_name = argv[i++];
+    for (j=0; j<num_modules; j++) {
 
-    fp = openfile(file_name, "rxbin", location, "rb");
-    if (!fp) {
-        fprintf(stderr, "ERROR opening file %s\n", file_name);
-        exit(-1);
+        file_name = argv[i++];
+        if (file_name[0] == '-') {
+            if (strlen(file_name) > 2) {
+                error_and_exit(2, "Invalid argument, expecting \"-a\"");
+            }
+            if (toupper((file_name[1])) != 'A') {
+                error_and_exit(2, "Invalid argument, expecting \"-a\"");
+            }
+            num_modules = j;
+            if (!num_modules) {
+                error_and_exit(2, "No input files before arguments");
+            }
+            break;
+        }
+
+        pgm[j].name = file_name;
+        fp = openfile(file_name, "rxbin", location, "rb");
+        if (!fp) {
+            fprintf(stderr, "ERROR opening file %s\n", file_name);
+            exit(-1);
+        }
+
+        fread(&pgm[j].segment.globals, 1, sizeof(int), fp);
+        fread(&pgm[j].segment.inst_size, 1, sizeof(size_t), fp);
+        fread(&pgm[j].segment.const_size, 1, sizeof(size_t), fp);
+
+        pgm[j].segment.binary = calloc(pgm[j].segment.inst_size, sizeof(bin_code));
+        pgm[j].segment.const_pool = calloc(pgm[j].segment.const_size, 1);
+
+        fread(pgm[j].segment.binary, sizeof(bin_code), pgm[j].segment.inst_size, fp);
+        fread(pgm[j].segment.const_pool, 1, pgm[j].segment.const_size, fp);
+
+        pgm[j].segment.module_index = j;
+        pgm[j].globals = calloc(pgm[j].segment.globals, sizeof(value));
+
+        fclose(fp);
     }
-
-    fread(&pgm.globals, 1, sizeof(int), fp);
-    fread(&pgm.inst_size, 1, sizeof(size_t), fp);
-    fread(&pgm.const_size, 1, sizeof(size_t), fp);
-
-    pgm.binary     = calloc(pgm.inst_size, sizeof(bin_code));
-    pgm.const_pool = calloc(pgm.const_size, 1);
-
-    fread(pgm.binary, sizeof(bin_code), pgm.inst_size, fp);
-    fread(pgm.const_pool, 1, pgm.const_size, fp);
-
-    fclose(fp);
 
     /* Run the program */
 #ifndef NDEBUG
     if (debug_mode) printf("Starting Execution\n");
 #endif
 
-    run(&pgm, argc - i, argv + i, debug_mode);
+    run(num_modules, pgm, argc - i, argv + i, debug_mode);
+
+    /* Free Memory */
+    for (j=0; j<num_modules; j++) {
+        free(pgm[j].segment.binary);
+        free(pgm[j].segment.const_pool);
+        free(pgm[j].globals);
+    }
+    free(pgm);
+    return 0;
 }

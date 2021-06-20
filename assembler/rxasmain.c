@@ -193,6 +193,8 @@ int main(int argc, char *argv[]) {
     scanner.string_constants_tree = 0;
     scanner.proc_constants_tree = 0;
     scanner.label_constants_tree = 0;
+    scanner.extern_constants_tree = 0;
+    scanner.extern_regs = 0;
 
     /* Pointer to the end of the buffer */
     buff_end = (char*) (((char*)buff) + bytes);

@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "platform.h"
 #include "rxas.h"
 #include "rxvminst.h"
@@ -151,11 +152,12 @@ typedef struct code_line {
  * to include and where to put the procedure details.
  * So we have to run through the code and flag where to add label and procedure
  * details - in sum, 2 passes */
-#define MAX_LINE_SIZE 5000
+#define MAX_LINE_SIZE 5000 /* TODO */
 void disassemble(bin_space *pgm, FILE *stream) {
     size_t i, j;
-    chameleon_constant* entry;
+    chameleon_constant *entry;
     proc_constant* pentry;
+    expose_proc_constant* eentry;
     char line_buffer[MAX_LINE_SIZE];
     size_t line_len;
 
@@ -216,36 +218,121 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 fprintf(stream, "* 0x%.6x STRING \"%s\"\n", (unsigned int)i, line_buffer);
                 break;
             case PROC_CONST:
-                fprintf(stream, "* 0x%.6x PROC   %s() @ 0x%.6x (locals=%d)\n", (unsigned int)i,
-                        ((proc_constant*)entry)->name,
-                        (unsigned int)((proc_constant*)entry)->start,
-                        ((proc_constant*)entry)->locals
-                );
-                source[((proc_constant*)entry)->start].flags = show_proc;
-                source[((proc_constant*)entry)->start].proc_index = i;
+                if ( ((proc_constant*)entry)->start == SIZE_MAX ) {
+                    fprintf(stream,
+                            "* 0x%.6x PROC   %s() exposed from external\n",
+                            (unsigned int) i,
+                            ((proc_constant *) entry)->name
+                    );
+                }
+                else {
+                    fprintf(stream,
+                            "* 0x%.6x PROC   %s() @ 0x%.6x (locals=%d)\n",
+                            (unsigned int) i,
+                            ((proc_constant *) entry)->name,
+                            (unsigned int) ((proc_constant *) entry)->start,
+                            ((proc_constant *) entry)->locals
+                    );
+                    source[((proc_constant *) entry)->start].flags = show_proc;
+                    source[((proc_constant *) entry)->start].proc_index = i;
+                }
+                break;
+
+            case EXPOSE_REG_CONST:
+                fprintf(stream,
+                        "* 0x%.6x EXPOSED-REG g%d <-> as %s\n",
+                        (unsigned int) i,
+                        ((expose_reg_constant *) entry)->global_reg,
+                        ((expose_reg_constant *) entry)->index);
+                break;
+
+            case EXPOSE_PROC_CONST:
+                pentry = (proc_constant *)(pgm->const_pool + ((expose_proc_constant*)entry)->procedure);
+
+                if (((expose_proc_constant *)entry)->imported) {
+                    fprintf(stream,
+                            "* 0x%.6x EXPOSED-PROC %s() <-- as %s\n",
+                            (unsigned int) i,
+                            pentry->name,
+                            ((expose_proc_constant *) entry)->index
+                        );
+                    }
+                else {
+                    fprintf(stream,
+                            "* 0x%.6x EXPOSED-PROC %s() --> as %s\n",
+                            (unsigned int) i,
+                            pentry->name,
+                            ((expose_proc_constant *) entry)->index
+                    );
+                }
                 break;
 
             default:
-                fprintf(stream, "* %0x.6x UNKNOWN \n", (unsigned int)i);
+                fprintf(stream, "* 0x%.6x UNKNOWN \n", (unsigned int)i);
         }
 
         i += entry->size_in_pool;
     }
 
-    /* Pass 2 - Generate listing output */
+    /* Pass 2a - Generate listing output - number of globals & header information */
     int globals = pgm->globals;
     int locals = 0;
     fprintf(stream, "\n* CODE SEGMENT - Size 0x%x\n", (unsigned int)pgm->inst_size);
     fprintf(stream, "\n.globals=%d\n", globals);
+
+    /* Pass 2b - Exposed Registers and procedures exposed from external modules */
+    i = 0;
+    while (i < pgm->const_size) {
+        entry = (chameleon_constant *)(pgm->const_pool + i);
+        switch(entry->type) {
+            case PROC_CONST:
+                if ( ((proc_constant*)entry)->start == SIZE_MAX ) {
+                    eentry = (expose_proc_constant *)(pgm->const_pool + ((proc_constant *) entry)->exposed);
+                    fprintf(stream,
+                            "%s() .expose=%s\n",
+                            ((proc_constant *) entry)->name,
+                            eentry->index
+                    );
+                }
+                break;
+
+            case EXPOSE_REG_CONST:
+                fprintf(stream,
+                        "g%d .expose=%s\n",
+                        ((expose_reg_constant *) entry)->global_reg,
+                        ((expose_reg_constant *) entry)->index
+                );
+                break;
+
+            default: ;
+        }
+
+        i += entry->size_in_pool;
+    }
+
+    /* Pass 2c - The assembler code itself */
     i = 0;
     while (i < pgm->inst_size) {
         if (source[i].flags == show_proc) {
             pentry = (proc_constant *)(pgm->const_pool +
                                        source[i].proc_index);
-            locals = pentry->locals;
-            snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
-            fprintf(stream, "\n%-15s.locals=%d\n", line_buffer, locals);
-            line_buffer[0] = 0;
+            if (pentry->exposed == SIZE_MAX) {
+                locals = pentry->locals;
+                snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
+                fprintf(stream, "\n%-15s .locals=%d\n", line_buffer, locals);
+                line_buffer[0] = 0;
+            }
+            else {
+                eentry = (expose_proc_constant *)(pgm->const_pool +
+                                             pentry->exposed);
+                locals = pentry->locals;
+                snprintf(line_buffer, MAX_LINE_SIZE, "%s()", pentry->name);
+                fprintf(stream, "\n%-15s .locals=%d .expose=%s\n",
+                        line_buffer,
+                        locals,
+                        eentry->index);
+                line_buffer[0] = 0;
+            }
         }
         else if (source[i].flags == show_label) {
             snprintf(line_buffer, MAX_LINE_SIZE, "lb_%x:", (unsigned int)i);
@@ -253,7 +340,7 @@ void disassemble(bin_space *pgm, FILE *stream) {
         else line_buffer[0] = 0;
         fprintf(stream, "%-15s",line_buffer);
             j = i++;
-            line_len = snprintf(line_buffer, MAX_LINE_SIZE, "%s ", source[j].inst->instruction);
+            line_len = snprintf(line_buffer, MAX_LINE_SIZE, " %s ", source[j].inst->instruction);
 
             switch(source[j].inst->operands) {
                 case 0:

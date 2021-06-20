@@ -1,6 +1,7 @@
 /* REXX ASSEMBLER               */
 /* The Assembler itself         */
 #include <string.h>
+#include <stdint.h>
 #include "platform.h"
 #include "rxasassm.h"
 #include "rxvminst.h"
@@ -26,6 +27,8 @@ void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
+    if (context->extern_constants_tree) free_tree(&context->extern_constants_tree);
+    if (context->extern_regs) free(context->extern_regs);
 }
 
 /* Backpatch Procedures, check references and free backpatch information */
@@ -170,9 +173,70 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
     return index;
 }
 
+/*
+ * Add an external index to the external tree
+ */
+static void add_extern_index(Assembler_Context *context, Token *token) {
+
+    size_t dummy;
+
+    /* Have we come across this symbol yet? */
+    if (src_node(context->extern_constants_tree,
+                 (char*)token->token_value.string,
+                 &dummy)) {
+        /* Yes - duplicate */
+        err_at(context, token, "duplicate exposed index");
+    }
+    else {
+        /* Create entry in the tree */
+        add_node(&context->extern_constants_tree,
+                 (char*)token->token_value.string,
+                 (size_t)dummy);
+    }
+}
+
 /* Set the number of globals */
 void rxassetg(Assembler_Context *context, Token *globalsToken) {
-    context->binary.globals = globalsToken->token_value.integer;
+    if (context->binary.globals)
+        err_at(context, globalsToken, "duplicate .globals directive (ignored)");
+    else {
+        context->binary.globals = (int) globalsToken->token_value.integer;
+        context->extern_regs = calloc(context->binary.globals, sizeof(char));
+    }
+}
+
+/* Expose a global register */
+void rxasexre(Assembler_Context *context, Token *registerToken,
+              Token *exposeToken) {
+    size_t entry_size, entry_index;
+    expose_reg_constant *centry;
+
+    if (registerToken->token_value.integer >= context->binary.globals)
+        err_at(context, registerToken, "global register number bigger than the number of globals");
+
+    /* Duplicate extern index check */
+    add_extern_index(context, exposeToken);
+
+    /* Duplicate register check */
+    if (context->extern_regs[(int)registerToken->token_value.integer]) {
+        err_at(context, registerToken, "duplicate exposed register");
+    }
+    else context->extern_regs[(int)registerToken->token_value.integer] = 1;
+
+    /* Add the entry to the constants pool */
+    entry_size =
+            sizeof(expose_reg_constant) +
+            strlen((char*)exposeToken->token_value.string);
+
+    entry_index =
+            reserve_in_const_pool(context, entry_size,
+                                  EXPOSE_REG_CONST);
+    centry = (expose_reg_constant *) (context->binary.const_pool +
+                                  entry_index);
+    memcpy(centry->index, exposeToken->token_value.string,
+           strlen((char*)exposeToken->token_value.string) + 1);
+
+    centry->global_reg = (int)registerToken->token_value.integer;
 }
 
 static void gen_instr(Assembler_Context *context, Instruction *inst) {
@@ -191,7 +255,7 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
         case ID:
             /* Have we come across this symbol yet? */
             if (src_node(context->label_constants_tree,
-                         operandToken->token_value.string,
+                         (char*)operandToken->token_value.string,
                          &entry_index)) {
                 /* Yes */
                 ref_header = (struct backpatching *)entry_index;
@@ -200,7 +264,7 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                 /* No - Create entry in the tree */
                 ref_header = malloc(sizeof(struct backpatching));
                 add_node(&context->label_constants_tree,
-                         operandToken->token_value.string,
+                         (char*)operandToken->token_value.string,
                          (size_t) ref_header);
 
                 ref_header->defined = 0;
@@ -222,36 +286,31 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                 context->binary.binary[context->binary.inst_size++].index = ref_header->index;
             }
             return;
-        case REG:
-            switch (operandToken->token_subtype) {
-                case 'r':
-                    if (operandToken->token_value.integer >= context->current_locals)
-                        err_at(context, operandToken, "register number bigger than the number of locals");
+        case RREG:
+            if (operandToken->token_value.integer >= context->current_locals)
+                err_at(context, operandToken, "register number bigger than the number of locals");
 
-                    context->binary.binary[context->binary.inst_size++].index =
-                        operandToken->token_value.integer;
-                    break;
-                case 'g':
-                    if (operandToken->token_value.integer >= context->binary.globals)
-                        err_at(context, operandToken, "global register number bigger than the number of globals");
+            context->binary.binary[context->binary.inst_size++].index =
+                    operandToken->token_value.integer;
+            return;
+        case GREG:
+            if (operandToken->token_value.integer >= context->binary.globals)
+                err_at(context, operandToken, "global register number bigger than the number of globals");
 
-                    context->binary.binary[context->binary.inst_size++].index =
-                            operandToken->token_value.integer +
-                            context->current_locals;
-                    break;
-                case 'a':
-                    context->binary.binary[context->binary.inst_size++].index =
-                            operandToken->token_value.integer +
-                                    context->current_locals +
-                                    context->binary.globals;
-                    break;
-
-            }
+            context->binary.binary[context->binary.inst_size++].index =
+                    operandToken->token_value.integer +
+                    context->current_locals;
+            return;
+        case AREG:
+            context->binary.binary[context->binary.inst_size++].index =
+                    operandToken->token_value.integer +
+                    context->current_locals +
+                    context->binary.globals;
             return;
         case FUNC:
             /* Have we come across this symbol yet? */
             if (src_node(context->proc_constants_tree,
-                         operandToken->token_value.string,
+                         (char*)operandToken->token_value.string,
                          &entry_index)) {
                 /* Yes */
                 ref_header = (struct backpatching *)entry_index;
@@ -260,21 +319,23 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                 /* No - Create entry in the tree */
                 ref_header = malloc(sizeof(struct backpatching));
                 add_node(&context->proc_constants_tree,
-                         operandToken->token_value.string,
+                         (char*)operandToken->token_value.string,
                          (size_t) ref_header);
 
                 /* Add the entry to the constants pool */
                 entry_size =
                         sizeof(proc_constant) +
-                        strlen(operandToken->token_value.string);
+                        strlen((char*)operandToken->token_value.string);
                 entry_index =
                         reserve_in_const_pool(context, entry_size,
                                               PROC_CONST);
                 centry = (proc_constant *) (context->binary.const_pool +
                                             entry_index);
-                centry->locals = 0;
-                centry->start = 0;
-                memcpy(centry->name, operandToken->token_value.string, strlen(operandToken->token_value.string) + 1 );
+                centry->locals = -1;
+                centry->start = SIZE_MAX;
+                centry->exposed = SIZE_MAX;
+                memcpy(centry->name, operandToken->token_value.string,
+                       strlen((char*)operandToken->token_value.string) + 1 );
 
                 ref_header->defined = 0;
                 ref_header->index = entry_index;
@@ -303,17 +364,17 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
             return;
         case CHAR:
             context->binary.binary[context->binary.inst_size++].cconst =
-                    operandToken->token_value.character;
+                    (char)operandToken->token_value.character;
             return;
         case STRING:
             /* Search if the constant already exists */
             if (!src_node(context->string_constants_tree,
-                         operandToken->token_value.string,
+                          (char*)operandToken->token_value.string,
                          &entry_index)) {
                 /* No it doesn't create one */
                 entry_size =
                         sizeof(string_constant) +
-                        strlen(operandToken->token_value.string);
+                        strlen((char*)operandToken->token_value.string);
                 entry_index =
                         reserve_in_const_pool(context, entry_size,
                                               STRING_CONST);
@@ -322,7 +383,7 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                         (string_constant *) (context->binary.const_pool +
                                              entry_index);
                 sentry->string_len = unescape_string(sentry->string,
-                                                     operandToken->token_value
+                                                     (char*)operandToken->token_value
                                                              .string);
                 sentry->string[sentry->string_len] =
                         0; /* Add a null ... just for safety */
@@ -331,7 +392,7 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
 
                 /* Save it in the tree */
                 add_node(&context->string_constants_tree,
-                         operandToken->token_value.string,
+                         (char*)operandToken->token_value.string,
                          entry_index);
             }
             context->binary.binary[context->binary.inst_size++].index = entry_index;
@@ -347,7 +408,10 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
 static OperandType token_to_operand_type(int token_type) {
     switch(token_type) {
         case ID: return OP_ID;
-        case REG: return OP_REG;
+        case RREG:
+        case GREG:
+        case AREG:
+            return OP_REG;
         case FUNC: return OP_FUNC;
         case INT: return OP_INT;
         case FLOAT: return OP_FLOAT;
@@ -364,12 +428,12 @@ static Instruction *validate_instruction(Assembler_Context* context, Token *inst
     char errorBuffer[MAX_ERROR_LENGTH];
     size_t i;
     Instruction *possible_inst, *next_possible_inst;
-    Instruction *inst = src_inst(instrToken->token_value.string, type1, type2, type3);
+    Instruction *inst = src_inst((char*)instrToken->token_value.string, type1, type2, type3);
 
     if (inst) return inst;
 
     /* Make a useful error message */
-    possible_inst = fst_inst(instrToken->token_value.string);
+    possible_inst = fst_inst((char*)instrToken->token_value.string);
     if (!possible_inst) err_at(context, instrToken, "invalid instruction mnemonic");
     else {
         strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
@@ -445,9 +509,7 @@ void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
     }
 }
 
-/* Procedures Definition */
-void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) {
-
+static size_t define_proc(Assembler_Context *context, Token *funcToken) {
     proc_constant *centry;
     size_t entry_index;
     size_t entry_size;
@@ -455,14 +517,14 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
 
     /* Have we come across this symbol yet? */
     if (src_node(context->proc_constants_tree,
-                 funcToken->token_value.string,
+                 (char*)funcToken->token_value.string,
                  &entry_index)) {
         /* Yes - check duplicate definition */
         ref_header = (struct backpatching *)entry_index;
         if (ref_header->defined) {
             err_at(context, funcToken, "duplicate procedure definition");
             /* TODO - Message, proc defined at ref_header->def_token */
-            return;
+            return 0;
         }
         centry = (proc_constant*)(context->binary.const_pool + ref_header->index);
     }
@@ -470,31 +532,50 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
         add_node(&context->proc_constants_tree,
-                 funcToken->token_value.string,
+                 (char*)funcToken->token_value.string,
                  (size_t)ref_header);
 
         /* Add the entry to the constants pool */
         entry_size =
                 sizeof(proc_constant) +
-                strlen(funcToken->token_value.string);
+                strlen((char*)funcToken->token_value.string);
         entry_index =
                 reserve_in_const_pool(context, entry_size,
                                       PROC_CONST);
         centry = (proc_constant *) (context->binary.const_pool +
                                     entry_index);
-        memcpy(centry->name, funcToken->token_value.string, strlen(funcToken->token_value.string) + 1);
+        memcpy(centry->name, funcToken->token_value.string, strlen((char*)funcToken->token_value.string) + 1);
         ref_header->refs = 0;
         ref_header->index = entry_index;
     }
 
     /* Add / update entry details */
-    centry->locals = localsToken->token_value.integer;
-    centry->start = context->binary.inst_size;
+    centry->locals = -1;
+    centry->start = SIZE_MAX;
+    centry->exposed = SIZE_MAX;
+
+    centry->module = 0;
     ref_header->defined = 1;
 //    ref_header->def_token = funcToken;
 
+    return ref_header->index;
+}
+
+/* Procedures Definition */
+void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) {
+
+    proc_constant *centry;
+    size_t entry_index;
+
+    entry_index = define_proc(context, funcToken);
+    centry = (proc_constant*)(context->binary.const_pool + entry_index);
+
+    /* Add / update entry details */
+    centry->locals = (int)localsToken->token_value.integer;
+    centry->start = context->binary.inst_size;
+
     /* Store the current number of locals */
-    context->current_locals = localsToken->token_value.integer;
+    context->current_locals = (int)localsToken->token_value.integer;
 }
 
 /* Label Definition */
@@ -504,7 +585,7 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
 
     /* Have we come across this symbol yet? */
     if (src_node(context->label_constants_tree,
-                 labelToken->token_value.string,
+                 (char*)labelToken->token_value.string,
                  &tree_index)) {
         /* Yes - check duplicate definition */
         ref_header = (struct backpatching *)tree_index;
@@ -518,7 +599,7 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
         add_node(&context->label_constants_tree,
-                 labelToken->token_value.string,
+                 (char*)labelToken->token_value.string,
                  (size_t)ref_header);
 
         ref_header->refs = 0;
@@ -528,4 +609,85 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
     ref_header->defined = 1;
 //    ref_header->def_token = labelToken;
     ref_header->index = context->binary.inst_size;
+}
+
+/* Define an exposed procedure */
+void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
+              Token *exposeToken) {
+
+    proc_constant *pentry;
+    size_t entry_size, entry_index, pentry_index;
+    expose_proc_constant *centry;
+
+    /* Create Procedure Entry */
+    pentry_index = define_proc(context, funcToken);
+    pentry = (proc_constant*)(context->binary.const_pool + pentry_index);
+
+    /* Add / update entry details */
+    pentry->locals = (int)localsToken->token_value.integer;
+    pentry->start = context->binary.inst_size;
+
+    /* Store the current number of locals */
+    context->current_locals = (int)localsToken->token_value.integer;
+
+    /* Duplicate extern index check */
+    add_extern_index(context, exposeToken);
+
+    /* Add the entry to the constants pool */
+    entry_size =
+            sizeof(expose_proc_constant) +
+            strlen((char*)exposeToken->token_value.string);
+
+    entry_index =
+            reserve_in_const_pool(context, entry_size,
+                                  EXPOSE_PROC_CONST);
+    centry = (expose_proc_constant *) (context->binary.const_pool +
+                                  entry_index);
+    memcpy(centry->index, exposeToken->token_value.string,
+           strlen((char*)exposeToken->token_value.string) + 1);
+
+    centry->procedure = pentry_index;
+    centry->imported = 0;
+
+    /* Proc Entry has a pointer to the external entry */
+    pentry->exposed = entry_index;
+}
+
+/* Declare a required / imported procedure */
+void rxasdecl(Assembler_Context *context, Token *funcToken,
+              Token *exposeToken) {
+
+    proc_constant *pentry;
+    size_t entry_size, entry_index, pentry_index;
+    expose_proc_constant *centry;
+
+    /* Create Procedure Entry */
+    pentry_index = define_proc(context, funcToken);
+    pentry = (proc_constant*)(context->binary.const_pool + pentry_index);
+
+    /* Add / update entry details */
+    pentry->locals = -1;
+    pentry->start = SIZE_MAX;
+
+    /* Duplicate extern index check */
+    add_extern_index(context, exposeToken);
+
+    /* Add the entry to the constants pool */
+    entry_size =
+            sizeof(expose_proc_constant) +
+            strlen((char*)exposeToken->token_value.string);
+
+    entry_index =
+            reserve_in_const_pool(context, entry_size,
+                                  EXPOSE_PROC_CONST);
+    centry = (expose_proc_constant *) (context->binary.const_pool +
+                                  entry_index);
+    memcpy(centry->index, exposeToken->token_value.string,
+           strlen((char*)exposeToken->token_value.string) + 1);
+
+    centry->procedure = pentry_index;
+    centry->imported = 1;
+
+    /* Proc Entry has a pointer to the external entry */
+    pentry->exposed = entry_index;
 }

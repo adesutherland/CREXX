@@ -38,13 +38,14 @@ struct bin_space {
     int globals;
     size_t inst_size;
     size_t const_size;
+    int module_index;
     bin_code *binary;
     unsigned char *const_pool;
 };
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, PROC_CONST
+    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -66,9 +67,26 @@ typedef struct string_constant {
 typedef struct proc_constant {
     chameleon_constant base;
     int locals;
+    bin_space *module;
     size_t start;
+    size_t exposed;
     char name[1]; /* Must be last member */
 } proc_constant;
+
+/* cREXX Exposed Register entry in the constant pool */
+typedef struct expose_reg_constant {
+    chameleon_constant base;
+    int global_reg;
+    char index[1]; /* Must be last member */
+} expose_reg_constant;
+
+/* cREXX Exposed Procedure entry in the constant pool */
+typedef struct expose_proc_constant {
+    chameleon_constant base;
+    size_t procedure;
+    unsigned char imported : 1;
+    char index[1]; /* Must be last member */
+} expose_proc_constant;
 
 typedef struct Assembler_Context {
     char *top, *cursor, *marker, *ctxmarker, *linestart;
@@ -83,6 +101,8 @@ typedef struct Assembler_Context {
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
+    struct avl_tree_node *extern_constants_tree;
+    char *extern_regs;
 } Assembler_Context;
 
 /* Token Functions */

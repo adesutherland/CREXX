@@ -20,8 +20,6 @@ essence of REXX:
 CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
 and it will also run on Linux, Windows, OSX, and z/Architecture.
 
-Please see our [project aims](Project-Aims).
-
 ## Wiki Based Documentation
 
 This represents the latest thoughts, aims, architecture, designs and details; some of this may have been built, some things may have been built to older designs and some may just be a future wish. This is the place where we are developing the cREXX Architecture.
@@ -42,7 +40,7 @@ The documentation is stored in the code repository/branch under the [/doc](https
 
 # Current Component User Documentation
 
-Version 0.1.4
+cREXX-Phase-0 v0.1.6-f0017
 
 ## Running a REXX program
 
@@ -68,6 +66,8 @@ Type
 for command format / options
 
 ## Assembler
+
+See [REXX Assembler Specification](assembler).
 
 Type
 

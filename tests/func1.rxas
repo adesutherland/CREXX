@@ -1,0 +1,20 @@
+.globals=1
+
+g0 .expose=my.exposed_global
+
+log()          .expose=my.log
+
+func1()        .locals=3 .expose=global.func1
+               load r1,1
+               load r2,"In func1()"
+               call r0,log(),r1
+               ret
+
+say_exposed_g()       .locals=1 .expose=global.say_exposed_g
+               load r0,"exposed global="
+               imaster g0
+               sprime g0
+               concat r0,r0,g0
+               ssay r0
+               say "\n"
+               ret

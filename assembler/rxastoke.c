@@ -87,7 +87,9 @@ Token* token_f(Assembler_Context* context, int type) {
             token->token_value.string[token->length] = 0;
             for (c = token->token_value.string; *c; ++c) *c = (char) tolower(*c);
             break;
-        case REG:
+        case RREG:
+        case GREG:
+        case AREG:
             /* Need to null terminate */
             buffer = malloc(token->length);
             memcpy(buffer, token->token_source + 1, token->length - 1);
@@ -137,7 +139,9 @@ void prnt_tok(Token* token) {
         case CHAR:
             printf("[%c] ", token->token_value.character);
             break;
-        case REG:
+        case RREG:
+        case AREG:
+        case GREG:
             printf("[%c%d] ", token->token_subtype, (int) token->token_value.integer);
             break;
         case LABEL:
