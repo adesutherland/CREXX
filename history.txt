@@ -2,6 +2,7 @@ CREXX History / Change Log
 
 F0022 - Feature - UTF
         Feature - Long Strings
+        Fix - Faster end-of-source detection
 F0017 - Feature - Linking Multiple Modules
 I0053 - Fix Issue 53 - String Concat Errors
       - Deprecate SAY REG and replace with SSAY REG (String only)

@@ -13,11 +13,12 @@ int opt_scan(Context* s) {
     int depth;
 
     regular:
+    /*
     if (s->cursor >= s->buff_end) {
         return TK_EOS;
     }
     s->top = s->cursor;
-
+    */
 /*!re2c
     re2c:yyfill:enable = 0;
 
@@ -45,7 +46,10 @@ int opt_scan(Context* s) {
     'LEVELL' { return(TK_LEVELL); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
-    whitespace { goto regular; }
+    whitespace {
+        s->top = s->cursor;
+        goto regular;
+    }
     ";" { return(TK_EOC); }
     "\r\n" {
         s->line++;
@@ -63,7 +67,10 @@ int opt_scan(Context* s) {
     comment:
 /*!re2c
     "*/" {
-        if(--depth == 0) goto regular;
+        if(--depth == 0) {
+            s->top = s->cursor;
+            goto regular;
+        }
         else goto comment;
     }
     "\n" {

@@ -18,10 +18,12 @@ int rexbscan(Context* s) {
     int depth;
 
     regular:
+    /*
     if (s->cursor >= s->buff_end) {
         return TK_EOS;
     }
     s->top = s->cursor;
+    */
 
 /*!re2c
   re2c:yyfill:enable = 0;
@@ -150,7 +152,10 @@ int rexbscan(Context* s) {
   str [bB] / (all\symchr) { return(TK_STRING); }
   str [xX] / (all\symchr) { return(TK_STRING); }
   eof { return(TK_EOS); }
-  whitespace { goto regular; }
+  whitespace {
+    s->top = s->cursor;
+    goto regular;
+  }
   "\r\n" {
      s->line++;
      s->linestart = s->cursor+2;
@@ -168,7 +173,10 @@ int rexbscan(Context* s) {
     comment:
 /*!re2c
   "*/" {
-    if(--depth == 0) goto regular;
+    if(--depth == 0) {
+        s->top = s->cursor;
+        goto regular;
+    }
     else goto comment;
   }
   "\n" {
