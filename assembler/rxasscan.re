@@ -13,36 +13,38 @@
 int scan(Assembler_Context* s, char *buff_end) {
     int depth;
 
+    /* Defines Unicode Character Categories like L = letter  */
+    /*!include:re2c "../re2c/include/unicode_categories.re" */
+
     regular:
+
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:flags:utf-8 = 1;
 
     whitespace = [ \t\v\f]+;
     digit = [0-9];
-    letter = [a-zA-Z];
-    any = [\x01-\xFF];
-    eof = [\x00];
+/*    L = [a-zA-Z]; */
+    eol = "\r\n" | [\r] | [\n];
+    eof = [\000] ;
+    any = [^] \ eof ;
+
     slit = ["] ( (any\["\n\r]) | ( [\\]["] ) )* ["];
-    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\['\n\r]) [']);
+    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\[\n\r]) [']);
     float = [-+]? (digit* "." digit+ | digit+ ".");
     integer = [-+]? digit+;
     rreg = 'r' digit+;
     greg = 'g' digit+;
     areg = 'a' digit+;
-    id = (letter | [_]) (letter | digit | [_-.])*;
+    id = (L | [_]) (L | digit | [_-.])*;
 
     "/*" {
       depth = 1;
       goto comment;
     }
-    "\r\n" {
+    eol {
        s->line++;
        s->linestart = s->cursor+1;
-       return(NEWLINE);
-    }
-    [\r] | [\n] {
-       s->line++;
-       s->linestart = s->cursor;
        return(NEWLINE);
     }
     "*" [^\r\n]* { goto regular; }

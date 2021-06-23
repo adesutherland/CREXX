@@ -4,7 +4,7 @@ g1 .expose=my.exposed_global
 
 main()         .locals=3
                load r1,"Hello"
-               load r2,"Rene"
+               load r2,"René"
                sconcat r2,r1,r2
                ssay r2
                say "\n"
@@ -25,7 +25,7 @@ main()         .locals=3
                call func2()
                ret
 
-log()          .locals=1 .expose=my.log
+logRené()          .locals=1 .expose=my.log
                load r0,"Log: "
                ssay r0
                ssay a1
