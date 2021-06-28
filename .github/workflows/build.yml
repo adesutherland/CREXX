@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxasscan.c.s370
-          path: s370/rxasscan.c
+          path: S370/rxasscan.c
 
       - name: Upload rxasgrmr.c
         uses: actions/upload-artifact@v2
@@ -134,7 +134,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxcposcn.c.s370
-          path: s370/rxcposcn.c
+          path: S370/rxcposcn.c
 
       - name: Upload rxcpopgr.c
         uses: actions/upload-artifact@v2
@@ -158,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rexbscan.c.s370
-          path: s370/rexbscan.c
+          path: S370/rexbscan.c
 
       - name: Upload rxcpbgmr.c
         uses: actions/upload-artifact@v2
@@ -200,7 +200,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: rxasscan.c.s370
-        path: s370/rxasscan.c
+        path: S370/rxasscan.c
 
     - name: Download rxasgrmr.c
       uses: actions/download-artifact@v2
@@ -217,7 +217,7 @@ jobs:
     - name: Download rxcposcn.c.s370
       uses: actions/download-artifact@v2
       with:
-        name: s370/rxcposcn.c
+        name: S370/rxcposcn.c
         path: compiler
 
     - name: Download rxcpopgr.c
@@ -235,7 +235,7 @@ jobs:
     - name: Download rexbscan.c.s370
       uses: actions/download-artifact@v2
       with:
-        name: s370/rexbscan.c
+        name: S370/rexbscan.c
         path: compiler
 
     - name: Download rxcpbgmr.c
