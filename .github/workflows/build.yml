@@ -203,7 +203,9 @@ jobs:
         path: S370
 
     - name: Rename rxasscan.c.s370
-      run: mv S370/rxasscan.c.s370 S370/rxasscan.c
+      run: |
+        pwd
+        mv ./S370/rxasscan.c.s370 ./S370/rxasscan.c
       shell: bash
 
     - name: Download rxasgrmr.c
@@ -225,7 +227,7 @@ jobs:
         path: S370
 
     - name: Rename rxcposcn.c.s370
-      run: mv S370/rxcposcn.c.s370 S370/rxcposcn.c
+      run: mv ./S370/rxcposcn.c.s370 ./S370/rxcposcn.c
       shell: bash
 
     - name: Download rxcpopgr.c
@@ -247,7 +249,7 @@ jobs:
         path: S370
 
     - name: Rename rexbscan.c.s370
-      run: mv S370/rexbscan.c.s370 S370/rexbscan.c
+      run: mv ./S370/rexbscan.c.s370 ./S370/rexbscan.c
       shell: bash
 
     - name: Download rxcpbgmr.c
