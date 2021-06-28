@@ -217,8 +217,8 @@ jobs:
     - name: Download rxcposcn.c.s370
       uses: actions/download-artifact@v2
       with:
-        name: S370/rxcposcn.c
-        path: compiler
+        name: rxcposcn.c.s370
+        path: S370/rxcposcn.c
 
     - name: Download rxcpopgr.c
       uses: actions/download-artifact@v2
@@ -235,8 +235,8 @@ jobs:
     - name: Download rexbscan.c.s370
       uses: actions/download-artifact@v2
       with:
-        name: S370/rexbscan.c
-        path: compiler
+        name: rexbscan.c.s370
+        path: S370/rexbscan.c
 
     - name: Download rxcpbgmr.c
       uses: actions/download-artifact@v2
