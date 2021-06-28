@@ -205,7 +205,11 @@ jobs:
     - name: Rename rxasscan.c.s370
       run: |
         pwd
-        cp ./S370/rxasscan.c.s370 ./S370/rxasscan.c
+        ls -l
+        ls S370
+        ls -l S370
+        ls -l S370/rxasscan.c.s370
+        mv S370/rxasscan.c.s370 S370/rxasscan.c
       shell: bash
 
     - name: Download rxasgrmr.c
