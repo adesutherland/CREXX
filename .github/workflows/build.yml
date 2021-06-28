@@ -73,9 +73,9 @@ jobs:
 
       - name: Build CMS lexers
         run: |
-          ${{ runner.temp }}/release/re2c/re2c -I s370 -o s370/rxasscan.c assembler/rxasscan.re
-          ${{ runner.temp }}/release/re2c/re2c -I s370 -o s370/rxcposcn.c compiler/rxcposcn.re
-          ${{ runner.temp }}/release/re2c/re2c -I s370 -o s370/rexbscan.c compiler/rxcpbscn.re
+          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rxasscan.c assembler/rxasscan.re
+          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rxcposcn.c compiler/rxcposcn.re
+          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rexbscan.c compiler/rxcpbscn.re
         shell: bash
 
       - name: Upload Executable
