@@ -202,16 +202,6 @@ jobs:
         name: rxasscan.c.s370
         path: S370
 
-    - name: Rename rxasscan.c.s370
-      run: |
-        pwd
-        ls -l
-        ls S370
-        ls -l S370
-        ls -l S370/rxasscan.c.s370
-        mv S370/rxasscan.c.s370 S370/rxasscan.c
-      shell: bash
-
     - name: Download rxasgrmr.c
       uses: actions/download-artifact@v2
       with:
@@ -230,10 +220,6 @@ jobs:
         name: rxcposcn.c.s370
         path: S370
 
-    - name: Rename rxcposcn.c.s370
-      run: mv ./S370/rxcposcn.c.s370 ./S370/rxcposcn.c
-      shell: bash
-
     - name: Download rxcpopgr.c
       uses: actions/download-artifact@v2
       with:
@@ -251,10 +237,6 @@ jobs:
       with:
         name: rexbscan.c.s370
         path: S370
-
-    - name: Rename rexbscan.c.s370
-      run: mv ./S370/rexbscan.c.s370 ./S370/rexbscan.c
-      shell: bash
 
     - name: Download rxcpbgmr.c
       uses: actions/download-artifact@v2
