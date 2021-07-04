@@ -5,6 +5,10 @@
 #ifndef CREXX_RXVMVARS_H
 #define CREXX_RXVMVARS_H
 
+#ifndef NUTF8
+#include "utf.h"
+#endif
+
 //#include "rx_intrp.h"
 
 //#define SMALL_STRING_BUFFER 24
@@ -186,6 +190,25 @@ static void set_conststring(value *v, string_constant *value) {
     v->status.primed_string = 1;
     v->string_length = value->string_len;
     memcpy(v->string_value, value->string,  v->string_length);
+}
+
+static void string_concat_char(value *v1, value *v2) {
+    int char_size;
+    size_t len;
+    char *insert_at;
+#ifdef NUTF8
+    char_size = 1;
+#else
+    char_size = utf8codepointsize(v2->int_value);
+#endif
+    insert_at = v1->string_value + v1->string_length;
+    len = v1->string_length + char_size;
+    extend_string_buffer(v1,len);
+#ifdef NUTF8
+    *insert_at = (unsigned char)v2->int_value;
+#else
+    utf8catcodepoint(insert_at, v2->int_value, char_size);
+#endif
 }
 
 /* Calculate the string value */

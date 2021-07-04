@@ -4,9 +4,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "platform.h"
 #include "rxcpmain.h"
 #include "../avl_tree/avl_tree.h"
 #include "rxcpdary.h"
+
+#ifndef NUTF8
+#include "utf.h"
+#endif
 
 /* Frees a symbol */
 static void symbol_free(Symbol *symbol);
@@ -167,8 +172,13 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->name = (char*)malloc(node->node_string_length + 1);
     memcpy(symbol->name, node->node_string, node->node_string_length);
     symbol->name[node->node_string_length] = 0;
-    /* Lowercase symbol name */
-    for (c = symbol->name ; *c; ++c) *c = (char)tolower(*c);
+
+    /* Uppercase symbol name */
+#ifdef NUTF8
+    for (c = symbol->name ; *c; ++c) *c = (char)toupper(*c);
+#else
+    utf8upr(symbol->name);
+#endif
     symbol->ast_node_array = dpa_f();
 
     /* Returns 1 on duplicate */
@@ -189,8 +199,13 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
-    /* Lowercase symbol name */
-    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+
+    /* Uppercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)toupper(*c);
+#else
+    utf8upr(name);
+#endif
 
     result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
 

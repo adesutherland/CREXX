@@ -5,9 +5,7 @@
 #ifndef CREXX_RXVMINST_H
 #define CREXX_RXVMINST_H
 
-#ifdef __CMS__
-#include "cms.h"
-#endif
+#include "platform.h"
 
 typedef enum OperandType
 {

@@ -5,4 +5,5 @@
 
 /*!re2c
 letter = L;
+whitespace = Zs+;
 */

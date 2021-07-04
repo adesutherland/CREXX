@@ -22,9 +22,9 @@ int scan(Assembler_Context* s, char *buff_end) {
     /*!include:re2c "encoding.re" */
 
 /*!re2c
-    whitespace = [ \t\v\f]+;
     digit = [0-9];
-    eol = "\r\n" | [\r] | [\n];
+    eol2 = "\r\n";
+    eol1 = [\r] | [\n];
     eof = [\000] ;
     any = [^] \ eof ;
 
@@ -41,11 +41,17 @@ int scan(Assembler_Context* s, char *buff_end) {
       depth = 1;
       goto comment;
     }
-    eol {
+    eol1 {
        s->line++;
        s->linestart = s->cursor+1;
        return(NEWLINE);
     }
+    eol2 {
+       s->line++;
+       s->linestart = s->cursor+2;
+       return(NEWLINE);
+    }
+
     "*" [^\r\n]* { goto regular; }
 
     float {return(FLOAT);}

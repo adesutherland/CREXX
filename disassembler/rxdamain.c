@@ -70,13 +70,9 @@ int main(int argc, char *argv[]) {
     FILE *output = stdout;
     int i;
 
-
-//    setlocale(LC_ALL, "en_US.UTF-8");
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
 #endif
-//    _setmode(_fileno(stdout), _O_U8TEXT);
-    printf("René\n");
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

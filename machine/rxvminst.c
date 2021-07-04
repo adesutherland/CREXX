@@ -64,13 +64,6 @@ void init_ops() {
     instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
 
-    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
-    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
-    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
-    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
-
     instr_f("inc", "Increment Int (op1++)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dec", "Decrement Int (op1--)", OP_REG, OP_NONE, OP_NONE);
     instr_f("inc0", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
@@ -80,11 +73,25 @@ void init_ops() {
     instr_f("inc2", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
     instr_f("dec2", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
 
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("appendchar", "Append Concat Char op2 (as int) on op1", OP_REG, OP_REG, OP_NONE);
+
     instr_f("triml", "Trim String (op1) from Left by (op2) Chars", OP_REG, OP_REG, OP_NONE);
     instr_f("trimr", "Trim String (op1) from Right by (op2) Chars", OP_REG, OP_REG, OP_NONE);
+    instr_f("trunc", "Trunc String (op1) to (op2) Chars", OP_REG, OP_REG, OP_NONE);
+    instr_f("triml", "Trim String (op2) from Left by (op3) Chars into op1", OP_REG, OP_REG, OP_REG);
+    instr_f("trimr", "Trim String (op2) from Right by (op3) Chars into op1", OP_REG, OP_REG, OP_REG);
+    instr_f("trunc", "Trunc String (op2) to (op3) Chars into op1", OP_REG, OP_REG, OP_REG);
     instr_f("strlen", "String Length op1 = length(op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("str2char", "String to Char op1 = op2[op3]", OP_REG, OP_REG, OP_REG);
-    instr_f("str2int", "String to Int op1 = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("strchar", "Int op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("strchar", "Int op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
+    instr_f("strpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
 
     instr_f("ieq", "Int Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("ieq", "Int Equals op1=(op2==op3)", OP_REG, OP_REG, OP_INT);
@@ -103,14 +110,10 @@ void init_ops() {
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_INT);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_INT, OP_REG);
 
-    instr_f("iprime", "Int Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("fprime", "Float Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("sprime", "String Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("cprime", "Char Prime op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-
-    instr_f("imaster", "Make int the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("fmaster", "Make float the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("smaster", "Make string the master value for op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_STRING);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
 
@@ -143,8 +146,6 @@ void init_ops() {
     instr_f("brt", "Branch to op1 if op2 true", OP_ID, OP_REG, OP_NONE);
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
 
-    instr_f("init", "Initialize op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("free", "Free op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("move", "Move op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("copy", "Copy op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
@@ -156,7 +157,6 @@ void init_ops() {
     instr_f("load", "Load op1 with op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_CHAR, OP_NONE);
 
-    instr_f("say", "Say op1 (depreciated)", OP_REG, OP_NONE, OP_NONE);
     instr_f("ssay", "String Say op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
@@ -166,6 +166,9 @@ void init_ops() {
     instr_f("exit", "Exit", OP_NONE, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_INT, OP_NONE, OP_NONE);
+
+    instr_f("itos", "Set register string value from its int value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;

@@ -25,7 +25,7 @@ main()         .locals=3
                call func2()
                ret
 
-logRené()          .locals=1 .expose=my.log
+log()          .locals=1 .expose=my.log
                load r0,"Log: "
                ssay r0
                ssay a1
@@ -35,8 +35,7 @@ logRené()          .locals=1 .expose=my.log
 
 say_module_g()   .locals=1
                load r0,"module global="
-               imaster g0
-               sprime g0
+               itos g0
                concat r0,r0,g0
                ssay r0
                say "\n"
