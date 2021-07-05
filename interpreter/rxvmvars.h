@@ -9,47 +9,32 @@
 #include "utf.h"
 #endif
 
-//#include "rx_intrp.h"
-
-//#define SMALL_STRING_BUFFER 24
-#define SMALL_STRING_BUFFER 81
-#define EXTEND_STRING_BUFFER 300
+#define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
-typedef struct string_extend_buffer string_extend_buffer;
-
-struct string_extend_buffer {
-    size_t buffer_size;
-    char buffer[EXTEND_STRING_BUFFER];
-    /*
-    char buffer[EXTEND_STRING_BUFFER];
-    string_extend_buffer *next;
-    string_extend_buffer *prev;
-    value *owning_value;*/
-};
 
 typedef union {
     struct {
-        unsigned int primed_int : 1;
-        unsigned int primed_float : 1;
-        unsigned int primed_decimal : 1;
-        unsigned int primed_string : 1;
-        unsigned int is_object : 1; /* Objects aren't primed as such */
+        unsigned int type_object : 1;
+        unsigned int type_string : 1;
+        unsigned int type_decimal : 1;
+        unsigned int type_float : 1;
+        unsigned int type_int : 1;
     };
-    unsigned int all_flags;;
-} value_status;
+    unsigned int all_type_flags;
+} value_type;
 
 struct value {
-    /* bit field to store value status */
-    value_status status;
+    /* bit field to store value status - these are explicitly set (not automatic at all) */
+    value_type status;
 
     /* Value */
     rxinteger int_value;
     double float_value;
     void *decimal_value; /* TODO */
-    char string_value[SMALL_STRING_BUFFER];
+    char *string_value;
     size_t string_length;
-    string_extend_buffer *string_extend; /* TODO */
+    size_t string_buffer_length;
     void *object_value;
 
     /*
@@ -76,56 +61,205 @@ static value* value_f(void* parent) {
 static value* value_int_f(void* parent, rxinteger initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->owner = parent;
-    this->status.primed_int = 1;
     this->int_value = initial_value;
     return this;
 }
 static value* value_float_f(void* parent, double initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->owner = parent;
-    this->status.primed_float = 1;
     this->float_value = initial_value;
     return this;
 }
 
+/*
+ * Returns required buffer size - the smallest power of two that's greater or
+ * equal to a given value
+ */
+static size_t buffer_size(size_t value) {
+    size_t i;
+    if (value <= SMALLEST_STRING_BUFFER_LENGTH)
+        return SMALLEST_STRING_BUFFER_LENGTH;
+
+    --value;
+    for(i = 1; i < sizeof(size_t); i*=2)
+        value |= value >> i;
+    return value+1;
+}
+
 /* value factories - constant string value */
 static value* value_conststring_f(void* parent, string_constant *initial_value) {
-    /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->owner = parent;
-    this->status.primed_string = 1;
     this->string_length = initial_value->string_len;
+    this->string_buffer_length = buffer_size(this->string_length);
+    this->string_value = malloc(this->string_buffer_length);
     memcpy(this->string_value, initial_value->string,  this->string_length);
     return this;
 }
 
 /* value factories - null string value */
 static value* value_nullstring_f(void* parent, char *initial_value) {
-    /* TODO Handle strings > 24 characters! */
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->owner = parent;
-    this->status.primed_string = 1;
     this->string_length = strlen(initial_value);
+    this->string_buffer_length = buffer_size(this->string_length);
+    this->string_value = malloc(this->string_buffer_length);
     memcpy(this->string_value, initial_value,  this->string_length);
     return this;
 }
 
 static void free_value(void* parent, value *v) {
     if (v && v->owner == parent) {
-        /* TODO string extensions and other complexities */
+        if (v->string_value) free(v->string_value);
         free(v);
     }
 }
 
+/* Int Flag */
+static void set_type_int(value *v) {
+    v->status.all_type_flags = 0;
+    v->status.type_int = 1;
+}
+
+static void add_type_int(value *v) {
+    v->status.type_int = 1;
+}
+
+static unsigned int get_type_int(value *v) {
+    return v->status.type_int;
+}
+
+/* Float Flag */
+static void set_type_float(value *v) {
+    v->status.all_type_flags = 0;
+    v->status.type_float = 1;
+}
+
+static void add_type_float(value *v) {
+    v->status.type_float = 1;
+}
+
+static unsigned int get_type_float(value *v) {
+    return v->status.type_float;
+}
+
+/* Decimal Flag */
+static void set_type_decimal(value *v) {
+    v->status.all_type_flags = 0;
+    v->status.type_decimal = 1;
+}
+
+static void add_type_decimal(value *v) {
+    v->status.type_decimal = 1;
+}
+
+static unsigned int get_type_decimal(value *v) {
+    return v->status.type_decimal;
+}
+
+/* String Flag */
+static void set_type_string(value *v) {
+    v->status.all_type_flags = 0;
+    v->status.type_string = 1;
+}
+
+static void add_type_string(value *v) {
+    v->status.type_string = 1;
+}
+
+static unsigned int get_type_string(value *v) {
+    return v->status.type_string;
+}
+
+/* Object Flag */
+static void set_type_object(value *v) {
+    v->status.all_type_flags = 0;
+    v->status.type_object = 1;
+}
+
+static void add_type_object(value *v) {
+    v->status.type_object = 1;
+}
+
+static unsigned int get_type_object(value *v) {
+    return v->status.type_object;
+}
+
+/* Unset Flag */
+static void unset_type(value *v) {
+    v->status.all_type_flags = 0;
+}
+
 static void set_int(value *v, rxinteger value) {
-    v->status.all_flags = 0;
-    v->status.primed_int = 1;
     v->int_value = value;
 }
 static void set_float(value *v, double value) {
-    v->status.all_flags = 0;
-    v->status.primed_float = 1;
     v->float_value = value;
+}
+
+static void prep_string_buffer(value *v, size_t length) {
+    v->string_length = length;
+    if (v->string_value) {
+        if (v->string_length > v->string_buffer_length) {
+            free(v->string_value);
+            v->string_buffer_length = buffer_size(v->string_length);
+            v->string_value = malloc(v->string_buffer_length);
+        }
+    }
+    else {
+        v->string_buffer_length = buffer_size(v->string_length);
+        v->string_value = malloc(v->string_buffer_length);
+    }
+}
+
+static void extend_string_buffer(value *v, size_t length) {
+    v->string_length = length;
+    if (v->string_value) {
+        if (v->string_length > v->string_buffer_length) {
+            v->string_buffer_length = buffer_size(v->string_length);
+            v->string_value = realloc(v->string_value, v->string_buffer_length);
+        }
+    }
+    else {
+        v->string_buffer_length = buffer_size(v->string_length);
+        v->string_value = malloc(v->string_buffer_length);
+    }
+}
+
+static void set_string(value *v, char *value, size_t length) {
+    prep_string_buffer(v,length);
+    memcpy(v->string_value, value, v->string_length);
+}
+
+static void set_const_string(value *v, string_constant *from) {
+    set_string(v, from->string,  from->string_len);
+}
+
+static void set_value_string(value *v, value *from) {
+    set_string(v, from->string_value,  from->string_length);
+}
+
+static void set_buffer_string(value *v, char *buffer, size_t length, size_t buffer_length) {
+    if (v->string_value) free(v->string_value);
+    v->string_value = buffer;
+    v->string_length = length;
+    v->string_buffer_length = buffer_length;
+}
+
+static int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
+    if (length1 > length2) return 1;
+    if (length1 < length2) return -1;
+    return strncmp(value1, value2, length1);
+}
+
+static int string_cmp_value(value *v1, value *v2) {
+    return string_cmp(v1->string_value, v1->string_length,
+                      v2->string_value, v2->string_length);
+}
+
+static int string_cmp_const(value *v1, string_constant *v2) {
+    return string_cmp(v1->string_value, v1->string_length,
+                      v2->string, v2->string_len);
 }
 
 /*
@@ -135,61 +269,25 @@ static void set_float(value *v, double value) {
  */
 static void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length;
-    char *buffer = malloc(len);
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
 
     memcpy(buffer, v2->string_value, v2->string_length);
     memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
 
-    /* TODO Need to fix for large strings */
-    if (len > SMALL_STRING_BUFFER) len = SMALL_STRING_BUFFER;
-
-    memcpy(v1->string_value, buffer, len);
-    v1->string_length = len;
-    free(buffer);
+    set_buffer_string(v1, buffer, len, buffer_len);
 }
 
 static void string_sconcat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length + 1;
-    char *buffer = malloc(len);
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
 
     memcpy(buffer, v2->string_value, v2->string_length);
     buffer[v2->string_length] = ' ';
     memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
 
-    /* TODO Need to fix for large strings */
-    if (len > SMALL_STRING_BUFFER) len = SMALL_STRING_BUFFER;
-
-    memcpy(v1->string_value, buffer, len);
-    v1->string_length = len;
-    free(buffer);
-}
-
-/* This resets the variable flag so that only the matser type flag is set.
- * This allow the value to have multiple fast updates without
- * having to consider the status. When the series of changes are done the flags
- * can be reset to allow another buffer to be primed (like string for printing)
- * (Deprecated)
- */
-static void master_int(value *v) {
-    v->status.all_flags = 0;
-    v->status.primed_int = 1;
-}
-
-static void master_float(value *v) {
-    v->status.all_flags = 0;
-    v->status.primed_float = 1;
-}
-
-static void master_string(value *v) {
-    v->status.all_flags = 0;
-    v->status.primed_string = 1;
-}
-
-static void set_conststring(value *v, string_constant *value) {
-    v->status.all_flags = 0;
-    v->status.primed_string = 1;
-    v->string_length = value->string_len;
-    memcpy(v->string_value, value->string,  v->string_length);
+    set_buffer_string(v1, buffer, len, buffer_len);
 }
 
 static void string_concat_char(value *v1, value *v2) {
@@ -212,22 +310,20 @@ static void string_concat_char(value *v1, value *v2) {
 }
 
 /* Calculate the string value */
-static void prime_string(value *v) {
-    if (v->status.primed_string) return;
-    if (v->status.primed_int) {
-        /* TODO clear extended string data */
+static void string_from_int(value *v) {
+    prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
 #ifdef __32BIT__
-        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%ld",v->int_value);
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",v->int_value);
 #else
-        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%lld",v->int_value);
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",v->int_value);
 #endif
-        v->status.primed_string = 1;
-    }
-    else if (v->status.primed_float) {
-        /* TODO clear extended string data */
-        v->string_length = snprintf(v->string_value,SMALL_STRING_BUFFER,"%g",v->float_value);
-        v->status.primed_string = 1;
-    }
+}
+
+/* Calculate the string value */
+static void string_from_float(value *v) {
+    prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%g",v->float_value);
+    v->status.type_string = 1;
 }
 
 #endif //CREXX_RXVMVARS_H
