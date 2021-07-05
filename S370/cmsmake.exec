@@ -23,6 +23,12 @@ SAY "RX DISASSEMBLE"
 SAY "RX RUN"
 'RXBVM -V'
 
+/* Tests */
+'RXAS -L D ASCOMMON'
+'RXBVM -L D ASCOMMON'
+'RXAS -L D ASEBCDIC'
+'RXBVM -L D ASEBCDIC'
+
 IF BUILD_RESULT > 0 THEN DO
 SAY "***********************************"
 SAY "***** THERE WERE BUILD ERRORS *****"
