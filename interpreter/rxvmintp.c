@@ -872,13 +872,12 @@ START_INSTRUCTION(ILTE_REG_INT_REG)
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  COPY_REG_REG  Copy op2 to op1                                       pej 10 Apr 2021
+ *  COPY_REG_REG  Copy op2 to op1
  *  -----------------------------------------------------------------------------------
  */
 START_INSTRUCTION(COPY_REG_REG) // label not yet defined
     CALC_DISPATCH(2);
-    op1R = value_f(current_frame);
-    memcpy(op1R , op2R, sizeof(value));
+    copy_value(op1R, op2R);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -910,8 +909,6 @@ START_INSTRUCTION(IDIV_REG_REG_REG)
     DEBUG("TRACE - IDIV_REG_REG_REG\n") ;
     REG_RETURN_INT(op2RI / op3RI);
     DISPATCH;
-
-
 
 /* ------------------------------------------------------------------------------------
  *  SEQ_REG_REG_REG  String Equals op1=(op2==op3)
@@ -1369,10 +1366,25 @@ START_INSTRUCTION(FTOS_REG)
  */
 START_INSTRUCTION(APPENDCHAR_REG_REG)
     CALC_DISPATCH(2);
-    DEBUG("TRACE - APPENDCHAR_REG_REG R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    DEBUG("TRACE - APPENDCHAR_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
     v1 = op1R;
     v2 = op2R;
     string_concat_char(v1,v2);
+    DISPATCH;
+
+/*
+ *   STRLEN_REG_REG String Length op1 = length(op2)
+ */
+START_INSTRUCTION(STRLEN_REG_REG)
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - APPENDCHAR_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    v1 = op1R;
+    v2 = op2R;
+#ifndef NUTF8
+    v1->int_value = (rxinteger)v2->string_chars;
+#else
+    v1->int_value = (rxinteger)v2->string_length;
+#endif
     DISPATCH;
 
 /* ---------------------------------------------------------------------------

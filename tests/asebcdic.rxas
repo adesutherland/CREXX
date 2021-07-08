@@ -13,6 +13,7 @@ main()         .locals=1
 
                * Run Tests
                call test_appendchar()
+               call test_strlen()
 
                * Print Results
                iadd r0, g0, g1
@@ -62,5 +63,26 @@ test_appendchar()  .locals=5
                load r2,197 * EBCDIC Letter E
                appendchar r1,r2
                seq r4,r1,"ABCDE"
+               call r0,expect_true(),r3
+               ret
+
+test_strlen()  .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing strlen 1 ..."
+               load r1, "ABCD"
+               strlen r2,r1
+               ieq r4,r2,4
+               call r0,expect_true(),r3
+               say "Testing strlen 2 ..."
+               copy r5,r1
+               strlen r2,r5
+               ieq r4,r2,4
+               call r0,expect_true(),r3
+               say "Testing strlen 3 ..."
+               load r1, "ABCD"
+               load r5, "QWERTYUIOPQWERTYUIOPQWERTYUIOP"
+               concat r1,r1,r5
+               strlen r2,r1
+               ieq r4,r2,34
                call r0,expect_true(),r3
                ret

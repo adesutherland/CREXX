@@ -35,6 +35,11 @@ struct value {
     char *string_value;
     size_t string_length;
     size_t string_buffer_length;
+    size_t string_pos;
+#ifndef NUTF8
+    size_t string_chars;
+    size_t string_char_pos;
+#endif
     void *object_value;
 
     /*
@@ -64,6 +69,7 @@ static value* value_int_f(void* parent, rxinteger initial_value) {
     this->int_value = initial_value;
     return this;
 }
+
 static value* value_float_f(void* parent, double initial_value) {
     value* this = calloc(1,sizeof(value)); /* Zeros data */
     this->owner = parent;
@@ -94,6 +100,11 @@ static value* value_conststring_f(void* parent, string_constant *initial_value) 
     this->string_buffer_length = buffer_size(this->string_length);
     this->string_value = malloc(this->string_buffer_length);
     memcpy(this->string_value, initial_value->string,  this->string_length);
+    this->string_pos = 0;
+#ifndef NUTF8
+    this->string_char_pos = 0;
+    this->string_chars = utf8nlen(this->string_value, this->string_length);
+#endif
     return this;
 }
 
@@ -105,6 +116,11 @@ static value* value_nullstring_f(void* parent, char *initial_value) {
     this->string_buffer_length = buffer_size(this->string_length);
     this->string_value = malloc(this->string_buffer_length);
     memcpy(this->string_value, initial_value,  this->string_length);
+    this->string_pos = 0;
+#ifndef NUTF8
+    this->string_char_pos = 0;
+    this->string_chars = utf8nlen(this->string_value, this->string_length);
+#endif
     return this;
 }
 
@@ -229,6 +245,11 @@ static void extend_string_buffer(value *v, size_t length) {
 static void set_string(value *v, char *value, size_t length) {
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    v->string_chars = utf8nlen(v->string_value, v->string_length);
+#endif
 }
 
 static void set_const_string(value *v, string_constant *from) {
@@ -239,11 +260,41 @@ static void set_value_string(value *v, value *from) {
     set_string(v, from->string_value,  from->string_length);
 }
 
-static void set_buffer_string(value *v, char *buffer, size_t length, size_t buffer_length) {
+static void set_buffer_string(value *v, char *buffer, size_t length, size_t buffer_length
+#ifndef NUTF8
+  , size_t string_chars
+#endif
+) {
     if (v->string_value) free(v->string_value);
     v->string_value = buffer;
     v->string_length = length;
     v->string_buffer_length = buffer_length;
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    v->string_chars = string_chars;
+#endif
+}
+
+/* Copy a value */
+static void copy_value(value *dest, value *source) {
+    dest->status.all_type_flags = source->status.all_type_flags;
+    dest->int_value = source->int_value;
+    dest->float_value = source->float_value;
+    dest->decimal_value = source->decimal_value;
+    dest->string_pos = source->string_pos;
+    dest->string_length = source->string_length;
+#ifndef NUTF8
+    dest->string_chars = source->string_chars;
+    dest->string_char_pos = source->string_char_pos;
+#endif
+    dest->object_value = source->object_value; /* TODO */
+    /* Copy String Data */
+    if (dest->string_length) {
+        prep_string_buffer(dest, dest->string_length);
+        memcpy(dest->string_value, source->string_value, dest->string_length);
+    }
+    else dest->string_value = 0;
 }
 
 static int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
@@ -268,14 +319,20 @@ static int string_cmp_const(value *v1, string_constant *v2) {
  * a prepend / append
  */
 static void string_concat(value *v1, value *v2, value *v3) {
-    size_t len = v2->string_length + v3->string_length;
+    size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);
     char *buffer = malloc(buffer_len);
 
     memcpy(buffer, v2->string_value, v2->string_length);
     memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
+    v1->string_pos = 0;
 
+#ifdef NUTF8
     set_buffer_string(v1, buffer, len, buffer_len);
+#else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+    v1->string_char_pos = 0;
+#endif
 }
 
 static void string_sconcat(value *v1, value *v2, value *v3) {
@@ -286,25 +343,39 @@ static void string_sconcat(value *v1, value *v2, value *v3) {
     memcpy(buffer, v2->string_value, v2->string_length);
     buffer[v2->string_length] = ' ';
     memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
+    v1->string_pos = 0;
 
+    #ifdef NUTF8
     set_buffer_string(v1, buffer, len, buffer_len);
+    #else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+    v1->string_char_pos = 0;
+    #endif
 }
 
 static void string_concat_char(value *v1, value *v2) {
     int char_size;
-    size_t len;
     char *insert_at;
+
+    v1->string_pos = v1->string_length;
 #ifdef NUTF8
     char_size = 1;
 #else
+    v1->string_char_pos = v1->string_chars;
     char_size = utf8codepointsize(v2->int_value);
 #endif
-    insert_at = v1->string_value + v1->string_length;
-    len = v1->string_length + char_size;
-    extend_string_buffer(v1,len);
+
+
+
+    extend_string_buffer(v1,v1->string_length + char_size);
+    insert_at = v1->string_value + v1->string_pos;
+
+
+
 #ifdef NUTF8
     *insert_at = (unsigned char)v2->int_value;
 #else
+    v1->string_chars += 1;
     utf8catcodepoint(insert_at, v2->int_value, char_size);
 #endif
 }
@@ -317,13 +388,22 @@ static void string_from_int(value *v) {
 #else
     v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",v->int_value);
 #endif
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    v->string_chars = v->string_length;
+#endif
 }
 
 /* Calculate the string value */
 static void string_from_float(value *v) {
     prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
     v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%g",v->float_value);
-    v->status.type_string = 1;
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    v->string_chars = v->string_length;
+#endif
 }
 
 #endif //CREXX_RXVMVARS_H

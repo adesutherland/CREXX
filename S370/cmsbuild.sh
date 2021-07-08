@@ -64,7 +64,7 @@ herccontrol "/detach 181" -w "^Ready;"
 herccontrol "/vmarc pack * * d (pun" -w "^Ready;"
 
 # Build
-herccontrol "/cmsmake" -w "^Ready" -t 250
+herccontrol "/cmsmake" -w "^Ready;" -t 250
 
 # Make binary tape and vmarc
 herccontrol "/cp disc" -w "^VM/370 Online"

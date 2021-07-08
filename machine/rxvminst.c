@@ -131,6 +131,7 @@ void init_ops() {
     instr_f("nsmap", "Map op1 to namespace op2 var name in op3", OP_REG, OP_STRING, OP_REG);
     instr_f("unmap", "Unmap op1", OP_REG, OP_NONE, OP_NONE);
 
+
     instr_f("call", "Call procedure (op1())", OP_FUNC, OP_NONE, OP_NONE);
     instr_f("call", "Call procedure (op1=op2())", OP_REG, OP_FUNC, OP_NONE);
     instr_f("call", "Call procedure (op1=op2(op3...) )", OP_REG, OP_FUNC, OP_REG);
