@@ -333,36 +333,35 @@ static void type_promotion(ASTNode *node) {
         switch (node->value_type) {
             case TP_INTEGER:
             case TP_BOOLEAN:
-                op1 = "imaster";
+                op1 = "i";
                 break;
 
             case TP_FLOAT:
-                op1 = "fmaster";
+                op1 = "f";
                 break;
 
             default:
-                op1 = "smaster";
+                op1 = "s";
                 break;
         }
 
         switch (node->target_type) {
             case TP_INTEGER:
             case TP_BOOLEAN:
-                op2 = "iprime";
+                op2 = "i";
                 break;
 
             case TP_FLOAT:
-                op2 = "fprime";
+                op2 = "f";
                 break;
 
             default:
-                op2 = "sprime";
+                op2 = "s";
                 break;
         }
 
-        snprintf(temp, buf_len, "   %s r%d\n   %s r%d\n",
+        snprintf(temp, buf_len, "   %sto%s r%d\n",
                  op1,
-                 node->register_num,
                  op2,
                  node->register_num);
         node->output3 = output_fs(temp);
