@@ -88,9 +88,10 @@ void init_ops() {
     instr_f("trimr", "Trim String (op2) from Right by (op3) Chars into op1", OP_REG, OP_REG, OP_REG);
     instr_f("trunc", "Trunc String (op2) to (op3) Chars into op1", OP_REG, OP_REG, OP_REG);
     instr_f("strlen", "String Length op1 = length(op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("strchar", "Int op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
-    instr_f("strchar", "Int op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
-    instr_f("strpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("strchar", "op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("strchar", "op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
+    instr_f("setstrpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("getstrpos", "Get String (op2) charpos into op1", OP_REG, OP_REG, OP_NONE);
     instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
 
     instr_f("ieq", "Int Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);

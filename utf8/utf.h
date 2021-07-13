@@ -212,6 +212,9 @@ utf8codepoint(const void *utf8_restrict str,
 // Calculates the size of the next utf8 codepoint in str.
 utf8_nonnull utf8_weak size_t utf8codepointcalcsize(const void *str);
 
+// Calculates the size of the prev utf8 codepoint in str.
+utf8_nonnull utf8_weak size_t utf8rcodepointcalcsize(const void *str);
+
 // Returns the size of the given codepoint in bytes.
 utf8_weak size_t utf8codepointsize(utf8_int32_t chr);
 
@@ -1181,6 +1184,16 @@ size_t utf8codepointcalcsize(const void *str) {
 
     // 1 byte utf8 codepoint otherwise
     return 1;
+}
+
+size_t utf8rcodepointcalcsize(const void *str) {
+    const char *s = (const char *) str;
+
+    do {
+        s--;
+    } while ((0 != (0x80 & s[0])) && (0x80 == (0xc0 & s[0])));
+
+    return (const char*)str - s;
 }
 
 size_t utf8codepointsize(utf8_int32_t chr) {

@@ -1,4 +1,32 @@
 * cREXX Assembler Test Suite - EBCDIC
+*
+* EBCDIC Characters Used in Tests
+* 193	C1	A
+* 194	C2	B
+* 195	C3	C
+* 196	C4	D
+* 197	C5	E
+* 198	C6	F
+* 199	C7	G
+* 200	C8	H
+* 201	C9	I
+* 209	D1	J
+* 210	D2	K
+* 211	D3	L
+* 212	D4	M
+* 213	D5	N
+* 214	D6	O
+* 215	D7	P
+* 216	D8	Q
+* 217	D9	R
+* 226	E2	S
+* 227	E3	T
+* 228	E4	U
+* 229	E5	V
+* 230	E6	W
+* 231	E7	X
+* 232	E8	Y
+* 233	E9	Z
 
 .globals=2
 g0 .expose=tests.success
@@ -14,6 +42,8 @@ main()         .locals=1
                * Run Tests
                call test_appendchar()
                call test_strlen()
+               call test_getstrpos()
+               call test_setstrpos_strchar()
 
                * Print Results
                iadd r0, g0, g1
@@ -86,3 +116,74 @@ test_strlen()  .locals=6
                ieq r4,r2,34
                call r0,expect_true(),r3
                ret
+
+* Test getstrpos
+test_getstrpos() .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing getstrpos ..."
+               load r1,"ABCDE"
+               load r2,3
+               setstrpos r1,r2
+               load r2,0 * Clear r2 (just in case)
+               getstrpos r2,r1
+               ieq r4,r2,3
+               call r0,expect_true(),r3
+               ret
+
+* Test strchar and setstrpos
+test_setstrpos_strchar() .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing strchar and setstrpos 1 ..."
+               load r1,"ABCDE"
+               load r2,4
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,197 * E
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 2 ..."
+               *        01234567891123456789212345678931234567894123456
+               load r1,"-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRST"
+               load r2,4
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,196 * D
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 3 ..."
+               load r2,5
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,197 * E
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 4 ..."
+               load r2,44
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,217 * R
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 5 ..."
+               load r2,41
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,214 * O
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 6 ..."
+               load r2,40
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,213 * N
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 7 ..."
+               load r2,1
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,193 * A
+               call r0,expect_true(),r3
+
+               ret
+

@@ -1377,13 +1377,60 @@ START_INSTRUCTION(APPENDCHAR_REG_REG)
  */
 START_INSTRUCTION(STRLEN_REG_REG)
     CALC_DISPATCH(2);
-    DEBUG("TRACE - APPENDCHAR_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    DEBUG("TRACE - STRLEN_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
     v1 = op1R;
     v2 = op2R;
 #ifndef NUTF8
     v1->int_value = (rxinteger)v2->string_chars;
 #else
     v1->int_value = (rxinteger)v2->string_length;
+#endif
+    DISPATCH;
+
+/*
+ * SETSTRPOS_REG_REG - Set String (op1) charpos set to op2
+ */
+START_INSTRUCTION(SETSTRPOS_REG_REG)
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - SETSTRPOS_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    v1 = op1R;
+    v2 = op2R;
+#ifndef NUTF8
+    string_set_byte_pos(v1, v2->int_value);
+#else
+    v1->string_pos = v2->int_value;
+#endif
+    DISPATCH;
+
+/*
+ * GETSTRPOS_REG_REG - Get String (op2) charpos into op1
+ */
+START_INSTRUCTION(GETSTRPOS_REG_REG)
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - GETSTRPOS_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    v1 = op1R;
+    v2 = op2R;
+#ifndef NUTF8
+    v1->int_value = (int)v2->string_char_pos;
+#else
+    v1->int_value = v2->string_pos;
+#endif
+    DISPATCH;
+
+/*
+ * STRCHAR_REG_REG - op1 (as int) = op2[charpos]
+ */
+START_INSTRUCTION(STRCHAR_REG_REG)
+    CALC_DISPATCH(2);
+    DEBUG("TRACE - STRCHAR_REG_REG R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+    v1 = op1R;
+    v2 = op2R;
+#ifndef NUTF8
+    int codepoint;
+    utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+    v1->int_value = codepoint;
+#else
+    v1->int_value = v2->string_value[v2->string_pos];
 #endif
     DISPATCH;
 

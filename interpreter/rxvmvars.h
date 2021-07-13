@@ -9,6 +9,9 @@
 #include "utf.h"
 #endif
 
+#include <assert.h>
+#include <stdlib.h>
+
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
@@ -353,6 +356,86 @@ static void string_sconcat(value *v1, value *v2, value *v3) {
     #endif
 }
 
+#ifndef NUTF8
+/* This sets v's string_pos (the byte index) and v's string_char_pos
+ * (the utf8 codepoint index) based on a new string_char_pos */
+static void string_set_byte_pos(value *v, size_t new_string_char_pos) {
+    assert (v->string_char_pos < v->string_chars);
+    /* We need to walk through the UTF8 characters until we get to
+     * the required string_char_pos and then we will know the corresponding
+     * string_pos. But we need to work out the best starting point for the walk:
+     * - The start of the string,
+     * - The end of the string, or
+     * - from the existing string_pos
+     */
+    size_t byte_from;
+    size_t char_from;
+    size_t gap;
+    int diff;
+
+    diff = (int)(new_string_char_pos - v->string_char_pos);
+
+    if (diff == 1) {
+        /* Optimised for the scenario where the user program is walking the string */
+        v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+        v->string_char_pos++;
+        return;
+    }
+
+    if (diff == -1) {
+        /* Might be looping through the string backwards */
+        v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+        v->string_char_pos--;
+        return;
+    }
+
+    if (diff > 1) {
+        /* So the new position is bigger than the current position ... we need
+         * to check if it is quicker to search from the end of the string */
+        if (v->string_chars - 1 - new_string_char_pos < diff) {
+            /* loop from the end */
+            v->string_pos = v->string_length - 1;
+            v->string_char_pos = v->string_chars - 1;
+            v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+            while (v->string_char_pos != new_string_char_pos) {
+                v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+                v->string_char_pos--;
+            }
+            return;
+        }
+        /* loop from the current position */
+        while (v->string_char_pos != new_string_char_pos) {
+            v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+            v->string_char_pos++;
+        }
+        return;
+    }
+
+    if (diff < 1) {
+        /* So the new position is smaller than the current position ... we need
+         * to check if it is quicker to search from the beginning of the string */
+        if (new_string_char_pos <= -diff) {
+            /* loop from the beginning */
+            v->string_pos = 0;
+            v->string_char_pos = 0;
+            while (v->string_char_pos != new_string_char_pos) {
+                v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+                v->string_char_pos++;
+            }
+            return;
+        }
+        /* loop from the current position */
+        while (v->string_char_pos != new_string_char_pos) {
+            v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+            v->string_char_pos--;
+        }
+        return;
+    }
+
+    /* If we reach here it means the current position was not changed - fine */
+}
+#endif
+
 static void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
@@ -365,12 +448,8 @@ static void string_concat_char(value *v1, value *v2) {
     char_size = utf8codepointsize(v2->int_value);
 #endif
 
-
-
     extend_string_buffer(v1,v1->string_length + char_size);
     insert_at = v1->string_value + v1->string_pos;
-
-
 
 #ifdef NUTF8
     *insert_at = (unsigned char)v2->int_value;
