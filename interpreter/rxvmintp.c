@@ -619,6 +619,7 @@ START_INSTRUCTION(TIME_REG)
  * ------------------------------------------------------------------------------------
  */
 START_INSTRUCTION(TRIMR_REG_REG)
+   /* TODO - UTF etc */
     CALC_DISPATCH(2);
     DEBUG("TRACE - TRIMR_REG_REG\n") ;
     v1 = op1R;
@@ -639,6 +640,7 @@ START_INSTRUCTION(TRIMR_REG_REG)
 START_INSTRUCTION(TRIML_REG_REG)
     CALC_DISPATCH(2);
     DEBUG("TRACE - TRIML_REG_REG\n") ;
+    /* TODO - UTF etc */
     v1 = op1R;
 
     j = v1->string_length - 1;

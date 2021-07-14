@@ -7,29 +7,37 @@ set(CMAKE_C_STANDARD 90)
 enable_testing()
 find_program(CTEST ctest)
 
-add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} ascommon
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/ascommon.rxbin ${CMAKE_CURRENT_BINARY_DIR}/ascommon.rxbin
-        COMMAND ${CTEST} -R ascommon --output-on-failure
-        DEPENDS ascommon.rxas rxas rxvm rxbvm
-        OUTPUT ascommon.rxbin
-        COMMENT "cREXX-Assemble ascommon.rxas ..."
-)
-
-add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} asutf
-        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/asutf.rxbin ${CMAKE_CURRENT_BINARY_DIR}/asutf.rxbin
-        COMMAND ${CTEST} -R asutf --output-on-failure
-        DEPENDS asutf.rxas rxas rxvm rxbvm
-        OUTPUT asutf.rxbin
-        COMMENT "cREXX-Assemble asutf.rxas ..."
-)
-
+set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
+set(REXXTESTBINS basic.rxbin)
 
 add_custom_target(tests ALL
-        DEPENDS ascommon.rxbin asutf.rxbin)
+        DEPENDS ${ASMTESTBINS} ${REXXTESTBINS})
 
-add_test(NAME ascommon COMMAND rxvm ascommon WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_test(NAME ascommon-bytecode COMMAND rxbvm ascommon WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_test(NAME asutf COMMAND rxvm asutf WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-add_test(NAME asutf-bytecode COMMAND rxbvm asutf WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+foreach(_binfile ${ASMTESTBINS})
+  get_filename_component(_basename ${_binfile} NAME_WE)
+  add_custom_command(
+        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
+        COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
+        COMMAND ${CTEST} -R ${_basename} --output-on-failure
+        DEPENDS ${_basename}.rxas rxas rxvm rxbvm
+        OUTPUT ${_binfile}
+        COMMENT "cREXX Assemble Test ${_basename} ..."
+  )
+  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endforeach()
+
+foreach(_binfile ${REXXTESTBINS})
+  get_filename_component(_basename ${_binfile} NAME_WE)
+  add_custom_command(
+          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
+          COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
+          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
+          COMMAND ${CTEST} -R ${_basename} --output-on-failure
+          DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
+          OUTPUT ${_binfile}
+          COMMENT "cREXX Assemble Test ${_basename} ..."
+  )
+  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endforeach()
