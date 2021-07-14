@@ -12,8 +12,7 @@ func1()        .locals=3 .expose=global.func1
 
 say_exposed_g()       .locals=1 .expose=global.say_exposed_g
                load r0,"exposed global="
-               imaster g0
-               sprime g0
+               itos g0
                concat r0,r0,g0
                ssay r0
                say "\n"

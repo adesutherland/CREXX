@@ -4,7 +4,7 @@ g1 .expose=my.exposed_global
 
 main()         .locals=3
                load r1,"Hello"
-               load r2,"Rene"
+               load r2,"René"
                sconcat r2,r1,r2
                ssay r2
                say "\n"
@@ -35,8 +35,7 @@ log()          .locals=1 .expose=my.log
 
 say_module_g()   .locals=1
                load r0,"module global="
-               imaster g0
-               sprime g0
+               itos g0
                concat r0,r0,g0
                ssay r0
                say "\n"

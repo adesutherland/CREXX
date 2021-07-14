@@ -9,7 +9,7 @@
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
 
-#define   YYCTYPE     char
+#define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
@@ -17,23 +17,24 @@
 int rexbscan(Context* s) {
     int depth;
 
-    regular:
-    if (s->cursor >= s->buff_end) {
-        return TK_EOS;
-    }
-    s->top = s->cursor;
+/*!re2c
+  re2c:yyfill:enable = 0;
+*/
+  regular:
+
+  /* Character Encoding Specifics  */
+  /*!include:re2c "encoding.re" */
 
 /*!re2c
   re2c:yyfill:enable = 0;
 
-  whitespace = [ \t\v\f]+;
+  eol2 = "\r\n";
+  eol1 = [\r] | [\n];
+  eof = [\000] ;
+  any = [^] \ eof ;
   digit = [0-9];
-  letter = [a-zA-Z];
   hex = [a-fA-F0-9];
   int_des = [uUlL]*;
-  all = [\000-\377];
-  eof = [\000];
-  any = all\eof;
   symchr = letter|digit|[.!?_];
   float	= (digit*)[.]digit+([eE][+-]?digit+)?;
   integer = digit+;
@@ -147,36 +148,44 @@ int rexbscan(Context* s) {
   symbol ob ":" { return(TK_LABEL); }
   symbol { return(TK_SYMBOL); }
   str { return(TK_STRING); }
-  str [bB] / (all\symchr) { return(TK_STRING); }
-  str [xX] / (all\symchr) { return(TK_STRING); }
+  str [bB] / (any\symchr) { return(TK_STRING); }
+  str [xX] / (any\symchr) { return(TK_STRING); }
   eof { return(TK_EOS); }
-  whitespace { goto regular; }
-  "\r\n" {
+  whitespace {
+    s->top = s->cursor;
+    goto regular;
+  }
+  eol2 {
      s->line++;
      s->linestart = s->cursor+2;
      return(TK_EOC);
   }
-  "\n" {
+  eol1 {
      s->line++;
      s->linestart = s->cursor+1;
      return(TK_EOC);
   }
 
-  any { printf("unexpected character: %c\n", *s->cursor); return(-1); }
+  any {
+    return(TK_UNKNOWN);
+  }
 */
 
     comment:
 /*!re2c
   "*/" {
-    if(--depth == 0) goto regular;
+    if(--depth == 0) {
+        s->top = s->cursor;
+        goto regular;
+    }
     else goto comment;
   }
-  "\n" {
+  eol1 {
     s->line++;
     s->linestart = s->cursor+1;
     goto comment;
   }
-  "\r\n" {
+  eol2 {
     s->line++;
     s->linestart = s->cursor+2;
     goto comment;
@@ -186,9 +195,9 @@ int rexbscan(Context* s) {
     goto comment;
   }
   eof {
-    printf("EOF before comment closed (comment depth %d): %c\n", depth);
-    return(-1);
-    }
+    // TODO EOF before comment closed
+    return(TK_EOS);
+  }
   any { goto comment; }
 */
 }

@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "platform.h"
 #include "rxvminst.h"
 #include "rxvmintp.h"
@@ -71,6 +74,11 @@ int main(int argc, char *argv[]) {
     int i, j;
     int num_modules;
     char *location = 0;
+    int rc = 0;
+
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -168,7 +176,7 @@ int main(int argc, char *argv[]) {
     if (debug_mode) printf("Starting Execution\n");
 #endif
 
-    run(num_modules, pgm, argc - i, argv + i, debug_mode);
+    rc = run(num_modules, pgm, argc - i, argv + i, debug_mode);
 
     /* Free Memory */
     for (j=0; j<num_modules; j++) {
@@ -177,5 +185,6 @@ int main(int argc, char *argv[]) {
         free(pgm[j].globals);
     }
     free(pgm);
-    return 0;
+
+    return rc;
 }

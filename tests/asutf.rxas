@@ -1,0 +1,223 @@
+* cREXX Assembler Test Suite - UTF8
+*
+* UTF Characters Used in Tests
+* Α	913	0391 Greek uppercase ALPHA
+* Β	914	0392 Greek uppercase BETA
+* Γ	915	0393 Greek uppercase GAMMA
+* Δ	916	0394 Greek uppercase DELTA
+* Ε	917	0395 Greek uppercase EPSILON
+* Ζ	918	0396 Greek uppercase ZETA
+* Η	919	0397 Greek uppercase ETA
+* Θ	920	0398 Greek uppercase THETA
+* Ι	921	0399 Greek uppercase IOTA
+* Κ	922	039A Greek uppercase KAPPA
+* Λ	923	039B Greek uppercase LAMDA
+* Μ	924	039C Greek uppercase MU
+* Ν	925	039D Greek uppercase letter NU
+* Ξ	926	039E Greek uppercase XI
+* Ο	927	039F Greek uppercase OMICRON
+* Π	928	03A0 Greek uppercase letter PI
+* Ρ	929	03A1 RHO Greek capital letters
+* Σ	931	03A3 Greek uppercase SIGMA
+* Τ	932	03A4 Greek uppercase TAU
+* Υ	933	03A5 Greek uppercase UPSILON
+* Φ	934	03A6 Greek uppercase letter PHI
+* Χ	935	03A7 Greek uppercase CHI
+* Ψ	936	03A8 Greek uppercase PSI
+* Ω	937	03A9 GREEK CAPITAL LETTER OMEGA
+* Ϊ	938	03AA GREEK CAPITAL LETTER IOTA with the DIALYTIKA
+* Ϋ	939	03AB Greek capital letters with DIALYTIKA of UPSILON
+* ά	940	03AC ALPHA Greek lowercase letters with the TONOS
+* έ	941	03AD Greek lowercase letters with TONOS of EPSILON
+* ή	942	03AE Greek lowercase letters ETA with the TONOS
+* ί	943	03AF Greek lowercase IOTA with the TONOS
+* ΰ	944	03B0 With DIALYTIKA and TONOS Greek lowercase UPSILON
+* α	945	03B1 Greek lowercase letters ALPHA
+* β	946	03B2 Greek lowercase letters BETA
+* γ	947	03B3 reek lowercase GAMMA
+* δ	948	03B4 Greek lowercase letters DELTA
+* ε	949	03B5 Greek lowercase EPSILON
+* ζ	950	03B6 Greek lowercase ZETA
+* η	951	03B7 Greek lowercase letters ETA
+* θ	952	03B8 Greek lowercase THETA
+* ι	953	03B9 Greek lowercase IOTA
+* κ	954	03BA Greek lowercase KAPPA
+* λ	955	03BB Greek lowercase LAMDA
+* μ	956	03BC Greek lowercase letter MU
+* ν	957	03BD Greek lowercase letters NU
+* ξ	958	03BE Greek lowercase XI
+* ο	959	03BF Greek lowercase OMICRON
+* π	960	03C0 Greek lowercase letters PI
+* ρ	961	03C1 Greek lowercase RHO
+* ς	962	03C2 Greek lowercase FINAL SIGMA
+* σ	963	03C3 Greek lowercase SIGMA
+* τ	964	03C4 Greek lowercase TAU
+* υ	965	03C5 Greek lowercase UPSILON
+* φ	966	03C6 Greek lowercase letters PHI
+* χ	967	03C7 Greek lowercase CHI
+* ψ	968	03C8 Greek lowercase PSI
+* ω	969	03C9 Greek lowercase OMEGA
+* ϊ	970	03CA Greek lowercase IOTA with the DIALYTIKA
+* ϋ	971	03CB Greek lowercase letters with DIALYTIKA of UPSILON
+* ό	972	03CC Greek lowercase letters with TONOS of OMICRON
+* ύ	973	03CD Greek lowercase letters with TONOS of UPSILON
+* ώ	974	03CE Greek lowercase letters with OMEGA's TONOS
+* Ϗ	975	03CF Greek uppercase symbol KAI
+
+.globals=2
+g0 .expose=tests.success
+g1 .expose=tests.failure
+
+main()         .locals=1
+               say "cREXX Assembler Test Suite - UTF8 - Version cREXX-Phase-0 v0.1.6-f0022\n"
+
+               * Zero result count
+               load g0,0
+               load g1,0
+
+               * Run Tests
+               call test_appendchar()
+               call test_strlen()
+               call test_getstrpos()
+               call test_setstrpos_strchar()
+
+               * Print Results
+               iadd r0, g0, g1
+               itos r0
+               ssay r0
+               say " tests run\n"
+               brt failures, g1
+
+               * No failures
+               say "Success\n"
+               ret 0
+
+failures:      * There were failures
+               itos g1
+               say "*** "
+               ssay g1
+               say " tests failed ***\n"
+               ret 1
+
+expect_true()  .locals=0
+               brt expect_true_ok,a1
+               iadd g1,g1,1 * Failure
+               say " FAILED\n"
+               ret
+expect_true_ok:
+               iadd g0,g0,1 * Success
+               say " ok\n"
+               ret
+
+expect_false() .locals=0
+               brf expect_false_ok,a1
+               iadd g1,g1,1 * Failure
+               say " FAILED\n"
+               ret
+expect_false_ok:
+               iadd g0,g0,1 * Success
+               say " ok\n"
+               ret
+
+* Tests
+
+test_appendchar()  .locals=5
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing appendchar ..."
+               load r1, "ΑΒΓΔ"
+               load r2,923 * Greek Capital Letter Lambda Λ
+               appendchar r1,r2
+               seq r4,r1,"ΑΒΓΔΛ"
+               call r0,expect_true(),r3
+               ret
+
+test_strlen()  .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing strlen 1 ..."
+               load r1, "ΑΒΓΔ"
+               strlen r2,r1
+               ieq r4,r2,4
+               call r0,expect_true(),r3
+               say "Testing strlen 2 ..."
+               copy r5,r1
+               strlen r2,r5
+               ieq r4,r2,4
+               call r0,expect_true(),r3
+               say "Testing strlen 3 ..."
+               load r1, "ΑΒΓΔ"
+               load r5, "QWERTYUIOPQWERTYUIOPQWERTYUIOP"
+               concat r1,r1,r5
+               strlen r2,r1
+               ieq r4,r2,34
+               call r0,expect_true(),r3
+               ret
+
+* Test getstrpos
+test_getstrpos() .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing getstrpos ..."
+               load r1,"ΑΒΓΔΛ"
+               load r2,3
+               setstrpos r1,r2
+               load r2,0 * Clear r2 (just in case)
+               getstrpos r2,r1
+               ieq r4,r2,3
+               call r0,expect_true(),r3
+               ret
+
+* Test strchar and setstrpos
+test_setstrpos_strchar() .locals=6
+               load r3,1 * One argument when calling expect_true/false
+               say "Testing strchar and setstrpos 1 ..."
+               load r1,"ΑΒΓΔΛ"
+               load r2,4
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,923 * Greek Capital Letter Lambda Λ
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 2 ..."
+               *        01234567891123456789212345678931234567894123456
+               load r1,"-ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨ"
+               load r2,4
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,916 * Δ 916 0394 Greek uppercase DELTA
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 3 ..."
+               load r2,5
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,917 * Ε 917 0395 Greek uppercase EPSILON
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 4 ..."
+               load r2,44
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,934 * Φ 934 03A6 Greek uppercase letter PHI
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 5 ..."
+               load r2,41
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,931 * Σ 931 03A3 Greek uppercase SIGMA
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 6 ..."
+               load r2,40
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,929 * Ρ 929 03A1 RHO Greek capital letters
+               call r0,expect_true(),r3
+
+               say "Testing strchar and setstrpos 7 ..."
+               load r2,1
+               setstrpos r1,r2
+               strchar r2,r1
+               ieq r4,r2,913 * Α 913 0391 Greek uppercase ALPHA
+               call r0,expect_true(),r3
+
+               ret

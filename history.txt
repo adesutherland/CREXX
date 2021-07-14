@@ -1,5 +1,13 @@
 CREXX History / Change Log
 
+F0022 - Feature - UTF
+        Feature - Long Strings
+        Fix - Faster end-of-source detection
+        Instruction itos replacing sprime and smaster
+        Updated instructions to seq, sne
+        New instructions appendchar, strlen, getstrpos, setstrpos, strchar
+        S370 build updates
+        Initial assembler and rexx test scripts on build
 F0017 - Feature - Linking Multiple Modules
 I0053 - Fix Issue 53 - String Concat Errors
       - Deprecate SAY REG and replace with SSAY REG (String only)

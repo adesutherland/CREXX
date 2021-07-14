@@ -4,7 +4,7 @@
 #include "rxcpopgr.h"
 #include "rxcpmain.h"
 
-#define   YYCTYPE     char
+#define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
@@ -12,21 +12,22 @@
 int opt_scan(Context* s) {
     int depth;
 
+/*!re2c
+    re2c:yyfill:enable = 0;
+*/
     regular:
-    if (s->cursor >= s->buff_end) {
-        return TK_EOS;
-    }
-    s->top = s->cursor;
+
+    /* Character Encoding Specifics  */
+    /*!include:re2c "encoding.re" */
 
 /*!re2c
     re2c:yyfill:enable = 0;
 
-    whitespace = [ \t\v\f]+;
+    eol2 = "\r\n";
+    eol1 = [\r] | [\n];
+    eof = [\000] ;
+    any = [^] \ eof ;
     digit = [0-9];
-    letter = [a-zA-Z];
-    all = [\000-\377];
-    eof = [\000];
-    any = all\eof;
     symchr = letter|digit|[.!?_];
     symbol = symchr*;
 */
@@ -45,14 +46,17 @@ int opt_scan(Context* s) {
     'LEVELL' { return(TK_LEVELL); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
-    whitespace { goto regular; }
+    whitespace {
+        s->top = s->cursor;
+        goto regular;
+    }
     ";" { return(TK_EOC); }
-    "\r\n" {
+    eol2 {
         s->line++;
         s->linestart = s->cursor+2;
         return(TK_EOC);
     }
-    "\n" {
+    eol1 {
         s->line++;
         s->linestart = s->cursor+1;
         return(TK_EOC);
@@ -63,15 +67,18 @@ int opt_scan(Context* s) {
     comment:
 /*!re2c
     "*/" {
-        if(--depth == 0) goto regular;
+        if(--depth == 0) {
+            s->top = s->cursor;
+            goto regular;
+        }
         else goto comment;
     }
-    "\n" {
+    eol1 {
         s->line++;
         s->linestart = s->cursor+1;
         goto comment;
     }
-    "\r\n" {
+    eol2 {
         s->line++;
         s->linestart = s->cursor+2;
         goto comment;

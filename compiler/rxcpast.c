@@ -27,6 +27,8 @@ Token *token_f(Context *context, int type) {
     token->column = context->top - context->linestart + 1;
     token->token_string = context->top;
 
+    context->top = context->cursor;
+
     return token;
 }
 

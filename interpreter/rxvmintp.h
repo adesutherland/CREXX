@@ -4,7 +4,7 @@
 #include "rxas.h"
 #include "rxvmvars.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.6-f0017"
+#define rxversion "cREXX-Phase-0 v0.1.6-f0022"
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
@@ -12,7 +12,7 @@
     #define DEBUG(...) if (debug_mode) fprintf(stderr, __VA_ARGS__)
 #endif
 
-#define ERROR(...)   { fprintf(stderr, __VA_ARGS__); goto SIGNAL; }
+#define RXERROR(...)   { fprintf(stderr, __VA_ARGS__); goto SIGNAL; }
 #define MAP_ADDR(instr, op1, op2, op3, target, msg)             \
                 instruction = src_inst(instr, op1,op2,op3);     \
                 address_map[instruction->opcode] = target;
@@ -41,7 +41,7 @@
 #define REG_VAL(n)                   current_frame->locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
-#define FLOAT_OP(n)                  (pc +(n))->fconst
+#define FLOAT_OP(n)                  (pc+(n))->fconst
 
 #define CONSTSTRING_OP(n)            (string_constant *)(current_frame->module->const_pool + (pc+(n))->index)
 #define PROC_OP(n)                   (proc_constant *)(current_frame->module->const_pool + (pc+(n))->index)
@@ -53,7 +53,7 @@
 
 #define REG_RETURN_INT(val)        { set_int(REG_OP(1),val);}
 #define REG_RETURN_FLOAT(val)      { set_float(REG_OP(1),val);  }
-#define REG_RETURN_STRING(val)     { set_conststring(REG_OP(1), val);}
+#define REG_RETURN_STRING(val)     { set_const_string(REG_OP(1), val);}
 
 #define REG_RET_CHAR(val)          { v1=REG_OP(1); if (v1) set_char(v1,val);                               \
                                     else REG_OP(1) = value_char_f(current_frame,val); }
@@ -71,12 +71,12 @@
                                     (t) = strtod((s)->string_value, &converr);                          \
                                     if (converr[0] != '\0') goto converror; }
 
-#define CONV2INT(i,v)             { if ((v)->status.primed_float)                                      \
+#define CONV2INT(i,v)             { if ((v)->status.type_float)                                      \
                                     (i) = (rxinteger) (v)->float_value;                                 \
-                                    else if ((v)->status.primed_string) S2INT(i,v); }
+                                    else if ((v)->status.type_string) S2INT(i,v); }
 
-#define CONV2FLOAT(i,v) if ((v)->status.primed_int) (i) = (double) (v)->int_value;                      \
-        else if ((v)->status.primed_string) S2FLOAT(i,v);
+#define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
+        else if ((v)->status.type_string) S2FLOAT(i,v);
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }
@@ -89,6 +89,9 @@
 #define op1F                     FLOAT_OP(1)
 #define op2F                     FLOAT_OP(2)
 #define op3F                     FLOAT_OP(3)
+#define op1S                     CONSTSTRING_OP(1)
+#define op2S                     CONSTSTRING_OP(2)
+#define op3S                     CONSTSTRING_OP(3)
 #define op1RI                    INT_VAL(op1R)
 #define op2RI                    INT_VAL(op2R)
 #define op3RI                    INT_VAL(op3R)
@@ -96,9 +99,9 @@
 #define op3RF                    FLOAT_VAL(op3R)
 #define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}
 //#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
-//                                 if ((v)->status.primed_int==0)  goto notint; }
+//                                 if ((v)->status.type_int==0)  goto notint; }
 //#define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n); REG_TEST(v);                                      \
-//                                   if ((v)->status.primed_float==0)  goto notfloat; }
+//                                   if ((v)->status.type_float==0)  goto notfloat; }
 #define REG_OP_TEST_INT(v,n)    { (v) = REG_OP(n);}
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 

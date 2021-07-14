@@ -5,6 +5,12 @@
 #include "platform.h"
 #include "rxdadism.h"
 #include "rxvminst.h"
+//#include <locale.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+//#include <io.h>
+//#include <fcntl.h>
 
 static void help() {
     char* helpMessage =
@@ -63,6 +69,10 @@ int main(int argc, char *argv[]) {
     char *output_file_name = 0;
     FILE *output = stdout;
     int i;
+
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+#endif
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {

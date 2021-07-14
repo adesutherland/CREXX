@@ -12,8 +12,8 @@ add_custom_command(
 )
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -o rxasscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re ${CMAKE_CURRENT_SOURCE_DIR}/rxasgrmr.h re2c
+        COMMAND ${CMAKE_BINARY_DIR}/re2c/re2c -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o rxasscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re ${CMAKE_CURRENT_SOURCE_DIR}/rxasscan.re ${CMAKE_CURRENT_SOURCE_DIR}/rxasgrmr.h re2c
         OUTPUT rxasscan.c
         COMMENT "Create REXX ASSEMBLER Lexer..."
 )
