@@ -1351,6 +1351,15 @@ START_INSTRUCTION(FTOS_REG)
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  ITOF_REG  Set register string value from its float value
+ *  -----------------------------------------------------------------------------------*/
+START_INSTRUCTION(ITOF_REG)
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - ITOF_REG\n");
+    op1R->float_value = op1R->int_value;
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  STRCHAR_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */

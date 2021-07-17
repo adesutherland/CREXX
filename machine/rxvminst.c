@@ -171,6 +171,7 @@ void init_ops() {
 
     instr_f("itos", "Set register string value from its int value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;

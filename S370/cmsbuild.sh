@@ -26,6 +26,7 @@ cp ./*.parm src
 # Tests
 cp ../tests/ascommon.rxas src
 cp ../tests/asebcdic.rxas src
+cp ../tests/basic.rexx src/basic.exec
 
 # IPL
 herccontrol -v
