@@ -294,13 +294,21 @@ START_INSTRUCTION(LOAD_REG_STRING)
     set_const_string(op1R, CONSTSTRING_OP(2));
     DISPATCH;
 
-/* String Say */
+/* String Say - Deprecated */
 START_INSTRUCTION(SSAY_REG)
     CALC_DISPATCH(1)
     DEBUG("TRACE - SSAY_REG R%llu\n", REG_IDX(1));
     printf("%.*s", (int) op1R->string_length, op1R->string_value);
     DISPATCH;
 
+/* Say - Print string value of register as a line */
+    START_INSTRUCTION(SAY_REG)
+    CALC_DISPATCH(1)
+    DEBUG("TRACE - SAY_REG R%llu\n", REG_IDX(1));
+    printf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+    DISPATCH;
+
+/* - Deprecated */
 START_INSTRUCTION(SAY_STRING)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_STRING constant index 0x%x\n", (unsigned int) (pc+1)->index);
@@ -960,6 +968,7 @@ START_INSTRUCTION(SNE_REG_REG_STRING)
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
+/* - Deprecated */
 START_INSTRUCTION(SAY_INT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_INT\n") ;
@@ -974,6 +983,7 @@ START_INSTRUCTION(SAY_INT)
  *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
+/* - Deprecated */
 START_INSTRUCTION(SAY_CHAR)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_CHAR\n") ;
@@ -984,6 +994,7 @@ START_INSTRUCTION(SAY_CHAR)
  *  SAY_FLOAT  Say op1                                                  pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
+/* - Deprecated */
 START_INSTRUCTION(SAY_FLOAT)
     CALC_DISPATCH(1);
     DEBUG("TRACE - SAY_FLOAT\n") ;

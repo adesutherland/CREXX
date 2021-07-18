@@ -3,6 +3,8 @@
  * REXX Level B Validations
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
@@ -181,10 +183,17 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     ASTNode* n = sym_trnd(symbol, 0);
     ASTNode* parent;
     ASTNode* expr;
+    char *buffer;
+    size_t length;
     if (n->node_type == VAR_SYMBOL) {
         /* Used without definition/declaration - Taken Constant */
         symbol->type = TP_STRING;
-        n->node_type = CONST_SYMBOL;
+        n->node_type = STRING;
+        length = strlen(symbol->name);
+        buffer = malloc(length);
+        memcpy(buffer,symbol->name,length);
+        ast_sstr(n, buffer, length);
+        // n->symbol = 0;
     }
     else {
         expr = n->sibling;

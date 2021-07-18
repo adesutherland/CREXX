@@ -71,6 +71,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->target_type = TP_UNKNOWN;
     node->node_string = "";
     node->node_string_length = 0;
+    node->free_node_string = 0;
     node->register_num = -1;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
@@ -88,8 +89,120 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     return node;
 }
 
+/* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
+ * and decoding / encoding the string nicely */
+/* TODO - X and B suffix */
+#define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
+ASTNode *ast_fstr(Context* context, Token *token) {
+    unsigned char separator;
+    char* raw_string;
+    size_t raw_length;
+    char *processed_string;
+    char *buffer;
+    size_t processed_length;
+
+    /* Make the token */
+    ASTNode *node = ast_ft(context, STRING);
+    node->token = token;
+
+    /* Prepare for processing string */
+    separator = token->token_string[0];
+    raw_string = token->token_string + 1;
+    if (token->token_string[token->length - 1] != separator)
+        raw_length = token->length - 3; /* I.e. There "must" be an X or B suffix which we don't support yet */
+    else
+        raw_length = token->length - 2;
+    processed_length = 0;
+    processed_string = malloc(raw_length * 2); /* Worse case */
+
+    /* Code String - basically RexxAssembler uses C type escapes */
+    buffer = processed_string;
+    while (raw_length) {
+        /* Decode REXX style */
+        if (*raw_string == separator) {
+            /* Just skip to the repeated speech mark */
+            raw_string++;
+            raw_length--;
+        }
+
+        /* Encode C style */
+        switch (*raw_string) {
+            case '\\':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\\');
+                break;
+            case '\n':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('n');
+                break;
+            case '\t':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('t');
+                break;
+            case '\a':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('a');
+                break;
+            case '\b':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('b');
+                break;
+            case '\f':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('f');
+                break;
+            case '\r':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('r');
+                break;
+            case '\v':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('v');
+                break;
+            case '\'':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\'');
+                break;
+            case '\"':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\"');
+                break;
+            case 0:
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('0');
+                break;
+            case '\?':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('?');
+                break;
+            default:
+                ADD_CHAR_TO_BUFFER(*raw_string);
+        }
+        raw_string++;
+        raw_length--;
+    }
+
+    /* Get rid of excess memory */
+    processed_string = realloc(processed_string, processed_length);
+
+    /* Fix up token */
+    node->node_string = processed_string;
+    node->node_string_length = processed_length;
+    node->free_node_string = 1; /* So the malloced buffer is freed */
+    return node;
+}
+
+/* Set the string value of an ASTNode. string must be malloced. memory is
+ * then managed by the AST Library (the caller must not free it) */
+void ast_sstr(ASTNode *node, char* string, size_t length) {
+    if (node->free_node_string) free(node->node_string);
+    node->node_string = string;
+    node->node_string_length = length;
+    node->free_node_string = 1; /* So the malloced buffer is freed when cleaning up */
+}
+
 /* ASTNode Factory - With node type and string value */
-ASTNode *ast_ftt(Context* context, NodeType type, const char *string) {
+ASTNode *ast_ftt(Context* context, NodeType type, char *string) {
     ASTNode *node = ast_ft(context, type);
     node->node_string = string;
     node->node_string_length = strlen(string);
@@ -97,21 +210,21 @@ ASTNode *ast_ftt(Context* context, NodeType type, const char *string) {
 }
 
 /* ASTNode Factory - Error Node */
-ASTNode *ast_err(Context* context, const char *error_string, Token *token) {
+ASTNode *ast_err(Context* context, char *error_string, Token *token) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, token));
     return errorAST;
 }
 
 /* Turn a node to an ERROR */
-void mknd_err(ASTNode* node, const char *error_string) {
+void mknd_err(ASTNode* node, char *error_string) {
     node->node_type = ERROR;
     node->node_string = error_string;
     node->node_string_length = strlen(error_string);
 }
 
 /* ASTNode Factory - Error at last Node */
-ASTNode *ast_errh(Context* context, const char *error_string) {
+ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev));
     return errorAST;
@@ -309,6 +422,7 @@ void free_ast(Context *context) {
     ASTNode *n;
     while (t) {
         n = t->free_list;
+        if (t->free_node_string) free(t->node_string);
         if (t->scope) scp_free(t->scope);
         if (t->output) f_output(t->output);
         if (t->output2) f_output(t->output2);

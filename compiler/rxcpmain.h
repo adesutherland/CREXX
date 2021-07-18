@@ -89,8 +89,9 @@ struct ASTNode {
     Token *token;
     Scope *scope;
     Symbol *symbol;
-    const char *node_string;
+    char *node_string;
     size_t node_string_length;
+    char free_node_string;
     /* These are only valid after the set_source_location walker has run */
     char *source_start, *source_end;
     int line, column;
@@ -109,25 +110,30 @@ void free_tok(Context* context);
 void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */
 
-/* AST Function */
+/* AST Functions */
 ASTNode* ast_f(Context* context, NodeType type, Token *token);
+/* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks */
+ASTNode *ast_fstr(Context* context, Token *token);
 /* ASTNode Factory - With node type*/
 ASTNode *ast_ft(Context* context, NodeType type);
 /* ASTNode Factory - With node type and string value */
-ASTNode *ast_ftt(Context* context, NodeType type, const char *string);
+ASTNode *ast_ftt(Context* context, NodeType type, char *string);
 /* ASTNode Factory - Error Node */
-ASTNode *ast_err(Context* context, const char *error_string, Token *token);
+ASTNode *ast_err(Context* context, char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
-ASTNode *ast_errh(Context* context, const char *error_string);
+ASTNode *ast_errh(Context* context, char *error_string);
 const char *ast_ndtp(NodeType type);
 void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Returns younger for chaining */
 /* Turn a node to an ERROR */
-void mknd_err(ASTNode* node, const char *error_string);
+void mknd_err(ASTNode* node, char *error_string);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file);
+/* Set the string value of an ASTNode. string must be malloced. memory is
+ * then managed by the AST Library (the caller must not free it) */
+void ast_sstr(ASTNode *node, char* string, size_t length);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;

@@ -302,7 +302,7 @@ term(A)              ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
 term(A)              ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
-term(A)              ::= TK_STRING(S). { A = ast_f(context, STRING,S); }
+term(A)              ::= TK_STRING(S). { A = ast_fstr(context,S); }
 bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
