@@ -184,6 +184,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     if (n->node_type == VAR_SYMBOL) {
         /* Used without definition/declaration - Taken Constant */
         symbol->type = TP_STRING;
+        n->node_type = CONST_SYMBOL;
     }
     else {
         expr = n->sibling;
@@ -472,7 +473,7 @@ int validate(Context *context) {
     /* Step 3
      * - Validate Symbols
      */
-//    validate_symbols(context->ast->scope);
+    validate_symbols(context->ast->scope);
 
     /* Step 4
      * - Type Safety

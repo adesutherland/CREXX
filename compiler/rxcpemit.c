@@ -251,7 +251,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = node->symbol->register_num;
                 break;
 
-            case CONST_SYMBOL: /* TODO */
+            case CONST_SYMBOL:
             case FLOAT:
             case INTEGER:
             case STRING:
@@ -530,7 +530,13 @@ static walker_result emit_walker(walker_direction direction,
             case VAR_TARGET:
                 break;
 
-            case CONST_SYMBOL: /* TODO */
+            case CONST_SYMBOL:
+                snprintf(temp1, buf_len, "   load r%d,\"%s\"\n",
+                         node->register_num, node->symbol->name);
+                node->output = output_fs(temp1);
+                type_promotion(node);
+                break;
+
             case STRING:
                 /* TODO - X and B suffix */
                 encode_print(temp2, buf_len, node->node_string + 1, node->node_string_length - 2);
