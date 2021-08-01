@@ -30,7 +30,12 @@ int scan(Assembler_Context* s, char *buff_end) {
 
     slit = ["] ( (any\["\n\r]) | ( [\\]["] ) )* ["];
     clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\[\n\r]) [']);
-    float = [-+]? (digit* "." digit+ | digit+ ".");
+
+    // floating literals
+    fsig = digit* "." digit+ | digit+ ".";
+    fexp = [eE] [+-]? digit+;
+    float = (fsig fexp? | digit+ fexp);
+
     integer = [-+]? digit+;
     rreg = 'r' digit+;
     greg = 'g' digit+;

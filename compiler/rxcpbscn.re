@@ -36,7 +36,12 @@ int rexbscan(Context* s) {
   hex = [a-fA-F0-9];
   int_des = [uUlL]*;
   symchr = letter|digit|[.!?_];
-  float	= (digit*)[.]digit+([eE][+-]?digit+)?;
+
+  // floating literals
+  fsig = digit* "." digit+ | digit+ ".";
+  fexp = [eE] [+-]? digit+;
+  float = (fsig fexp? | digit+ fexp);
+
   integer = digit+;
   simple = (symchr\(digit|[.]))(symchr\[.])*;
   stem = simple [.];
@@ -98,7 +103,7 @@ int rexbscan(Context* s) {
 //  'INTERPRET' { return(TK_INTERPRET); }
 //  'ITERATE' { return(TK_ITERATE); }
 //  'LEAVE' { return(TK_LEAVE); }
-//  'NOP' { return(TK_NOP); }
+  'NOP' { return(TK_NOP); }
 //  'NUMERIC' { return(TK_NUMERIC); }
 'OPTIONS' { return(TK_OPTIONS); }
 //  'OTHERWISE' { return(TK_OTHERWISE); }

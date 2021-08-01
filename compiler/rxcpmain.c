@@ -23,7 +23,8 @@ static void help() {
             "                    https://graphviz.org/download/\n"
 #endif
             "  -l location     Working Location (directory)\n"
-            "  -o output_file  REXX Assembler Output File\n";
+            "  -o output_file  REXX Assembler Output File\n"
+            "  -n              No Optimising\n";
 
     printf("%s",helpMessage);
 }
@@ -73,6 +74,7 @@ int main(int argc, char *argv[]) {
     int debug_mode = 0;
     char *file_name;
     char *location = 0;
+    int do_optimise = 1;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -97,6 +99,9 @@ int main(int argc, char *argv[]) {
                     error_and_exit(2, "Missing location after -l");
                 }
                 location = argv[i];
+                break;
+            case 'N': /* No Optimisation */
+                do_optimise = 0;
                 break;
 
             case 'V': /* Version */
@@ -154,6 +159,9 @@ int main(int argc, char *argv[]) {
 #endif
 
     buff = file2buf(fp);
+    /* Close file */
+    fclose(fp);
+
     if(buff == NULL) {
         fprintf(stderr, "Can't read input file\n");
         exit(-1);
@@ -172,7 +180,9 @@ int main(int argc, char *argv[]) {
     context.ast = 0;
     context.free_list = 0;
     context.level = UNKNOWN;
+    context.optimise = do_optimise;
     context.buff_end = (char*) (((char*)buff) + bytes);
+    context.buff_start = buff;
 
     /* Create Options parser to work out required language level */
     opt_pars(&context);
@@ -221,36 +231,57 @@ int main(int argc, char *argv[]) {
         system("dot astgraph0.dot -Tpng -o astgraph0.png");
     }
 #endif
-    errors = validate(&context);
+    if (debug_mode)
+        printf("Validating AST Tree\n");
+    validate(&context);
+#ifndef __CMS__
+    if (debug_mode) {
+        pdot_tree(context.ast, "astgraph1.dot");
+        system("dot astgraph1.dot -Tpng -o astgraph1.png");
+    }
+#endif
+    errors = prnterrs(&context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
+        goto finish;
     }
-    else {
-#ifndef __CMS__
-        if (debug_mode) {
-            pdot_tree(context.ast, "astgraph1.dot");
-            system("dot astgraph1.dot -Tpng -o astgraph1.png");
-        }
-#endif
 
-        /* Generate Assembler */
-        outFile = openfile(output_file_name, "rxas", location, "w");
-        if (outFile == NULL) {
-            fprintf(stderr, "Can't open output file %s\n", output_file_name);
-            exit(-1);
-        }
+    /* Optimise AST Tree */
+    if (context.optimise) {
         if (debug_mode)
-            printf("Generating Assembler file %s\n", output_file_name);
-        emit(&context, outFile);
-
+            printf("Optimising AST Tree\n");
+        optimise(&context);
 #ifndef __CMS__
         if (debug_mode) {
             pdot_tree(context.ast, "astgraph2.dot");
             system("dot astgraph2.dot -Tpng -o astgraph2.png");
         }
 #endif
-        if (debug_mode) printf("Compiler Exiting - Success\n");
     }
+
+    errors = prnterrs(&context);
+    if (errors) {
+        fprintf(stderr,"%d error(s) in source file\n", errors);
+        goto finish;
+    }
+
+    /* Generate Assembler */
+    outFile = openfile(output_file_name, "rxas", location, "w");
+    if (outFile == NULL) {
+        fprintf(stderr, "Can't open output file %s\n", output_file_name);
+        exit(-1);
+    }
+    if (debug_mode)
+        printf("Generating Assembler file %s\n", output_file_name);
+    emit(&context, outFile);
+
+#ifndef __CMS__
+    if (debug_mode) {
+        pdot_tree(context.ast, "astgraph3.dot");
+        system("dot astgraph3.dot -Tpng -o astgraph3.png");
+    }
+#endif
+    if (debug_mode) printf("Compiler Exiting - Success\n");
 
     finish:
 
@@ -261,7 +292,6 @@ int main(int argc, char *argv[]) {
     free_tok(&context);
 
     /* Close files and deallocate */
-    if (fp) fclose(fp);
     if (outFile) fclose(outFile);
 #ifndef NDEBUG
     if (traceFile) fclose(traceFile);

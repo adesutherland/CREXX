@@ -6,7 +6,8 @@
 
 #define rxversion "cREXX-Phase-0 v0.1.6 hotfix 2"
 
-#include "stdio.h"
+#include <stdio.h>
+#include "platform.h"
 
 /* Typedefs */
 typedef struct ASTNode ASTNode;
@@ -39,6 +40,7 @@ typedef enum ValueType {
 /* Compiler Context Object */
 typedef struct Context {
     FILE *traceFile;
+    char *buff_start;
     char *buff_end;
     char *top, *cursor, *marker, *ctxmarker, *linestart;
     int line;
@@ -48,6 +50,7 @@ typedef struct Context {
     ASTNode* ast;
     ASTNode* free_list;
     RexxLevel level;
+    int optimise;
 } Context;
 
 int rexbscan(Context* s);
@@ -58,14 +61,14 @@ int opt_pars(Context *context);
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ASSIGN, BY, CALL, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    FLOAT, INTEGER, NOP, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_PREFIX,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_SYMBOL, VAR_TARGET
+    VAR_SYMBOL, VAR_TARGET, CONSTANT
 } NodeType;
 
 struct Token {
@@ -92,9 +95,14 @@ struct ASTNode {
     char *node_string;
     size_t node_string_length;
     char free_node_string;
+    rxinteger int_value;
+    int bool_value;
+    double float_value;
     /* These are only valid after the set_source_location walker has run */
+    Token *token_start, *token_end;
     char *source_start, *source_end;
     int line, column;
+    /* These are used by the code emitters */
     OutputFragment *output;
     OutputFragment *output2;
     OutputFragment *output3;
@@ -125,8 +133,8 @@ ASTNode *ast_errh(Context* context, char *error_string);
 const char *ast_ndtp(NodeType type);
 void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
-ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Returns child for chaining */
-ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Returns younger for chaining */
+ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
+ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
 /* Turn a node to an ERROR */
 void mknd_err(ASTNode* node, char *error_string);
 void free_ast(Context* context);
@@ -134,6 +142,15 @@ void pdot_tree(ASTNode *tree, char* output_file);
 /* Set the string value of an ASTNode. string must be malloced. memory is
  * then managed by the AST Library (the caller must not free it) */
 void ast_sstr(ASTNode *node, char* string, size_t length);
+/* Set a node string to a static value (i.e. the node isn't responsible for
+ * freeing it). See also ast_sstr() */
+void ast_str(ASTNode* node, char *string);
+/* Replace replaced_node with new_node in the tree
+ * note that replaced_node should not be a descendant or direct relation of
+ * new_node (else we will get a loop in the tree)! */
+void ast_rpl(ASTNode* replaced_node, ASTNode* new_node);
+/* Delete / Remove node (i.e. the whole subtree) from the tree */
+void ast_del(ASTNode* node);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -159,8 +176,14 @@ typedef walker_result (*walker_handler)(walker_direction direction,
  */
 walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload);
 
-/* Validator - returns the number of errors */
-int validate(Context *context);
+/* Validator AST Tree */
+void validate(Context *context);
+
+/* Optimise AST Tree */
+void optimise(Context *context);
+
+/* Prints errors and returns the number of errors in the AST Tree */
+int prnterrs(Context *context);
 
 /* Scope and Symbols */
 struct Scope {
@@ -180,6 +203,7 @@ struct Symbol {
     Scope *scope;
     ValueType type;
     int register_num;
+    char is_constant;
 };
 
 /* Scope Factory */

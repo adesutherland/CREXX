@@ -129,7 +129,7 @@ command(I)             ::= expression(E).
 //keyword_instruction(I) ::= call(K). { I = K; }
 //keyword_instruction(I) ::= iterate(K). { I = K; }
 //keyword_instruction(I) ::= leave(K). { I = K; }
-//keyword_instruction(I) ::= nop(K). { I = K; }
+keyword_instruction(I) ::= nop(K). { I = K; }
 //keyword_instruction(I) ::= parse(K). { I = K; }
 //keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
@@ -230,9 +230,6 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
     leave ::= 'LEAVE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
           -> (LEAVE v?);
 
-### Nop
-    nop ::= 'NOP';
-
 ### Parse
     parse ::= ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
              -> (PARSE OPTIONS in out)
@@ -261,6 +258,10 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
 /* Say */
 say(I) ::= TK_SAY(T) expression(E).
     { I = ast_f(context, SAY, T); add_ast(I,E); }
+
+/* Nop */
+nop(I) ::= TK_NOP(T).
+    { I = ast_f(context, NOP, T); }
 
 /*
 ### Parse Templates

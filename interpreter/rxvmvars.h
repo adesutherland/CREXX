@@ -300,10 +300,16 @@ static void copy_value(value *dest, value *source) {
     else dest->string_value = 0;
 }
 
+/* Compares two strings. returns -1, 0, 1 as appropriate */
+#define MIN(a,b) (((a)<(b))?(a):(b))
 static int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
-    if (length1 > length2) return 1;
-    if (length1 < length2) return -1;
-    return strncmp(value1, value2, length1);
+    rxinteger idiff;
+
+    if ((idiff = memcmp(value1, value2,MIN(length1, length2)) != 0))
+        return (int)idiff;
+
+    idiff = (rxinteger)length1 - (rxinteger)length2;
+    return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
 }
 
 static int string_cmp_value(value *v1, value *v2) {

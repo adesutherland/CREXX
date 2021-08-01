@@ -172,6 +172,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->name = (char*)malloc(node->node_string_length + 1);
     memcpy(symbol->name, node->node_string, node->node_string_length);
     symbol->name[node->node_string_length] = 0;
+    symbol->is_constant = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -221,14 +222,17 @@ static void symbol_free(Symbol *symbol) {
     free(symbol);
 }
 
+/* Returns the index'th AST Node attached to a symbol */
 ASTNode* sym_trnd(Symbol *symbol, size_t index) {
     return (ASTNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
 }
 
+/* Connect an AST Node to a Symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node) {
     dpa_add((dpa*)(symbol->ast_node_array), node);
 }
 
+/* Returns the number of AST nodes connected to a symbol */
 size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
 }

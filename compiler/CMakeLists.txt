@@ -35,7 +35,7 @@ add_custom_command(
 add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
                rxcposcn.c rxcpopgr.c rxcpopar.c rxcpopgr.h
                rexbscan.c rxcpbgmr.c rxcpbpar.c rxcpbgmr.h rxcpbval.c rxcpsymb.c
-               rxcpdary.h rxcpemit.c
+               rxcpdary.h rxcpemit.c rxcp_opt.c
                ../platform/platform.h ../platform/platform.c
                ../utf8/utf.h)
 

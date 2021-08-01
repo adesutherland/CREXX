@@ -72,6 +72,9 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
+    node->int_value = 0;
+    node->bool_value = 0;
+    node->float_value = 0;
     node->register_num = -1;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
@@ -191,6 +194,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
     node->free_node_string = 1; /* So the malloced buffer is freed */
     return node;
 }
+#undef ADD_CHAR_TO_BUFFER
 
 /* Set the string value of an ASTNode. string must be malloced. memory is
  * then managed by the AST Library (the caller must not free it) */
@@ -219,8 +223,23 @@ ASTNode *ast_err(Context* context, char *error_string, Token *token) {
 /* Turn a node to an ERROR */
 void mknd_err(ASTNode* node, char *error_string) {
     node->node_type = ERROR;
+    if (node->free_node_string) {
+        free(node->node_string);
+        node->free_node_string = 0;
+    }
     node->node_string = error_string;
     node->node_string_length = strlen(error_string);
+}
+
+/* Set a node string to a static value (i.e. the node isn't responsible for
+ * freeing it). See also ast_sstr() */
+void ast_str(ASTNode* node, char *string) {
+    if (node->free_node_string) {
+        free(node->node_string);
+        node->free_node_string = 0;
+    }
+    node->node_string = string;
+    node->node_string_length = strlen(string);
 }
 
 /* ASTNode Factory - Error at last Node */
@@ -270,6 +289,8 @@ const char *ast_ndtp(NodeType type) {
             return "FLOAT";
         case INTEGER:
             return "INTEGER";
+        case NOP:
+            return "NOP";
         case OP_ADD:
             return "OP_ADD";
         case OP_MINUS:
@@ -389,10 +410,38 @@ walker_result prnt_walker_handler(walker_direction direction,
     return result_normal;
 }
 
+
+
+static walker_result print_error_walker(walker_direction direction,
+                                  ASTNode* node,
+                                  __attribute__((unused)) void *payload) {
+
+    int *errors = (int*)payload;
+
+    if (direction == in) {
+        if (node->node_type == ERROR) {
+            fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
+            prt_unex(stderr, node->source_start,
+                     (int) (node->source_end - node->source_start + 1));
+            fprintf(stderr,"\"\n");
+            (*errors)++;
+        }
+    }
+    return result_normal;
+}
+
+/* Prints errors and returns the number of errors in the AST Tree */
+int prnterrs(Context *context) {
+    int errors = 0;
+    ast_wlkr(context->ast, print_error_walker, &errors);
+    return errors;
+}
+
 void prnt_ast(ASTNode *node) {
     ast_wlkr(node, prnt_walker_handler, NULL);
 }
 
+/* Add Child - Returns child for chaining */
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     if (child == 0) return child;
     ASTNode *s = parent->child;
@@ -408,6 +457,7 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     return child;
 }
 
+/* Add sibling - Returns younger for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
     if (younger == 0 || older == 0) return younger;
     ASTNode *parent = older->parent;
@@ -415,6 +465,58 @@ ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
     older->sibling = younger;
     younger->parent = parent;
     return younger;
+}
+
+/* Replace replaced_node with new_node in the tree
+ * note that replaced_node should not be a descendant or direct relation of
+ * new_node (else we might get a loop in the tree)! */
+void ast_rpl(ASTNode* replaced_node, ASTNode* new_node) {
+    ASTNode *younger_sibling;
+
+    /* Make the new node point to the right parent and younger sibling */
+    new_node->sibling = replaced_node->sibling;
+    new_node->parent = replaced_node->parent;
+
+    /* Update younger sibling */
+    younger_sibling = replaced_node->parent->child;
+    while (younger_sibling) {
+        if (younger_sibling->sibling == replaced_node) {
+            younger_sibling->sibling = new_node;
+            break;
+        }
+        younger_sibling = younger_sibling->sibling;
+    }
+
+    /* Update Parent */
+    if (replaced_node->parent->child == replaced_node)
+        replaced_node->parent->child = new_node;
+
+    /* Orphan the replaced node */
+    replaced_node->parent = NULL;
+    replaced_node->sibling = NULL;
+}
+
+/* Delete / Remove node (i.e. the whole subtree) from the tree */
+void ast_del(ASTNode* node) {
+    ASTNode *younger_sibling;
+
+    /* Update younger sibling */
+    younger_sibling = node->parent->child;
+    while (younger_sibling) {
+        if (younger_sibling->sibling == node) {
+            younger_sibling->sibling = node->sibling;
+            break;
+        }
+        younger_sibling = younger_sibling->sibling;
+    }
+
+    /* Update Parent */
+    if (node->parent->child == node)
+        node->parent->child = node->sibling;
+
+    /* Orphan the deleted node */
+    node->parent = NULL;
+    node->sibling = NULL;
 }
 
 void free_ast(Context *context) {
@@ -482,7 +584,7 @@ void prt_unex(FILE* output, const char *ptr, int len) {
 
 void pdot_scope(Symbol *symbol, void *payload) {
     char reg[20];
-    if (symbol->register_num != -1)
+    if (symbol->register_num >= 0)
         sprintf(reg,"R%d",symbol->register_num);
     else
         reg[0] = 0;
@@ -553,6 +655,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case FUNCTION:
             case ITERATE:
             case LEAVE:
+            case NOP:
             case OPTIONS:
             case PROCEDURE:
             case PULL:
@@ -618,6 +721,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case STRING:
             case INTEGER:
             case FLOAT:
+            case CONSTANT:
                 attributes = "color=cyan3 shape=box";
                 only_label = 1;
                 break;
@@ -642,7 +746,7 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
-        if (node->register_num != -1)
+        if (node->register_num >= 0)
             sprintf(value_type_buffer,"\nR%d",node->register_num);
         else
             value_type_buffer[0] = 0;
