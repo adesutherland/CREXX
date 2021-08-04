@@ -209,7 +209,7 @@ static walker_result register_walker(walker_direction direction,
                  * If an assignment from an expression (rather than a symbol) then
                  * then mark the register as don't assign (DONT_ASSIGN_REGISTER) so we can assign
                  * it to the target register on the way out (bottom up) and save
-                 * a copy
+                 * a copy instruction
                  */
                 if (child2->symbol == 0)
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
@@ -222,15 +222,29 @@ static walker_result register_walker(walker_direction direction,
                 if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
-            default: ;
-        }
-    }
-    else {
-        /* OUT - BOTTOM UP */
-        switch (node->node_type) {
-
+                /* The order of the operands if these instructions are not order
+                 * specific but the instructions only support operand 3 being a
+                 * constant */
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
+            case OP_ADD:
+            case OP_MULT:
+                if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                else if (is_constant(child1)) {
+                    /* We need to swap the two children round because the last one needs
+                     * to be the constant */
+                    child1->parent->child = child2;
+                    child2 = child1;
+                    child2->sibling = 0;
+                    child1 = child2->parent->child;
+                    child1->sibling = child2;
+
+                    child2->register_num = DONT_ASSIGN_REGISTER;
+                }
+                break;
+
+                /* The order of the operands of these instructions are significant
+                 * however the instructions do not support both being a constant */
             case OP_COMPARE_GT:
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
@@ -241,21 +255,67 @@ static walker_result register_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-            case OP_AND:
-            case OP_OR:
-            case OP_CONCAT:
-            case OP_SCONCAT:
-            case OP_ADD:
             case OP_MINUS:
-            case OP_MULT:
             case OP_POWER:
             case OP_DIV:
             case OP_IDIV:
             case OP_MOD:
+            case OP_CONCAT:
+            case OP_SCONCAT:
+                /* one or the other can be a constant - not both */
+                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+                /* These should not have constants if the optimiser has been run and
+                 * anyway the instructions cannot accept constants */
+            case OP_AND:
+            case OP_OR:
+            default:
+                ;
+        }
+    }
+    else {
+        /* OUT - BOTTOM UP */
+        switch (node->node_type) {
+
+            /* The order of the operands if these instructions are not order
+             * specific but the instructions only support operand 3 being a
+             * constant */
+            case OP_COMPARE_EQUAL:
+            case OP_COMPARE_NEQ:
+            case OP_ADD:
+            case OP_MULT:
+
+            /* The order of the operands of these instructions are significant
+             * however the instructions do not support both being a caonstnt */
+            case OP_COMPARE_GT:
+            case OP_COMPARE_LT:
+            case OP_COMPARE_GTE:
+            case OP_COMPARE_LTE:
+            case OP_COMPARE_S_EQ:
+            case OP_COMPARE_S_NEQ:
+            case OP_COMPARE_S_GT:
+            case OP_COMPARE_S_LT:
+            case OP_COMPARE_S_GTE:
+            case OP_COMPARE_S_LTE:
+            case OP_MINUS:
+            case OP_POWER:
+            case OP_DIV:
+            case OP_IDIV:
+            case OP_MOD:
+            case OP_CONCAT:
+            case OP_SCONCAT:
+
+            /* These should not have constants if the optimiser has been run and
+             * anyway the instructions cannot accept constants */
+            case OP_AND:
+            case OP_OR:
+
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0)
+                if (child1->symbol == 0 && child1->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child1->register_num);
-                if (child2->symbol == 0)
+                if (child2->symbol == 0 && child2->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child2->register_num);
 
                 /* Set result temporary register */
@@ -492,22 +552,60 @@ static walker_result emit_walker(walker_direction direction,
             case OP_SCONCAT:
                 if (!op) op="sconcat";
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
-                if (child2->output) output_append(node->output, child2->output);
-                snprintf(temp1, buf_len, "   %s r%d,r%d,r%d\n",
-                         op,
-                         node->register_num,
-                         child1->register_num,
-                         child2->register_num);
+                /* One or other of the operands may be a constant */
+                /* If the register is not set then the child is a constant */
+                if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    if (child2->output)
+                        output_append(node->output, child2->output);
+                    /* It MUST have been converted to a STRING
+                     * We don't need to worry about ".0" to show a float literal */
+                    snprintf(temp1, buf_len, "   %s r%d,\"%.*s\",r%d\n",
+                                 op,
+                                 node->register_num,
+                                 child1->node_string_length, child1->node_string,
+                                 child2->register_num);
+                }
+
+                /* If the register is not set then the child is a constant */
+                else if (child2->register_num == DONT_ASSIGN_REGISTER) {
+                    if (child1->output)
+                        output_append(node->output, child1->output);
+                    /* It MUST have been converted to a STRING
+                     * We don't need to worry about ".0" to show a float literal */
+                    snprintf(temp1, buf_len, "   %s r%d,r%d,\"%.*s\"\n",
+                             op,
+                             node->register_num,
+                             child1->register_num,
+                             child2->node_string_length, child2->node_string);
+                }
+
+                /* Neither are constants */
+                else {
+                    if (child1->output) output_append(node->output, child1->output);
+                    if (child2->output) output_append(node->output, child2->output);
+                    snprintf(temp1, buf_len, "   %s r%d,r%d,r%d\n",
+                             op,
+                             node->register_num,
+                             child1->register_num,
+                             child2->register_num);
+                }
+
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);
             break;
 
+            /* Order of operands don't matter */
             case OP_COMPARE_EQUAL:
                 if (!op) op="eq";
             case OP_COMPARE_NEQ:
                 if (!op) op="ne";
+            case OP_ADD:
+                if (!op) op="add";
+            case OP_MULT:
+                if (!op) op="mult";
+
+            /* Order of operands DO matter */
             case OP_COMPARE_GT:
                 if (!op) op="gt";
             case OP_COMPARE_LT:
@@ -528,12 +626,8 @@ static walker_result emit_walker(walker_direction direction,
                 if (!op) op="gtes";
             case OP_COMPARE_S_LTE:
                 if (!op) op="ltes";
-            case OP_ADD:
-                if (!op) op="add";
             case OP_MINUS:
                 if (!op) op="sub";
-            case OP_MULT:
-                if (!op) op="mult";
             case OP_POWER:
                 if (!op) op="pow";
             case OP_DIV:
@@ -542,34 +636,208 @@ static walker_result emit_walker(walker_direction direction,
                 if (!op) op="divi";
             case OP_MOD:
                 if (!op) op="mod";
+
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
-                if (child2->output) output_append(node->output, child2->output);
-                snprintf(temp1, buf_len, "   %s%s r%d,r%d,r%d\n",
-                         tp_prefix,
-                         op,
-                         node->register_num,
-                         child1->register_num,
-                         child2->register_num);
+                /* One or other of the operands may be a constant */
+                /* If the register is not set then the child is a constant */
+                if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    if (child2->output)
+                        output_append(node->output, child2->output);
+                    if (child1->target_type == TP_STRING) {
+                        snprintf(temp1, buf_len, "   %s%s r%d,\"%.*s\",r%d\n",
+                                 tp_prefix,
+                                 op,
+                                 node->register_num,
+                                 child1->node_string_length, child1->node_string,
+                                 child2->register_num);
+                    }
+
+                    else if (child2->value_type == TP_FLOAT) {
+                        /* Need to make sure the float literal has an ".0" */
+                        flag = 1; /* Assume we should add .0 */
+                        for (i = 0; i < child1->node_string_length; i++) {
+                            if (child1->node_string[i] == '.' ||
+                                child1->node_string[i] == 'e') {
+                                /* Already in a float format */
+                                flag = 0; /* don't add .0 */
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            snprintf(temp1, buf_len, "   %s%s r%d,%.*s.0,r%d\n",
+                                     tp_prefix,
+                                     op,
+                                     node->register_num,
+                                     child1->node_string_length, child1->node_string,
+                                     child2->register_num);
+                        } else {
+                            snprintf(temp1, buf_len, "   %s%s r%d,%.*s,r%d\n",
+                                     tp_prefix,
+                                     op,
+                                     node->register_num,
+                                     child1->node_string_length, child1->node_string,
+                                     child2->register_num);
+                        }
+                    }
+
+                    /* INTEGER */
+                    else {
+                        snprintf(temp1, buf_len, "   %s%s r%d,%.*s,r%d\n",
+                                 tp_prefix,
+                                 op,
+                                 node->register_num,
+                                 child1->node_string_length, child1->node_string,
+                                 child2->register_num);
+                    }
+                }
+
+                /* If the register is not set then the child is a constant */
+                else if (child2->register_num == DONT_ASSIGN_REGISTER) {
+                    if (child1->output)
+                        output_append(node->output, child1->output);
+
+                    if (child2->target_type == TP_STRING) {
+                        snprintf(temp1, buf_len, "   %s%s r%d,r%d,\"%.*s\"\n",
+                                 tp_prefix,
+                                 op,
+                                 node->register_num,
+                                 child1->register_num,
+                                 child2->node_string_length, child2->node_string);
+                    }
+
+                    else if (child2->value_type == TP_FLOAT) {
+                        /* Need to make sure the float literal has an ".0" */
+                        flag = 1; /* Assume we should add .0 */
+                        for (i = 0; i < child2->node_string_length; i++) {
+                            if (child2->node_string[i] == '.' ||
+                                child2->node_string[i] == 'e') {
+                                /* Already in a float format */
+                                flag = 0; /* don't add .0 */
+                                break;
+                            }
+                        }
+                        if (flag) {
+                            snprintf(temp1, buf_len, "   %s%s r%d,r%d,%.*s.0\n",
+                                     tp_prefix,
+                                     op,
+                                     node->register_num,
+                                     child1->register_num,
+                                     child2->node_string_length, child2->node_string);
+                        } else {
+                            snprintf(temp1, buf_len, "   %s%s r%d,r%d,%.*s\n",
+                                     tp_prefix,
+                                     op,
+                                     node->register_num,
+                                     child1->register_num,
+                                     child2->node_string_length, child2->node_string);
+                        }
+                    }
+
+                    /* INTEGER */
+                    else {
+                        snprintf(temp1, buf_len, "   %s%s r%d,r%d,%.*s\n",
+                                 tp_prefix,
+                                 op,
+                                 node->register_num,
+                                 child1->register_num,
+                                 child2->node_string_length, child2->node_string);
+                    }
+                }
+
+                /* Neither are constants */
+                else {
+                    if (child1->output)
+                        output_append(node->output, child1->output);
+                    if (child2->output)
+                        output_append(node->output, child2->output);
+                    snprintf(temp1, buf_len, "   %s%s r%d,r%d,r%d\n",
+                             tp_prefix,
+                             op,
+                             node->register_num,
+                             child1->register_num,
+                             child2->register_num);
+                }
+
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);
                 break;
 
             case OP_AND:
-                op="and";
-            case OP_OR:
-                if (!op) op="or";
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
-                if (child2->output) output_append(node->output, child2->output);
-                snprintf(temp1, buf_len, "   %s r%d,r%d,r%d\n",
-                         op,
-                         node->register_num,
-                         child1->register_num,
-                         child2->register_num);
+                output_append(node->output, child1->output);
+
+                /* If result is false - we can just lazily set the result to false
+                 * and not bother with the second expression */
+                snprintf(temp1, buf_len, "   brf l%d,r%d\n",
+                         child1->node_number,
+                         child1->register_num);
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
+
+                /* Evaluate child2 */
+                output_append(node->output, child2->output);
+
+                /* Result is child2's result & branch to end */
+                if (node->register_num == child2->register_num) {
+                    /* No need to copy if the registers are the same */
+                    snprintf(temp1, buf_len, "   br l%d\n", node->node_number);
+                }
+                else {
+                    snprintf(temp1, buf_len, "   icopy r%d,r%d\n   br l%d\n",
+                             node->register_num,
+                             child2->register_num,
+                             node->node_number);
+                }
+                node->output3 = output_fs(temp1);
+                output_append(node->output, node->output3);
+
+                /* End of logic */
+                snprintf(temp1, buf_len, "l%d:\n   load r%d,0\nl%d:\n",
+                         child1->node_number,
+                         node->register_num,
+                         node->node_number);
+                node->output4 = output_fs(temp1);
+                output_append(node->output, node->output4);
+                type_promotion(node);
+                break;
+
+            case OP_OR:
+                node->output = output_f();
+                output_append(node->output, child1->output);
+
+                /* If result is true - we can just lazily set the result to true
+                 * and not bother with the second expression */
+                snprintf(temp1, buf_len, "   brt l%d,r%d\n",
+                         child1->node_number,
+                         child1->register_num);
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+
+                /* Evaluate child2 */
+                output_append(node->output, child2->output);
+
+                /* Result is child2's result & branch to end */
+                if (node->register_num == child2->register_num) {
+                    /* No need to copy if the registers are the same */
+                    snprintf(temp1, buf_len, "   br l%d\n", node->node_number);
+                }
+                else {
+                    snprintf(temp1, buf_len, "   icopy r%d,r%d\n   br l%d\n",
+                             node->register_num,
+                             child2->register_num,
+                             node->node_number);
+                }
+                node->output3 = output_fs(temp1);
+                output_append(node->output, node->output3);
+
+                /* End of logic */
+                snprintf(temp1, buf_len, "l%d:\n   load r%d,1\nl%d:\n",
+                         child1->node_number,
+                         node->register_num,
+                         node->node_number);
+                node->output4 = output_fs(temp1);
+                output_append(node->output, node->output4);
                 type_promotion(node);
                 break;
 

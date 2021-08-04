@@ -106,7 +106,7 @@ static value* value_conststring_f(void* parent, string_constant *initial_value) 
     this->string_pos = 0;
 #ifndef NUTF8
     this->string_char_pos = 0;
-    this->string_chars = utf8nlen(this->string_value, this->string_length);
+    this->string_chars = initial_value->string_chars;
 #endif
     return this;
 }
@@ -360,6 +360,76 @@ static void string_sconcat(value *v1, value *v2, value *v3) {
     set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
     v1->string_char_pos = 0;
     #endif
+}
+
+static void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
+    size_t len = v2->string_length + v3->string_len;
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
+
+    memcpy(buffer, v2->string_value, v2->string_length);
+    memcpy(buffer + v2->string_length, v3->string, v3->string_len);
+    v1->string_pos = 0;
+
+#ifdef NUTF8
+    set_buffer_string(v1, buffer, len, buffer_len);
+#else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+    v1->string_char_pos = 0;
+#endif
+}
+
+static void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
+    size_t len = v2->string_length + v3->string_len + 1;
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
+
+    memcpy(buffer, v2->string_value, v2->string_length);
+    buffer[v2->string_length] = ' ';
+    memcpy(buffer + v2->string_length + 1, v3->string, v3->string_len);
+    v1->string_pos = 0;
+
+#ifdef NUTF8
+    set_buffer_string(v1, buffer, len, buffer_len);
+#else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+    v1->string_char_pos = 0;
+#endif
+}
+
+static void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
+    size_t len = v2->string_len + v3->string_length;
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
+
+    memcpy(buffer, v2->string, v2->string_len);
+    memcpy(buffer + v2->string_len, v3->string_value, v3->string_length);
+    v1->string_pos = 0;
+
+#ifdef NUTF8
+    set_buffer_string(v1, buffer, len, buffer_len);
+#else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+    v1->string_char_pos = 0;
+#endif
+}
+
+static void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
+    size_t len = v2->string_len + v3->string_length + 1;
+    size_t buffer_len = buffer_size(len);
+    char *buffer = malloc(buffer_len);
+
+    memcpy(buffer, v2->string, v2->string_len);
+    buffer[v2->string_len] = ' ';
+    memcpy(buffer + v2->string_len + 1, v3->string_value, v3->string_length);
+    v1->string_pos = 0;
+
+#ifdef NUTF8
+    set_buffer_string(v1, buffer, len, buffer_len);
+#else
+    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+    v1->string_char_pos = 0;
+#endif
 }
 
 #ifndef NUTF8

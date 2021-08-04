@@ -5,7 +5,11 @@
 #include "platform.h"
 #include "rxasassm.h"
 #include "rxvminst.h"
+
 #include "rxastree.h"
+#ifndef NUTF8
+#include "utf.h"
+#endif
 
 /* Structure to handle "backpatching" - fixing forward references */
 struct backpatching_references;
@@ -387,6 +391,10 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                                                              .string);
                 sentry->string[sentry->string_len] =
                         0; /* Add a null ... just for safety */
+
+#ifndef NUTF8
+                sentry->string_chars = utf8nlen(sentry->string, sentry->string_len);
+#endif
 
                 /* TODO resize/shrink entry after unescaping */
 
