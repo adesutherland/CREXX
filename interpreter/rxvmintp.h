@@ -4,7 +4,7 @@
 #include "rxas.h"
 #include "rxvmvars.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.6 hotfix 1"
+#define rxversion "cREXX-Phase-0 v0.1.6 + F0026"
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
@@ -80,23 +80,23 @@
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }
-#define op1R                     REG_OP(1)
-#define op2R                     REG_OP(2)
-#define op3R                     REG_OP(3)
-#define op1I                     INT_OP(1)
-#define op2I                     INT_OP(2)
-#define op3I                     INT_OP(3)
-#define op1F                     FLOAT_OP(1)
-#define op2F                     FLOAT_OP(2)
-#define op3F                     FLOAT_OP(3)
-#define op1S                     CONSTSTRING_OP(1)
-#define op2S                     CONSTSTRING_OP(2)
-#define op3S                     CONSTSTRING_OP(3)
-#define op1RI                    INT_VAL(op1R)
-#define op2RI                    INT_VAL(op2R)
-#define op3RI                    INT_VAL(op3R)
-#define op2RF                    FLOAT_VAL(op2R)
-#define op3RF                    FLOAT_VAL(op3R)
+#define op1R                     (REG_OP(1))
+#define op2R                     (REG_OP(2))
+#define op3R                     (REG_OP(3))
+#define op1I                     (INT_OP(1))
+#define op2I                     (INT_OP(2))
+#define op3I                     (INT_OP(3))
+#define op1F                     (FLOAT_OP(1))
+#define op2F                     (FLOAT_OP(2))
+#define op3F                     (FLOAT_OP(3))
+#define op1S                     (CONSTSTRING_OP(1))
+#define op2S                     (CONSTSTRING_OP(2))
+#define op3S                     (CONSTSTRING_OP(3))
+#define op1RI                    (INT_VAL(op1R))
+#define op2RI                    (INT_VAL(op2R))
+#define op3RI                    (INT_VAL(op3R))
+#define op2RF                    (FLOAT_VAL(op2R))
+#define op3RF                    (FLOAT_VAL(op3R))
 #define REG_OP_TEST(v,n)        { (v) = REG_OP(n);}
 //#define REG_OP_TEST_INT(v,n)   { (v) = REG_OP(n); REG_TEST(v);                                      \
 //                                 if ((v)->status.type_int==0)  goto notint; }

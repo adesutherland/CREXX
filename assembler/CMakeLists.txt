@@ -21,10 +21,12 @@ add_custom_command(
 add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c
         rxasgrmr.c rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
-        ../avl_tree/rxastree.h)
+        ../avl_tree/rxastree.h
+        ../utf8/utf.h)
 
 target_link_libraries(rxas machine avl_tree platform)
 
 add_dependencies(rxas re2c lemon)
 
-target_include_directories(rxas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../machine ../platform ../avl_tree)
+target_include_directories(rxas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../machine
+        ../platform ../avl_tree ../utf8)

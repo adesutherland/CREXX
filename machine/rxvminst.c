@@ -111,10 +111,42 @@ void init_ops() {
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_INT);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_INT, OP_REG);
 
+    instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fne", "Float Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("fne", "Float Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fgt", "Float Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("fgt", "Float Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fgt", "Float Greater than op1=(op2>op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("fgte", "Float Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("fgte", "Float Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fgte", "Float Greater than equals op1=(op2>=op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("flt", "Float Less than op1=(op2<op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("flt", "Float Less than op1=(op2<op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("flt", "Float Less than op1=(op2<op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_FLOAT, OP_REG);
+
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sgt", "String Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("sgt", "String Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sgt", "String Greater than op1=(op2>op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("sgte", "String Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("sgte", "String Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("sgte", "String Greater than equals op1=(op2>=op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("slt", "String Less than op1=(op2<op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("slt", "String Less than op1=(op2<op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("slt", "String Less than op1=(op2<op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_STRING, OP_REG);
+
+    instr_f("and", "Logical (int) and op1=(op2 && op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("or", "Logical (int) or op1=(op2 || op3)", OP_REG, OP_REG, OP_REG);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
 
@@ -150,6 +182,7 @@ void init_ops() {
 
     instr_f("move", "Move op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("copy", "Copy op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("icopy", "Copy Integer op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);
@@ -159,7 +192,8 @@ void init_ops() {
     instr_f("load", "Load op1 with op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_CHAR, OP_NONE);
 
-    instr_f("ssay", "String Say op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("say", "Say op1 (as string)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("ssay", "String Say op1 (Deprecated use 'say reg')", OP_REG, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_STRING, OP_NONE, OP_NONE);

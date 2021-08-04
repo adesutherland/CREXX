@@ -60,6 +60,9 @@ typedef struct chameleon_constant {
 typedef struct string_constant {
     chameleon_constant base;
     size_t string_len;
+#ifndef NUTF8
+    size_t string_chars;
+#endif
     char string[1]; /* Must be last member */
 } string_constant;
 

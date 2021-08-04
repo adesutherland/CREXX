@@ -3,13 +3,16 @@
  * REXX Level B Validations
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
 /* Step 1
- * - Sets the source start / finish position for each node
+ * - Sets the token and source start / finish position for each node
  * - Fixes SCONCAT to CONCAT
- * - Other AST fixups (TBC)
+ * - Removes excess NOPs
+ * - Other AST fixups / validations
  */
 
 #define print_node printf("Line %d: %.*s\n", node->line + 1,(int)(node->source_end - node->source_start) + 1, node->source_start)
@@ -17,60 +20,69 @@
 static walker_result step1_walker(walker_direction direction,
                                   ASTNode* node, __attribute__((unused)) void *payload) {
 
-    ASTNode *child, *c;
-    char *ch;
+    ASTNode *child, *next_child;
     int has_to;
     int has_for;
     int has_by;
+    Token *left, *right;
 
     Context *context = (Context*)payload;
 
     if (direction == out) {
         if (node->token) {
-            node->source_start = node->token->token_string;
-            node->source_end = node->token->token_string +
-                               node->token->length - 1;
-            node->line = node->token->line;
-            node->column = node->token->column;
+            node->token_start = node->token;
+            node->token_end = node->token;
+        } else {
+            node->token_start = 0;
+            node->token_end = 0;
+        }
+
+        child = node->child;
+        while (child) {
+            /* A non-terminal node  - so look at children */
+            /* The children's token_start etc. will have been set already */
+            if (child->token_start) {
+                if (node->token_start) {
+                    if (child->token_start->token_number < node->token_start->token_number)
+                        node->token_start = child->token_start;
+                    if (child->token_end->token_number > node->token_end->token_number)
+                        node->token_end = child->token_end;
+                } else {
+                    node->token_start = child->token_start;
+                    node->token_end = child->token_end;
+                }
+            }
+            child = child->sibling;
+        }
+
+        /* To pretty generated comments, and for code re-writing, and proper
+         * source code analysis, we need to expand the source code to include
+         * any '('s to the left and ')'s to the right as these are removed from
+         * the AST. What we are doing is expanding the selection to include
+         * *matching* ('s and )'s. Where they don't match, ignore, they will be
+         * handled by a parent or grandparent node */
+        left = node->token_start->token_prev;
+        right = node->token_end->token_next;
+        while (left && right && left->token_type==TK_OPEN_BRACKET && right->token_type==TK_CLOSE_BRACKET) {
+            node->token_start = left;
+            node->token_end = right;
+            left = left->token_prev;
+            right = right->token_next;
+        }
+
+        /* Set code start and end position */
+        if (node->token_start) {
+            node->source_start = node->token_start->token_string;
+            node->source_end = node->token_end->token_string +
+                               node->token_end->length - 1;
+            node->line = node->token_start->line;
+            node->column = node->token_start->column;
         } else {
             node->source_start = 0;
             node->source_end = 0;
             node->line = 0;
             node->column = 0;
         }
-
-        child = node->child;
-        while (child) {
-            /* A non-terminal node  - so look at children */
-            /* The children's source_start etc. will have been set already */
-            if (child->source_start) {
-                if (node->source_start) {
-                    if (child->source_start < node->source_start) {
-                        node->source_start = child->source_start;
-                        node->line = child->line;
-                        node->column = child->column;
-                    }
-                    if (child->source_end > node->source_end)
-                        node->source_end = child->source_end;
-                } else {
-                    node->source_start = child->source_start;
-                    node->source_end = child->source_end;
-                    node->line = child->line;
-                    node->column = child->column;
-                }
-            }
-            child = child->sibling;
-        }
-/*
-        // Prints out the AST source string
-        if (node->source_start) {
-            printf("%s=",ast_nodetype(node->node_type));
-            print_unescaped(stdout, node->source_start,
-                            (int)(node->source_end - node->source_start + 1));
-            printf("\n");
-
-        }
-*/
 
         if (node->node_type == PROGRAM_FILE) {
             /* prune REXX_OPTIONS */
@@ -111,17 +123,19 @@ static walker_result step1_walker(walker_direction direction,
             /* We need to decide if there is white space between the tokens */
             if (node->child->sibling->source_start - node->child->source_end == 1)
                 node->node_type = OP_CONCAT; /* No gap */
-            {
-                /* OK There is a gap but we need to check it is actually
-                 * whitespace - it could be a ( or ) for example */
-                for (ch=node->child->source_end + 1;
-                    ch<node->child->sibling->source_start; ch++) {
-                    if (*ch == ' ' || *ch == '\t'
-                        || *ch == '\v' || *ch == '\f') break;
-                }
-                if (ch == node->child->sibling->source_start)
-                    node->node_type = OP_CONCAT; /* No WS Found */
+        }
+
+        else if (node->node_type == INSTRUCTIONS) {
+            /* Remove Excess NOPs */
+            child = node->child;
+            while (child) {
+                next_child = child->sibling;
+                if (child->node_type == NOP)
+                    ast_del(child);
+                child = next_child;
             }
+            if (!node->child)
+                node->node_type = NOP; /* Convert empty STATEMENTS to NOP */
         }
     }
     return result_normal;
@@ -181,9 +195,31 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     ASTNode* n = sym_trnd(symbol, 0);
     ASTNode* parent;
     ASTNode* expr;
+    char *buffer;
+    size_t length;
+    size_t i;
+
     if (n->node_type == VAR_SYMBOL) {
         /* Used without definition/declaration - Taken Constant */
+        /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
         symbol->type = TP_STRING;
+        symbol->is_constant = 1;
+        /* Update all the attached AST Nodes to be constants */
+        for (i=0; i<sym_nond(symbol); i++) {
+            n = sym_trnd(symbol, i);
+            if (n->node_type != VAR_SYMBOL) {
+                /* This means we are trying to write to a TAKEN CONSTANT
+                 * which is illegal in Levels B/G/L */
+                mknd_err(n, "UPDATING_TAKEN_CONSTANT");
+            }
+            else {
+                n->node_type = STRING;
+                length = strlen(symbol->name);
+                buffer = malloc(length);
+                memcpy(buffer, symbol->name, length);
+                ast_sstr(n, buffer, length);
+            }
+        }
     }
     else {
         expr = n->sibling;
@@ -203,21 +239,9 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 }
 
 static void validate_symbols(Scope* scope) {
-    int i = 0;
-    ASTNode *p;
+    int i;
     if (!scope) return;
 
-    p = scope->defining_node;
-    /*
-    if (p->node_type == PROGRAM_FILE) {
-        printf("SCOPE PROGRAM\n");
-    }
-    else {
-        printf("SCOPE \"%.*s\"\n",
-               (int) (p->source_end - p->source_start + 1),
-               p->source_start);
-    }
-    */
     scp_4all(scope, validate_symbol_in_scope, NULL);
     for (i=0; i < scp_noch(scope); i++) {
         validate_symbols(scp_chd(scope, i));
@@ -428,33 +452,9 @@ static walker_result step4_walker(walker_direction direction,
     return result_normal;
 }
 
-
-
-/* Step 5
- * - Print errors
- */
-static walker_result step5_walker(walker_direction direction,
-                                  ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
-
-    int *errors = (int*)payload;
-
-    if (direction == in) {
-        if (node->node_type == ERROR) {
-            fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
-            prt_unex(stderr, node->source_start,
-                     (int) (node->source_end - node->source_start + 1));
-            fprintf(stderr,"\"\n");
-            (*errors)++;
-        }
-    }
-    return result_normal;
-}
-
-/* Returns the number of errors */
-int validate(Context *context) {
+/* Validate AST */
+void validate(Context *context) {
     Scope *current_scope;
-    int errors = 0;
 
     /* Step 1
      * - Sets the source start / finish for eac node
@@ -472,18 +472,11 @@ int validate(Context *context) {
     /* Step 3
      * - Validate Symbols
      */
-//    validate_symbols(context->ast->scope);
+    validate_symbols(context->ast->scope);
 
     /* Step 4
      * - Type Safety
      */
     current_scope = 0;
     ast_wlkr(context->ast, step4_walker, (void *) &current_scope);
-
-    /* Step 5
-     * - Print errors
-     */
-    ast_wlkr(context->ast, step5_walker, &errors);
-
-    return errors;
-}
+ }

@@ -1,5 +1,15 @@
 CREXX History / Change Log
 
+F0026 - Constant Folding and Constant Propagation Compiler Optimiser
+        Taken constants support
+        IF constant optimisation
+        Logical AND/OR Constant Optimisation
+        Lazy AND/OR expression evaluation
+        Use of the constant version of instructions
+        Updated TRACE messages to use rxas format
+        float and string comparison functions
+        say instruction rationalisation (say reg as string with a newline added only)
+
 I0061 - Fix Issue 61 - itof instruction missing
 
 0.1.6 - 14 July 2021
