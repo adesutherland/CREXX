@@ -1,6 +1,7 @@
 CREXX History / Change Log
 
 F0028 - Level B Low Level Functions
+      - Fix UTF whitespace/tab
 
 F0026 - Constant Folding and Constant Propagation Compiler Optimiser
         Taken constants support
