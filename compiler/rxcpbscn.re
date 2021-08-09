@@ -44,7 +44,8 @@ int rexbscan(Context* s) {
 
   integer = digit+;
   simple = (symchr\(digit|[.]))(symchr\[.])*;
-  stem = simple [.];
+  compound = simple ([.] simple)+;
+  stem = simple [.] (simple [.])*;
   symbol = symchr+;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
@@ -91,6 +92,7 @@ int rexbscan(Context* s) {
   ";" { return(TK_EOC); }
 
 //  'ADDRESS' { return(TK_ADDRESS); }
+'ASSEMBLER' { return(TK_ASSEMBLER); }
 //  'ARG' { return(TK_ARG); }
 //  'CALL' { return(TK_CALL); }
   'DO' { return(TK_DO); }
@@ -150,7 +152,8 @@ int rexbscan(Context* s) {
   integer { return(TK_INTEGER); }
   simple { return(TK_VAR_SYMBOL); }
 //  stem { return(TK_SYMBOL_STEM); }
-  symbol ob ":" { return(TK_LABEL); }
+  compound { return(TK_SYMBOL_COMPOUND); }
+  simple ob ":" { return(TK_LABEL); }
   symbol { return(TK_SYMBOL); }
   str { return(TK_STRING); }
   str [bB] / (any\symchr) { return(TK_STRING); }

@@ -259,6 +259,8 @@ const char *ast_ndtp(NodeType type) {
             return "ARG";
         case ASSIGN:
             return "ASSIGN";
+        case ASSEMBLER:
+            return "ASSEMBLER";
         case BY:
             return "BY";
         case CALL:
@@ -652,7 +654,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case CALL:
             case ENVIRONMENT:
             case FOR:
-            case FUNCTION:
             case ITERATE:
             case LEAVE:
             case NOP:
@@ -666,6 +667,11 @@ walker_result pdot_walker_handler(walker_direction direction,
             case PARSE:
                 attributes = "color=green4";
                 only_type = 1;
+                break;
+
+            case ASSEMBLER:
+            case FUNCTION:
+                attributes = "color=green4";
                 break;
 
                 /* Address is often a sign of a parsing error */

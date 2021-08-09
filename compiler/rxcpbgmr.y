@@ -117,13 +117,14 @@ assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
       add_ast(I,E); }
 
 
-assignment(I) ::=  TK_CONST_SYMBOL(T) TK_EQUAL expression(E).
+assignment(I) ::=  TK_SYMBOL(T) TK_EQUAL expression(E).
     { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.2", T));
       add_ast(I,E); }
 
 command(I)             ::= expression(E).
                        { I = ast_ft(context, ADDRESS); add_ast(I,E); }
 
+keyword_instruction(I) ::= assembler(K). { I = K; }
 //keyword_instruction(I) ::= address(K). { I = K; }
 //keyword_instruction(I) ::= arg(K). { I = K; }
 //keyword_instruction(I) ::= call(K). { I = K; }
@@ -212,7 +213,63 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
 /*
 ### ADDRESS
     address ::= 'ADDRESS' e:taken_constant c:expression? -> (ADDRESS ENVIRONMENT[e] c);
+*/
 
+/* Assembler */
+assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).
+             { I = A; }
+assembler(I) ::= TK_ASSEMBLER TK_EOC assembler_instruction(A).
+             { I = A; }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC assembler_list(I) TK_END.
+             { G = I; }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC TK_END.
+             { G = 0; }
+assembler(G) ::= TK_ASSEMBLER TK_DO ANYTHING(E).
+             { G = ast_err(context, "BAD_ASSEMBLER", E); }
+assembler(G) ::= TK_ASSEMBLER TK_DO(E) TK_EOS.
+             { G = ast_err(context, "ASSEMBLER_NO_END", E); }
+assembler(G) ::= TK_ASSEMBLER TK_DO(E) TK_EOC assembler_list(I) TK_EOS.
+             { G = I; add_ast(G,ast_err(context, "ASSEMBLER_NO_END", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC assembler_list(I) ANYTHING(E).
+             { G = I; add_ast(G,ast_err(context, "BAD_ASSEMBLER", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC assembler_list(I) TK_END.
+             { G = I; }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC TK_END.
+             { G = 0; }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO ANYTHING(E).
+             { G = ast_err(context, "BAD_ASSEMBLER", E); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO(E) TK_EOS.
+             { G = ast_err(context, "ASSEMBLER_NO_END", E); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO(E) TK_EOC assembler_list(I) TK_EOS.
+             { G = I; add_ast(G,ast_err(context, "ASSEMBLER_NO_END", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC assembler_list(I) ANYTHING(E).
+             { G = I; add_ast(G,ast_err(context, "BAD_ASSEMBLER", E)); }
+assembler_list(I)  ::= assembler_instruction(L) TK_EOC.
+                       { I = L; }
+assembler_list(I)  ::= assembler_list(I1) assembler_instruction(L) TK_EOC.
+                       { I = I1; add_sbtr(I,L); }
+assembler_instruction(I) ::= assembler_op(OP).
+    { I = OP; }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1).
+    { I = OP; add_ast(I,A1); }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembler_arg(A2).
+    { I = OP; add_ast(I,A1); add_ast(I,A2); }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembler_arg(A2) TK_COMMA assembler_arg(A3).
+    { I = OP; add_ast(I,A1); add_ast(I,A2); add_ast(I,A3);}
+assembler_op(OP)         ::= TK_VAR_SYMBOL(S).
+                         { OP = ast_f(context, ASSEMBLER, S); }
+assembler_op(OP)         ::= TK_SAY(S). /* SAY is also a REXX keyword */
+                         { OP = ast_f(context, ASSEMBLER, S); }
+assembler_arg(A)         ::= var_symbol(B).
+                         { A = B; }
+assembler_arg(A)         ::= TK_FLOAT(S).
+                         { A = ast_f(context, FLOAT,S); }
+assembler_arg(A)         ::= TK_INTEGER(S).
+                         { A = ast_f(context, INTEGER,S); }
+assembler_arg(A)         ::= TK_STRING(S).
+                         { A = ast_fstr(context,S); }
+
+/*
 ### Arg
     arg ::= 'ARG' t:template_list?
         -> (PARSE (OPTIONS UPPER?) ARG t?)
@@ -286,7 +343,8 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_CONST_SYMBOL TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL.
+%left TK_SYMBOL TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL TK_SYMBOL_COMPOUND.
+%left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
 /*
@@ -294,16 +352,32 @@ nop(I) ::= TK_NOP(T).
               / ((e:. -> (ERROR["36"] e)) resync);
 */
 
+/* Expression Lists */
+expression_list(L)   ::= expression(E).
+                         { L = E; }
+expression_list(L)   ::= expression_list(L1) TK_COMMA expression(E).
+                         { L = L1; add_sbtr(L,E); }
 
-term(A)              ::= var_symbol(B). [TK_VAR_SYMBOL]
+term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_SYMBOL_COMPOUND(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_STRING(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { P = E; }
+function_parameters(P) ::= TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { P = 0; }
+term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
-term(A)              ::= TK_CONST_SYMBOL(S).
+term(A)                ::= TK_SYMBOL(S).
                          { A = ast_f(context, CONST_SYMBOL, S); }
-term(A)              ::= TK_FLOAT(S).
+term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
-term(A)              ::= TK_INTEGER(S).
+term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
-term(A)              ::= TK_STRING(S). { A = ast_fstr(context,S); }
+term(A)                ::= TK_STRING(S). { A = ast_fstr(context,S); }
+
 bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
@@ -411,9 +485,9 @@ expression(P)        ::= and_expression(E).
                          { P = E; }
 
 /* Support Standard REXX Errors */
-expression(E)        ::= TK_COMMA(S).
+expression(E)        ::= TK_COMMA(S). [TK_EQUAL] /* Low precedence */
                          { E = ast_err(context, "37.1", S); }
-expression(E)        ::= TK_CLOSE_BRACKET(S).
+expression(E)        ::= TK_CLOSE_BRACKET(S). [TK_EQUAL] /* Low precedence */
                          { E = ast_err(context, "37.2", S); }
 
 /*
@@ -429,7 +503,7 @@ expression_list1(L)    ::= expression_list1(L1) TK_COMMA expression(E). { L = L1
 
 // VARIABLE & SYMBOLS
 var_symbol(T)          ::= TK_SYMBOL(S). { T = ast_f(S); }
-var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S); }
+var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S);
 var_symbol(T)          ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
 var_symbol_list1(L)    ::= var_symbol(V). { L = ast_ft(TK_LIST); add_ast(L,V); }
 var_symbol_list1(L)    ::= var_symbol_list1(L1) var_symbol(V). { L = L1; add_ast(L,V); }
