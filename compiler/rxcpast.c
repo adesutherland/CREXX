@@ -213,6 +213,14 @@ ASTNode *ast_ftt(Context* context, NodeType type, char *string) {
     return node;
 }
 
+/* ASTNode Factory - With node type and string value copied from another node */
+ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
+    ASTNode *node = ast_ft(context, source_node->node_type);
+    node->node_string = source_node->node_string;
+    node->node_string_length = source_node->node_string_length;
+    return node;
+}
+
 /* ASTNode Factory - Error Node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
@@ -798,16 +806,30 @@ walker_result pdot_walker_handler(walker_direction direction,
 
         /* Link to Symbol */
         if (node->symbol) {
-            if (node->node_type == VAR_TARGET)
-                fprintf(output,"n%d -> s%d_%s [color=cyan]\n",
+            if (node->symbol->writeUsage && node->symbol->readUsage) {
+                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"both\"]\n",
                         node->node_number,
-                        node->symbol->scope->defining_node->node_number,
-                        node->symbol->name);
-            else
+                        node->symbol->symbol->scope->defining_node->node_number,
+                        node->symbol->symbol->name);
+            }
+            else if (node->symbol->writeUsage) {
+                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"forward\"]\n",
+                        node->node_number,
+                        node->symbol->symbol->scope->defining_node->node_number,
+                        node->symbol->symbol->name);
+            }
+            else if (node->symbol->readUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"back\"]\n",
                         node->node_number,
-                        node->symbol->scope->defining_node->node_number,
-                        node->symbol->name);
+                        node->symbol->symbol->scope->defining_node->node_number,
+                        node->symbol->symbol->name);
+            }
+            else {
+                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"none\"]\n",
+                        node->node_number,
+                        node->symbol->symbol->scope->defining_node->node_number,
+                        node->symbol->symbol->name);
+            }
         }
     }
 

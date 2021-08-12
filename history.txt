@@ -1,7 +1,14 @@
 CREXX History / Change Log
 
-F0028 - Level B Low Level Functions
-      - Fix UTF whitespace/tab
+F0028 - rxc level B embedded REXX ASSEMBLER
+      - initial function() parsing (not complete)
+      - Fix UTF whitespace/tab (rxc and rxas)
+      - Fix rxas did not accept negative floats
+      - Fix rxc do repeat segfault with a non-integer loop counter
+      - Fix rxc optimiser turns loop variable to a constant
+      - Refactor rxc - ASTNode to Symbol Connector now a object so that
+        relationship attributes are supported; read/write attributes needed for
+        optimiser
 
 F0026 - Constant Folding and Constant Propagation Compiler Optimiser
         Taken constants support

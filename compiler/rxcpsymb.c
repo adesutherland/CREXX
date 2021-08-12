@@ -217,19 +217,34 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
 
 /* Frees a symbol */
 static void symbol_free(Symbol *symbol) {
+    size_t i;
     free(symbol->name);
+
+    /* Free SymbolNode Connectors */
+    for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
+        free(((dpa*)(symbol->ast_node_array))->pointers[i]);
+    }
     free_dpa(symbol->ast_node_array);
+
     free(symbol);
 }
 
-/* Returns the index'th AST Node attached to a symbol */
-ASTNode* sym_trnd(Symbol *symbol, size_t index) {
-    return (ASTNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
+/* Returns the index'th SymbolNode connector attached to a symbol */
+SymbolNode* sym_trnd(Symbol *symbol, size_t index) {
+    return (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
 }
 
-/* Connect an AST Node to a Symbol */
-void sym_adnd(Symbol *symbol, ASTNode* node) {
-    dpa_add((dpa*)(symbol->ast_node_array), node);
+/* Connect a ASTNode to a Symbol */
+void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
+              unsigned int writeAccess) {
+    SymbolNode *connector = malloc(sizeof(SymbolNode));
+    connector->symbol = symbol;
+    connector->node = node;
+    connector->readUsage = readAccess;
+    connector->writeUsage = writeAccess;
+
+    dpa_add((dpa*)(symbol->ast_node_array), connector);
+    node->symbol = connector;
 }
 
 /* Returns the number of AST nodes connected to a symbol */

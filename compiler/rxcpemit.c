@@ -338,10 +338,10 @@ static walker_result register_walker(walker_direction direction,
             case VAR_SYMBOL:
             case VAR_TARGET:
                 /* Set the symbols register */
-                if (node->symbol->register_num == UNSET_REGISTER)
-                    node->symbol->register_num = get_reg(payload->current_scope);
+                if (node->symbol->symbol->register_num == UNSET_REGISTER)
+                    node->symbol->symbol->register_num = get_reg(payload->current_scope);
                 /* The node uses the symbol register number */
-                node->register_num = node->symbol->register_num;
+                node->register_num = node->symbol->symbol->register_num;
                 break;
 
             case FLOAT:
@@ -503,7 +503,7 @@ static walker_result emit_walker(walker_direction direction,
 
         /* Operator and type prefix */
         op = 0;
-        if (child1) switch (child1->target_type) {
+        switch (node->value_type) {
             case TP_BOOLEAN:
             case TP_INTEGER:
                 tp_prefix = "i"; break;
@@ -514,7 +514,6 @@ static walker_result emit_walker(walker_direction direction,
             default:
                 tp_prefix = "";
         }
-        else tp_prefix = "";
 
         switch (node->node_type) {
 
@@ -1080,7 +1079,6 @@ static walker_result emit_walker(walker_direction direction,
                         snprintf(temp1, buf_len, "   %sadd r%d,r%d,1.0\n",
                                  tp_prefix,
                                  node->parent->register_num,
-                                 node->child->register_num,
                                  node->parent->register_num);
                     }
                     node->output4 = output_fs(temp1);

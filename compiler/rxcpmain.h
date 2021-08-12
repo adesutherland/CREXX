@@ -81,6 +81,8 @@ struct Token {
     char* token_string;
 };
 
+typedef struct SymbolNode SymbolNode;
+
 struct ASTNode {
     NodeType node_type;
     ValueType value_type;
@@ -91,7 +93,6 @@ struct ASTNode {
     ASTNode *parent, *child, *sibling;
     Token *token;
     Scope *scope;
-    Symbol *symbol;
     char *node_string;
     size_t node_string_length;
     char free_node_string;
@@ -102,11 +103,20 @@ struct ASTNode {
     Token *token_start, *token_end;
     char *source_start, *source_end;
     int line, column;
+    SymbolNode *symbol;
     /* These are used by the code emitters */
     OutputFragment *output;
     OutputFragment *output2;
     OutputFragment *output3;
     OutputFragment *output4;
+};
+
+/* Symbol-ASTNode Connector */
+struct SymbolNode {
+    ASTNode *node;
+    Symbol *symbol;
+    unsigned int readUsage : 1;
+    unsigned int writeUsage : 1;
 };
 
 /* Print Unescaped*/
@@ -126,6 +136,8 @@ ASTNode *ast_fstr(Context* context, Token *token);
 ASTNode *ast_ft(Context* context, NodeType type);
 /* ASTNode Factory - With node type and string value */
 ASTNode *ast_ftt(Context* context, NodeType type, char *string);
+/* ASTNode Factory - With node type and string value copied from another node */
+ASTNode *ast_fstk(Context* context, ASTNode *source_node);
 /* ASTNode Factory - Error Node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
@@ -232,11 +244,12 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 /* Resolve a Symbol */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
 
-/* Get a the index'th ASTNode using the symbol */
-ASTNode* sym_trnd(Symbol *symbol, size_t index);
+/* Returns the index'th SymbolNode connector attached to a symbol */
+SymbolNode* sym_trnd(Symbol *symbol, size_t index);
 
-/* Add a AST Node using the symbol */
-void sym_adnd(Symbol *symbol, ASTNode* node);
+/* Add an ASTNode using the symbol */
+void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
+              unsigned int writeAccess);
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);

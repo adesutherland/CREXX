@@ -34,7 +34,7 @@ int scan(Assembler_Context* s, char *buff_end) {
     // floating literals
     fsig = digit* "." digit+ | digit+ ".";
     fexp = [eE] [+-]? digit+;
-    float = (fsig fexp? | digit+ fexp);
+    float = [-+]? (fsig fexp? | digit+ fexp);
 
     integer = [-+]? digit+;
     rreg = 'r' digit+;

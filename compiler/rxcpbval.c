@@ -15,8 +15,6 @@
  * - Other AST fixups / validations
  */
 
-#define print_node printf("Line %d: %.*s\n", node->line + 1,(int)(node->source_end - node->source_start) + 1, node->source_start)
-
 static walker_result step1_walker(walker_direction direction,
                                   ASTNode* node, __attribute__((unused)) void *payload) {
 
@@ -119,6 +117,7 @@ static walker_result step1_walker(walker_direction direction,
                 add_ast(node, ast_ft(context, BY));
             }
         }
+
         else if (node->node_type == OP_SCONCAT) {
             /* We need to decide if there is white space between the tokens */
             if (node->child->sibling->source_start - node->child->source_end == 1)
@@ -149,7 +148,6 @@ static walker_result step2_walker(walker_direction direction,
                                   void *payload) {
 
     Scope **current_scope = (Scope**)payload;
-    ASTNode* child;
     Symbol *symbol;
 
     if (direction == in) {
@@ -166,11 +164,12 @@ static walker_result step2_walker(walker_direction direction,
         if (node->node_type == PROGRAM_FILE) {
             *current_scope = (*current_scope)->parent;
         }
+
         else if (node->node_type == PROCEDURE) {
             // TBC
         }
-        else if (node->node_type == VAR_TARGET ||
-                 node->node_type == VAR_SYMBOL) {
+
+        else if (node->node_type == VAR_TARGET) {
             /* Find the symbol */
             symbol = sym_rslv(*current_scope, node);
 
@@ -179,8 +178,33 @@ static walker_result step2_walker(walker_direction direction,
                 symbol = sym_f(*current_scope, node);
             }
 
-            node->symbol = symbol;
-            sym_adnd(symbol, node);
+            sym_adnd(symbol, node, 0, 1);
+        }
+
+        else if (node->node_type == VAR_SYMBOL) {
+            /* Find the symbol */
+            symbol = sym_rslv(*current_scope, node);
+
+            /* Make a new symbol if it does not exist */
+            if (!symbol) {
+                symbol = sym_f(*current_scope, node);
+            }
+
+            sym_adnd(symbol, node, 1, 0);
+        }
+
+        else if (node->node_type == TO) {
+            /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
+             * first child (VAR_TARGET)'s symbol */
+            symbol = node->parent->child->child->symbol->symbol;
+            sym_adnd(symbol, node, 1, 0);
+        }
+
+        else if (node->node_type == BY) {
+            /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
+             * first child (VAR_TARGET)'s symbol */
+            symbol = node->parent->child->child->symbol->symbol;
+            sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
     }
 
@@ -192,14 +216,13 @@ static walker_result step2_walker(walker_direction direction,
  */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     /* For REXX Level B the variable type is defined by its first use */
-    ASTNode* n = sym_trnd(symbol, 0);
-    ASTNode* parent;
+    SymbolNode *n = sym_trnd(symbol, 0);
     ASTNode* expr;
     char *buffer;
     size_t length;
     size_t i;
 
-    if (n->node_type == VAR_SYMBOL) {
+    if (!n->writeUsage) {
         /* Used without definition/declaration - Taken Constant */
         /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
         symbol->type = TP_STRING;
@@ -207,22 +230,22 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         /* Update all the attached AST Nodes to be constants */
         for (i=0; i<sym_nond(symbol); i++) {
             n = sym_trnd(symbol, i);
-            if (n->node_type != VAR_SYMBOL) {
+            if (n->node->node_type != VAR_SYMBOL) {
                 /* This means we are trying to write to a TAKEN CONSTANT
                  * which is illegal in Levels B/G/L */
-                mknd_err(n, "UPDATING_TAKEN_CONSTANT");
+                mknd_err(n->node, "UPDATING_TAKEN_CONSTANT");
             }
             else {
-                n->node_type = STRING;
+                n->node->node_type = STRING;
                 length = strlen(symbol->name);
                 buffer = malloc(length);
                 memcpy(buffer, symbol->name, length);
-                ast_sstr(n, buffer, length);
+                ast_sstr(n->node, buffer, length);
             }
         }
     }
     else {
-        expr = n->sibling;
+        expr = n->node->sibling;
         switch (expr->node_type) {
             case FLOAT:
                 symbol->type = TP_FLOAT;
@@ -269,7 +292,6 @@ static walker_result step4_walker(walker_direction direction,
 
     Scope **current_scope = (Scope**)payload;
     ASTNode *child1, *child2;
-    Symbol *symbol;
     ValueType max_type = TP_UNKNOWN;
 
     if (direction == in) {
@@ -365,9 +387,9 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->symbol->type == TP_UNKNOWN)
-                    node->symbol->type = TP_STRING;
-                node->value_type = node->symbol->type;
+                if (node->symbol->symbol->type == TP_UNKNOWN)
+                    node->symbol->symbol->type = TP_STRING;
+                node->value_type = node->symbol->symbol->type;
                 node->target_type = node->value_type;
                 break;
 
@@ -392,7 +414,7 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case ASSIGN:
-                if (child1->symbol->type == TP_UNKNOWN) {
+                if (child1->symbol->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet */
                     if (node->parent->node_type == REPEAT) {
                         /* Special logic for LOOP Assignment - type must be numeric */
@@ -405,16 +427,16 @@ static walker_result step4_walker(walker_direction direction,
                     child2->target_type = child1->value_type;
                     node->value_type = child1->value_type;
                     node->target_type = child1->value_type;
-                    child1->symbol->type = child1->value_type;
+                    child1->symbol->symbol->type = child1->value_type;
                 }
                 else {
                     /* The Target Symbol has a type */
-                    child1->value_type = child1->symbol->type;
-                    child1->target_type = child1->symbol->type;
-                    child2->target_type = child1->symbol->type;
-                    node->value_type = child1->symbol->type;
-                    node->target_type = child1->symbol->type;
-                    child1->symbol->type = child1->value_type;
+                    child1->value_type = child1->symbol->symbol->type;
+                    child1->target_type = child1->symbol->symbol->type;
+                    child2->target_type = child1->symbol->symbol->type;
+                    node->value_type = child1->symbol->symbol->type;
+                    node->target_type = child1->symbol->symbol->type;
+                    child1->symbol->symbol->type = child1->value_type;
                 }
                 break;
 

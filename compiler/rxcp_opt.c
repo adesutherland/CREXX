@@ -620,20 +620,17 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     Payload* payload = pload;
     ASTNode* n;
     ASTNode* value_node;
-    char *buffer;
-    size_t length;
     size_t i;
 
     if (symbol->is_constant) return; /* already done */
 
-    n = sym_trnd(symbol, 0);
-    if (n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {
+    n = sym_trnd(symbol, 0)->node;
+    if (n->parent->node_type == ASSIGN  && n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {
         /* OK this could be a constant symbol */
         value_node = n->sibling;
         /* Check to see if it is updated */
         for (i=1; i<sym_nond(symbol); i++) {
-            n = sym_trnd(symbol, i);
-            if (n->node_type == VAR_TARGET) return; /* Not a constant as it it updated */
+            if (sym_trnd(symbol, i)->writeUsage) return; /* Not a constant as it is updated */
         }
     }
     else return;
@@ -642,7 +639,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     symbol->is_constant = 1;
     payload->changed = 1;
     for (i=1; i<sym_nond(symbol); i++) {
-        n = sym_trnd(symbol, i);
+        n = sym_trnd(symbol, i)->node;
         n->node_type = CONSTANT;
         n->value_type = value_node->value_type;
         n->int_value = value_node->int_value;
