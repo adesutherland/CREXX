@@ -41,7 +41,7 @@ add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
 
 add_dependencies(rxc re2c lemon)
 
-target_link_libraries(rxc machine avl_tree platform)
+target_link_libraries(rxc machine avl_tree platform m)
 
 target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ../avl_tree ../machine ../platform ../utf8)

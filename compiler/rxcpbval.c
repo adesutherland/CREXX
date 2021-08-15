@@ -157,7 +157,7 @@ static walker_result step1_walker(walker_direction direction,
 
             if (context->level != LEVELB) {
                 /* ASSEMBLER is only valid in level b */
-                mknd_err(node, "ASSEMBLER_NOT_LEVEL_B");
+                mknd_err(node, "ASSEMBLER_ONLY_LEVELB");
             }
 
             else {
@@ -174,13 +174,13 @@ static walker_result step1_walker(walker_direction direction,
                     }
                     else {
                         type2 = OP_NONE;
-                        type2 = OP_NONE;
+                        type3 = OP_NONE;
                     }
                 }
                 else {
                     type1 = OP_NONE;
                     type2 = OP_NONE;
-                    type2 = OP_NONE;
+                    type3 = OP_NONE;
                 }
 
                 /* Lookup Instruction */
