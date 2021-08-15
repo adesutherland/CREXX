@@ -5,8 +5,20 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
+#include "rxvminst.h"
+
+/* Get the assembler operandtype from the astnode type for the ASSEMBLER instruction */
+static OperandType nodetype_to_operandtype(NodeType ntype) {
+    switch (ntype) {
+        case INTEGER: return OP_INT;
+        case FLOAT: return OP_FLOAT;
+        case STRING: return OP_STRING;
+        default: return OP_REG;
+    }
+}
 
 /* Step 1
  * - Sets the token and source start / finish position for each node
@@ -23,6 +35,8 @@ static walker_result step1_walker(walker_direction direction,
     int has_for;
     int has_by;
     Token *left, *right;
+    char *buffer;
+    char *c;
 
     Context *context = (Context*)payload;
 
@@ -136,6 +150,55 @@ static walker_result step1_walker(walker_direction direction,
             if (!node->child)
                 node->node_type = NOP; /* Convert empty STATEMENTS to NOP */
         }
+
+        else if (node->node_type == ASSEMBLER) {
+            /* ASSEMBLER operand types */
+            OperandType type1, type2, type3;
+
+            if (context->level != LEVELB) {
+                /* ASSEMBLER is only valid in level b */
+                mknd_err(node, "ASSEMBLER_NOT_LEVEL_B");
+            }
+
+            else {
+
+                child = node->child;
+                if (child) {
+                    type1 = nodetype_to_operandtype(child->node_type);
+                    child = child->sibling;
+                    if (child) {
+                        type2 = nodetype_to_operandtype(child->node_type);
+                        child = child->sibling;
+                        if (child) type3 = nodetype_to_operandtype(child->node_type);
+                        else type3 = OP_NONE;
+                    }
+                    else {
+                        type2 = OP_NONE;
+                        type2 = OP_NONE;
+                    }
+                }
+                else {
+                    type1 = OP_NONE;
+                    type2 = OP_NONE;
+                    type2 = OP_NONE;
+                }
+
+                /* Lookup Instruction */
+
+                /* We need to copy it to a null terminated buffer and lowercase it! */
+                buffer = malloc(node->node_string_length + 1);
+                memcpy(buffer, node->node_string, node->node_string_length);
+                buffer[node->node_string_length] = 0;
+                for (c = buffer; *c; ++c) *c = (char) tolower(*c);
+
+                /* Lookup */
+                if (!src_inst(buffer, type1, type2, type3)) {
+                    /* Invalid Instruction */
+                    mknd_err(node, "INVALID_ASSEMBLER");
+                }
+                free(buffer);
+            }
+        }
     }
     return result_normal;
 }
@@ -190,7 +253,12 @@ static walker_result step2_walker(walker_direction direction,
                 symbol = sym_f(*current_scope, node);
             }
 
-            sym_adnd(symbol, node, 1, 0);
+            if (node->parent->node_type == ASSEMBLER) {
+                /* If an assembler instruction we need to assume read/write
+                 * access - and therefore disable some optimisations */
+                sym_adnd(symbol, node, 1, 1);
+            }
+            else sym_adnd(symbol, node, 1, 0);
         }
 
         else if (node->node_type == TO) {
@@ -222,7 +290,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     size_t length;
     size_t i;
 
-    if (!n->writeUsage) {
+    if (n->node->node_type != VAR_TARGET) {
         /* Used without definition/declaration - Taken Constant */
         /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
         symbol->type = TP_STRING;
@@ -230,7 +298,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         /* Update all the attached AST Nodes to be constants */
         for (i=0; i<sym_nond(symbol); i++) {
             n = sym_trnd(symbol, i);
-            if (n->node->node_type != VAR_SYMBOL) {
+            if (n->writeUsage) {
                 /* This means we are trying to write to a TAKEN CONSTANT
                  * which is illegal in Levels B/G/L */
                 mknd_err(n->node, "UPDATING_TAKEN_CONSTANT");
@@ -478,6 +546,9 @@ static walker_result step4_walker(walker_direction direction,
 void validate(Context *context) {
     Scope *current_scope;
 
+    /* We need the assembler db for ASSEMBLE */
+    if (context->level == LEVELB) init_ops();
+
     /* Step 1
      * - Sets the source start / finish for eac node
      * - Fixes SCONCAT to CONCAT
@@ -501,4 +572,7 @@ void validate(Context *context) {
      */
     current_scope = 0;
     ast_wlkr(context->ast, step4_walker, (void *) &current_scope);
+
+    // Free Instruction Database
+    if (context->level == LEVELB) free_ops();
  }

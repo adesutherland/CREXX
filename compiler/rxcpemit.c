@@ -192,11 +192,13 @@ static walker_result register_walker(walker_direction direction,
                                  void *pl) {
 
     walker_payload *payload = (walker_payload*) pl;
-    ASTNode *child1, *child2, *c;
+    ASTNode *child1, *child2, *child3, *c;
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     else child2 = NULL;
+    if (child2) child3 = child2->sibling;
+    else child3 = NULL;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -222,7 +224,16 @@ static walker_result register_walker(walker_direction direction,
                 if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
-                /* The order of the operands if these instructions are not order
+            case ASSEMBLER:
+                /*
+                * Constants do not need a register
+                */
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child2 && is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (child3 && is_constant(child3)) child3->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+                /* The order of the operands of these instructions are not order
                  * specific but the instructions only support operand 3 being a
                  * constant */
             case OP_COMPARE_EQUAL:
@@ -398,6 +409,9 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            /* NOTE than ASSEMBLER children should never have temporary registers
+             * than need returning as they are either symbols or constants,
+             * so we do not have a case ASSEMBLER: */
             default:;
         }
 
@@ -474,6 +488,42 @@ static void type_promotion(ASTNode *node) {
     }
 }
 
+/* Formats a constant value into buffer */
+static void format_constant(char* buffer, ValueType type, ASTNode* node) {
+    int flag;
+    size_t i;
+
+    if (type == TP_STRING) {
+        snprintf(buffer, buf_len, "\"%.*s\"",
+                 node->node_string_length,
+                 node->node_string);
+    }
+    else if (type == TP_FLOAT) {
+        /* Need to make sure the float literal has an ".0" (for the assembler) */
+        flag = 1; /* Assume we should add .0 */
+        for (i=0; i<node->node_string_length; i++) {
+            if (node->node_string[i] == '.' || node->node_string[i] == 'e') {
+                /* Already in a float format */
+                flag = 0; /* don't add .0 */
+                break;
+            }
+        }
+        if (flag)
+            snprintf(buffer, buf_len, "%.*s.0",
+                     node->node_string_length,
+                     node->node_string);
+        else
+            snprintf(buffer, buf_len, "%.*s",
+                     node->node_string_length,
+                     node->node_string);
+    }
+    else {
+        snprintf(buffer, buf_len, "%.*s",
+                 node->node_string_length,
+                 node->node_string);
+    }
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -500,6 +550,8 @@ static walker_result emit_walker(walker_direction direction,
         child1 = node->child;
         if (child1) child2 = child1->sibling;
         else child2 = NULL;
+        if (child2) child3 = child2->sibling;
+        else child3 = NULL;
 
         /* Operator and type prefix */
         op = 0;
@@ -864,44 +916,77 @@ static walker_result emit_walker(walker_direction direction,
             case FLOAT:
             case INTEGER:
                 /* If register is not set then the parent node will handle this
-                 * as a constant */
+                 * as a constant - we just set the value as a string */
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
-                    if (node->value_type == TP_STRING) {
-                        snprintf(temp1, buf_len, "   load r%d,\"%.*s\"\n",
-                                 node->register_num,
-                                 node->node_string_length,
-                                 node->node_string);
-                    }
-                    else if (node->value_type == TP_FLOAT) {
-                        /* Need to make sure the float literal has an ".0" */
-                        flag = 1; /* Assume we should add .0 */
-                        for (i=0; i<node->node_string_length; i++) {
-                            if (node->node_string[i] == '.' || node->node_string[i] == 'e') {
-                                /* Already in a float format */
-                                flag = 0; /* don't add .0 */
-                                break;
-                            }
-                        }
-                        if (flag)
-                            snprintf(temp1, buf_len, "   load r%d,%.*s.0\n",
-                                     node->register_num,
-                                     node->node_string_length,
-                                     node->node_string);
-                        else
-                            snprintf(temp1, buf_len, "   load r%d,%.*s\n",
-                                     node->register_num,
-                                     node->node_string_length,
-                                     node->node_string);
-                    }
-                    else {
-                        snprintf(temp1, buf_len, "   load r%d,%.*s\n",
-                                 node->register_num,
-                                 node->node_string_length,
-                                 node->node_string);
-                    }
+                    /* Get the constant string */
+                    format_constant(temp2, node->value_type, node);
+
+                    /* Make the register load instruction */
+                    snprintf(temp1, buf_len, "   load r%d,%s\n",
+                             node->register_num,
+                             temp2);
+
+                    /* Set the node output */
                     node->output = output_fs(temp1);
+
+                    /* Do any type promotion */
                     type_promotion(node);
                 }
+                break;
+
+            case ASSEMBLER:
+                get_comment(comment,node, NULL);
+                /* Child instructions */
+                node->output = output_fs(comment);
+
+                /* We will build temp1 to be the assembler instruction */
+                /* First the command */
+                snprintf(temp1, buf_len, "   %.*s ",
+                         node->node_string_length ,node->node_string);
+
+                /* Argument 1 */
+                if (child1) {
+                    if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                        format_constant(temp2, child1->target_type, child1);
+                    }
+                    else { /* A register */
+                        output_append(node->output, child1->output);
+                        snprintf(temp2, buf_len, "r%d", child1->register_num);
+                    }
+                    strcat(temp1, temp2);
+                }
+
+                /* Argument 2 */
+                if (child2) {
+                    strcat(temp1, ",");
+                    if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                        format_constant(temp2, child2->target_type, child2);
+                    }
+                    else { /* A register */
+                        output_append(node->output, child2->output);
+                        snprintf(temp2, buf_len, "r%d", child2->register_num);
+                    }
+                    strcat(temp1, temp2);
+                }
+
+                /* Argument 3 */
+                if (child3) {
+                    strcat(temp1, ",");
+                    if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                        format_constant(temp2, child3->target_type, child3);
+                    }
+                    else { /* A register */
+                        output_append(node->output, child3->output);
+                        snprintf(temp2, buf_len, "r%d", child3->register_num);
+                    }
+                    strcat(temp1, temp2);
+                }
+                /* End of Line */
+                strcat(temp1, "\n");
+
+                /* Finally, append our output */
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
                 break;
 
             case ASSIGN:
@@ -934,29 +1019,23 @@ static walker_result emit_walker(walker_direction direction,
 
             case SAY:
                 get_comment(comment,node, NULL);
+                /* Child instructions */
                 node->output = output_fs(comment);
-                if (node->register_num == DONT_ASSIGN_REGISTER) {
+                if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     /* If the register is not set then the child is a constant
-                     * which we SAY directly
-                     * - it MUST have been converted to a STRING
-                     * - we don't need to worry about ".0" to show a float literal */
-                    snprintf(temp1, buf_len, "   say \"%.*s\"\n",
-                             child1->node_string_length, child1->node_string);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                     * which we SAY directly. Get the constant string - target type */
+                    format_constant(temp2, child1->target_type, child1);
+                    snprintf(temp1, buf_len, "   say %s\n", temp2);
                 }
                 else {
                     output_append(node->output, child1->output);
-                    snprintf(temp1, buf_len, "   say r%d\n",
-                             node->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    snprintf(temp1, buf_len, "   say r%d\n", child1->register_num);
                 }
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
                 break;
 
             case IF:
-                if (child2) child3 = child2->sibling;
-                else child3 = NULL;
                 get_comment(comment,child1, "{IF}");
                 node->output = output_fs(comment);
                 if (child1->output) output_append(node->output, child1->output);

@@ -1,27 +1,13 @@
 /* Level B Function Test */
 options levelb
 
-result = 0
-data = 5
-assembler
-do
+say "starting"
+start_time = 0
+end_time = 0
+a = 0
+assembler time start_time
+do i = 1 to 100000000
+  a = a + i
 end
-say xxx
-assembler
-    time result
-assembler
-do
-    iadd result,result,data
-    time result
-    1
-    load result,5
-    say "hello"
-end
-
-/*
-*/
-say result
-/*
-say time(1)
-say ("AAA") (1+2)
-*/
+assembler time end_time
+say "Time taken is" end_time-start_time "seconds"
