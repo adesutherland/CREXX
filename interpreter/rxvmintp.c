@@ -1263,10 +1263,10 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI / op3I);
             DISPATCH;
 
-            /* -----------------------------------------------------------------------------------
-            *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
-            *  -----------------------------------------------------------------------------------
-            */
+/* -----------------------------------------------------------------------------------
+ *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
         START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI / op3RI);
@@ -1590,6 +1590,42 @@ START_OF_INSTRUCTIONS ;
             CONV2FLOAT(f3, op3R)
             REG_RETURN_FLOAT(op2F / f3);
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+                i1=1;
+                i2=op2RI;
+                i3=op3RI;
+                while (i3 != 0)
+                {
+                    if ((i3 & 1) == 1) i1 *= i2;
+                    i3 >>= 1;
+                    i2 *= i2;
+                }
+            REG_RETURN_INT(i1);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn               pej 22 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            i1=1;
+            i2=op2RI;
+            i3=op3I;
+            while (i3 != 0)
+            {
+                if ((i3 & 1) == 1) i1 *= i2;
+                i3 >>= 1;
+                i2 *= i2;
+            }
+            REG_RETURN_INT(i1);
+            DISPATCH;
+
 
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Int Prime op1              ???
