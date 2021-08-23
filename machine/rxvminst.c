@@ -207,6 +207,10 @@ void init_ops() {
     instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
 
+    instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
+    instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
+
+
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;
     instructions = malloc(sizeof(Instruction) * (no_instructions + 2));
