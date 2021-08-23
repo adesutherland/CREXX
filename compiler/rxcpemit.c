@@ -572,9 +572,23 @@ static walker_result emit_walker(walker_direction direction,
             case PROGRAM_FILE:
                 snprintf(temp1, buf_len, "/* REXX COMPILER PoC */\n"
                                          "\n"
-                                         ".globals=0\n"
+                                         ".globals=0\n");
+                node->output = output_fs(temp1);
+                n = child1;
+                while (n) {
+                    if (n->output) output_append(node->output, n->output);
+                    n = n->sibling;
+                }
+
+                print_output(payload->file, node->output);
+                break;
+
+            case PROCEDURE:
+                snprintf(temp1, buf_len, ""
                                          "\n"
-                                         "main()   .locals=%d\n",
+                                         "%.*s()   .locals=%d\n",
+                         node->node_string_length,
+                         node->node_string,
                          node->scope->num_registers);
                 node->output = output_fs(temp1);
                 n = child1;
@@ -583,11 +597,11 @@ static walker_result emit_walker(walker_direction direction,
                     n = n->sibling;
                 }
 
-                node->output2 = output_fs("   exit\n"); /* TODO PoC Hack! */
+                node->output2 = output_fs("   ret\n"); /* TODO PoC Hack! */
                 output_append(node->output, node->output2);
 
-                print_output(payload->file, node->output);
                 break;
+
 
             case INSTRUCTIONS:
                 node->output = output_f();

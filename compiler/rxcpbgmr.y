@@ -66,8 +66,10 @@ var_symbol(A)    ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
 label(A)         ::= TK_LABEL(S). { A = ast_f(context, LABEL, S); }
 
 /* Language Options */
-rexx_options(I)    ::= TK_OPTIONS TK_EOC.
-                   { I = 0; }
+rexx_options(I)    ::= .
+                   { I = ast_ft(context, REXX_OPTIONS); }
+rexx_options(I)    ::= TK_OPTIONS(T) TK_EOC.
+                   { I = ast_f(context, REXX_OPTIONS, T); }
 rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) TK_EOC.
                    { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,L); }
 option_list(L)     ::= option(L1).
@@ -127,14 +129,14 @@ command(I)             ::= expression(E).
 keyword_instruction(I) ::= assembler(K). { I = K; }
 //keyword_instruction(I) ::= address(K). { I = K; }
 //keyword_instruction(I) ::= arg(K). { I = K; }
-//keyword_instruction(I) ::= call(K). { I = K; }
+keyword_instruction(I) ::= call(K). { I = K; }
 //keyword_instruction(I) ::= iterate(K). { I = K; }
 //keyword_instruction(I) ::= leave(K). { I = K; }
 keyword_instruction(I) ::= nop(K). { I = K; }
 //keyword_instruction(I) ::= parse(K). { I = K; }
-//keyword_instruction(I) ::= procedure(K). { I = K; }
+keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
-//keyword_instruction(I) ::= return(K). { I = K; }
+keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
 keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "8.1", T); }
 keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
@@ -207,6 +209,22 @@ else(T) ::= TK_ELSE(E) ncl0 TK_EOS.
             { T = ast_err(context, "14.4", E); }
 else(T) ::= TK_ELSE ncl0 TK_END(E).
             { T = ast_err(context, "10.6", E); }
+
+/* Procedure */
+procedure(P) ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C) TK_EOC
+                 TK_ARG arg_list(A).
+                 { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,A);}
+class(C) ::= TK_CLASS(T).
+                 { C = ast_f(context, CLASS, T); }
+
+/* Argument Templates */
+arg_list(L)       ::= . { L = ast_ft(context, ARGS); }
+arg_list(L)       ::= argument(T). { L = ast_ft(context, ARGS); add_ast(L,T); }
+arg_list(L)       ::= arg_list(L1) TK_COMMA argument(T). { L = L1; add_ast(L,T); }
+argument(T)       ::= var_symbol(V) class(C).
+                      { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
+argument(T)       ::= var_symbol(V) TK_EQUAL class(C).
+                      { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
 
 /* Instructions */
 
@@ -312,6 +330,13 @@ assembler_arg(A)         ::= TK_STRING(S).
            -> (RETURN e?);
 */
 
+/* Return */
+return(I) ::= TK_RETURN(T) expression(E).
+    { I = ast_f(context, RETURN, T); add_ast(I,E); }
+
+return(I) ::= TK_RETURN(T).
+    { I = ast_f(context, RETURN, T); }
+
 /* Say */
 say(I) ::= TK_SAY(T) expression(E).
     { I = ast_f(context, SAY, T); add_ast(I,E); }
@@ -347,17 +372,24 @@ nop(I) ::= TK_NOP(T).
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
-/*
-    function ::= (f:taken_constant '(' p:expression_list? (')') -> (FUNCTION[f] p)
-              / ((e:. -> (ERROR["36"] e)) resync);
-*/
+function_name(N)       ::= TK_VAR_SYMBOL(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_SYMBOL_COMPOUND(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_STRING(S).
+                           { N = ast_f(context, FUNCTION, S); }
+call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
+        { I = ast_f(context, CALL, T); add_ast(I,F); add_ast(F,E); }
+call(I) ::= TK_CALL(T) function_name(F).
+        { I = ast_f(context, CALL, T); add_ast(I,F); }
+call(I) ::= TK_CALL(T) ANYTHING(E).
+        { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "19.2", E)); }
 
 /* Expression Lists */
-expression_list(L)   ::= expression(E).
+expression_list(L)     ::= expression(E).
                          { L = E; }
-expression_list(L)   ::= expression_list(L1) TK_COMMA expression(E).
+expression_list(L)     ::= expression_list(L1) TK_COMMA expression(E).
                          { L = L1; add_sbtr(L,E); }
-
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_SYMBOL_COMPOUND(S) function_parameters(P).

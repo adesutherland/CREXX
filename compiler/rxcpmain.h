@@ -59,7 +59,7 @@ int opt_scan(Context* s);
 int opt_pars(Context *context);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ASSEMBLER, ASSIGN, BY, CALL, CONST_SYMBOL,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NOP, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_PREFIX,
@@ -68,7 +68,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_SYMBOL, VAR_TARGET, CONSTANT
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT
 } NodeType;
 
 struct Token {
@@ -88,6 +88,7 @@ struct ASTNode {
     ValueType value_type;
     ValueType target_type;
     int register_num;
+    char register_type;
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
@@ -215,7 +216,9 @@ struct Symbol {
     Scope *scope;
     ValueType type;
     int register_num;
+    char register_type;
     char is_constant;
+    char is_function;
 };
 
 /* Scope Factory */

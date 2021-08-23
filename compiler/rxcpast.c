@@ -76,6 +76,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->bool_value = 0;
     node->float_value = 0;
     node->register_num = -1;
+    node->register_type = 'r';
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -265,6 +266,8 @@ const char *ast_ndtp(NodeType type) {
             return "ADDRESS";
         case ARG:
             return "ARG";
+        case ARGS:
+            return "ARGS";
         case ASSIGN:
             return "ASSIGN";
         case ASSEMBLER:
@@ -273,6 +276,8 @@ const char *ast_ndtp(NodeType type) {
             return "BY";
         case CALL:
             return "CALL";
+        case CLASS:
+            return "CLASS";
         case CONST_SYMBOL:
             return "CONST_SYMBOL";
         case DO:
@@ -385,11 +390,12 @@ const char *ast_ndtp(NodeType type) {
             return "TOKEN";
         case UPPER:
             return "UPPER";
+        case VAR_REFERENCE:
+            return "VAR_REFERENCE";
         case VAR_SYMBOL:
             return "VAR_SYMBOL";
         case VAR_TARGET:
             return "VAR_TARGET";
-
         default: return "*UNKNOWN*";
     }
 }
@@ -592,20 +598,32 @@ void prt_unex(FILE* output, const char *ptr, int len) {
     }
 }
 
+/* Prints to dot file one symbol */
 void pdot_scope(Symbol *symbol, void *payload) {
     char reg[20];
     if (symbol->register_num >= 0)
-        sprintf(reg,"R%d",symbol->register_num);
+        sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
     else
         reg[0] = 0;
 
-    fprintf((FILE*)payload,
-            "s%d_%s[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
-            symbol->scope->defining_node->node_number,
-            symbol->name,
-            symbol->name,
-            type_nm(symbol->type),
-            reg);
+    if (symbol->is_function) {
+        fprintf((FILE*)payload,
+                "s%d_%s[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                symbol->scope->defining_node->node_number,
+                symbol->name,
+                symbol->name,
+                type_nm(symbol->type),
+                reg);
+    }
+    else {
+        fprintf((FILE*)payload,
+                "s%d_%s[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                symbol->scope->defining_node->node_number,
+                symbol->name,
+                symbol->name,
+                type_nm(symbol->type),
+                reg);
+    }
 }
 
 /* Works out the which child index a child has */
@@ -658,7 +676,6 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case ASSIGN:
-            case ARG:
             case CALL:
             case ENVIRONMENT:
             case FOR:
@@ -666,7 +683,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case LEAVE:
             case NOP:
             case OPTIONS:
-            case PROCEDURE:
             case PULL:
             case REPEAT:
             case RETURN:
@@ -678,8 +694,12 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case ASSEMBLER:
-            case FUNCTION:
                 attributes = "color=green4";
+                break;
+
+            case FUNCTION:
+            case PROCEDURE:
+                attributes = "color=pink";
                 break;
 
                 /* Address is often a sign of a parsing error */
@@ -716,7 +736,10 @@ walker_result pdot_walker_handler(walker_direction direction,
                 only_type = 1;
                 break;
 
+            case ARG:
+            case ARGS:
             case PATTERN:
+            case CLASS:
             case REL_POS:
             case ABS_POS:
             case SIGN:
@@ -727,9 +750,10 @@ walker_result pdot_walker_handler(walker_direction direction,
 
             case VAR_SYMBOL:
             case VAR_TARGET:
+            case VAR_REFERENCE:
             case CONST_SYMBOL:
                 attributes = "color=cyan3 shape=cds";
-                only_label = 1;
+//                only_label = 1;
                 break;
 
             case STRING:
@@ -761,7 +785,7 @@ walker_result pdot_walker_handler(walker_direction direction,
         }
 
         if (node->register_num >= 0)
-            sprintf(value_type_buffer,"\nR%d",node->register_num);
+            sprintf(value_type_buffer,"\n%c%d", node->register_type, node->register_num);
         else
             value_type_buffer[0] = 0;
 

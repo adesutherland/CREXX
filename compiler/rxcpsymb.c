@@ -172,7 +172,9 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->name = (char*)malloc(node->node_string_length + 1);
     memcpy(symbol->name, node->node_string, node->node_string_length);
     symbol->name[node->node_string_length] = 0;
+    symbol->register_type = 'r';
     symbol->is_constant = 0;
+    symbol->is_function = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -208,11 +210,17 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     utf8upr(name);
 #endif
 
-    result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
-
+    /* Look for the symbol - looking up in each parent scope */
+    do {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        if (result) {
+            free(name);
+            return result;
+        }
+        scope = scope->parent;
+    } while (scope);
     free(name);
-
-    return result;
+    return 0;
 }
 
 /* Frees a symbol */
