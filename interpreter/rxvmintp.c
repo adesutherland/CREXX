@@ -90,6 +90,10 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
+#ifndef NUTF8
+    int codepoint;
+#endif
+
 
     /*
      * Instruction database - loaded from a generated header file
@@ -1684,7 +1688,13 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             v2 = op2R;
             v3 = op3R;
-            i1 = v2->string_value[v3->int_value - 1] - '0';
+#ifndef NUTF8
+            string_set_byte_pos(v2, v3->int_value-1);
+            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+            i1= codepoint;
+#else
+            i1=v2->string_value[v3->int_value - 1];
+#endif
             REG_RETURN_INT(i1);
             DISPATCH;
 
@@ -1753,7 +1763,6 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
 #ifndef NUTF8
-            int codepoint;
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
             v1->int_value = codepoint;
 #else
