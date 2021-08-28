@@ -5,5 +5,5 @@
 
 /*!re2c
 letter = L;
-whitespace = Zs+;
+whitespace = (Zs | [\t\v\f])+;
 */

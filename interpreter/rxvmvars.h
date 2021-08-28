@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -559,6 +560,12 @@ static void string_from_float(value *v) {
     v->string_char_pos = 0;
     v->string_chars = v->string_length;
 #endif
+}
+
+/* Calculate the integer value from float */
+static void int_from_float(value *v) {
+    v->int_value = floor(v->float_value);
+    if (v->float_value - (double)v->int_value > 0.5) v->int_value++;
 }
 
 #endif //CREXX_RXVMVARS_H

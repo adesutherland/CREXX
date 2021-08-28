@@ -44,7 +44,9 @@ int rexbscan(Context* s) {
 
   integer = digit+;
   simple = (symchr\(digit|[.]))(symchr\[.])*;
-  stem = simple [.];
+  compound = simple ([.] simple)+;
+  stem = simple [.] (simple [.])*;
+  class = [.] simple;
   symbol = symchr+;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
@@ -91,8 +93,9 @@ int rexbscan(Context* s) {
   ";" { return(TK_EOC); }
 
 //  'ADDRESS' { return(TK_ADDRESS); }
-//  'ARG' { return(TK_ARG); }
-//  'CALL' { return(TK_CALL); }
+  'ASSEMBLER' { return(TK_ASSEMBLER); }
+  'ARG' { return(TK_ARG); }
+  'CALL' { return(TK_CALL); }
   'DO' { return(TK_DO); }
 //  'DROP' { return(TK_DROP); }
   'ELSE' { return(TK_ELSE); }
@@ -108,11 +111,11 @@ int rexbscan(Context* s) {
 'OPTIONS' { return(TK_OPTIONS); }
 //  'OTHERWISE' { return(TK_OTHERWISE); }
 //  'PARSE' { return(TK_PARSE); }
-//  'PROCEDURE' { return(TK_PROCEDURE); }
+  'PROCEDURE' { return(TK_PROCEDURE); }
 //  'PULL' { return(TK_PULL); }
 //  'PUSH' { return(TK_PUSH); }
 //  'QUEUE' { return(TK_QUEUE); }
-//  'RETURN' { return(TK_RETURN); }
+  'RETURN' { return(TK_RETURN); }
   'SAY' { return(TK_SAY); }
 //  'SELECT' { return(TK_SELECT); }
 //  'SIGNAL' { return(TK_SIGNAL); }
@@ -146,11 +149,13 @@ int rexbscan(Context* s) {
 //  'VERSION' { return(TK_VERSION); }
 //  'WHILE' { return(TK_WHILE); }
 //  'WITH' { return(TK_WITH); }
+  class { return(TK_CLASS); }
   float { return(TK_FLOAT); }
   integer { return(TK_INTEGER); }
   simple { return(TK_VAR_SYMBOL); }
 //  stem { return(TK_SYMBOL_STEM); }
-  symbol ob ":" { return(TK_LABEL); }
+  compound { return(TK_SYMBOL_COMPOUND); }
+  simple ob ":" { return(TK_LABEL); }
   symbol { return(TK_SYMBOL); }
   str { return(TK_STRING); }
   str [bB] / (any\symchr) { return(TK_STRING); }

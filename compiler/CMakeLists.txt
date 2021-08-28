@@ -5,7 +5,7 @@ project(Compiler C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
+        COMMAND ${CMAKE_BINARY_DIR}/lemon/lemon -p -s -c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.y lemon
         OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpopgr.h
         COMMENT "Create Options Parser..."
@@ -41,6 +41,7 @@ add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
 
 add_dependencies(rxc re2c lemon)
 
-target_link_libraries(rxc avl_tree platform m)
+target_link_libraries(rxc machine avl_tree platform m)
 
-target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../avl_tree ../platform ../utf8)
+target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+        ../avl_tree ../machine ../platform ../utf8)

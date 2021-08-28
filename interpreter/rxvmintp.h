@@ -4,7 +4,7 @@
 #include "rxas.h"
 #include "rxvmvars.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.6 + F0026"
+#define rxversion "cREXX-Phase-0 v0.1.6 + F0028"
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0

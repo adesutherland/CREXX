@@ -128,17 +128,93 @@ int get_reg(Scope *scope) {
     else {
         reg = (int)((scope->num_registers)++);
     }
-//  printf("get %d\n", reg);
+ //   printf("get %d\n", reg);
     return reg;
 }
 
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg) {
-//  printf("free %d\n", reg);
+    size_t i;
+//    printf("free %d\n", reg);
     dpa *free_array;
+    free_array = (dpa*)(scope->free_registers_array);
+    for (i=0; i<free_array->size; i++) {
+        if (reg == (size_t)free_array->pointers[i]) {
+//            printf(" ... already freed\n");
+            return;
+        }
+    }
+    dpa_add(free_array, (void*)(size_t)reg);
+}
+
+/* Get number of free register from scope - returns the start of a sequence
+ * n, n+1, n+2, ... n+number */
+int get_regs(Scope *scope, size_t number) {
+    dpa *free_array;
+    int reg, r, top, i;
+    size_t seq;
 
     free_array = (dpa*)(scope->free_registers_array);
-    dpa_add(free_array, (void*)(size_t)reg);
+    /* Check the free list - how many could be used */
+    if (free_array->size) {
+        i = (int)free_array->size - 1;
+        top = (int)(size_t)(free_array->pointers[i]);
+        for (seq=1, i--; i>=0; i--) {
+            r = (int)(size_t)(free_array->pointers[i]);
+            if (r == top - 1) {
+                /* Part of the sequence */
+                top--;
+                seq++;
+                if (seq >= number) {
+                    /* We have enough registers to reuse */
+                    reg = top; /* Result is the beginning of the sequence */
+                    /* Now remove them from the free list */
+                    free_array->size -= number;
+//                    printf("get %d-%d\n", reg, reg+(int)number - 1);
+                    return reg;
+                }
+            }
+            else break;
+        }
+        /* seq is now the number of registers which could be used in the free list */
+        /* top is the first register which may be useful */
+        /* Can we use these plus some new ones */
+        r = (int)(size_t)(free_array->pointers[free_array->size - 1]) + 1;
+        if (r == (int)(scope->num_registers)) {
+            /* Yes we can because the next unused register adds to the sequence */
+            reg = top; /* Result is the beginning of the sequence */
+            /* Now remove them from the free list */
+            free_array->size -= seq;
+            /* Now assign some brand ne ones */
+            scope->num_registers += number - seq;
+//            printf("get %d-%d\n", reg, reg+(int)number - 1);
+            return reg;
+        }
+        /* No we can't so just assign new ones */
+    }
+
+    reg = (int)(scope->num_registers); /* Assign brand-new registers */
+    scope->num_registers += number;
+//    printf("get %d-%d\n", reg, reg+(int)number - 1);
+    return reg;
+}
+
+/* Return no longer used registers to the scope, starting from reg
+ * reg, reg+1, ... reg+number */
+void ret_regs(Scope *scope, int reg, size_t number) {
+//    printf("free %d-%d\n", reg, reg + (int)number - 1);
+    dpa *free_array;
+    size_t j, i;
+    free_array = (dpa*)(scope->free_registers_array);
+    for (j=0; j<number; j++) {
+        for (i=0; i<free_array->size; i++)
+            if (reg == (size_t)free_array->pointers[i]) {
+//                printf(" ... %d already freed\n",reg);
+                break;
+            }
+        dpa_add(free_array, (void*)(size_t)reg);
+        reg++;
+    }
 }
 
 char* type_nm(ValueType type) {
@@ -172,7 +248,9 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->name = (char*)malloc(node->node_string_length + 1);
     memcpy(symbol->name, node->node_string, node->node_string_length);
     symbol->name[node->node_string_length] = 0;
+    symbol->register_type = 'r';
     symbol->is_constant = 0;
+    symbol->is_function = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -208,28 +286,49 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     utf8upr(name);
 #endif
 
-    result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
-
+    /* Look for the symbol - looking up in each parent scope */
+    do {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+        if (result) {
+            free(name);
+            return result;
+        }
+        scope = scope->parent;
+    } while (scope);
     free(name);
-
-    return result;
+    return 0;
 }
 
 /* Frees a symbol */
 static void symbol_free(Symbol *symbol) {
+    size_t i;
     free(symbol->name);
+
+    /* Free SymbolNode Connectors */
+    for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
+        free(((dpa*)(symbol->ast_node_array))->pointers[i]);
+    }
     free_dpa(symbol->ast_node_array);
+
     free(symbol);
 }
 
-/* Returns the index'th AST Node attached to a symbol */
-ASTNode* sym_trnd(Symbol *symbol, size_t index) {
-    return (ASTNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
+/* Returns the index'th SymbolNode connector attached to a symbol */
+SymbolNode* sym_trnd(Symbol *symbol, size_t index) {
+    return (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
 }
 
-/* Connect an AST Node to a Symbol */
-void sym_adnd(Symbol *symbol, ASTNode* node) {
-    dpa_add((dpa*)(symbol->ast_node_array), node);
+/* Connect a ASTNode to a Symbol */
+void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
+              unsigned int writeAccess) {
+    SymbolNode *connector = malloc(sizeof(SymbolNode));
+    connector->symbol = symbol;
+    connector->node = node;
+    connector->readUsage = readAccess;
+    connector->writeUsage = writeAccess;
+
+    dpa_add((dpa*)(symbol->ast_node_array), connector);
+    node->symbol = connector;
 }
 
 /* Returns the number of AST nodes connected to a symbol */

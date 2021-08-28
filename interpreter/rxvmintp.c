@@ -90,6 +90,10 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
+#ifndef NUTF8
+    int codepoint;
+#endif
+
 
     /*
      * Instruction database - loaded from a generated header file
@@ -1000,7 +1004,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLT_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FLT R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FLT R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F < op3RF);
             DISPATCH;
 
@@ -1027,7 +1031,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FGTE_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FGTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FGTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F >= op3RF);
             DISPATCH;
 
@@ -1054,7 +1058,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLTE_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FLTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FLTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F <= op3RF);
             DISPATCH;
 
@@ -1263,10 +1267,10 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI / op3I);
             DISPATCH;
 
-            /* -----------------------------------------------------------------------------------
-            *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
-            *  -----------------------------------------------------------------------------------
-            */
+/* -----------------------------------------------------------------------------------
+ *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
         START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI / op3RI);
@@ -1390,7 +1394,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FSUB_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FSUB R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+        DEBUG("TRACE - FSUB R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F - op3RF);
             DISPATCH;
 
@@ -1399,7 +1403,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FDIV_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FDIV R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+        DEBUG("TRACE - FDIV R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF);
             DISPATCH;
 
@@ -1534,7 +1538,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SUBF_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - SUBF R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             CONV2FLOAT(f3, op3R)
             REG_RETURN_FLOAT(op2F - f3);
             DISPATCH;
@@ -1586,10 +1590,46 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(DIVF_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - DIVF R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             CONV2FLOAT(f3, op3R)
             REG_RETURN_FLOAT(op2F / f3);
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+                i1=1;
+                i2=op2RI;
+                i3=op3RI;
+                while (i3 != 0)
+                {
+                    if ((i3 & 1) == 1) i1 *= i2;
+                    i3 >>= 1;
+                    i2 *= i2;
+                }
+            REG_RETURN_INT(i1);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn               pej 22 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            i1=1;
+            i2=op2RI;
+            i3=op3I;
+            while (i3 != 0)
+            {
+                if ((i3 & 1) == 1) i1 *= i2;
+                i3 >>= 1;
+                i2 *= i2;
+            }
+            REG_RETURN_INT(i1);
+            DISPATCH;
+
 
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Int Prime op1              ???
@@ -1633,11 +1673,22 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  ITOF_REG  Set register string value from its float value
+ *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOF_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - ITOF R%llu\n", REG_IDX(1));
             op1R->float_value = op1R->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FTOI_REG  Set register int value from its float value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(FTOI_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - FTOI R%llu\n", REG_IDX(1));
+            int_from_float(op1R);
+            if (op1R->float_value != (double)op1R->int_value) {
+                goto converror;
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1648,7 +1699,13 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             v2 = op2R;
             v3 = op3R;
-            i1 = v2->string_value[v3->int_value - 1] - '0';
+#ifndef NUTF8
+            string_set_byte_pos(v2, v3->int_value-1);
+            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+            i1= codepoint;
+#else
+            i1=v2->string_value[v3->int_value - 1];
+#endif
             REG_RETURN_INT(i1);
             DISPATCH;
 
@@ -1717,7 +1774,6 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
 #ifndef NUTF8
-            int codepoint;
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
             v1->int_value = codepoint;
 #else

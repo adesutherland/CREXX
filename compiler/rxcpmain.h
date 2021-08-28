@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX-Phase-0 v0.1.6 + F0026"
+#define rxversion "cREXX-Phase-0 v0.1.6 + F0028"
 
 #include <stdio.h>
 #include "platform.h"
@@ -59,7 +59,7 @@ int opt_scan(Context* s);
 int opt_pars(Context *context);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ASSIGN, BY, CALL, CONST_SYMBOL,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NOP, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_PREFIX,
@@ -68,7 +68,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_SYMBOL, VAR_TARGET, CONSTANT
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT
 } NodeType;
 
 struct Token {
@@ -81,17 +81,22 @@ struct Token {
     char* token_string;
 };
 
+typedef struct SymbolNode SymbolNode;
+
 struct ASTNode {
     NodeType node_type;
     ValueType value_type;
     ValueType target_type;
     int register_num;
+    char register_type;
+    int additional_registers; /* always type 'r' */
+    int num_additional_registers;
+    char is_ref_arg;
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
     Token *token;
     Scope *scope;
-    Symbol *symbol;
     char *node_string;
     size_t node_string_length;
     char free_node_string;
@@ -102,11 +107,20 @@ struct ASTNode {
     Token *token_start, *token_end;
     char *source_start, *source_end;
     int line, column;
+    SymbolNode *symbol;
     /* These are used by the code emitters */
     OutputFragment *output;
     OutputFragment *output2;
     OutputFragment *output3;
     OutputFragment *output4;
+};
+
+/* Symbol-ASTNode Connector */
+struct SymbolNode {
+    ASTNode *node;
+    Symbol *symbol;
+    unsigned int readUsage : 1;
+    unsigned int writeUsage : 1;
 };
 
 /* Print Unescaped*/
@@ -126,6 +140,8 @@ ASTNode *ast_fstr(Context* context, Token *token);
 ASTNode *ast_ft(Context* context, NodeType type);
 /* ASTNode Factory - With node type and string value */
 ASTNode *ast_ftt(Context* context, NodeType type, char *string);
+/* ASTNode Factory - With node type and string value copied from another node */
+ASTNode *ast_fstk(Context* context, ASTNode *source_node);
 /* ASTNode Factory - Error Node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
@@ -203,7 +219,9 @@ struct Symbol {
     Scope *scope;
     ValueType type;
     int register_num;
+    char register_type;
     char is_constant;
+    char is_function;
 };
 
 /* Scope Factory */
@@ -223,6 +241,14 @@ int get_reg(Scope *scope);
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg);
 
+/* Get number of free register from scope - returns the start of a sequence
+ * n, n+1, n+2, ... n+number */
+int get_regs(Scope *scope, size_t number);
+
+/* Return no longer used registers to the scope, starting from reg
+ * reg, reg+1, ... reg+number */
+void ret_regs(Scope *scope, int reg, size_t number);
+
 /* Frees scope and all its symbols */
 void scp_free(Scope *scope);
 
@@ -232,11 +258,12 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 /* Resolve a Symbol */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
 
-/* Get a the index'th ASTNode using the symbol */
-ASTNode* sym_trnd(Symbol *symbol, size_t index);
+/* Returns the index'th SymbolNode connector attached to a symbol */
+SymbolNode* sym_trnd(Symbol *symbol, size_t index);
 
-/* Add a AST Node using the symbol */
-void sym_adnd(Symbol *symbol, ASTNode* node);
+/* Add an ASTNode using the symbol */
+void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
+              unsigned int writeAccess);
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
