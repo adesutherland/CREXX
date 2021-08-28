@@ -604,12 +604,21 @@ static walker_result step4_walker(walker_direction direction,
                 /* Process all the arguments */
                 n1 = node->child;
                 n2 = sym_trnd(node->symbol->symbol, 0)->node;
+                /* n2 is PROCEDURE. Go to the first arg */
+                n2 = n2->child->sibling->child;
+
+                /* Check each argument */
                 while (n1) {
                     if (!n2) {
                         mknd_err(n1, "UNEXPECTED_ARGUMENT");
                         break;
                     }
                     n1->target_type = n2->value_type;
+                    if (n2->child->node_type == VAR_REFERENCE) {
+                        n1->is_ref_arg = 1;
+                        n1->symbol->writeUsage = 1;
+                        if (!n1->symbol) mknd_err(n1, "CANT_BE_PASSED_BY_REF");
+                    }
                     n1 = n1->sibling;
                     n2 = n2->sibling;
                 }

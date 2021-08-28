@@ -1673,11 +1673,22 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  ITOF_REG  Set register string value from its float value
+ *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOF_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - ITOF R%llu\n", REG_IDX(1));
             op1R->float_value = op1R->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FTOI_REG  Set register int value from its float value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(FTOI_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - FTOI R%llu\n", REG_IDX(1));
+            int_from_float(op1R);
+            if (op1R->float_value != (double)op1R->int_value) {
+                goto converror;
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------

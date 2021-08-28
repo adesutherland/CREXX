@@ -77,6 +77,9 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->float_value = 0;
     node->register_num = -1;
     node->register_type = 'r';
+    node->additional_registers = -1;
+    node->num_additional_registers = 0;
+    node->is_ref_arg = 0;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -784,8 +787,15 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
-        if (node->register_num >= 0)
-            sprintf(value_type_buffer,"\n%c%d", node->register_type, node->register_num);
+        if (node->register_num >= 0) {
+            if (node->num_additional_registers)
+                sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
+                        node->register_type, node->register_num,
+                        node->additional_registers,
+                        node->additional_registers + node->num_additional_registers - 1);
+            else
+                sprintf(value_type_buffer,"\n%c%d", node->register_type, node->register_num);
+        }
         else
             value_type_buffer[0] = 0;
 

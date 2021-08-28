@@ -128,17 +128,93 @@ int get_reg(Scope *scope) {
     else {
         reg = (int)((scope->num_registers)++);
     }
-//  printf("get %d\n", reg);
+ //   printf("get %d\n", reg);
     return reg;
 }
 
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg) {
-//  printf("free %d\n", reg);
+    size_t i;
+//    printf("free %d\n", reg);
     dpa *free_array;
+    free_array = (dpa*)(scope->free_registers_array);
+    for (i=0; i<free_array->size; i++) {
+        if (reg == (size_t)free_array->pointers[i]) {
+//            printf(" ... already freed\n");
+            return;
+        }
+    }
+    dpa_add(free_array, (void*)(size_t)reg);
+}
+
+/* Get number of free register from scope - returns the start of a sequence
+ * n, n+1, n+2, ... n+number */
+int get_regs(Scope *scope, size_t number) {
+    dpa *free_array;
+    int reg, r, top, i;
+    size_t seq;
 
     free_array = (dpa*)(scope->free_registers_array);
-    dpa_add(free_array, (void*)(size_t)reg);
+    /* Check the free list - how many could be used */
+    if (free_array->size) {
+        i = (int)free_array->size - 1;
+        top = (int)(size_t)(free_array->pointers[i]);
+        for (seq=1, i--; i>=0; i--) {
+            r = (int)(size_t)(free_array->pointers[i]);
+            if (r == top - 1) {
+                /* Part of the sequence */
+                top--;
+                seq++;
+                if (seq >= number) {
+                    /* We have enough registers to reuse */
+                    reg = top; /* Result is the beginning of the sequence */
+                    /* Now remove them from the free list */
+                    free_array->size -= number;
+//                    printf("get %d-%d\n", reg, reg+(int)number - 1);
+                    return reg;
+                }
+            }
+            else break;
+        }
+        /* seq is now the number of registers which could be used in the free list */
+        /* top is the first register which may be useful */
+        /* Can we use these plus some new ones */
+        r = (int)(size_t)(free_array->pointers[free_array->size - 1]) + 1;
+        if (r == (int)(scope->num_registers)) {
+            /* Yes we can because the next unused register adds to the sequence */
+            reg = top; /* Result is the beginning of the sequence */
+            /* Now remove them from the free list */
+            free_array->size -= seq;
+            /* Now assign some brand ne ones */
+            scope->num_registers += number - seq;
+//            printf("get %d-%d\n", reg, reg+(int)number - 1);
+            return reg;
+        }
+        /* No we can't so just assign new ones */
+    }
+
+    reg = (int)(scope->num_registers); /* Assign brand-new registers */
+    scope->num_registers += number;
+//    printf("get %d-%d\n", reg, reg+(int)number - 1);
+    return reg;
+}
+
+/* Return no longer used registers to the scope, starting from reg
+ * reg, reg+1, ... reg+number */
+void ret_regs(Scope *scope, int reg, size_t number) {
+//    printf("free %d-%d\n", reg, reg + (int)number - 1);
+    dpa *free_array;
+    size_t j, i;
+    free_array = (dpa*)(scope->free_registers_array);
+    for (j=0; j<number; j++) {
+        for (i=0; i<free_array->size; i++)
+            if (reg == (size_t)free_array->pointers[i]) {
+//                printf(" ... %d already freed\n",reg);
+                break;
+            }
+        dpa_add(free_array, (void*)(size_t)reg);
+        reg++;
+    }
 }
 
 char* type_nm(ValueType type) {

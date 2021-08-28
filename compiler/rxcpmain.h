@@ -89,6 +89,9 @@ struct ASTNode {
     ValueType target_type;
     int register_num;
     char register_type;
+    int additional_registers; /* always type 'r' */
+    int num_additional_registers;
+    char is_ref_arg;
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
@@ -237,6 +240,14 @@ int get_reg(Scope *scope);
 
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg);
+
+/* Get number of free register from scope - returns the start of a sequence
+ * n, n+1, n+2, ... n+number */
+int get_regs(Scope *scope, size_t number);
+
+/* Return no longer used registers to the scope, starting from reg
+ * reg, reg+1, ... reg+number */
+void ret_regs(Scope *scope, int reg, size_t number);
 
 /* Frees scope and all its symbols */
 void scp_free(Scope *scope);
