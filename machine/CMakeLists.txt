@@ -4,11 +4,11 @@ project(Machine C)
 
 set(CMAKE_C_STANDARD 90)
 
-find_program(REXX regina)
+find_program(REXX rexx)
 if(NOT REXX)
-    message(STATUS "NOTE: Regina not found - using existing instrmiss.h and instrset.h (if they exist!)")
+    message(STATUS "NOTE: rexx not found - using existing instrmiss.h and instrset.h (if they exist!)")
 else()
-    message(STATUS "NOTE: REXX Regina found - using ${REXX}")
+    message(STATUS "NOTE: REXX found - using ${REXX}")
     add_custom_command(
         COMMAND ${REXX} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmigen.rexx ${CMAKE_HOME_DIRECTORY}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxvminst.c
