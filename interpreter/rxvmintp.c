@@ -1707,8 +1707,54 @@ START_OF_INSTRUCTIONS ;
             i1=v2->string_value[v3->int_value - 1];
 #endif
             REG_RETURN_INT(i1);
-            DISPATCH;
+            DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  BCT_REG_ID  dec op1; if op1>0 goto op2                           pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCT_REG_ID) CALC_DISPATCH(2);
+            DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(1)]->int_value)--;
+            if (current_frame->locals[REG_IDX(1)]->int_value>0) {
+                next_pc = current_frame->module->binary + REG_IDX(2);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCT_REG_REG_ID  dec op1, inc op2; if op1>0 goto op3              pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCT_REG_REG_ID) CALC_DISPATCH(3);
+            DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            (current_frame->locals[REG_IDX(1)]->int_value)--;
+            (current_frame->locals[REG_IDX(2)]->int_value)++;
+            if (current_frame->locals[REG_IDX(1)]->int_value>0) {
+                next_pc = current_frame->module->binary + REG_IDX(3);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  CONCCHAR_REG_REG_ID  op1=op2[op3]                                pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - CONCCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+            i3=v3->int_value;   // save offset, we misuse v3 later
+#ifndef NUTF8
+            string_set_byte_pos(v2, v3->int_value-1);
+            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+            v3->int_value=codepoint;
+#else
+            v3->int_value=v2->string_value[v3->int_value - 1];
+#endif
+            string_concat_char(v1, v3);
+            v3->int_value=i3;   // restore original v3
+        DISPATCH;
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */

@@ -80,6 +80,7 @@ void init_ops() {
     instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
     instr_f("appendchar", "Append Concat Char op2 (as int) on op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("concchar", "Concat Char op1 from op2 position op3", OP_REG, OP_REG, OP_REG);
 
     instr_f("triml", "Trim String (op1) from Left by (op2) Chars", OP_REG, OP_REG, OP_NONE);
     instr_f("trimr", "Trim String (op1) from Right by (op2) Chars", OP_REG, OP_REG, OP_NONE);
@@ -211,6 +212,8 @@ void init_ops() {
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
+    instr_f("bct", "dec op1; if op1<=0; goto op2(if true)", OP_REG, OP_ID,OP_NONE);
+    instr_f("bct", "dec op1; inc op1, if op1<=0; goto op3(if true)", OP_REG, OP_REG,OP_ID);
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;
