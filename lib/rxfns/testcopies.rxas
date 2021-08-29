@@ -1,0 +1,28 @@
+.globals=0
+
+copies()  .expose=global.copies
+    
+main()    .locals=8
+          load r1,"Test"
+          load r2,"of Copies function"
+          sconcat r2,r1,r2
+          say r2
+
+          /* the first example from the book, COPIES('abc',3) == 'abcabcabc' */
+          load r3,2  /* there are two arguments*/
+          load r4,"abc"
+          load r5,3 /* second argument, repeat */
+          call r1,copies(),r3
+          say r1
+
+          /* the second example from the book, COPIES('abc',0) == '' */
+          load r3,2  /* there are two arguments*/
+          load r4,"abc"
+          load r5,0 /* second argument, repeat */
+          call r1,copies(),r3
+          say r1
+
+          exit
+          
+          
+

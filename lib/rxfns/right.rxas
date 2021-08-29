@@ -1,0 +1,50 @@
+/* 
+ * rexx RIGHT bif in rxas.
+ * rudimentary error checking
+ */
+          .globals=0
+/* externals used */          
+copies()  .expose=global.copies
+length()  .expose=global.length
+substr()  .expose=global.substr
+
+
+right()   .locals=15 .expose=global.right
+          copy r9,a1          
+          /* load the pad, we need it for non-substr processing */
+          load  r7," " /* default pad */
+          ilt   r1,a0,3
+          brt   doit,r1 /* we do not have 3 arguments, no pad */
+          copy  r7,a3  /* we have a pad, replace the default one */
+doit:   
+          /* trim = length(String) - Length */
+          load  r3,1 /* there is one argument for the call to length() */
+          copy  r4,a1 /* and it is the string in r8 (a1) */
+          call  r10,length(),r3 /* what is the length of the string arg */
+          isub  r11,r10,a2  /* trim is in r11 */
+          itos r11
+          copy r14,r11
+          load  r13,0
+          isub  r11,r13,r11 /* flip sign */
+          ilte  r12,r11,0   /* if trim <= 0 */
+          brt   retsubstr,r12
+          /* call copies and concatenate */
+          load  r3,2  /* there are two arguments */
+          copy  r4,r7
+          load  r5,0
+          iadd  r5,r11,0 /* second argument, repeat */
+          call  r1,copies(),r3
+          concat r5,r1,r9
+          ret   r5
+retsubstr:
+          iadd r14,r14,2
+          load r3,3  /* there are 2 arguments */
+          copy r4,r9 /* the string */
+          dec r14
+          inc r10
+          inc r10
+          copy r5,r14 /* second argument, startpos */
+          copy r6,r10
+          call r1,substr(),r3
+          ret r1
+          
