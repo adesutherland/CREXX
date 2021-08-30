@@ -78,7 +78,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     bin_code *pc, *next_pc;
     void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
-    value *v1, *v2, *v3;
+    value *v1, *v2, *v3, *v_temp;
     rxinteger i1, i2, i3;
     double f1, f2, f3;
     char *converr;
@@ -514,13 +514,24 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg) {
-                *(current_frame->return_reg) = v1;
-                if (v1) v1->owner = current_frame->parent;
+                if (v1->owner != current_frame) {
+                    /* We need to clone/copy the register to avoid having
+                     * two registers pointing to the same value */
+                    /* OPTIMISATION RULE - Avoid returning argument registers */
+                    *(current_frame->return_reg) =
+                            value_f(current_frame->parent);
+                    copy_value(*(current_frame->return_reg),v1);
+                }
+                else {
+                    /* Otherwise, we can return our register safely */
+                    *(current_frame->return_reg) = v1;
+                    v1->owner = current_frame->parent;
+                }
             }
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            if (!current_frame) rc = (int) v1->int_value;
+            if (!current_frame) rc = (int) v1->int_value; /* Exiting - grab the int rc */
             free_frame(temp_frame);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
@@ -602,13 +613,20 @@ START_OF_INSTRUCTIONS ;
             }
             DISPATCH;
 
-        START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2);
+        START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2); /* Deprecated */
             DEBUG("TRACE - MOVE R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
             /* v1 needs to be deallocated */
             free_value(current_frame, op1R);
             /* Now move the register; if op2 is null, well so be it, no harm done */
             op1R = op2R;
             op2R = NULL;
+            DISPATCH;
+
+        START_INSTRUCTION(SWAP_REG_REG) CALC_DISPATCH(2); /* Deprecated */
+            DEBUG("TRACE - SWAP R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            v_temp = op1R;
+            op1R = op2R;
+            op2R = v_temp;
             DISPATCH;
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0);
@@ -1239,15 +1257,32 @@ START_OF_INSTRUCTIONS ;
             copy_value(op1R, op2R);
             DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  SCOPY_REG_REG  Copy String op2 to op1
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(SCOPY_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - SCOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            copy_string_value(op1R, op2R);
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ICOPY_REG_REG  Copy Integer op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(ICOPY_REG_REG) CALC_DISPATCH(2);
-    DEBUG("TRACE - ICOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
-    op1R->int_value = op2R->int_value;
-    DISPATCH;
+        START_INSTRUCTION(ICOPY_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - ICOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            op1R->int_value = op2R->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FCOPY_REG_REG  Copy Float op2 to op1
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FCOPY_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - FCOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            op1R->float_value = op2R->float_value;
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
@@ -1700,11 +1735,11 @@ START_OF_INSTRUCTIONS ;
             v2 = op2R;
             v3 = op3R;
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value-1);
+            string_set_byte_pos(v2, v3->int_value);
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
             i1= codepoint;
 #else
-            i1=v2->string_value[v3->int_value - 1];
+            i1=v2->string_value[v3->int_value];
 #endif
             REG_RETURN_INT(i1);
             DISPATCH

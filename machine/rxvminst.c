@@ -170,7 +170,7 @@ void init_ops() {
     instr_f("call", "Call procedure (op1=op2())", OP_REG, OP_FUNC, OP_NONE);
     instr_f("call", "Call procedure (op1=op2(op3...) )", OP_REG, OP_FUNC, OP_REG);
 
-    instr_f("ret", "Return NULL", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("ret", "Return VOID", OP_NONE, OP_NONE, OP_NONE);
     instr_f("ret", "Return op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("ret", "Return op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("ret", "Return op1", OP_FLOAT, OP_NONE, OP_NONE);
@@ -181,9 +181,12 @@ void init_ops() {
     instr_f("brt", "Branch to op1 if op2 true", OP_ID, OP_REG, OP_NONE);
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
 
-    instr_f("move", "Move op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("move", "Move op2 to op1 (Deprecated use swap)", OP_REG, OP_REG, OP_NONE);
+    instr_f("swap", "Swap op1 and op2", OP_REG, OP_REG, OP_NONE);
     instr_f("copy", "Copy op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("icopy", "Copy Integer op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("fcopy", "Copy Float op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("scopy", "Copy String op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);

@@ -301,6 +301,21 @@ static void copy_value(value *dest, value *source) {
     else dest->string_value = 0;
 }
 
+/* Copy string value */
+static void copy_string_value(value *dest, value *source) {
+    dest->string_pos = source->string_pos;
+    dest->string_length = source->string_length;
+#ifndef NUTF8
+    dest->string_chars = source->string_chars;
+    dest->string_char_pos = source->string_char_pos;
+#endif
+    if (dest->string_length) {
+        prep_string_buffer(dest, dest->string_length);
+        memcpy(dest->string_value, source->string_value, dest->string_length);
+    }
+    else dest->string_value = 0;
+}
+
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 static int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
@@ -471,7 +486,7 @@ static void string_set_byte_pos(value *v, size_t new_string_char_pos) {
          * to check if it is quicker to search from the end of the string */
         if (v->string_chars - 1 - new_string_char_pos < diff) {
             /* loop from the end */
-            v->string_pos = v->string_length - 1;
+            v->string_pos = v->string_length;
             v->string_char_pos = v->string_chars - 1;
             v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
             while (v->string_char_pos != new_string_char_pos) {

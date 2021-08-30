@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
@@ -142,7 +143,7 @@ static OutputFragment *output_f(){
     return output;
 }
 
-static OutputFragment *output_fs(char* text){
+static OutputFragment *output_fs(char* text) {
     OutputFragment *output = malloc(sizeof(OutputFragment));
     output->after = NULL;
     output->before = NULL;
@@ -172,6 +173,16 @@ static void output_append(OutputFragment* before, OutputFragment* after) {
     while (before->after) before = before->after;
     before->after = after;
     after->before = before;
+}
+
+static void output_append_text(OutputFragment* before, char* after) {
+    char *buffer;
+    while (before->after) before = before->after;
+    buffer = malloc(strlen(before->output) + strlen(after) + 1);
+    strcpy(buffer, before->output);
+    strcat(buffer, after);
+    free(before->output);
+    before->output = buffer;
 }
 
 static void print_output(FILE* file, OutputFragment* existing) {
@@ -267,7 +278,7 @@ static walker_result register_walker(walker_direction direction,
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
-                    else if (!c->symbol)
+                    else if (c->symbol == 0 || is_constant(c))
                         c->register_num = DONT_ASSIGN_REGISTER;
 
                     c = c->sibling;
@@ -280,6 +291,13 @@ static walker_result register_walker(walker_direction direction,
                  * We do not need a register as we can "say" a constant directly
                  */
                 if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case RETURN:
+                /*
+                 * We do not need a register as we can "ret" a constant directly
+                 */
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case ASSEMBLER:
@@ -480,6 +498,20 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case RETURN:
+                if (child1) {
+                    node->register_num = child1->register_num;
+                    node->register_type = child1->register_type;
+                    /* If a register is needed at all ... */
+                    if (node->register_num != DONT_ASSIGN_REGISTER) {
+                        /* Then if it is a temporary mark the register for reuse */
+                        if (child1->symbol == 0)
+                            ret_reg(payload->current_scope,
+                                    child1->register_num);
+                    }
+                }
+                break;
+
             case ADDRESS:
             case IF:
                 node->register_num = child1->register_num;
@@ -525,11 +557,18 @@ static walker_result register_walker(walker_direction direction,
 
 static void get_comment(char* comment, ASTNode *node, char* prefix) {
     char temp[buf_len];
-    encode_comment(temp, buf_len, node->source_start, (int)(node->source_end - node->source_start) + 1);
-    if (prefix)
-        snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line, prefix, temp);
-    else
-        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, temp);
+    if (!node->source_start) {
+        comment[0] = 0;
+    }
+    else {
+        encode_comment(temp, buf_len, node->source_start,
+                       (int) (node->source_end - node->source_start) + 1);
+        if (prefix)
+            snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line,
+                     prefix, temp);
+        else
+            snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, temp);
+    }
 }
 
 /* Comment without quoting node text */
@@ -639,6 +678,8 @@ static walker_result emit_walker(walker_direction direction,
     char comment[buf_len];
     size_t i;
     int flag;
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -671,9 +712,17 @@ static walker_result emit_walker(walker_direction direction,
         switch (node->node_type) {
 
             case PROGRAM_FILE:
-                snprintf(temp1, buf_len, "/* REXX COMPILER PoC */\n"
+                snprintf(temp1, buf_len, "/*\n"
+                                         " * cREXX COMPILER VERSION : %s\n"
+                                         " * SOURCE                 : %.*s\n"
+                                         " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
+                                         " */\n"
                                          "\n"
-                                         ".globals=0\n");
+                                         ".globals=0\n",
+                    rxversion,
+                    node->node_string_length, node->node_string,
+                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
                 node->output = output_fs(temp1);
                 n = child1;
                 while (n) {
@@ -685,24 +734,34 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case PROCEDURE:
-                snprintf(temp1, buf_len, ""
-                                         "\n"
-                                         "%.*s()   .locals=%d\n",
-                         node->node_string_length,
-                         node->node_string,
-                         node->scope->num_registers);
-                node->output = output_fs(temp1);
-                n = child1;
-                while (n) {
-                    if (n->output) output_append(node->output, n->output);
-                    n = n->sibling;
+                if (!child3 || child3->node_type == NOP) {
+                    /* A declaration - external */
+                    snprintf(temp1, buf_len, ""
+                                             "\n"
+                                             "%.*s() .expose=global.%.*s\n", /* TODO */
+                             node->node_string_length,
+                             node->node_string,
+                             node->node_string_length, node->node_string);
+                    node->output = output_fs(temp1);
                 }
-
-                node->output2 = output_fs("   ret\n"); /* TODO PoC Hack! */
-                output_append(node->output, node->output2);
-
+                else {
+                    /* Definition */
+                    snprintf(temp1, buf_len, ""
+                                             "\n"
+                                             "%.*s() .locals=%d .expose=%.*s.%.*s\n",
+                             node->node_string_length,
+                             node->node_string,
+                             node->scope->num_registers,
+                             node->parent->node_string_length, node->parent->node_string,
+                             node->node_string_length, node->node_string);
+                    node->output = output_fs(temp1);
+                    n = child1;
+                    while (n) {
+                        if (n->output) output_append(node->output, n->output);
+                        n = n->sibling;
+                    }
+                }
                 break;
-
 
             case INSTRUCTIONS:
                 node->output = output_f();
@@ -711,6 +770,80 @@ static walker_result emit_walker(walker_direction direction,
                     if (n->output) output_append(node->output, n->output);
                     n = n->sibling;
                 }
+                break;
+
+            case CALL:
+                /* Comment */
+                get_comment(comment, node, NULL);
+                node->output = output_fs(comment);
+                /* TODO - set result */
+                output_append(node->output,child1->output);
+                break;
+
+            case FUNCTION:
+                /* Comment */
+                get_comment(comment, node, NULL);
+                node->output = output_fs(comment);
+
+                /* Number of arguments */
+                snprintf(temp1, buf_len, "   load r%d,%d\n",
+                         node->additional_registers,
+                         node->num_additional_registers - 1);
+                output_append_text(node->output, temp1);
+
+                /* Step through the arguments - eveluating them */
+                n = child1;
+                while (n) {
+                    if (n->output) output_append(node->output, n->output);
+                    n = n->sibling;
+                }
+
+                /* Step through the arguments - getting the register numbers right for the call */
+                node->output2 = output_fs("");
+                n = child1;
+                i = node->additional_registers + 1; /* First one is the number of arguments */
+                while (n) {
+                    if (n->register_num != i) {
+                        /* We need to copy or swap registers */
+                        if (n->is_ref_arg) {
+                            snprintf(temp1, buf_len, "   swap r%d,%c%d\n",
+                                     i, n->register_type, n->register_num);
+                            output_append_text(node->output2, temp1);
+                        }
+                        else {
+                            snprintf(temp1, buf_len, "   %scopy r%d,%c%d\n",
+                                     tp_prefix, i, n->register_type, n->register_num);
+                            output_append_text(node->output2, temp1);
+                        }
+                    }
+                    n = n->sibling; i++;
+                }
+
+                /* Actual Call */
+                snprintf(temp1, buf_len, "   call %c%d,%.*s(),r%d\n",
+                         node->register_type, node->register_num,
+                         node->node_string_length, node->node_string,
+                         node->additional_registers);
+                output_append_text(node->output2, temp1);
+
+                /* Step through for swapping registers back */
+                n = child1;
+                i = node->additional_registers + 1; /* First one is the number of arguments */
+                while (n) {
+                    if (n->register_num != i) {
+                        /* We need to copy or swap registers */
+                        if (n->is_ref_arg) {
+                            /* I have reversed arguments just for readability */
+                            snprintf(temp1, buf_len, "   swap %c%d,r%d\n",
+                                     n->register_type, n->register_num,i);
+                            output_append_text(node->output2, temp1);
+                        }
+                    }
+                    n = n->sibling; i++;
+                }
+                output_append(node->output, node->output2);
+
+                type_promotion(node);
                 break;
 
             case OP_CONCAT:
@@ -1193,6 +1326,29 @@ static walker_result emit_walker(walker_direction direction,
                 else {
                     output_append(node->output, child1->output);
                     snprintf(temp1, buf_len, "   say %c%d\n",
+                             child1->register_type,
+                             child1->register_num);
+                }
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+                break;
+
+            case RETURN:
+                get_comment(comment,node, NULL);
+                /* Child instructions */
+                node->output = output_fs(comment);
+                if (child1 == 0) {
+                    snprintf(temp1, buf_len, "   ret\n");
+                }
+                else if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    /* If the register is not set then the child is a constant
+                     * which we RET directly. Get the constant string - target type */
+                    format_constant(temp2, child1->target_type, child1);
+                    snprintf(temp1, buf_len, "   ret %s\n", temp2);
+                }
+                else {
+                    output_append(node->output, child1->output);
+                    snprintf(temp1, buf_len, "   ret %c%d\n",
                              child1->register_type,
                              child1->register_num);
                 }

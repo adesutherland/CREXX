@@ -1,5 +1,8 @@
 CREXX History / Change Log
 
+I0081 - UTF Char Positioning Fix
+F0018 - CALL, RETURN, ARG support (without PARSE)
+
 F0028 - rxc level B embedded REXX ASSEMBLER
       - initial function() parsing (not complete)
       - Fix UTF whitespace/tab (rxc and rxas)

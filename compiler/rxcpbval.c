@@ -33,7 +33,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
 static walker_result step1_walker(walker_direction direction,
                                   ASTNode* node, __attribute__((unused)) void *payload) {
 
-    ASTNode *child, *next_child, *new_child, *next;
+    ASTNode *child, *next_child, *new_child, *next, *last;
     int has_to;
     int has_for;
     int has_by;
@@ -47,6 +47,10 @@ static walker_result step1_walker(walker_direction direction,
     if (direction == in) {
 
         if (node->node_type == PROGRAM_FILE) {
+            /* File name */
+            node->node_string = context->file_name;
+            node->node_string_length = strlen(context->file_name);
+
             /* Fix up the top of the tree */
 
             /* Remove the top INSTRUCTIONS node (2nd child) and promote its children */
@@ -76,7 +80,7 @@ static walker_result step1_walker(walker_direction direction,
         else if (node->node_type == PROCEDURE) {
             if (node->parent->node_type != PROGRAM_FILE) {
                 /* We can only define procedures in classes */
-                mknd_err(node, "CANT_DEFINE_PROC_HEER");
+                mknd_err(node, "CANT_DEFINE_PROC_HERE");
             }
             else {
                 /* Move node siblings (aka next instructions) until the next procedure to be node
@@ -86,8 +90,11 @@ static walker_result step1_walker(walker_direction direction,
                 new_child = ast_ft(context,INSTRUCTIONS);
                 add_ast(node,new_child);
 
+                last = NULL;
+
                 /* For each sibling until the next PROCEDURE */
                 while ((next = node->sibling) && next->node_type != PROCEDURE) {
+                    last = next; /* To check that there is a return */
                     /* 2. Disconnect/remove next node from the AST tree */
                     node->sibling = next->sibling;
                     next->sibling = 0;
@@ -95,8 +102,25 @@ static walker_result step1_walker(walker_direction direction,
                     /* 3. add next under INSTRUCTIONS child */
                     add_ast(new_child,next);
                 }
+
+                if (last) { /* If there are no instructions at all it is a declaration */
+                    if (last->node_type != RETURN) {
+                        /* We need to add a return */
+                        new_child = ast_ft(context,RETURN);
+                        add_ast(last->parent,new_child); /* Adds as the last sibling */
+                    }
+                }
             }
         }
+
+        else if (node->node_type == RETURN) {
+            if (!node->child) {
+                /* Add a constant 0 for a return value */
+                new_child = ast_ftt(context,INTEGER,"0");
+                add_ast(node,new_child);
+            }
+        }
+
     } else {
         /* Bottom up - source code positions, concat, etc */
         if (node->token) {
@@ -376,7 +400,7 @@ static walker_result step2b_walker(walker_direction direction,
                 mknd_err(node, "NOT_A_FUNCTION");
             }
 
-            sym_adnd(symbol, node, 1, 0);
+            else sym_adnd(symbol, node, 1, 0);
         }
 
         if (node->scope) *current_scope = (*current_scope)->parent;
@@ -681,7 +705,9 @@ static walker_result step4_walker(walker_direction direction,
 
             case RETURN:
                 /* Type is the scope > procedure > type */
-                if (child1) child1->target_type = (*current_scope)->defining_node->value_type;
+                node->value_type = (*current_scope)->defining_node->value_type;
+                node->target_type = node->value_type;
+                if (child1) child1->target_type = node->value_type;
                 break;
 
             case IF:

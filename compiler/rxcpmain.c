@@ -169,6 +169,7 @@ int main(int argc, char *argv[]) {
     bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize context */
+    context.file_name = file_name;
     context.traceFile = traceFile;
     context.top = buff;
     context.cursor = buff;

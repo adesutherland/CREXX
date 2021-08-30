@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX-Phase-0 v0.1.6 + F0028"
+#define rxversion "cREXX-Phase-0 v0.1.6 + F0018"
 
 #include <stdio.h>
 #include "platform.h"
@@ -39,6 +39,7 @@ typedef enum ValueType {
 
 /* Compiler Context Object */
 typedef struct Context {
+    char* file_name;
     FILE *traceFile;
     char *buff_start;
     char *buff_end;
