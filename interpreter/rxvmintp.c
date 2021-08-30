@@ -1735,11 +1735,11 @@ START_OF_INSTRUCTIONS ;
             v2 = op2R;
             v3 = op3R;
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value-1);
+            string_set_byte_pos(v2, v3->int_value);
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
             i1= codepoint;
 #else
-            i1=v2->string_value[v3->int_value - 1];
+            i1=v2->string_value[v3->int_value];
 #endif
             REG_RETURN_INT(i1);
             DISPATCH;

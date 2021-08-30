@@ -486,7 +486,7 @@ static void string_set_byte_pos(value *v, size_t new_string_char_pos) {
          * to check if it is quicker to search from the end of the string */
         if (v->string_chars - 1 - new_string_char_pos < diff) {
             /* loop from the end */
-            v->string_pos = v->string_length - 1;
+            v->string_pos = v->string_length;
             v->string_char_pos = v->string_chars - 1;
             v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
             while (v->string_char_pos != new_string_char_pos) {
