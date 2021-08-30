@@ -39,6 +39,7 @@ typedef enum ValueType {
 
 /* Compiler Context Object */
 typedef struct Context {
+    char* file_name;
     FILE *traceFile;
     char *buff_start;
     char *buff_end;

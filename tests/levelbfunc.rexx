@@ -1,37 +1,32 @@
 /* Level B Function Test */
 options levelb
 x = 2.0
-call test 1,x, x + 3.0
-say x
+a = 1
+say "main() calling test 1, 2.0, 5.0"
+call test a, x, x+3.0
+say "main() a =" a "(should be 1)"
+say "main() x =" x "(should be 10)"
+say "Length of 'hello' is" length("hello")
 return
 
 test: procedure = .int
-  arg a = .int, b .int, c = .float
-  result = 0
-  result = a + b + test2(b)
-  if result = 3 then do
-     say "The Result is 3"
-  end
+  arg a = .int, b .float, c = .float
+  result = 0.0
+  result = a + b + double(c)
+  say "test() a =" a
+  say "test() b =" b
+  say "test() c =" c
+  say "test() a + b + c*2 =" result
+  say "test() setting a and b (aka x) to 10"
+  a = 10
   b = 10
-  say c
-  return result;
+  return result
 
-test2: procedure = .float
-  arg x .float
-  say "starting"
-  start_time = 0
-  end_time = 0
-  a = 0
-  assembler say "hello"
-  assembler do
-    itos a
-    say a
-  end
-  assembler time start_time
-  do i = 1 to 100000000
-    a = a + i
-  end
-  assembler time end_time
+double: procedure = .float
+  arg x = .float
+  result = x * 2.0
+  say "double() double" x "is" result
+  return result
 
-  say "Time taken is" end_time-start_time "seconds"
-  return 0
+length: procedure = .int
+  arg string1 = .string
