@@ -7,7 +7,7 @@
 substr()  .expose=global.substr
           
 left()    .locals=8 .expose=global.left
-          dec a2
+*          dec a2
           inc a0 /* we pass on one more than we got */
           move r3,a0  /* there a0 arguments*/
           move r4,a1 /* the string */

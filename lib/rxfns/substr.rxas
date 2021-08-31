@@ -32,17 +32,18 @@ doit:
           copy  r4,a1 /* and it is the string in a1 */
           call  r10,length(),r3 /* what is the length of the string arg */
           copy  r12,r10 /* the preliminary loop counter is the strlength */
-          *          inc   r12
+*          inc   r12
+          dec   a2
           /* if r6 is nonzero, we have a length argument, a2:=r8+1 */
           igt   r1,r6,0
           brf   skip,r1
           copy  r12,r6 /* the final loop counter is the length argument */
           iadd  r12,r12,a2 /* adapt for start position */
-          inc   a2
+   *       inc   a2
 skip:    
           /* now loop characters from a1 from the start pos in a2 to (length) r1 */
           load  r14,"" /* we are going to return this so initialize it */
-          inc r10
+          dec r10        
 loop:
           /* a2: int argument 2, start position */
           /* r4: string argument1, string */
@@ -54,7 +55,7 @@ loop:
           strchar r13,r4,a2
           appendchar r14,r13 
           inc   a2 /* increment loop index */
-          igt   r11,a2,r12
+          igte  r11,a2,r12
           brt   endloop,r11 /* jump out of the loop */
           igt   r16,a2,r10 /* are we past end of string ? */
           brt   pad,r16 
@@ -62,7 +63,7 @@ loop:
 pad:
           concat r14,r14,r7  /* we are past length, cat pad */
           inc   a2
-          igt   r11,a2,r12
+          igte  r11,a2,r12
           brt   endloop,r11 /* jump out of the loop */
           br    pad
 Endloop:
