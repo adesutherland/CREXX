@@ -1747,11 +1747,11 @@ START_OF_INSTRUCTIONS ;
  *  BCT_REG_ID  dec op1; if op1>0 goto op2                           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCT_REG_ID) CALC_DISPATCH(2);
+        START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(1)]->int_value)--;
-            if (current_frame->locals[REG_IDX(1)]->int_value>0) {
-                next_pc = current_frame->module->binary + REG_IDX(2);
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -1759,12 +1759,12 @@ START_OF_INSTRUCTIONS ;
  *  BCT_REG_REG_ID  dec op1, inc op2; if op1>0 goto op3              pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCT_REG_REG_ID) CALC_DISPATCH(3);
+        START_INSTRUCTION(BCT_ID_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            (current_frame->locals[REG_IDX(1)]->int_value)--;
-            (current_frame->locals[REG_IDX(2)]->int_value)++;
-            if (current_frame->locals[REG_IDX(1)]->int_value>0) {
-                next_pc = current_frame->module->binary + REG_IDX(3);
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            (current_frame->locals[REG_IDX(3)]->int_value)++;
+            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -1781,7 +1781,7 @@ START_OF_INSTRUCTIONS ;
             v3 = op3R;
             i3=v3->int_value;   // save offset, we misuse v3 later
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value-1);
+            string_set_byte_pos(v2, v3->int_value);
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
             v3->int_value=codepoint;
 #else

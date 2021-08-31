@@ -215,8 +215,8 @@ void init_ops() {
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
-    instr_f("bct", "dec op1; if op1<=0; goto op2(if true)", OP_REG, OP_ID,OP_NONE);
-    instr_f("bct", "dec op1; inc op1, if op1<=0; goto op3(if true)", OP_REG, OP_REG,OP_ID);
+    instr_f("bct", "dec op2; if op2<=0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
+    instr_f("bct", "dec op2; inc op3, if op2<=0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;
