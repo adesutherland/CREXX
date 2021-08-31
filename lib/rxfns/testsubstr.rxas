@@ -45,7 +45,16 @@ main()    .locals=8
           load r7,"." /* fourth argument, pad */ 
           call r1,substr(),r3
           say r1
- 
+
+          /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
+          load r3,4  /* there are four arguments*/
+          load r4,"abc"
+          load r5,2 /* second argument, startpos */
+          load r6,6 /* third argument, length */
+          load r7,"é" /* fourth argument, pad */ 
+          call r1,substr(),r3
+          say r1
+
           exit
           
           

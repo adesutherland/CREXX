@@ -1,9 +1,6 @@
-/* --------------------------------------------------------------------
- * rexx SUBSTR bif in rxas.
- * Uses length.rxas
- * Uses the new instructions BCT and CONCCHAR
+/* 
+ * rexx SUBSTR bif in rxas. Uses length.rxas
  * rudimentary error checking
- * --------------------------------------------------------------------
  */
 
           .globals=0
@@ -43,6 +40,7 @@ doit:
           iadd  r12,r12,a2 /* adapt for start position */
 skip:    
           /* now loop characters from a1 from the start pos in a2 to (length) r1 */
+          load  r14,"" /* we are going to return this so initialize it */
           dec r10        
 loop:
           /* a2: int argument 2, start position */
