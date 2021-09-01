@@ -3,34 +3,34 @@
 left()    .expose=global.left
     
 main()    .locals=8
-          load r1,"Test"
-          load r2,"of Left function"
-          sconcat r2,r1,r2
-          say r2
+    load r1,"Test"
+    load r2,"of Left function"
+    sconcat r2,r1,r2
+    say r2
 
-/*          /* the first example from the book, LEFT('abc d',8) == 'abc d   ' */
-          load r3,2  /* there are two arguments*/
-          load r4,"abc d"
-          load r5,8 /* second argument, length */
-          call r1,left(),r3
-          say r1
-*/
-          /* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' */
-          load r3,3 /* there are three arguments*/
-          load r4,"abc d"
-          load r5,8 /* second argument, length */
-          load r6,"." /* third argument, pad */              
-          call r1,left(),r3
-          say r1
-
-          /* the third example from the book, LEFT('abc  def',7) == 'abc de' */
-          load r3,2  /* there are two arguments*/
-          load r4,"abc  def"
-          load r5,7 /* second argument, length */
-          call r1,left(),r3
-          say r1
-
-          exit
+    /* /\* the first example from the book, LEFT('abc d',8) == 'abc d   ' *\/ */
+    /* load r3,2  /\* there are two arguments*\/ */
+    /* load r4,"abc d" */
+    /* load r5,8 /\* second argument, length *\/ */
+    /* call r1,left(),r3 */
+    /* say r1 */
+    
+    /* /\* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' *\/ */
+    /* load r3,3 /\* there are three arguments*\/ */
+    /* load r4,"abc d" */
+    /* load r5,8 /\* second argument, length *\/ */
+    /* load r6,"." /\* third argument, pad *\/               */
+    /* call r1,left(),r3 */
+    /* say r1 */
+    
+    /* the third example from the book, LEFT('abc  def',7) == 'abc de' */
+    load r3,2  /* there are two arguments*/
+    load r4,"abc  def"
+    load r5,7 /* second argument, length */
+    call r1,left(),r3
+    say r1
+    
+    exit
           
           
 

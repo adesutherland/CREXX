@@ -3,59 +3,68 @@
 substr()  .expose=global.substr
     
 main()    .locals=8
-          load r1,"Test"
-          load r2,"of Substr function"
-          sconcat r2,r1,r2
-          say r2
-
-          load r3,2  /* there are two arguments*/
-          load r4,"1234567890"
-          load r5,5 /* second argument, startpos */
-          call r1,substr(),r3
-          say r1
-
-          load r3,4  /* there are four arguments*/
-          load r4,"1234567890"
-          load r5,6 /* second argument, startpos */
-          load r6,6 /* third argument, length */
-          load r7,"." /* fourth argument, pad */              
-          call r1,substr(),r3
-          say r1
-
-          /* the first example from the book, SUBSTR('abc',2) == 'bc' */
-          load r3,2  /* there are two arguments*/
-          load r4,"abc"
-          load r5,2 /* second argument, startpos */
-          call r1,substr(),r3
-          say r1
-
-          /* the second example from the book, SUBSTR('abc',2,4) == 'bc  ' */
-          load r3,3  /* there are three arguments*/
-          load r4,"abc"
-          load r5,2 /* second argument, startpos */
-          load r6,4 /* third argument, length */   
-          call r1,substr(),r3
-          say r1
-
-          /* the third example from the book, SUBSTR('abc',2,6,'.') == 'bc....' */
-          load r3,4  /* there are four arguments*/
-          load r4,"abc"
-          load r5,2 /* second argument, startpos */
-          load r6,6 /* third argument, length */
-          load r7,"." /* fourth argument, pad */ 
-          call r1,substr(),r3
-          say r1
-
-          /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
-          load r3,4  /* there are four arguments*/
-          load r4,"abc"
-          load r5,2 /* second argument, startpos */
-          load r6,6 /* third argument, length */
-          load r7,"é" /* fourth argument, pad */ 
-          call r1,substr(),r3
-          say r1
-
-          exit
-          
+    load r1,"Test"
+    load r2,"of Substr function"
+    sconcat r2,r1,r2
+    say r2
+    
+    load r3,2  /* there are two arguments*/
+    load r4,"1234567890"
+    load r5,5 /* second argument, startpos */
+    call r1,substr(),r3
+    say r1
+    
+    load r3,4  /* there are four arguments*/
+    load r4,"1234567890"
+    load r5,6 /* second argument, startpos */
+    load r6,6 /* third argument, length */
+    load r7,"." /* fourth argument, pad */              
+    call r1,substr(),r3
+    say r1
+    
+    /* the first example from the book, SUBSTR('abc',2) == 'bc' */
+    load r3,2  /* there are two arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    call r1,substr(),r3
+    say r1
+    
+    /* the second example from the book, SUBSTR('abc',2,4) == 'bc  ' */
+    load r3,3  /* there are three arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,4 /* third argument, length */
+    call r1,substr(),r3
+    say r1
+    
+    /* the third example from the book, SUBSTR('abc',2,6,'.') == 'bc....' */
+    load r3,4  /* there are four arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,4 /* third argument, length */
+    load r7,"." /* fourth argument, pad */
+    call r1,substr(),r3
+    say r1
+    
+    /* test of substr shorter than max, SUBSTR('abc',1,2,'.') == 'ab' */
+    load r3,4  /* there are four arguments*/
+    load r4,"abcdefgh"
+    load r5,1 /* second argument, startpos */
+    load r6,2 /* third argument, length */
+    load r7,"." /* fourth argument, pad */
+    call r1,substr(),r3
+    say r1
+    
+    /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
+    load r3,4  /* there are four arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,6 /* third argument, length */
+    load r7,"é" /* fourth argument, pad */
+    call r1,substr(),r3
+    say r1
+    
+    exit
+    
           
 
