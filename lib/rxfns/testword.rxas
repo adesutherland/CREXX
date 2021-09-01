@@ -1,0 +1,9 @@
+/* Test word function */
+
+words() .expose=global.words
+main()  .locals=8
+    load r3,1  /* there are four arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    call r1,words(),r3
+    say r1
+    ret
