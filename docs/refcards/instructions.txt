@@ -1,0 +1,164 @@
+
+* REXX Assembly Instruction List
+0x0013 addf       {REG,REG,REG}        Convert and Add to Float (op1=op2+op3)
+0x0014 addf       {REG,REG,FLOAT}      Convert and Add to Float (op1=op2+op3)
+0x0003 addi       {REG,REG,REG}        Convert and Add to Integer (op1=op2+op3)
+0x0004 addi       {REG,REG,INT}        Convert and Add to Integer (op1=op2+op3)
+0x0075 amap       {REG,REG}            Map op1 to arg register index in op2
+0x0076 amap       {REG,INT}            Map op1 to arg register index  op2
+0x0070 and        {REG,REG,REG}        Logical (int) and op1=(op2 && op3)
+0x0033 appendchar {REG,REG}            Append Concat Char op2 (as int) on op1
+0x0089 br         {ID}                 Branch to op1
+0x008b brf        {ID,REG}             Branch to op1 if op2 false
+0x008a brt        {ID,REG}             Branch to op1 if op2 true
+0x0081 call       {REG,FUNC}           Call procedure (op1=op2())
+0x0082 call       {REG,FUNC,REG}       Call procedure (op1=op2(op3...) )
+0x0080 call       {FUNC}               Call procedure (op1())
+0x0030 concat     {REG,REG,REG}        String Concat (op1=op2||op3)
+0x0031 concat     {REG,REG,STRING}     String Concat (op1=op2||op3)
+0x0032 concat     {REG,STRING,REG}     String Concat (op1=op2||op3)
+0x008d copy       {REG,REG}            Copy op2 to op1
+0x0026 dec        {REG}                Decrement Int (op1--)
+0x0028 dec0       no operand           Decrement R0-- Int
+0x002a dec1       no operand           Decrement R0-- Int
+0x002c dec2       no operand           Decrement R0-- Int
+0x0022 divf       {REG,REG,REG}        Convert and Divide to Float (op1=op2/op3)
+0x0023 divf       {REG,REG,FLOAT}      Convert and Divide to Float (op1=op2/op3)
+0x0024 divf       {REG,FLOAT,REG}      Convert and Divide to Float (op1=op2/op3)
+0x000f divi       {REG,REG,REG}        Convert and Divide to Integer (op1=op2/op3)
+0x0010 divi       {REG,REG,INT}        Convert and Divide to Integer (op1=op2/op3)
+0x009c exit       no operand           Exit
+0x009d exit       {REG}                Exit op1
+0x009e exit       {INT}                Exit op1
+0x0011 fadd       {REG,REG,REG}        Float Add (op1=op2+op3)
+0x0012 fadd       {REG,REG,FLOAT}      Float Add (op1=op2+op3)
+0x001f fdiv       {REG,REG,REG}        Float Divide (op1=op2/op3)
+0x0020 fdiv       {REG,REG,FLOAT}      Float Divide (op1=op2/op3)
+0x0021 fdiv       {REG,FLOAT,REG}      Float Divide (op1=op2/op3)
+0x0050 feq        {REG,REG,REG}        Float Equals op1=(op2==op3)
+0x0051 feq        {REG,REG,FLOAT}      Float Equals op1=(op2==op3)
+0x0054 fgt        {REG,REG,REG}        Float Greater than op1=(op2>op3)
+0x0055 fgt        {REG,REG,FLOAT}      Float Greater than op1=(op2>op3)
+0x0056 fgt        {REG,FLOAT,REG}      Float Greater than op1=(op2>op3)
+0x0057 fgte       {REG,REG,REG}        Float Greater than equals op1=(op2>=op3)
+0x0058 fgte       {REG,REG,FLOAT}      Float Greater than equals op1=(op2>=op3)
+0x0059 fgte       {REG,FLOAT,REG}      Float Greater than equals op1=(op2>=op3)
+0x005a flt        {REG,REG,REG}        Float Less than op1=(op2<op3)
+0x005b flt        {REG,REG,FLOAT}      Float Less than op1=(op2<op3)
+0x005c flt        {REG,FLOAT,REG}      Float Less than op1=(op2<op3)
+0x005d flte       {REG,REG,REG}        Float Less than equals op1=(op2<=op3)
+0x005e flte       {REG,REG,FLOAT}      Float Less than equals op1=(op2<=op3)
+0x005f flte       {REG,FLOAT,REG}      Float Less than equals op1=(op2<=op3)
+0x001b fmult      {REG,REG,REG}        Float Multiply (op1=op2*op3)
+0x001c fmult      {REG,REG,FLOAT}      Float Multiply (op1=op2*op3)
+0x0052 fne        {REG,REG,REG}        Float Not equals op1=(op2!=op3)
+0x0053 fne        {REG,REG,FLOAT}      Float Not equals op1=(op2!=op3)
+0x0015 fsub       {REG,REG,REG}        Float Subtract (op1=op2-op3)
+0x0016 fsub       {REG,REG,FLOAT}      Float Subtract (op1=op2-op3)
+0x0017 fsub       {REG,FLOAT,REG}      Float Subtract (op1=op2-op3)
+0x00a0 ftos       {REG}                Set register string value from its float value
+0x003e getstrpos  {REG,REG}            Get String (op2) charpos into op1
+0x0079 gmap       {REG,REG}            Map op1 to global var name in op2
+0x007a gmap       {REG,STRING}         Map op1 to global var name op2
+0x0001 iadd       {REG,REG,REG}        Integer Add (op1=op2+op3)
+0x0002 iadd       {REG,REG,INT}        Integer Add (op1=op2+op3)
+0x008e icopy      {REG,REG}            Copy Integer op2 to op1
+0x000d idiv       {REG,REG,REG}        Integer Divide (op1=op2/op3)
+0x000e idiv       {REG,REG,INT}        Integer Divide (op1=op2/op3)
+0x0040 ieq        {REG,REG,REG}        Int Equals op1=(op2==op3)
+0x0041 ieq        {REG,REG,INT}        Int Equals op1=(op2==op3)
+0x0044 igt        {REG,REG,REG}        Int Greater than op1=(op2>op3)
+0x0045 igt        {REG,REG,INT}        Int Greater than op1=(op2>op3)
+0x0046 igt        {REG,INT,REG}        Int Greater than op1=(op2>op3)
+0x0047 igte       {REG,REG,REG}        Int Greater than equals op1=(op2>=op3)
+0x0048 igte       {REG,REG,INT}        Int Greater than equals op1=(op2>=op3)
+0x0049 igte       {REG,INT,REG}        Int Greater than equals op1=(op2>=op3)
+0x004a ilt        {REG,REG,REG}        Int Less than op1=(op2<op3)
+0x004b ilt        {REG,REG,INT}        Int Less than op1=(op2<op3)
+0x004c ilt        {REG,INT,REG}        Int Less than op1=(op2<op3)
+0x004d ilte       {REG,REG,REG}        Int Less than equals op1=(op2<=op3)
+0x004e ilte       {REG,REG,INT}        Int Less than equals op1=(op2<=op3)
+0x004f ilte       {REG,INT,REG}        Int Less than equals op1=(op2<=op3)
+0x0009 imult      {REG,REG,REG}        Integer Multiply (op1=op2*op3)
+0x000a imult      {REG,REG,INT}        Integer Multiply (op1=op2*op3)
+0x0025 inc        {REG}                Increment Int (op1++)
+0x0027 inc0       no operand           Increment R0++ Int
+0x0029 inc1       no operand           Increment R0++ Int
+0x002b inc2       no operand           Increment R0++ Int
+0x0042 ine        {REG,REG,REG}        Int Not equals op1=(op2!=op3)
+0x0043 ine        {REG,REG,INT}        Int Not equals op1=(op2!=op3)
+0x0005 isub       {REG,REG,REG}        Integer Subtract (op1=op2-op3)
+0x0006 isub       {REG,REG,INT}        Integer Subtract (op1=op2-op3)
+0x00a1 itof       {REG}                Set register float value from its int value
+0x009f itos       {REG}                Set register string value from its int value
+0x008f link       {REG,REG}            Link op2 to op1
+0x0092 load       {REG,INT}            Load op1 with op2
+0x0093 load       {REG,FLOAT}          Load op1 with op2
+0x0095 load       {REG,CHAR}           Load op1 with op2
+0x0094 load       {REG,STRING}         Load op1 with op2
+0x0073 map        {REG,REG}            Map op1 to var name in op2
+0x0074 map        {REG,STRING}         Map op1 to var name op2
+0x008c move       {REG,REG}            Move op2 to op1
+0x001d multf      {REG,REG,REG}        Convert and Multiply to Float (op1=op2*op3)
+0x001e multf      {REG,REG,FLOAT}      Convert and Multiply to Float (op1=op2*op3)
+0x000b multi      {REG,REG,REG}        Convert and Multiply to Integer (op1=op2*op3)
+0x000c multi      {REG,REG,INT}        Convert and Multiply to Integer (op1=op2*op3)
+0x007b nsmap      {REG,REG,REG}        Map op1 to namespace in op2 var name in op3
+0x007c nsmap      {REG,REG,STRING}     Map op1 to namespace in op2 var name op3
+0x007e nsmap      {REG,STRING,REG}     Map op1 to namespace op2 var name in op3
+0x007d nsmap      {REG,STRING,STRING}  Map op1 to namespace op2 var name op3
+0x0091 null       {REG}                Null op1
+0x0071 or         {REG,REG,REG}        Logical (int) or op1=(op2 || op3)
+0x0077 pmap       {REG,REG}            Map op1 to parent var name in op2
+0x0078 pmap       {REG,STRING}         Map op1 to parent var name op2
+0x0083 ret        no operand           Return NULL
+0x0084 ret        {REG}                Return op1
+0x0085 ret        {INT}                Return op1
+0x0086 ret        {FLOAT}              Return op1
+0x0087 ret        {CHAR}               Return op1
+0x0088 ret        {STRING}             Return op1
+0x0096 say        {REG}                Say op1 (as string)
+0x0098 say        {INT}                Say op1
+0x0099 say        {FLOAT}              Say op1
+0x009b say        {CHAR}               Say op1
+0x009a say        {STRING}             Say op1
+0x002d sconcat    {REG,REG,REG}        String Concat with space (op1=op2||op3)
+0x002e sconcat    {REG,REG,STRING}     String Concat with space (op1=op2||op3)
+0x002f sconcat    {REG,STRING,REG}     String Concat with space (op1=op2||op3)
+0x0060 seq        {REG,REG,REG}        String Equals op1=(op2==op3)
+0x0061 seq        {REG,REG,STRING}     String Equals op1=(op2==op3)
+0x003d setstrpos  {REG,REG}            Set String (op1) charpos set to op2
+0x0064 sgt        {REG,REG,REG}        String Greater than op1=(op2>op3)
+0x0065 sgt        {REG,REG,STRING}     String Greater than op1=(op2>op3)
+0x0066 sgt        {REG,STRING,REG}     String Greater than op1=(op2>op3)
+0x0067 sgte       {REG,REG,REG}        String Greater than equals op1=(op2>=op3)
+0x0068 sgte       {REG,REG,STRING}     String Greater than equals op1=(op2>=op3)
+0x0069 sgte       {REG,STRING,REG}     String Greater than equals op1=(op2>=op3)
+0x006a slt        {REG,REG,REG}        String Less than op1=(op2<op3)
+0x006b slt        {REG,REG,STRING}     String Less than op1=(op2<op3)
+0x006c slt        {REG,STRING,REG}     String Less than op1=(op2<op3)
+0x006d slte       {REG,REG,REG}        String Less than equals op1=(op2<=op3)
+0x006e slte       {REG,REG,STRING}     String Less than equals op1=(op2<=op3)
+0x006f slte       {REG,STRING,REG}     String Less than equals op1=(op2<=op3)
+0x0062 sne        {REG,REG,REG}        String Not equals op1=(op2!=op3)
+0x0063 sne        {REG,REG,STRING}     String Not equals op1=(op2!=op3)
+0x0097 ssay       {REG}                String Say op1 (Deprecated use 'say reg')
+0x003c strchar    {REG,REG}            op1 (as int) = op2[charpos]
+0x003b strchar    {REG,REG,REG}        op1 (as int) = op2[op3]
+0x003a strlen     {REG,REG}            String Length op1 = length(op2)
+0x0018 subf       {REG,REG,REG}        Convert and Subtract to Float (op1=op2-op3)
+0x0019 subf       {REG,REG,FLOAT}      Convert and Subtract to Float (op1=op2-op3)
+0x001a subf       {REG,FLOAT,REG}      Convert and Subtract to Float (op1=op2-op3)
+0x0007 subi       {REG,REG,REG}        Convert and Subtract to Integer (op1=op2-op3)
+0x0008 subi       {REG,REG,INT}        Convert and Subtract to Integer (op1=op2-op3)
+0x003f substr     {REG,REG,REG}        op1 = op2[charpos]...op2[charpos+op3-1]
+0x0072 time       {REG}                Put time into op1
+0x0034 triml      {REG,REG}            Trim String (op1) from Left by (op2) Chars
+0x0037 triml      {REG,REG,REG}        Trim String (op2) from Left by (op3) Chars into op1
+0x0035 trimr      {REG,REG}            Trim String (op1) from Right by (op2) Chars
+0x0038 trimr      {REG,REG,REG}        Trim String (op2) from Right by (op3) Chars into op1
+0x0036 trunc      {REG,REG}            Trunc String (op1) to (op2) Chars
+0x0039 trunc      {REG,REG,REG}        Trunc String (op2) to (op3) Chars into op1
+0x0090 unlink     {REG}                Unlink op1
+0x007f unmap      {REG}                Unmap op1
+
