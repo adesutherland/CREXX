@@ -3,49 +3,49 @@
 right()   .expose=global.right
     
 main()    .locals=8
-          load r1,"Test"
-          load r2,"of Right function"
-          sconcat r2,r1,r2
-          say r2
-
-          /* the first example from the book, RIGHT('abc d',8) == 'abc d   ' */
-          load r3,2  /* there are two arguments*/
-          load r4,"abc  d"
-          load r5,8 /* second argument, length */
-          call r1,right(),r3
-          say r1
-
-          /* the second example from the book, RIGHT('abc d',8,'.') == 'abc d...' */
-          load r3,3  /* there are three arguments*/
-          load r4,"abc  d"
-          load r5,8 /* second argument, length */
-          load r6,"." /* third argument, pad */              
-          call r1,right(),r3
-          say r1
-
-          /* the third example from the book, RIGHT('12',5,0) == '00012' */
-          load r3,3  /* there are three arguments*/
-          load r4,"12"
-          load r5,5 /* second argument, length */
-          load r6,"0" /* third argument, pad */               
-          call r1,right(),r3
-          say r1
-
-          /* a test for the substring (non-copies concatenate function), returns 'fox' */
-          load r3,2  /* there are two arguments*/
-          load r4,"the quick brown fox"
-          load r5,3 /* second argument, length */
-          call r1,right(),r3
-          say r1
-
-          /* a test for the substring (non-copies concatenate function), returns 'uvwxyz' */
-          load r3,2  /* there are two arguments*/
-          load r4,"abcdefghijklmnopqrstuvwxyz"
-          load r5,6 /* second argument, length */
-          call r1,right(),r3
-          say r1
-          
-          exit
+    load r1,"Test"
+    load r2,"of Right function"
+    sconcat r2,r1,r2
+    say r2
+    
+    /* the first example from the book, RIGHT('abc d',8) == 'abc d   ' */
+    load r3,2  /* there are two arguments*/
+    load r4,"abc  d"
+    load r5,8 /* second argument, length */
+    call r1,right(),r3
+    say r1
+    
+    /* the second example from the book, RIGHT('abc d',8,'.') == 'abc d...' */
+    load r3,3  /* there are three arguments*/
+    load r4,"abc  d"
+    load r5,8 /* second argument, length */
+    load r6,"." /* third argument, pad */              
+    call r1,right(),r3
+    say r1
+    
+    /* the third example from the book, RIGHT('12',5,0) == '00012' */
+    load r3,3  /* there are three arguments*/
+    load r4,"12"
+    load r5,5 /* second argument, length */
+    load r6,"0" /* third argument, pad */               
+    call r1,right(),r3
+    say r1
+    
+    /* a test for the substring (non-copies concatenate function), returns 'fox' */
+    load r3,2  /* there are two arguments*/
+    load r4,"the quick brown fox"
+    load r5,3 /* second argument, length */
+    call r1,right(),r3
+    say r1
+    
+    /* a test for the substring (non-copies concatenate function), returns 'uvwxyz' */
+    load r3,2  /* there are two arguments*/
+    load r4,"abcdefghijklmnopqrstuvwxyz"
+    load r5,6 /* second argument, length */
+    call r1,right(),r3
+    say r1
+    
+    exit
           
           
 

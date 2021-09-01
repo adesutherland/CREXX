@@ -53,13 +53,14 @@ loop:
     br    end
 pad:
     concchar r14,r7,a2
-    /* say "we are padding" */
-    /* say r7 */
-    /* itos r12 */
-    /* say r12 */
-    /* say  r14 */
-    /* itos a2 */
-    /* say a2 */
+          
+    say "we are padding with"
+    say r7
+    itos r12
+    say r12
+    say  r14
+    itos a2
+    say a2
     bct   pad,r12,a2
 end:
     ret   r14
