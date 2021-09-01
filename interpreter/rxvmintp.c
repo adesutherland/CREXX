@@ -79,7 +79,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3, *v_temp;
-    rxinteger i1, i2, i3;
+    rxinteger i1, i2, i3, i4,i5;
     double f1, f2, f3;
     char *converr;
     string_constant *s1, *s2, *s3;
@@ -1768,7 +1768,56 @@ START_OF_INSTRUCTIONS ;
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
-
+/* ------------------------------------------------------------------------------------
+ *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - FNDBLNK R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+            i5=v2->string_length;
+            for (i3=v3->int_value;i3<i5; i3++) {
+         #ifndef NUTF8
+                string_set_byte_pos(v2, i3);
+                utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+                i4=codepoint;
+        #else
+                i4=v2->string_value[i3];
+        #endif
+                if (i4==32) goto blankfound;
+            }
+            i3=-i5;
+            blankfound:
+    REG_RETURN_INT(i3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FndNBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3);
+           DEBUG("TRACE - FNDNBLNK R%llu R%llu\n", REG_IDX(1),
+              REG_IDX(2));
+          v1 = op1R;
+          v2 = op2R;
+          v3 = op3R;
+          i5=v2->string_length;
+          for (i3=v3->int_value;i3<i5; i3++) {
+        #ifndef NUTF8
+              string_set_byte_pos(v2, i3);
+              utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+              i4=codepoint;
+        #else
+              i4=v2->string_value[i3];
+        #endif
+              if (i4!=32) goto nonblankfound;
+          }
+          i3=-i5;
+        nonblankfound:
+    REG_RETURN_INT(i3);
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_ID  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
