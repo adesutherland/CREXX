@@ -1,0 +1,7 @@
+# parse for description table
+
+pipe "< instructions.txt | specs /\item[/ 1 8-18 7 19-38 20 /]/ nw  40-* 50 | xlate 7.23 upper | > instr.tex"
+
+# parse for sort by opcode
+
+pipe "< instructions.txt | sort | xlate 7.22 upper | xlate 5.6 upper | specs /\\texttt{/ 1 5-7 nw /}/ nw  /&/ nw /\\texttt{/ nw 8-18 nw /}/ nw /&/ nw /\\texttt{/ nw 18-38 nw /}/ nw /\\\\/ nw | > opcodes.tex"

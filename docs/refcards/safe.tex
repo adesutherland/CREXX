@@ -1,0 +1,61 @@
+\begin{ttdesc}[labelwidth=\widthof{\texttt{report}}]
+\item[book] Default is two-sided.
+\item[report] No \texttt{part} divisions.
+\end{ttdesc}
+
+\subsection{Common \texttt{documentclass} options}
+
+\begin{ttdesc}[labelwidth=\widthof{\ttfamily{letterpaper/a4paper}}]
+\item[10pt/11pt/12pt] Font size.
+\item[letterpaper/a4paper] Paper size.
+\item[draft] Double-space lines.
+\end{ttdesc}
+
+\section{Document structure}
+
+\vspace{-\baselineskip}
+
+\begin{multicols*}{2}
+\lstinline|\part{title}| \\
+\lstinline|\chapter{title}| \\
+\lstinline|\section{title}| \\
+\lstinline|\subsection{title}| \\
+\lstinline|\subsubsection{title}| \\
+\lstinline|\paragraph{title}| \\
+\lstinline|\subparagraph{title}|
+\end{multicols*}
+
+\section{Text properties}
+
+\subsection{Font face}
+
+\begin{tabular}{lll}
+Command & Declaration & Effect \\
+\lstinline|\textrm{text}| & \lstinline|{\rmfamily text}| & \textrm{Roman family} \\
+\lstinline|\textsf{text}| & \lstinline|{\sffamily text}| & \textsf{Sans serif family} \\
+\end{tabular}
+
+
+\section{Math mode}
+
+\subsection{Math mode symbols}
+\begin{multicols*}{4}
+\( \leq \) \verb|\leq| \\
+\( \times \) \verb|\times| \\
+\( ^{\circ} \) \verb|^{\circ}| \\
+\( \infty \) \verb|\infty| \\
+\( \supset \) \verb|\supset| \\
+\( \subset \) \verb|\subset| \\
+\( \cup \) \verb|\cup| \\
+\( \dot a \) \verb|\dot a| \\
+\( \alpha \) \verb|\alpha| \\
+\( \epsilon \) \verb|\epsilon| \\
+\( \theta \) \verb|\theta| \\
+\( \lambda \) \verb|\lambda| \\
+\( \pi \) \verb|\pi| \\
+\( \upsilon \) \verb|\upsilon|
+\end{multicols*}
+
+\section{Filler material}
+
+\lipsum
