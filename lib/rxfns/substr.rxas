@@ -52,8 +52,7 @@ loop:
     brt   pad,r1
     br    end
 pad:
-    concchar r14,r7,a2
-          
+    concat r14,r14,r7
     say "we are padding with"
     say r7
     itos r12
@@ -61,7 +60,7 @@ pad:
     say  r14
     itos a2
     say a2
-    bct   pad,r12,a2
+    bct   pad,r12
 end:
     ret   r14
     exit
