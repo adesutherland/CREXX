@@ -1,0 +1,30 @@
+/* wordindx */
+          .globals=0
+main()  .locals=12
+    /*       0123456789012345678901234567890123456789012  */
+   load  r1,"The quick brown fox jumps over the lazy dog"
+   load  r2,5          /* word number           */
+   load  r3,0          /* offset in string      */
+   strlen r4,r1        /* length doesn't matter */
+   load  r6,0          /* word count            */
+   load  R10,""        /* extracted word        */
+loop:
+   fndnblnk r3,r1,r3   /* find first/next non blank offset   */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5
+   inc r6              /* else increase word count           */
+                       /* offset of word is in R3            */
+   ieq r7,r6,r2        /* is this the word we ae looking for?*/
+   brt wordsub,r7      /* end and start returning remaining string */
+   fndblnk r3,r1,r3    /* from offset find next blank offset */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5        /* word not found                     */
+   bct loop,r4,r3      /* continue to look for next non blank char */
+wordsub:
+   strlen r4,r1
+   isub r4,r4,r3
+   concchar r10,r1,r3
+   bct wordsub,r4,r3
+break:
+   say r10
+   ret r10

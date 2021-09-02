@@ -1778,7 +1778,11 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             v3 = op3R;
-            i5=v2->string_length;
+         #ifndef NUTF8
+            i5 = (rxinteger) v2->string_chars;
+         #else
+            i5 = (rxinteger)v2->string_length;
+         #endif
             for (i3=v3->int_value;i3<i5; i3++) {
          #ifndef NUTF8
                 string_set_byte_pos(v2, i3);
@@ -1803,7 +1807,11 @@ START_OF_INSTRUCTIONS ;
           v1 = op1R;
           v2 = op2R;
           v3 = op3R;
-          i5=v2->string_length;
+        #ifndef NUTF8
+          i5 = (rxinteger) v2->string_chars;
+        #else
+          i5 = (rxinteger)v2->string_length;
+        #endif
           for (i3=v3->int_value;i3<i5; i3++) {
         #ifndef NUTF8
               string_set_byte_pos(v2, i3);
