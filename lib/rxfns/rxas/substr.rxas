@@ -52,14 +52,13 @@ loop:
     brt   pad,r1
     br    end
 pad:
-    concat r14,r14,r7
+    concat r14,r7,1
     say "we are padding with"
     say r7
+    say "for times"
     itos r12
     say r12
     say  r14
-    itos a2
-    say a2
     bct   pad,r12
 end:
     ret   r14

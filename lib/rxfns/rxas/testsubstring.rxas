@@ -1,0 +1,30 @@
+/*
+ * cREXX COMPILER VERSION : cREXX-Phase-0 v0.1.6 + F0018
+ * SOURCE                 : testsubstring
+ * BUILT                  : 2021-09-02 10:21:54
+ */
+
+.globals=0
+
+main() .locals=8 .expose=testsubstring.main
+   * Line 3: say substr('1234567890','6',0,''
+   * Line 3: substr('1234567890','6',0,''
+   load r1,4
+   load r2,"1234567890"
+   load r3,6
+   load r4,0
+   load r5,""
+   call r6,substr(),r1
+   say r6
+   * Line 4: say substr('1234567890','7',8,'.'
+   * Line 4: substr('1234567890','7',8,'.'
+   load r1,4
+   load r2,"1234567890"
+   load r3,7
+   load r4,8
+   load r5,"."
+   call r7,substr(),r1
+   say r7
+   ret 0
+
+substr() .expose=global.substr
