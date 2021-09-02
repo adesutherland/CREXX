@@ -27,17 +27,18 @@ wrongargs:
     say "substr needs at least two and at most 4 arguments"
     exit
 substr:
+    swap  r8,a2 /* start pos in r8 */
     /* we want to know the length of the string argument */
     load  r3,1 /* there is one argument for the call to length() */
     copy  r4,a1 /* and it is the string in a1 */
     call  r10,length(),r3 /* what is the length of the string arg */
     copy  r12,r10 /* the preliminary loop counter is the strlength */
-    dec   a2
+    dec   r8
     /* if r6 is nonzero, we have a length argument, a2:=r8+1 */
     igt   r1,r6,0
     brf   skip,r1
-    iadd  r12,r10,a2
-    isub  r10,r10,a2 /* loop r10 from original string length */
+    iadd  r12,r10,r8
+    isub  r10,r10,r8 /* loop r10 from original string length */
     isub  r12,r6,r10
     copy  r10,r6 /* final conc loop length */
     br    loop
@@ -45,23 +46,22 @@ skip:
     load  r12,0 /* with no length, never need to pad */
     /* now loop characters from a1 from start pos in a2 to (length) r1 */
 loop:
-    concchar r14,r4,a2
-    bct   loop,r10,a2 /* loop inc a2 and dec r10 */
+    concchar r14,r4,r8
+    bct   loop,r10,r8 /* loop inc a2 and dec r10 */
     /* check if we need to pad */
     igte  r1,r12,1
     brt   pad,r1
     br    end
 pad:
-    concat r14,r7,r14
+    concat r14,r14,r7
     say "we are padding with"
     say r7
     say "for times"
     itos r12
     say r12
-    say  r14
     bct   pad,r12
 end:
-    ret   r15
+    ret   r14
     exit
                 
     
