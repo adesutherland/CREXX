@@ -763,6 +763,23 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - INC2\n");
             REG_VAL(2)->int_value++;
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            (current_frame->locals[REG_IDX(1)]->int_value)=0-(current_frame->locals[REG_IDX(1)]->int_value);
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FSEX   op1 = -op1  decimal                                    pej 2. September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FSEX_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            (current_frame->locals[REG_IDX(1)]->float_value)=0-(current_frame->locals[REG_IDX(1)]->float_value);
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
