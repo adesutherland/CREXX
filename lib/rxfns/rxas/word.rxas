@@ -1,9 +1,8 @@
 /* word */
-          .globals=0
-main()  .locals=11
-    /*       0123456789  */
-   load  r1,"The quick brown fox jumps over the lazy dog"
-   load  r2,4       /* word number      */
+         .globals=0
+word()   .locals=11 .expose=global.word
+   copy  r1,a1      /* full string      */
+   copy  r2,a2      /* word number      */
    load  r3,0       /* offset in string */
    load  r4,100000  /* length doesn't matter */
    load  r6,0       /* word count       */
@@ -30,6 +29,5 @@ isplus:
 wordc:
    concchar r10,r1,r8  /* extract word char by car      */
    bct  wordc,r5,r8    /* ... until length counter is 0 */
-   say r10
 break:
    ret r10

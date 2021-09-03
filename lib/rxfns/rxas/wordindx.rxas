@@ -1,9 +1,9 @@
 /* wordindx */
           .globals=0
-main()  .locals=11
+wordindx() .locals=11 .expose=global.wordindx
     /*       0123456789012345678901234567890123456789012  */
-   load  r1,"The quick brown fox jumps over the lazy dog"
-   load  r2,12       /* word number      */
+   copy  r1,a1      /* string */
+   copy  r2,a2      /* word number      */
    load  r3,0       /* offset in string */
    load  r4,100000  /* length doesn't matter */
    load  r6,0       /* word count       */
@@ -27,5 +27,4 @@ break:
    load r3,0
 return:
    itos r3
-   say r3
    ret r3

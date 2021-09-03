@@ -1,9 +1,8 @@
 /* wordindx */
           .globals=0
-main()  .locals=12
-    /*       0123456789012345678901234567890123456789012  */
-   load  r1,"The quick brown fox jumps over the lazy dog"
-   load  r2,5          /* word number           */
+subword() .locals=12 .expose=global.subword
+   copy  r1,a1
+   copy  r2,a2         /* word number to find   */
    load  r3,0          /* offset in string      */
    strlen r4,r1        /* length doesn't matter */
    load  r6,0          /* word count            */
@@ -26,5 +25,4 @@ wordsub:
    concchar r10,r1,r3
    bct wordsub,r4,r3
 break:
-   say r10
    ret r10

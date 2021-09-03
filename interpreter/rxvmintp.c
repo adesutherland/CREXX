@@ -1844,7 +1844,7 @@ START_OF_INSTRUCTIONS ;
     REG_RETURN_INT(i3);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  CONCCHAR_REG_REG_ID  op1=op2[op3]                                pej 27 August 2021
+ *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3);

@@ -16,4 +16,5 @@ loop:
    brt break,r5
    bct loop,r4,r3      /* then look for next non blank char  */
 break:
+   itos r6
    ret r6

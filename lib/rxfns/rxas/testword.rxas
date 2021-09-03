@@ -1,9 +1,43 @@
 /* Test word function */
 
-words() .expose=global.words
+words()   .expose=global.words
+subword() .expose=global.subword
+word()    .expose=global.word
+wordindx().expose=global.wordindx
 main()  .locals=8
-    load r3,1  /* there are four arguments*/
+    load r1,"Test words"
+    say r1
+    load r3,1  /* there is one argument */
     load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
     call r1,words(),r3
+    say r1
+/* word */
+    load r1,"Test word: 7"
+    say r1
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,7  /* fetch 7. word */
+    call r1,word(),r3
+    say r1
+/* wordindx */
+    load r1,"Test wordindx: 4"
+    say r1
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,4  /* pos of 4. word */
+    call r1,wordindx(),r3
+    say r1
+
+ /* subword */
+    load r1,"Test subword: 5"
+    say r1
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    load r5,5  /* start with 5 word */
+    call r1,subword(),r3
     say r1
     ret
