@@ -1,0 +1,12 @@
+/* Test reverse function */
+
+reverse() .expose=global.reverse
+main()    .locals=5
+    load r1,"Test Reverse"
+    say r1
+    load r3,1  /* there is one argument */
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    call r1,reverse(),r3
+    say r1
+    ret
