@@ -1,0 +1,16 @@
+/* Test reverse function */
+
+pos() .expose=global.pos
+main()    .locals=7
+    load r1,"Test pos"
+    say r1
+    load r3,3  /* there are 3 arguments */
+    load r4,"fox"
+    say r4
+    load r5,"The quick brown fox jumps over the lazy dog"
+    say r5
+    load r6,1
+    call r1,pos(),r3
+    itos r1
+    say r1
+    ret
