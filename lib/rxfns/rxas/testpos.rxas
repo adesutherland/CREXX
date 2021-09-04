@@ -1,16 +1,33 @@
 /* Test reverse function */
 
 pos() .expose=global.pos
+lastpos() .expose=global.lastpos
 main()    .locals=7
+/* Test pos */
     load r1,"Test pos"
     say r1
     load r3,3  /* there are 3 arguments */
-    load r4,"fox"
+    load r4,"!"
     say r4
-    load r5,"The quick brown fox jumps over the lazy dog"
+/*                    1         2         3         4     */
+/*           1234567890123456789012345678901234567890123  */
+    load r5,"The quick brown fox jumps over the lazy(!) dog"
     say r5
-    load r6,1
+    load r6,1   /* offset to search */
     call r1,pos(),r3
+    itos r1
+    say r1
+/* Test Lastpos */
+    load r1,"Test lastpos"
+    say r1
+    load r3,2 /* there are 3 arguments */
+    load r4,"!"
+    say r4
+    /*                1         2         3         4     */
+    /*       12345678901234567890123456789012345678901234567  */
+    load r5,"The quick brown fox jumps over the lazy ! dog"
+    say r5
+    call r1,lastpos(),r3
     itos r1
     say r1
     ret

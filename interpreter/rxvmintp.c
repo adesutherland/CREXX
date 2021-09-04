@@ -1786,6 +1786,31 @@ START_OF_INSTRUCTIONS ;
             }
         DISPATCH;
 /* ------------------------------------------------------------------------------------
+ *  BCTNM_REG_ID  dec op1; if op1>=0 goto op2                           pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTNM_ID_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCTNM_REG_REG_ID  dec op1, inc op2; if op1>=0 goto op3              pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - BCTNM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            (current_frame->locals[REG_IDX(3)]->int_value)++;
+            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  -----------------------------------------------------------------------------------
  */

@@ -22,6 +22,8 @@ outerloop:
    ieq r11,r8,r9       /* is it not equal, goto next source char */
    brf next,r11
    copy r12,r3         /* it is equal, save begin pos */
+   ieq r11,r5,0        /* if remaining length is 0, return now*/
+   brt found,r11
    inc r6              /* look into next search char  */
 innerloop:
    inc r3              /* look into next source char  */
