@@ -1,0 +1,23 @@
+main()  .locals=20
+
+
+    load r14,"string"
+    load r7,"."
+    concat r14,r14,r7
+    say r14
+    load r14,""
+
+
+    load r15,"string"
+    load r3,3 /* start */
+    load r2,3 /* length */
+loop:   
+    concchar r13,r15,r3
+    bct loop,r2,r3
+
+    load r7,"."
+    concat r13,r7,r13
+    say r13
+    
+    exit
+    
