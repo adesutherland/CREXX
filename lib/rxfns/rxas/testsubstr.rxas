@@ -18,7 +18,7 @@ main()    .locals=8
     load r4,"1234567890"
     load r5,6 /* second argument, startpos */
     load r6,6 /* third argument, length */
-    load r7,"." /* fourth argument, pad */              
+    load r7,"." /* fourth argument, pad */
     call r1,substr(),r3
     say r1
     
