@@ -2,24 +2,23 @@
  * rexx SUBSTR bif in rxas. Uses length.rxas
  * rudimentary error checking
  */
-
-    .globals=0
+.globals=0
 length()  .expose=global.length          
 substr()  .locals=20 .expose=global.substr
     /* string    = arg1    */
     /* n (start) = arg2    */
-    load  r8," " /* the default pad character */
-    ilt   r11,a0,2 /* less than 2 arguments */
+    load  r8," "        /* the default pad character */
+    ilt   r11,a0,2      /* less than 2 arguments     */
     brt   wrongargs,r11
-    igt   r11,a0,4 /* more than 4 arguments */
+    igt   r11,a0,4      /* more than 4 arguments     */
     brt   wrongargs,r11
     ieq   r11,a0,2
-    brt   argok,r11 /* we have two arguments */
+    brt   argok,r11     /* we have two arguments     */
     /* we have 3 or 4 arguments */
-    copy  r5,a3 /* save length field */
+    copy  r5,a3         /* save length field         */
     ieq   r11,a0,4
-    brf   argok,r11 /* we do not have 4 arguments, no pad */
-    copy  r8,a4  /* we have a pad, replace the default one */
+    brf   argok,r11 /* we do not have 4 args, no pad */
+    copy  r8,a4  /* we have pad, replace default one */
     br    argok
 wrongargs:
     /* we are here if there are not enough, or too many arguments */
@@ -37,22 +36,22 @@ argok:
     brf substr,r11
     copy r5,r6   /* req length := maxlength */
 substr:
-    iadd r12,r4,r5  /* max offset length=offset+requested length */
+    iadd r12,r4,r5      /* max offset length=offset+requested length */
     dec  r12
-    igte r11,r6,r12 /* requested length <= maxlength? */
-    brt  lenok,r11  /* if true skip padding size check */
-    isub r7,r12,r6  /* calculate padding size */
-    isub r5,r5,r7   /* reduce to maxlen */
+    igte r11,r6,r12     /* requested length <= maxlength?     */
+    brt  lenok,r11      /* if true skip padding size check    */
+    isub r7,r12,r6      /* calculate padding size             */
+    isub r5,r5,r7       /* reduce to maxlen                   */
 lenok:
     dec  r4
 loop:
     concchar r14,r1,r4
-    bct   loop,r5,r4   /* loop inc a2 and dec r10 */
-    ieq  r11,r7,0      /* check if we need to pad */
-    brt  end,r11
+    bct   loop,r5,r4    /* loop inc r4 and dec r5  */
+    ieq  r11,r7,0       /* check if we need to pad */
+    brt  end,r11        /* we do not               */
 pad:
-    concat r14,r14,r8
-    bct   pad,r7
+    concat r14,r14,r8   /* concat pad in r8 to r14 */
+    bct   pad,r7        /* loop back until r7 = 0  */
 end:
     ret   r14
     exit

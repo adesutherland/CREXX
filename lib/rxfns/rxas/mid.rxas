@@ -4,10 +4,10 @@ main()   .locals=16
  *      to compare performance. MID uses the new instructions BCT and CONCCHAR
  * ------------------------------------------------------------------------------
  */
-   /* load  r15,10000000      /\* 10 meg loop *\/ */
-   /* time  r14 */
-   /* itos r14 */
-   /* say   r14 */
+   load  r15,10000000      /* 10 meg loop */
+   time  r14
+   itos r14
+   say   r14
 outer:
 /* MID init, string, offset, length and some other variables */
 /*                   1         2         3         4
@@ -38,9 +38,9 @@ pad:
    concat r2,r2,r8  /* we are past length, cat pad */
    bct    pad,r7
 nopad:
-   /* bct outer,r15    /\* next iteration of 10 meg loop *\/ */
-   /* time  r14        /\* output time *\/ */
-   /* itos r14 */
-   /* say   r14 */
+   bct outer,r15    /* next iteration of 10 meg loop */
+   time  r14        /* output time */
+   itos r14
+   say   r14
    say r2           /* output extracted substr */
    ret

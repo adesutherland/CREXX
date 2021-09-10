@@ -8,11 +8,11 @@ substr()  .expose=global.substr
           
 left()    .locals=8 .expose=global.left
     dec a2
-    inc a0 /* we pass on one more than we got */
-    move r3,a0  /* there are a0 arguments*/
-    move r4,a1 /* the string */
-    load r5,1 /* second argument, startpos == 1*/
-    move r6,a2 /* third argument, length */
-    move r7,a3 /* fourth argument, pad */
-    call r1,substr(),r3
+    inc a0 			/* we pass on one more than we got */
+    move r3,a0  		/* there are a0 arguments          */
+    move r4,a1 			/* the string                      */
+    load r5,1 			/* second argument, startpos == 1  */
+    move r6,a2 			/* third argument, length          */
+    move r7,a3 			/* fourth argument, pad            */
+    call r1,substr(),r3		/* call substr                     */
     ret r1
