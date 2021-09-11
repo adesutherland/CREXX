@@ -270,7 +270,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     return symbol;
 }
 
-/* Resolve a Symbol */
+/* Resolve a Symbol - including parent scope */
 Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     Symbol *result;
     char *c;
@@ -297,6 +297,27 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     } while (scope);
     free(name);
     return 0;
+}
+
+/* Local Resolve a Symbol - current scope only */
+Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
+    Symbol *result = 0;
+    char *c;
+    /* Sadly we are making a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Uppercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)toupper(*c);
+#else
+    utf8upr(name);
+#endif
+
+    result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+    free(name);
+    return result;
 }
 
 /* Frees a symbol */
