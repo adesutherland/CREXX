@@ -326,11 +326,17 @@ static walker_result step2a_walker(walker_direction direction,
 
         if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
             /* Find the symbol */
-            symbol = sym_rslv(*current_scope, node);
+            if (node->parent->node_type == ARG) /* Only search current scope */
+                symbol = sym_lrsv(*current_scope, node);
+            else /* Search parent scopes */
+                symbol = sym_rslv(*current_scope, node);
 
             /* Make a new symbol if it does not exist */
             if (!symbol) {
                 symbol = sym_f(*current_scope, node);
+            }
+            else if (symbol->is_function) {
+                mknd_err(node, "IS_A_FUNCTION");
             }
 
             sym_adnd(symbol, node, 0, 1);
@@ -343,6 +349,9 @@ static walker_result step2a_walker(walker_direction direction,
             /* Make a new symbol if it does not exist */
             if (!symbol) {
                 symbol = sym_f(*current_scope, node);
+            }
+            else if (symbol->is_function) {
+                mknd_err(node, "IS_A_FUNCTION");
             }
 
             if (node->parent->node_type == ASSEMBLER) {

@@ -256,8 +256,11 @@ void scp_free(Scope *scope);
 /* Symbol Factory - define a symbol */
 Symbol *sym_f(Scope *scope, ASTNode *node);
 
-/* Resolve a Symbol */
+/* Resolve a Symbol - including parent scopes */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
+
+/* Local Resolve a Symbol - current scope only */
+Symbol *sym_lrsv(Scope *scope, ASTNode *node);
 
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);
