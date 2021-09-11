@@ -1,5 +1,7 @@
 CREXX History / Change Log
 
+F0032 - document rexx bifs from standard (in docs/bifs)
+
 I0081 - UTF Char Positioning Fix
 F0018 - CALL, RETURN, ARG support (without PARSE)
 
