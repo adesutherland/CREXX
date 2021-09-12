@@ -8,10 +8,11 @@
 #include <time.h>
 #include <stdint.h>
 #include "platform.h"
-#include "rxvmintp.h"
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxastree.h"
+#include "rxvmintp.h"
+#include "rxvmvars.h"
 
 typedef struct stack_frame stack_frame;
 
@@ -28,7 +29,7 @@ struct stack_frame {
 /* Macros */
 
 /* Stack Frame Factory */
-stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
+static RX_INLINE stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
                      stack_frame *parent, bin_code *return_pc,
                      void *return_inst,
                      value **return_reg) {
@@ -60,7 +61,7 @@ stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
 }
 
 /* Free Stack Frame */
-void free_frame(stack_frame *frame) {
+static RX_INLINE void free_frame(stack_frame *frame) {
     /* TODO Free Variable Pool */
     int l;
     for (l = 0; l < frame->number_locals; l++)

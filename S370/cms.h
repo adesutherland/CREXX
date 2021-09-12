@@ -5,6 +5,9 @@
 #ifndef CREXX_CMS_H
 #define CREXX_CMS_H
 
+#undef RX_INLINE
+#define RX_INLINE inline
+
 /* VM/370 has a 32 bit (or 24/32) architecture */
 #define __32BIT__
 
