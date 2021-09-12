@@ -647,11 +647,7 @@ static walker_result step4_walker(walker_direction direction,
                         break;
                     }
                     n1->target_type = n2->value_type;
-                    if (n2->child->node_type == VAR_REFERENCE) {
-                        n1->is_ref_arg = 1;
-                        n1->symbol->writeUsage = 1;
-                        if (!n1->symbol) mknd_err(n1, "CANT_BE_PASSED_BY_REF");
-                    }
+                    if (n2->child->node_type == VAR_REFERENCE) n1->is_ref_arg = 1;
                     n1 = n1->sibling;
                     n2 = n2->sibling;
                 }
