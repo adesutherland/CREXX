@@ -1,13 +1,14 @@
 /* Classic REXX Runtime Library */
 
 options levelb /* Written in REXX Level B */
-
 /* Tests */
-say substr("René Vincent Jansen",1,4,".")
-say substr("René Vincent Jansen",6,7,"")
-say substr("12345678",5,6,"é")
-say substr("12345678",10,6,"é")
-say substr("12345678",10,6,"éé")
+  say substr('1234567890',5,5,'')
+  say substr('1234567890',6,6,'.')
+  say substr('abc',2,2,'')
+  say substr('abc',2,4,'')
+  say substr('abc',2,4,'.')
+  say substr('abcdefgh',1,2,'.')
+  say substr('abcdefgh',2,6,'é')
 
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int
@@ -94,4 +95,3 @@ substr: procedure = .string
 
   /* Done */
   return output
-  
