@@ -154,15 +154,31 @@ static walker_result step1_walker(walker_direction direction,
          * any '('s to the left and ')'s to the right as these are removed from
          * the AST. What we are doing is expanding the selection to include
          * *matching* ('s and )'s. Where they don't match, ignore, they will be
-         * handled by a parent or grandparent node */
+         * handled by a parent or grandparent node
+         *
+         * And we do the same thing for functions checking the ( after the function name
+         */
         if (node->token_start) {
-            left = node->token_start->token_prev;
-            right = node->token_end->token_next;
-            while (left && right && left->token_type==TK_OPEN_BRACKET && right->token_type==TK_CLOSE_BRACKET) {
-                node->token_start = left;
-                node->token_end = right;
-                left = left->token_prev;
-                right = right->token_next;
+            if (node->node_type == FUNCTION) {
+                /* Function brackets */
+                left = node->token_start->token_next; /* I.e. after the function name */
+                right = node->token_end->token_next;
+                if (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_end = right;
+                }
+            }
+            else {
+                /* Other brackets */
+                left = node->token_start->token_prev;
+                right = node->token_end->token_next;
+                while (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_start = left;
+                    node->token_end = right;
+                    left = left->token_prev;
+                    right = right->token_next;
+                }
             }
         }
 

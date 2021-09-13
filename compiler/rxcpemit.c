@@ -29,6 +29,12 @@ static int is_constant(ASTNode* node) {
     }
 }
 
+/* Tests if a node is not a constant */
+static int is_var_symbol(ASTNode* node) {
+    if (node->symbol && node->node_type != FUNCTION) return 1;
+    else return 0;
+}
+
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
@@ -240,7 +246,7 @@ static walker_result register_walker(walker_direction direction,
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
-                if (child2->symbol == 0 || is_constant(child2))
+                if (!is_var_symbol(child2) || is_constant(child2))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -278,7 +284,7 @@ static walker_result register_walker(walker_direction direction,
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
-                    else if (c->symbol == 0 || is_constant(c))
+                    else if (!is_var_symbol(c) || is_constant(c))
                         c->register_num = DONT_ASSIGN_REGISTER;
 
                     c = c->sibling;
@@ -400,9 +406,9 @@ static walker_result register_walker(walker_direction direction,
             case OP_OR:
 
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0 && child1->register_num != DONT_ASSIGN_REGISTER)
+                if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child1->register_num);
-                if (child2->symbol == 0 && child2->register_num != DONT_ASSIGN_REGISTER)
+                if (!is_var_symbol(child2) && child2->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child2->register_num);
 
                 /* Set result temporary register */
@@ -413,7 +419,7 @@ static walker_result register_walker(walker_direction direction,
 
             case OP_PREFIX:
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0)
+                if (!is_var_symbol(child1))
                     ret_reg(payload->current_scope, child1->register_num);
 
                 /* Set result temporary register */
@@ -466,9 +472,9 @@ static walker_result register_walker(walker_direction direction,
                 c = child1;
                 while (c) {
                     /* If it is a symbol with the same register as i don't return the register */
-                    if ( !(c->symbol &&
-                           c->symbol->symbol->register_num == i &&
-                           c->symbol->symbol->register_type == 'r') )
+                    if ( !( is_var_symbol(c) &&
+                            c->symbol->symbol->register_num == i &&
+                            c->symbol->symbol->register_type == 'r') )
                         ret_reg(payload->current_scope, i);
 
                     i++;
@@ -493,7 +499,7 @@ static walker_result register_walker(walker_direction direction,
                 /* If a register is needed at all ... */
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
                     /* Then if it is a temporary mark the register for reuse */
-                    if (child1->symbol == 0)
+                    if (!is_var_symbol(child1))
                         ret_reg(payload->current_scope, child1->register_num);
                 }
                 break;
@@ -505,7 +511,7 @@ static walker_result register_walker(walker_direction direction,
                     /* If a register is needed at all ... */
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
-                        if (child1->symbol == 0)
+                        if (!is_var_symbol(child1))
                             ret_reg(payload->current_scope,
                                     child1->register_num);
                     }
@@ -517,7 +523,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0)
+                if (!is_var_symbol(child1))
                     ret_reg(payload->current_scope, child1->register_num);
                 break;
 
@@ -534,7 +540,7 @@ static walker_result register_walker(walker_direction direction,
                     if (c->child) {
                         c->register_num = c->child->register_num;
                         c->register_type = c->child->register_type;
-                        if (c->child->symbol == 0)
+                        if (!is_var_symbol(c->child))
                             ret_reg(payload->current_scope, c->register_num);
                     }
                     c = c->sibling;

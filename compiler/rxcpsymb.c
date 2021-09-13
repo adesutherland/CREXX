@@ -128,23 +128,29 @@ int get_reg(Scope *scope) {
     else {
         reg = (int)((scope->num_registers)++);
     }
- //   printf("get %d\n", reg);
+
+//    printf("get %d - ", reg);
+//    {int i; for (i=0; i<free_array->size; i++) printf("%d ",(int)(size_t)free_array->pointers[i]);printf("\n");}
+
     return reg;
 }
 
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg) {
     size_t i;
-//    printf("free %d\n", reg);
     dpa *free_array;
     free_array = (dpa*)(scope->free_registers_array);
+
+//    printf("free %d - ", reg);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+
     for (i=0; i<free_array->size; i++) {
         if (reg == (size_t)free_array->pointers[i]) {
-//            printf(" ... already freed\n");
+            printf(" ... already freed\n");
             return;
         }
     }
-    dpa_add(free_array, (void*)(size_t)reg);
+    dpa_ado(free_array, (void*)(size_t)reg);
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -155,6 +161,10 @@ int get_regs(Scope *scope, size_t number) {
     size_t seq;
 
     free_array = (dpa*)(scope->free_registers_array);
+
+//    printf("get %d regs - ", (int)number);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+
     /* Check the free list - how many could be used */
     if (free_array->size) {
         i = (int)free_array->size - 1;
@@ -202,17 +212,20 @@ int get_regs(Scope *scope, size_t number) {
 /* Return no longer used registers to the scope, starting from reg
  * reg, reg+1, ... reg+number */
 void ret_regs(Scope *scope, int reg, size_t number) {
-//    printf("free %d-%d\n", reg, reg + (int)number - 1);
     dpa *free_array;
     size_t j, i;
     free_array = (dpa*)(scope->free_registers_array);
+
+//    printf("free %d-%d - ", reg, reg + (int)number - 1);
+//    {int ii; for (ii=1; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+
     for (j=0; j<number; j++) {
         for (i=0; i<free_array->size; i++)
             if (reg == (size_t)free_array->pointers[i]) {
 //                printf(" ... %d already freed\n",reg);
                 break;
             }
-        dpa_add(free_array, (void*)(size_t)reg);
+        dpa_ado(free_array, (void*)(size_t)reg);
         reg++;
     }
 }
