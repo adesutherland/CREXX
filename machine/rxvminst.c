@@ -220,6 +220,8 @@ void init_ops() {
     instr_f("bctnm", "dec op2; if op2>=0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
     instr_f("bctnm", "dec op2; inc op3, if op2>=0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
 
+    instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_INT);
 
     instr_f("fndblnk", "op1 = find next blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
     instr_f("fndnblnk", "op1 = find next next non blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
