@@ -3,6 +3,8 @@
 options levelb /* Written in REXX Level B */
 
 /* Tests */
+say substr('abc',2,2,'')
+say substr('abcdefgh',1,2,'.')
 say substr("René Vincent Jansen",1,4,".")
 say substr("René Vincent Jansen",6,7,"")
 say substr("12345678",5,6,"é")
@@ -52,7 +54,7 @@ substr: procedure = .string
     /* Yes there are characters needed from string1 */
     if length <= inputLength then do
       /* Just copy from string1 - no padding needed */
-      do i = start to start + length
+      do i = start to start + length - 1
          assembler concchar output,string1,i
       end
     end
