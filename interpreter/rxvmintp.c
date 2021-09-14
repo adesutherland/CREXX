@@ -1762,37 +1762,148 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(i1);
             DISPATCH
 /* ------------------------------------------------------------------------------------
- *  BGT_ID_REG_REG  if op2>p3 goto op1                            pej 13 September 2021
+ *  BGT_ID_REG_REG  if op2>op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BGT_ID_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value>current_frame->locals[REG_IDX(3)]->int_value) {
+            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
                 next_pc = current_frame->module->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  BGT_ID_REG_INT  if op2>p3 goto op1                            pej 13 September 2021
+ *  BGT_ID_REG_INT  if op2>op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BGT_ID_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value>op3I) {
+            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
                next_pc = current_frame->module->binary + REG_IDX(1);
                CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BGE_ID_REG_REG  if op2>=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGE_ID_REG_REG) CALC_DISPATCH(3);
+       DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+       if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
+          next_pc = current_frame->module->binary + REG_IDX(1);
+          CALC_DISPATCH_MANUAL;
+       }
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  BGE_ID_REG_INT  if op2>=op3 goto op1                         pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLT_ID_REG_REG  if op2<op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLT_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BLT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLT_ID_REG_INT  if op2<op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLT_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLE_ID_REG_REG  if op2<=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLE_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLE_ID_REG_INT  if op2<=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BNE_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BNE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BEQ_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BEQ_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+ /* ------------------------------------------------------------------------------------
  *  BCT_REG_ID  dec op2; if op2>0 goto op1                           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             (current_frame->locals[REG_IDX(2)]->int_value)--;
-            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
+            if (current_frame->locals[REG_IDX(2)]->int_value > 0) {
                 next_pc = current_frame->module->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }

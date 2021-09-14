@@ -3,12 +3,13 @@
  */
 .globals=0
 main()  .locals=8
-   load r1,"Test BGT with reg reg"
+
+   load r1,"Test BGE with reg reg"
    say r1
    load r2,0
    load r3,10
 loop:
-   bgt  endloop,r2,r3
+   bge  endloop,r2,r3
    inc  r2
    itos r2
    say  r2
@@ -16,11 +17,11 @@ loop:
 endloop:
    load r1,"Endloop reached"
    say r1
-   load r1,"Test BGT with int"
+   load r1,"Test BGE with int"
    say r1
    load r2,0
 loop2:
-   bgt  endloop2,r2,5
+   bge  endloop2,r2,5
    inc  r2
    itos r2
    say  r2
