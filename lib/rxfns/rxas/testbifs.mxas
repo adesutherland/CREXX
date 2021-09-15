@@ -2,6 +2,7 @@
 
     length()   .expose=global.length
     substr()   .expose=global.substr
+    copies()   .expose=global.copies
     reverse()  .expose=global.reverse
     word()     .expose=global.word
     words()    .expose=global.words
@@ -109,6 +110,28 @@ main() .locals=8
     seq r4,r1,"bcéééé"
     call r0,expect_true(),r3
 
+    /* copies */
+    /* the first example from the book, COPIES('abc',3) == 'abcabcabc' */
+    say "Test Copies function"
+    load r3,2  /* there are two arguments*/
+    load r4,"abc"
+    load r5,3 /* second argument, repeat */
+    call r1,copies(),r3
+    load r3,1
+    seq r4,r1,"abcabcabc"
+    call r0,expect_true(),r3
+
+    
+    /* the second example from the book, COPIES('abc',0) == '' */
+    say "Test of copies function, zero copies"
+    load r3,2  /* there are two arguments*/
+    load r4,"abc"
+    load r5,0 /* second argument, repeat */
+    call r1,copies(),r3
+    load r3,1
+    seq r4,r1,""
+    call r0,expect_true(),r3
+ 
     /* right */
     say "Test of Right function, 2 args"
     /* the first example from the book, RIGHT('abc d',8) == 'abc d   ' */
