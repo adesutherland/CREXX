@@ -1,0 +1,109 @@
+#include "../../../tests/testskel.inc"
+
+    length()   .expose=global.length
+    substr()   .expose=global.substr
+    
+main() .locals=8
+    call logo()
+
+    /* the length function */
+    say "Test Length function - string argument"
+    load r3,1  /* there is one argument */
+    load r4,"abcdefgh" /* 8, following the book */
+    call r1,length(),r3
+    ieq  r4,r1,8
+    call r0,expect_true(),r3
+
+    say "Test Length function - empty string argument"   
+    load r3,1 /* there is one argument */
+    load r4,"" /* 0, following the book */
+    call r1,length(),r3
+    ieq  r4,r1,0
+    call r0,expect_true(),r3
+
+    /* the substr function */
+    say "Test Substr function - one arg, start pos, no overrun"           
+    load r3,2  /* there are two arguments*/
+    load r4,"1234567890"
+    load r5,5 /* second argument, startpos */
+    call r1,substr(),r3
+    load r3,1
+    load r5,"567890"
+    seq  r4,r1,r5
+    call r0,expect_true(),r3
+
+    say "Test Substr function - overrun and pad"
+    load r3,4  /* there are four arguments*/
+    load r4,"1234567890"
+    load r5,6 /* second argument, startpos */
+    load r6,6 /* third argument, length */
+    load r7,"." /* fourth argument, pad */
+    call r1,substr(),r3
+    load r3,1
+    seq  r4,r1,"67890."
+    call r0,expect_true(),r3
+    
+    /* the first example from the book, SUBSTR('abc',2) == 'bc' */
+    say "Test Substr function - no overrun, no pad"    
+    load r3,2  /* there are two arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    call r1,substr(),r3
+    load r3,1
+    seq  r4,r1,"bc"
+    call r0,expect_true(),r3
+
+    /* the second example from the book, SUBSTR('abc',2,4) == 'bc  ' */
+    say "Test Substr function - overrun, default pad"    
+    load r3,3  /* there are three arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,4 /* third argument, length */
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bc  "
+    call r0,expect_true(),r3
+    
+    /* the third example from the book, SUBSTR('abc',2,4,'.') == 'bc....' */
+    say "Test Substr function - overrun, pad not default"          
+    load r3,4  /* there are four arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,4 /* third argument, length */
+    load r7,"." /* fourth argument, pad */
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bc.."
+    call r0,expect_true(),r3
+
+    
+    /* test of substr shorter than max, SUBSTR('abc',1,2,'.') == 'ab' */
+    say "Test Substr function - shorter than max, pad not default, unused"
+    load r3,4  /* there are four arguments*/
+    load r4,"abcdefgh"
+    load r5,1 /* second argument, startpos */
+    load r6,2 /* third argument, length */
+    load r7,"." /* fourth argument, pad */
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"ab"
+    call r0,expect_true(),r3
+
+    
+    /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
+    say "Test Substr function - unicode pad "  
+    load r3,4  /* there are four arguments*/
+    load r4,"abc"
+    load r5,2 /* second argument, startpos */
+    load r6,6 /* third argument, length */
+    load r7,"é" /* fourth argument, pad */
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bcéééé"
+    call r0,expect_true(),r3
+    
+
+    /* finished; print the results */
+    call print_results()
+    
+    exit
