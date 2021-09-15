@@ -85,7 +85,6 @@ main() .locals=8
     seq r4,r1,"bc.."
     call r0,expect_true(),r3
 
-    
     /* test of substr shorter than max, SUBSTR('abc',1,2,'.') == 'ab' */
     say "Test Substr function - shorter than max, pad not default, unused"
     load r3,4  /* there are four arguments*/
@@ -98,7 +97,6 @@ main() .locals=8
     seq r4,r1,"ab"
     call r0,expect_true(),r3
 
-    
     /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
     say "Test Substr function - unicode pad "  
     load r3,4  /* there are four arguments*/
@@ -167,34 +165,34 @@ main() .locals=8
     /* left */
     /* the first example from the book, LEFT('abc d',8) == 'abc d   ' */
     say "Test of Left function, no pad"
-    /* load r3,2  /\* there are two arguments *\/ */
-    /* load r4,"abc d" */
-    /* load r5,8 /\* second argument, length *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc d   " */
-    /* call r0,expect_true(),r3 */
+    load r3,2  /* there are two arguments */
+    load r4,"abc d"
+    load r5,8 /* second argument, length */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc d   "
+    call r0,expect_true(),r3
         
-    /* /\* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' *\/ */
-    /* say "Test of Left function, pad" */
-    /* load r3,3 /\* there are three arguments*\/ */
-    /* load r4,"abc d" */
-    /* load r5,8 /\* second argument, length *\/ */
-    /* load r6,"." /\* third argument, pad *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc d..." */
-    /* call r0,expect_true(),r3 */
+    /* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' */
+    say "Test of Left function, pad"
+    load r3,3 /* there are three arguments*/
+    load r4,"abc d"
+    load r5,8 /* second argument, length */
+    load r6,"." /* third argument, pad */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc d..."
+    call r0,expect_true(),r3
     
-    /* /\* the third example from the book, LEFT('abc  def',7) == 'abc de' *\/ */
-    /* say "Test of Left function, short" */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"abc  def" */
-    /* load r5,7 /\* second argument, length *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc  de" */
-    /* call r0,expect_true(),r3 */
+    /* the third example from the book, LEFT('abc  def',7) == 'abc de' */
+    say "Test of Left function, short"
+    load r3,2  /* there are two arguments*/
+    load r4,"abc  def"
+    load r5,7 /* second argument, length */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc  de"
+    call r0,expect_true(),r3
     
     /* reverse */
     say "Test Reverse"
