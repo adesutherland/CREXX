@@ -1,0 +1,304 @@
+.globals=2
+g0 .expose=tests.success
+g1 .expose=tests.failure
+logo()         .locals=2
+    say "cREXX Assembler Test Suite - Common - Version cREXX-Phase-0c"
+    
+    * Zero result count
+    load g0,0
+    load g1,0
+    ret
+failures:      
+    itos g1
+    load r0,"***"
+    sconcat r1,r0,g1
+    load r0,"tests failed ***"
+    sconcat r1,r1,r0
+    say r1
+    ret 1
+expect_true()  .locals=0
+    brt expect_true_ok,a1
+    iadd g1,g1,1  
+    say " FAILED"
+    ret
+expect_true_ok:
+    iadd g0,g0,1  
+    say " ok"
+    ret
+    
+expect_false() .locals=0
+    brf expect_false_ok,a1
+    iadd g1,g1,1  
+    say " FAILED"
+    ret
+expect_false_ok:
+    iadd g0,g0,1 
+    say " ok"
+    ret
+    
+print_results() .locals=3
+    iadd r0, g0, g1
+    itos r0
+    load r1,"tests run"
+    sconcat r1,r0,r1
+    say r1
+    brt failures, g1
+    
+    
+    say "Success"
+    ret 0
+    length()   .expose=global.length
+    substr()   .expose=global.substr
+    reverse()  .expose=global.reverse
+    word()     .expose=global.word
+    words()    .expose=global.words
+    wordindx() .expose=global.wordindx
+    subword()  .expose=global.subword
+    pos()      .expose=global.pos
+    lastpos()  .expose=global.lastpos   
+    right()    .expose=global.right
+    left()     .expose=global.left
+main() .locals=8
+    call logo()
+    
+    say "Test Length function - string argument"
+    load r3,1  
+    load r4,"abcdefgh" 
+    call r1,length(),r3
+    ieq  r4,r1,8
+    call r0,expect_true(),r3
+    say "Test Length function - empty string argument"   
+    load r3,1 
+    load r4,"" 
+    call r1,length(),r3
+    ieq  r4,r1,0
+    call r0,expect_true(),r3
+    
+    say "Test Substr function - one arg, start pos, no overrun"           
+    load r3,2  
+    load r4,"1234567890"
+    load r5,5 
+    call r1,substr(),r3
+    load r3,1
+    load r5,"567890"
+    seq  r4,r1,r5
+    call r0,expect_true(),r3
+    say "Test Substr function - overrun and pad"
+    load r3,4  
+    load r4,"1234567890"
+    load r5,6 
+    load r6,6 
+    load r7,"." 
+    call r1,substr(),r3
+    load r3,1
+    seq  r4,r1,"67890."
+    call r0,expect_true(),r3
+    
+    
+    say "Test Substr function - no overrun, no pad"    
+    load r3,2  
+    load r4,"abc"
+    load r5,2 
+    call r1,substr(),r3
+    load r3,1
+    seq  r4,r1,"bc"
+    call r0,expect_true(),r3
+    
+    say "Test Substr function - overrun, default pad"    
+    load r3,3  
+    load r4,"abc"
+    load r5,2 
+    load r6,4 
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bc  "
+    call r0,expect_true(),r3
+    
+    
+    say "Test Substr function - overrun, pad not default"          
+    load r3,4  
+    load r4,"abc"
+    load r5,2 
+    load r6,4 
+    load r7,"." 
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bc.."
+    call r0,expect_true(),r3
+    
+    
+    say "Test Substr function - shorter than max, pad not default, unused"
+    load r3,4  
+    load r4,"abcdefgh"
+    load r5,1 
+    load r6,2 
+    load r7,"." 
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"ab"
+    call r0,expect_true(),r3
+    
+    
+    say "Test Substr function - unicode pad "  
+    load r3,4  
+    load r4,"abc"
+    load r5,2 
+    load r6,6 
+    load r7,"é" 
+    call r1,substr(),r3
+    load r3,1
+    seq r4,r1,"bcéééé"
+    call r0,expect_true(),r3
+    
+    say "Test of Right function, 2 args"
+    
+    load r3,2  
+    load r4,"abc  d"
+    load r5,8 
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"  abc  d"
+    call r0,expect_true(),r3
+    
+    say "Test of Right function, 3 args"
+    load r3,3  
+    load r4,"abc  d"
+    load r5,8 
+    load r6,"."               
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"..abc  d"
+    call r0,expect_true(),r3
+    
+    
+    say "Test of Right function, 3 args"
+    load r3,3  
+    load r4,"12"
+    load r5,5 
+    load r6,"0"                
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"00012"
+    call r0,expect_true(),r3
+    
+    say "Test of Right function, non-copies concatenate version"
+    load r3,2  
+    load r4,"the quick brown fox"
+    load r5,3 
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"fox"
+    call r0,expect_true(),r3
+    
+    
+    say "Test of Right function, non-copies concatenate version"    
+    load r3,2  
+    load r4,"abcdefghijklmnopqrstuvwxyz"
+    load r5,6 
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"uvwxyz"
+    call r0,expect_true(),r3
+    
+    
+    say "Test of Left function, no pad"
+    
+    
+    
+    
+    
+    
+    
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    say "Test Reverse"
+    load r3,1  
+    load r4,"The quick brown fox jumps over the lazy dog"
+    call r1,reverse(),r3
+    seq r4,r1,"god yzal eht revo spmuj xof nworb kciuq ehT"
+    call r0,expect_true(),r3
+    
+    say "Test words"
+    load r3,1  
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    call r1,words(),r3
+    load r3,1
+    ieq r4,r1,9
+    call r0,expect_true(),r3
+          
+    say "Test word: 7"
+    load r3,2  
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,7  
+    call r1,word(),r3
+    load r3,1
+    seq r4,r1,"the"
+    call r0,expect_true(),r3
+    
+    say "Test wordindx: 4"
+    load r3,2  
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,4  
+    call r1,wordindx(),r3
+    load r3,1
+    ieq r4,r1,17
+    call r0,expect_true(),r3
+    
+    say "Test subword: 5"
+    load r3,2  
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    load r5,5  
+    call r1,subword(),r3
+    load r3,1
+    seq r4,r1,"jumps over the lazy dog"
+    call r0,expect_true(),r3
+    
+    say "Test pos"
+    load r3,3  
+    load r4,"!"
+    load r5,"The quick brown fox jumps over the lazy(!) dog"
+    load r6,1   
+    call r1,pos(),r3
+    load r3,1
+    ieq r4,r1,41
+    call r0,expect_true(),r3
+    
+    
+    
+    say "Test lastpos"
+    load r3,2 
+    load r4,"!"
+    load r5,"The quick brown fox jumps over the lazy ! dog"
+    call r1,lastpos(),r3
+    load r3,1
+    ieq r4,r1,41
+    call r0,expect_true(),r3
+    
+    call print_results()
+    
+    exit

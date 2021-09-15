@@ -8,6 +8,5 @@ reverse() .locals=4 .expose=global.reverse
 loop:
     concchar r3,r1,r2
     bct loop,r2        /* continue to look for next non blank char */
-    concchar r3,r1,r2 /* byte 0 needs to be concattenated too      */
-    say r3
+    concchar r3,r1,r2  /* byte 0 needs to be concatenated too      */
     ret r3
