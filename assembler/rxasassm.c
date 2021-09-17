@@ -156,8 +156,16 @@ static size_t unescape_string(char *to, char* from) {
  */
 static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
                                     enum const_pool_type type) {
-    size_t index;
+    size_t index, new_size;
     chameleon_constant * entry;
+
+    /* Extend the buffer if we need to */
+    while (size > context->const_buffer_size - context->binary.const_size) {
+        new_size = context->const_buffer_size * 2;
+        context->binary.const_pool = realloc(context->binary.const_pool, new_size);
+        memset(context->binary.const_pool + context->const_buffer_size, 0, context->const_buffer_size);
+        context->const_buffer_size = new_size;
+    }
 
     /* We are putting the entry at the top of the pool */
     index = context->binary.const_size;
@@ -244,11 +252,31 @@ void rxasexre(Assembler_Context *context, Token *registerToken,
 }
 
 static void gen_instr(Assembler_Context *context, Instruction *inst) {
+    /* Extend the buffer if we need to */
+    size_t new_size;
+    if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
+        new_size = context->inst_buffer_size * 2;
+        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        memset(context->binary.binary + context->inst_buffer_size, 0,
+               context->inst_buffer_size * sizeof(bin_code));
+        context->inst_buffer_size = new_size;
+    }
+
     context->binary.binary[context->binary.inst_size].instruction.opcode = inst->opcode;
     context->binary.binary[context->binary.inst_size++].instruction.no_ops = inst->operands;
 }
 
 static void gen_operand(Assembler_Context *context, Token *operandToken) {
+    /* Extend the buffer if we need to */
+    size_t new_size;
+    if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
+        new_size = context->inst_buffer_size * 2;
+        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        memset(context->binary.binary + context->inst_buffer_size, 0,
+               context->inst_buffer_size * sizeof(bin_code));
+        context->inst_buffer_size = new_size;
+    }
+
     string_constant *sentry;
     size_t entry_index;
     size_t entry_size;

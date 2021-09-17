@@ -100,6 +100,8 @@ typedef struct Assembler_Context {
     Error* error_tail;
     int severity;
     bin_space binary;
+    size_t inst_buffer_size;
+    size_t const_buffer_size;
     int current_locals;
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *proc_constants_tree;
