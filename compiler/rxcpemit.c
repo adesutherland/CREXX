@@ -670,6 +670,20 @@ static void format_constant(char* buffer, ValueType type, ASTNode* node) {
     }
 }
 
+static char* type_to_prefix(ValueType value_type) {
+    switch (value_type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+            return "i";
+        case TP_STRING:
+            return "s";
+        case TP_FLOAT:
+            return "f";
+        default:
+            return "";
+    }
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -703,17 +717,7 @@ static walker_result emit_walker(walker_direction direction,
 
         /* Operator and type prefix */
         op = 0;
-        switch (node->value_type) {
-            case TP_BOOLEAN:
-            case TP_INTEGER:
-                tp_prefix = "i"; break;
-            case TP_STRING:
-                tp_prefix = "s"; break;
-            case TP_FLOAT:
-                tp_prefix = "f"; break;
-            default:
-                tp_prefix = "";
-        }
+        tp_prefix = type_to_prefix(node->value_type);
 
         switch (node->node_type) {
 
@@ -907,17 +911,11 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
             break;
 
-            /* Order of operands don't matter */
+            /* These operators have a prefix type of that of the first child */
             case OP_COMPARE_EQUAL:
                 if (!op) op="eq";
             case OP_COMPARE_NEQ:
                 if (!op) op="ne";
-            case OP_ADD:
-                if (!op) op="add";
-            case OP_MULT:
-                if (!op) op="mult";
-
-            /* Order of operands DO matter */
             case OP_COMPARE_GT:
                 if (!op) op="gt";
             case OP_COMPARE_LT:
@@ -938,6 +936,14 @@ static walker_result emit_walker(walker_direction direction,
                 if (!op) op="gtes";
             case OP_COMPARE_S_LTE:
                 if (!op) op="ltes";
+
+                tp_prefix = type_to_prefix(child1->value_type);
+
+            /* These operators use the type prefix already set (i.e. of their type) */
+            case OP_ADD:
+                if (!op) op="add";
+            case OP_MULT:
+                if (!op) op="mult";
             case OP_MINUS:
                 if (!op) op="sub";
             case OP_POWER:
