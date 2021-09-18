@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
+#include <errno.h>
 
 /* value factories */
 static RX_INLINE value* value_f(void* parent) {
