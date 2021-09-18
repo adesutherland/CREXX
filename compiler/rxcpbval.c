@@ -629,15 +629,15 @@ static walker_result step4_walker(walker_direction direction,
                 child2->target_type = TP_INTEGER;
                 break;
 
-            case OP_PREFIX:
-                child1 = node->child;
-                if (node->token->token_type == TK_NOT) {
-                    node->value_type = TP_BOOLEAN;
-                    child1->target_type = TP_BOOLEAN;
-                    break;
-                }
-                node->value_type = child1->value_type;
-                child1->target_type = child1->value_type;
+            case OP_NOT:
+                node->value_type = TP_BOOLEAN;
+                child1->target_type = TP_BOOLEAN;
+                break;
+
+            case OP_PLUS:
+            case OP_NEG:
+                node->value_type = promotion[child1->value_type][TP_UNKNOWN];
+                child1->target_type = promotion[child1->value_type][TP_UNKNOWN];
                 break;
 
             case VAR_SYMBOL:

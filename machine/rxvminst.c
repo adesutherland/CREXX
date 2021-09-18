@@ -27,6 +27,7 @@ void init_ops() {
 
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
 
@@ -148,6 +149,7 @@ void init_ops() {
 
     instr_f("and", "Logical (int) and op1=(op2 && op3)", OP_REG, OP_REG, OP_REG);
     instr_f("or", "Logical (int) or op1=(op2 || op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("not", "Logical (int) not op1=!op2", OP_REG, OP_REG, OP_NONE);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
 
@@ -211,6 +213,9 @@ void init_ops() {
     instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftoi", "Set register int value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("ftob", "Set register boolean (int 1 or 0) value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);

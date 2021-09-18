@@ -792,7 +792,16 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  ADD_REG_REG_REG  Logical AND op1=(op2 && op3)
+ *  ISUB_REG_INT_REG: Integer Subtract (op1=op2-op3)               pej 8. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISUB_REG_INT_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISUB R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I - op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  AND_REG_REG_REG  Int Logical AND op1=(op2 && op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(AND_REG_REG_REG) CALC_DISPATCH(3);
@@ -801,12 +810,22 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  OR_REG_REG_REG  Logical OR op1=(op2 || op3)
+ *  OR_REG_REG_REG  Int Logical OR op1=(op2 || op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(OR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - OR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI || op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  NOT_REG_REG  Int Logical NOT op1=!op2
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(NOT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - NOT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            if (op2RI) REG_RETURN_INT(0)
+            else REG_RETURN_INT(1);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1740,6 +1759,39 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - FTOI R%llu\n", REG_IDX(1));
             int_from_float(op1R);
             if (op1R->float_value != (double)op1R->int_value) {
+                goto converror;
+            }
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FTOB_REG  Set register boolean (int set to 1 or 0) value from its float value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(FTOB_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - FTOB R%llu\n", REG_IDX(1));
+            int_from_float(op1R);
+
+            if (op1R->float_value) op1R->int_value = 1;
+            else op1R->int_value = 0;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STOI_REG  Set register int value from its string value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(STOI_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - STOI R%llu\n", REG_IDX(1));
+            /* Convert a string to a integer - returns 1 on error */
+            if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
+                goto converror;
+            }
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STOF_REG  Set register float value from its string value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(STOF_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - STOF R%llu\n", REG_IDX(1));
+            /* Convert a string to a float - returns 1 on error */
+            if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
                 goto converror;
             }
             DISPATCH;

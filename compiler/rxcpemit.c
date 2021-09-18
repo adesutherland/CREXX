@@ -417,7 +417,9 @@ static walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(payload->current_scope);
                 break;
 
-            case OP_PREFIX:
+            case OP_NOT:
+            case OP_NEG:
+            case OP_PLUS:
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1))
                     ret_reg(payload->current_scope, child1->register_num);
@@ -608,8 +610,12 @@ static void type_promotion(ASTNode *node) {
         }
 
         switch (node->target_type) {
-            case TP_INTEGER:
             case TP_BOOLEAN:
+                if (node->value_type == TP_FLOAT) op2 = "b";
+                else op2 = "i";
+                break;
+
+            case TP_INTEGER:
                 op2 = "i";
                 break;
 
@@ -1188,12 +1194,56 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
                 break;
 
-            case OP_PREFIX:
+            case OP_NOT:
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
-                snprintf(temp1, buf_len, "   prefix_todo %c%d\n",
+                snprintf(temp1, buf_len, "   not %c%d,%c%d\n",
+                         node->register_type,
+                         node->register_num,
                          child1->register_type,
                          child1->register_num);
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+                type_promotion(node);
+                break;
+
+            case OP_NEG:
+                node->output = output_f();
+                if (child1->output) output_append(node->output, child1->output);
+                if (node->value_type == TP_FLOAT) {
+                    snprintf(temp1, buf_len, "   fsub %c%d,0.0,%c%d\n",
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                else {
+                    snprintf(temp1, buf_len, "   isub %c%d,0,%c%d\n",
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+                type_promotion(node);
+                break;
+
+            case OP_PLUS:
+                node->output = output_f();
+                if (child1->output) output_append(node->output, child1->output);
+                if (node->register_type != child1->register_type ||
+                    node->register_num != child1->register_num) {
+                    snprintf(temp1, buf_len, "   %scopy %c%d,%c%d\n",
+                             tp_prefix,
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                else {
+                    strncpy(temp1,"   * \"+\" is a nop here\n",buf_len);
+                }
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);

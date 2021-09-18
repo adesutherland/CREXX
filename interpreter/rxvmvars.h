@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 
 /* value factories */
 static RX_INLINE value* value_f(void* parent) {
@@ -547,6 +548,84 @@ static RX_INLINE void string_from_float(value *v) {
 static RX_INLINE void int_from_float(value *v) {
     v->int_value = floor(v->float_value);
     if (v->float_value - (double)v->int_value > 0.5) v->int_value++;
+}
+
+/* Convert a string to an integer - returns 1 on error */
+static RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
+    char *buffer = malloc(length + 1);
+    char *end = buffer;
+    int rc = 0;
+    errno = 0;
+
+    /* Null terminated buffer */
+    buffer[length] = 0;
+    memcpy(buffer, string, length);
+
+    /* Convert */
+#ifdef __32BIT__
+    rxinteger l = strtol(buffer, &end, 10);
+#else
+    rxinteger l = strtoll(buffer, &end, 10);
+#endif
+
+    /* Convert error */
+    if (errno == ERANGE || end == buffer) {
+        rc = 1;
+        goto end_string2integer;
+    }
+
+    /* Check only trailing spaces */
+    while (*end != 0) {
+        if (!isspace(*end)) {
+            rc = 1;
+            goto end_string2integer;
+        }
+        end++;
+    }
+
+    /* All good */
+    *out = l;
+
+    end_string2integer:
+    free(buffer);
+    return rc;
+}
+
+/* Convert a string to a float - returns 1 on error */
+static RX_INLINE int string2float(double *out, char *string, size_t length) {
+    char *buffer = malloc(length + 1);
+    char *end = buffer;
+    int rc = 0;
+    errno = 0;
+
+    /* Null terminated buffer */
+    buffer[length] = 0;
+    memcpy(buffer, string, length);
+
+    /* Convert */
+    double l = strtod(buffer, &end);
+
+    /* Convert error */
+    if (errno == ERANGE || end == buffer) {
+        rc = 1;
+        goto end_string2float;
+    }
+
+    /* Check only trailing spaces */
+    while (*end != 0) {
+        if (!isspace(*end)) {
+            rc = 1;
+            goto end_string2float;
+        }
+        end++;
+    }
+
+    /* All good */
+    *out = l;
+
+    end_string2float:
+    free(buffer);
+    return rc;
 }
 
 #endif //CREXX_RXVMVARS_H

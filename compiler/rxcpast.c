@@ -353,8 +353,12 @@ const char *ast_ndtp(NodeType type) {
             return "OP_OR";
         case OP_POWER:
             return "OP_POWER";
-        case OP_PREFIX:
-            return "OP_PREFIX";
+        case OP_NOT:
+            return "OP_NOT";
+        case OP_PLUS:
+            return "OP_PLUS";
+        case OP_NEG:
+            return "OP_NEG";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:
@@ -721,7 +725,9 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_MOD:
             case OP_OR:
             case OP_POWER:
-            case OP_PREFIX:
+            case OP_NOT:
+            case OP_PLUS:
+            case OP_NEG:
             case OP_SCONCAT:
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
