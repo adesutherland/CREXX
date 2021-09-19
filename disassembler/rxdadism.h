@@ -3,7 +3,7 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX F0023"
+#define rxversion "cREXX F0034"
 
 /* Disassembler */
 void disassemble(bin_space *pgm, FILE *stream);
