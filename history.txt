@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+F0023 - Show hex of instructions in disassembler
 F0030 - Fixes, BIF Functions, RXAS Instructions and RXVM Optimisations
       - Prefix operators (~, +, -)
 F0032 - Document rexx bifs from standard (in docs/bifs)

@@ -363,7 +363,7 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 default:
                     snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len,"*INTERNAL_ERROR_NUM_OPS*");
             }
-        fprintf(stream, "%-45s * 0x%.6x %s\n", line_buffer, (unsigned int)j, source[j].comment);
+        fprintf(stream, "%-45s * 0x%.6x:%.4x %s\n", line_buffer, (unsigned int)j, source[j].inst->opcode, source[j].comment);
     }
 
     /* Free memory */
