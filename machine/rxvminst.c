@@ -27,6 +27,7 @@ void init_ops() {
 
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
 
@@ -80,6 +81,7 @@ void init_ops() {
     instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
     instr_f("appendchar", "Append Concat Char op2 (as int) on op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("concchar", "Concat Char op1 from op2 position op3", OP_REG, OP_REG, OP_REG);
 
     instr_f("triml", "Trim String (op1) from Left by (op2) Chars", OP_REG, OP_REG, OP_NONE);
     instr_f("trimr", "Trim String (op1) from Right by (op2) Chars", OP_REG, OP_REG, OP_NONE);
@@ -147,6 +149,7 @@ void init_ops() {
 
     instr_f("and", "Logical (int) and op1=(op2 && op3)", OP_REG, OP_REG, OP_REG);
     instr_f("or", "Logical (int) or op1=(op2 || op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("not", "Logical (int) not op1=!op2", OP_REG, OP_REG, OP_NONE);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
 
@@ -210,10 +213,36 @@ void init_ops() {
     instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftoi", "Set register int value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("ftob", "Set register boolean (int 1 or 0) value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
+    instr_f("bct", "dec op2; if op2>0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
+    instr_f("bct", "dec op2; inc op3, if op2>0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
+    instr_f("bctnm", "dec op2; if op2>=0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
+    instr_f("bctnm", "dec op2; inc op3, if op2>=0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
+
+    instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_INT);
+    instr_f("bge", "if op2>=op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("bge", "if op2>=op3 then goto op1", OP_ID,OP_REG, OP_INT);
+    instr_f("blt", "if op2<op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("blt", "if op2<op3 then goto op1", OP_ID,OP_REG, OP_INT);
+    instr_f("ble", "if op2<=op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("ble", "if op2<=op3 then goto op1", OP_ID,OP_REG, OP_INT);
+    instr_f("bne", "if op2!=op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("bne", "if op2!=op3 then goto op1", OP_ID,OP_REG, OP_INT);
+    instr_f("beq", "if op2==op3 then goto op1", OP_ID,OP_REG, OP_REG);
+    instr_f("beq", "if op2==op3 then goto op1", OP_ID,OP_REG, OP_INT);
+
+    instr_f("fndblnk", "op1 = find next blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
+    instr_f("fndnblnk", "op1 = find next next non blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
+
+    instr_f("isex", "dec op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
+    instr_f("fsex", "float op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;

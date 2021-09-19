@@ -1,0 +1,65 @@
+/* Test reverse function */
+
+pos() .expose=global.pos
+lastpos() .expose=global.lastpos
+copies() .expose=global.copies
+main()    .locals=16
+/* Test pos */
+    load r1,"Test pos"
+    say r1
+    load r3,3  /* there are 3 arguments */
+    load r4,"!"
+    say r4
+/*                    1         2         3         4     */
+/*           1234567890123456789012345678901234567890123  */
+    load r5,"The quick brown fox jumps over the lazy(!) dog"
+    say r5
+    load r6,1   /* offset to search */
+    call r1,pos(),r3
+    itos r1
+    say r1
+/* Test Lastpos */
+    load r1,"Test lastpos"
+    say r1
+    load r3,2 /* there are 2 arguments */
+    load r4,"!"
+    say r4
+    /*                1         2         3         4     */
+    /*       12345678901234567890123456789012345678901234567  */
+    load r5,"The quick brown fox jumps over the lazy ! dog"
+    say r5
+    call r1,lastpos(),r3
+    itos r1
+    say r1
+/* Performance test of pos, create string length 500 chars and add 9 at the end  */
+    load r3,2 /* there are 2 arguments */
+    load r4,"1"
+    load r5,500
+    call r1,copies(),r3
+    sconcat r1,r1,"9"
+    say r1
+/* run pos function 100,000 times to find 9 */
+    load r3,3  /* there are 3 arguments */
+    load r4,"9"
+    load r7,100000      /* loop counter */
+    copy r5,r1  /* copy long string to r5 */
+    say r5
+    time r6
+    itos r6
+    say  r6    /* output start time */
+    load R12,"start loop"
+    say r12
+xloop:
+    load r6,1   /* offset to search */
+    call r1,pos(),r3
+    bct  xloop,r7
+    itos r1
+    say r1    /* output position returned by last iteration */
+    time r6
+    itos r6
+    say  r6
+
+
+
+
+    ret

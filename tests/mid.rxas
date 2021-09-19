@@ -1,0 +1,46 @@
+main()   .locals=16
+/* ------------------------------------------------------------------------------
+ * MID(string,position,length,pad)  this is a variation of René's substr function
+ *      to compare performance. MID uses the new instructions BCT and CONCCHAR
+ * ------------------------------------------------------------------------------
+ */
+   load  r15,10000000      /* 10 meg loop */
+   time  r14
+   itos r14
+   say   r14
+outer:
+/* MID init, string, offset, length and some other variables */
+/*                   1         2         3         4
+            1234567890123456789012345678901234567890123  */
+   load r1,"The quick brown fox jumps over the lazy dog"
+   load r8,"?"  /* padding byte */
+   load r6,43   /* maxlen */
+   load r7,0    /* over sized */
+   load r2,""   /* extracted substr */
+   load r4,21   /* substr offset */
+   load r5,10    /* substr length */
+/* MID function */
+substr:
+   iadd r12,R4,R5   /* max offset length=offset+requested length */
+   dec r12
+   igte r11,r6,r12  /* requested length <= maxlength? */
+   brt  lenok,r11   /* if true skip padding size calc */
+   isub r7,r12,r6   /* calculate padding size */
+   isub r5,r5,r7    /* reduce to maxlen */
+ lenok:
+   dec r4
+loop:
+   concchar r2,r1,r4 /* conc chars in target register */
+   bct loop,r5,r4    /* loop through until r5 becomes zero */
+   ieq r11,r7,0      /* is requested length oversize and require padding? */
+   brt nopad,r11     /* branch if not */
+ pad:
+   concat r2,r2,r8  /* we are past length, cat pad */
+   bct    pad,r7
+nopad:
+   bct outer,r15    /* next iteration of 10 meg loop */
+   time  r14        /* output time */
+   itos r14
+   say   r14
+   say r2           /* output extracted substr */
+   ret

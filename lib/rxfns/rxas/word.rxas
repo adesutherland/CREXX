@@ -1,0 +1,33 @@
+/* word */
+         .globals=0
+word()   .locals=11 .expose=global.word
+   copy  r1,a1         /* full string                        */
+   copy  r2,a2         /* word number                        */
+   load  r3,0          /* offset in string                   */
+   load  r4,100000     /* length doesn't matter              */
+   load  r6,0          /* word count                         */
+   load  R10,""        /* extracted word                     */
+loop:
+   fndnblnk r3,r1,r3   /* find first/next non blank offset   */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5
+   inc r6              /* else increase word count           */
+                       /* offset of word is in R3            */
+   copy r8,r3          /* save offset of word                */
+   fndblnk r3,r1,r3    /* from offset find next blank offset */
+   ieq r7,r6,r2        /* is this the word we ae looking for?*/
+   brt wordf,r7        /* go and fetch it                    */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5        /* word not found                     */
+   bct loop,r4,r3      /* continue to look for next non blank char */
+wordf:
+   igt r5,r3,0         /* if <0 end of string reached = -length(string)       */
+   brt isplus,r5       /* length of string is offset +1, as good as non blank */
+   imult r3,r3,-1      /* make it positive                    */
+isplus:
+   isub r5,r3,r8       /* calculate length to extract         */
+wordc:
+   concchar r10,r1,r8  /* extract word char by char           */
+   bct  wordc,r5,r8    /* ... until length counter is 0       */
+break:
+   ret r10

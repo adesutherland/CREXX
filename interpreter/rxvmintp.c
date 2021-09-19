@@ -8,10 +8,11 @@
 #include <time.h>
 #include <stdint.h>
 #include "platform.h"
-#include "rxvmintp.h"
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxastree.h"
+#include "rxvmintp.h"
+#include "rxvmvars.h"
 
 typedef struct stack_frame stack_frame;
 
@@ -28,7 +29,7 @@ struct stack_frame {
 /* Macros */
 
 /* Stack Frame Factory */
-stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
+static RX_INLINE stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
                      stack_frame *parent, bin_code *return_pc,
                      void *return_inst,
                      value **return_reg) {
@@ -60,7 +61,7 @@ stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
 }
 
 /* Free Stack Frame */
-void free_frame(stack_frame *frame) {
+static RX_INLINE void free_frame(stack_frame *frame) {
     /* TODO Free Variable Pool */
     int l;
     for (l = 0; l < frame->number_locals; l++)
@@ -79,7 +80,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
     value *v1, *v2, *v3, *v_temp;
-    rxinteger i1, i2, i3;
+    rxinteger i1, i2, i3, i4,i5;
     double f1, f2, f3;
     char *converr;
     string_constant *s1, *s2, *s3;
@@ -763,6 +764,23 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - INC2\n");
             REG_VAL(2)->int_value++;
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            (current_frame->locals[REG_IDX(1)]->int_value)=0-(current_frame->locals[REG_IDX(1)]->int_value);
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  FSEX   op1 = -op1  decimal                                    pej 2. September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FSEX_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            (current_frame->locals[REG_IDX(1)]->float_value)=0-(current_frame->locals[REG_IDX(1)]->float_value);
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
@@ -774,7 +792,16 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  ADD_REG_REG_REG  Logical AND op1=(op2 && op3)
+ *  ISUB_REG_INT_REG: Integer Subtract (op1=op2-op3)               pej 8. April 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISUB_REG_INT_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISUB R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I - op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  AND_REG_REG_REG  Int Logical AND op1=(op2 && op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(AND_REG_REG_REG) CALC_DISPATCH(3);
@@ -783,12 +810,22 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  OR_REG_REG_REG  Logical OR op1=(op2 || op3)
+ *  OR_REG_REG_REG  Int Logical OR op1=(op2 || op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(OR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - OR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI || op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  NOT_REG_REG  Int Logical NOT op1=!op2
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(NOT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - NOT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            if (op2RI) REG_RETURN_INT(0)
+            else REG_RETURN_INT(1);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1727,6 +1764,39 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  FTOB_REG  Set register boolean (int set to 1 or 0) value from its float value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(FTOB_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - FTOB R%llu\n", REG_IDX(1));
+            int_from_float(op1R);
+
+            if (op1R->float_value) op1R->int_value = 1;
+            else op1R->int_value = 0;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STOI_REG  Set register int value from its string value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(STOI_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - STOI R%llu\n", REG_IDX(1));
+            /* Convert a string to a integer - returns 1 on error */
+            if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
+                goto converror;
+            }
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STOF_REG  Set register float value from its string value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(STOF_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - STOF R%llu\n", REG_IDX(1));
+            /* Convert a string to a float - returns 1 on error */
+            if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
+                goto converror;
+            }
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  STRCHAR_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -1742,8 +1812,271 @@ START_OF_INSTRUCTIONS ;
             i1=v2->string_value[v3->int_value];
 #endif
             REG_RETURN_INT(i1);
-            DISPATCH;
+            DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  BGT_ID_REG_REG  if op2>op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BGT_ID_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  BGT_ID_REG_INT  if op2>op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BGT_ID_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
+               next_pc = current_frame->module->binary + REG_IDX(1);
+               CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BGE_ID_REG_REG  if op2>=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGE_ID_REG_REG) CALC_DISPATCH(3);
+       DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+       if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
+          next_pc = current_frame->module->binary + REG_IDX(1);
+          CALC_DISPATCH_MANUAL;
+       }
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  BGE_ID_REG_INT  if op2>=op3 goto op1                         pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLT_ID_REG_REG  if op2<op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLT_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BLT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLT_ID_REG_INT  if op2<op3 goto op1                           pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLT_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLE_ID_REG_REG  if op2<=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLE_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BLE_ID_REG_INT  if op2<=op3 goto op1                          pej 13 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BNE_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BNE_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BEQ_ID_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BEQ_ID_REG_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
+            next_pc = current_frame->module->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL;
+        }
+    DISPATCH;
+ /* ------------------------------------------------------------------------------------
+ *  BCT_REG_ID  dec op2; if op2>0 goto op1                           pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            if (current_frame->locals[REG_IDX(2)]->int_value > 0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCT_REG_REG_ID  dec op2, inc op3; if op2>0 goto op1              pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCT_ID_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            (current_frame->locals[REG_IDX(3)]->int_value)++;
+            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCTNM_REG_ID  dec op2; if op2>=0 goto op1                           pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTNM_ID_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1              pej 26 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - BCTNM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            (current_frame->locals[REG_IDX(2)]->int_value)--;
+            (current_frame->locals[REG_IDX(3)]->int_value)++;
+            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - FNDBLNK R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+         #ifndef NUTF8
+            i5 = (rxinteger) v2->string_chars;
+         #else
+            i5 = (rxinteger)v2->string_length;
+         #endif
+            for (i3=v3->int_value;i3<i5; i3++) {
+         #ifndef NUTF8
+                string_set_byte_pos(v2, i3);
+                utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+                i4=codepoint;
+        #else
+                i4=v2->string_value[i3];
+        #endif
+                if (i4==32) goto blankfound;
+            }
+            i3=-i5;
+            blankfound:
+    REG_RETURN_INT(i3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FndNBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3);
+           DEBUG("TRACE - FNDNBLNK R%llu R%llu\n", REG_IDX(1),
+              REG_IDX(2));
+          v1 = op1R;
+          v2 = op2R;
+          v3 = op3R;
+        #ifndef NUTF8
+          i5 = (rxinteger) v2->string_chars;
+        #else
+          i5 = (rxinteger)v2->string_length;
+        #endif
+          for (i3=v3->int_value;i3<i5; i3++) {
+        #ifndef NUTF8
+              string_set_byte_pos(v2, i3);
+              utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+              i4=codepoint;
+        #else
+              i4=v2->string_value[i3];
+        #endif
+              if (i4!=32) goto nonblankfound;
+          }
+          i3=-i5;
+        nonblankfound:
+    REG_RETURN_INT(i3);
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - CONCCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+            i3=v3->int_value;   // save offset, we misuse v3 later
+#ifndef NUTF8
+            string_set_byte_pos(v2, v3->int_value);
+            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+            v3->int_value=codepoint;
+#else
+            v3->int_value=v2->string_value[v3->int_value - 1];
+#endif
+            string_concat_char(v1, v3);
+            v3->int_value=i3;   // restore original v3
+        DISPATCH;
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */

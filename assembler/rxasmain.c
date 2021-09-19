@@ -187,8 +187,14 @@ int main(int argc, char *argv[]) {
     scanner.binary.globals = 0;
     scanner.binary.const_size = 0;
     scanner.binary.inst_size = 0;
-    scanner.binary.binary = malloc(sizeof(bin_code) * 5000); /* todo */
-    scanner.binary.const_pool = malloc(sizeof(unsigned char) * 5000); /* TODO */
+
+    scanner.inst_buffer_size = 1024;
+    scanner.binary.binary = malloc(scanner.inst_buffer_size * sizeof(bin_code));
+    memset(scanner.binary.binary,0,scanner.inst_buffer_size * sizeof(bin_code));
+
+    scanner.const_buffer_size = sizeof(unsigned char) * 1024;
+    scanner.binary.const_pool = malloc(scanner.const_buffer_size);
+    memset(scanner.binary.const_pool,0,scanner.const_buffer_size);
 
     scanner.string_constants_tree = 0;
     scanner.proc_constants_tree = 0;

@@ -1,0 +1,44 @@
+/* reverse */
+          .globals=0
+pos() .locals=13 .expose=global.pos
+   copy r1,a2          /* source string      */
+   strlen r2,r1        /* length             */
+   copy r3,a3          /* outer offset       */
+   dec  r3             /* make pos to offset */
+   ilt  r11,r3,0       /* <0                 */
+   brf  offok,r11
+   load r3,0
+offok:
+   isub r2,r2,r3       /* length - offset    */
+   copy r4,a1          /* search string      */
+   strlen r10,r4
+   dec r10             /* -1 for BCT         */
+outerloop:
+   STRCHAR r8,r1,r3    /* load source char    */
+   copy r5,r10         /* length search string*/
+   load r6,0           /* inner offset        */
+ /* test first search char  */
+   STRCHAR r9,r4,r6
+   ieq r11,r8,r9       /* is it not equal, goto next source char */
+   brf next,r11
+   copy r12,r3         /* it is equal, save begin pos */
+   ieq r11,r5,0        /* if remaining length is 0, return now*/
+   brt found,r11
+   inc r6              /* look into next search char  */
+innerloop:
+   inc r3              /* look into next source char  */
+   STRCHAR r8,r1,r3    /* fetch source char           */
+   STRCHAR r9,r4,r6    /* fetch search char           */
+   ieq r11,r8,r9       /* are they equal ?            */
+   brf next,r11        /* branch into outer loop      */
+   bct innerloop,r5,r6 /* continue with next chars    */
+   br  found
+    copy r3,r12        /* re position to original source char */
+next:
+    bct outerloop,r2,r3 /* outer loop */
+    load r12,0         /* string not found */
+    br return
+found:
+    inc R12            /* +1 to make offset to position */
+return:
+    ret r12

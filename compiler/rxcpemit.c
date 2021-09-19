@@ -29,6 +29,12 @@ static int is_constant(ASTNode* node) {
     }
 }
 
+/* Tests if a node is not a constant */
+static int is_var_symbol(ASTNode* node) {
+    if (node->symbol && node->node_type != FUNCTION) return 1;
+    else return 0;
+}
+
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
@@ -240,7 +246,7 @@ static walker_result register_walker(walker_direction direction,
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
-                if (child2->symbol == 0 || is_constant(child2))
+                if (!is_var_symbol(child2) || is_constant(child2))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -278,7 +284,7 @@ static walker_result register_walker(walker_direction direction,
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
-                    else if (c->symbol == 0 || is_constant(c))
+                    else if (!is_var_symbol(c) || is_constant(c))
                         c->register_num = DONT_ASSIGN_REGISTER;
 
                     c = c->sibling;
@@ -400,9 +406,9 @@ static walker_result register_walker(walker_direction direction,
             case OP_OR:
 
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0 && child1->register_num != DONT_ASSIGN_REGISTER)
+                if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child1->register_num);
-                if (child2->symbol == 0 && child2->register_num != DONT_ASSIGN_REGISTER)
+                if (!is_var_symbol(child2) && child2->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child2->register_num);
 
                 /* Set result temporary register */
@@ -411,9 +417,11 @@ static walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(payload->current_scope);
                 break;
 
-            case OP_PREFIX:
+            case OP_NOT:
+            case OP_NEG:
+            case OP_PLUS:
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0)
+                if (!is_var_symbol(child1))
                     ret_reg(payload->current_scope, child1->register_num);
 
                 /* Set result temporary register */
@@ -466,9 +474,9 @@ static walker_result register_walker(walker_direction direction,
                 c = child1;
                 while (c) {
                     /* If it is a symbol with the same register as i don't return the register */
-                    if ( !(c->symbol &&
-                           c->symbol->symbol->register_num == i &&
-                           c->symbol->symbol->register_type == 'r') )
+                    if ( !( is_var_symbol(c) &&
+                            c->symbol->symbol->register_num == i &&
+                            c->symbol->symbol->register_type == 'r') )
                         ret_reg(payload->current_scope, i);
 
                     i++;
@@ -493,7 +501,7 @@ static walker_result register_walker(walker_direction direction,
                 /* If a register is needed at all ... */
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
                     /* Then if it is a temporary mark the register for reuse */
-                    if (child1->symbol == 0)
+                    if (!is_var_symbol(child1))
                         ret_reg(payload->current_scope, child1->register_num);
                 }
                 break;
@@ -505,7 +513,7 @@ static walker_result register_walker(walker_direction direction,
                     /* If a register is needed at all ... */
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
-                        if (child1->symbol == 0)
+                        if (!is_var_symbol(child1))
                             ret_reg(payload->current_scope,
                                     child1->register_num);
                     }
@@ -517,7 +525,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
-                if (child1->symbol == 0)
+                if (!is_var_symbol(child1))
                     ret_reg(payload->current_scope, child1->register_num);
                 break;
 
@@ -534,7 +542,7 @@ static walker_result register_walker(walker_direction direction,
                     if (c->child) {
                         c->register_num = c->child->register_num;
                         c->register_type = c->child->register_type;
-                        if (c->child->symbol == 0)
+                        if (!is_var_symbol(c->child))
                             ret_reg(payload->current_scope, c->register_num);
                     }
                     c = c->sibling;
@@ -602,8 +610,12 @@ static void type_promotion(ASTNode *node) {
         }
 
         switch (node->target_type) {
-            case TP_INTEGER:
             case TP_BOOLEAN:
+                if (node->value_type == TP_FLOAT) op2 = "b";
+                else op2 = "i";
+                break;
+
+            case TP_INTEGER:
                 op2 = "i";
                 break;
 
@@ -664,6 +676,20 @@ static void format_constant(char* buffer, ValueType type, ASTNode* node) {
     }
 }
 
+static char* type_to_prefix(ValueType value_type) {
+    switch (value_type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+            return "i";
+        case TP_STRING:
+            return "s";
+        case TP_FLOAT:
+            return "f";
+        default:
+            return "";
+    }
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -697,17 +723,7 @@ static walker_result emit_walker(walker_direction direction,
 
         /* Operator and type prefix */
         op = 0;
-        switch (node->value_type) {
-            case TP_BOOLEAN:
-            case TP_INTEGER:
-                tp_prefix = "i"; break;
-            case TP_STRING:
-                tp_prefix = "s"; break;
-            case TP_FLOAT:
-                tp_prefix = "f"; break;
-            default:
-                tp_prefix = "";
-        }
+        tp_prefix = type_to_prefix(node->value_type);
 
         switch (node->node_type) {
 
@@ -901,17 +917,11 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
             break;
 
-            /* Order of operands don't matter */
+            /* These operators have a prefix type of that of the first child */
             case OP_COMPARE_EQUAL:
                 if (!op) op="eq";
             case OP_COMPARE_NEQ:
                 if (!op) op="ne";
-            case OP_ADD:
-                if (!op) op="add";
-            case OP_MULT:
-                if (!op) op="mult";
-
-            /* Order of operands DO matter */
             case OP_COMPARE_GT:
                 if (!op) op="gt";
             case OP_COMPARE_LT:
@@ -932,6 +942,14 @@ static walker_result emit_walker(walker_direction direction,
                 if (!op) op="gtes";
             case OP_COMPARE_S_LTE:
                 if (!op) op="ltes";
+
+                tp_prefix = type_to_prefix(child1->value_type);
+
+            /* These operators use the type prefix already set (i.e. of their type) */
+            case OP_ADD:
+                if (!op) op="add";
+            case OP_MULT:
+                if (!op) op="mult";
             case OP_MINUS:
                 if (!op) op="sub";
             case OP_POWER:
@@ -1176,12 +1194,56 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
                 break;
 
-            case OP_PREFIX:
+            case OP_NOT:
                 node->output = output_f();
                 if (child1->output) output_append(node->output, child1->output);
-                snprintf(temp1, buf_len, "   prefix_todo %c%d\n",
+                snprintf(temp1, buf_len, "   not %c%d,%c%d\n",
+                         node->register_type,
+                         node->register_num,
                          child1->register_type,
                          child1->register_num);
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+                type_promotion(node);
+                break;
+
+            case OP_NEG:
+                node->output = output_f();
+                if (child1->output) output_append(node->output, child1->output);
+                if (node->value_type == TP_FLOAT) {
+                    snprintf(temp1, buf_len, "   fsub %c%d,0.0,%c%d\n",
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                else {
+                    snprintf(temp1, buf_len, "   isub %c%d,0,%c%d\n",
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                node->output2 = output_fs(temp1);
+                output_append(node->output, node->output2);
+                type_promotion(node);
+                break;
+
+            case OP_PLUS:
+                node->output = output_f();
+                if (child1->output) output_append(node->output, child1->output);
+                if (node->register_type != child1->register_type ||
+                    node->register_num != child1->register_num) {
+                    snprintf(temp1, buf_len, "   %scopy %c%d,%c%d\n",
+                             tp_prefix,
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                }
+                else {
+                    strncpy(temp1,"   * \"+\" is a nop here\n",buf_len);
+                }
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
                 type_promotion(node);

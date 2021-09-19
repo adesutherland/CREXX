@@ -7,6 +7,13 @@
 
 #include <stdio.h>
 
+#ifdef __GNUC__
+#  define RX_INLINE inline __attribute__((always_inline))
+#else
+#  define RX_INLINE inline
+#  warning "Functions may not be inlined as intended"
+#endif
+
 /* Load Platform Specific Headers */
 #ifdef __CMS__
 #include "cms.h"

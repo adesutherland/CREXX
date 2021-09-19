@@ -1,0 +1,20 @@
+          .globals=0
+words()   .locals=8 .expose=global.words
+    /* string    = arg1    */
+   copy  r1,a1
+   load  r3,0   /* offset in string */
+   load  r4,43  /* length of string */
+   load  r6,0   /* word count       */
+loop:
+   fndnblnk r3,r1,r3   /* find next non blank offset */
+   ilt r5,r3,0         /* if <0, nothing found, end search */
+   brt break,r5
+   inc r6              /* else increase word count  */
+                       /* offset of word is in R3   */
+   fndblnk r3,r1,r3    /* from offset find next blank offset */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5
+   bct loop,r4,r3      /* then look for next non blank char  */
+break:
+   itos r6
+   ret r6

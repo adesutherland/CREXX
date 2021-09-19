@@ -154,15 +154,31 @@ static walker_result step1_walker(walker_direction direction,
          * any '('s to the left and ')'s to the right as these are removed from
          * the AST. What we are doing is expanding the selection to include
          * *matching* ('s and )'s. Where they don't match, ignore, they will be
-         * handled by a parent or grandparent node */
+         * handled by a parent or grandparent node
+         *
+         * And we do the same thing for functions checking the ( after the function name
+         */
         if (node->token_start) {
-            left = node->token_start->token_prev;
-            right = node->token_end->token_next;
-            while (left && right && left->token_type==TK_OPEN_BRACKET && right->token_type==TK_CLOSE_BRACKET) {
-                node->token_start = left;
-                node->token_end = right;
-                left = left->token_prev;
-                right = right->token_next;
+            if (node->node_type == FUNCTION) {
+                /* Function brackets */
+                left = node->token_start->token_next; /* I.e. after the function name */
+                right = node->token_end->token_next;
+                if (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_end = right;
+                }
+            }
+            else {
+                /* Other brackets */
+                left = node->token_start->token_prev;
+                right = node->token_end->token_next;
+                while (left && right && left->token_type == TK_OPEN_BRACKET &&
+                       right->token_type == TK_CLOSE_BRACKET) {
+                    node->token_start = left;
+                    node->token_end = right;
+                    left = left->token_prev;
+                    right = right->token_next;
+                }
             }
         }
 
@@ -613,15 +629,15 @@ static walker_result step4_walker(walker_direction direction,
                 child2->target_type = TP_INTEGER;
                 break;
 
-            case OP_PREFIX:
-                child1 = node->child;
-                if (node->token->token_type == TK_NOT) {
-                    node->value_type = TP_BOOLEAN;
-                    child1->target_type = TP_BOOLEAN;
-                    break;
-                }
-                node->value_type = child1->value_type;
-                child1->target_type = child1->value_type;
+            case OP_NOT:
+                node->value_type = TP_BOOLEAN;
+                child1->target_type = TP_BOOLEAN;
+                break;
+
+            case OP_PLUS:
+            case OP_NEG:
+                node->value_type = promotion[child1->value_type][TP_UNKNOWN];
+                child1->target_type = promotion[child1->value_type][TP_UNKNOWN];
                 break;
 
             case VAR_SYMBOL:
@@ -647,11 +663,7 @@ static walker_result step4_walker(walker_direction direction,
                         break;
                     }
                     n1->target_type = n2->value_type;
-                    if (n2->child->node_type == VAR_REFERENCE) {
-                        n1->is_ref_arg = 1;
-                        n1->symbol->writeUsage = 1;
-                        if (!n1->symbol) mknd_err(n1, "CANT_BE_PASSED_BY_REF");
-                    }
+                    if (n2->child->node_type == VAR_REFERENCE) n1->is_ref_arg = 1;
                     n1 = n1->sibling;
                     n2 = n2->sibling;
                 }

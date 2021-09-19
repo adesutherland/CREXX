@@ -418,11 +418,11 @@ bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
 /* These are the normal expression form in unambiguous form */
 prefix_expression(P) ::= bracket(B). { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_MINUS(O) prefix_expression(C). [TK_NOT]
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
 power_expression(P)  ::= prefix_expression(E).
                          { P = E; }
 power_expression(A)  ::= power_expression(B) TK_POWER(O) prefix_expression(C).
@@ -450,7 +450,7 @@ addition(A)          ::= addition(B) TK_MINUS(O) multiplication(C).
 prefix_expression_c(P) ::= bracket(B). { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 power_expression_c(P)::= prefix_expression_c(E).
                          { P = E; }
 power_expression_c(A)::= power_expression_c(B) TK_POWER(O) prefix_expression_c(C).

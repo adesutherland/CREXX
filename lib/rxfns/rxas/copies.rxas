@@ -1,0 +1,29 @@
+/* 
+ * rexx COPIES bif in rxas.
+ * rudimentary error checking
+ */
+          .globals=0
+copies()  .locals=8 .expose=global.copies
+          ieq   r1,a0,2 /* copies needs two args */
+          brf   wrongargs,r1
+          ieq   r1,a2,0
+          brt   zerocopies,r1
+init:
+          load  r3,1    /* loop counter    */
+          load  r4,""   /* return register */
+loop:
+          igt   r1,r3,a2 /* compare counter */
+          brt   endloop,r1
+          concat r4,r4,a1 /* concat string to return */
+          inc   r3
+          br    loop
+endloop:    
+          ret r4
+
+wrongargs:
+          say   "copies needs exactly two arguments"
+          exit
+
+zerocopies:
+          load r4,""
+          ret r4

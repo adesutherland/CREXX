@@ -1,10 +1,10 @@
 CREXX History / Change Log
 
-F0032 - document rexx bifs from standard (in docs/bifs)
-
+F0030 - Fixes, BIF Functions, RXAS Instructions and RXVM Optimisations
+      - Prefix operators (~, +, -)
+F0032 - Document rexx bifs from standard (in docs/bifs)
 I0081 - UTF Char Positioning Fix
 F0018 - CALL, RETURN, ARG support (without PARSE)
-
 F0028 - rxc level B embedded REXX ASSEMBLER
       - initial function() parsing (not complete)
       - Fix UTF whitespace/tab (rxc and rxas)
@@ -14,7 +14,6 @@ F0028 - rxc level B embedded REXX ASSEMBLER
       - Refactor rxc - ASTNode to Symbol Connector now a object so that
         relationship attributes are supported; read/write attributes needed for
         optimiser
-
 F0026 - Constant Folding and Constant Propagation Compiler Optimiser
         Taken constants support
         IF constant optimisation
@@ -24,7 +23,6 @@ F0026 - Constant Folding and Constant Propagation Compiler Optimiser
         Updated TRACE messages to use rxas format
         float and string comparison functions
         say instruction rationalisation (say reg as string with a newline added only)
-
 I0061 - Fix Issue 61 - itof instruction missing
 
 0.1.6 - 14 July 2021

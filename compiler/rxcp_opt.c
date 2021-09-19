@@ -566,31 +566,33 @@ static walker_result opt1_walker(walker_direction direction,
                                                         child2->int_value);
                         break;
 
-                    case OP_PREFIX:
-                        if (node->token->token_type == TK_NOT) {
-                            if (node->value_type == TP_FLOAT)
-                                rewrite_to_boolean_constant(node, payload,
+                    case OP_NOT:
+                        if (node->value_type == TP_FLOAT)
+                            rewrite_to_boolean_constant(node, payload,
                                                             child1->float_value ==
                                                             0.0);
-                            else
-                                rewrite_to_boolean_constant(node, payload,
+                        else
+                            rewrite_to_boolean_constant(node, payload,
                                                             child1->int_value ==
                                                             0);
-                        } else if (node->token->token_type == TK_MINUS) {
-                            if (node->value_type == TP_FLOAT)
-                                rewrite_to_float_constant(node, payload,
+                        break;
+
+                    case OP_NEG:
+                        if (node->value_type == TP_FLOAT)
+                            rewrite_to_float_constant(node, payload,
                                                           -child1->float_value);
-                            else
-                                rewrite_to_integer_constant(node, payload,
+                        else
+                            rewrite_to_integer_constant(node, payload,
                                                             -child1->int_value);
-                        } else { /* Plus */
-                            if (node->value_type == TP_FLOAT)
-                                rewrite_to_float_constant(node, payload,
+                        break;
+
+                    case OP_PLUS:
+                        if (node->value_type == TP_FLOAT)
+                            rewrite_to_float_constant(node, payload,
                                                           child1->float_value);
-                            else
-                                rewrite_to_integer_constant(node, payload,
+                        else
+                            rewrite_to_integer_constant(node, payload,
                                                             child1->int_value);
-                        }
                         break;
 
                     case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */

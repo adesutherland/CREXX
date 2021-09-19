@@ -2,9 +2,54 @@
 #define CREXX_RXVMINTP_H
 
 #include "rxas.h"
-#include "rxvmvars.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.6 + F0018"
+#define rxversion "cREXX F0030"
+
+#define SMALLEST_STRING_BUFFER_LENGTH 32
+
+typedef struct value value;
+
+typedef union {
+    struct {
+        unsigned int type_object : 1;
+        unsigned int type_string : 1;
+        unsigned int type_decimal : 1;
+        unsigned int type_float : 1;
+        unsigned int type_int : 1;
+    };
+    unsigned int all_type_flags;
+} value_type;
+
+struct value {
+    /* bit field to store value status - these are explicitly set (not automatic at all) */
+    value_type status;
+
+    /* Value */
+    rxinteger int_value;
+    double float_value;
+    void *decimal_value; /* TODO */
+    char *string_value;
+    size_t string_length;
+    size_t string_buffer_length;
+    size_t string_pos;
+#ifndef NUTF8
+    size_t string_chars;
+    size_t string_char_pos;
+#endif
+    void *object_value;
+
+    /*
+     * Each value can either be owned by a stack frame or a variable pool
+     * The owner is responsible for freeing the value, but because value can
+     * be linked other stack frames and variable pools it is important that
+     * none of these free its memory when they are being freed themselves.
+     * The owner member is only used by parents to see if they are the real
+     * parent - if you like a paternity test!
+     * This also allows a value to be adopted by another parent (e.g. for a
+     * returned register from a procedure)
+     */
+    void *owner;
+};
 
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
