@@ -1,6 +1,7 @@
 CREXX History / Change Log
 
-F0030 - BIF Functions, RXAS Instructions and RXVM Optimisations
+F0030 - Fixes, BIF Functions, RXAS Instructions and RXVM Optimisations
+      - Prefix operators (~, +, -)
 F0032 - Document rexx bifs from standard (in docs/bifs)
 I0081 - UTF Char Positioning Fix
 F0018 - CALL, RETURN, ARG support (without PARSE)
