@@ -1942,7 +1942,7 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BEQ_ID_REG_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
         if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
             next_pc = current_frame->module->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2147,6 +2147,54 @@ START_OF_INSTRUCTIONS ;
 #else
             v1->int_value = v2->string_value[v2->string_pos];
 #endif
+            DISPATCH;
+
+/*
+ * GETTP_REG_REG gets the register type flag (op1 = op2.typeflag)
+ */
+        START_INSTRUCTION(GETTP_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            op1R->int_value = op2R->status.all_type_flags;
+            DISPATCH;
+
+/*
+ * SETTP_REG_INT sets the register type flag (op1.typeflag = op2)
+ */
+        START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2);
+            DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)op2I);
+            op1R->status.all_type_flags = op2I;
+            DISPATCH;
+
+/*
+ * SETORTP_REG_INT or the register type flag (op1.typeflag = op1.typeflag || op2)
+ */
+        START_INSTRUCTION(SETORTP_REG_INT) CALC_DISPATCH(2);
+            DEBUG("TRACE - SETORTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
+            op1R->status.all_type_flags = op1R->status.all_type_flags | op2I;
+            DISPATCH;
+
+/*
+ * BRTPT_ID_REG if op2.typeflag true then goto op1
+ */
+        START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - BRTPT_ID_REG 0x%x R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
+            if (op2R->status.all_type_flags) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+            DISPATCH;
+
+/*
+ * BRTPANDT_ID_REG_INT if op2.typeflag && op3 true then goto op1
+*/
+        START_INSTRUCTION(BRTPANDT_ID_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - BRTPANDT_ID_REG_INT 0x%x R%d %d\n",
+                  (unsigned int)REG_IDX(1),
+                  (int)REG_IDX(2),(int)op3I);
+            if (op2R->status.all_type_flags & op3I) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
             DISPATCH;
 
 /* ---------------------------------------------------------------------------
