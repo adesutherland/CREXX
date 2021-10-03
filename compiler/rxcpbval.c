@@ -682,6 +682,11 @@ static walker_result step4_walker(walker_direction direction,
                 child1->target_type = promotion[child1->value_type][TP_UNKNOWN];
                 break;
 
+            case FUNCTION:
+                node->value_type = node->symbol->symbol->type;
+                node->target_type = node->value_type;
+                break;
+
             case VAR_SYMBOL:
                 if (node->symbol->symbol->type == TP_UNKNOWN)
                     node->symbol->symbol->type = TP_STRING;
@@ -847,8 +852,6 @@ static walker_result step5_walker(walker_direction direction,
         switch (node->node_type) {
 
             case FUNCTION:
-                node->value_type = node->symbol->symbol->type;
-                node->target_type = node->value_type;
                 /* Process all the arguments */
                 n1 = node->child;
                 n2 = sym_trnd(node->symbol->symbol, 0)->node;
@@ -873,7 +876,14 @@ static walker_result step5_walker(walker_direction direction,
                     }
                     if (n2->child->node_type == VAR_REFERENCE) {
                         n1->is_ref_arg = 1;
-                        if (n1->symbol) n1->symbol->writeUsage = 1;
+                        if (n1->symbol) {
+                            if (n1->target_type != n1->value_type) {
+                                /* Cannot change type of pass by reference symbol */
+                                mknd_err(n1, "REFERENCE_TYPE_MISMATCH %d %s", arg_num, n2->child->symbol->symbol->name);
+                            }
+                            /* Mark as write access for the optimiser */
+                            n1->symbol->writeUsage = 1;
+                        }
                     }
                     n1 = n1->sibling;
                     n2 = n2->sibling;

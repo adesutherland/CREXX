@@ -2161,7 +2161,7 @@ START_OF_INSTRUCTIONS ;
  * SETTP_REG_INT sets the register type flag (op1.typeflag = op2)
  */
         START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2);
-            DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)op2I);
+            DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
             op1R->status.all_type_flags = op2I;
             DISPATCH;
 
