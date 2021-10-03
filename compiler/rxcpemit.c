@@ -12,6 +12,18 @@
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
 
+/* Register Type Flag Byte Values */
+/* Used for optional arguments ONLY
+ * set (1) means the register has a specified value */
+#define REGTP_VAL 1
+
+/* Used for "pass be value" large (strings, objects) registers ONLY
+ * set (2) means that it is not a symbol so does not need copying as even if it is
+ * changed the caller will not use its original value
+ * Note: Small registers (int, float) are always copied as this is fatser than
+ *       setting and checking this flag anyway */
+#define REGTP_NOTSYM 2
+
 /* Tests if a node is not a constant */
 static int is_constant(ASTNode* node) {
     switch (node->node_type) {
@@ -184,8 +196,14 @@ static void output_append(OutputFragment* before, OutputFragment* after) {
 static void output_append_text(OutputFragment* before, char* after) {
     char *buffer;
     while (before->after) before = before->after;
-    buffer = malloc(strlen(before->output) + strlen(after) + 1);
-    strcpy(buffer, before->output);
+    if (before->output) {
+        buffer = malloc(strlen(before->output) + strlen(after) + 1);
+        strcpy(buffer, before->output);
+    }
+    else {
+        buffer = malloc(strlen(after) + 1);
+        buffer[0] = 0;
+    }
     strcat(buffer, after);
     free(before->output);
     before->output = buffer;
@@ -232,8 +250,15 @@ static walker_result register_walker(walker_direction direction,
                 c = node->child;
                 a = 1;
                 while (c) {
-                    c->child->symbol->symbol->register_num = a;
-                    c->child->symbol->symbol->register_type = 'a';
+                    c->register_num = a;
+                    c->register_type ='a';
+                    if (c->is_ref_arg) {
+                        /* Pass by reference - no copy so just use the 'a' register */
+                        c->child->symbol->symbol->register_num = a;
+                        c->child->symbol->symbol->register_type = 'a';
+                    }
+                    /* Otherwise, a normal register will be assigned to the symbol later */
+
                     a++;
                     c = c->sibling;
                 }
@@ -247,6 +272,17 @@ static walker_result register_walker(walker_direction direction,
                  * a copy instruction
                  */
                 if (!is_var_symbol(child2) || is_constant(child2))
+                    child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                break;
+
+            case ARG:
+                /*
+                 * If there is a default value (not CLASS node) and if it is
+                 * from an expression then mark the register as don't assign
+                 * (DONT_ASSIGN_REGISTER) so we can assign it to the target
+                 * register on the way out (bottom up) and save a copy instruction
+                 */
+                if (child2->node_type != CLASS && (!is_var_symbol(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -495,6 +531,14 @@ static walker_result register_walker(walker_direction direction,
                 node->register_type = child1->register_type;
                 break;
 
+            case ARG:
+                if (child2->node_type != CLASS && child2->register_num == DONT_ASSIGN_REGISTER) {
+                    /* Marked earlier so set the register to the target register */
+                    child2->register_num = child1->register_num;
+                    child2->register_type = child1->register_type;
+                }
+                break;
+
             case SAY:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
@@ -703,6 +747,7 @@ static walker_result emit_walker(walker_direction direction,
     char temp2[buf_len];
     char comment[buf_len];
     size_t i;
+    int j, k;
     int flag;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -771,6 +816,7 @@ static walker_result emit_walker(walker_direction direction,
                              node->parent->node_string_length, node->parent->node_string,
                              node->node_string_length, node->node_string);
                     node->output = output_fs(temp1);
+
                     n = child1;
                     while (n) {
                         if (n->output) output_append(node->output, n->output);
@@ -779,12 +825,128 @@ static walker_result emit_walker(walker_direction direction,
                 }
                 break;
 
+            case ARGS:
             case INSTRUCTIONS:
                 node->output = output_f();
                 n = child1;
                 while (n) {
                     if (n->output) output_append(node->output, n->output);
                     n = n->sibling;
+                }
+                break;
+
+            case ARG:
+                get_comment(comment, node, NULL);
+                node->output = output_fs(comment);
+
+                if (node->is_opt_arg) { /* Optional Argument */
+                    /* If the register flag is set then an argument was specified */
+                    snprintf(temp1, buf_len, "   brtpandt l%da,%c%d,%d\n",
+                             child1->node_number,
+                             node->register_type,
+                             node->register_num,
+                             REGTP_VAL);
+                    output_append_text(node->output, temp1);
+
+                    /* Set the default value */
+                    output_append(node->output, child2->output);
+
+                    if (child1->register_num != child2->register_num ||
+                        child1->register_type != child2->register_type) {
+                        snprintf(temp1, buf_len, "   copy %c%d,%c%d\n",
+                                 child1->register_type,
+                                 child1->register_num,
+                                 child2->register_type,
+                                 child2->register_num);
+                        node->output2 = output_fs(temp1);
+                        output_append(node->output, node->output2);
+                    }
+
+                    /* End of logic */
+                    if (node->is_ref_arg) {
+                        /* Reference so no copy needed */
+                        snprintf(temp1, buf_len, "l%da:\n",
+                                 child1->node_number);
+                        node->output3 = output_fs(temp1);
+                        output_append(node->output, node->output3);
+                    }
+                    else {
+                        /* Pass by value - so if the default is not used we may need to
+                         * to do a copy - but check if the argument needs preserving */
+
+                        /* Only worry about it if it is a big register */
+                        if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                            snprintf(temp1, buf_len,
+                                     "   br l%dd\n"
+                                            "l%da:\n"
+                                            "   brtpandt l%dc,%c%d,%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   br l%dd\n"
+                                            "l%dc:\n"
+                                            "   swap %c%d,%c%d\n"
+                                            "l%dd:\n",
+                                     child1->node_number, child1->node_number,
+                                     child1->node_number,
+                                     node->register_type, node->register_num,
+                                     REGTP_NOTSYM,
+                                     tp_prefix,
+                                     child1->register_type, child1->register_num,
+                                     node->register_type, node->register_num,
+                                     child1->node_number,
+                                     child1->node_number,
+                                     child1->register_type, child1->register_num,
+                                     node->register_type, node->register_num,
+                                     child1->node_number);
+                            output_append_text(node->output, temp1);
+                        }
+                        else {
+                            snprintf(temp1, buf_len, "   br l%db\n"
+                                                     "l%da:\n"
+                                                     "   %scopy %c%d,%c%d\n"
+                                                     "l%db:\n",
+                                     child1->node_number, child1->node_number,
+                                     tp_prefix, child1->register_type,
+                                     child1->register_num,
+                                     node->register_type, node->register_num,
+                                     child1->node_number);
+                            node->output3 = output_fs(temp1);
+                            output_append(node->output, node->output3);
+                        }
+                    }
+                }
+
+                else if (!node->is_ref_arg) {
+                    /* Copy by value so may need to do a copy - but check if the argument needs preserving */
+
+                    /* Only worry about it if it is a big register */
+                    if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                        snprintf(temp1, buf_len, "   brtpandt l%dc,%c%d,%d\n"
+                                                "   %scopy %c%d,%c%d\n"
+                                                "   br l%dd\n"
+                                                "l%dc:\n"
+                                                "   swap %c%d,%c%d\n"
+                                                "l%dd:\n",
+                                 child1->node_number,
+                                 node->register_type, node->register_num,
+                                 REGTP_NOTSYM,
+                                 tp_prefix,
+                                 child1->register_type, child1->register_num,
+                                 node->register_type, node->register_num,
+                                 child1->node_number,
+                                 child1->node_number,
+                                 child1->register_type, child1->register_num,
+                                 node->register_type, node->register_num,
+                                 child1->node_number);
+                        output_append_text(node->output, temp1);
+                    }
+                    else {
+                        /* Just need to copy register */
+                        snprintf(temp1, buf_len, "   %scopy %c%d,%c%d\n",
+                                 tp_prefix, child1->register_type,
+                                 child1->register_num,
+                                 node->register_type, node->register_num);
+                        output_append_text(node->output, temp1);
+                    }
                 }
                 break;
 
@@ -807,31 +969,49 @@ static walker_result emit_walker(walker_direction direction,
                          node->num_additional_registers - 1);
                 output_append_text(node->output, temp1);
 
-                /* Step through the arguments - eveluating them */
-                n = child1;
-                while (n) {
-                    if (n->output) output_append(node->output, n->output);
-                    n = n->sibling;
-                }
-
-                /* Step through the arguments - getting the register numbers right for the call */
-                node->output2 = output_fs("");
+                /* Step through the arguments - evaluating them */
                 n = child1;
                 i = node->additional_registers + 1; /* First one is the number of arguments */
                 while (n) {
-                    if (n->register_num != i) {
-                        /* We need to copy or swap registers */
-                        if (n->is_ref_arg) {
-                            snprintf(temp1, buf_len, "   swap r%d,%c%d\n",
-                                     i, n->register_type, n->register_num);
-                            output_append_text(node->output2, temp1);
-                        }
-                        else {
-                            snprintf(temp1, buf_len, "   %scopy r%d,%c%d\n",
-                                     tp_prefix, i, n->register_type, n->register_num);
-                            output_append_text(node->output2, temp1);
+                    k = 0; /* 1 if we need to settp */
+                    j = 0; /* The required value of settp */
+
+                    /* Used for "pass be value" large (strings, objects) registers ONLY
+                     * set (2) means that it is not a symbol so its value does not need
+                     * preserving */
+                    if (!n->is_ref_arg &&
+                        (n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
+                        if (!n->symbol) {
+                            /* This means we will settp to REGTP_NOTSYM */
+                            k = 1;
+                            j = REGTP_NOTSYM;
                         }
                     }
+
+                    /* Optional arguments need to use the settp flag */
+                    if (n->is_opt_arg) {
+                        k = 1; /* means we have to settp */
+                        if (n->node_type != NOVAL) {
+                            /* If it is an optional parameter with a value we need to set the type flag */
+                            j = j | REGTP_VAL;
+                        }
+                    }
+                    if (k) { /* We need to settp */
+                        snprintf(temp1, buf_len, "   settp %c%d,%d\n",
+                                 n->register_type,
+                                 n->register_num,
+                                 j);
+                        output_append_text(n->output, temp1);
+                    }
+
+                    if (n->register_type != 'r' ||  n->register_num != i) {
+                        /* We need to swap registers to get it right for the call */
+                        snprintf(temp1, buf_len, "   swap r%d,%c%d\n",
+                                 i, n->register_type, n->register_num);
+                        output_append_text(n->output, temp1);
+                    }
+
+                    if (n->output) output_append(node->output, n->output);
                     n = n->sibling; i++;
                 }
 
@@ -840,24 +1020,21 @@ static walker_result emit_walker(walker_direction direction,
                          node->register_type, node->register_num,
                          node->node_string_length, node->node_string,
                          node->additional_registers);
-                output_append_text(node->output2, temp1);
+                output_append_text(node->output, temp1);
 
                 /* Step through for swapping registers back */
                 n = child1;
                 i = node->additional_registers + 1; /* First one is the number of arguments */
                 while (n) {
                     if (n->register_num != i) {
-                        /* We need to copy or swap registers */
-                        if (n->is_ref_arg) {
-                            /* I have reversed arguments just for readability */
-                            snprintf(temp1, buf_len, "   swap %c%d,r%d\n",
-                                     n->register_type, n->register_num,i);
-                            output_append_text(node->output2, temp1);
-                        }
+                        /* We need to swap registers */
+                        /* I have reversed arguments just for readability */
+                        snprintf(temp1, buf_len, "   swap %c%d,r%d\n",
+                                 n->register_type, n->register_num,i);
+                        output_append_text(node->output, temp1);
                     }
                     n = n->sibling; i++;
                 }
-                output_append(node->output, node->output2);
 
                 type_promotion(node);
                 break;
@@ -1255,6 +1432,11 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case VAR_TARGET:
+                break;
+
+            case NOVAL:
+                /* Set the node output as null */
+                node->output = output_f();
                 break;
 
             case CONSTANT:

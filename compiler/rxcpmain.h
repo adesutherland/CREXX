@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0030"
+#define rxversion "cREXX F0034"
 
 #include <stdio.h>
 #include "platform.h"
@@ -62,7 +62,7 @@ int opt_pars(Context *context);
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, NOP, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    FLOAT, INTEGER, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
@@ -93,6 +93,7 @@ struct ASTNode {
     int additional_registers; /* always type 'r' */
     int num_additional_registers;
     char is_ref_arg;
+    char is_opt_arg;
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
@@ -153,7 +154,7 @@ void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
 /* Turn a node to an ERROR */
-void mknd_err(ASTNode* node, char *error_string);
+void mknd_err(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file);
 /* Set the string value of an ASTNode. string must be malloced. memory is

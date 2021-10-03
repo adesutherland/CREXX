@@ -674,6 +674,42 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
     }
 }
 
+/* Step 2
+ * - Convert copy by value to copy by reference if the argument is a constant
+ */
+static walker_result opt2_walker(walker_direction direction,
+                                 ASTNode* node,
+                                 void *pload) {
+
+    Payload *payload = (Payload *) pload;
+    Symbol *symbol;
+    size_t i;
+    int is_constant;
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        if (node->scope) payload->current_scope = node->scope;
+
+        if (node->node_type == ARG) {
+            if (!node->is_ref_arg) { /* Only if it is pass by reference */
+                is_constant = 1;
+                symbol = node->child->symbol->symbol; /* The symbol is linked to the child node */
+                /* Check to see if the symbol is written to in the procedure */
+                for (i=1; i<sym_nond(symbol); i++) {
+                    if (sym_trnd(symbol, i)->writeUsage) {
+                        is_constant = 0; /* Not a constant as it is updated */
+                        break;
+                    }
+                }
+                /* If it us readonly make the argument pass by reference */
+                if (is_constant) node->is_ref_arg = 1;
+            }
+        }
+    }
+
+    return result_normal;
+}
+
 /* Optimise AST Tree */
 void optimise(Context *context) {
     Payload payload;
@@ -694,4 +730,8 @@ void optimise(Context *context) {
 
         if (!payload.changed) break;
     }
+
+    /* Constant Folding */
+    ast_wlkr(context->ast, opt2_walker, (void *) &payload);
+
 }
