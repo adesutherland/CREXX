@@ -128,7 +128,7 @@ int rexbscan(Context* s) {
 //  'DIGITS' { return(TK_DIGITS); }
 //  'ENGINEERING' { return(TK_ENGINEERING); }
 //  'ERROR' { return(TK_ERROR); }
-//  'EXPOSE' { return(TK_EXPOSE); }
+  'EXPOSE' { return(TK_EXPOSE); }
 //  'FAILURE' { return(TK_FAILURE); }
   'FOR' { return(TK_FOR); }
 //  'FOREVER' { return(TK_FOREVER); }

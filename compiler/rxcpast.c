@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include "rxcpmain.h"
 
 /* Token Factory */
@@ -80,10 +81,23 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->additional_registers = -1;
     node->num_additional_registers = 0;
     node->is_ref_arg = 0;
+    node->is_opt_arg = 0;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
     context->free_list = node;
+
+    /* These values are normally set by the set_source_location walker
+     *  However nodes (e.g. unspecified optional arguments) can be added after
+     *  the walker has been run - so we have added logic to add_ast() and add_sbtr()
+     *  to set these in this situation
+     * */
+    node->token_start = 0;
+    node->token_end = 0;
+    node->source_start = 0;
+    node->source_end = 0;
+    node->line = -1;
+    node->column = -1;
     return node;
 }
 
@@ -233,14 +247,46 @@ ASTNode *ast_err(Context* context, char *error_string, Token *token) {
 }
 
 /* Turn a node to an ERROR */
-void mknd_err(ASTNode* node, char *error_string) {
+void mknd_err(ASTNode* node, char *error_string, ...) {
+    va_list argptr;
+    size_t buffer_size = 200;
+    size_t needed;
+    char *buffer = malloc(buffer_size);
+
+    /* Reset Node */
     node->node_type = ERROR;
     if (node->free_node_string) {
         free(node->node_string);
         node->free_node_string = 0;
     }
-    node->node_string = error_string;
-    node->node_string_length = strlen(error_string);
+
+    /* Write to buffer as sized */
+    va_start(argptr, error_string);
+    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
+    va_end(argptr);
+    if (needed < 0) {
+        /* Error - bail */
+        fprintf(stderr,"Internal Error: First vsnprintf() failed in mknd_err()\n");
+        exit(1);
+    }
+    needed++; /* Null terminator */
+    buffer = realloc(buffer,needed); /* Trim or grow */
+
+    if (needed > buffer_size) {
+        /* If grow redo vsnprintf */
+        va_start(argptr, error_string);
+        needed = vsnprintf(buffer, needed, error_string, argptr);
+        va_end(argptr);
+        if (needed < 0) {
+            /* Error - bail */
+            fprintf(stderr,"Internal Error: Second vsnprintf() failed in mknd_err()\n");
+            exit(1);
+        }
+    }
+
+    node->node_string = buffer;
+    node->node_string_length = needed - 1;
+    node->free_node_string = 1;
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for
@@ -309,6 +355,8 @@ const char *ast_ndtp(NodeType type) {
             return "INTEGER";
         case NOP:
             return "NOP";
+        case NOVAL:
+            return "NOVAL";
         case OP_ADD:
             return "OP_ADD";
         case OP_MINUS:
@@ -464,6 +512,67 @@ void prnt_ast(ASTNode *node) {
     ast_wlkr(node, prnt_walker_handler, NULL);
 }
 
+
+/*
+ * ASTNode Line and Column numbers are normally set by the set_source_location walker
+ * However nodes (e.g. unspecified optional arguments) can be added after
+ * the walker has been run - so we have added logic to add_ast() and add_sbtr()
+ * to set these in this situation
+ * */
+static void fix_ast_line_number(ASTNode *node) {
+    ASTNode *older = 0;
+    ASTNode *n;
+
+    /* If the node has already got a line number there is nothing needed */
+    if (node->line != -1) return;
+
+    /* If the parent has not got a line number then the walker has not been run
+     * so nothing is needed */
+    if (!node->parent || node->parent->line == -1) return;
+
+    /* We need to fix up the line number etc. */
+    /* If we have a token then use it */
+    if (node->token) {
+        node->token_start = node->token;
+        node->token_end = node->token;
+        node->source_start = node->token_start->token_string;
+        node->source_end = node->token_end->token_string +
+                           node->token_end->length - 1;
+        node->line = node->token_start->line;
+        node->column = node->token_start->column;
+        return;
+    }
+
+    /* Older Sibling ? */
+    n = node->parent->child;
+    while (n != node) {
+        if (!n) {
+            /* Internal Error - bail */
+            fprintf(stderr, "Internal Error: Node is not one of its parent's children\n");
+            exit(1);
+        }
+        older = n;
+        n = n->sibling;
+    }
+    if (older && older->line != -1) { /* Check If the older has valid line number (it should!) */
+        node->token_start = 0;
+        node->token_end = 0;
+        node->source_start = older->source_end + 1;
+        node->source_end = node->source_start - 1;
+        node->line = older->line;
+        node->column = older->column + (int)(older->source_end - older->source_start) + 1;
+    }
+    else {
+        /* No older sibling - use the parent */
+        node->token_start = 0;
+        node->token_end = 0;
+        node->source_start = node->parent->source_end + 1;
+        node->source_end = node->source_start - 1;
+        node->line = node->parent->line;
+        node->column = node->parent->column + (int)(node->parent->source_end - node->parent->source_start) + 1;
+    }
+}
+
 /* Add Child - Returns child for chaining */
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     if (child == 0) return child;
@@ -477,6 +586,7 @@ ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
         s->parent = parent;
         s = s->sibling;
     }
+    fix_ast_line_number(child);
     return child;
 }
 
@@ -487,6 +597,7 @@ ASTNode *add_sbtr(ASTNode *older, ASTNode *younger) {
     while (older->sibling) older = older->sibling;
     older->sibling = younger;
     younger->parent = parent;
+    fix_ast_line_number(younger);
     return younger;
 }
 
@@ -741,6 +852,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case NOVAL:
                 attributes = "color=darkcyan";
                 only_type = 1;
                 break;

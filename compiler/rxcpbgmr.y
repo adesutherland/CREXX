@@ -221,10 +221,14 @@ class(C) ::= TK_CLASS(T).
 arg_list(L)       ::= . { L = ast_ft(context, ARGS); }
 arg_list(L)       ::= argument(T). { L = ast_ft(context, ARGS); add_ast(L,T); }
 arg_list(L)       ::= arg_list(L1) TK_COMMA argument(T). { L = L1; add_ast(L,T); }
-argument(T)       ::= var_symbol(V) class(C).
+argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL class(C).
                       { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
 argument(T)       ::= var_symbol(V) TK_EQUAL class(C).
                       { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
+argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
+                      { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
+                      { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
 
 /* Instructions */
 
@@ -379,17 +383,19 @@ function_name(N)       ::= TK_SYMBOL_COMPOUND(S).
 function_name(N)       ::= TK_STRING(S).
                            { N = ast_f(context, FUNCTION, S); }
 call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
-        { I = ast_f(context, CALL, T); add_ast(I,F); add_ast(F,E); }
-call(I) ::= TK_CALL(T) function_name(F).
-        { I = ast_f(context, CALL, T); add_ast(I,F); }
+        { I = ast_f(context, CALL, T); add_ast(I,F); if (E) add_ast(F,E); }
 call(I) ::= TK_CALL(T) ANYTHING(E).
         { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "19.2", E)); }
 
 /* Expression Lists */
-expression_list(L)     ::= expression(E).
+expression_list(L)     ::= .
+                         { L = 0; }
+expression_list(L)     ::= expression_in_list(E).
                          { L = E; }
-expression_list(L)     ::= expression_list(L1) TK_COMMA expression(E).
-                         { L = L1; add_sbtr(L,E); }
+expression_list(L)     ::= expression_list(L1) TK_COMMA expression_in_list(E).
+                         { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L,E);}
+expression_list(L)     ::= expression_list(L1) TK_COMMA.
+                         { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_SYMBOL_COMPOUND(S) function_parameters(P).
@@ -398,8 +404,6 @@ term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
                            { P = E; }
-function_parameters(P) ::= TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
-                           { P = 0; }
 term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
 term(A)                ::= TK_SYMBOL(S).
@@ -521,6 +525,9 @@ expression(E)        ::= TK_COMMA(S). [TK_EQUAL] /* Low precedence */
                          { E = ast_err(context, "37.1", S); }
 expression(E)        ::= TK_CLOSE_BRACKET(S). [TK_EQUAL] /* Low precedence */
                          { E = ast_err(context, "37.2", S); }
+/* expressions in a list cannot have these errors above because of parsing conflicta */
+expression_in_list(P) ::= and_expression(E).
+                         { P = E; }
 
 /*
 valueexp(P)            ::= TK_VALUE(T) expression(E). { P = ast_f(T); add_ast(P,E); }
