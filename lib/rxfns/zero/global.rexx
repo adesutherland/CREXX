@@ -13,7 +13,7 @@ say substr("12345678",10,6,"éé")
 
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int
-  arg type .string, code .string, parm1 .string
+  arg type = .string, code = .string, parm1 = .string
   /* TODO Variable number of arguments */
   say "RUNTIME" type "ERROR:" code parm1
   /*
@@ -23,15 +23,16 @@ raise: procedure = .int
 
 /* Length() Procedure */
 length: procedure = .int
-  arg string1 .string /* Pass by reference */
+  arg expose string1 = .string /* Pass by reference */
   result = 0
   assembler strlen result,string1
   return result
 
+
 /* Substr() Procedure */
 substr: procedure = .string
-  arg string1 .string, start=.int, length=.int, pad .string
-  /* TODO length and pad are optional */
+arg string1 = .string, start = .int, length = 0, pad = ' '
+/* Substr() Procedure */
 
   padchar = 0 /* Is an integer */
   output = ''
