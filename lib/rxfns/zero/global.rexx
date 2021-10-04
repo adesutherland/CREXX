@@ -3,7 +3,7 @@
 options levelb /* Written in REXX Level B */
 
 /* Tests */
-say substr('abc',2,2,'')
+say substr('abc',2,2)
 say substr('abcdefgh',1,2,'.')
 say substr("René Vincent Jansen",1,4,".")
 say substr("René Vincent Jansen",6,7,"")

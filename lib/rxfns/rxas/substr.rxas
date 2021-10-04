@@ -8,6 +8,14 @@ substr()  .locals=20 .expose=global.substr
     /* string    = arg1    */
     /* n (start) = arg2    */
     load  r8," "        /* the default pad character */
+    /* here we need to substract the left-out optionals from the argcount */    
+    brtpandt havethree,a3,1
+    isub  a0,a0,1
+havethree:
+    brtpandt havefour,a4,1
+    isub  a0,a0,1
+havefour:   
+    /* now we have the correct number */
     ilt   r11,a0,2      /* less than 2 arguments     */
     brt   wrongargs,r11
     igt   r11,a0,4      /* more than 4 arguments     */

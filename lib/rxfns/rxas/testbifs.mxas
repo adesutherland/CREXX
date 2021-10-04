@@ -175,120 +175,120 @@ main() .locals=8
     seq r4,r1,"fox"
     call r0,expect_true(),r3
     
-    /* /\* a test for the substring (non-copies concatenate , returns 'uvwxyz' *\/ */
-    /* say "Test of Right function, non-copies concatenate version"     */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"abcdefghijklmnopqrstuvwxyz" */
-    /* load r5,6 /\* second argument, length *\/ */
-    /* call r1,right(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"uvwxyz" */
-    /* call r0,expect_true(),r3 */
+    /* a test for the substring (non-copies concatenate , returns 'uvwxyz' */
+    say "Test of Right function, non-copies concatenate version"
+    load r3,2  /* there are two arguments*/
+    load r4,"abcdefghijklmnopqrstuvwxyz"
+    load r5,6 /* second argument, length */
+    call r1,right(),r3
+    load r3,1
+    seq r4,r1,"uvwxyz"
+    call r0,expect_true(),r3
 
-    /* /\* left *\/ */
-    /* /\* the first example from the book, LEFT('abc d',8) == 'abc d   ' *\/ */
-    /* say "Test of Left function, no pad" */
-    /* load r3,2  /\* there are two arguments *\/ */
-    /* load r4,"abc d" */
-    /* load r5,8 /\* second argument, length *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc d   " */
-    /* call r0,expect_true(),r3 */
+    /* left */
+    /* the first example from the book, LEFT('abc d',8) == 'abc d   ' */
+    say "Test of Left function, no pad"
+    load r3,2  /* there are two arguments */
+    load r4,"abc d"
+    load r5,8 /* second argument, length */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc d   "
+    call r0,expect_true(),r3
         
-    /* /\* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' *\/ */
-    /* say "Test of Left function, pad" */
-    /* load r3,3 /\* there are three arguments*\/ */
-    /* load r4,"abc d" */
-    /* load r5,8 /\* second argument, length *\/ */
-    /* load r6,"." /\* third argument, pad *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc d..." */
-    /* call r0,expect_true(),r3 */
+    /* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' */
+    say "Test of Left function, pad"
+    load r3,3 /* there are three arguments*/
+    load r4,"abc d"
+    load r5,8 /* second argument, length */
+    load r6,"." /* third argument, pad */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc d..."
+    call r0,expect_true(),r3
     
-    /* /\* the third example from the book, LEFT('abc  def',7) == 'abc de' *\/ */
-    /* say "Test of Left function, short" */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"abc  def" */
-    /* load r5,7 /\* second argument, length *\/ */
-    /* call r1,left(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"abc  de" */
-    /* call r0,expect_true(),r3 */
+    /* the third example from the book, LEFT('abc  def',7) == 'abc de' */
+    say "Test of Left function, short"
+    load r3,2  /* there are two arguments*/
+    load r4,"abc  def"
+    load r5,7 /* second argument, length */
+    call r1,left(),r3
+    load r3,1
+    seq r4,r1,"abc  de"
+    call r0,expect_true(),r3
     
-    /* /\* reverse *\/ */
-    /* say "Test Reverse" */
-    /* load r3,1  /\* there is one argument *\/ */
-    /* load r4,"The quick brown fox jumps over the lazy dog" */
-    /* call r1,reverse(),r3 */
-    /* seq r4,r1,"god yzal eht revo spmuj xof nworb kciuq ehT" */
-    /* call r0,expect_true(),r3 */
+    /* reverse */
+    say "Test Reverse"
+    load r3,1  /* there is one argument */
+    load r4,"The quick brown fox jumps over the lazy dog"
+    call r1,reverse(),r3
+    seq r4,r1,"god yzal eht revo spmuj xof nworb kciuq ehT"
+    call r0,expect_true(),r3
     
-    /* say "Test words" */
-    /* load r3,1  /\* there is one argument *\/ */
-    /* load r4,"The quick brown fox jumps over the lazy dog" */
-    /* say r4 */
-    /* call r1,words(),r3 */
-    /* load r3,1 */
-    /* ieq r4,r1,9 */
-    /* call r0,expect_true(),r3 */
+    say "Test words"
+    load r3,1  /* there is one argument */
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    call r1,words(),r3
+    load r3,1
+    ieq r4,r1,9
+    call r0,expect_true(),r3
 
-    /* /\* word *\/       */
-    /* say "Test word: 7" */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"The quick brown fox jumps over the lazy dog" */
-    /* say  r4 */
-    /* load r5,7  /\* fetch 7. word *\/ */
-    /* call r1,word(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"the" */
-    /* call r0,expect_true(),r3 */
+    /* word */
+    say "Test word: 7"
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,7  /* fetch 7. word */
+    call r1,word(),r3
+    load r3,1
+    seq r4,r1,"the"
+    call r0,expect_true(),r3
 
-    /* /\* wordindx *\/ */
-    /* say "Test wordindx: 4" */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"The quick brown fox jumps over the lazy dog" */
-    /* say  r4 */
-    /* load r5,4  /\* pos of 4. word *\/ */
-    /* call r1,wordindx(),r3 */
-    /* load r3,1 */
-    /* ieq r4,r1,17 */
-    /* call r0,expect_true(),r3 */
+    /* wordindx */
+    say "Test wordindx: 4"
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say  r4
+    load r5,4  /* pos of 4. word */
+    call r1,wordindx(),r3
+    load r3,1
+    ieq r4,r1,17
+    call r0,expect_true(),r3
 
-    /* /\* subword *\/ */
-    /* say "Test subword: 5" */
-    /* load r3,2  /\* there are two arguments*\/ */
-    /* load r4,"The quick brown fox jumps over the lazy dog" */
-    /* say r4 */
-    /* load r5,5  /\* start with 5 word *\/ */
-    /* call r1,subword(),r3 */
-    /* load r3,1 */
-    /* seq r4,r1,"jumps over the lazy dog" */
-    /* call r0,expect_true(),r3 */
+    /* subword */
+    say "Test subword: 5"
+    load r3,2  /* there are two arguments*/
+    load r4,"The quick brown fox jumps over the lazy dog"
+    say r4
+    load r5,5  /* start with 5 word */
+    call r1,subword(),r3
+    load r3,1
+    seq r4,r1,"jumps over the lazy dog"
+    call r0,expect_true(),r3
 
-    /* /\* Test pos *\/ */
-    /* say "Test pos" */
-    /* load r3,3  /\* there are 3 arguments *\/ */
-    /* load r4,"!" */
-    /* load r5,"The quick brown fox jumps over the lazy(!) dog" */
-    /* load r6,1   /\* offset to search *\/ */
-    /* call r1,pos(),r3 */
-    /* load r3,1 */
-    /* ieq r4,r1,41 */
-    /* call r0,expect_true(),r3 */
+    /* Test pos */
+    say "Test pos"
+    load r3,3  /* there are 3 arguments */
+    load r4,"!"
+    load r5,"The quick brown fox jumps over the lazy(!) dog"
+    load r6,1   /* offset to search */
+    call r1,pos(),r3
+    load r3,1
+    ieq r4,r1,41
+    call r0,expect_true(),r3
 
-    /* /\* we miss pos with one argument *\/ */
+    /* we miss pos with one argument */
     
-    /* /\* Test Lastpos *\/ */
-    /* say "Test lastpos" */
-    /* load r3,2 /\* there are 2 arguments *\/ */
-    /* load r4,"!" */
-    /* load r5,"The quick brown fox jumps over the lazy ! dog" */
-    /* call r1,lastpos(),r3 */
-    /* load r3,1 */
-    /* ieq r4,r1,41 */
-    /* call r0,expect_true(),r3 */
+    /* Test Lastpos */
+    say "Test lastpos"
+    load r3,2 /* there are 2 arguments */
+    load r4,"!"
+    load r5,"The quick brown fox jumps over the lazy ! dog"
+    call r1,lastpos(),r3
+    load r3,1
+    ieq r4,r1,41
+    call r0,expect_true(),r3
 
     /* finished; print the results */
     call print_results()
