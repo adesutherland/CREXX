@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+I0134 - Imported procedure name as "func.func"- temp workaround
 F0034 - Optional Procedure Arguments
 F0023 - Show hex of instructions in disassembler
 F0030 - Fixes, BIF Functions, RXAS Instructions and RXVM Optimisations

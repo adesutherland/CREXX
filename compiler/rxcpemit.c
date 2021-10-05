@@ -799,9 +799,9 @@ static walker_result emit_walker(walker_direction direction,
                     /* A declaration - external */
                     snprintf(temp1, buf_len, ""
                                              "\n"
-                                             "%.*s() .expose=global.%.*s\n", /* TODO */
-                             node->node_string_length,
-                             node->node_string,
+                                             "%.*s() .expose=%.*s.%.*s\n", /* TODO */
+                             node->node_string_length, node->node_string,
+                             node->node_string_length, node->node_string,
                              node->node_string_length, node->node_string);
                     node->output = output_fs(temp1);
                 }
