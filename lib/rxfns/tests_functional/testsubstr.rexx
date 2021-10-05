@@ -17,18 +17,16 @@ if substr("foobar",3,6,'*') \=   "obar**"  then say 'failed in test          7 '
 if substr("foobar",6,3) \=   "r  "    then say 'failed in test          8 '
 if substr("foobar",8,3) \=   "   "    then say 'failed in test          9 '
 if substr('1234567890',5) \= '567890' then say 'failed in test          10 '
-say '|'substr('1234567890',5)'|'
+/* say '|'substr('1234567890',5)'|' */
 if substr('1234567890',6,6,'.') \= '67890.' then say 'failed in test          11 '
 if substr('abc',2,4,'.') \= 'bc..'    then say 'failed in test          12 '
 if substr('abcdefgh',1,2,'.') \= 'ab' then say 'failed in test          13 '
 if substr('abcdefgh',2,3,'é') \= 'bcd'then say 'failed in test          14 '
-
-
-say substr("René Vincent Jansen",1,4,".")
-say substr("René Vincent Jansen",6,7,"")
-say substr("12345678",5,6,"é")
-say substr("12345678",10,6,"é")
-say substr("12345678",10,6,"éé")
+if substr("René Vincent Jansen",1,4,".") \= 'René' then say 'failed in test          15 '
+if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then say 'failed in test          16 '
+if substr("12345678",5,6,"é") \= '5678éé' then say 'failed in test          17 '
+/* say substr("12345678",10,6,"é") */
+/* if substr("12345678",10,6,"éé") \= 'éééééé' then say 'need exceptions for this' */
 
 say "SUBSTR OK"
 
