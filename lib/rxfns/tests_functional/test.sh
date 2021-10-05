@@ -1,4 +1,4 @@
-rxvm testsubstr ../rexx/substr ../rexx/length ../rexx/raise
-rxvm testsubstr ../rxas/substr ../rxas/length
-rxvm testsubstr ../rxas/oldsubstr ../rxas/length
+rxvm tsubstr ../rexx/substr ../rexx/length ../rexx/raise
+rxvm tsubstr ../rxas/substr ../rxas/length
+rxvm tsubstr ../rxas/oldsubstr ../rxas/length
 
