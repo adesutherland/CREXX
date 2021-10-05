@@ -106,11 +106,11 @@ instruction ::= NEWLINE.
 instruction ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid label, opcode or directive");}
 
 // operation/instruction
-instr ::= ID(IN). {rxasgen0(context,IN);}
-instr ::= ID(IN) operand(OP1). {rxasgen1(context,IN,OP1);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxasgen2(context,IN,OP1,OP2);}
+instr ::= ID(IN). {rxasque0(context,IN);}
+instr ::= ID(IN) operand(OP1). {rxasque1(context,IN,OP1);}
+instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxasque2(context,IN,OP1,OP2);}
 instr ::= ID(IN) operand(OP1) COMMA operand(OP2) COMMA operand(OP3).
-          {rxasgen3(context,IN,OP1,OP2,OP3);}
+          {rxasque3(context,IN,OP1,OP2,OP3);}
 
 // instr error messages
 instr ::= ID ANYTHING(T) error. {err_at(context, T, "expecting {operand} or {newline}");}

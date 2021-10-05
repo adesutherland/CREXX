@@ -12,6 +12,17 @@ typedef struct Error Error;
 typedef struct bin_space bin_space;
 struct avl_tree_node;
 
+/* Keyhole Optimiser */
+#define OPTIMISER_QUEUE_SIZE 10
+
+/* Keyhole Queue Item  */
+typedef struct instruction_queue {
+    Token *instrToken;
+    Token *operand1Token;
+    Token *operand2Token;
+    Token *operand3Token;
+} instruction_queue;
+
 /* cREXX Instruction Coding */
 #pragma pack(push,4)
 typedef struct instruction_coding {
@@ -93,6 +104,7 @@ typedef struct expose_proc_constant {
 
 typedef struct Assembler_Context {
     char *top, *cursor, *marker, *ctxmarker, *linestart;
+    int optimise;
     int line;
     int token_counter;
     Token* token_head;
@@ -108,6 +120,8 @@ typedef struct Assembler_Context {
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
     char *extern_regs;
+    instruction_queue *optimiser_queue;
+    size_t optimiser_queue_items;
 } Assembler_Context;
 
 /* Token Functions */

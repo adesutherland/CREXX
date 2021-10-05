@@ -466,7 +466,7 @@ START_OF_INSTRUCTIONS ;
             p2 = PROC_OP(2); /* This is the target */
             v3 = op3R;
             /* Clear target return value register */
-            free_value(current_frame, v1);
+            free_value(current_frame, v1); /* TODO Not needed? */
             op1R = 0;
             /* New stackframe */
             current_frame =

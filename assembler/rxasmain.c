@@ -22,7 +22,8 @@ static void help() {
         "  -i              Print Instructions\n"
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
-        "  -o output_file  Binary Output File\n";
+        "  -o output_file  Binary Output File\n"
+        "  -n              No Optimising\n";
 
     printf("%s",helpMessage);
 }
@@ -75,6 +76,7 @@ int main(int argc, char *argv[]) {
     int debug_mode = 0;
     int i;
     bin_space *pgm;
+    int optimise = 1;
 
     // Load Instruction Database
     init_ops();
@@ -127,6 +129,10 @@ int main(int argc, char *argv[]) {
             case 'I': /* Instructions */
                 prt_ops();
                 exit(0);
+
+            case 'N': /* No optimisation */
+                optimise = 0;
+                break;
 
             case 'D': /* Debug Mode */
                 debug_mode = 1;
@@ -183,6 +189,9 @@ int main(int argc, char *argv[]) {
     scanner.token_counter = 0;
     scanner.error_tail = 0;
     scanner.severity = 0;
+    scanner.optimise = optimise;
+    scanner.optimiser_queue = calloc(sizeof(instruction_queue),OPTIMISER_QUEUE_SIZE);
+    scanner.optimiser_queue_items = 0;
 
     scanner.binary.globals = 0;
     scanner.binary.const_size = 0;
@@ -232,6 +241,9 @@ int main(int argc, char *argv[]) {
         Parse(parser, token_type, token, &scanner);
     }
 
+    /* Flush the Keyhole Optimiser Queue */
+    flushopt(&scanner);
+
     /* Backpatch and check references */
     backptch(&scanner);
 
@@ -270,6 +282,9 @@ int main(int argc, char *argv[]) {
     /* Deallocate Binary */
     free(scanner.binary.binary);
     free(scanner.binary.const_pool);
+
+    /* Free Optimiser Queue */
+    free(scanner.optimiser_queue);
 
     /* Free Assembler Work Data */
     freeasbl(&scanner);

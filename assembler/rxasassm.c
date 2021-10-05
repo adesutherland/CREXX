@@ -209,6 +209,10 @@ static void add_extern_index(Assembler_Context *context, Token *token) {
 
 /* Set the number of globals */
 void rxassetg(Assembler_Context *context, Token *globalsToken) {
+
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
+
     if (context->binary.globals)
         err_at(context, globalsToken, "duplicate .globals directive (ignored)");
     else {
@@ -222,6 +226,9 @@ void rxasexre(Assembler_Context *context, Token *registerToken,
               Token *exposeToken) {
     size_t entry_size, entry_index;
     expose_reg_constant *centry;
+
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
 
     if (registerToken->token_value.integer >= context->binary.globals)
         err_at(context, registerToken, "global register number bigger than the number of globals");
@@ -545,6 +552,23 @@ void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
     }
 }
 
+/** Generate code for an instruction with up to three operands
+ *  NULLS in the operandToken's are used to detect the number of operands */
+void rxasgen(Assembler_Context *context, Token *instrToken, Token *operand1Token,
+              Token *operand2Token, Token *operand3Token) {
+
+    Instruction *inst=validate_instruction(context, instrToken,
+                                           operand1Token?token_to_operand_type(operand1Token->token_type):0,
+                                           operand2Token?token_to_operand_type(operand2Token->token_type):0,
+                                           operand3Token?token_to_operand_type(operand3Token->token_type):0);
+    if (inst) {
+        gen_instr(context, inst);
+        if (operand1Token) gen_operand(context, operand1Token);
+        if (operand2Token) gen_operand(context, operand2Token);
+        if (operand3Token) gen_operand(context, operand3Token);
+    }
+}
+
 static size_t define_proc(Assembler_Context *context, Token *funcToken) {
     proc_constant *centry;
     size_t entry_index;
@@ -603,6 +627,9 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
     proc_constant *centry;
     size_t entry_index;
 
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
+
     entry_index = define_proc(context, funcToken);
     centry = (proc_constant*)(context->binary.const_pool + entry_index);
 
@@ -618,6 +645,9 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
 void rxaslabl(Assembler_Context *context, Token *labelToken) {
     struct backpatching *ref_header;
     size_t tree_index;
+
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
 
     /* Have we come across this symbol yet? */
     if (src_node(context->label_constants_tree,
@@ -654,6 +684,9 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
     expose_proc_constant *centry;
+
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
 
     /* Create Procedure Entry */
     pentry_index = define_proc(context, funcToken);
@@ -696,6 +729,9 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
     expose_proc_constant *centry;
+
+    /* Flush Keyhole Optimiser Queue */
+    flushopt(context);
 
     /* Create Procedure Entry */
     pentry_index = define_proc(context, funcToken);
