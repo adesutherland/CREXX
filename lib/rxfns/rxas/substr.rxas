@@ -3,8 +3,8 @@
  * rudimentary error checking
  */
 .globals=0
-length()  .expose=global.length          
-substr()  .locals=20 .expose=global.substr
+length()  .expose=length.length          
+substr()  .locals=20 .expose=substr.substr
     /* string    = arg1    */
     /* n (start) = arg2    */
     load  r8," "        /* the default pad character */
@@ -40,9 +40,9 @@ argok:
     copy  r18,r1 /* and it is the string in r1 */
     call  r6,length(),r17 /* what is the length of the string arg */
     /* now loop characters from a1 from start pos in a2 to (length) r1 */
-    ieq r11,r5,0 /* if req length = 0 */
-    brf substr,r11
-    copy r5,r6   /* req length := maxlength */
+    ieq   r11,r5,0 /* if req length = 0 */
+    brf   substr,r11
+    copy  r5,r6   /* req length := maxlength */
 substr:
     iadd r12,r4,r5      /* max offset length=offset+requested length */
     dec  r12

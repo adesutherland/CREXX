@@ -1,6 +1,6 @@
 /* reverse */
           .globals=0
-lastpos() .locals=13 .expose=global.lastpos
+lastpos() .locals=13 .expose=lastpos.lastpos
    copy r1,a2          /* source string      */
    strlen r3,r1        /* length of source   */
    dec  r3

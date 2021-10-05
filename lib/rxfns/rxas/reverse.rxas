@@ -1,6 +1,6 @@
 /* reverse */
           .globals=0
-reverse() .locals=4 .expose=global.reverse
+reverse() .locals=4 .expose=reverse.reverse
    copy   r1,a1         /* string to reverse  */
    strlen r2,r1        /* length             */
    dec    r2

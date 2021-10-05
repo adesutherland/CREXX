@@ -3,7 +3,7 @@
  * rudimentary error checking
  */
           .globals=0
-copies()  .locals=8 .expose=global.copies
+copies()  .locals=8 .expose=copies.copies
           ieq   r1,a0,2 /* copies needs two args */
           brf   wrongargs,r1
           ieq   r1,a2,0

@@ -4,8 +4,8 @@
  */
 
           .globals=0
-length()  .expose=global.length          
-substr()  .locals=18 .expose=global.substr
+length()  .expose=length.length          
+substr()  .locals=18 .expose=substr.substr
     /* string    = arg1    */
     /* n (start) = arg2    */
     load  r7," " /* the default pad character */

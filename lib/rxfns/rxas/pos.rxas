@@ -1,6 +1,6 @@
 /* reverse */
           .globals=0
-pos() .locals=13 .expose=global.pos
+pos() .locals=13 .expose=pos.pos
    copy r1,a2          /* source string      */
    strlen r2,r1        /* length             */
    copy r3,a3          /* outer offset       */

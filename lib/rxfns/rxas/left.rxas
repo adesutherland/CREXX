@@ -6,7 +6,7 @@
           .globals=0
 substr()  .expose=global.substr
           
-left()    .locals=8 .expose=global.left
+left()    .locals=8 .expose=left.left
     dec a2
     inc a0 			/* we pass on one more than we got */
     move r3,a0  		/* there are a0 arguments          */

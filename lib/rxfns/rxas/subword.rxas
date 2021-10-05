@@ -1,6 +1,6 @@
 /* wordindx */
           .globals=0
-subword() .locals=12 .expose=global.subword
+subword() .locals=12 .expose=subword.subword
    copy  r1,a1
    copy  r2,a2         /* word number to find   */
    load  r3,0          /* offset in string      */
