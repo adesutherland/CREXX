@@ -4,12 +4,10 @@
  */
 
           .globals=0
-substr()  .expose=global.substr
+substr()  .expose=substr.substr
           
-left()    .locals=8 .expose=left.left
-    dec a2
-    inc a0 			/* we pass on one more than we got */
-    move r3,a0  		/* there are a0 arguments          */
+left()    .locals=10 .expose=left.left
+    load r3,4  		        /* there are 4 arguments           */
     move r4,a1 			/* the string                      */
     load r5,1 			/* second argument, startpos == 1  */
     move r6,a2 			/* third argument, length          */

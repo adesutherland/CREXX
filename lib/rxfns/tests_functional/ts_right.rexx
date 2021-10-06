@@ -29,5 +29,5 @@ say "RIGHT OK"
 
 /* function prototype */
 right: procedure = .string
-arg string1 = .string, start = .int, pad = ' '
+arg string1 = .string, length = .int, pad = ' '
 
