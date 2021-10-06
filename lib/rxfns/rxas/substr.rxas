@@ -2,12 +2,14 @@
  * rexx SUBSTR bif in rxas. Uses length.rxas
  * rudimentary error checking
  */
-.globals=0
+
+          .globals=0
 length()  .expose=length.length          
-substr()  .locals=20 .expose=substr.substr
+substr()  .locals=18 .expose=substr.substr
     /* string    = arg1    */
     /* n (start) = arg2    */
-    load  r8," "        /* the default pad character */
+    load  r7," " /* the default pad character */
+    load  r6,0   /* the length field initialized to 0 */
     /* here we need to substract the left-out optionals from the argcount */    
     brtpandt havethree,a3,1
     isub  a0,a0,1
@@ -16,52 +18,60 @@ havethree:
     isub  a0,a0,1
 havefour:   
     /* now we have the correct number */
-    ilt   r11,a0,2      /* less than 2 arguments     */
-    brt   wrongargs,r11
-    igt   r11,a0,4      /* more than 4 arguments     */
-    brt   wrongargs,r11
-    ieq   r11,a0,2
-    brt   argok,r11     /* we have two arguments     */
+    ilt   r1,a0,2 /* less than 2 arguments */
+    brt   wrongargs,r1
+    igt   r1,a0,4 /* more than 4 arguments */
+    brt   wrongargs,r1
+    ieq   r1,a0,2
+    brt   doit,r1 /* we have two arguments */
     /* we have 3 or 4 arguments */
-    copy  r5,a3         /* save length field         */
-    ieq   r11,a0,4
-    brf   argok,r11 /* we do not have 4 args, no pad */
-    copy  r8,a4  /* we have pad, replace default one */
-    br    argok
+    copy  r6,a3 /* save length field in r6*/
+    ieq   r1,a0,4
+    brf   doit,r1 /* we do not have 4 arguments, no pad */
+    copy  r7,a4  /* we have a pad, replace the default one */
+    br    doit
 wrongargs:
     /* we are here if there are not enough, or too many arguments */
     say "substr needs at least two and at most 4 arguments"
     exit
-argok:
-    copy  r4,a2
+doit:
     /* we want to know the length of the string argument */
-    copy  r1,a1
-    load  r17,1 /* there is one argument for the call to length() */
-    copy  r18,r1 /* and it is the string in r1 */
-    call  r6,length(),r17 /* what is the length of the string arg */
-    /* now loop characters from a1 from start pos in a2 to (length) r1 */
-    ieq   r11,r5,0 /* if req length = 0 */
-    brf   substr,r11
-    copy  r5,r6   /* req length := maxlength */
-substr:
-    iadd r12,r4,r5      /* max offset length=offset+requested length */
-    dec  r12
-    igte r11,r6,r12     /* requested length <= maxlength?     */
-    brt  lenok,r11      /* if true skip padding size check    */
-    isub r7,r12,r6      /* calculate padding size             */
-    isub r5,r5,r7       /* reduce to maxlen                   */
-lenok:
-    dec  r4
+    load  r3,1 /* there is one argument for the call to length() */
+    copy  r4,a1 /* and it is the string in a1 */
+    call  r10,length(),r3 /* what is the length of the string arg */
+    copy  r12,r10 /* the preliminary loop counter is the strlength */
+    dec   a2
+    /* if r6 is nonzero, we have a length argument, a2:=r8+1 */
+    igt   r1,r6,0
+    brf   skip,r1
+    copy  r12,r6 /* the final loop counter is the length argument */
+    iadd  r12,r12,a2 /* adapt for start position */
+skip:    
+    /* now loop characters from a1 from start pos in a2 to length r1 */
+    load  r14,"" /* we are going to return this so initialize it */
+    dec r10        
 loop:
-    concchar r14,r1,r4
-    bct   loop,r5,r4    /* loop inc r4 and dec r5  */
-    ieq  r11,r7,0       /* check if we need to pad */
-    brt  end,r11        /* we do not               */
+    /* a2: int argument 2, start position */
+    /* r4: string argument1, string */
+    /* r7: the pad character */
+    /* r10:int length of arg */
+    /* r12: loop counter */
+    /* r13: receive integer of r4[a2] */
+    /* r14: return result from function */
+    strchar r13,r4,a2
+    appendchar r14,r13 
+    inc   a2 /* increment loop index */
+    igte  r11,a2,r12
+    brt   endloop,r11 /* jump out of the loop */
+    igt   r16,a2,r10 /* are we past end of string ? */
+    brt   pad,r16 
+    br    loop
 pad:
-    concat r14,r14,r8   /* concat pad in r8 to r14 */
-    bct   pad,r7        /* loop back until r7 = 0  */
-end:
+    concat r14,r14,r7  /* we are past length, cat pad */
+    inc   a2
+    igte  r11,a2,r12
+    brt   endloop,r11 /* jump out of the loop */
+    br    pad
+Endloop:
     ret   r14
     exit
-                
-    
