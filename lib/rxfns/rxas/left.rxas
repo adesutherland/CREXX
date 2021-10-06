@@ -7,10 +7,11 @@
 substr()  .expose=substr.substr
           
 left()    .locals=10 .expose=left.left
+    dec  a2
     load r3,4  		        /* there are 4 arguments           */
-    move r4,a1 			/* the string                      */
+    swap r4,a1 			/* the string                      */
     load r5,1 			/* second argument, startpos == 1  */
-    move r6,a2 			/* third argument, length          */
-    move r7,a3 			/* fourth argument, pad            */
+    swap r6,a2 			/* third argument, length          */
+    swap r7,a3 			/* fourth argument, pad            */
     call r1,substr(),r3		/* call substr                     */
     ret r1
