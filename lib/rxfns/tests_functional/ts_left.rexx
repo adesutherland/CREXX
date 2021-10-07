@@ -2,9 +2,7 @@
 options levelb
 /* These from TRL */
 say "Look for LEFT OK"
-say '|'left('abc d',8)'|'
 if left('abc d',8) \= 'abc d   '  then say 'failed in test          1 '
-say '|'left('abc d',8,'.')'|'
 if left('abc d',8,'.') \= 'abc d...'  then say 'failed in test          2 '
 if left('abc  def',7) \= 'abc  de'  then say 'failed in test          3 '
 /* These from Mark Hessling. */

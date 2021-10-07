@@ -6,7 +6,10 @@
           .globals=0
 substr()  .expose=substr.substr
           
-left()    .locals=10 .expose=left.left
+left()    .locals=10 .expose=left.left 
+    brtpandt havepad,a3,1
+    load a3," "
+havepad:
     dec  r2
     load r3,4  		        /* there are 4 arguments           */
     swap r4,a1 			/* the string                      */
