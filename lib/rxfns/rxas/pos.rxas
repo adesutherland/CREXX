@@ -4,9 +4,12 @@ pos() .locals=13 .expose=pos.pos
     brtpandt havestart,a3,1
     load a3,1
     isub a0,a0,1
+    load r12,0          /* load default return position */
 havestart:
     copy r1,a2          /* source string      */
     strlen r2,r1        /* length             */
+    ieq  r11,r2,0       /* =0                 */
+    brt  return,r11
     copy r3,a3          /* outer offset       */
     dec  r3             /* make pos to offset */
     ilt  r11,r3,0       /* <0                 */
@@ -15,9 +18,11 @@ havestart:
 offok:
     isub r2,r2,r3       /* length - offset    */
     copy r4,a1          /* search string      */
-    strlen r10,r4
+    strlen r10,r4       /* length of needle   */
     dec r10             /* -1 for BCT         */
-outerloop:
+    ilt  r11,r10,0      /* <0                 */
+    brt  return,r11
+ outerloop:
     strchar r8,r1,r3    /* load source char    */
     copy r5,r10         /* length search string*/
     load r6,0           /* inner offset        */
