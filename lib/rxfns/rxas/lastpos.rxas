@@ -4,6 +4,7 @@ lastpos() .locals=13 .expose=lastpos.lastpos
     brtpandt havestart,a3,1
     load a3,1
     isub a0,a0,1
+    load r12,0
 havestart:
     copy r1,a2          /* source string      */
     strlen r3,r1        /* length of source   */
