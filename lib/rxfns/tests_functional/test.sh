@@ -6,3 +6,6 @@ rxvm ts_length ../rexx/length
 rxvm ts_length ../rxas/length
 rxvm ts_pos ../rxas/pos
 rxvm tscopies ../rxas/copies
+rxvm tslastpos ../rxas/lastpos
+rxvm tsword ../rxas/word
+
