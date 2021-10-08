@@ -39,6 +39,7 @@ doit:
     load  r3,1 /* there is one argument for the call to length() */
     copy  r4,a1 /* and it is the string in a1 */
     call  r10,length(),r3 /* what is the length of the string arg */
+    itos r10
     copy  r12,r10 /* the preliminary loop counter is the strlength */
     dec   a2
     /* if r6 is nonzero, we have a length argument, a2:=r8+1 */
@@ -46,7 +47,9 @@ doit:
     brf   skip,r1
     copy  r12,r6 /* the final loop counter is the length argument */
     iadd  r12,r12,a2 /* adapt for start position */
-skip:    
+skip:
+    igt   r17,a2,r10 /* if the start pos is greater than string length */
+    brt   pad,r17
     /* now loop characters from a1 from start pos in a2 to length r1 */
     load  r14,"" /* we are going to return this so initialize it */
     dec r10        
