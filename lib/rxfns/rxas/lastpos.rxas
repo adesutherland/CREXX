@@ -1,39 +1,43 @@
-/* reverse */
+/* lastpos */
           .globals=0
 lastpos() .locals=13 .expose=lastpos.lastpos
-   copy r1,a2          /* source string      */
-   strlen r3,r1        /* length of source   */
-   dec  r3
-   copy r4,a1          /* search string      */
-   strlen r10,r4
-   dec r10             /* -1 for BCT         */
+    brtpandt havestart,a3,1
+    load a3,1
+    isub a0,a0,1
+havestart:
+    copy r1,a2          /* source string      */
+    strlen r3,r1        /* length of source   */
+    dec  r3
+    copy r4,a1          /* search string      */
+    strlen r10,r4
+    dec r10             /* -1 for BCT         */
 outerloop:
-   STRCHAR r8,r1,r3    /* load source char    */
-   copy r5,r10         /* length search string*/
-   copy r6,r10         /* inner offset        */
+    strchar r8,r1,r3    /* load source char    */
+    copy r5,r10         /* length search string*/
+    copy r6,r10         /* inner offset        */
  /* test first search char  */
-   STRCHAR r9,r4,r6
-   ieq r11,r8,r9       /* is it not equal, goto next source char */
-   brf next,r11
-   copy r12,r3         /* it is equal, save begin pos */
-   ieq r11,r6,0        /* if remaining length is 0, return now*/
-   brt found,r11
-   dec r6              /* look into next search char  */
+    strchar r9,r4,r6
+    ieq r11,r8,r9       /* is it not equal, goto next source char */
+    brf next,r11
+    copy r12,r3         /* it is equal, save begin pos */
+    ieq r11,r6,0        /* if remaining length is 0, return now*/
+    brt found,r11
+    dec r6              /* look into next search char  */
 innerloop:
 /* and test all other search char  */
-   dec r3              /* look into next source char  */
-   STRCHAR r8,r1,r3    /* fetch source char           */
-   STRCHAR r9,r4,r6    /* fetch search char           */
-   ieq r11,r8,r9       /* are they equal ?            */
-   brf next,r11        /* branch into outer loop      */
-   bctnm innerloop,r6  /* continue with next chars    */
-   br  found
-   copy r3,r12         /* re position to original source char */
+    dec r3              /* look into next source char  */
+    strchar r8,r1,r3    /* fetch source char           */
+    strchar r9,r4,r6    /* fetch search char           */
+    ieq r11,r8,r9       /* are they equal ?            */
+    brf next,r11        /* branch into outer loop      */
+    bctnm innerloop,r6  /* continue with next chars    */
+    br  found
+    copy r3,r12         /* re position to original source char */
 next:
     bctnm outerloop,r3 /* outer loop */
     load r3,0          /* string not found */
     br return
 found:
-    inc R3             /* +1 to make offset to position */
-return:
+    inc  r3             /* +1 to make offset to position */
+return: 
     ret r3
