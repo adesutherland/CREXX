@@ -9,7 +9,7 @@ length()  .expose=length.length
 substr()  .expose=substr.substr
 
 right()   .locals=15 .expose=right.right
-    ieq  r7,a2,0
+    ieq  r7,a2,0            /* return empty when length = 0 */
     brt  return_empty,r7
     copy r9,a1          
     /* load the pad, we need it for non-substr processing */

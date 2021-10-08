@@ -7,6 +7,8 @@
 substr()  .expose=substr.substr
           
 left()    .locals=10 .expose=left.left 
+    ieq  r7,a2,0   /* return empty when length = 0 */
+    brt  return_empty,r7
     brtpandt havepad,a3,1
     load a3," "
 havepad:
@@ -21,3 +23,5 @@ havepad:
     settp r7,1
     call r1,substr(),r3		/* call substr                     */
     ret r1
+return_empty:
+    ret ""
