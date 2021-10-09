@@ -981,11 +981,8 @@ static walker_result emit_walker(walker_direction direction,
                      * preserving */
                     if (!n->is_ref_arg &&
                         (n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
-                        if (!n->symbol) {
-                            /* This means we will settp to REGTP_NOTSYM */
-                            k = 1;
-                            j = REGTP_NOTSYM;
-                        }
+                        k = 1; /* This means we will settp */
+                        if (!n->symbol) j = REGTP_NOTSYM; /* Mark it as not a symbol */
                     }
 
                     /* Optional arguments need to use the settp flag */
