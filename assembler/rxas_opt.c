@@ -5,10 +5,50 @@
 #include "rxasassm.h"
 #include "string.h"
 
-/*
-void rxasgen(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-             Token *operand2Token, Token *operand3Token)
- */
+typedef struct rule {
+    char in_out;
+    char* instruction;
+    char optype1;
+    int opnum1;
+    char optype2;
+    int opnum2;
+    char optype3;
+    int opnum3;
+} rule;
+
+rule rules[] =
+        {
+                {'i', "swap", 'r', 0, 'r', 1, 0, 0},
+                {'i', "swap", 'r', 0, 'r', 1, 0, 0},
+                {'i', "sconcat", 'r', 0, 'r', 0, 'r', 1},
+                {'o', "sappend", 'r', 0, 'r', 1, 0, 0},
+
+                /* End of rules marker */
+                {0, 0, 0, 0, 0, 0, 0, 0}
+        };
+
+static rule* optimise_rule(Assembler_Context *context, rule *r ) {
+    char *inst = r->instruction;
+    size_t i;
+
+    for (i=0; i<context->optimiser_queue_items; i++) {
+        if (!strcmp((char*)(context->optimiser_queue[i].instrToken->token_value.string), inst)) {
+           /* printf("inst=%s\n", inst); */
+
+
+        }
+    }
+
+    while (r->in_out && !strcmp(r->instruction,inst)) r++;
+    return r;
+}
+
+static void optimise(Assembler_Context *context) {
+    rule *r = &rules[0];
+
+    while (r->in_out)
+        r = optimise_rule(context, r);
+}
 
 static void queue_instruction(Assembler_Context *context, Token *instrToken, Token *operand1Token,
 Token *operand2Token, Token *operand3Token) {
@@ -34,6 +74,9 @@ Token *operand2Token, Token *operand3Token) {
     context->optimiser_queue[context->optimiser_queue_items].operand2Token = operand2Token;
     context->optimiser_queue[context->optimiser_queue_items].operand3Token = operand3Token;
     context->optimiser_queue_items++;
+
+    /* Optimise */
+    optimise(context);
 }
 
 /** Queue code for the keyhole optimiser */
