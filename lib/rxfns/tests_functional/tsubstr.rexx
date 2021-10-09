@@ -31,8 +31,13 @@ if substr("12345678",5,6,"é") \= '5678éé' then say 'failed in test          1
 say "SUBSTR OK"
 
 return
+
+/* Length() Procedure - needed for the substr declaration */
+length: procedure = .int
+  arg string1 = .string
+
 /* Substr() Procedure */
 substr: procedure = .string
-arg string1 = .string, start = .int, length = 0, pad = ' '
+  arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '
 
 
