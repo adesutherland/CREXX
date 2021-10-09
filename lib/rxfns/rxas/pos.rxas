@@ -4,14 +4,14 @@ pos() .locals=13 .expose=pos.pos
     brtpandt havestart,a3,1
     load a3,1
     isub a0,a0,1
-    load r12,0          /* load default return position */
 havestart:
     copy r1,a2          /* source string      */
     strlen r2,r1        /* length             */
     ieq  r11,r2,0       /* =0                 */
-    brt  return,r11
+    brt  empty,r11      /* empty haystack     */
     copy r3,a3          /* outer offset       */
     dec  r3             /* make pos to offset */
+    copy r12,r3         /* keep original position */
     ilt  r11,r3,0       /* <0                 */
     brf  offok,r11
     load r3,0
@@ -21,7 +21,7 @@ offok:
     strlen r10,r4       /* length of needle   */
     dec r10             /* -1 for BCT         */
     ilt  r11,r10,0      /* <0                 */
-    brt  return,r11
+    brt  empty,r11
  outerloop:
     strchar r8,r1,r3    /* load source char    */
     copy r5,r10         /* length search string*/
@@ -45,6 +45,7 @@ innerloop:
     copy r3,r12        /* re position to original source char */
 next:
     bct outerloop,r2,r3 /* outer loop */
+empty:
     load r12,0         /* string not found */
     br return
 found:
