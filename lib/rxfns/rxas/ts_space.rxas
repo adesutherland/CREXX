@@ -1,0 +1,35 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : ts_space
+ * BUILT                  : 2021-10-11 10:34:23
+ */
+
+.globals=0
+
+main() .locals=6 .expose=ts_space.main
+   * Line 3: say "test Space bif"
+   say "test Space bif"
+   * Line 4: say space(x,5,'.!#')
+   * Line 4: space(x,5,'.!#')
+   load r1,3
+   load r2,"the quick brown fox jumps over the lazy dog"
+   settp r2,0
+   load r3,5
+   settp r3,1
+   load r4,".!#"
+   settp r4,3
+   call r5,space(),r1
+   say r5
+   * Line 5: say space(x)
+   * Line 5: space(x)
+   load r2,3
+   load r3,"the quick brown fox jumps over the lazy dog"
+   settp r3,0
+   settp r4,0
+   settp r5,2
+   call r1,space(),r2
+   say r1
+   * Line 6: return
+   ret 0
+
+space() .expose=space.space
