@@ -751,6 +751,8 @@ static walker_result emit_walker(walker_direction direction,
     int flag;
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
+    char ret_type;
+    int ret_num;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -959,6 +961,10 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case FUNCTION:
+                /* Return Registers */
+                ret_type = node->register_type;
+                ret_num = node->register_num;
+
                 /* Comment */
                 get_comment(comment, node, NULL);
                 node->output = output_fs(comment);
@@ -1006,6 +1012,13 @@ static walker_result emit_walker(walker_direction direction,
                         snprintf(temp1, buf_len, "   swap r%d,%c%d\n",
                                  i, n->register_type, n->register_num);
                         output_append_text(n->output, temp1);
+
+                        /* Fix up return register so its swapped correctly */
+                        if (node->register_type == n->register_type &&
+                            node->register_num == n->register_num) {
+                            ret_type = 'r';
+                            ret_num = (int)i;
+                        }
                     }
 
                     if (n->output) output_append(node->output, n->output);
@@ -1014,7 +1027,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Actual Call */
                 snprintf(temp1, buf_len, "   call %c%d,%.*s(),r%d\n",
-                         node->register_type, node->register_num,
+                         ret_type, ret_num,
                          node->node_string_length, node->node_string,
                          node->additional_registers);
                 output_append_text(node->output, temp1);

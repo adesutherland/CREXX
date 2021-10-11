@@ -84,6 +84,15 @@ static RX_INLINE value* value_nullstring_f(void* parent, char *initial_value) {
     return this;
 }
 
+/* Clears a register */
+static RX_INLINE void clear_reg(value* reg) {
+    void* parent = reg->owner;
+    if (reg->string_value) free(reg->string_value);
+    memset(reg, 0, sizeof(value));
+    reg->owner = parent;
+    return;
+}
+
 static RX_INLINE void free_value(void* parent, value *v) {
     if (v && v->owner == parent) {
         if (v->string_value) free(v->string_value);
