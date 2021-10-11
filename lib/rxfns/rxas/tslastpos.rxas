@@ -1,0 +1,267 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : tslastpos
+ * BUILT                  : 2021-10-11 12:12:32
+ */
+
+.globals=0
+
+main() .locals=6 .expose=tslastpos.main
+   * Line 2: say "Look for LASTPOS OK"
+   say "Look for LASTPOS OK"
+   * Line 4: {IF} lastpos(' ','abc def ghi') \= 8
+   * Line 4: lastpos(' ','abc def ghi')
+   load r1,3
+   load r2," "
+   settp r2,2
+   load r3,"abc def ghi"
+   settp r3,2
+   settp r4,0
+   call r5,lastpos(),r1
+   ine r5,r5,8
+   brf l13,r5
+   * Line 4: {THEN}
+   * Line 4: say 'failed in test 1 '
+   say "failed in test 1 "
+l13:
+   * Line 5: {IF} lastpos(' ','abcdefghi') \= 0
+   * Line 5: lastpos(' ','abcdefghi')
+   load r2,3
+   load r3," "
+   settp r3,2
+   load r4,"abcdefghi"
+   settp r4,2
+   settp r5,0
+   call r1,lastpos(),r2
+   ine r5,r1,0
+   brf l21,r5
+   * Line 5: {THEN}
+   * Line 5: say 'failed in test 2 '
+   say "failed in test 2 "
+l21:
+   * Line 6: {IF} lastpos(' ','abc def ghi',7) \= 4
+   * Line 6: lastpos(' ','abc def ghi',7)
+   load r2,3
+   load r3," "
+   settp r3,2
+   load r4,"abc def ghi"
+   settp r4,2
+   load r5,7
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,4
+   brf l30,r5
+   * Line 6: {THEN}
+   * Line 6: say 'failed in test 3 '
+   say "failed in test 3 "
+l30:
+   * Line 8: {IF} lastpos('b', 'abc abc') \= 6
+   * Line 8: lastpos('b', 'abc abc')
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   settp r5,0
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l38,r5
+   * Line 8: {THEN}
+   * Line 8: say 'failed in test 4 '
+   say "failed in test 4 "
+l38:
+   * Line 9: {IF} lastpos('b', 'abc abc',5) \= 2
+   * Line 9: lastpos('b', 'abc abc',5)
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,5
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,2
+   brf l47,r5
+   * Line 9: {THEN}
+   * Line 9: say 'failed in test 5 '
+   say "failed in test 5 "
+l47:
+   * Line 10: {IF} lastpos('b', 'abc abc',6) \= 6
+   * Line 10: lastpos('b', 'abc abc',6)
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,6
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l56,r5
+   * Line 10: {THEN}
+   * Line 10: say 'failed in test 6 '
+   say "failed in test 6 "
+l56:
+   * Line 11: {IF} lastpos('b', 'abc abc',7) \= 6
+   * Line 11: lastpos('b', 'abc abc',7)
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,7
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l65,r5
+   * Line 11: {THEN}
+   * Line 11: say 'failed in test 7 '
+   say "failed in test 7 "
+l65:
+   * Line 12: {IF} lastpos('x', 'abc abc') \= 0
+   * Line 12: lastpos('x', 'abc abc')
+   load r2,3
+   load r3,"x"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   settp r5,0
+   call r1,lastpos(),r2
+   ine r5,r1,0
+   brf l73,r5
+   * Line 12: {THEN}
+   * Line 12: say 'failed in test 8 '
+   say "failed in test 8 "
+l73:
+   * Line 13: {IF} lastpos('b', 'abc abc',20) \= 6
+   * Line 13: lastpos('b', 'abc abc',20)
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,20
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l82,r5
+   * Line 13: {THEN}
+   * Line 13: say 'failed in test 9 '
+   say "failed in test 9 "
+l82:
+   * Line 17: {IF} lastpos('b', 'abc abc',20) \= 6
+   * Line 17: lastpos('b', 'abc abc',20)
+   load r2,3
+   load r3,"b"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,20
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l91,r5
+   * Line 17: {THEN}
+   * Line 17: say 'failed in test 13 '
+   say "failed in test 13 "
+l91:
+   * Line 18: {IF} lastpos('bc', 'abc abc') \= 6
+   * Line 18: lastpos('bc', 'abc abc')
+   load r2,3
+   load r3,"bc"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   settp r5,0
+   call r1,lastpos(),r2
+   ine r5,r1,6
+   brf l99,r5
+   * Line 18: {THEN}
+   * Line 18: say 'failed in test 14 '
+   say "failed in test 14 "
+l99:
+   * Line 19: {IF} lastpos('bc ', 'abc abc',20) \= 2
+   * Line 19: lastpos('bc ', 'abc abc',20)
+   load r2,3
+   load r3,"bc "
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,20
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,2
+   brf l108,r5
+   * Line 19: {THEN}
+   * Line 19: say 'failed in test 15 '
+   say "failed in test 15 "
+l108:
+   * Line 20: {IF} lastpos('abc', 'abc abc',6) \= 1
+   * Line 20: lastpos('abc', 'abc abc',6)
+   load r2,3
+   load r3,"abc"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,6
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,1
+   brf l117,r5
+   * Line 20: {THEN}
+   * Line 20: say 'failed in test 16 '
+   say "failed in test 16 "
+l117:
+   * Line 21: {IF} lastpos('abc', 'abc abc') \= 5
+   * Line 21: lastpos('abc', 'abc abc')
+   load r2,3
+   load r3,"abc"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   settp r5,0
+   call r1,lastpos(),r2
+   ine r5,r1,5
+   brf l125,r5
+   * Line 21: {THEN}
+   * Line 21: say 'failed in test 17 '
+   say "failed in test 17 "
+l125:
+   * Line 22: {IF} lastpos('abc', 'abc abc',7) \= 5
+   * Line 22: lastpos('abc', 'abc abc',7)
+   load r2,3
+   load r3,"abc"
+   settp r3,2
+   load r4,"abc abc"
+   settp r4,2
+   load r5,7
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,5
+   brf l134,r5
+   * Line 22: {THEN}
+   * Line 22: say 'failed in test 18 '
+   say "failed in test 18 "
+l134:
+   * Line 24: {IF} lastpos('abc','abcdefabccdabcd',4) \= 7
+   * Line 24: lastpos('abc','abcdefabccdabcd',4)
+   load r2,3
+   load r3,"abc"
+   settp r3,2
+   load r4,"abcdefabccdabcd"
+   settp r4,2
+   load r5,4
+   settp r5,1
+   call r1,lastpos(),r2
+   ine r5,r1,7
+   brf l143,r5
+   * Line 24: {THEN}
+   * Line 24: say 'failed in test 19 '
+   say "failed in test 19 "
+l143:
+   * Line 25: say "LASTPOS OK"
+   say "LASTPOS OK"
+   * Line 25: 
+   ret 0
+
+lastpos() .expose=lastpos.lastpos
