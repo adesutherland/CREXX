@@ -44,10 +44,8 @@ innerloop:
     br  found
     copy r3,r12         /* re position to original source char */
 next:
-    bctnm outerloop,r3 /* outer loop */
-    load r3,0          /* string not found */
-    br return
+    bctnm outerloop,r3  /* outer loop */
+    load r3,-1          /* string not found, will be later 0 */
 found:
-    inc  r3             /* +1 to make offset to position */
-return:
+    inc r3              /* +1 to make offset to position */
     ret r3
