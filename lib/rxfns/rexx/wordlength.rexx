@@ -1,6 +1,6 @@
 /* rexx space adds n padding chars between words */
 options levelb
-wordlen: procedure = .string
+wordlength: procedure = .string
   arg expose string = .string, wordnum = .int
 wlen=0
 wordstr=word(string,wordnum)
