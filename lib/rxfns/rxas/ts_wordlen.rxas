@@ -1,0 +1,54 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : ts_wordlen
+ * BUILT                  : 2021-10-11 13:19:12
+ */
+
+.globals=0
+
+main() .locals=8 .expose=ts_wordlen.main
+   * Line 3: wrds=words(x)
+   * Line 3: words(x)
+   load r2,1
+   load r3,"the quick brown fox jumps over the lazy dog"
+   settp r3,0
+   call r1,words(),r2
+   * Line 4: {DO}
+   * Line 4: i=1
+   load r3,1
+   * Line 4: to wrds
+l26:
+   * Line 4: to wrds
+   igt r0,r3,r1
+   brt l16,r0
+   * Line 5: say word(x,i) wordlen(x,i)
+   * Line 5: word(x,i)
+   load r4,2
+   load r5,"the quick brown fox jumps over the lazy dog"
+   settp r5,0
+   swap r6,r3
+   call r2,word(),r4
+   swap r3,r6
+   * Line 5: wordlen(x,i)
+   load r4,2
+   load r5,"the quick brown fox jumps over the lazy dog"
+   settp r5,0
+   swap r6,r3
+   call r7,wordlen(),r4
+   swap r3,r6
+   itos r7
+   sconcat r7,r2,r7
+   say r7
+   * Line 4: {Implicit "BY 1"}
+   inc r3
+   * Line 4: {DO-END}
+   br l26
+l16:
+   * Line 7: return
+   ret 0
+
+wordlen() .expose=wordlen.wordlen
+
+word() .expose=word.word
+
+words() .expose=words.words

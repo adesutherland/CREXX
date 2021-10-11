@@ -22,7 +22,7 @@ if lastpos('abc', 'abc abc',6) \= 1 then say 'failed in test 16 '
 if lastpos('abc', 'abc abc') \= 5 then say 'failed in test 17 '
 if lastpos('abc', 'abc abc',7) \= 5 then say 'failed in test 18 '
 /* These from elsewhere. */
-if lastpos('abc','abcdefabccdabcd',4) \= 7 then say 'failed in test 19 '
+if lastpos('abc','abcdefabccdabcd',4) \= 1 then say 'failed in test 19 '
 say "LASTPOS OK"
 
 /* function prototype */

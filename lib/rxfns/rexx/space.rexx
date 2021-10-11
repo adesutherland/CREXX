@@ -1,0 +1,38 @@
+/* rexx space adds n padding chars between words */
+options levelb
+space: procedure = .string
+  arg expose string = .string, spacenr = 2,  pad = " "
+
+wrds=words(string)
+if wrds<2 then return string
+
+padstr=""
+newstr=""
+offset=0
+cpad=""
+/* make sure just to take first char */
+assembler strchar cpad,pad,offset
+assembler load pad,""
+assembler appendchar pad,cpad
+
+/* create padding string */
+do i=1 to spacenr
+   padstr=padstr||pad
+end
+
+/* add padding string between words */
+do i=1 to wrds-1
+   newstr=newstr||word(string,i)||padstr
+end
+/* add last word */
+newstr=newstr||word(string,wrds)
+return newstr
+
+/* function prototype */
+word: procedure = .string
+arg string1 = .string, string2 = .int
+
+words: procedure = .int
+arg string1 = .string
+
+

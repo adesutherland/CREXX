@@ -1,7 +1,6 @@
 /* wordindx */
           .globals=0
-wordindx() .locals=11 .expose=global.wordindx
-    /*       0123456789012345678901234567890123456789012  */
+wordindex() .locals=11 .expose=wordindex.wordindex
    copy  r1,a1      /* string */
    copy  r2,a2      /* word number      */
    load  r3,0       /* offset in string */

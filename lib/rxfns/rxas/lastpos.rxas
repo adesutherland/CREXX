@@ -2,12 +2,21 @@
           .globals=0
 lastpos() .locals=13 .expose=lastpos.lastpos
     brtpandt havestart,a3,1
-    load a3,1
+    load a3,0
     isub a0,a0,1
     load r12,0
 havestart:
     copy r1,a2          /* source string      */
     strlen r3,r1        /* length of source   */
+    ieq r11,a3,0        /* 0 : no end pos parm is specified, check full length */
+    brt nopos,r11       /* true:  full length */
+    igt r11,a3,r3       /* specified new pos>string length? */
+    brt nopos,r11       /* use original length */
+    igt r11,a3,0        /* specified new pos>0? */
+    brf nopos,r11       /* <=0 used original length */
+    copy r3,a3          /* new max seek pos  */
+nopos:
+    load r11,"max search len "
     dec  r3
     copy r4,a1          /* search string      */
     strlen r10,r4
@@ -35,10 +44,8 @@ innerloop:
     br  found
     copy r3,r12         /* re position to original source char */
 next:
-    bctnm outerloop,r3 /* outer loop */
-    load r3,0          /* string not found */
-    br return
+    bctnm outerloop,r3  /* outer loop */
+    load r3,-1          /* string not found, will be later 0 */
 found:
-    inc  r3             /* +1 to make offset to position */
-return: 
+    inc r3              /* +1 to make offset to position */
     ret r3
