@@ -445,9 +445,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2);
             v1 = op1R;
             p2 = PROC_OP(2); /* This is the target */
-            /* Clear target return value register */
-            free_value(current_frame, v1);
-            op1R = 0;
+
             /* New stackframe */
             current_frame = frame_f(program, p2, 0, current_frame, next_pc,
                                     next_inst, &(op1R));
@@ -465,9 +463,7 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             p2 = PROC_OP(2); /* This is the target */
             v3 = op3R;
-            /* Clear target return value register */
-            free_value(current_frame, v1);
-            op1R = 0;
+
             /* New stackframe */
             current_frame =
                     frame_f(program, p2, (int) v3->int_value, current_frame,
@@ -496,6 +492,10 @@ START_OF_INSTRUCTIONS ;
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
+
+            /* Clear the return register */
+            if (current_frame->return_reg) clear_reg(*(current_frame->return_reg));
+
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -519,12 +519,15 @@ START_OF_INSTRUCTIONS ;
                     /* We need to clone/copy the register to avoid having
                      * two registers pointing to the same value */
                     /* OPTIMISATION RULE - Avoid returning argument registers */
-                    *(current_frame->return_reg) =
-                            value_f(current_frame->parent);
                     copy_value(*(current_frame->return_reg),v1);
                 }
                 else {
                     /* Otherwise, we can return our register safely */
+
+                    /* Free parent return register */
+                    free_value(current_frame->parent, *current_frame->return_reg);
+
+                    /* Move Register */
                     *(current_frame->return_reg) = v1;
                     v1->owner = current_frame->parent;
                 }
@@ -548,9 +551,8 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                *(current_frame->return_reg) =
-                        value_int_f(current_frame->parent,
-                                    i1);
+                (*current_frame->return_reg)->int_value = i1;
+
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -574,8 +576,7 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                *(current_frame->return_reg) =
-                        value_float_f(current_frame->parent, f1);
+                (*current_frame->return_reg)->float_value = f1;
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -601,8 +602,7 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                *(current_frame->return_reg) =
-                        value_conststring_f(current_frame->parent, s1);
+                set_const_string(*current_frame->return_reg, s1);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
