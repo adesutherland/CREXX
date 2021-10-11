@@ -1,4 +1,4 @@
-/* rexx space adds n padding chars between words */
+/* rexx wordlength finds length of certain word */
 options levelb
 wordlength: procedure = .string
   arg expose string = .string, wordnum = .int
