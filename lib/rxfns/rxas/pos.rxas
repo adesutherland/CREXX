@@ -22,6 +22,8 @@ offok:
     dec r10             /* -1 for BCT         */
     ilt  r11,r10,0      /* <0                 */
     brt  empty,r11
+    ilt  r11,r10,r2     /* length(needle, already -1 for BCT) < length(string+offset) */
+    brf  empty,r11
  outerloop:
     strchar r8,r1,r3    /* load source char    */
     copy r5,r10         /* length search string*/

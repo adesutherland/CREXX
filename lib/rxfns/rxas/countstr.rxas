@@ -1,52 +1,62 @@
 /*
  * cREXX COMPILER VERSION : cREXX I0134
  * SOURCE                 : countstr
- * BUILT                  : 2021-10-10 08:14:11
+ * BUILT                  : 2021-10-12 13:51:49
  */
 
 .globals=0
 
-countstr() .locals=9 .expose=countstr.countstr
+countstr() .locals=10 .expose=countstr.countstr
    * Line 5: needle = .string
    * Line 5: haystack = .string
    * Line 6: count=0
    load r1,0
    * Line 7: offset=0
    load r2,0
-   * Line 9: {DO}
-   * Line 9: i=1
-   load r3,1
-   * Line 9: to 8192
-   load r4,8192
-l45:
-   * Line 9: to 8192
-   igt r0,r3,r4
-   brt l24,r0
-   * Line 10: offset=pos(needle,haystack,offset+1)
-   * Line 10: pos(needle,haystack,offset+1)
-   load r5,3
-   swap r6,a1
-   swap r7,a2
-   iadd r8,r2,1
-   settp r8,1
-   call r2,pos(),r5
-   swap a1,r6
-   swap a2,r7
-   * Line 11: {IF} offset=0
-   ieq r8,r2,0
-   brf l39,r8
-   * Line 11: {THEN}
-   * Line 11: return count
-   ret r1
-l39:
-   * Line 12: count=count+1
-   iadd r1,r1,1
-   * Line 9: {Implicit "BY 1"}
-   inc r3
-   * Line 9: {DO-END}
-   br l45
-l24:
+   * Line 8: nlen=0
+   load r3,0
+   * Line 9: strlen nlen,needle
+   strlen r3,a1
+   * Line 10: nlen=nlen-1
+   isub r3,r3,1
+   * Line 12: {DO}
+   * Line 12: i=1
+   load r4,1
+   * Line 12: to 8192
+   load r5,8192
+l61:
+   * Line 12: to 8192
+   igt r0,r4,r5
+   brt l35,r0
+   * Line 13: offset=pos(needle,haystack,offset+1)
+   * Line 13: pos(needle,haystack,offset+1)
+   load r6,3
+   settp a1,0
+   swap r7,a1
+   settp a2,0
+   swap r8,a2
+   iadd r9,r2,1
+   settp r9,1
+   call r2,pos(),r6
+   swap a1,r7
+   swap a2,r8
+   * Line 14: {IF} offset=0
+   ieq r9,r2,0
+   brf l50,r9
+   * Line 14: {THEN}
    * Line 14: return count
+   ret r1
+l50:
+   * Line 15: offset=offset+nlen
+   iadd r2,r2,r3
+   * Line 16: count=count+1
+   iadd r1,r1,1
+   * Line 12: {Implicit "BY 1"}
+   inc r4
+   * Line 12: {DO-END}
+   br l61
+l35:
+   * Line 18: return count
    ret r1
 
 pos() .expose=pos.pos
