@@ -1,0 +1,100 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : center
+ * BUILT                  : 2021-10-12 12:31:12
+ */
+
+.globals=0
+
+center() .locals=15 .expose=center.center
+   * Line 5: string = .string
+   * Line 5: centlen = .int
+   * Line 5: pad = " "
+   brtpandt l11a,a3,1
+   load r1," "
+   br l11d
+l11a:
+   brtpandt l11c,a3,2
+   scopy r1,a3
+   br l11d
+l11c:
+   swap r1,a3
+l11d:
+   * Line 7: padstr=""
+   load r2,""
+   * Line 8: offset=0
+   load r3,0
+   * Line 9: slen=0
+   load r4,0
+   * Line 10: cpad=""
+   load r5,""
+   * Line 13: strchar cpad,pad,offset
+   strchar r5,r1,r3
+   * Line 14: load pad,""
+   load r1,""
+   * Line 15: appendchar pad,cpad
+   appendchar r1,r5
+   * Line 17: strlen slen,string
+   strlen r4,a1
+   * Line 18: padlen=centlen-slen
+   isub r6,a2,r4
+   * Line 19: idiv padlen,padlen,2
+   idiv r6,r6,2
+   * Line 20: {IF} padlen=0
+   ieq r7,r6,0
+   brf l55,r7
+   * Line 20: {THEN}
+   * Line 20: return string
+   ret a1
+l55:
+   * Line 22: {IF} padlen<0
+   ilt r7,r6,0
+   brf l94,r7
+   * Line 22: {THEN}
+   * Line 22: newstr=substr(string,-padlen+1,centlen," ")
+   * Line 22: substr(string,-padlen+1,centlen," ")
+   load r9,4
+   settp a1,0
+   swap r10,a1
+   isub r14,0,r6
+   iadd r11,r14,1
+   settp a2,1
+   swap r12,a2
+   load r13," "
+   settp r13,3
+   call r8,substr(),r9
+   swap a1,r10
+   swap a2,r12
+   br l74
+   * Line 25: {ELSE}
+l94:
+   * Line 25: padstr=copies(pad,padlen)
+   * Line 25: copies(pad,padlen)
+   load r12,2
+   settp r1,0
+   swap r13,r1
+   swap r14,r6
+   call r2,copies(),r12
+   swap r1,r13
+   swap r6,r14
+   * Line 26: newstr=padstr||string||padstr
+   concat r14,r2,a1
+   concat r8,r14,r2
+   * Line 27: strlen slen,newstr
+   strlen r4,r8
+   * Line 28: {IF} slen<centlen
+   ilt r14,r4,a2
+   brf l93,r14
+   * Line 28: {THEN}
+   * Line 28: newstr=newstr||pad
+   concat r8,r8,r1
+l93:
+l74:
+   * Line 31: return newstr
+   ret r8
+
+copies() .expose=copies.copies
+
+length() .expose=length.length
+
+substr() .expose=substr.substr
