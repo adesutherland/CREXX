@@ -3,7 +3,7 @@ options levelb
 
 /* delstr(string,position,length) delete string from certain position and length and returns it */
 delstr: procedure = .string
-  arg expose string = .string, position = .int, dellen = .int
+  arg expose string = .string, position = .int, dellen = 0
 
   if position<1 then position=1
   len=length(string)

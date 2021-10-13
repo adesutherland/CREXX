@@ -3,7 +3,7 @@ options levelb
 
 /* delword(string,wordnumber-to-delete,length) delete one word, or the remaining words in string */
 delword: procedure = .string
-  arg expose string = .string, wnum = .int, wcount = .int
+  arg expose string = .string, wnum = .int, wcount = 0
   wrds=words(string)
   if wcount=0 then wcount=wrds
 
