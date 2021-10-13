@@ -1,0 +1,52 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : ts_abbrev
+ * BUILT                  : 2021-10-13 17:49:12
+ */
+
+.globals=0
+
+main() .locals=6 .expose=ts_abbrev.main
+   * Line 2: say "test abbrev"
+   say "test abbrev"
+   * Line 3: say '---1---'
+   say "---1---"
+   * Line 4: say abbrev('quicker','quick')
+   * Line 4: abbrev('quicker','quick')
+   load r1,3
+   load r2,"quicker"
+   settp r2,2
+   load r3,"quick"
+   settp r3,2
+   settp r4,0
+   call r5,abbrev(),r1
+   say r5
+   * Line 5: say '---2---'
+   say "---2---"
+   * Line 6: say abbrev('quicker','q',2)
+   * Line 6: abbrev('quicker','q',2)
+   load r2,3
+   load r3,"quicker"
+   settp r3,2
+   load r4,"q"
+   settp r4,2
+   load r5,2
+   settp r5,1
+   call r1,abbrev(),r2
+   say r1
+   * Line 7: say '---3---'
+   say "---3---"
+   * Line 8: say abbrev('quicker','fast')
+   * Line 8: abbrev('quicker','fast')
+   load r2,3
+   load r3,"quicker"
+   settp r3,2
+   load r4,"fast"
+   settp r4,2
+   settp r5,0
+   call r1,abbrev(),r2
+   say r1
+   * Line 9: return
+   ret 0
+
+abbrev() .expose=abbrev.abbrev
