@@ -1,0 +1,120 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : insert
+ * BUILT                  : 2021-10-13 11:47:16
+ */
+
+.globals=0
+
+insert() .locals=15 .expose=insert.insert
+   * Line 4: insstr = .string
+   * Line 4: string = .string
+   * Line 4: position = .int
+   * Line 4: len = .int
+   * Line 4: pad = .string
+   brtpandt l17c,a5,2
+   scopy r1,a5
+   br l17d
+l17c:
+   swap r1,a5
+l17d:
+   * Line 6: slen=length(string)
+   * Line 6: length(string)
+   load r3,1
+   settp a2,0
+   swap r4,a2
+   call r2,length(),r3
+   swap a2,r4
+   * Line 7: {IF} position>slen
+   igt r4,a3,r2
+   brf l38,r4
+   * Line 7: {THEN}
+   * Line 7: string=substr(string,1,position-1,' ')
+   * Line 7: substr(string,1,position-1,' ')
+   load r5,4
+   settp a2,0
+   swap r6,a2
+   load r7,1
+   isub r8,a3,1
+   settp r8,1
+   load r9," "
+   settp r9,3
+   call r6,substr(),r5
+   swap a2,r6
+l38:
+   * Line 9: {IF} position=1
+   ieq r9,a3,1
+   brf l53,r9
+   * Line 9: {THEN}
+   * Line 9: str1=''
+   load r8,""
+   br l52
+   * Line 10: {ELSE}
+l53:
+   * Line 10: str1=substr(string,1,position-1)
+   * Line 10: substr(string,1,position-1)
+   load r3,4
+   settp a2,0
+   swap r4,a2
+   load r5,1
+   isub r6,a3,1
+   settp r6,1
+   settp r7,2
+   call r8,substr(),r3
+   swap a2,r4
+l52:
+   * Line 11: {IF} position>slen
+   igt r9,a3,r2
+   brf l65,r9
+   * Line 11: {THEN}
+   * Line 11: str2=''
+   load r7,""
+   br l64
+   * Line 12: {ELSE}
+l65:
+   * Line 12: str2=substr(string,position)
+   * Line 12: substr(string,position)
+   load r10,4
+   settp a2,0
+   swap r11,a2
+   swap r12,a3
+   settp r13,0
+   settp r14,2
+   call r7,substr(),r10
+   swap a2,r11
+   swap a3,r12
+l64:
+   * Line 14: {IF} len>0
+   igt r14,a4,0
+   brf l84,r14
+   * Line 15: {THEN}
+   * Line 15: {IF} pad=''
+   seq r13,r1,""
+   brf l75,r13
+   * Line 15: {THEN}
+   * Line 15: pad=' '
+   load r1," "
+l75:
+   * Line 16: insstr=substr(insstr,1,len,pad)
+   * Line 16: substr(insstr,1,len,pad)
+   load r9,4
+   settp a1,0
+   swap r10,a1
+   load r11,1
+   settp a4,1
+   swap r12,a4
+   settp r1,1
+   swap r13,r1
+   call r10,substr(),r9
+   swap a1,r10
+   swap a4,r12
+   swap r1,r13
+l84:
+   * Line 19: return str1||insstr||str2
+   concat r14,r8,a1
+   concat r14,r14,r7
+   ret r14
+
+length() .expose=length.length
+
+substr() .expose=substr.substr
