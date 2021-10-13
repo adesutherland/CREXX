@@ -1,0 +1,233 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : delword
+ * BUILT                  : 2021-10-13 10:00:17
+ */
+
+.globals=0
+
+delword() .locals=35 .expose=delword.delword
+   * Line 5: string = .string
+   * Line 5: wnum = .int
+   * Line 5: wcount = .int
+   icopy r1,a3
+   * Line 6: wrds=words(string)
+   * Line 6: words(string)
+   load r3,1
+   settp a1,0
+   swap r4,a1
+   call r2,words(),r3
+   swap a1,r4
+   * Line 7: {IF} wcount=0
+   ieq r4,r1,0
+   brf l26,r4
+   * Line 7: {THEN}
+   * Line 7: wcount=wrds
+   copy r1,r2
+l26:
+   * Line 9: {IF} wnum>wrds
+   igt r4,a2,r2
+   brf l32,r4
+   * Line 9: {THEN}
+   * Line 9: return string
+   ret a1
+l32:
+   * Line 10: {IF} wnum<1
+   ilt r4,a2,1
+   brf l38,r4
+   * Line 10: {THEN}
+   * Line 10: return string
+   ret a1
+l38:
+   * Line 12: wdel=0
+   load r4,0
+   * Line 13: wlen=0
+   load r3,0
+   * Line 14: slen=0
+   load r5,0
+   * Line 16: {DO}
+   * Line 16: dw=1
+   load r6,1
+   * Line 16: to 8192
+   load r7,8192
+l180:
+   * Line 16: to 8192
+   igt r0,r6,r7
+   brt l53,r0
+   * Line 17: strlen slen,string
+   strlen r5,a1
+   * Line 18: {IF} slen<1
+   ilt r8,r5,1
+   brf l63,r8
+   * Line 18: {THEN}
+   * Line 18: return ""
+   ret ""
+l63:
+   * Line 19: wpos=wordindex(string,wnum)
+   * Line 19: wordindex(string,wnum)
+   load r9,2
+   settp a1,0
+   swap r10,a1
+   swap r11,a2
+   call r8,wordindex(),r9
+   swap a1,r10
+   swap a2,r11
+   * Line 20: {IF} wpos=0
+   ieq r11,r8,0
+   brf l74,r11
+   * Line 20: {THEN}
+   * Line 20: return string
+   ret a1
+l74:
+   * Line 21: wrd= word(string,wnum)
+   * Line 21: word(string,wnum)
+   load r12,2
+   settp a1,0
+   swap r13,a1
+   swap r14,a2
+   call r11,word(),r12
+   swap a1,r13
+   swap a2,r14
+   * Line 22: strlen wlen,wrd
+   strlen r3,r11
+   * Line 23: xpos=wpos+wlen
+   iadd r14,r8,r3
+   * Line 24: {IF} xpos<slen
+   ilt r13,r14,r5
+   brf l104,r13
+   * Line 25: {THEN}
+   * Line 25: {IF} substr(string,xpos,1)=' '
+   * Line 25: substr(string,xpos,1)
+   load r15,4
+   settp a1,0
+   swap r16,a1
+   swap r17,r14
+   load r18,1
+   settp r18,1
+   settp r19,2
+   call r12,substr(),r15
+   swap a1,r16
+   swap r14,r17
+   seq r19,r12," "
+   brf l102,r19
+   * Line 25: {THEN}
+   * Line 25: wlen=wlen+1
+   iadd r3,r3,1
+l102:
+l104:
+   * Line 27: {IF} wpos+wlen>slen
+   iadd r19,r8,r3
+   igt r19,r19,r5
+   brf l165,r19
+   * Line 28: {THEN}
+   * Line 28: {IF} wpos=1
+   ieq r18,r8,1
+   brf l124,r18
+   * Line 28: {THEN}
+   * Line 28: retstr=''
+   load r17,""
+   br l123
+   * Line 29: {ELSE}
+l124:
+   * Line 29: retstr=substr(string,1,wpos-1)
+   * Line 29: substr(string,1,wpos-1)
+   load r20,4
+   settp a1,0
+   swap r21,a1
+   load r22,1
+   isub r23,r8,1
+   settp r23,1
+   settp r24,2
+   call r17,substr(),r20
+   swap a1,r21
+l123:
+   br l164
+   * Line 32: {ELSE}
+l165:
+   * Line 32: {IF} wpos=1
+   ieq r24,r8,1
+   brf l163,r24
+   * Line 32: {THEN}
+   * Line 32: retstr=substr(string,wpos+wlen)
+   * Line 32: substr(string,wpos+wlen)
+   load r25,4
+   settp a1,0
+   swap r26,a1
+   iadd r27,r8,r3
+   settp r28,0
+   settp r29,2
+   call r17,substr(),r25
+   swap a1,r26
+   br l162
+   * Line 34: {ELSE}
+l163:
+   * Line 34: {IF} wnum<wrds
+   ilt r29,a2,r2
+   brf l161,r29
+   * Line 34: {THEN}
+   * Line 34: retstr=substr(string,1,wpos-1)||substr(string,wpos+wlen)
+   * Line 34: substr(string,1,wpos-1)
+   load r30,4
+   settp a1,0
+   swap r31,a1
+   load r32,1
+   isub r33,r8,1
+   settp r33,1
+   settp r34,2
+   call r28,substr(),r30
+   swap a1,r31
+   * Line 34: substr(string,wpos+wlen)
+   load r30,4
+   settp a1,0
+   swap r31,a1
+   iadd r32,r8,r3
+   settp r33,0
+   settp r34,2
+   call r27,substr(),r30
+   swap a1,r31
+   concat r17,r28,r27
+   br l160
+   * Line 35: {ELSE}
+l161:
+   * Line 35: retstr=substr(string,1,wpos-1)
+   * Line 35: substr(string,1,wpos-1)
+   load r30,4
+   settp a1,0
+   swap r31,a1
+   load r32,1
+   isub r33,r8,1
+   settp r33,1
+   settp r34,2
+   call r17,substr(),r30
+   swap a1,r31
+l160:
+l162:
+l164:
+   * Line 38: string=retstr
+   copy a1,r17
+   * Line 39: wdel=wdel+1
+   iadd r4,r4,1
+   * Line 40: {IF} wdel>=wcount
+   igte r34,r4,r1
+   brf l179,r34
+   * Line 40: {THEN}
+   * Line 40: return string
+   ret a1
+l179:
+   * Line 16: {Implicit "BY 1"}
+   inc r6
+   * Line 16: {DO-END}
+   br l180
+l53:
+   * Line 42: return string
+   ret a1
+
+word() .expose=word.word
+
+words() .expose=words.words
+
+wordindex() .expose=wordindex.wordindex
+
+length() .expose=length.length
+
+substr() .expose=substr.substr
