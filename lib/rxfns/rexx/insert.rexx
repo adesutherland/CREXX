@@ -2,7 +2,7 @@
 options levelb
 /* insert(insstr,string,position,length,pad) inserts string into existing string at certain position and length */
 insert: procedure = .string
-  arg expose insstr = .string, expose string = .string, position = .int, len = .int, pad = .string
+  arg insstr = .string, string = .string, position = .int, len = 0, pad = " "
 
   slen=length(string)
   if position>slen then string=substr(string,1,position-1,' ')  /* is position>string length , extend string */
