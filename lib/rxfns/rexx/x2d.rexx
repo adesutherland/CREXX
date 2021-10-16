@@ -10,9 +10,8 @@ x2d: procedure = .int
   sign=0
   if slen=0 then return 0      /* no hex input return 0    */
   assembler strlen hlen,hex    /* get length of hex string */
-  if slen>0 then hex=right(hex,slen,'0')  /* if length parm set, treat hex as signed integer */
-  else slen=hlen                          /* else it is an unsignded integer
-
+  if slen>0 then hex=right(hex,slen,"0")  /* if length parm set, treat hex as signed integer */
+  else slen=hlen                          /* else it is an unsigned integer */
   do i=0 to slen-1                     /* loop through hex string */
      assembler strchar char,hex,i      /* fetch one byte          */
      if char>=97 & char<=102 then do   /* treat a to f has hex numbers */
