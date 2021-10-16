@@ -1349,6 +1349,24 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  IREM_REG_REG_INT  Remainder Division (op1=op2%op3)                  pej 16 Oct 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IREM_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IREM R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI % op3I);
+            DISPATCH;
+
+ /* -----------------------------------------------------------------------------------
+  *  IREM_REG_REG_REG  Remainder Division (op1=op2/op3)                pej 16 Octr 2021
+  *  ----------------------------------------------------------------------------------
+  */
+        START_INSTRUCTION(IREM_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IREM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI % op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */

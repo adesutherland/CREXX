@@ -38,6 +38,10 @@ void init_ops() {
 
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
+
+    instr_f("irem", "Remainder Divisions (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("irem", "Remainder Division  (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
+
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
 
