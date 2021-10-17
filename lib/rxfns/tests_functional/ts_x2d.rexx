@@ -1,6 +1,11 @@
 /* rexx */
 options levelb
+say d2x(-128)
+say d2x(128)
+say d2x(-3967)
+say d2x(32640)
 
+/* X2D tests  */
 if x2d( 'ff80',4) \=-128 then say "error in "0
 if x2d( '7f80',4) \=32640 then say "error in "1
 if x2d( 'ff80',2) \=-128 then say "error in "2
@@ -18,3 +23,6 @@ return
 
 x2d: procedure = .int
   arg expose hex = .string, slen = -1
+
+d2x: procedure = .string
+  arg expose int1 = .int, slen = -1
