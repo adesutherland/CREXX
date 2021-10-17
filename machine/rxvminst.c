@@ -80,9 +80,16 @@ void init_ops() {
 
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_INT);
-
     instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_REG);
     instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ixor", "bit wise exclusive OR of 2 integers (op1=op2^op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ixor", "bit wise exclusive OR of 2 integers (op1=op2^op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ishl", "bit wise shift logical left of integer (op1=op2<<op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ishl", "bit wise shift logical left of integer (op1=op2<<op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ishr", "bit wise shift logical right of integer (op1=op2>>op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ishr", "bit wise shift logical right of integer (op1=op2>>op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("inot", "inverts all bits of an integer (op1=~op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("inot", "inverts all bits of an integer (op1=~op2)", OP_REG, OP_INT, OP_NONE);
 
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);

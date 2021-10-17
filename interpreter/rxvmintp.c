@@ -1367,20 +1367,20 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
  /* ------------------------------------------------------------------------------------
-  *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
+  *  IOR_REG_REG_REG bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
   *  -----------------------------------------------------------------------------------
   */
-        START_INSTRUCTION(IOR_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - IOR R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI | op3I);
+        START_INSTRUCTION(IOR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI | op3RI);
             DISPATCH;
 /* -----------------------------------------------------------------------------------
  *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                          pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IOR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - IOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI | op3RI);
+        START_INSTRUCTION(IOR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI | op3I);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1392,12 +1392,82 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI & op3I);
             DISPATCH;
 /* -----------------------------------------------------------------------------------
- *  IAND_REG_REG_INT  bitwise AND (op1=op2&op3)                        pej 17 Oct 2021
+ *  IAND_REG_REG_REG  bitwise AND (op1=op2&op3)                        pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(IAND_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI & op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  IXOR_REG_REG_REG  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IXOR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI ^ op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  IXOR_REG_REG_INT  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IXOR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI ^ op3I);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHL_REG_REG_REG  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHL_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI << op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHL_REG_REG_INT  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHL_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI << op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  ISHR_REG_REG_REG  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI >> op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHR_REG_REG_INT  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXSHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI >> op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  INOT_REG_REG  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(INOT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            REG_RETURN_INT(~op2RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  INOT_REG_INT  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(INOT_REG_INT) CALC_DISPATCH(2);
+            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)op2I);
+            REG_RETURN_INT(~op2I);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
