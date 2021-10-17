@@ -78,6 +78,12 @@ void init_ops() {
     instr_f("inc2", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
     instr_f("dec2", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
 
+    instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_INT);
+
+    instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_INT);
+
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);

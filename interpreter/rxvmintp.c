@@ -1358,12 +1358,46 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
  /* -----------------------------------------------------------------------------------
-  *  IREM_REG_REG_REG  Remainder Division (op1=op2/op3)                pej 16 Octr 2021
+  *  IREM_REG_REG_REG  Remainder Division (op1=op2/op3)                 pej 16 Oct 2021
   *  ----------------------------------------------------------------------------------
   */
         START_INSTRUCTION(IREM_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IREM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI % op3RI);
+            DISPATCH;
+
+ /* ------------------------------------------------------------------------------------
+  *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
+  *  -----------------------------------------------------------------------------------
+  */
+        START_INSTRUCTION(IOR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI | op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                          pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IOR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI | op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IAND_REG_REG_INT  bitwise AND (op1=op2&op3)                         pej 17 Oct 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IAND_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IAND R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI & op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  IAND_REG_REG_INT  bitwise AND (op1=op2&op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IAND_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI & op3RI);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
