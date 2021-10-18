@@ -2087,6 +2087,28 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /*
+ *   APPEND_REG_REG Append string op2 on op1
+ */
+        START_INSTRUCTION(APPEND_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - APPEND R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            string_append(v1, v2);
+            DISPATCH;
+
+/*
+ *   SAPPEND_REG_REG Append with space string op2 on op1
+ */
+        START_INSTRUCTION(SAPPEND_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - SAPPEND R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            string_sappend(v1, v2);
+            DISPATCH;
+
+/*
  *   STRLEN_REG_REG String Length op1 = length(op2)
  */
         START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2);

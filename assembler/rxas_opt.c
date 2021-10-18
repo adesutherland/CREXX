@@ -3,18 +3,48 @@
  */
 
 #include "rxasassm.h"
+#include "rxvminst.h"
+
 #include "string.h"
 
 typedef struct rule {
     char in_out;
     char* instruction;
     char optype1;
-    int opnum1;
+    size_t opnum1;
     char optype2;
-    int opnum2;
+    size_t opnum2;
     char optype3;
-    int opnum3;
+    size_t opnum3;
 } rule;
+
+/* We can only have 10 (0..9) operands of each type in our rules */
+#define MAX_OP_MAP 10
+
+/* Rules Operands Mapping */
+typedef struct op_map {
+   /* Holds the mapped values */
+   size_t reg[MAX_OP_MAP];
+   char regtp[MAX_OP_MAP]; /* register type: r,g or a */
+   rxinteger integer[MAX_OP_MAP];
+   unsigned char *string[MAX_OP_MAP];
+   unsigned char character[MAX_OP_MAP];
+   double real[MAX_OP_MAP];
+
+   /* Flags to show what maps are set */
+   Token *reg_token[MAX_OP_MAP];
+   Token *integer_token[MAX_OP_MAP];
+   Token *string_token[MAX_OP_MAP];
+   Token *character_token[MAX_OP_MAP];
+   Token *real_token[MAX_OP_MAP];
+   Token *func_token;
+
+   /* Set if the number of rules used > MAX_OP_MAP - in which case the rule never matches */
+   char overflowed;
+
+   /* Instructions matched in the rules */
+    char inst_mapped[OPTIMISER_QUEUE_SIZE];
+} op_map;
 
 /* The keyhole optimiser rules
  * Each rule is made up of a number of 'i' input instructions and a single 'o'
@@ -29,7 +59,7 @@ typedef struct rule {
  * any of the register operands in the matching rules. Again see examples!
  *
  * If there is a match then each found in instruction is removed from the queue
- * and the output instruction is inserted in the queue where the first instruction
+ * and the output instruction is inserted in the queue where the last instruction
  * was found.
  *
  * If the out instruction is a null this means there is no output instruction to
@@ -113,40 +143,291 @@ rule rules[] =
                 {'o', "sappend", 'r', 0, 'r', 1, 0, 0},
 
                 /* concat to append: concat r0,r0,r1 to append r0,r1 */
-                {'i', "sconcat", 'r', 0, 'r', 0, 'r', 1},
-                {'o', "sappend", 'r', 0, 'r', 1, 0, 0},
+                {'i', "concat", 'r', 0, 'r', 0, 'r', 1},
+                {'o', "append", 'r', 0, 'r', 1, 0, 0},
 
                 /* End of rules marker */
                 {0, 0, 0, 0, 0, 0, 0, 0}
         };
 
-static rule* optimise_rule(Assembler_Context *context, rule *r ) {
-    char *inst = r->instruction;
-    size_t i;
+/*
+ * Return 1 if the instrToken is relevant
+ * Relevant means it uses a mapped register
+ */
+static int is_relevant(op_map *map, Token *opToken) {
+    int i;
+    char r_tp;
 
-    for (i=0; i<context->optimiser_queue_items; i++) {
-        if (!strcmp((char*)(context->optimiser_queue[i].instrToken->token_value.string), inst)) {
-            /*
-           printf("inst=%s %s %d\n",
-                  inst,
-                  (char*)(context->optimiser_queue[i].instrToken->token_value.string),
-                  (int)context->optimiser_queue[i].instrToken->line);
-           */
+    if (!opToken) return 0;
 
+    switch(opToken->token_type) {
+        case RREG:
+            r_tp = 'r';
+            break;
+        case GREG:
+            r_tp = 'g';
+            break;
+        case AREG:
+            r_tp = 'a';
+            break;
+        default: return 0;
+    }
+    for (i=0; i<MAX_OP_MAP; i++) {
+        if (map->reg_token[i] &&
+            map->regtp[i] == r_tp &&
+            map->reg[i] == opToken->token_value.integer) return 1;
+    }
+    return 0;
+}
+
+/* Checks if a instrToken can map against an op_type and op_num
+ * returns 1 if it can map, otherwise 0
+ * NOTE: if it can be mapped the *map structure is updated */
+static int can_map(op_map *map, Token *opToken, char op_type, size_t op_num) {
+    int i;
+
+    if (!opToken) {
+        if (op_type) return 0;
+        else return 1;
+    }
+
+    switch(op_type) {
+        case 'r': /* Register */
+            if ( !(opToken->token_type == RREG ||
+                   opToken->token_type == GREG ||
+                   opToken->token_type == AREG ) ) return 0; /* Wrong Type */
+
+            if (map->reg_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->regtp[op_num] != op_type ||
+                    map->reg[op_num] != opToken->token_value.integer)
+                    return 0; /* Wrong register */
+            }
+            else { /* Not mapped yet - map it */
+                map->reg_token[op_num] = opToken;
+                map->regtp[op_num] = op_type;
+                map->reg[op_num] = opToken->token_value.integer;
+            }
+            return 1;
+
+        case 'i': /* Integer */
+            if (opToken->token_type != INT ) return 0; /* Wrong Type */
+            if (map->integer_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->integer[op_num] != opToken->token_value.integer)
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->integer_token[op_num] = opToken;
+                map->integer[op_num] = opToken->token_value.integer;
+            }
+            return 1;
+
+        case 's': /* String */
+            if (opToken->token_type != STRING ) return 0; /* Wrong Type */
+            if (map->string_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->string[op_num] != opToken->token_value.string)
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->string_token[op_num] = opToken;
+                map->string[op_num] = opToken->token_value.string;
+            }
+            return 1;
+
+        case 'c': /* Char */
+            if (opToken->token_type != CHAR ) return 0; /* Wrong Type */
+            if (map->character_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->character[op_num] != opToken->token_value.character)
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->character_token[op_num] = opToken;
+                map->character[op_num] = opToken->token_value.character;
+            }
+            return 1;
+
+        case 'f': /* Float */
+            if (opToken->token_type != FLOAT ) return 0; /* Wrong Type */
+            if (map->real_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->real[op_num] != opToken->token_value.real)
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->real_token[op_num] = opToken;
+                map->real[op_num] = opToken->token_value.real;
+            }
+            return 1;
+
+        case 'j': /* Jump, meaning an ID or FUNC - op_num is not used because the
+                   * jump is a hazard instruction which will flush the instruction
+                   * queue. Meaning there can only ever be one label in a rule */
+            if ( !(opToken->token_type == FUNC ||
+                   opToken->token_type == ID ) ) return 0; /* Wrong Type */
+            else {
+                map->func_token = opToken;
+                return 1;
+            }
+
+        case 0:   /* Check nulls match */
+            return 1;
+
+        default: return 0; /* Something is wrong */
+    }
+}
+
+/* Returns the mapped token for a rule */
+static Token* mapped_token(op_map *map, char op_type, size_t op_num) {
+    switch(op_type) {
+        case 'r': /* Register */
+            return map->reg_token[op_num];
+
+        case 'i': /* Integer */
+            return map->integer_token[op_num];
+
+        case 's': /* String */
+            return map->string_token[op_num];
+
+        case 'c': /* Char */
+            return map->character_token[op_num];
+
+        case 'f': /* Float */
+            return map->real_token[op_num];
+
+        case 'j': /* Jump, meaning an ID or FUNC - op_num is not used */
+            return map->func_token;
+
+        case 0:   /* Check nulls match */
+        default:  /* Something wrong */
+            return 0;
+    }
+}
+
+/* Optimise a rule starting from a specific instruction
+ * returns 1 if the rule was successfully applied */
+static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int inst_no) {
+
+    /* Clear Map */
+    memset(map, 0, sizeof(*map));
+
+    /* Check the instruction maps */
+    if (!can_map(map, context->optimiser_queue[inst_no].operand1Token, r->optype1, r->opnum1))
+        return 0;
+    if (!can_map(map, context->optimiser_queue[inst_no].operand2Token, r->optype2, r->opnum2))
+        return 0;
+    if (!can_map(map, context->optimiser_queue[inst_no].operand3Token, r->optype3, r->opnum3))
+        return 0;
+    r++;
+
+    map->inst_mapped[inst_no] = 1;
+
+    /* Process next input rules */
+    while (r->in_out == 'i' && inst_no < context->optimiser_queue_items) {
+        for (inst_no++; inst_no < context->optimiser_queue_items; inst_no++) {
+            if (!strcmp((char*)(context->optimiser_queue[inst_no].instrToken->token_value.string), r->instruction)) {
+                /* Could be the instruction we are looking for */
+                /* First see if the instruction is Relevant */
+                if ( !( !is_relevant(map, context->optimiser_queue[inst_no].operand1Token) &&
+                        !is_relevant(map, context->optimiser_queue[inst_no].operand2Token) &&
+                        !is_relevant(map, context->optimiser_queue[inst_no].operand3Token) &&
+                        context->optimiser_queue[inst_no].operand1Token ) ) {
+                    /* Relevant - so check if it is a match */
+                    if ( can_map(map, context->optimiser_queue[inst_no].operand1Token, r->optype1, r->opnum1) &&
+                         can_map(map, context->optimiser_queue[inst_no].operand2Token, r->optype2, r->opnum2) &&
+                         can_map(map, context->optimiser_queue[inst_no].operand3Token, r->optype3, r->opnum3) ) {
+
+                        map->inst_mapped[inst_no] = 1;
+                        r++;
+                        break;
+                    }
+                    else return 0; /* Match Failed */
+                }
+            }
+            else {
+                /* Not the instruction we are looking for - make sure its irrelevant */
+                if (is_relevant(map, context->optimiser_queue[inst_no].operand1Token))
+                    return 0; /* If it is relevant we can't match the rule */
+                if (is_relevant(map, context->optimiser_queue[inst_no].operand2Token))
+                    return 0; /* If it is relevant we can't match the rule */
+                if (is_relevant(map, context->optimiser_queue[inst_no].operand3Token))
+                    return 0; /* If it is relevant we can't match the rule */
+            }
         }
     }
 
-    while (r->in_out == 'i') r++;
-    if (r->in_out == 'o') r++;
+    if (r->in_out == 'o') {
+        /* A match! We need to apply the output rule */
+        if (r->instruction) {
+            Token
+                    *new_instruction =
+                    token_id(context,
+                             context->optimiser_queue[inst_no].instrToken,
+                             r->instruction);
+            context->optimiser_queue[inst_no].instrToken = new_instruction;
 
-    return r;
+            context->optimiser_queue[inst_no].operand1Token =
+                    mapped_token(map, r->optype1, r->opnum1);
+
+            context->optimiser_queue[inst_no].operand2Token =
+                    mapped_token(map, r->optype2, r->opnum2);
+
+            context->optimiser_queue[inst_no].operand3Token =
+                    mapped_token(map, r->optype3, r->opnum3);
+
+            inst_no--;
+        }
+
+        /* Now we need to delete the other matched instructions */
+        while (inst_no >= 0) {
+            if (map->inst_mapped[inst_no]) {
+                /* Remove from the queue */
+                if (OPTIMISER_QUEUE_SIZE - inst_no - 1 > 0 ) {
+                    memmove(&context->optimiser_queue[inst_no],
+                            &context->optimiser_queue[inst_no + 1],
+                            sizeof(instruction_queue) *
+                            (OPTIMISER_QUEUE_SIZE - inst_no - 1));
+                }
+                /* One less instruction in the queue */
+                context->optimiser_queue_items--;
+            }
+            inst_no--;
+        }
+        return 1;
+    }
+
+    return 0;
+}
+
+/* Optimise a rule across the queue of instructions
+ * Updates the rule pointer to the start of the next rule
+ * returns 1 if the rule was successfully applied */
+static int optimise_rule_in_queue(Assembler_Context *context, rule **r ) {
+    size_t i;
+    op_map map;
+    int result = 0;
+
+    for (i=0; i<context->optimiser_queue_items; i++) {
+        if (!strcmp((char*)(context->optimiser_queue[i].instrToken->token_value.string), (*r)->instruction)) {
+           if (optimise_rule(context, &map, *r, i)) {
+               result = 1;
+               break;
+           }
+        }
+    }
+
+    while ((*r)->in_out == 'i') (*r)++;
+    if ((*r)->in_out == 'o') (*r)++;
+
+    return result;
 }
 
 static void optimise(Assembler_Context *context) {
-    rule *r = &rules[0];
-
-    while (r->in_out)
-        r = optimise_rule(context, r);
+    rule *r;
+    int changed;
+    do {
+        changed = 0;
+        r = &rules[0];
+        while (r->in_out)
+            if (optimise_rule_in_queue(context, &r)) changed = 1;
+    } while (changed);
 }
 
 static void queue_instruction(Assembler_Context *context, Token *instrToken, Token *operand1Token,

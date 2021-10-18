@@ -133,6 +133,7 @@ struct Token {
     Token *token_prev;
     size_t line, column, length;
     char* token_source;
+    char optimised;
     union {
         rxinteger integer;
         unsigned char string[1];
@@ -146,6 +147,10 @@ Token* token_f(Assembler_Context* context, int type);
 void free_tok(Assembler_Context* context);
 void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */
+/* Change an ID token's ID
+ * MUST be a ID Token
+ * Returns a new token which is a copy of the input token but with the new_id */
+Token* token_id(Assembler_Context* context, Token *from_token, char* new_id);
 
 /* Scanner */
 int scan(Assembler_Context* s, char *buff_end);
