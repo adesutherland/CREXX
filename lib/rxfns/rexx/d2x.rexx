@@ -4,6 +4,7 @@ options levelb
 
 d2x: procedure = .string
   arg xint = .int, slen=-1
+  if slen=0 then return ""
   trtab="0123456789ABCDEF"
   hlen=0
   char=0
@@ -42,7 +43,12 @@ d2x: procedure = .string
            j=hlen-i
            assembler concchar xstr,rstr,j
         end
+        if slen>0 then xstr=right(xstr,slen,'0')
         return xstr
      end
   end
 return ""
+
+/* Right() Procedure */
+   right: procedure = .string
+          arg string = .string, length1 = .int, pad = '0'
