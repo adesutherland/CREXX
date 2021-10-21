@@ -64,13 +64,66 @@ static void backpatch_procedures(Assembler_Context *context) {
     }
 }
 
+/* This finds the label backpatch index that branch source belongs to */
+static struct backpatching* find_patch_index(Assembler_Context *context, size_t source) {
+    struct string_wrapper *i;
+    struct backpatching *patch;
+    struct backpatching_references *ref;
+
+    avl_tree_for_each_in_postorder(i, context->label_constants_tree,
+                                       struct string_wrapper, index_node) {
+        patch = (struct backpatching *) (i->value);
+        ref = patch->refs;
+        while (ref) {
+            if (ref->index == source) return patch;
+            ref = ref->link;;
+        }
+    }
+    return 0;
+}
+
+/* Optimise Labels - optimising branches to an unconditional branch by
+ * converting the destination to go to the destination of the second branch */
+static void optimise_labels(Assembler_Context *context) {
+    struct string_wrapper *i;
+    struct backpatching *patch, *p;
+
+    Instruction *br = src_inst("br", OP_ID, OP_NONE, OP_NONE);
+    int changed = 1;
+
+    /* Labels - walk and process the tree of labels */
+    while (changed) {
+        changed = 0;
+        avl_tree_for_each_in_postorder(i, context->label_constants_tree,
+                                       struct string_wrapper, index_node) {
+            patch = (struct backpatching *) (i->value);
+
+            if (patch->defined != 0) { /* Note that unknown Symbol Errors handled later */
+
+                /* Check if the destination is an unconditional branch */
+                if (context->binary.binary[patch->index].instruction.opcode == br->opcode) {
+                    /* Yes - find the patch index for this jump source */
+                    p = find_patch_index(context, patch->index + 1);
+                    if (p && p != patch && p->defined) {
+                        /* if found, and if not self referring, and if defined */
+                        /* Otherwise, an error - the optimiser should duck out */
+                        patch->index = p->index; /* make the target of this label the next
+                                                  * branch target */
+                        changed = 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
 /* Backpatch Labels, check references and free backpatch information */
 static void backpatch_labels(Assembler_Context *context) {
     struct string_wrapper *i;
     struct backpatching *patch;
     struct backpatching_references *ref, *nextref;
 
-    /* Procedures - walk and process the tree */
+    /* Labels - walk and process the tree */
     avl_tree_for_each_in_postorder(i, context->label_constants_tree,
                                    struct string_wrapper, index_node) {
         patch = (struct backpatching*)(i->value);
@@ -102,6 +155,7 @@ static void backpatch_labels(Assembler_Context *context) {
 
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context) {
+    if (context->optimise) optimise_labels(context);
     backpatch_procedures(context);
     backpatch_labels(context);
 }
@@ -312,18 +366,13 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                 ref_header->refs = 0;
             }
 
-            if (ref_header->defined == 0) {
-                /* keep references for backpatching the above */
-                struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
-                ref->index = context->binary.inst_size;
-                ref->token = operandToken;
-                ref->link = ref_header->refs;
-                ref_header->refs = ref;
-                context->binary.binary[context->binary.inst_size++].index = 0;
-            }
-            else {
-                context->binary.binary[context->binary.inst_size++].index = ref_header->index;
-            }
+            /* keep references for backpatching the above */
+            struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+            ref->index = context->binary.inst_size;
+            ref->token = operandToken;
+            ref->link = ref_header->refs;
+            ref_header->refs = ref;
+            context->binary.binary[context->binary.inst_size++].index = 0;
             return;
         case RREG:
             if (operandToken->token_value.integer >= context->current_locals)
