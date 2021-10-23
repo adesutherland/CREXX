@@ -1917,6 +1917,34 @@ START_OF_INSTRUCTIONS ;
                 goto converror;
             }
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  STRLOWER_REG_REG  translate string into lower case string              pej 23.10.21
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(STRLOWER_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - STRLOWER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+
+            v1 = op1R;
+            v2 = op2R;
+            set_value_string(v1,v2);
+            /*     i1=utf8uprcodepoint(v1->int_value); */
+            utf8lwr(v1->string_value);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STRUPPER_REG_REG  translate string into upper case string              pej 23.10.21
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(STRUPPER_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - STRUPPER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+
+            v1 = op1R;
+            v2 = op2R;
+            set_value_string(v1,v2);
+     /*     i1=utf8uprcodepoint(v1->int_value); */
+
+            utf8upr(v1->string_value);
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STRCHAR_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021

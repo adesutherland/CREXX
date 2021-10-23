@@ -234,6 +234,9 @@ void init_ops() {
     instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
+    instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
+
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
