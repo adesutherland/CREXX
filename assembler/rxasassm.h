@@ -16,6 +16,7 @@ void rxasque2(Assembler_Context *context, Token *instrToken, Token *operand1Toke
               Token *operand2Token);
 void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
               Token *operand2Token, Token *operand3Token);
+void rxasqlbl(Assembler_Context *context, Token *labelToken);
 
 /* Flush the optimiser queue */
 void flushopt(Assembler_Context *context);

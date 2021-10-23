@@ -99,7 +99,7 @@ functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_EXPOSE(T) error.
 instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
-instruction ::= LABEL(L). {rxaslabl(context,L);}
+instruction ::= LABEL(L). {rxasqlbl(context,L);}
 instruction ::= NEWLINE.
 
 // Instruction error messages

@@ -695,9 +695,6 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
     struct backpatching *ref_header;
     size_t tree_index;
 
-    /* Flush Keyhole Optimiser Queue */
-    flushopt(context);
-
     /* Have we come across this symbol yet? */
     if (src_node(context->label_constants_tree,
                  (char*)labelToken->token_value.string,
