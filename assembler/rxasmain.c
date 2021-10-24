@@ -190,8 +190,11 @@ int main(int argc, char *argv[]) {
     scanner.error_tail = 0;
     scanner.severity = 0;
     scanner.optimise = optimise;
-    scanner.optimiser_queue = calloc(sizeof(instruction_queue),OPTIMISER_QUEUE_SIZE);
+    scanner.optimiser_queue = calloc(sizeof(instruction_queue),
+                                     OPTIMISER_TARGET_MAX_QUEUE_SIZE +
+                                     OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE);
     scanner.optimiser_queue_items = 0;
+    scanner.optimiser_counter = 0;
 
     scanner.binary.globals = 0;
     scanner.binary.const_size = 0;

@@ -13,7 +13,10 @@ typedef struct bin_space bin_space;
 struct avl_tree_node;
 
 /* Keyhole Optimiser */
-#define OPTIMISER_QUEUE_SIZE 10
+/* We are aiming for 20 instructions in the keyhole */
+#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 20
+/* We add 40 slots for any instruction growth caused by rules */
+#define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {
@@ -122,6 +125,7 @@ typedef struct Assembler_Context {
     char *extern_regs;
     instruction_queue *optimiser_queue;
     size_t optimiser_queue_items;
+    int optimiser_counter;
 } Assembler_Context;
 
 /* Token Functions */

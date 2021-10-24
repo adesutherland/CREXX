@@ -123,18 +123,20 @@ Token* token_f(Assembler_Context* context, int type) {
     return token;
 }
 
-/* Change an ID token's ID
- * MUST be a ID Token
- * Returns a new token which is a copy of the input token but with the new_id */
+/* Create an optimised ID token which is not in the source input
+ * If from_token if specified the source position (e.g line number) is taken
+ * from the from_token position, otherwise position is set to zero.
+ * Returns a new token with value as the new_id */
 Token* token_id(Assembler_Context* context, Token *from_token, char* new_id) {
     int extra_for_value;
 
     /* Create New Token */
-    extra_for_value = strlen(new_id) - sizeof(((Token*)0)->token_value) + 1;
+    extra_for_value =
+            (int) strlen(new_id) - (int) sizeof(((Token *) 0)->token_value) + 1;
     if (extra_for_value < 0) extra_for_value = 0;
 
-    Token* token = malloc(sizeof(Token) + extra_for_value);
-    token->token_type = ID; /* Only works for ID tokens */
+    Token *token = malloc(sizeof(Token) + extra_for_value);
+    token->token_type = ID;
 
     /* Link it up */
     if (context->token_tail) {
@@ -142,8 +144,7 @@ Token* token_id(Assembler_Context* context, Token *from_token, char* new_id) {
         token->token_prev = context->token_tail;
         context->token_tail->token_next = token;
         context->token_tail = token;
-    }
-    else {
+    } else {
         context->token_head = token;
         context->token_tail = token;
         token->token_next = 0;
@@ -151,10 +152,18 @@ Token* token_id(Assembler_Context* context, Token *from_token, char* new_id) {
     }
     token->token_number = ++(context->token_counter);
     token->token_subtype = 0;
-    token->length = from_token->length;
-    token->line = from_token->line;
-    token->column = from_token->column;
-    token->token_source = from_token->token_source;
+    if (from_token) {
+        token->length = from_token->length;
+        token->line = from_token->line;
+        token->column = from_token->column;
+        token->token_source = from_token->token_source;
+    }
+    else {
+        token->length = 0;
+        token->line = 0;
+        token->column = 0;
+        token->token_source = 0;
+    }
     token->optimised = 1;
 
     /* New value */

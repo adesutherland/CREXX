@@ -184,6 +184,7 @@ void init_ops() {
     instr_f("br", "Branch to op1", OP_ID, OP_NONE, OP_NONE);
     instr_f("brt", "Branch to op1 if op2 true", OP_ID, OP_REG, OP_NONE);
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
+    instr_f("brtf", "Branch to op1 if op3 true, otherwise branch to op2", OP_ID, OP_ID, OP_REG);
 
     instr_f("move", "Move op2 to op1 (Deprecated use swap)", OP_REG, OP_REG, OP_NONE);
     instr_f("swap", "Swap op1 and op2", OP_REG, OP_REG, OP_NONE);

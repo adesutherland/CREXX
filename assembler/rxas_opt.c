@@ -34,6 +34,7 @@ typedef struct rule {
     rule_flag flag;
     instruction_pattern in;
     instruction_pattern out;
+    instruction_pattern out2;
 } rule;
 
 /* We can only have 10 (0..9) operands of each type in our rules */
@@ -49,6 +50,7 @@ typedef struct op_map {
    unsigned char character[MAX_OP_MAP];
    double real[MAX_OP_MAP];
    char* branch[MAX_OP_MAP]; /* Branch IDs */
+   char* label[MAX_OP_MAP]; /* Branch LABELs */
    char* proc[MAX_OP_MAP]; /* Procedure IDs */
 
    /* Tokens to show what maps are set and the holding the defining token */
@@ -57,16 +59,30 @@ typedef struct op_map {
    Token *string_token[MAX_OP_MAP];
    Token *character_token[MAX_OP_MAP];
    Token *real_token[MAX_OP_MAP];
-   Token *proc_token[MAX_OP_MAP];
    Token *branch_token[MAX_OP_MAP];
+   Token *label_token[MAX_OP_MAP];
+   Token *proc_token[MAX_OP_MAP];
 
    /* Instructions matched in the rules */
-   rule *inst_mapped[OPTIMISER_QUEUE_SIZE];
+   rule *inst_mapped[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
 } op_map;
 
-/* The keyhole optimiser rules
- * Each rule is made up of a number of 'i' input instructions and a single 'o'
- * output instruction.
+/* The COVID-Opt Keyhole Optimiser Rules
+ *
+ * Each rule set is made up of a number of instructions mappings - individual
+ * rules. A rule set ends with a rule flagged END_OF_RULE. The rule sets as a
+ * whole end with a rule set just made up of a rule flagged END_OF_RULE
+ *
+ * Each rule has
+ * a) a flag indicating
+ * - END_OF_RULE described above
+ * - NO_GAP  (a normal instruction)
+ * - LABEL (a label instruction)
+ * b) The input mapping which is used to indicate
+
+ * - INSTRUCTION (a normal instruction)
+ * - LABEL (a label instruction)
+
  *
  * The operand matching is done by mapping the actual register to the rules register number,
  * when that actual register is found again it keeps the same mapping. So each
@@ -171,25 +187,37 @@ rule rules[] =
                         'i',"append", 'r', 0, 'r', 1, 0, 0},
             {END_OF_RULE},
 
-            /* Unconditional branch to branch false */
-            {ANY_GAP,   'i',"br",  'b', 0, 0, 0, 0, 0,
-                        'i',"brf", 'b', 1, 'r',0, 0, 0},
-            {ANY_GAP,   'l',0,     'l', 0, 0, 0, 0, 0,
-                        'l',0,     'l', 0, 0, 0, 0, 0},
-            {NO_GAP,    'i',"brf", 'b', 1, 'r', 0, 0, 0,
-                        'i',"brf", 'b', 1, 'r',0, 0, 0},
+            /* Unconditional branch to branch true mapped to brtf*/
+            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
+                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
+            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
+                        'l',0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brt", 'b', 1, 'r', 0,  0,  0,
+                        'i',"brt", 'b', 1, 'r', 0,  0,  0,
+                        'l',0,     'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
-            /* Unconditional branch to branch true */
-            {ANY_GAP,   'i',"br",  'b', 0, 0, 0, 0, 0,
-                        'i',"brt", 'b', 1, 'r',0, 0, 0},
-            {ANY_GAP,   'l',0,     'l', 0, 0, 0, 0, 0,
-                        'l',0,     'l', 0, 0, 0, 0, 0},
-            {NO_GAP,    'i',"brt", 'b', 1, 'r', 0, 0, 0,
-                        'i',"brt", 'b', 1, 'r',0, 0, 0},
+            /* Unconditional branch to branch false mapped to brtf*/
+            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
+                        'i',"brtf",'b', 2, 'b', 1, 'r', 0},
+            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
+                        'l',0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brf", 'b', 1, 'r', 0,  0,  0,
+                        'i',"brf", 'b', 1, 'r', 0,  0,  0,
+                        'l',0,     'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
-            /* NOTE Branch to unconditional branch is optimised later - no rule needed for this */
+            /* Unconditional branch to branch true false to brtf*/
+            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
+                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
+            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
+                        'l',0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brtf",'b', 1, 'b', 2, 'r', 0,
+                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
+            {END_OF_RULE},
+
+            /* NOTE Branch to unconditional branch is optimised later anyway so
+             * no rule needed for these scenarios */
 
             /* End of all rules marker */
             {END_OF_RULE}
@@ -315,17 +343,30 @@ static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_
             return 1;
 
         case 'l': /* Label */
+            /* The l and b tokens are intrinsically linked - "quantum!" - different
+             * token types but have matching values */
             if (opToken->token_type != LABEL ) return 0; /* Wrong Type */
+            if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
+                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+                    return 0; /* Wrong value */
+            }
+            else if (map->branch_token[op_num]) { /* Already Mapped branch - checked consistent */
+                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+                    return 0; /* Wrong value */
+            }
+
+            return 1;
+
+        case 'b': /* BRANCH */
+            /* The l and b tokens are intrinsically linked - "quantum!" - different
+             * token types but have matching values */
+            if (opToken->token_type != ID ) return 0; /* Wrong Type */
             if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
                 if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
-            return 1;
-
-        case 'b': /* BRANCH */
-            if (opToken->token_type != ID ) return 0; /* Wrong Type */
-            if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+            else if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
+                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             return 1;
@@ -423,25 +464,37 @@ static int map_operand(op_map *map, Token *opToken, char op_type, size_t op_num)
             }
             return 1;
 
-        case 'l': /* LABEL */
+        case 'l': /* Label */
+            /* The l and b tokens are intrinsically linked - "quantum!" - different
+             * token types but have matching values */
             if (opToken->token_type != LABEL ) return 0; /* Wrong Type */
-            if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+            if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
+                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->branch_token[op_num] = opToken;
-                map->branch[op_num] = (char*)opToken->token_value.string;
+                if (map->branch_token[op_num]) { /* Already Mapped branch - checked consistent */
+                    if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+                        return 0; /* Wrong value */
+                }
+                map->label_token[op_num] = opToken;
+                map->label[op_num] = (char*)opToken->token_value.string;
             }
             return 1;
 
         case 'b': /* BRANCH */
+            /* The l and b tokens are intrinsically linked - "quantum!" - different
+             * token types but have matching values */
             if (opToken->token_type != ID ) return 0; /* Wrong Type */
             if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
                 if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
+                if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
+                    if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+                        return 0; /* Wrong value */
+                }
                 map->branch_token[op_num] = opToken;
                 map->branch[op_num] = (char*)opToken->token_value.string;
             }
@@ -502,7 +555,7 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
     }
 }
 
-/* Maps an instruction can map a rule
+/* Maps an instruction against a rule
  * Returns 1 on success, 0 if the map fails. *map may be changed on either case */
 static int map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
 
@@ -540,7 +593,10 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
 }
 
 /* Returns the mapped token for a rule */
-static Token* mapped_token(op_map *map, char op_type, size_t op_num) {
+static Token* mapped_token(Assembler_Context *context, op_map *map, char op_type, size_t op_num) {
+    Token *t;
+    char buffer[20];
+
     switch(op_type) {
         case 'r': /* Register */
             return map->reg_token[op_num];
@@ -558,10 +614,51 @@ static Token* mapped_token(op_map *map, char op_type, size_t op_num) {
             return map->real_token[op_num];
 
         case 'l': /* Label == Branch */
-            return map->branch_token[op_num];
+            t = map->label_token[op_num];
+            if (t == 0) {
+                /* Special functionality for labels / branches
+                 * if label has not been defined in an input rule then a
+                 * unique label token is created */
 
-        case 'b': /* Branch */
-            return map->branch_token[op_num];
+                /* If the intrinsically linked branch id is set make a pair */
+                t = map->branch_token[op_num];
+                if (t) t = token_id(context, t, (char*)t->token_value.string);
+
+                    /* Otherwise make a unique label - note that as it does not start with
+                     * a letter, it cannot be a duplicate of a label from the
+                     * rxas source file */
+                else {
+                    snprintf(buffer, 20, "%d", context->optimiser_counter++);
+                    t = token_id(context, NULL, buffer);
+                }
+                /* Store the created token */
+                t->token_type = LABEL;
+                map->label_token[op_num] = t;
+            }
+            return t;
+
+        case 'b': /* Branch == Label */
+            t = map->branch_token[op_num];
+            if (t == 0) {
+                /* Special functionality for labels / branches
+                 * if branch id has not been defined in an input rule then a
+                 * unique branch token is created */
+
+                /* If the intrinsically linked label is set make a pair */
+                t = map->label_token[op_num];
+                if (t) t = token_id(context, t, (char*)t->token_value.string);
+
+                /* Otherwise make a unique label - note that as it does not start with
+                 * a letter, it cannot be a duplicate of a label from the
+                 * rxas source file */
+                else {
+                    snprintf(buffer, 20, "%d", context->optimiser_counter++);
+                    t = token_id(context, NULL, buffer);
+                }
+                /* Store the created token */
+                map->branch_token[op_num] = t;
+            }
+            return t;
 
         case 'p': /* Procedure */
             return map->proc_token[op_num];
@@ -576,6 +673,7 @@ static Token* mapped_token(op_map *map, char op_type, size_t op_num) {
  * returns 1 if the rule was successfully applied */
 static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int inst_no) {
     Token *new_instruction;
+    int inst_no2;
 
     /* Clear Map */
     memset(map, 0, sizeof(*map));
@@ -623,10 +721,11 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
         /* A match! We need to apply the output rule */
         /* Make sure inst_no is in range */
         if (inst_no >= context->optimiser_queue_items)
-            inst_no = context->optimiser_queue_items - 1;
+            inst_no = (int)context->optimiser_queue_items - 1;
         while (inst_no >= 0) {
             r = map->inst_mapped[inst_no];
             if (r) {
+                /* Main output instruction */
                 switch (r->out.inst_type) {
                     case 'i':
                         context->optimiser_queue[inst_no].instrToken =
@@ -634,17 +733,16 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                                          context->optimiser_queue[inst_no].instrToken,
                                          r->out.instruction);
                         context->optimiser_queue[inst_no].operand1Token =
-                                mapped_token(map, r->out.optype1, r->out.opnum1);
+                                mapped_token(context, map, r->out.optype1, r->out.opnum1);
                         context->optimiser_queue[inst_no].operand2Token =
-                                mapped_token(map, r->out.optype2, r->out.opnum2);
+                                mapped_token(context, map, r->out.optype2, r->out.opnum2);
                         context->optimiser_queue[inst_no].operand3Token =
-                                mapped_token(map, r->out.optype3, r->out.opnum3);
+                                mapped_token(context, map, r->out.optype3, r->out.opnum3);
                         break;
 
                     case 'l':
                         context->optimiser_queue[inst_no].instrToken =
-                                mapped_token(map, 'l', r->out.opnum1);
-                        context->optimiser_queue[inst_no].instrToken->token_type = LABEL;
+                                mapped_token(context, map, 'l', r->out.opnum1);
                         context->optimiser_queue[inst_no].operand1Token = 0;
                         context->optimiser_queue[inst_no].operand2Token = 0;
                         context->optimiser_queue[inst_no].operand3Token = 0;
@@ -661,6 +759,55 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         /* One less instruction in the queue */
                         context->optimiser_queue_items--;
                 }
+
+                /* Secondary output instruction */
+                switch (r->out2.inst_type) {
+                    case 'i':
+                        /* Insert instruction in the queue */
+                        inst_no2 = inst_no + 1;
+                        if ((int)context->optimiser_queue_items - inst_no2 > 0) {
+                            memmove(&context->optimiser_queue[inst_no2 + 1],
+                                    &context->optimiser_queue[inst_no2],
+                                    sizeof(instruction_queue) *
+                                    (context->optimiser_queue_items - inst_no2));
+                        }
+                        context->optimiser_queue_items++;
+
+                        /* Add the instruction */
+                        context->optimiser_queue[inst_no2].instrToken =
+                                token_id(context,
+                                         context->optimiser_queue[inst_no2].instrToken,
+                                         r->out2.instruction);
+                        context->optimiser_queue[inst_no2].operand1Token =
+                                mapped_token(context, map, r->out2.optype1, r->out2.opnum1);
+                        context->optimiser_queue[inst_no2].operand2Token =
+                                mapped_token(context, map, r->out2.optype2, r->out2.opnum2);
+                        context->optimiser_queue[inst_no2].operand3Token =
+                                mapped_token(context, map, r->out2.optype3, r->out2.opnum3);
+                        break;
+
+                    case 'l':
+                        /* Insert instruction in the queue */
+                        inst_no2 = inst_no + 1;
+                        if ((int)context->optimiser_queue_items - inst_no2 > 0) {
+                            memmove(&context->optimiser_queue[inst_no2 + 1],
+                                    &context->optimiser_queue[inst_no2],
+                                    sizeof(instruction_queue) *
+                                    (context->optimiser_queue_items - inst_no2));
+                        }
+                        context->optimiser_queue_items++;
+
+                        /* Add the instruction */
+                        context->optimiser_queue[inst_no2].instrToken =
+                                mapped_token(context, map, 'l', r->out2.opnum1);
+                        context->optimiser_queue[inst_no2].operand1Token = 0;
+                        context->optimiser_queue[inst_no2].operand2Token = 0;
+                        context->optimiser_queue[inst_no2].operand3Token = 0;
+                        break;
+
+                    default: ; /* No secondary instruction - nothing to be done */
+                }
+
             }
             inst_no--;
         }
@@ -710,8 +857,9 @@ static void optimise(Assembler_Context *context) {
 static void queue_instruction(Assembler_Context *context, Token *instrToken, Token *operand1Token,
                               Token *operand2Token, Token *operand3Token) {
 
-    /* Check if the queue is full */
-    if (context->optimiser_queue_items >= OPTIMISER_QUEUE_SIZE) {
+    /* Remove old instructions to get queue down to the target length */
+    /* Note that instruction rules can add instructions to the queue  */
+    while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
         /* Write the oldest instruction */
         if (context->optimiser_queue[0].instrToken->token_type == LABEL)
             rxaslabl(context, context->optimiser_queue[0].instrToken);
@@ -724,7 +872,7 @@ static void queue_instruction(Assembler_Context *context, Token *instrToken, Tok
         /* Move the queue */
         memmove(&context->optimiser_queue[0],
                 &context->optimiser_queue[1],
-                sizeof(instruction_queue) * (OPTIMISER_QUEUE_SIZE - 1));
+                sizeof(instruction_queue) * (context->optimiser_queue_items - 1));
 
         /* One less instruction in the queue */
         context->optimiser_queue_items--;

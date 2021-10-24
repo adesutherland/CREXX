@@ -689,6 +689,13 @@ START_OF_INSTRUCTIONS ;
             }
             DISPATCH;
 
+        START_INSTRUCTION(BRTF_ID_ID_REG)
+            DEBUG("TRACE - BRTF 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (op3RI) next_pc = current_frame->module->binary + REG_IDX(1);
+            else next_pc = current_frame->module->binary + REG_IDX(2);
+            CALC_DISPATCH_MANUAL;
+            DISPATCH;
+
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
 
