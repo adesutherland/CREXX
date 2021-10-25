@@ -69,98 +69,197 @@ typedef struct op_map {
 
 /* The COVID-Opt Keyhole Optimiser Rules
  *
- * Each rule set is made up of a number of instructions mappings - individual
- * rules. A rule set ends with a rule flagged END_OF_RULE. The rule sets as a
+ * Each rule set is made up of a number of instructions mappings (individual
+ * rules). A rule set ends with a rule flagged END_OF_RULE. The rule sets as a
  * whole end with a rule set just made up of a rule flagged END_OF_RULE
  *
  * Each rule has
  * a) a flag indicating
  * - END_OF_RULE described above
- * - NO_GAP  (a normal instruction)
- * - LABEL (a label instruction)
- * b) The input mapping which is used to indicate
-
- * - INSTRUCTION (a normal instruction)
- * - LABEL (a label instruction)
-
+ * - NO_GAP There can be no instructions before this rule in the ruleset
+ * - NO_HAZARD There can be non-hazardous instructions before matching this rule
+ * - ANY_GAP There can be any instructions before matching this rule
+ *
+ * b) The input mapping which is used to map a rule to an instruction.
+ * c) 0,1, or 2 output template mappings that are used to replace the
+ *    mapped instruction.
+ *
+ * All the rules of a ruleset need to map to instructions correctly. When they do
+ * all the mapped instructions are replaced by the output templates.
+ *
+ * Each instruction mapping can have a type of
+ * 'i' - INSTRUCTION (a normal instruction)
+ * 'l' - LABEL (a label instruction)
  *
  * The operand matching is done by mapping the actual register to the rules register number,
  * when that actual register is found again it keeps the same mapping. So each
  * input rule much match the instruction and operands. See examples!
  *
- * There may be other instructions in the source code between the matched input
- * instructions as long as they are 'irrelevant', meaning that they do not use
- * any of the register operands in the matching rules. Again see examples!
+ * NO_HAZARD
+ * In this mode, there may be other instructions in the source code between the
+ * matched input instructions as long as they are not hazardous including being
+ * 'irrelevant', meaning that they do not use any of the register operands in
+ * the matching rules. Again see examples!
  *
- * If there is a match then each found in instruction is removed from the queue
- * and the output instruction is inserted in the queue where the last instruction
- * was found.
+ * Hazardous instructions, change the data flow and include:
+ * - labels (causes un-analysable flow control)
+ * - branches (causes un-analysable flow control)
+ * - function calls (these use dynamic registers(
+ * - Procedure boundaries
+ * - instructions not part of the ruleset but using registers used in the ruleset
  *
- * If the out instruction is a null this means there is no output instruction to
- * be inserted
+ * If there is a match then each found instruction is removed from the queue
+ * and replaced with the output instruction templates (if any).
  *
- * Examples assume the following rules:
+ * NOTE that a branch to an unconditional branch is optimised later, as part of
+ * the assembler branch address backpacking logic, so no rules are needed for
+ * these scenarios
  *
- * Rule 1 - Two swaps cancelling out: swap r0,r1; swap r0,r1
- *    in_out instruction op1     op2     op3
- *  { 'i',   "swap",     'r', 0, 'r', 1, 0, 0 }
- *  { 'i',   "swap",     'r', 0, 'r', 1, 0, 0 }
- *  { 'o',   0,          0, 0,   0, 0,   0, 0 }
+ * Annotated Examples (see after this comment block for the actual rule declarations)
  *
- * Rule 2 -Two swaps cancelling out: swap r0,r1; swap r1,r0
- *    in_out instruction op1     op2     op3
- *  { 'i',   "swap",     'r', 0, 'r', 1, 0, 0 }
- *  { 'i',   "swap",     'r', 1, 'r', 0, 0, 0 }
- *  { 'o',   0,          0, 0,   0, 0,   0, 0 }
+ * 1. Rule for two swaps cancelling out: swap r0,r1; swap r0,r1
  *
- * Rule 3 - sconcat to sappend: sconcat r0,r0,r1 to sappend r0,r1
- *    in_out instruction op1     op2     op3
- *  { 'i',   "sconcat",  'r', 0, 'r', 0, 'r', 1 }
- *  { 'o',   "sappend",  'r', 0, 'r', 1, 0, 0 }
+ *          *  flag type   type inst    op1     op2     op3
+ * input    *  {NO_HAZARD, 'i', "swap", 'r', 0, 'r', 1, 0, 0,
+ * output 1 *               0},
+ * output 2 *
+ * input    *  {NO_HAZARD, 'i', "swap", 'r', 0, 'r', 1, 0, 0,
+ * output 1 *               0},
+ * output 2 *
+ * input    *  {END_OF_RULE},
  *
- * Example 1
+ * This rule helps the situation where there are two consecutive calls to procedures
+ * and the compiler swaps back a register after the first call only to swap
+ * it back for the next call. Note that a second ruleset is needed for the case
+ * where the register numbers are reversed in the second swap (see the rules after
+ * this comment block)
+ *
+ * NO_HAZARD is used as a branch in or out, or use of a relevant register would
+ * invalidate the rule logic
+ *
+ * Example 1.1
  *   swap r4,r8
  *   swap r4,r8
  *
- *   Rule 1 matches - rule r0 maps to register r4, and rule r1 maps to register r8
- *   No output - the swaps are removed
+ * Rule matches - rule r0 maps to register r4, and rule r1 maps to register r8
+ * No output - the swaps are removed
  *
- * Example 2
- *   swap r4,r8
- *   swap r8,r4
- *
- *   Rule 2 matches - rule r0 maps to register r4, and rule r1 maps to register r8
- *   This shows how the second rule matches rather than rule 1 because of the
- *   register order in the second input instruction
- *   No output - the swaps are removed
- *
- * Example 3
+ * Example 1.2
  *   swap r4,r8
  *   iadd r2,r3,r5
- *   swap r8,r4
+ *   swap r4,r8
  *
- *   Rule 2 matches - rule r0 maps to register r4, and rule r1 maps to register r8
- *   The iadd instruction is 'irrelevant' as it doesn't use r4 or r8
- *   No output - the swaps are removed
+ * Rule matches - rule r0 maps to register r4, and rule r1 maps to register r8
+ * The iadd instruction is 'irrelevant' as it doesn't use r4 or r8
+ * Output - the swaps are removed
+ *   iadd r2,r3,r5
  *
- * Example 4
+ * Example 1.3
  *   swap r4,r8
  *   say r4
- *   swap r8,r4
+ *   swap r4,r8
  *
- *   Rule 2 does not match - although rule r0 maps to register r4, and rule r1 maps to register r8
- *   the say instruction uses r4. So no match, the swaps cannot be removed
- *   No output
+ * Rule does not match - although rule r0 maps to register r4, and rule r1 maps
+ * to register r8 the say instruction uses r4. So no match, the swaps cannot be
+ * removed
+ * Output same as input - no change
  *
- * Example 5
- *   sconcat r4,r4,r8
  *
- *   Rule 3 matches - rule r0 maps to register r4, and rule r1 maps to register r8
- *   noting that the first two operands are the same register
- *   sconcat is removed and replaced with the faster sappend r4,r8
+ * 2. Rule for converting a concat to a faster append
+ *    concat r0,r0,r1 to append r0,r1
+ *
+ *          *  flag type   type inst      op1     op2     op3
+ * input    *  {NO_HAZARD, 'i', "concat", 'r', 0, 'r', 0, 'r', 1,
+ * output 1 *              'i', "append", 'r', 0, 'r', 1,  0, 0},
+ * output 2 *
+ * input    *  {END_OF_RULE},
+ *
+ * Example 2.1
+ *   concat r4,r4,r8
+ *
+ * Rule matches - rule r0 maps to register r4, and rule r1 maps to register r8
+ * noting that the first two operands are the same register
+ * Output - concat is removed and replaced with the faster append
+ *   append r4,r8
+ *
+ *
+ * 3. Rule for optimising an unconditional branch (br) to a branch true (brt),
+ *    converting this to a brtf, and reducing the number of branches program flow
+ *    needs to go through
+ *
+ *    This is a complex ruleset and one of 3 rulesets (currently) designed to improve
+ *    performance by reducing branches to branches
+ *
+ *          *  flag type   type inst    op1     op2     op3
+ * input    *  {ANY_GAP,   'i',"br",    'b', 0,  0,  0,  0,  0,
+ * output 1 *              'i',"brtf",  'b', 1, 'b', 2, 'r', 0},
+ * output 2 *
+ * input    *  {ANY_GAP,   'l',0,       'l', 0,  0,  0,  0,  0,
+ * output 1 *              'l',0,       'l', 0,  0,  0,  0,  0},
+ * output 2 *
+ * input    *  {NO_GAP,    'i',"brt",   'b', 1, 'r', 0,  0,  0,
+ * output 1 *              'i',"brt",   'b', 1, 'r', 0,  0,  0,
+ * output 2 *              'l',0,       'l', 2,  0,  0,  0,  0},
+ * input    *  {END_OF_RULE},
+ *
+ * Especially with control statements (like IF) the compiler glues the
+ * different logic blocks together with branches, this leads to scenarios
+ * where a branch jumps directly to another branch.
+ *
+ * Rule 1 matches an unconditional branch which it proposes to change to a conditional
+ *        direct branch to the two eventual destinations
+ * Rule 2 matches to a label which is the destination of the previous matched br.
+ *        ANY_GAP is used as intervening instruction can be safely ignored
+ *        The output template shows this label is unchanged
+ * Rule 3 matches the brt. The NO_GAP indicated that the brt must directly
+ *        follow the label above. The output of this rule is the brt followed
+ *        by a new label (to be used by the new brtf, from rule 1)
+ *
+ * The important details is the 'l' and 'b' mappings. These are intrinsically linked
+ * ('b' 0  branches to label 'l' 0). So
+ *   b0 (rule 1) maps to l0 (rule 2)
+ *   b1 (rule 3) is the branch true target and is used in the rule 1 output
+ *   b2 is special - there is no input b2 so the system creates a new unique
+ *      label for it. Rule 1 uses this as the branch false destination, and rule
+ *      3's output 2 makes the required label instruction.
+ *
+ * NOTE that by the nature of a keyhole optimiser this optimisation only works when
+ * the branches are near (currently upto 20 instructions or so apart) each other.
+ *
+ * Example 3.1
+ *
+ *     br lb1
+ *     ...
+ *   lb1:
+ *     brt lb2,r3
+ *     instf
+ *     ...
+ *   lb2:
+ *     instt
+ *
+ * As can be seen the control flow from "br lb1" either ends up at
+ *   "instt" if r3 is true, or "instf" but requires two branches.
+ *
+ * The output from the ruleset is:
+ *
+ *     brtf lb2,lbnew,r3
+ *     ...
+ *   lb1:
+ *     brt lb2,r3
+ *   lbnew:
+ *     instf
+ *     ...
+ *   lb2:
+ *     instt
+ *
+ * As can be seen the branch now goes directly to the eventual destinations. The
+ * rest of the code is unchanged as other logic may be branching to lb1 and lb2
+ * by leaving this alone we know we are not breaking other areas. (Note that after
+ * disassembly lp1 may be removed if it is not used by anu other code)
  *
  */
 rule rules[] =
+
         {
 
             /* Two swaps cancelling out: swap r0,r1; swap r0,r1 */
