@@ -18,7 +18,7 @@ add_custom_command(
         COMMENT "Create REXX ASSEMBLER Lexer..."
 )
 
-add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c
+add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c rxas_opt.c
         rxasgrmr.c rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
         ../avl_tree/rxastree.h

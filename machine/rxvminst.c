@@ -82,6 +82,8 @@ void init_ops() {
     instr_f("concat", "String Concat (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
     instr_f("appendchar", "Append Concat Char op2 (as int) on op1", OP_REG, OP_REG, OP_NONE);
     instr_f("concchar", "Concat Char op1 from op2 position op3", OP_REG, OP_REG, OP_REG);
+    instr_f("sappend", "String Append with space (op1=op1||op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("append", "String Append (op1=op1||op2)", OP_REG, OP_REG, OP_NONE);
 
     instr_f("triml", "Trim String (op1) from Left by (op2) Chars", OP_REG, OP_REG, OP_NONE);
     instr_f("trimr", "Trim String (op1) from Right by (op2) Chars", OP_REG, OP_REG, OP_NONE);
@@ -182,6 +184,7 @@ void init_ops() {
     instr_f("br", "Branch to op1", OP_ID, OP_NONE, OP_NONE);
     instr_f("brt", "Branch to op1 if op2 true", OP_ID, OP_REG, OP_NONE);
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
+    instr_f("brtf", "Branch to op1 if op3 true, otherwise branch to op2", OP_ID, OP_ID, OP_REG);
 
     instr_f("move", "Move op2 to op1 (Deprecated use swap)", OP_REG, OP_REG, OP_NONE);
     instr_f("swap", "Swap op1 and op2", OP_REG, OP_REG, OP_NONE);

@@ -40,7 +40,7 @@ int scan(Assembler_Context* s, char *buff_end) {
     rreg = 'r' digit+;
     greg = 'g' digit+;
     areg = 'a' digit+;
-    id = (letter | [_]) (letter | digit | [_-.])*;
+    id = (letter | [_]) (letter | digit | [_\-.#])*;
 
     "/*" {
       depth = 1;
