@@ -315,11 +315,31 @@ static RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
                       v2->string, v2->string_len);
 }
 
-/*
- * TODO - Optimisation opportunity - keyhole optimiser can change to
- * more specific instructions where there is no overlap or to do
- * a prepend / append
- */
+static RX_INLINE void string_append(value *v1, value *v2) {
+    size_t start = v1->string_length;
+
+    extend_string_buffer(v1, v1->string_length + v2->string_length);
+    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    v1->string_pos = 0;
+#ifndef NUTF8
+    v1->string_char_pos = 0;
+    v1->string_chars += v2->string_chars;
+#endif
+}
+
+static RX_INLINE void string_sappend(value *v1, value *v2) {
+    size_t start = v1->string_length;
+
+    extend_string_buffer(v1, v1->string_length + v2->string_length + 1);
+    v1->string_value[start++] = ' ';
+    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    v1->string_pos = 0;
+#ifndef NUTF8
+    v1->string_char_pos = 0;
+    v1->string_chars += v2->string_chars + 1;
+#endif
+}
+
 static RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);

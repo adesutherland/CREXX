@@ -12,6 +12,20 @@ typedef struct Error Error;
 typedef struct bin_space bin_space;
 struct avl_tree_node;
 
+/* Keyhole Optimiser */
+/* We are aiming for 20 instructions in the keyhole */
+#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 20
+/* We add 40 slots for any instruction growth caused by rules */
+#define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
+
+/* Keyhole Queue Item  */
+typedef struct instruction_queue {
+    Token *instrToken;
+    Token *operand1Token;
+    Token *operand2Token;
+    Token *operand3Token;
+} instruction_queue;
+
 /* cREXX Instruction Coding */
 #pragma pack(push,4)
 typedef struct instruction_coding {
@@ -93,6 +107,7 @@ typedef struct expose_proc_constant {
 
 typedef struct Assembler_Context {
     char *top, *cursor, *marker, *ctxmarker, *linestart;
+    int optimise;
     int line;
     int token_counter;
     Token* token_head;
@@ -108,6 +123,9 @@ typedef struct Assembler_Context {
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
     char *extern_regs;
+    instruction_queue *optimiser_queue;
+    size_t optimiser_queue_items;
+    int optimiser_counter;
 } Assembler_Context;
 
 /* Token Functions */
@@ -119,6 +137,7 @@ struct Token {
     Token *token_prev;
     size_t line, column, length;
     char* token_source;
+    char optimised;
     union {
         rxinteger integer;
         unsigned char string[1];
@@ -132,6 +151,10 @@ Token* token_f(Assembler_Context* context, int type);
 void free_tok(Assembler_Context* context);
 void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */
+/* Change an ID token's ID
+ * MUST be a ID Token
+ * Returns a new token which is a copy of the input token but with the new_id */
+Token* token_id(Assembler_Context* context, Token *from_token, char* new_id);
 
 /* Scanner */
 int scan(Assembler_Context* s, char *buff_end);

@@ -2,5 +2,6 @@
 
 /*!re2c
 letter = [a-zA-Z];
-whitespace = [ \t\v\f]+;
+whitespace = [ \t]+;
+not_char = [~\^];
 */

@@ -1,6 +1,14 @@
 CREXX History / Change Log
 
 F0035 - (Almost) complete REXX/RXAS BIF library
+F0036 - COVID-Opt Assembler Keyhole Optimiser
+      - Initial set of C-Opt rules:
+        - swaps cancelling each other out
+        - concat to append
+        - br to brt/brf/brtf
+      - Jump to unconditional jump Assembler Optimiser
+      - BranchTrueFalse (BRTF) - Branch with two destinations
+      - String append instructions (APPEND/SAPPEND)
 I0I49 - Compiler error - does not take account os a swap interfering with a return register
       - Segfault when the return register is also used as a argument
 I0146 - Compiler not always setting typeflags of arguments correctly
