@@ -82,7 +82,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     value *v1, *v2, *v3, *v_temp;
     rxinteger i1, i2, i3, i4,i5;
     double f1, f2, f3;
-    char *converr;
+    char *converr, *c;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
     /* Linker Stuff */
@@ -445,7 +445,9 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2);
             v1 = op1R;
             p2 = PROC_OP(2); /* This is the target */
-
+            /* Clear target return value register */
+            free_value(current_frame, v1);
+            op1R = 0;
             /* New stackframe */
             current_frame = frame_f(program, p2, 0, current_frame, next_pc,
                                     next_inst, &(op1R));
@@ -492,10 +494,6 @@ START_OF_INSTRUCTIONS ;
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
-
-            /* Clear the return register */
-            if (current_frame->return_reg) clear_reg(*(current_frame->return_reg));
-
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -519,15 +517,12 @@ START_OF_INSTRUCTIONS ;
                     /* We need to clone/copy the register to avoid having
                      * two registers pointing to the same value */
                     /* OPTIMISATION RULE - Avoid returning argument registers */
+                    *(current_frame->return_reg) =
+                            value_f(current_frame->parent);
                     copy_value(*(current_frame->return_reg),v1);
                 }
                 else {
                     /* Otherwise, we can return our register safely */
-
-                    /* Free parent return register */
-                    free_value(current_frame->parent, *current_frame->return_reg);
-
-                    /* Move Register */
                     *(current_frame->return_reg) = v1;
                     v1->owner = current_frame->parent;
                 }
@@ -551,8 +546,9 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                (*current_frame->return_reg)->int_value = i1;
-
+                *(current_frame->return_reg) =
+                        value_int_f(current_frame->parent,
+                                    i1);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -576,7 +572,8 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                (*current_frame->return_reg)->float_value = f1;
+                *(current_frame->return_reg) =
+                        value_float_f(current_frame->parent, f1);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -602,7 +599,8 @@ START_OF_INSTRUCTIONS ;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                set_const_string(*current_frame->return_reg, s1);
+                *(current_frame->return_reg) =
+                        value_conststring_f(current_frame->parent, s1);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -689,6 +687,13 @@ START_OF_INSTRUCTIONS ;
                 next_pc = current_frame->module->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
+            DISPATCH;
+
+        START_INSTRUCTION(BRTF_ID_ID_REG)
+            DEBUG("TRACE - BRTF 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (op3RI) next_pc = current_frame->module->binary + REG_IDX(1);
+            else next_pc = current_frame->module->binary + REG_IDX(2);
+            CALC_DISPATCH_MANUAL;
             DISPATCH;
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
@@ -1928,9 +1933,11 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             set_value_string(v1,v2);
-            /*     i1=utf8uprcodepoint(v1->int_value); */
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)tolower(*c);
+#else
             utf8lwr(v1->string_value);
-            if (v1->string_length!=v2->string_length) set_value_string(v1,v2);
+#endif
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1944,9 +1951,11 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             set_value_string(v1,v2);
-     /*     i1=utf8uprcodepoint(v1->int_value); */
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)toupper(*c);
+#else
             utf8upr(v1->string_value);
-            if (v1->string_length!=v2->string_length) set_value_string(v1,v2);
+#endif
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2239,6 +2248,28 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             string_concat_char(v1, v2);
+            DISPATCH;
+
+/*
+ *   APPEND_REG_REG Append string op2 on op1
+ */
+        START_INSTRUCTION(APPEND_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - APPEND R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            string_append(v1, v2);
+            DISPATCH;
+
+/*
+ *   SAPPEND_REG_REG Append with space string op2 on op1
+ */
+        START_INSTRUCTION(SAPPEND_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - SAPPEND R%llu R%llu\n", REG_IDX(1),
+                  REG_IDX(2));
+            v1 = op1R;
+            v2 = op2R;
+            string_sappend(v1, v2);
             DISPATCH;
 
 /*

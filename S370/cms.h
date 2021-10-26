@@ -24,5 +24,6 @@
 
 /* Shocking hack ... */
 #define snprintf(s,sz,...) sprintf(s,__VA_ARGS__)
+#define vsnprintf(s,sz,...) vsprintf(s,__VA_ARGS__)
 
 #endif //CREXX_CMS_H

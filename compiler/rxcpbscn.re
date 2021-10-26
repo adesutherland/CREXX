@@ -52,7 +52,7 @@ int rexbscan(Context* s) {
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   str = sqstr|dqstr;
   ob = [ \t]*;
-  not = [\\~¬];
+  not = [\\] | not_char;
 */
 
 /*!re2c
