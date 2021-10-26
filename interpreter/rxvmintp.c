@@ -82,7 +82,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     value *v1, *v2, *v3, *v_temp;
     rxinteger i1, i2, i3, i4,i5;
     double f1, f2, f3;
-    char *converr;
+    char *converr, *c;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
     /* Linker Stuff */
@@ -1933,9 +1933,11 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             set_value_string(v1,v2);
-            /*     i1=utf8uprcodepoint(v1->int_value); */
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)tolower(*c);
+#else
             utf8lwr(v1->string_value);
-            if (v1->string_length!=v2->string_length) set_value_string(v1,v2);
+#endif
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1949,9 +1951,11 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             set_value_string(v1,v2);
-     /*     i1=utf8uprcodepoint(v1->int_value); */
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)toupper(*c);
+#else
             utf8upr(v1->string_value);
-            if (v1->string_length!=v2->string_length) set_value_string(v1,v2);
+#endif
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
