@@ -9,4 +9,4 @@ rxvm tscopies ../rxas/copies
 rxvm tslastpos ../rxas/lastpos
 rxvm tsword ../rxas/word
 rxvm ts_countstr ../rexx/countstr ../rxas/pos
-rxvm ts_countstr ../rxas/countstr ../rxas/pos
+

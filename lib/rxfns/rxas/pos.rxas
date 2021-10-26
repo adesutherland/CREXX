@@ -1,5 +1,5 @@
 /* reverse */
-          .globals=0
+    .globals=0
 pos() .locals=13 .expose=pos.pos
     brtpandt havestart,a3,1
     load a3,1
@@ -22,7 +22,7 @@ offok:
     dec r10             /* -1 for BCT         */
     ilt  r11,r10,0      /* <0                 */
     brt  empty,r11
-    ilt  r11,r10,r2     /* length(needle, already -1 for BCT) < length(string+offset) */
+    ilt  r11,r10,r2     /* length(ndle, already -1 for BCT) < length(str+off) */
     brf  empty,r11
  outerloop:
     strchar r8,r1,r3    /* load source char    */
