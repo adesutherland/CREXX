@@ -42,7 +42,7 @@ options levelb
 
 /* function prototype */
 overlay: procedure = .string
-  arg insstr = .string, string = .string, position = .int, len = 0, pad = " "
+  arg insstr = .string, string = .string, position = .int, len = 0, pad = ""
 
 
 
