@@ -315,6 +315,44 @@ rule rules[] =
                         'i',"brtf",'b', 1, 'b', 2, 'r', 0},
             {END_OF_RULE},
 
+            /* brt to brt with same condition */
+            {ANY_GAP,   'i',"brt",  'b', 0, 'r', 0,  0,  0,
+                        'i',"brt",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
+                        'l',0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brt",  'b', 1, 'r', 0,  0,  0,
+                        'i',"brt",  'b', 1, 'r', 0,  0,  0},
+            {END_OF_RULE},
+
+            /* brf to brf with same condition */
+            {ANY_GAP,   'i',"brf",  'b', 0, 'r', 0,  0,  0,
+                        'i',"brf",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
+                        'l',0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brf",  'b', 1, 'r', 0,  0,  0,
+                        'i',"brf",  'b', 1, 'r', 0,  0,  0},
+            {END_OF_RULE},
+
+            /* brt to brf with same condition */
+            {ANY_GAP,   'i',"brt",  'b', 0, 'r', 0,  0,  0,
+                        'i',"brt",  'b', 2, 'r', 0,  0,  0},
+            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
+                        'l',0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brf",  'b', 1, 'r', 0,  0,  0,
+                        'i',"brf",  'b', 1, 'r', 0,  0,  0,
+                        'l',0,      'l', 2,  0,  0,  0,  0},
+            {END_OF_RULE},
+
+            /* brf to brt with same condition */
+            {ANY_GAP,   'i',"brf",  'b', 0, 'r', 0,  0,  0,
+                        'i',"brf",  'b', 2, 'r', 0,  0,  0},
+            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
+                        'l',0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    'i',"brt",  'b', 1, 'r', 0,  0,  0,
+                        'i',"brt",  'b', 1, 'r', 0,  0,  0,
+                        'l',0,      'l', 2,  0,  0,  0,  0},
+            {END_OF_RULE},
+
             /* NOTE Branch to unconditional branch is optimised later anyway so
              * no rule needed for these scenarios */
 
