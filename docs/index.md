@@ -40,7 +40,7 @@ The documentation is stored in the code repository/branch under the [/doc](https
 
 # Current Component User Documentation
 
-cREXX F0036
+cREXX I0156
 
 ## Running a REXX program
 

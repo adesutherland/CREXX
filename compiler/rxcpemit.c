@@ -396,10 +396,15 @@ static walker_result register_walker(walker_direction direction,
                 else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
-                /* These should not have constants if the optimiser has been run and
-                 * anyway the instructions cannot accept constants */
             case OP_AND:
             case OP_OR:
+                /*  These should not have constants if the optimiser has been run and
+                  * anyway the instructions cannot accept constants
+                  * But we do want this node and all children to have the
+                  * same register if possible to about register copies */
+                if (!is_var_symbol(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (!is_var_symbol(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+
             default:
                 ;
         }
@@ -436,11 +441,6 @@ static walker_result register_walker(walker_direction direction,
             case OP_CONCAT:
             case OP_SCONCAT:
 
-            /* These should not have constants if the optimiser has been run and
-             * anyway the instructions cannot accept constants */
-            case OP_AND:
-            case OP_OR:
-
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
                     ret_reg(payload->current_scope, child1->register_num);
@@ -451,6 +451,30 @@ static walker_result register_walker(walker_direction direction,
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
                     node->register_num = get_reg(payload->current_scope);
+                break;
+
+            case OP_AND:
+            case OP_OR:
+                /* What we try and do here is use the same register for the
+                 * node and children to avoid copies */
+                if (child1->register_num == DONT_ASSIGN_REGISTER ||
+                    child2->register_num == DONT_ASSIGN_REGISTER) {
+                    /* If we are assigning a register to either children we
+                     * will assign to this node and children, overriding/ignoring
+                     * any DONT_ASSIGN_REGISTER flag for this node */
+                    node->register_num = get_reg(payload->current_scope);
+                    if (child1->register_num == DONT_ASSIGN_REGISTER)
+                        child1->register_num = node->register_num;
+                    if (child2->register_num == DONT_ASSIGN_REGISTER)
+                        child2->register_num = node->register_num;
+                }
+                else {
+                    /* Else both children have a register assigned (and must be symbols)
+                     * so just set the node's register */
+                    if (node->register_num != DONT_ASSIGN_REGISTER)
+                        /* DONT_ASSIGN_REGISTER means that the register number will be set later */
+                        node->register_num = get_reg(payload->current_scope);
+                }
                 break;
 
             case OP_NOT:
@@ -1296,88 +1320,174 @@ static walker_result emit_walker(walker_direction direction,
             case OP_AND:
                 node->output = output_f();
                 output_append(node->output, child1->output);
+                if (node->register_num == child1->register_num &&
+                    node->register_type == child1->register_type) {
+                    /* If child1 and result are the same registers the logic
+                     * is slightly shorter
+                     *
+                     * If result is false - we can just lazily set the result to false
+                     * and not bother with the second expression */
+                    snprintf(temp1, buf_len, "   brf l%dandend,%c%d\n",
+                             node->node_number,
+                             child1->register_type,
+                             child1->register_num);
+                    node->output2 = output_fs(temp1);
+                    output_append(node->output, node->output2);
 
-                /* If result is false - we can just lazily set the result to false
-                 * and not bother with the second expression */
-                snprintf(temp1, buf_len, "   brf l%d,%c%d\n",
-                         child1->node_number,
-                         child1->register_type,
-                         child1->register_num);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                    /* Evaluate child2 */
+                    output_append(node->output, child2->output);
 
-                /* Evaluate child2 */
-                output_append(node->output, child2->output);
+                    /* Result is child2's result */
+                    if (! (node->register_num == child2->register_num &&
+                           node->register_type == child2->register_type) ) {
+                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                                 node->register_type,
+                                 node->register_num,
+                                 child2->register_type,
+                                 child2->register_num);
+                        node->output3 = output_fs(temp1);
+                        output_append(node->output, node->output3);
+                    }
 
-                /* Result is child2's result & branch to end */
-                if (node->register_num == child2->register_num &&
-                   node->register_type == child2->register_type ) {
-                    /* No need to copy if the registers are the same */
-                    snprintf(temp1, buf_len, "   br l%d\n", node->node_number);
+                    /* End of logic */
+                    /* Result is already set */
+                    snprintf(temp1, buf_len,
+                             "l%dandend:\n",
+                             node->node_number);
+                    node->output4 = output_fs(temp1);
+                    output_append(node->output, node->output4);
                 }
                 else {
-                    snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%d\n",
+                    /* If child1 and result are not the same registers the logic
+                     * is slightly longer
+                     *
+                     * If result is false - we can just lazily set the result to false
+                     * and not bother with the second expression */
+                    snprintf(temp1, buf_len, "   brf l%dandfalse,%c%d\n",
+                             node->node_number,
+                             child1->register_type,
+                             child1->register_num);
+                    node->output2 = output_fs(temp1);
+                    output_append(node->output, node->output2);
+
+                    /* Evaluate child2 */
+                    output_append(node->output, child2->output);
+
+                    /* Result is child2's result & branch to end */
+                    if (node->register_num == child2->register_num &&
+                        node->register_type == child2->register_type) {
+                        /* No need to copy if the registers are the same */
+                        snprintf(temp1, buf_len, "   br l%dandend\n", node->node_number);
+                    }
+                    else {
+                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%dandend\n",
+                                 node->register_type,
+                                 node->register_num,
+                                 child2->register_type,
+                                 child2->register_num,
+                                 node->node_number);
+                    }
+                    node->output3 = output_fs(temp1);
+                    output_append(node->output, node->output3);
+
+                    /* End of logic */
+                    /* Result is 0/false */
+                    snprintf(temp1, buf_len,
+                             "l%dandfalse:\n   load %c%d,0\nl%dandend:\n",
+                             node->node_number,
                              node->register_type,
                              node->register_num,
-                             child2->register_type,
-                             child2->register_num,
                              node->node_number);
+                    node->output4 = output_fs(temp1);
+                    output_append(node->output, node->output4);
                 }
-                node->output3 = output_fs(temp1);
-                output_append(node->output, node->output3);
-
-                /* End of logic */
-                snprintf(temp1, buf_len, "l%d:\n   load %c%d,0\nl%d:\n",
-                         child1->node_number,
-                         node->register_type,
-                         node->register_num,
-                         node->node_number);
-                node->output4 = output_fs(temp1);
-                output_append(node->output, node->output4);
                 type_promotion(node);
                 break;
 
             case OP_OR:
                 node->output = output_f();
                 output_append(node->output, child1->output);
+                if (node->register_num == child1->register_num &&
+                    node->register_type == child1->register_type) {
+                    /* If child1 and result are the same registers the logic
+                     * is slightly shorter
+                     *
+                     * If result is true - we can just lazily set the result to true
+                     * and not bother with the second expression */
+                    snprintf(temp1, buf_len, "   brt l%dorend,%c%d\n",
+                             node->node_number,
+                             child1->register_type,
+                             child1->register_num);
+                    node->output2 = output_fs(temp1);
+                    output_append(node->output, node->output2);
 
-                /* If result is true - we can just lazily set the result to true
-                 * and not bother with the second expression */
-                snprintf(temp1, buf_len, "   brt l%d,%c%d\n",
-                         child1->node_number,
-                         child1->register_type,
-                         child1->register_num);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                    /* Evaluate child2 */
+                    output_append(node->output, child2->output);
 
-                /* Evaluate child2 */
-                output_append(node->output, child2->output);
+                    /* Result is child2's result */
+                    if (! (node->register_num == child2->register_num &&
+                           node->register_type == child2->register_type) ) {
+                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                                 node->register_type,
+                                 node->register_num,
+                                 child2->register_type,
+                                 child2->register_num);
+                        node->output3 = output_fs(temp1);
+                        output_append(node->output, node->output3);
+                    }
 
-                /* Result is child2's result & branch to end */
-                if (node->register_num == child2->register_num &&
-                    node->register_type == child2->register_type) {
-                    /* No need to copy if the registers are the same */
-                    snprintf(temp1, buf_len, "   br l%d\n", node->node_number);
+                    /* End of logic */
+                    /* Result is already set */
+                    snprintf(temp1, buf_len,
+                                 "l%dorend:\n",
+                                 node->node_number);
+                    node->output4 = output_fs(temp1);
+                    output_append(node->output, node->output4);
                 }
                 else {
-                    snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%d\n",
-                             node->register_type,
-                             node->register_num,
-                             child2->register_type,
-                             child2->register_num,
-                             node->node_number);
-                }
-                node->output3 = output_fs(temp1);
-                output_append(node->output, node->output3);
+                    /* If child1 and result are not the same registers the logic
+                     * is slightly longer
+                     *
+                     * If result is true - we can just lazily set the result to true
+                     * and not bother with the second expression */
+                    snprintf(temp1, buf_len, "   brt l%dortrue,%c%d\n",
+                             node->node_number,
+                             child1->register_type,
+                             child1->register_num);
+                    node->output2 = output_fs(temp1);
+                    output_append(node->output, node->output2);
 
-                /* End of logic */
-                snprintf(temp1, buf_len, "l%d:\n   load %c%d,1\nl%d:\n",
-                         child1->node_number,
-                         node->register_type,
-                         node->register_num,
-                         node->node_number);
-                node->output4 = output_fs(temp1);
-                output_append(node->output, node->output4);
+                    /* Evaluate child2 */
+                    output_append(node->output, child2->output);
+
+                    /* Result is child2's result & branch to end */
+                    if (node->register_num == child2->register_num &&
+                        node->register_type == child2->register_type) {
+                        /* No need to copy if the registers are the same */
+                        snprintf(temp1, buf_len, "   br l%dorend\n", node->node_number);
+                    }
+                    else {
+                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%dorend\n",
+                                 node->register_type,
+                                 node->register_num,
+                                 child2->register_type,
+                                 child2->register_num,
+                                 node->node_number);
+                    }
+                    node->output3 = output_fs(temp1);
+                    output_append(node->output, node->output3);
+
+                    /* End of logic */
+                    /* Result is 1/true */
+                    snprintf(temp1, buf_len,
+                                 "l%dortrue:\n   load %c%d,1\nl%dorend:\n",
+                                 node->node_number,
+                                 node->register_type,
+                                 node->register_num,
+                                 node->node_number);
+                    node->output4 = output_fs(temp1);
+                    output_append(node->output, node->output4);
+                }
                 type_promotion(node);
                 break;
 
@@ -1615,7 +1725,7 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment);
                 if (child1->output) output_append(node->output, child1->output);
                 get_comment_line_number_only(comment,child2,"{THEN}");
-                snprintf(temp1, buf_len, "   brf l%d,%c%d\n%s",
+                snprintf(temp1, buf_len, "   brf l%diffalse,%c%d\n%s",
                          node->node_number,
                          node->register_type,
                          node->register_num,
@@ -1625,21 +1735,21 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output,child2->output);
                 if (child3) {
                     get_comment_line_number_only(comment,child3,"{ELSE}");
-                    snprintf(temp1, buf_len, "   br l%d\n%sl%d:\n",
-                             child3->node_number,
+                    snprintf(temp1, buf_len, "   br l%difend\n%sl%diffalse:\n",
+                             node->node_number,
                              comment,
                              node->node_number);
                     node->output3 = output_fs(temp1);
                     output_append(node->output, node->output3);
                     output_append(node->output,child3->output);
 
-                    snprintf(temp1, buf_len, "l%d:\n",
-                             child3->node_number);
+                    snprintf(temp1, buf_len, "l%difend:\n",
+                             node->node_number);
                     node->output4 = output_fs(temp1);
                     output_append(node->output, node->output4);
                 }
                 else {
-                    snprintf(temp1, buf_len, "l%d:\n",
+                    snprintf(temp1, buf_len, "l%diffalse:\n",
                              node->node_number);
                     node->output3 = output_fs(temp1);
                     output_append(node->output, node->output3);
@@ -1653,7 +1763,7 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output, child1->output);
 
                 /* Loop Start */
-                snprintf(temp1, buf_len, "l%d:\n",
+                snprintf(temp1, buf_len, "l%ddostart:\n",
                          node->node_number);
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
@@ -1671,8 +1781,8 @@ static walker_result emit_walker(walker_direction direction,
                 get_comment_line_number_only(comment,child1, "{DO-END}");
                 node->output3 = output_fs(comment);
                 output_append(node->output, node->output3);
-                snprintf(temp1, buf_len, "   br l%d\nl%d:\n",
-                         node->node_number, child1->node_number);
+                snprintf(temp1, buf_len, "   br l%ddostart\nl%ddoend:\n",
+                         node->node_number, node->node_number);
                 node->output4 = output_fs(temp1);
                 output_append(node->output, node->output4);
                 break;
@@ -1696,13 +1806,13 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output, child1->output);
 
                 node->output2 = output_fs(comment);
-                snprintf(temp1, buf_len, "   %sgt r0,%c%d,%c%d\n   brt l%d,r0\n", /* r0 - todo */
+                snprintf(temp1, buf_len, "   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
                          tp_prefix,
                          node->parent->register_type,
                          node->parent->register_num,
                          node->child->register_type,
                          node->child->register_num,
-                         node->parent->node_number);
+                         node->parent->parent->node_number);
                 node->output4 = output_fs(temp1);
                 output_append(node->output2, node->output4);
                 break;

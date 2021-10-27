@@ -1,5 +1,9 @@
 CREXX History / Change Log
 
+I0156 - Fixed Duplicate Labels.
+      - Improved readability of generated RXAS labels
+      - Performance Improvement for AND and OR logic
+      - New C-Opt rules to optimise brt/f to brt/f branches
 F0036 - COVID-Opt Assembler Keyhole Optimiser
       - Initial set of C-Opt rules:
         - swaps cancelling each other out
