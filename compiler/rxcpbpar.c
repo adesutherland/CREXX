@@ -12,7 +12,7 @@ int rexbpars(Context *context) {
     char *buff, *buff_end;
     size_t bytes;
     int token_type, last_token_type;
-    Token *token;
+    Token *token, *t;
     void *parser;
 
     /* Create parser and set up tracing */
@@ -29,16 +29,22 @@ int rexbpars(Context *context) {
         if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
 
         // EOS Special Processing
-        if (token_type == TK_EOS) {
+        if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {
             // Send an EOC
             if (last_token_type != TK_EOC) {
-                token = token_f(context, TK_EOC);
-                RexxB(parser, TK_EOC, token, context);
+                RexxB(parser, TK_EOC, 0, context);
+            }
+
+            if (token_type == TK_BADCOMMENT) {
+                RexxB(parser, TK_BADCOMMENT, token, context);
+
+                t = token_f(context, TK_EOC);
+                RexxB(parser, TK_EOC, t, context);
             }
 
             // Send EOS
-            token = token_f(context, token_type);
-            RexxB(parser, token_type, token, context);
+            t = token_f(context, TK_EOS);
+            RexxB(parser, TK_EOS, t, context);
 
             // Send a null
             RexxB(parser, 0, NULL, context);

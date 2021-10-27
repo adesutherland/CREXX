@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+I0159 - Fixed Compiler does not issue an error when a comment is not closed
 I0156 - Fixed Duplicate Labels.
       - Improved readability of generated RXAS labels
       - Performance Improvement for AND and OR logic

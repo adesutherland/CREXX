@@ -16,6 +16,9 @@
 
 int rexbscan(Context* s) {
     int depth;
+    char *comment_top;
+    int comment_line;
+    char* comment_linestart;
 
 /*!re2c
   re2c:yyfill:enable = 0;
@@ -58,6 +61,9 @@ int rexbscan(Context* s) {
 /*!re2c
   "/*" {
     depth = 1;
+    comment_line = s->line;
+    comment_linestart = s->linestart;
+    comment_top = s->top;
     goto comment;
   }
   "|" ob "|" { return(TK_CONCAT); }
@@ -205,8 +211,11 @@ int rexbscan(Context* s) {
     goto comment;
   }
   eof {
-    // TODO EOF before comment closed
-    return(TK_EOS);
+      s->line = comment_line;
+      s->linestart = comment_linestart;
+      s->top = comment_top;
+      s->cursor = s->top + 2; /* To get the '/*' */
+      return(TK_BADCOMMENT);
   }
   any { goto comment; }
 */
