@@ -1,10 +1,10 @@
 /* rexx space adds n padding chars between words */
 options levelb
 space: procedure = .string
-  arg expose string = .string, spacenr = 2,  pad = " "
+  arg expose string = .string, spacenr = 1,  pad = " "
 
 wrds=words(string)
-if wrds<2 then return string
+if wrds<2 then return word(string,1)
 
 padstr=""
 newstr=""
@@ -26,6 +26,7 @@ do i=1 to wrds-1
 end
 /* add last word */
 newstr=newstr||word(string,wrds)
+
 return newstr
 
 /* function prototype */
