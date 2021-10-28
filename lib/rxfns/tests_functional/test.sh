@@ -11,3 +11,5 @@ rxvm tsword ../rxas/word
 rxvm ts_countstr ../rexx/countstr ../rxas/pos
 rxvm ts_space ../rexx/space ../rxas/word ../rxas/words
 rxvm ts_overlay ../rexx/overlay ../rexx/length ../rexx/substr ../rexx/raise
+rxvm ts_wrdix ../rxas/wordindex
+rxvm ts_verify ../rexx/verify
