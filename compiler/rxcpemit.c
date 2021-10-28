@@ -1154,7 +1154,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_COMPARE_S_LTE:
                 if (!op) op="ltes";
 
-                tp_prefix = type_to_prefix(child1->value_type);
+                tp_prefix = type_to_prefix(child1->target_type);
 
             /* These operators use the type prefix already set (i.e. of their type) */
             case OP_ADD:
