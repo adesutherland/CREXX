@@ -17,7 +17,7 @@
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN.
+%token TK_UNKNOWN TK_BADCOMMENT.
 %wildcard ANYTHING.
 
 /* Program & Structure */
@@ -101,6 +101,8 @@ instruction(I)         ::= single_instruction(B) junk(J) TK_EOC.
 single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
+single_instruction(E)  ::= TK_BADCOMMENT.
+                          { E = ast_errh(context, "6.1"); }
 single_instruction(E)  ::= error.
                           { E = ast_errh(context, "49.4"); }
 
