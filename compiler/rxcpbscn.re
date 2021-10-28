@@ -110,8 +110,8 @@ int rexbscan(Context* s) {
 //  'EXIT' { return(TK_EXIT); }
   'IF' { return(TK_IF); }
 //  'INTERPRET' { return(TK_INTERPRET); }
-//  'ITERATE' { return(TK_ITERATE); }
-//  'LEAVE' { return(TK_LEAVE); }
+  'ITERATE' { return(TK_ITERATE); }
+  'LEAVE' { return(TK_LEAVE); }
   'NOP' { return(TK_NOP); }
 //  'NUMERIC' { return(TK_NUMERIC); }
 'OPTIONS' { return(TK_OPTIONS); }

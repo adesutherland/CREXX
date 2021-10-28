@@ -132,8 +132,8 @@ keyword_instruction(I) ::= assembler(K). { I = K; }
 //keyword_instruction(I) ::= address(K). { I = K; }
 //keyword_instruction(I) ::= arg(K). { I = K; }
 keyword_instruction(I) ::= call(K). { I = K; }
-//keyword_instruction(I) ::= iterate(K). { I = K; }
-//keyword_instruction(I) ::= leave(K). { I = K; }
+keyword_instruction(I) ::= iterate(K). { I = K; }
+keyword_instruction(I) ::= leave(K). { I = K; }
 keyword_instruction(I) ::= nop(K). { I = K; }
 //keyword_instruction(I) ::= parse(K). { I = K; }
 keyword_instruction(I) ::= procedure(K). { I = K; }
@@ -187,6 +187,33 @@ dorep_item(R) ::= TK_BY(T) expression(E).
                   { R = ast_f(context, BY, T); add_ast(R,E); }
 dorep_item(R) ::= TK_FOR(T) expression(E).
                   { R = ast_f(context, FOR, T); add_ast(R,E); }
+
+
+
+/*
+do(I)                  ::= TK_DO(T) do_rep(A) do_cond(B) delim program_instructions(C) TK_END.
+                           { I = ast_f(T); add_ast(I,A); add_ast(I,B); add_ast(I,C); add_ast(I,ast_ft(TK_NULL)); }
+do(I)                  ::= TK_DO(T) do_rep(A) do_cond(B) delim program_instructions(C) TK_END var_symbol(D).
+                           { I = ast_f(T); add_ast(I,A); add_ast(I,B); add_ast(I,C); add_ast(I,D); }
+do_rep(I)              ::= . { I = ast_ft(TK_NULL); }
+do_rep(I)              ::= assignment(A) do_cnt(B). { I = ast_ft(TK_REP); add_ast(I,A); add_ast(I,B); }
+do_rep(I)              ::= assignment(A). { I = ast_ft(TK_REP); add_ast(I,A); }
+do_rep(I)              ::= TK_FOREVER(A). { I = ast_ft(TK_REP); add_ast(I,ast_f(A)); }
+do_rep(I)              ::= expression(A). { I = ast_ft(TK_REP); add_ast(I,A); }
+cnt(I)                 ::= dob(A). { I = A; }
+cnt(I)                 ::= dof(A). { I = A; }
+cnt(I)                 ::= dot(A). { I = A; }
+do_cnt(I)              ::= cnt(A). { I = ast_ft(TK_LIST); add_ast(I,A); }
+do_cnt(I)              ::= do_cnt(I1) cnt(A). { I = I1; add_ast(I,A); }
+dot(I)                 ::= TK_TO(T) expression(A). { I = ast_f(T); add_ast(I,A); }
+dob(I)                 ::= TK_BY(T) expression(A). { I = ast_f(T); add_ast(I,A); }
+dof(I)                 ::= TK_FOR(T) expression(A). { I = ast_f(T); add_ast(I,A); }
+do_cond(I)             ::= . { I = ast_ft(TK_NULL); }
+do_cond(I)             ::= TK_WHILE(T) expression(A). { I = ast_f(T); add_ast(I,A); }
+do_cond(I)             ::= TK_UNTIL(T) expression(A). { I = ast_f(T); add_ast(I,A); }
+*/
+
+
 
 /* IF Group */
 %nonassoc TK_IF.
@@ -302,15 +329,23 @@ assembler_arg(A)         ::= TK_STRING(S).
     call ::= 'CALL' (f:taken_constant / ( (. -> ERROR[19.2]) resync) ) e:expression_list?
          -> (CALL CONST_SYMBOL[f] e);
     expression_list ::= expr (',' expr)*;
+*/
 
-### Iterate
-    iterate ::= 'ITERATE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-            -> (ITERATE v?)
+/* Iterate */
+iterate(I) ::= TK_ITERATE(T) var_symbol(S).
+    { I = ast_f(context, ITERATE, T); add_ast(I,S); }
 
-### Leave
-    leave ::= 'LEAVE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-          -> (LEAVE v?);
+iterate(I) ::= TK_ITERATE(T).
+    { I = ast_f(context, ITERATE, T); }
 
+/* Leave */
+leave(I) ::= TK_LEAVE(T) var_symbol(S).
+    { I = ast_f(context, LEAVE, T); add_ast(I,S); }
+
+leave(I) ::= TK_LEAVE(T).
+    { I = ast_f(context, LEAVE, T); }
+
+/*
 ### Parse
     parse ::= ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
              -> (PARSE OPTIONS in out)
@@ -330,10 +365,6 @@ assembler_arg(A)         ::= TK_STRING(S).
 ### Pull
     pull ::= 'PULL' t:template_list?
          -> (PARSE (OPTIONS UPPER?) PULL t?);
-
-### Return
-    return ::= 'RETURN' e:expression?
-           -> (RETURN e?);
 */
 
 /* Return */
