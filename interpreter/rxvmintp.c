@@ -1354,20 +1354,20 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  IREM_REG_REG_INT  Remainder Division (op1=op2%op3)                  pej 16 Oct 2021
+ *  IMOD_REG_REG_INT  Remainder Division (op1=op2%op3)                  pej 16 Oct 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IREM_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - IREM R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+        START_INSTRUCTION(IMOD_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI % op3I);
             DISPATCH;
 
  /* -----------------------------------------------------------------------------------
-  *  IREM_REG_REG_REG  Remainder Division (op1=op2/op3)                 pej 16 Oct 2021
+  *  IMOD_REG_REG_REG  Remainder Division (op1=op2/op3)                 pej 16 Oct 2021
   *  ----------------------------------------------------------------------------------
   */
-        START_INSTRUCTION(IREM_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - IREM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI % op3RI);
             DISPATCH;
 
@@ -2218,6 +2218,22 @@ START_OF_INSTRUCTIONS ;
         nonblankfound:
     REG_RETURN_INT(i3);
     DISPATCH;
+ /* ------------------------------------------------------------------------------------
+  *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
+  *  -----------------------------------------------------------------------------------
+  */
+    START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3);
+    DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+
+    v1 = op1R;
+    v2 = op2R;
+    v3 = op3R;
+    printf("V2 %d \n",v2->int_value);
+    printf("V2 %s \n",v2->string_value);
+    i1=v2->status.type_int;
+    REG_RETURN_INT(i1);
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
