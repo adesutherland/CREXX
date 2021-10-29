@@ -11,7 +11,9 @@ abbrev: procedure = .string
   assembler strlen alen,astr
   do i=0 to alen-1
      assembler strchar char1,string,i
+     assembler itos char1
      assembler strchar char2,astr,i
+     assembler itos char2
      if char1\=char2 then return 0
   end
   /* is the minimum match of chars satisfied */
