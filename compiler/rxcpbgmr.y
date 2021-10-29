@@ -167,12 +167,21 @@ simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
 /* DO Group */
 do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
                   { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
+do(G)         ::= TK_DO(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,D); add_ast(G,I); }
+do(G)         ::= TK_DO(T) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = ast_f(context, DO, T); add_ast(G,D); add_ast(G,I); }
+do(G)         ::= TK_DO(T) doforever(F) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = ast_f(context, DO, T); add_ast(G,F); add_ast(G,I); }
+
 do(G)         ::= TK_DO dorep ANYTHING(E).
                   { G = ast_err(context, "27.1", E); }
 do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
                   { G = I; add_ast(G,ast_err(context, "14.1", E)); }
 do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
                   { G = I; add_ast(G,ast_err(context, "35.1", E)); }
+dorep(R)      ::= expression(E).
+                  { R = ast_ft(context, REPS);   add_ast(R,E); }
 dorep(R)      ::= assignment(A).
                   { R = ast_ft(context, REPEAT); add_ast(R,A); }
 dorep(R)      ::= assignment(A) dorep_list(L).
@@ -188,31 +197,13 @@ dorep_item(R) ::= TK_BY(T) expression(E).
 dorep_item(R) ::= TK_FOR(T) expression(E).
                   { R = ast_f(context, FOR, T); add_ast(R,E); }
 
+doforever(R)  ::= TK_FOREVER(T).
+                  { R = ast_f(context, REPS, T); }
 
-
-/*
-do(I)                  ::= TK_DO(T) do_rep(A) do_cond(B) delim program_instructions(C) TK_END.
-                           { I = ast_f(T); add_ast(I,A); add_ast(I,B); add_ast(I,C); add_ast(I,ast_ft(TK_NULL)); }
-do(I)                  ::= TK_DO(T) do_rep(A) do_cond(B) delim program_instructions(C) TK_END var_symbol(D).
-                           { I = ast_f(T); add_ast(I,A); add_ast(I,B); add_ast(I,C); add_ast(I,D); }
-do_rep(I)              ::= . { I = ast_ft(TK_NULL); }
-do_rep(I)              ::= assignment(A) do_cnt(B). { I = ast_ft(TK_REP); add_ast(I,A); add_ast(I,B); }
-do_rep(I)              ::= assignment(A). { I = ast_ft(TK_REP); add_ast(I,A); }
-do_rep(I)              ::= TK_FOREVER(A). { I = ast_ft(TK_REP); add_ast(I,ast_f(A)); }
-do_rep(I)              ::= expression(A). { I = ast_ft(TK_REP); add_ast(I,A); }
-cnt(I)                 ::= dob(A). { I = A; }
-cnt(I)                 ::= dof(A). { I = A; }
-cnt(I)                 ::= dot(A). { I = A; }
-do_cnt(I)              ::= cnt(A). { I = ast_ft(TK_LIST); add_ast(I,A); }
-do_cnt(I)              ::= do_cnt(I1) cnt(A). { I = I1; add_ast(I,A); }
-dot(I)                 ::= TK_TO(T) expression(A). { I = ast_f(T); add_ast(I,A); }
-dob(I)                 ::= TK_BY(T) expression(A). { I = ast_f(T); add_ast(I,A); }
-dof(I)                 ::= TK_FOR(T) expression(A). { I = ast_f(T); add_ast(I,A); }
-do_cond(I)             ::= . { I = ast_ft(TK_NULL); }
-do_cond(I)             ::= TK_WHILE(T) expression(A). { I = ast_f(T); add_ast(I,A); }
-do_cond(I)             ::= TK_UNTIL(T) expression(A). { I = ast_f(T); add_ast(I,A); }
-*/
-
+docond(R) ::= TK_WHILE(T) expression(E).
+                  { R = ast_f(context, WHILE, T); add_ast(R,E); }
+docond(R) ::= TK_UNTIL(T) expression(E).
+                  { R = ast_f(context, UNTIL, T); add_ast(R,E); }
 
 
 /* IF Group */

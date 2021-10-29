@@ -137,7 +137,7 @@ int rexbscan(Context* s) {
   'EXPOSE' { return(TK_EXPOSE); }
 //  'FAILURE' { return(TK_FAILURE); }
   'FOR' { return(TK_FOR); }
-//  'FOREVER' { return(TK_FOREVER); }
+  'FOREVER' { return(TK_FOREVER); }
 //  'FORM' { return(TK_FORM); }
 //  'FUZZ' { return(TK_FUZZ); }
 //  'HALT' { return(TK_HALT); }
@@ -148,12 +148,12 @@ int rexbscan(Context* s) {
 //  'SOURCE' { return(TK_SOURCE); }
 //  'SYNTAX' { return(TK_SYNTAX); }
   'TO' { return(TK_TO); }
-//  'UNTIL' { return(TK_UNTIL); }
+  'UNTIL' { return(TK_UNTIL); }
 //  'UPPER' { return(TK_UPPER); }
 //  'VALUE' { return(TK_VALUE); }
 //  'VAR' { return(TK_VAR); }
 //  'VERSION' { return(TK_VERSION); }
-//  'WHILE' { return(TK_WHILE); }
+  'WHILE' { return(TK_WHILE); }
 //  'WITH' { return(TK_WITH); }
   class { return(TK_CLASS); }
   float { return(TK_FLOAT); }
