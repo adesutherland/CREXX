@@ -1344,6 +1344,15 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI / op3I);
             DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  IDIV_REG_INT_REG  Integer Divide (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IDIV_REG_INT_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I / op3RI);
+            DISPATCH;
+
 /* -----------------------------------------------------------------------------------
  *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
@@ -1351,6 +1360,33 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI / op3RI);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IMOD_REG_REG_INT  Integer Modulo (op1=op2 & op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IMOD_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI % op3I);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IMOD_REG_INT_REG  Integer Modulo (op1=op2 % op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IMOD_REG_INT_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I % op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  IMOD_REG_REG_REG  Integer Modulo (op1=op2 % op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI % op3RI);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
