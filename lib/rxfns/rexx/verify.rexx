@@ -9,18 +9,19 @@ verify: procedure = .int
    char=""
    tab=""
    pos=0
-   spos=spos-1
-   if spos<0 then spos=0
-   /* todo: change to nested if then/else */
+
    if match='N' then imatch=0
-   if match='n' then imatch=0
-   if match='M' then imatch=1
-   if match='m' then imatch=1
+   else if match='n' then imatch=0
+   else if match='M' then imatch=1
+   else if match='m' then imatch=1
 
    Assembler strlen ilen,instring        /* determine string length              */
    Assembler strlen tlen,intab           /* determine table  length              */
    if ilen=0 then return 0
-   if tlen=0 then return 0
+   if tlen=0 then return spos
+
+   spos=spos-1
+   if spos<0 then spos=0
 
    do i=spos to ilen-1                  /* check each byte of input string          */
       assembler strchar char,instring,i /* get next input byte  */
