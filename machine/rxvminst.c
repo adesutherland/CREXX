@@ -22,48 +22,53 @@ static int no_instructions = 0;
 void init_ops() {
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
-    instr_f("addi", "Convert and Add to Integer (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("addi", "Convert and Add to Integer (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
-    instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
     instr_f("imult", "Integer Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
     instr_f("imult", "Integer Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_INT);
-    instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
-    instr_f("divi", "Convert and Divide to Integer (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("divi", "Convert and Divide to Integer (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
+    instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
+
+    instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("imod", "Integer Modulo (op1=op2&op3)", OP_REG, OP_INT, OP_REG);
 
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_FLOAT);
-    instr_f("addf", "Convert and Add to Float (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("addf", "Convert and Add to Float (op1=op2+op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("addf", "Convert and Add to Float (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("addf", "Convert and Add to Float (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_FLOAT);
 
     instr_f("fsub", "Float Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fsub", "Float Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("fsub", "Float Subtract (op1=op2-op3)", OP_REG, OP_FLOAT, OP_REG);
-    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
-    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("subf", "Convert and Subtract to Float (op1=op2-op3) (Deprecated)", OP_REG, OP_FLOAT, OP_REG);
 
     instr_f("fmult", "Float Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fmult", "Float Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_FLOAT);
-    instr_f("multf", "Convert and Multiply to Float (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("multf", "Convert and Multiply to Float (op1=op2*op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("multf", "Convert and Multiply to Float (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("multf", "Convert and Multiply to Float (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_FLOAT);
 
     instr_f("fdiv", "Float Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fdiv", "Float Divide (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("fdiv", "Float Divide (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
-    instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
-    instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
-    instr_f("divf", "Convert and Divide to Float (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("divf", "Convert and Divide to Float (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
+    instr_f("divf", "Convert and Divide to Float (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("divf", "Convert and Divide to Float (op1=op2/op3) (Deprecated)", OP_REG, OP_FLOAT, OP_REG);
 
     instr_f("inc", "Increment Int (op1++)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dec", "Decrement Int (op1--)", OP_REG, OP_NONE, OP_NONE);

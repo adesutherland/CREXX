@@ -1,6 +1,9 @@
 CREXX History / Change Log
 
 F0037 - More Loop Constructs
+I0172 - Fixed RXC generating idivi instruction. Includes adding missing
+        idiv_reg_int_reg and imod instructions. Deprecated divi and related
+        convert and calculate instructions
 I0169 - Fixed comparison operators picking up child1's value type not its target type
 I0159 - Fixed Compiler does not issue an error when a comment is not closed
 I0156 - Fixed Duplicate Labels.

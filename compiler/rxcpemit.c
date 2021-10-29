@@ -422,7 +422,7 @@ static walker_result register_walker(walker_direction direction,
             case OP_MULT:
 
             /* The order of the operands of these instructions are significant
-             * however the instructions do not support both being a caonstnt */
+             * however the instructions do not support both being a constant */
             case OP_COMPARE_GT:
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
@@ -1166,9 +1166,8 @@ static walker_result emit_walker(walker_direction direction,
             case OP_POWER:
                 if (!op) op="pow";
             case OP_DIV:
-                if (!op) op="div";
             case OP_IDIV:
-                if (!op) op="divi";
+                if (!op) op="div";
             case OP_MOD:
                 if (!op) op="mod";
 
