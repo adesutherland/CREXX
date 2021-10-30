@@ -252,7 +252,7 @@ static walker_result step1_walker(walker_direction direction,
             has_to = 0;
             has_for = 0;
             has_by = 0;
-            child = node->child->sibling; /* Second Child - the first is the assignment */
+            child = node->child;
             while (child) {
                 if (child->node_type == BY) {
                     if (has_by) mknd_err(child, "27.1");
@@ -422,14 +422,16 @@ static walker_result step2a_walker(walker_direction direction,
 
         else if (node->node_type == TO) {
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
-             * first child (VAR_TARGET)'s symbol */
+             * first child (VAR_TARGET)'s symbol
+             * Note: If the REPEAT has a TO it has an assign */
             symbol = node->parent->child->child->symbol->symbol;
             sym_adnd(symbol, node, 1, 0);
         }
 
         else if (node->node_type == BY) {
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
-             * first child (VAR_TARGET)'s symbol */
+             * first child (VAR_TARGET)'s symbol
+             * Note: If the REPEAT has a BY it has an assign*/
             symbol = node->parent->child->child->symbol->symbol;
             sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
@@ -787,7 +789,7 @@ static walker_result step4_walker(walker_direction direction,
                 if (child1) child1->target_type = TP_BOOLEAN;
                 break;
 
-            /* Loops */
+                /* Loops */
             case TO:
             case BY:
                 /* The TO/BY value type needs to be the same as the assigment type */
@@ -801,6 +803,11 @@ static walker_result step4_walker(walker_direction direction,
                 child1->target_type = TP_INTEGER;
                 node->value_type = child1->target_type;
                 node->target_type = child1->target_type;
+                break;
+
+            case UNTIL:
+            case WHILE:
+                if (child1) child1->target_type = TP_BOOLEAN;
                 break;
 
             default:;

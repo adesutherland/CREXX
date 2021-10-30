@@ -41,7 +41,7 @@ static int is_constant(ASTNode* node) {
     }
 }
 
-/* Tests if a node is not a constant */
+/* Tests if a node is a symbol */
 static int is_var_symbol(ASTNode* node) {
     if (node->symbol && node->node_type != FUNCTION) return 1;
     else return 0;
@@ -597,19 +597,56 @@ static walker_result register_walker(walker_direction direction,
                     ret_reg(payload->current_scope, child1->register_num);
                 break;
 
+            case TO:
+            case BY:
+            case UNTIL:
+            case WHILE:
+                /* Set the register number based on child */
+                if (node->child) {
+                    node->register_num = node->child->register_num;
+                    node->register_type = node->child->register_type;
+                }
+                break;
+
+            case FOR:
+                if (!is_var_symbol(node->child)) {
+                    /* Not a symbol - use the temp register */
+                    node->register_num = node->child->register_num;
+                    node->register_type = node->child->register_type;
+                }
+                /* Else new register for copy */
+                else node->register_num = get_reg(payload->current_scope);
+                break;
+
             case REPEAT:
-                node->register_num = child1->register_num;
-                node->register_type = child1->register_type;
+                /* Set the register number to the assignment register number
+                 * (if the assignment node exists) */
+                c = child1;
+                while (c) {
+                    if (c->node_type == ASSIGN) {
+                        node->register_num = c->register_num;
+                        node->register_type = c->register_type;
+                        break;
+                    }
+                    c = c->sibling;
+                }
                 break;
 
             case DO:
-                /* We need to free temporary registers for the children
-                 * TO/BY/FOR which is under REPEAT (child1) */
-                c = child1->child->sibling; /* The second child under the REPEAT */
+                /* We need to free temporary registers for the children of the
+                 * REPEAT Node at this (the DO) level - because they need to retained
+                 * while the do loop is in progress.
+                 * Nodes TO/BY/FOR/UNTIL/WHILE or ASSIGN are under REPEAT (child1) */
+
+                c = child1->child; /* The first child under the REPEAT */
                 while (c) {
-                    if (c->child) {
-                        c->register_num = c->child->register_num;
-                        c->register_type = c->child->register_type;
+                    if (c->node_type == FOR) {
+                        /* Always node register  */
+                        ret_reg(payload->current_scope, c->register_num);
+                    }
+                    /* Don't do it for the ASSIGN node - it takes care of itself */
+                    else if (c->node_type != ASSIGN && c->child) {
+                        /* release the temporary register */
                         if (!is_var_symbol(c->child))
                             ret_reg(payload->current_scope, c->register_num);
                     }
@@ -1757,6 +1794,13 @@ static walker_result emit_walker(walker_direction direction,
 
             case DO: /* DO LOOP */
                 /* Loop Assignments REPEAT->output */
+
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+
                 get_comment_line_number_only(comment,child1, "{DO}");
                 node->output = output_fs(comment);
                 output_append(node->output, child1->output);
@@ -1767,11 +1811,14 @@ static walker_result emit_walker(walker_direction direction,
                 node->output2 = output_fs(temp1);
                 output_append(node->output, node->output2);
 
-                /* Loop Checks REPEAT->output2 */
+                /* Loop Begin Checks REPEAT->output2 */
                 output_append(node->output, child1->output2);
 
                 /* Loop Body - instructions */
                 output_append(node->output,child2->output);
+
+                /* Loop End Checks REPEAT->output4 */
+                output_append(node->output, child1->output4);
 
                 /* Loop increments REPEAT->output3 */
                 output_append(node->output, child1->output3);
@@ -1787,19 +1834,62 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case REPEAT:
-                node->output = output_f();
-                output_append(node->output, child1->output);
-                node->output2 = output_f();
-                node->output3 = output_f();
-                while (child2) {
-                    if (child2->output) output_append(node->output, child2->output);
-                    if (child2->output2) output_append(node->output2, child2->output2);
-                    if (child2->output3) output_append(node->output3, child2->output3);
-                    child2 = child2->sibling;
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment); /* Assign / init instruction */
+                node->output2 = output_f(); /* Begin Loop exit checks */
+                node->output3 = output_f(); /* Loop increments */
+                node->output4 = output_f(); /* End Loop exit checks */
+                while (child1) {
+                    if (child1->output) output_append(node->output, child1->output);
+                    if (child1->output2) output_append(node->output2, child1->output2);
+                    if (child1->output3) output_append(node->output3, child1->output3);
+                    if (child1->output4) output_append(node->output4, child1->output4);
+                    child1 = child1->sibling;
                 }
                 break;
 
+            case FOR:
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment);
+                output_append(node->output, child1->output);
+                if (child1->register_num != node->register_num ||
+                    child1->register_type != node->register_type) {
+                    snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                             node->register_type,
+                             node->register_num,
+                             child1->register_type,
+                             child1->register_num);
+                    output_append_text(node->output, temp1);
+                }
+                node->output2 = output_fs(comment);
+                snprintf(temp1, buf_len, "   bct l%ddoend,%c%d\n",
+                         node->parent->parent->node_number,
+                         node->register_type,
+                         node->register_num);
+                output_append_text(node->output2, temp1);
+                break;
+
             case TO:
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+
+                /* If the REPEAT has a TO it has an ASSIGN and its register
+                 * number will have been set to the ASSIGN Variable */
+
                 get_comment(comment,node, NULL);
                 node->output = output_fs(comment);
                 output_append(node->output, child1->output);
@@ -1812,11 +1902,19 @@ static walker_result emit_walker(walker_direction direction,
                          node->child->register_type,
                          node->child->register_num,
                          node->parent->parent->node_number);
-                node->output4 = output_fs(temp1);
-                output_append(node->output2, node->output4);
+                output_append_text(node->output2, temp1);
                 break;
 
             case BY:
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+
+                /* If the REPEAT has a BY it has an ASSIGN and its register
+                 * number will have been set to the ASSIGN Variable */
+
                 if (child1) {
                     /* BY explicitly stated */
                     get_comment(comment, node, NULL);
@@ -1832,8 +1930,7 @@ static walker_result emit_walker(walker_direction direction,
                              node->child->register_num,
                              node->parent->register_type,
                              node->parent->register_num);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output3, node->output4);
+                    output_append_text(node->output3, temp1);
                 }
                 else {
                     /* BY Added implicitly - increment by 1 */
@@ -1853,9 +1950,40 @@ static walker_result emit_walker(walker_direction direction,
                                  node->parent->register_type,
                                  node->parent->register_num);
                     }
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output3, node->output4);
+                    output_append_text(node->output3, temp1);
                 }
+                break;
+
+            case WHILE:
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+                get_comment(comment,node, NULL);
+                node->output2 = output_fs(comment);
+                output_append(node->output2, child1->output);
+                snprintf(temp1, buf_len, "   brf l%ddoend,%c%d\n",
+                         node->parent->parent->node_number,
+                         node->register_type,
+                         node->register_num);
+                output_append_text(node->output2, temp1);
+                break;
+
+            case UNTIL:
+                /* Loop output mapping / convention
+                 * output =  Loop Assign / init instruction
+                 * output2 = Loop iteration beginning exit checks
+                 * output3 = Loop iteration increments
+                 * output4 = Loop iteration end exit checks */
+                get_comment(comment,node, NULL);
+                node->output4 = output_fs(comment);
+                output_append(node->output4, child1->output);
+                snprintf(temp1, buf_len, "   brt l%ddoend,%c%d\n",
+                         node->parent->parent->node_number,
+                         node->register_type,
+                         node->register_num);
+                output_append_text(node->output4, temp1);
                 break;
 
             default:;

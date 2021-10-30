@@ -168,9 +168,10 @@ simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
 do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
                   { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
 do(G)         ::= TK_DO(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,D); add_ast(G,I); }
+                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(R,D); add_ast(G,I); }
 do(G)         ::= TK_DO(T) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,D); add_ast(G,I); }
+                  { G = ast_f(context, DO, T); ASTNode* R = ast_ft(context, REPEAT);
+                    add_ast(G,R); add_ast(R,D); add_ast(G,I); }
 do(G)         ::= TK_DO(T) doforever(F) TK_EOC instruction_list(I) TK_END TK_EOC.
                   { G = ast_f(context, DO, T); add_ast(G,F); add_ast(G,I); }
 
@@ -181,7 +182,8 @@ do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
 do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
                   { G = I; add_ast(G,ast_err(context, "35.1", E)); }
 dorep(R)      ::= expression(E).
-                  { R = ast_ft(context, REPS);   add_ast(R,E); }
+                  { R = ast_ft(context, REPEAT);
+                  ASTNode* F = ast_ft(context, FOR); add_ast(R,F); add_ast(F,E); }
 dorep(R)      ::= assignment(A).
                   { R = ast_ft(context, REPEAT); add_ast(R,A); }
 dorep(R)      ::= assignment(A) dorep_list(L).
@@ -198,7 +200,7 @@ dorep_item(R) ::= TK_FOR(T) expression(E).
                   { R = ast_f(context, FOR, T); add_ast(R,E); }
 
 doforever(R)  ::= TK_FOREVER(T).
-                  { R = ast_f(context, REPS, T); }
+                  { R = ast_f(context, REPEAT, T); }
 
 docond(R) ::= TK_WHILE(T) expression(E).
                   { R = ast_f(context, WHILE, T); add_ast(R,E); }

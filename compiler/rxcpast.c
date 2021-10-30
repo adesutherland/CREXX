@@ -337,9 +337,7 @@ const char *ast_ndtp(NodeType type) {
             return "ERROR";
         case FOR:
             return "FOR";
-        case REPS:
-            return "REPS";
-        case WHILE:
+       case WHILE:
             return "WHILE";
         case UNTIL:
             return "UNTIL";
@@ -805,7 +803,6 @@ walker_result pdot_walker_handler(walker_direction direction,
             case FOR:
             case WHILE:
             case UNTIL:
-            case REPS:
             case ITERATE:
             case LEAVE:
             case NOP:
