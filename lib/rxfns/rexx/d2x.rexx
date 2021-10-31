@@ -27,7 +27,7 @@ d2x: procedure = .string
   do i=0 to 64
      char=char*16
      assembler idiv yint,xint,16
-     assembler irem rint,xint,16
+     assembler imod rint,xint,16
      xint=yint
 
      if xint>0 then do
