@@ -11,7 +11,7 @@ _datei: Procedure = .string
 
   if abbreV('DAYS',format,1) then return 'DAYS not allowed as input format'
   if abbreV('CENTURY',format,1) then return 'CENTURY not allowed as input format'
-  if abbreV('EUROPEAN',format,1) | abbreV('GERMAN',format,1) | abbreV('XEUROPEAN',format,1) | abbreV('XGERMAN',format,1)then do  /* format dd.mm.yy or dd/mm/yy */
+  if abbreV('EUROPEAN',format,1) | abbreV('GERMAN',format,1) | abbreV('XEUROPEAN',format,1) | abbreV('XGERMAN',format,1) | abbreV('DEC',format,3) | abbreV('XDEC',format,3) then do  /* format dd.mm.yy or dd/mm/yy */
      idate=split(idate)
      YY=word(idate,3)
      yy=testyear(yy)
@@ -19,7 +19,7 @@ _datei: Procedure = .string
      dd=word(idate,1)
      return _jdn(dd,mm,YY)
   end
-  if abbreV('USA',format,1)  | abbreV('XUSA',format,2)then do  /* format dd.mm.yy or mm/dd/yy */
+  if abbreV('USA',format,1)  | abbreV('XUSA',format,2) then do  /* format dd.mm.yy or mm/dd/yy */
      idate=split(idate)
      YY=word(idate,3)
      yy=testyear(yy)
@@ -27,6 +27,26 @@ _datei: Procedure = .string
      dd=word(idate,2)
      return _jdn(dd,mm,YY)
   end
+  if abbreV('INTERNATIONAL',format,2)  then do  /* format yyyy-mm-dd */
+       idate=split(idate)
+       YY=word(idate,1)
+       yy=testyear(yy)
+       mm=word(idate,2)
+       dd=word(idate,3)
+       return _jdn(dd,mm,YY)
+    end
+if abbreV('QUALIFIED',format,2)  then do  /* format Thursday, December 17, 2020 */
+       mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+       idate=split(idate)
+       YY=word(idate,4)
+       yy=testyear(yy)
+       mm=word(idate,2)
+       dd=word(idate,3)
+       dd=split(dd)
+       mm=wordpos(mm,mlist)
+       return _jdn(dd,mm,YY)
+    end
+
   if abbreV('STANDARD',format,1) then do
      idate=right(idate,8,'0')
      YY=substr(idate,1,4)
@@ -42,6 +62,11 @@ _datei: Procedure = .string
      dd=substr(idate,9,2)
      return _jdn(dd,mm,YY)
   end
+  if abbreV('EPOCH',format,3) then do
+     idate=idate%86400+_jdn(1,1,1970)
+     return idate
+  end
+
 return format' invalid input format'
 
 testyear: procedure = .int
@@ -58,7 +83,7 @@ split: Procedure = .string
 
   do i=1 to xlen
       c0=substr(idate,i,1)
-      if c0="." | c0="/" then retstr=retstr||" "
+      if c0="." | c0="/" | c0="," | c0="-" then retstr=retstr||" "
       else retstr=retstr||c0
   end
 return retstr
@@ -77,6 +102,10 @@ right:  procedure = .string
 
 word: procedure = .string
   arg string1 = .string, string2 = .int
+
+wordpos: procedure = .int
+  arg string1 = .string, string2 = .string, offset = 0
+
 
 length: procedure = .int
   arg string1 = .string

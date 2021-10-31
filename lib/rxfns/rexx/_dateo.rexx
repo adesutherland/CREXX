@@ -9,6 +9,9 @@ _dateo: Procedure = .string
   if abbreV('UNIX',format,1)>0 then return JDN-1721426-719162   /* UNIX Days since 1.1.1970                          */
   if abbreV('JDN',format,1)>0 then return JDN                   /* JDN is Julian Day Number starting 24. Nov 4714 BC */
 
+  weekday="Monday Tuesday Wednesday Thursday Friday Saturday Sunday"
+  mlist='January February March April May June July August September October November December'
+
 /* Translate Julian Day Number in Gregorian Date */
   L=JDN+68569
   N=4*L%146097
@@ -20,6 +23,7 @@ _dateo: Procedure = .string
   L=J%11
   mm=J+2-12*L
   YY=100*(N-49)+I+L
+  wday=(jdn//7)+1
 
 /* YEAR= yy ; Month=mm ; Day=dd */
   if abbreV('JULIAN',format,1) then do
@@ -30,37 +34,21 @@ _dateo: Procedure = .string
      daysofyear=JDN-_jdn(1,1,YY)+1
      return right(daysofyear,3,'0')
   end
-  if abbreV('WEEKDAY',format,1) then do
-     jdn=jdn//7
-     if jdn=0 then return 'Monday'
-     if jdn=1 then return 'Tuesday'
-     if jdn=2 then return 'Wednesday'
-     if jdn=3 then return 'Thursday'
-     if jdn=4 then return 'Friday'
-     if jdn=5 then return 'Saturday'
-     if jdn=6 then return 'Sunday'
-  end
+  if abbreV('WEEKDAY',format,1) then return word(weekday,wday)
 
   if abbreV('CENTURY',format,1) then do
      dayscentury=jdn-_jdn(1,1,YY%100*100)+1
      return dayscentury
   end
 
-  if abbreV('SHORT',format,2) then do
-     list='JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC'
-     ms=word(list,mm)
-     return right(dd,2,'0')' 'ms' 'right(YY,4,'0')
-  end
-  if abbreV('LONG',format,1) then do
-     list='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
-     ms=word(list,mm)
-     return right(dd,2,'0')' 'ms' 'right(YY,4,'0')
-  end
-
-  if abbreV('MONTH',format,1) then do
-       list='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
-       return word(list,mm)
+  if abbreV('EPOCH',format,2) then do
+     return (jdn-_jdn(1,1,1970))*86400
     end
+
+  if abbreV('NORMAL',format,2) then return right(dd,2,'0')' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
+  if abbreV('XNORMAL',format,1) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
+
+  if abbreV('MONTH',format,1) then return word(mlist,mm)
 
   if abbreV('EUROPEAN',format,1)   then return right(dd,2,'0')'/'right(mm,2,'0')'/'right(YY,2,'0')
   if abbreV('XEUROPEAN',format,2)  then return right(dd,2,'0')'/'right(mm,2,'0')'/'right(YY,4,'0')
@@ -76,9 +64,14 @@ _dateo: Procedure = .string
   if abbreV('ORDERED',format,1)    then  return right(YY,2,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
   if abbreV('XORDERED',format,2)   then  return right(YY,4,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
 
-  if abbreV('NORMAL',format,1)    then  return right(dd,2,'0')' 'right(mm,2,'0')' 'right(yy,4,'0')
+  if abbreV('DEC',format,3)        then  return right(dd,2,'0')'-'right(mm,2,'0')'-'right(yy,2,'0')
+  if abbreV('XDEC',format,3)       then  return right(dd,2,'0')'-'right(mm,2,'0')'-'right(yy,4,'0')
 
-return right(dd,2,'0')' 'right(mm,2,'0')' 'right(YY,4,'0')
+  if abbreV('INTERNATIONAL',format,3) then  return right(YY,4,'0')'-'right(mm,2,'0')'-'right(dd,2,'0')
+
+  if abbreV('QUALIFIED',format,1) then return word(weekday,wday)', 'word(mlist,mm)' 'right(dd,2,'0')', 'right(YY,4,'0') /* Thursday, December 17, 2020 */
+
+ return right(dd,2,'0')' 'right(mm,2,'0')' 'right(YY,4,'0')
 
 /* Prototypes */
 
@@ -93,5 +86,12 @@ right:  procedure = .string
 
 word: procedure = .string
   arg string1 = .string, string2 = .int
+
+length: procedure = .int
+  arg string1 = .string
+
+substr: procedure = .string
+   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
+
 
 
