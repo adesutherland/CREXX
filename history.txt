@@ -1,5 +1,7 @@
 CREXX History / Change Log
 
+F0037 - REXX Loop Constructs (UNTIL, WHILE, FOREVER, LEAVE, ITERATE)
+        RXAS bcf instruction
 I0172 - Fixed RXC generating idivi instruction. Includes adding missing
         idiv_reg_int_reg and imod instructions. Deprecated divi and related
         convert and calculate instructions

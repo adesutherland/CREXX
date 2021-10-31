@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX I0172"
+#define rxversion "cREXX F0037"
 
 #include <stdio.h>
 #include "platform.h"
@@ -69,7 +69,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -97,6 +97,7 @@ struct ASTNode {
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
+    ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
     Token *token;
     Scope *scope;
     char *node_string;
