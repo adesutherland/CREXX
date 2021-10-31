@@ -13,3 +13,4 @@ rxvm ts_space ../rexx/space ../rxas/word ../rxas/words
 rxvm ts_overlay ../rexx/overlay ../rexx/length ../rexx/substr ../rexx/raise
 rxvm ts_wrdix ../rxas/wordindex
 rxvm ts_verify ../rexx/verify
+rxvm ts_date ../rexx/date ../rexx/_jdn ../rexx/_datei ../rexx/_dateo ../rexx/abbrev ../rxas/right ../rxas/word ../rxas/length ../rexx/substr ../rexx/upper ../rexx/wordpos ../rxas/copies ../rexx/raise ../rxas/words ../rxas/wordindex ../rxas/pos
