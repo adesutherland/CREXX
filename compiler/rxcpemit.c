@@ -1803,19 +1803,19 @@ static walker_result emit_walker(walker_direction direction,
 
                 get_comment_line_number_only(comment,child1, "{DO}");
                 node->output = output_fs(comment);
+                /* Init */
                 output_append(node->output, child1->output);
 
                 /* Loop Start */
                 snprintf(temp1, buf_len, "l%ddostart:\n",
                          node->node_number);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
 
                 /* Loop Begin Checks REPEAT->output2 */
                 output_append(node->output, child1->output2);
 
                 /* Loop Body - instructions */
-                output_append(node->output,child2->output);
+                output_append(node->output, child2->output);
 
                 /* Loop End Checks REPEAT->output4 */
                 snprintf(temp1, buf_len, "l%ddoinc:\n",
@@ -1827,7 +1827,7 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output, child1->output3);
 
                 /* Loop End */
-                get_comment_line_number_only(comment,child1, "{DO-END}");
+                get_comment_line_number_only(comment, child1, "{DO-END}");
                 output_append_text(node->output, comment);
                 snprintf(temp1, buf_len, "   br l%ddostart\nl%ddoend:\n",
                          node->node_number, node->node_number);
@@ -1845,10 +1845,20 @@ static walker_result emit_walker(walker_direction direction,
                 node->output3 = output_f(); /* Loop increments */
                 node->output4 = output_f(); /* End Loop exit checks */
                 while (child1) {
-                    if (child1->output) output_append(node->output, child1->output);
-                    if (child1->output2) output_append(node->output2, child1->output2);
-                    if (child1->output3) output_append(node->output3, child1->output3);
-                    if (child1->output4) output_append(node->output4, child1->output4);
+                    if (child1->node_type == ASSIGN) {
+                        /* Only output is valid - does not follow convention */
+                        if (child1->output) output_append(node->output, child1->output);
+                    }
+                    else {
+                        if (child1->output)
+                            output_append(node->output, child1->output);
+                        if (child1->output2)
+                            output_append(node->output2, child1->output2);
+                        if (child1->output3)
+                            output_append(node->output3, child1->output3);
+                        if (child1->output4)
+                            output_append(node->output4, child1->output4);
+                    }
                     child1 = child1->sibling;
                 }
                 break;
