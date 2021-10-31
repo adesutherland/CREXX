@@ -97,6 +97,7 @@ struct ASTNode {
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
+    ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
     Token *token;
     Scope *scope;
     char *node_string;

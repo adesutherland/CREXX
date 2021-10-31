@@ -42,6 +42,7 @@ static walker_result step1_walker(walker_direction direction,
     int has_to;
     int has_for;
     int has_by;
+    int has_assign;
     Token *left, *right;
     char *buffer;
     char *c;
@@ -252,9 +253,13 @@ static walker_result step1_walker(walker_direction direction,
             has_to = 0;
             has_for = 0;
             has_by = 0;
+            has_assign = 0;
             child = node->child;
             while (child) {
-                if (child->node_type == BY) {
+                if (child->node_type == ASSIGN) {
+                    has_assign = 1;
+                }
+                else if (child->node_type == BY) {
                     if (has_by) mknd_err(child, "27.1");
                     else has_by = 1;
                 }
@@ -268,7 +273,7 @@ static walker_result step1_walker(walker_direction direction,
                 }
                 child = child->sibling;
             }
-            if (has_to && !has_by) {
+            if (has_assign && !has_by) {
                 /* Need to add implicit "BY" node - to avoid an infinite loop! */
                 add_ast(node, ast_ft(context, BY));
             }
@@ -573,7 +578,8 @@ static void validate_symbols(Scope* scope) {
  * - Type Safety
  */
 
-/* Type promotion matrix for numeric operators */
+/* Type promotion matrix for numeric operators
+ * Check LEAVE / ITERATE are in a valid DO Loop */
 const ValueType promotion[6][6] = {
 /*                TP_UNKNOWN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING,  TP_OBJECT */
 /* TP_UNKNOWN */ {TP_UNKNOWN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_FLOAT,   TP_FLOAT},
@@ -808,6 +814,55 @@ static walker_result step4_walker(walker_direction direction,
             case UNTIL:
             case WHILE:
                 if (child1) child1->target_type = TP_BOOLEAN;
+                break;
+
+            case LEAVE:
+            case ITERATE:
+                /* Link to relevant DO */
+                if (node->child) {
+                    /* Symbol specified - so we need to find it */
+                    n1 = node->parent;
+                    while (1) {
+                        if (!n1) {
+                            mknd_err(node, "INVALID_CONTROL_VARIABLE"); /* 28.3 */
+                            break;
+                        }
+                        else if (n1->node_type == DO) {
+                            /* Find the ASSIGN */
+                            n2 = n1->child; /* REPEAT */
+                            n2 = n2->child; /* First child of REPEAT */
+                            while (n2) {
+                                if (n2->node_type == ASSIGN) {
+                                    /* Same Symbol? */
+                                    if (n2->child->symbol->symbol ==
+                                        node->child->symbol->symbol) {
+                                        node->association = n1;
+                                        goto found;
+                                    }
+                                    else break;
+                                }
+                                n2 = n2->sibling; /* Next REPEAT Child */
+                            }
+                        }
+                        n1 = n1->parent;
+                    };
+                    found:;
+                }
+                else {
+                    /* Symbol not specified - just find inner DO */
+                    n1 = node->parent;
+                    while (1) {
+                        if (!n1) {
+                            mknd_err(node, "NOT_IN_LOOP"); /* 28.1, 28.2 */
+                            break;
+                        }
+                        else if (n1->node_type == DO) {
+                            node->association = n1;
+                            break;
+                        }
+                        n1 = n1->parent;
+                    };
+                }
                 break;
 
             default:;

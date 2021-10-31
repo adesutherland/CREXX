@@ -60,6 +60,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->parent = 0;
     node->child = 0;
     node->sibling = 0;
+    node->association = 0;
     node->token = 0;
     node->symbol = 0;
     node->scope = 0;
@@ -960,6 +961,13 @@ walker_result pdot_walker_handler(walker_direction direction,
             fprintf(output,"n%d -> n%d [xlabel=\"%d\"]\n",
                     node->parent->node_number,
                     node->node_number, child_index);
+        }
+
+        /* Link to Associated Node */
+        if (node->association) {
+            fprintf(output,"n%d -> n%d [color=red dir=\"forward\"]\n",
+                    node->node_number,
+                    node->association->node_number);
         }
 
         /* Link to Symbol */

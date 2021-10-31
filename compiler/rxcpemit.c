@@ -190,7 +190,7 @@ static void output_insert_after(OutputFragment* existing, OutputFragment* after)
 static void output_append(OutputFragment* before, OutputFragment* after) {
     while (before->after) before = before->after;
     before->after = after;
-    after->before = before;
+    if (after) after->before = before;
 }
 
 static void output_append_text(OutputFragment* before, char* after) {
@@ -1818,6 +1818,9 @@ static walker_result emit_walker(walker_direction direction,
                 output_append(node->output,child2->output);
 
                 /* Loop End Checks REPEAT->output4 */
+                snprintf(temp1, buf_len, "l%ddoinc:\n",
+                         node->node_number);
+                output_append_text(node->output, temp1);
                 output_append(node->output, child1->output4);
 
                 /* Loop increments REPEAT->output3 */
@@ -1825,12 +1828,10 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Loop End */
                 get_comment_line_number_only(comment,child1, "{DO-END}");
-                node->output3 = output_fs(comment);
-                output_append(node->output, node->output3);
+                output_append_text(node->output, comment);
                 snprintf(temp1, buf_len, "   br l%ddostart\nl%ddoend:\n",
                          node->node_number, node->node_number);
-                node->output4 = output_fs(temp1);
-                output_append(node->output, node->output4);
+                output_append_text(node->output, temp1);
                 break;
 
             case REPEAT:
@@ -1839,9 +1840,7 @@ static walker_result emit_walker(walker_direction direction,
                  * output2 = Loop iteration beginning exit checks
                  * output3 = Loop iteration increments
                  * output4 = Loop iteration end exit checks */
-
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment); /* Assign / init instruction */
+                node->output = output_f(); /* Assign / init instruction */
                 node->output2 = output_f(); /* Begin Loop exit checks */
                 node->output3 = output_f(); /* Loop increments */
                 node->output4 = output_f(); /* End Loop exit checks */
@@ -1873,7 +1872,7 @@ static walker_result emit_walker(walker_direction direction,
                     output_append_text(node->output, temp1);
                 }
                 node->output2 = output_fs(comment);
-                snprintf(temp1, buf_len, "   bct l%ddoend,%c%d\n",
+                snprintf(temp1, buf_len, "   bcf l%ddoend,%c%d\n",
                          node->parent->parent->node_number,
                          node->register_type,
                          node->register_num);
@@ -1984,6 +1983,24 @@ static walker_result emit_walker(walker_direction direction,
                          node->register_type,
                          node->register_num);
                 output_append_text(node->output4, temp1);
+                break;
+
+            case LEAVE:
+                /* Leave Loop */
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment);
+                snprintf(temp1, buf_len, "   br l%ddoend\n",
+                         node->association->node_number);
+                output_append_text(node->output, temp1);
+                break;
+
+            case ITERATE:
+                /* Iterate Loop */
+                get_comment(comment,node, NULL);
+                node->output = output_fs(comment);
+                snprintf(temp1, buf_len, "   br l%ddoinc\n",
+                         node->association->node_number);
+                output_append_text(node->output, temp1);
                 break;
 
             default:;
