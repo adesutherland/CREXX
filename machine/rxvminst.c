@@ -249,6 +249,8 @@ void init_ops() {
     instr_f("bct", "dec op2; inc op3, if op2>0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
     instr_f("bctnm", "dec op2; if op2>=0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
     instr_f("bctnm", "dec op2; inc op3, if op2>=0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
+    instr_f("bcf", "if op2=0 goto op1(if false) else dec op2", OP_ID, OP_REG,OP_NONE);
+    instr_f("bcf", "if op2=0 goto op1(if false) else dec op2 and inc op3", OP_ID,OP_REG, OP_REG);
 
     instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_REG);
     instr_f("bgt", "if op2>op3 then goto op1", OP_ID,OP_REG, OP_INT);

@@ -2050,6 +2050,33 @@ START_OF_INSTRUCTIONS ;
             }
         DISPATCH;
 /* ------------------------------------------------------------------------------------
+ *  BCF_ID_REG if op2=0 goto op1(if false) else dec op2
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCF_ID_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - BCF R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+            else (current_frame->locals[REG_IDX(2)]->int_value)--;
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  BCF_ID_REG_REG  if op2=0 goto op1(if false) else dec op2 and inc op3
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCF_ID_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - BCF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
+                next_pc = current_frame->module->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL;
+            }
+            else {
+                (current_frame->locals[REG_IDX(2)]->int_value)--;
+                (current_frame->locals[REG_IDX(3)]->int_value)++;
+            }
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
  *  BCTNM_REG_ID  dec op2; if op2>=0 goto op1                           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
