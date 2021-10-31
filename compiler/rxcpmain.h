@@ -69,7 +69,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -97,6 +97,7 @@ struct ASTNode {
     ASTNode *free_list;
     int node_number;
     ASTNode *parent, *child, *sibling;
+    ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
     Token *token;
     Scope *scope;
     char *node_string;
@@ -184,7 +185,7 @@ typedef enum walker_result {
  *   request_skip - skip this node (only for in - top down - direction
  */
 typedef walker_result (*walker_handler)(walker_direction direction,
-        ASTNode* visited_node, void *payload);
+                                        ASTNode* visited_node, void *payload);
 
 /* And the walker itself
  * It returns
