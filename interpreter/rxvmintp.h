@@ -3,7 +3,7 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX F0037"
+#define rxversion "cREXX I0182"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
