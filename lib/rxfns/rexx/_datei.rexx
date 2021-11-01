@@ -66,6 +66,9 @@ if abbreV('QUALIFIED',format,2)  then do  /* format Thursday, December 17, 2020 
      idate=idate%86400+_jdn(1,1,1970)
      return idate
   end
+  if abbreV('JDN',format,3) then return idate                   /* is already JDN */
+  if abbreV('BASE',format,1) then return idateJ+1721426         /* calulate JDN   */
+  if abbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
 
 return format' invalid input format'
 

@@ -6,8 +6,8 @@ _dateo: Procedure = .string
   if format='' then format='NORMAL'
 
   if abbreV('BASE',format,1)>0 then return JDN-1721426          /* BASE is REXX Type Format, starting 01.01.0001     */
-  if abbreV('UNIX',format,1)>0 then return JDN-1721426-719162   /* UNIX Days since 1.1.1970                          */
-  if abbreV('JDN',format,1)>0 then return JDN                   /* JDN is Julian Day Number starting 24. Nov 4714 BC */
+  if abbreV('UNIX',format,2)>0 then return JDN-1721426-719162   /* UNIX Days since 1.1.1970                          */
+  if abbreV('JDN',format,3)>0 then return JDN                   /* JDN is Julian Day Number starting 24. Nov 4714 BC */
 
   weekday="Monday Tuesday Wednesday Thursday Friday Saturday Sunday"
   mlist='January February March April May June July August September October November December'
