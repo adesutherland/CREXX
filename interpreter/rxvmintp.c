@@ -698,10 +698,18 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
-
             set_int(op1R, time(NULL));
 
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  MTIME get time of the day in microseconds                      pej 31. October 2021
+ * ------------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
+            REG_RETURN_INT((time(NULL)%86400)*1000+123);
+            DISPATCH;
+
 /* ------------------------------------------------------------------------------------
  *  TRIMR  Trim right                                                 pej 7. April 2021
  * ------------------------------------------------------------------------------------
