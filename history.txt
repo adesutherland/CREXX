@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+I0177 - Implement LOOP as a synonym for DO in loops
 I0183 - Fix loop fails with empty do
 I0182 - Fix RXC sometimes goes into a loop when compiling loops/assignments
 F0037 - REXX Loop Constructs (UNTIL, WHILE, FOREVER, LEAVE, ITERATE)

@@ -167,33 +167,38 @@ simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
           { G = I; add_ast(G,ast_err(context, "35.1", E)); }
 
 /* DO Group */
-do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
-do(G)         ::= TK_DO(T) dorep(R) TK_EOC TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= TK_DO(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(R,D); add_ast(G,I); }
-do(G)         ::= TK_DO(T) dorep(R) docond(D) TK_EOC TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= TK_DO(T) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); ASTNode* R = ast_ft(context, REPEAT);
+
+tk_doloop(D)  ::= TK_DO(T).
+                  { D = ast_f(context, DO, T); }
+tk_doloop(D)  ::= TK_LOOP(T).
+                  { D = ast_f(context, DO, T); }
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = T; add_ast(G,R); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC TK_END TK_EOC.
+                  { G = T; add_ast(G,R); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC TK_END TK_EOC.
+                  { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = T; ASTNode* R = ast_ft(context, REPEAT);
                     add_ast(G,R); add_ast(R,D); add_ast(G,I); }
-do(G)         ::= TK_DO(T) docond(D) TK_EOC TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); ASTNode* R = ast_ft(context, REPEAT);
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC TK_END TK_EOC.
+                  { G = T; ASTNode* R = ast_ft(context, REPEAT);
                     add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= TK_DO(T) doforever(F) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,F); add_ast(G,I); }
-do(G)         ::= TK_DO(T) doforever(F) TK_EOC TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,F); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= TK_DO dorep ANYTHING(E).
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC instruction_list(I) TK_END TK_EOC.
+                  { G = T; add_ast(G,F); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC TK_END TK_EOC.
+                  { G = T; add_ast(G,F); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop dorep ANYTHING(E).
                   { G = ast_err(context, "27.1", E); }
-do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
-                  { G = I; add_ast(G,ast_err(context, "14.1", E)); }
-do(G)         ::= TK_DO(E) dorep TK_EOC TK_EOS.
-                  { G = ast_ft(context, NOP); add_ast(G,ast_err(context, "14.1", E)); }
-do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
+do(G)         ::= tk_doloop(E) dorep TK_EOC instruction_list(I) TK_EOS.
+                  { G = I; mknd_err(E, "14.1"); add_ast(G,E); }
+do(G)         ::= tk_doloop(E) dorep TK_EOC TK_EOS.
+                  { G = ast_ft(context, NOP); mknd_err(E, "14.1"); add_ast(G,E); }
+do(G)         ::= tk_doloop dorep TK_EOC instruction_list(I) ANYTHING(E).
                   { G = I; add_ast(G,ast_err(context, "35.1", E)); }
-do(G)         ::= TK_DO dorep TK_EOC ANYTHING(E).
+do(G)         ::= tk_doloop dorep TK_EOC ANYTHING(E).
                   { G = ast_ft(context, NOP); add_ast(G,ast_err(context, "35.1", E)); }
 dorep(R)      ::= expression(E).
                   { R = ast_ft(context, REPEAT);
