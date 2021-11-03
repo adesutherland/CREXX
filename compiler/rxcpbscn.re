@@ -103,6 +103,7 @@ int rexbscan(Context* s) {
   'ARG' { return(TK_ARG); }
   'CALL' { return(TK_CALL); }
   'DO' { return(TK_DO); }
+  'LOOP' { return(TK_LOOP); }
 //  'DROP' { return(TK_DROP); }
   'ELSE' { return(TK_ELSE); }
   'END' { return(TK_END); }

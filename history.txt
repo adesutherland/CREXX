@@ -1,6 +1,9 @@
 CREXX History / Change Log
 
 F0035 - (Almost) complete REXX/RXAS BIF library
+I0180 - Loop TO check is not right for a negative BY value
+I0177 - Implement LOOP as a synonym for DO in loops
+I0183 - Fix loop fails with empty do
 I0182 - Fix RXC sometimes goes into a loop when compiling loops/assignments
 F0037 - REXX Loop Constructs (UNTIL, WHILE, FOREVER, LEAVE, ITERATE)
         RXAS bcf instruction
