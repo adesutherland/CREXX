@@ -1792,7 +1792,6 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - FTOS R%llu\n", REG_IDX(1));
             string_from_float(op1R);
             DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
@@ -1844,6 +1843,22 @@ START_OF_INSTRUCTIONS ;
                 goto converror;
             }
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FFORMAT_REG_REG_REG  Set string from float use format string   pej 3. November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FFORMAT_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
+            op3R->string_value[op3R->string_length]='\0';    // terminate format string explicitly, rexx vars aren't!
+            op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+            op1R->string_pos = 0;
+  #ifndef NUTF8
+            op1R->string_char_pos = 0;
+            op1R->string_chars = op1R->string_length;
+  #endif
+            DISPATCH;
+
 /* ------------------------------------------------------------------------------------
  *  STRLOWER_REG_REG  translate string into lower case string              pej 23.10.21
  *  -----------------------------------------------------------------------------------
