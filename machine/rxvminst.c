@@ -112,6 +112,9 @@ void init_ops() {
     instr_f("strlen", "String Length op1 = length(op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("strchar", "op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
     instr_f("strchar", "op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
+    instr_f("hexchar", "op1 (as hex) = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("poschar", "op1 = position of op3 in op2", OP_REG, OP_REG, OP_REG);
+
     instr_f("setstrpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
     instr_f("getstrpos", "Get String (op2) charpos into op1", OP_REG, OP_REG, OP_NONE);
     instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
