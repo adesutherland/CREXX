@@ -246,6 +246,7 @@ void init_ops() {
 
     instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
     instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
     instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);

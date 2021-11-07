@@ -122,6 +122,15 @@ struct value {
 
 #define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
         else if ((v)->status.type_string) S2FLOAT(i,v);
+ // Get Character
+#ifndef NUTF8
+  #define GETSTRCHAR(i,v,p)           { string_set_byte_pos(v,p);             \
+        utf8codepoint(v->string_value + v->string_pos, &codepoint);           \
+        i=codepoint; }
+#else
+  #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
+#endif
+
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }

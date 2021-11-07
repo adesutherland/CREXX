@@ -2366,6 +2366,28 @@ START_OF_INSTRUCTIONS ;
             string_concat_char(v1, v3);
             v3->int_value=i3;   // restore original v3
         DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  TRANSCHAR_REG_REG_REG  replace op1 if it is in op3-list by char in op2-list pej 7 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRANSCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - TRANSCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            i1 = op1R->int_value;
+            v2 = op2R;
+            v3 = op3R;
+
+            for (i=0;i<v3->string_length; i++) {
+                GETSTRCHAR(i3,v3,i);
+                if (i1==i3) {
+                   GETSTRCHAR(i2,v2,i);
+                   i1=i2;
+                   break;
+                }
+            }
+        REG_RETURN_INT(i1);
+        DISPATCH;
+
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */
