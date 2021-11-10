@@ -34,10 +34,10 @@ strip: procedure = .string
       j=hlen
       do i=0 to hlen-1   /* by -1 not yet supported */
          j=j-1
-      Assembler begin
+      Assembler do
          strchar char,retstr,j
          itos char
-      assembler end
+      end
          if char=schar then hlen=hlen-1
          else do
             retstr=substr(retstr,1,hlen)
