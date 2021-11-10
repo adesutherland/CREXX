@@ -3,6 +3,7 @@ options levelb
 
 /* SUBSTR */
 say "Look for SUBSTR OK"
+/* do 1000000 */
 /* These from the Rexx book. */
 /* say '|'substr('abc',2)'|' */
 if substr('abc',2) \= 'bc'            then say 'failed in test          1 '
@@ -27,7 +28,7 @@ if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then say 'failed in test  
 if substr("12345678",5,6,"é") \= '5678éé' then say 'failed in test          17 '
 /* say substr("12345678",10,6,"é") */
 /* if substr("12345678",10,6,"éé") \= 'éééééé' then say 'need exceptions for this' */
-
+/* end */
 say "SUBSTR OK"
 
 return
