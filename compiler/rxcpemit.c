@@ -24,7 +24,7 @@
  *       setting and checking this flag anyway */
 #define REGTP_NOTSYM 2
 
-/* Tests if a node is not a constant */
+/* Tests if a node is a constant */
 static int is_constant(ASTNode* node) {
     switch (node->node_type) {
         case CONSTANT: /* This is what the optimiser changes all constants to */
@@ -1896,21 +1896,103 @@ static walker_result emit_walker(walker_direction direction,
                  * output3 = Loop iteration increments
                  * output4 = Loop iteration end exit checks */
 
-                /* If the REPEAT has a TO it has an ASSIGN and its register
-                 * number will have been set to the ASSIGN Variable */
-
                 get_comment(comment,node, NULL);
                 node->output = output_fs(comment);
                 output_append(node->output, child1->output);
 
+                /* Need to determine the sign of the BY */
+                /* Find the BY */
+                j = 1; /* J is the sign: 1 (default)=positive, -1=negative, 0=dynamic */
+                n = node->parent->child; /* First sibling */
+                while (n) {
+                    if (n->node_type == BY) {
+                        if (n->child) {
+                            if (is_constant(n->child)) {
+                                if (n->child->value_type == n->child->target_type) {
+                                    /* Is a constant */
+                                    if (n->child->value_type == TP_INTEGER) {
+                                        if (n->child->int_value >= 0) j = 1;
+                                        else j = -1;
+                                    }
+                                    else if (n->child->value_type == TP_FLOAT) {
+                                        if (n->child->float_value >= 0.0) j = 1;
+                                        else j = -1;
+                                    }
+                                    else j = 1;
+                                }
+                                else j = 0; /* Not a constant */
+                            }
+                            else j = 0; /* Not a constant */
+                        }
+                        else j = 1; /* Implicit by */
+                        break;
+                    }
+                    n = n->sibling;
+                }
+                /* n is set the BY node (or NULL if n*/
+
+                /* If the REPEAT has a TO it has an ASSIGN and its register
+                 * number will have been set to the ASSIGN Variable */
                 node->output2 = output_fs(comment);
-                snprintf(temp1, buf_len, "   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
-                         tp_prefix,
-                         node->parent->register_type,
-                         node->parent->register_num,
-                         node->child->register_type,
-                         node->child->register_num,
-                         node->parent->parent->node_number);
+                switch (j) {
+                    case 1: /* Positive */
+                        snprintf(temp1, buf_len, "   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                                 tp_prefix,
+                                 node->parent->register_type,
+                                 node->parent->register_num,
+                                 node->child->register_type,
+                                 node->child->register_num,
+                                 node->parent->parent->node_number);
+                        break;
+                    case -1: /* Negative */
+                        snprintf(temp1, buf_len, "   %slt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                                 tp_prefix,
+                                 node->parent->register_type,
+                                 node->parent->register_num,
+                                 node->child->register_type,
+                                 node->child->register_num,
+                                 node->parent->parent->node_number);
+                        break;
+                    default: /* Dynamic by value */
+                        /* We need a zero (int or flaot */
+                        if (*tp_prefix == 'i') op = "0";
+                        else op = "0.0";
+                        snprintf(temp1, buf_len,
+                                 "   %slt r0,%c%d,%s\n" /* Check the by value sign */
+                                 "   brt l%ddoneg1,r0\n"    /* JMP to Negative BY (r0 - todo) */
+
+                                 "   %sgt r0,%c%d,%c%d\n"   /* Pos BY */
+                                 "   brtf l%ddoend,l%ddoneg2,r0\n" /* r0 - todo */
+
+                                 "l%ddoneg1:\n"
+                                 "   %slt r0,%c%d,%c%d\n"   /* Neg BY */
+                                 "   brt l%ddoend,r0\n" /* r0 - todo */
+
+                                 "l%ddoneg2:\n",
+
+                                 tp_prefix,
+                                 n->child->register_type,
+                                 n->child->register_num,
+                                 op,
+                                 node->parent->parent->node_number,
+
+                                 tp_prefix,
+                                 node->parent->register_type,
+                                 node->parent->register_num,
+                                 node->child->register_type,
+                                 node->child->register_num,
+                                 node->parent->parent->node_number,
+                                 node->parent->parent->node_number,
+
+                                 node->parent->parent->node_number,
+                                 tp_prefix,
+                                 node->parent->register_type,
+                                 node->parent->register_num,
+                                 node->child->register_type,
+                                 node->child->register_num,
+                                 node->parent->parent->node_number,
+                                 node->parent->parent->node_number);
+                }
                 output_append_text(node->output2, temp1);
                 break;
 

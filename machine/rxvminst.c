@@ -112,6 +112,9 @@ void init_ops() {
     instr_f("strlen", "String Length op1 = length(op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("strchar", "op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
     instr_f("strchar", "op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
+    instr_f("hexchar", "op1 (as hex) = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("poschar", "op1 = position of op3 in op2", OP_REG, OP_REG, OP_REG);
+
     instr_f("setstrpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
     instr_f("getstrpos", "Get String (op2) charpos into op1", OP_REG, OP_REG, OP_NONE);
     instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
@@ -239,8 +242,11 @@ void init_ops() {
     instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
+    instr_f("fformat", "Set string value from float value using a format string", OP_REG, OP_REG, OP_REG);
+
     instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
     instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
     instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);

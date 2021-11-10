@@ -7,7 +7,6 @@ d2x: procedure = .string
   if slen=0 then return ""
   trtab="0123456789ABCDEF"
   hlen=0
-  char=0
   sign=0
   yint=0
   rint=0
@@ -23,9 +22,7 @@ d2x: procedure = .string
      end
      xint=dc+xint
   end
-
   do i=0 to 64
-     char=char*16
      assembler idiv yint,xint,16
      assembler imod rint,xint,16
      xint=yint
@@ -39,10 +36,12 @@ d2x: procedure = .string
         assembler strchar sint,trtab,rint
         assembler appendchar rstr,sint
         assembler strlen hlen,rstr
+
         do i=1 to hlen   /* now reverse the string */
            j=hlen-i
            assembler concchar xstr,rstr,j
         end
+        if hlen//2=1 then xstr='0'xstr
         if slen>0 then xstr=right(xstr,slen,'0')
         return xstr
      end

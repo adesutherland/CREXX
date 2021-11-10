@@ -1,7 +1,10 @@
 /* rexx */
 options levelb
+say "Hex to char"
+say x2c('616263') 'abc'
+say x2c('343536') '456'
 
-say "decimal to Hex"
+say "Decimal to Hex"
 say d2x(-128)
 say d2x(128)
 say d2x(-3967)
@@ -22,6 +25,7 @@ say d2b(-128)
 say d2b(128)
 say d2b(-3967)
 say d2b(32640)
+
 say "Hex to Bit"
 say x2b( 'ff80')
 say x2b( '7f80')
@@ -49,13 +53,23 @@ if x2d('F081',2) \= -127 then say "error in "8
 if x2d('F081',1) \= 1 then say "error in "9
 if x2d('0031',0) \= 0 then say "error in "10
 
-
-
 say 'Done x2d.rexx'
+
+say "test D2X"
+xc=d2c(7)
+say 1 c2x(xc) '07x'
+xc=d2c(129)
+say 2 c2x(xc) '81x'
+say 'Done d2x.rexx'
+say 3 "'"c2x('')"'" "''"
+say 'Done d2x.rexx'
+
 return
 
 x2d: procedure = .int
   arg expose hex = .string, slen = -1
+x2c: procedure = .string
+  arg expose hex = .string
 
 x2b: procedure = .string
   arg expose hex = .string, slen = -1
@@ -65,4 +79,10 @@ d2b: procedure = .string
 
 d2x: procedure = .string
   arg expose int1 = .int, slen = -1
+
+d2c: procedure = .string
+  arg expose int1 = .int, slen = -1
+
+c2x: procedure = .string
+  arg expose string = .string
 
