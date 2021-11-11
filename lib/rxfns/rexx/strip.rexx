@@ -18,29 +18,23 @@ strip: procedure = .string
    if option=' ' then option='B'
 
    retstr=instr
-   if option='L' | option='B' then do   /* check leading blanks */
+   if option='L' | option='B' then do    /* check leading blanks */
       Assembler strlen hlen,retstr
-      do i=0 to hlen-1   /* by -1 not yet supported */
+      do i=0 to hlen-1
          assembler strchar char,retstr,i
          assembler itos char
          if char\=schar then do
-            retstr=substr(retstr,i+1)     /* there are leading blanks  */
-            i=hlen
+            retstr=substr(retstr,i+1)     /* place none byte char and leave loop  */
+            leave
          end
       end
    end
    if option='T' | option='B' then do   /* check trailing blanks */
       Assembler strlen hlen,retstr
-      j=hlen
-      do i=0 to hlen-1   /* by -1 not yet supported */
-         j=j-1
-         Assembler strchar char,retstr,j
-      end
-         if char=schar then hlen=hlen-1
-         else do
-            retstr=substr(retstr,1,hlen)
-            return retstr
-         end
+      do i=hlen-1 to 0 by -1
+         Assembler strchar char,retstr,i
+         Assembler itos char
+         if char\=schar then return substr(retstr,1,i+1)
       end
    end
 return retstr
