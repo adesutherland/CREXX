@@ -30,7 +30,7 @@ time: procedure = .string
     return right(hh,2,'0')':'right(mm,2,'0')||xm
  end
 
-return "invalid option"
+return "time invalid option"
 
 /* Prototype functions */
 trunc: procedure = .string

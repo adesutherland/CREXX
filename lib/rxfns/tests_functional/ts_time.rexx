@@ -1,6 +1,6 @@
 /* rexx test abs bif */
 options levelb
-/* RXVM ts_date date _jdn _dateo _datei abbrev right word words wordindex wordpos pos substr length copies upper */
+/* RXVM ts_time time trunc right left _elapsed copies length substr */
 say "test Time"
 say "Option 'E' "time('E')
 /* instead of a wait we run a large loop */

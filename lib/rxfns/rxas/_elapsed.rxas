@@ -1,7 +1,7 @@
 .globals=2
 g0 .expose=elapsed_flag
 g1 .expose=elapsed_time
-
+/* Elapsed time, requires global variables */
 _elapsed()   .locals=2 .expose=_elapsed._elapsed
          seq r1,g0,"Y"
          brf notset,r1
