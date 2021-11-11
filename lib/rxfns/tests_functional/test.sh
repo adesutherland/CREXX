@@ -17,3 +17,4 @@ rxvm ts_date ../rexx/date ../rexx/_jdn ../rexx/_datei ../rexx/_dateo ../rexx/abb
 rxvm ts_wordpos ../rexx/wordpos ../rxas/words ../rxas/word ../rxas/wordindex ../rxas/pos
 rxvm ts_wordlength ../rexx/wordlength ../rxas/word ../rxas/words
 rxvm ts_trunc ../rexx/trunc ../rxas/left ../rexx/substr ../rexx/raise ../rxas/length
+rxvm ts_strip ../rexx/strip ../rxas/length ../rexx/substr ../rexx/raise
