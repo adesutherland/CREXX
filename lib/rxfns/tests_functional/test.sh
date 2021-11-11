@@ -16,3 +16,4 @@ rxvm ts_verify ../rexx/verify
 rxvm ts_date ../rexx/date ../rexx/_jdn ../rexx/_datei ../rexx/_dateo ../rexx/abbrev ../rxas/right ../rxas/word ../rxas/length ../rexx/substr ../rexx/upper ../rexx/wordpos ../rxas/copies ../rexx/raise ../rxas/words ../rxas/wordindex ../rxas/pos
 rxvm ts_wordpos ../rexx/wordpos ../rxas/words ../rxas/word ../rxas/wordindex ../rxas/pos
 rxvm ts_wordlength ../rexx/wordlength ../rxas/word ../rxas/words
+rxvm ts_trunc ../rexx/trunc ../rxas/left ../rexx/substr ../rexx/raise ../rxas/length
