@@ -96,4 +96,4 @@ say "TRUNC OK"
 
 /* trunc()  */
 trunc: procedure = .string
-  arg number = .float, fraction = 0
+  arg number = .string, fraction = 0
