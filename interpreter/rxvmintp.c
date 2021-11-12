@@ -2388,6 +2388,14 @@ START_OF_INSTRUCTIONS ;
         REG_RETURN_INT(i1);
         DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(CNOP) CALC_DISPATCH(0);
+        DEBUG("TRACE - CNOP\n");
+        DISPATCH;
+
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */
@@ -2497,6 +2505,41 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
             op1R->status.all_type_flags = op2I;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_INT load register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int) v2->int_value,(int) v3->int_value);
+
+            v1->int_value = v2->int_value;
+            op1R->status.all_type_flags = v3->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_string load string to register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),v2->string_value,(int) v3->int_value);
+
+            v1->string_value = v2->string_value;
+            op1R->status.all_type_flags = v3->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_FLOAT float to load register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - LOADSETTP R%d %g %d\n", (int)REG_IDX(1), v2->float_value,(int) v3->int_value);
+            v1->string_value = v2->string_value;
+            op1R->status.all_type_flags = v3->int_value;
             DISPATCH;
 
 /*

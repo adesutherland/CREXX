@@ -248,6 +248,7 @@ void init_ops() {
     instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
     instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
     instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("cnop", "no operation", OP_NONE, OP_NONE, OP_NONE);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
@@ -280,6 +281,11 @@ void init_ops() {
 
     instr_f("gettp", "gets the register type flag (op1 = op2.typeflag)", OP_REG, OP_REG,OP_NONE);
     instr_f("settp", "sets the register type flag (op1.typeflag = op2)", OP_REG, OP_INT,OP_NONE);
+
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_INT,OP_INT);
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_FLOAT,OP_INT);
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_STRING,OP_INT);
+
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
