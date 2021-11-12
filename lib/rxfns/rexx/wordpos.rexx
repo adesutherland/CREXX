@@ -2,8 +2,8 @@
 options levelb
 wordpos: procedure = .int
   arg expose search = .string, string = .string, start = 1
-tlen=0
 
+tlen=0
 assembler strlen tlen,string
 if tlen=0 then return 0
 assembler strlen tlen,search
@@ -16,15 +16,17 @@ if snum=0 then return 0
 
 search=strip(search)
 
-i=0
-do until i>=wnum
-   i=i+1
-   wp=wordindex(string,i)
-   if wp<start then iterate
+startpos=wordindex(string,start)  /* calculate wordpos */
+
+do i=start to wnum
    if snum=1 then do
       if search = word(string,i) then return i
    end
-   else if pos(search,string,wp) = wp then return i
+   else do
+      if pos(search,string,startpos) = startpos then return i
+      startpos=wordindex(string,i+1)
+      if startpos=0 then leave
+   end
 end
 return 0
 
