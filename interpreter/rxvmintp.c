@@ -1854,7 +1854,6 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(i1);
             DISPATCH;
 
-
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Int Prime op1              ???
  *  -----------------------------------------------------------------------------------
@@ -2378,15 +2377,44 @@ START_OF_INSTRUCTIONS ;
             v3 = op3R;
 
             for (i=0;i<v3->string_length; i++) {
-                GETSTRCHAR(i3,v3,i);
-                if (i1==i3) {
-                   GETSTRCHAR(i2,v2,i);
-                   i1=i2;
+                 GETSTRCHAR(v3,i);
+                if (i1==v3->int_value) {
+                   GETSTRCHAR(v2,i);
+                   i1=v2->int_value;
                    break;
                 }
             }
         REG_RETURN_INT(i1);
         DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - SUBSTRING R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            i3 = op3R->int_value;
+            for (i=i3;i<v2->string_length; i++) {
+                GETSTRCHAR(v2,i);
+                string_concat_char(v1, v2);
+            }
+
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off at op2      pej 12 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - SUBSTCUT R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v1->string_length= op2R->int_value;
+
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021

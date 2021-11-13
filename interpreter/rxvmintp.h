@@ -124,9 +124,9 @@ struct value {
         else if ((v)->status.type_string) S2FLOAT(i,v);
  // Get Character
 #ifndef NUTF8
-  #define GETSTRCHAR(i,v,p)           { string_set_byte_pos(v,p);             \
+  #define GETSTRCHAR(v,p)           { string_set_byte_pos(v,p);             \
         utf8codepoint(v->string_value + v->string_pos, &codepoint);           \
-        i=codepoint; }
+        v->int_value=codepoint; }
 #else
   #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
 #endif
