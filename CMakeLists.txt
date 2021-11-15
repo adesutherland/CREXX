@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(CREXX)
 include(CTest)
+
+add_subdirectory(common)
 add_subdirectory(re2c)
 add_subdirectory(lemon)
 add_subdirectory(platform)
