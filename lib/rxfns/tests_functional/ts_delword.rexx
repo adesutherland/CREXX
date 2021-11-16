@@ -20,34 +20,51 @@ if delword("Med lov skal land bygges", 1,0) \= "Med lov skal land bygges" then s
 if delword(" Med lov skal", 1,0) \= " Med lov skal" then say 'failed in test 16 '
 if delword(" Med lov skal ", 4) \= " Med lov skal " then say 'failed in test 17 '
 if delword("", 1) \= "" then say 'failed in test 18 '
-say "DELWORD OK"
-
-
-
 
 x='CREXX is faster than BREXX'
+if delword(x,1) \= ' ' then say 'failed in test 19 '
+if delword(x,2) \= 'CREXX ' then say 'failed in test 20 '
+if delword(x,3)  \= 'CREXX is ' then say 'failed in test 21 '
+if delword(x,4)  \= 'CREXX is faster '  then say 'failed in test 22 '
+if delword(x,5) \= 'CREXX is faster than ' then say 'failed in test 23 '
+if delword(x,99)  \= 'CREXX is faster than BREXX' then say 'failed in test 24 '
 
-say "delword(x,1) '"delword(x,1)"'"
-say "delword(x,2) '"delword(x,2)"'"
-say "delword(x,3) '"delword(x,3)"'"
-say "delword(x,4) '"delword(x,4)"'"
-say "delword(x,5) '"delword(x,5)"'"
-say "delword(x,99) '"delword(x,99)"'"
+if delword(x,1,1) \= 'is faster than BREXX' then say 'failed in test 25 '
+if delword(x,2,1) \= 'CREXX faster than BREXX' then say 'failed in test 26 '
+if delword(x,3,1) \= 'CREXX is than BREXX' then say 'failed in test 27 '
+if delword(x,4,1) \= 'CREXX is faster BREXX' then say 'failed in test 28 '
+if delword(x,5,1) \= 'CREXX is faster than ' then say 'failed in test 29 '
+if delword(x,99,1) \= 'CREXX is faster than BREXX' then say 'failed in test 30 '
 
-say "delword(x,1,1) '"delword(x,1,1)"'"
-say "delword(x,2,1) '"delword(x,2,1)"'"
-say "delword(x,3,1) '"delword(x,3,1)"'"
-say "delword(x,4,1) '"delword(x,4,1)"'"
-say "delword(x,5,1) '"delword(x,5,1)"'"
-say "delword(x,99,1) '"delword(x,99,1)"'"
+if delword(x,1,2) \= 'faster than BREXX' then say 'failed in test 31 '
+if delword(x,2,3) \= 'CREXX BREXX' then say 'failed in test 32 '
+if delword(x,3,4) \= 'CREXX is ' then say 'failed in test 33 '
+if delword(x,4,2) \= 'CREXX is faster ' then say 'failed in test 34 '
+if delword(x,5,3) \= 'CREXX is faster than ' then say 'failed in test 35 '
+if delword(x,99,4) \= 'CREXX is faster than BREXX' then say 'failed in test 36 '
 
-say "delword(x,1,2) '"delword(x,1,2)"'"
-say "delword(x,2,3) '"delword(x,2,3)"'"
-say "delword(x,3,4) '"delword(x,3,4)"'"
-say "delword(x,4,2) '"delword(x,4,2)"'"
-say "delword(x,5,3) '"delword(x,5,3)"'"
-say "delword(x,99,4) '"delword(x,99,4)"'"
+/* say "delword(x,1) '"delword(x,1)"'" */
+/* say "delword(x,2) '"delword(x,2)"'" */
+/* say "delword(x,3) '"delword(x,3)"'" */
+/* say "delword(x,4) '"delword(x,4)"'" */
+/* say "delword(x,5) '"delword(x,5)"'" */
+/* say "delword(x,99) '"delword(x,99)"'" */
 
+/* say "delword(x,1,1) '"delword(x,1,1)"'" */
+/* say "delword(x,2,1) '"delword(x,2,1)"'" */
+/* say "delword(x,3,1) '"delword(x,3,1)"'" */
+/* say "delword(x,4,1) '"delword(x,4,1)"'" */
+/* say "delword(x,5,1) '"delword(x,5,1)"'" */
+/* say "delword(x,99,1) '"delword(x,99,1)"'" */
+
+/* say "delword(x,1,2) '"delword(x,1,2)"'" */
+/* say "delword(x,2,3) '"delword(x,2,3)"'" */
+/* say "delword(x,3,4) '"delword(x,3,4)"'" */
+/* say "delword(x,4,2) '"delword(x,4,2)"'" */
+/* say "delword(x,5,3) '"delword(x,5,3)"'" */
+/* say "delword(x,99,4) '"delword(x,99,4)"'" */
+
+say "DELWORD OK"
 return
 
 /* function prototype */
