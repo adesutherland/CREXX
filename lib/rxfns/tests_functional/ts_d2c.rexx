@@ -34,6 +34,7 @@ say "D2C OK"
 
 x2d: procedure = .int
   arg expose hex = .string, slen = -1
+
 x2c: procedure = .string
   arg expose hex = .string
 
