@@ -5,6 +5,7 @@ rxvm ts_left ../rxas/substr ../rxas/left ../rxas/length
 rxvm ts_length ../rexx/length
 rxvm ts_length ../rxas/length
 rxvm ts_pos ../rxas/pos
+rxvm tlinesz ../rexx/linesize
 rxvm tscopies ../rxas/copies
 rxvm tslastpos ../rxas/lastpos
 rxvm tsword ../rxas/word
@@ -28,3 +29,4 @@ rxvm ts_c2x ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/
 rxvm ts_x2c ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_upper ../rexx/upper ../rexx/lower
 rxvm ts_lower ../rexx/upper ../rexx/lower
+rxvm ts_delstr ../rexx/delstr ../rxas/length ../rexx/substr ../rexx/raise
