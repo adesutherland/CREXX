@@ -25,5 +25,6 @@ rxvm ts_x2b ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/
 rxvm ts_d2x ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_d2c ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_c2x ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
+rxvm ts_x2c ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_upper ../rexx/upper ../rexx/lower
 rxvm ts_lower ../rexx/upper ../rexx/lower
