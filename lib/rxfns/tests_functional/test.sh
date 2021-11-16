@@ -30,3 +30,4 @@ rxvm ts_x2c ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/
 rxvm ts_upper ../rexx/upper ../rexx/lower
 rxvm ts_lower ../rexx/upper ../rexx/lower
 rxvm ts_delstr ../rexx/delstr ../rxas/length ../rexx/substr ../rexx/raise
+rxvm ts_delword ../rexx/delword ../rxas/word ../rxas/words ../rxas/wordindex ../rxas/length ../rexx/substr ../rexx/raise
