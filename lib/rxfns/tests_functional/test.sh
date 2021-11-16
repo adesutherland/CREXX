@@ -13,8 +13,10 @@ rxvm ts_space ../rexx/space ../rxas/word ../rxas/words
 rxvm ts_overlay ../rexx/overlay ../rexx/length ../rexx/substr ../rexx/raise
 rxvm ts_wrdix ../rxas/wordindex
 rxvm ts_verify ../rexx/verify
-rxvm ts_date ../rexx/date ../rexx/_jdn ../rexx/_datei ../rexx/_dateo ../rexx/abbrev ../rxas/right ../rxas/word ../rxas/length ../rexx/substr ../rexx/upper ../rexx/wordpos ../rxas/copies ../rexx/raise ../rxas/words ../rxas/wordindex ../rxas/pos
-rxvm ts_wordpos ../rexx/wordpos ../rxas/words ../rxas/word ../rxas/wordindex ../rxas/pos
+rxvm ts_date ../rexx/date ../rexx/_jdn ../rexx/_datei ../rexx/_dateo ../rexx/abbrev ../rxas/right ../rxas/word ../rxas/length ../rexx/substr ../rexx/upper ../rexx/wordpos ../rxas/copies ../rexx/raise ../rxas/words ../rxas/wordindex ../rxas/pos 
+rxvm ts_wordpos ../rexx/wordpos ../rxas/words ../rxas/word ../rxas/wordindex ../rxas/pos ../rexx/strip
 rxvm ts_wordlength ../rexx/wordlength ../rxas/word ../rxas/words
 rxvm ts_trunc ../rexx/trunc ../rxas/left ../rexx/substr ../rexx/raise ../rxas/length
 rxvm ts_strip ../rexx/strip ../rxas/length ../rexx/substr ../rexx/raise
+rxvm ts_compare ../rexx/compare ../rxas/length ../rexx/substr ../rexx/raise
+rxvm ts_translate ../rexx/translate ../rxas/left ../rexx/upper ../rexx/substr ../rexx/raise ../rxas/length
