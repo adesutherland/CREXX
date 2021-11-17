@@ -41,8 +41,11 @@ d2x: procedure = .string
            j=hlen-i
            assembler concchar xstr,rstr,j
         end
-        if hlen//2=1 then xstr='0'xstr
-        if slen>0 then xstr=right(xstr,slen,'0')
+   /*     if hlen//2=1 then xstr='0'xstr */ /* dropped 2 bytes adjustment */
+        if slen>0 then do
+           if sign>0 then xstr=right(xstr,slen,'F')
+             else xstr=right(xstr,slen,'0')
+        end
         return xstr
      end
   end
