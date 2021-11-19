@@ -91,6 +91,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
+    char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','A', 'B', 'C', 'D', 'E', 'F','a', 'b', 'c', 'd', 'e', 'f'};
 #ifndef NUTF8
     int codepoint;
 #endif
@@ -2014,13 +2015,15 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(i1);
             DISPATCH
 /* ------------------------------------------------------------------------------------
- *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                           pej 04 November 2021
+ *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                       pej 04 November 2021
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            v1 = op1R;
             v2 = op2R;
             v3 = op3R;
+
 #ifndef NUTF8
             string_set_byte_pos(v2, v3->int_value);
             utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
@@ -2028,9 +2031,12 @@ START_OF_INSTRUCTIONS ;
 #else
             i3=v2->string_value[v3->int_value];
 #endif
-            i1=(i3>>4)&15;
-            i2=(i3)&15;
-            REG_RETURN_INT(i1*10+i2);
+            i1=(i3>>4)&15;                       // extract left hand side of value
+            i2=(i3)&15;                          // extract right hand side of value
+            v1->string_value[0]=hexconst[i1];    // set first character of hex value
+            v1->string_value[1]=hexconst[i2];    // set first character of hex value
+            v1->string_value[2]='\0';            // set end of string, just to be safe
+            PUTSTRLEN(v1,2);                  // hex length is 2
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  POSCHAR_REG_REG_REG  op1 position of op3 in op2                pej 05 November 2021
@@ -2376,7 +2382,9 @@ START_OF_INSTRUCTIONS ;
             v2 = op2R;
             v3 = op3R;
 
-            for (i=0;i<v3->string_length; i++) {
+            GETSTRLEN(i4,v3);
+
+            for (i=0;i<i4; i++) {
                  GETSTRCHAR(v3,i);
                 if (i1==v3->int_value) {
                    GETSTRCHAR(v2,i);
@@ -2389,6 +2397,10 @@ START_OF_INSTRUCTIONS ;
 
 /* ------------------------------------------------------------------------------------
  *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
+ *
+ *  !!! the position parameter is offset +1, this is an exception from normally     !!!
+ *  !!! using the offset. Reason: this instruction will be used directly from rexx  !!!
+ *  !!  so we save one instruction                                                  !!
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3);
@@ -2396,8 +2408,10 @@ START_OF_INSTRUCTIONS ;
 
             v1 = op1R;
             v2 = op2R;
-            i3 = op3R->int_value;
-            for (i=i3;i<v2->string_length; i++) {
+            i3 = op3R->int_value-1;  /* make position to offset  */
+            PUTSTRLEN(v1,0) ;      /* reset length of target  */
+            GETSTRLEN(i4,v3);
+            for (i=i3;i<i4; i++) {
                 GETSTRCHAR(v2,i);
                 string_concat_char(v1, v2);
             }
@@ -2405,16 +2419,34 @@ START_OF_INSTRUCTIONS ;
         DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off at op2      pej 12 November 2021
- *  -----------------------------------------------------------------------------------
- */
+*  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off after op2   pej 13 November 2021
+*  -----------------------------------------------------------------------------------
+*/
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - SUBSTCUT R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - SUBSTCUT R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
 
             v1 = op1R;
-            v1->string_length= op2R->int_value;
+            PUTSTRLEN(v1,op2R->int_value) ;
 
-            DISPATCH;
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - PADSTR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            i3 = op3R->int_value;
+            PUTSTRLEN(v1,0) ;        /* reset length of target  */
+            GETSTRCHAR(v2,0);       /* fetch pad character     */
+            for (i=0;i<i3; i++) {
+                string_concat_char(v1, v2);
+            }
+
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021

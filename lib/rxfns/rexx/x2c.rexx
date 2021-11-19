@@ -13,6 +13,10 @@ x2c: procedure = .string
   binary=""
   byte=0
   assembler strlen slen,hex    /* get length of hex string */
+  if slen//2=1 then do
+     hex='0'hex
+     slen=slen+1
+  end
 
   do i=0 to slen-1 by 2                   /* loop through hex string */
      assembler strchar char1,hex,i        /* fetch one byte          */
@@ -27,9 +31,8 @@ x2c: procedure = .string
      end
      if off1>15 then off1=off1-6    /* translate lower case to upper case hex */
      if off2>15 then off2=off2-6    /* translate lower case to upper case hex */
-     assembler ishl byte,off1,4     /* move 1. char to left hand byte         */
-     byte=byte+off2                 /* move 2. char to right hand byte        */
-     assembler appendchar binary,byte /* append to result                     */
+      assembler ishl byte,off1,4     /* move 1. char to left hand part of byte */
+     byte=byte+off2                 /* move 2. char to right hand part of byte*/
+      assembler appendchar binary,byte /* append to result                     */
   end
-
  return binary  /* return result */

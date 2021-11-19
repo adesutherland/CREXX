@@ -131,6 +131,19 @@ struct value {
   #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
 #endif
 
+#ifndef NUTF8
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_chars; }
+#else
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_len; }
+#endif
+
+#ifndef NUTF8
+  #define PUTSTRLEN(v,i)   { v->string_length=i; v->string_chars=i;}
+#else
+  #define PUTSTRLEN(v,i)   { v->string_length=i; }
+#endif
+
+
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }

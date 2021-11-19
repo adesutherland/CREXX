@@ -4,7 +4,6 @@ options levelb
 
 x2b: procedure = .string
  arg hex = .string, slen=-1
-
  if hex="" then return ""
 /*      0000 0001 0010 0011 0100 0101 0110 0111 1000 1001 1010 1011 1100 1101 1110 1111 */
 bittab="0000000100100011010001010110011110001001101010111100110111101111"
@@ -15,7 +14,6 @@ hlen=0
 offset=0
 added=0
 assembler strlen hlen,hex
-
 do i=0 to hlen-1
    assembler strchar char,hex,i
    assembler poschar offset,trtab,char  /* position in hex table   */
