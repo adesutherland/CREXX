@@ -5,8 +5,8 @@ say "Look for X2C OK"
 /* These from the Rexx book. */
 /* if x2c('F7F2 A2') \= '72s' then say 'failed in test EBCDIC */
 /* if x2c('F7F2a2') \= '72s' then say 'failed in test EBCDIC */
-if tx2c('F') \= '0F' then say 'failed in test 3 '
-   else say 'test 3 successful: 0F'
+if tx2c('F') \= '0f' then say 'failed in test 3 '
+   else say 'test 3 successful: 0f'
 /* These from Mark Hessling. */
 /* if x2c("416263") \= "Abc" then say 'failed in test 4 ' probably also EBCDIC */
 if tx2c("DeadBeef") \= "deadbeef" then say 'failed in test 5 '
@@ -32,7 +32,6 @@ tx2c: procedure = .string
   str2=c2x(str)  /* 2 half bytes translated into 2 bytes */
   assembler strlen slen,str2
   if slen//2=1 then str2='0'str2
-  say "'"str2"'"
 return str2
 
 

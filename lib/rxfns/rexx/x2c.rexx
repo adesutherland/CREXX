@@ -14,17 +14,9 @@ x2c: procedure = .string
   byte=0
   hexi=""
   blank=" "
-  assembler strchar char2,blank,byte  /* misuse byte as position 0 */
-  assembler strlen slen,hex    /* get length of hex string */
-  xlen=slen
-  do i=0 to xlen-1
-     assembler strchar char1,hex,i
-     if char1=char2 then do
-        slen=slen-1
-        iterate
-     end
-     assembler concchar hexi,hex,i
-  end
+  assembler dropchar hexi,hex,blank
+  assembler strlen slen,hexi    /* get length of hex string */
+
   if slen//2=1 then do
      hexi='0'hexi
      slen=slen+1

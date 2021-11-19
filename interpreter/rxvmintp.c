@@ -2385,7 +2385,7 @@ START_OF_INSTRUCTIONS ;
             GETSTRLEN(i4,v3);
 
             for (i=0;i<i4; i++) {
-                 GETSTRCHAR(v3,i);
+                GETSTRCHAR(v3,i);
                 if (i1==v3->int_value) {
                    GETSTRCHAR(v2,i);
                    i1=v2->int_value;
@@ -2394,6 +2394,35 @@ START_OF_INSTRUCTIONS ;
             }
         REG_RETURN_INT(i1);
         DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  DROPCHAR_REG_REG_REG  removes characters contained in op3-list pej 19 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DROPCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - DROPCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+
+            GETSTRLEN(i2,v2);
+            GETSTRLEN(i3,v3);
+            if (i3==0) i3=v3->string_length;
+            for (i=0;i<i2; i++) {
+                GETSTRCHAR(v2,i);
+                i5=0;
+                for (i4=0;i4<i3; i4++) {
+                    GETSTRCHAR(v3,i4);
+                    if (v2->int_value==v3->int_value) {
+                       i5=1;  // found drop char
+                       break;
+                    }
+                }
+                if (i5==1) continue;
+                string_concat_char(v1, v2);
+            }
+         DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
