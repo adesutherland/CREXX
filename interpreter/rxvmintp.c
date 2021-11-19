@@ -91,7 +91,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
-    char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','A', 'B', 'C', 'D', 'E', 'F','a', 'b', 'c', 'd', 'e', 'f'};
+    char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
 #ifndef NUTF8
     int codepoint;
 #endif
