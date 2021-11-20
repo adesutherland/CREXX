@@ -3,16 +3,20 @@ options levelb
 /* translate  */
 
 translate: procedure = .string
-  arg expose source = .string, tochar = "", fromchar = "",pad=" "
+  arg source = .string, tochar = "?????", fromchar = "?????",pad=" "
 
   slen=0
   flen=0
   result=""
   schar=0
 
-  if fromchar="" & tochar="" then return upper(source)
+  /* !!! fromchar or tochar containing '?????' mean it is not set, while '' mean it is empty */
+  if fromchar="?????" & tochar="?????" then return upper(source)
+  if fromchar="" & tochar="" then return source
 
   assembler strlen slen,source                 /* get length of souce string     */
+  if fromchar="?????" & tochar="" then return left("",slen,pad)
+
   assembler strlen flen,fromchar               /* get length of from list        */
 
   tochar=left(tochar,flen,pad)                 /* from and to list must be equal */

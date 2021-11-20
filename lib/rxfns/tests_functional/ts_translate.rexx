@@ -28,4 +28,4 @@ say "TRANSLATE OK"
 return
 
 translate: procedure = .string
-  arg expose source = .string, tochar = "", fromchar = "", pad=" "
+  arg source = .string, tochar = "?????", fromchar = "?????", pad=" "
