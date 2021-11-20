@@ -3,16 +3,24 @@ options levelb
 
 /* delword(string,wordnumber-to-delete,length) delete one word, or the remaining words in string */
 delword: procedure = .string
-  arg expose string = .string, wnum = .int, wcount = 0
-  wrds=words(string)
-  if wcount=0 then wcount=wrds
+  arg expose string = .string, wnum = .int, wcount = -1
 
-  if wnum>wrds then return string
   if wnum<1    then return string
+  if wcount=0  then return string
+
+  wrds=words(string)
+  if wnum>wrds then return string
 
   wdel=0
   wlen=0
   slen=0
+
+  if wcount<0 then do
+     wpos=wordindex(string,wnum)    /* locate position of word x */
+     if wpos=0 then return string
+     if wpos=1 then return ""
+     return substr(string,1,wpos-1)
+  end
 
   do dw=1 to 8192                   /* temporary solution, until we have a do forever */
      assembler strlen slen,string   /* length of original string */

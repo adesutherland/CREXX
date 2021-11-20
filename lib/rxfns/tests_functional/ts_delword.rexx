@@ -22,7 +22,7 @@ if delword(" Med lov skal ", 4) \= " Med lov skal " then say 'failed in test 17 
 if delword("", 1) \= "" then say 'failed in test 18 '
 
 x='CREXX is faster than BREXX'
-if delword(x,1) \= ' ' then say 'failed in test 19 '
+if delword(x,1) \= '' then say 'failed in test 19 '
 if delword(x,2) \= 'CREXX ' then say 'failed in test 20 '
 if delword(x,3)  \= 'CREXX is ' then say 'failed in test 21 '
 if delword(x,4)  \= 'CREXX is faster '  then say 'failed in test 22 '
@@ -69,6 +69,6 @@ return
 
 /* function prototype */
 delword: procedure = .string
-arg string1 = .string, wnum = .int, wcount = 0
+arg string1 = .string, wnum = .int, wcount = -1
 
 
