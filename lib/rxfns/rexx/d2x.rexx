@@ -5,6 +5,7 @@ options levelb
 d2x: procedure = .string
   arg xint = .int, slen=-1
   if slen=0 then return ""
+  if slen>20 then slen=20
   trtab="0123456789ABCDEF"
   hlen=0
   sign=0
