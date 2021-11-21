@@ -11,6 +11,7 @@ x2d: procedure = .int
   sign=0
   offset=0
   if slen=0 then return 0      /* no hex input return 0    */
+  if slen>20 then slen=20      /* may be up to 20 chars, inluding sign */
   assembler strlen hlen,hex    /* get length of hex string */
   if slen>0 then hex=right(hex,slen,"0")  /* if length parm set, treat hex as signed integer */
   else slen=hlen                          /* else it is an unsigned integer */
