@@ -21,7 +21,7 @@ rxvm ts_trunc ../rexx/trunc ../rxas/left ../rexx/substr ../rexx/raise ../rxas/le
 rxvm ts_strip ../rexx/strip ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_compare ../rexx/compare ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_translate ../rexx/translate ../rxas/left ../rexx/upper ../rexx/substr ../rexx/raise ../rxas/length
-#rxvm ts_x2d ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
+rxvm ts_x2d ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_x2b ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_d2x ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
 rxvm ts_d2c ../rexx/x2d ../rexx/x2c ../rexx/x2b ../rexx/d2b ../rexx/d2x ../rexx/d2c ../rexx/c2x ../rxas/right ../rxas/copies ../rxas/length ../rexx/substr ../rexx/raise
