@@ -5,7 +5,7 @@ say "Look for X2B OK"
 if x2b('C3') \= '11000011' then say 'failed in test 1 '
 if x2b('7') \= '0111' then say 'failed in test 2 '
 if x2b('1 C1') \= '000111000001' then say 'failed in test 3 '
-if x2b(c2x('C3'x)) \= '11000011' then say 'failed in test 4 '
+if x2b('C3') \= '11000011' then say 'failed in test 4 '
 if x2b(d2x('129')) \= '10000001' then say 'failed in test 5 '
 if x2b(d2x('12')) \= '1100' then say 'failed in test 6 '
 /* These from Mark Hessling. */
