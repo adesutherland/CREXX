@@ -17,10 +17,9 @@ if snum=0 then return 0
 search=strip(search)
 
 startpos=wordindex(string,start)  /* calculate wordpos */
-
 do i=start to wnum
    if snum=1 then do
-      if search = word(string,i) then return i
+      if abbrev(word(string,i),search)>0 then return i
    end
    else do
       if pos(search,string,startpos) = startpos then return i
@@ -45,3 +44,7 @@ arg string1 = .string, string2 = .string, start = 1
 
 strip: procedure = .string
        arg instr = .string, option = "B", schar= " "
+
+abbrev: procedure = .string
+  arg string = .string, astr = .string, len = 0
+

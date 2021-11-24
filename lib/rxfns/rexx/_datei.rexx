@@ -8,7 +8,6 @@ _datei: Procedure = .string
  * ----------------------------------------------------------
  */
   if format='' then format='NORMAL'
-
   if abbreV('DAYS',format,1) then return 'DAYS not allowed as input format'
   if abbreV('CENTURY',format,1) then return 'CENTURY not allowed as input format'
   if abbreV('EUROPEAN',format,1) | abbreV('GERMAN',format,1) | abbreV('XEUROPEAN',format,1) | abbreV('XGERMAN',format,1) | abbreV('DEC',format,3) | abbreV('XDEC',format,3) then do  /* format dd.mm.yy or dd/mm/yy */
@@ -35,7 +34,7 @@ _datei: Procedure = .string
        dd=word(idate,3)
        return _jdn(dd,mm,YY)
     end
-if abbreV('QUALIFIED',format,2)  then do  /* format Thursday, December 17, 2020 */
+if abbreV('QUALIFIED',format,2) then do  /* format Thursday, December 17, 2020 */
        mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
        idate=split(idate)
        YY=word(idate,4)
@@ -43,6 +42,16 @@ if abbreV('QUALIFIED',format,2)  then do  /* format Thursday, December 17, 2020 
        mm=word(idate,2)
        dd=word(idate,3)
        dd=split(dd)
+       mm=wordpos(mm,mlist)
+       return _jdn(dd,mm,YY)
+    end
+if abbreV('NORMAL',format,1) then do  /* format 24 December 2021 */
+       mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+       idate=split(idate)
+       YY=word(idate,3)
+       yy=testyear(yy)
+       mm=word(idate,2)
+       dd=word(idate,1)
        mm=wordpos(mm,mlist)
        return _jdn(dd,mm,YY)
     end
