@@ -69,11 +69,22 @@ static RX_INLINE void free_frame(stack_frame *frame) {
     free(frame);
 }
 
+int gettimeofday (struct timeval *__restrict __p, void *__restrict __tz);
+
+
 /* Interpreter */
 int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
+
+ // todo: correct location?
+    struct timeval tv;
+    struct timezone tz;
+    time_t	ctime;
+// end of time definitions
+
+    struct tm *tmdata;
     int rc = 0;
     int mod_index;
     bin_code *pc, *next_pc;
@@ -697,18 +708,24 @@ START_OF_INSTRUCTIONS ;
             CALC_DISPATCH_MANUAL;
             DISPATCH;
 
+
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
-            set_int(op1R, time(NULL));
-
+            gettimeofday(&tv, &tz);
+            REG_RETURN_INT(tv.tv_sec);
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  MTIME get time of the day in microseconds                      pej 31. October 2021
  * ------------------------------------------------------------------------------------
  */
+
         START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
-            REG_RETURN_INT((time(NULL)%86400)*1000+123);
+            ctime = time(NULL);
+            tmdata = localtime(&ctime);
+            i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60  ) + (tmdata->tm_sec));
+            gettimeofday(&tv, &tz);
+            REG_RETURN_INT(i1*1000000+tv.tv_usec);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
