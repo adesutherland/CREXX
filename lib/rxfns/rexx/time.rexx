@@ -7,15 +7,15 @@ time: procedure = .string
  if option="" then option='N'
  todayms=0
  assembler mtime todayms
- ms=todayms//1000
- today=todayms%1000
+ ms=todayms//1000000
+ today=todayms%1000000
  hh=today%3600
  rm=today//3600
  mm=rm%60
  ss=rm//60
 
  if option='N' | option='n' then return right(hh,2,'0')':'right(mm,2,'0')':'right(ss,2,'0')
- if option='L' | option='l' then return right(hh,2,'0')':'right(mm,2,'0')':'right(ss,2,'0')'.'left(ms,3,'0')
+ if option='L' | option='l' then return right(hh,2,'0')':'right(mm,2,'0')':'right(ss,2,'0')'.'left(ms,6,'0')
  if option='H' | option='h' then return hh
  if option='M' | option='m' then return hh*60+mm
  if option='S' | option='s' then return today
