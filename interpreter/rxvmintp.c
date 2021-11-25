@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <stdint.h>
 #include "platform.h"
 #include "rxas.h"
@@ -13,9 +13,6 @@
 #include "rxastree.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
-#if defined(__APPLE__) || defined(__linux__)
-#include <sys/time.h>
-#endif
 
 typedef struct stack_frame stack_frame;
 
