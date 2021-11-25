@@ -13,6 +13,9 @@
 #include "rxastree.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
+#if defined(__APPLE__) || defined(__linux__)
+#include <sys/time.h>
+#endif
 
 typedef struct stack_frame stack_frame;
 
