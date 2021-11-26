@@ -45,8 +45,8 @@ _dateo: Procedure = .string
      return (jdn-_jdn(1,1,1970))*86400
     end
 
-  if abbreV('NORMAL',format,2) then return right(dd,2,'0')' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
-  if abbreV('XNORMAL',format,1) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
+  if abbreV('NORMAL',format,1) then return right(dd,2,'0')' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
+  if abbreV('XNORMAL',format,2) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
 
   if abbreV('MONTH',format,1) then return word(mlist,mm)
 
@@ -59,7 +59,9 @@ _dateo: Procedure = .string
   if abbreV('USA',format,1)        then return right(mm,2,'0')'/'right(dd,2,'0')'/'right(YY,4,'0')
   if abbreV('XUSA',format,2)       then return right(mm,2,'0')'/'right(dd,2,'0')'/'right(YY,4,'0')
 
-  if abbreV('STANDARD',format,1)   then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
+  if abbreV('STANDARD',format,2)   then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
+  if abbreV('SORTED',format,1)     then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
+
 
   if abbreV('ORDERED',format,1)    then  return right(YY,2,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
   if abbreV('XORDERED',format,2)   then  return right(YY,4,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
@@ -71,7 +73,7 @@ _dateo: Procedure = .string
 
   if abbreV('QUALIFIED',format,1) then return word(weekday,wday)', 'word(mlist,mm)' 'right(dd,2,'0')', 'right(YY,4,'0') /* Thursday, December 17, 2020 */
 
- return right(dd,2,'0')' 'right(mm,2,'0')' 'right(YY,4,'0')
+return right(dd,2,'0')' 'right(mm,2,'0')' 'right(YY,4,'0')
 
 /* Prototypes */
 
