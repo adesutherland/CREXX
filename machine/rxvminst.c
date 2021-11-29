@@ -155,6 +155,8 @@ void init_ops() {
 
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("rseq", "non strict String Equals op1=(op2=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("rseq", "non strict String Equals op1=(op2=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sgt", "String Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_REG);
