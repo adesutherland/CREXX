@@ -1170,6 +1170,62 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  RSEQ_REG_REG_REG  String Equals op1=(op2=op3) non strict REXX comparison  pej 29. Nov 2021
+ *  -----------------------------------------------------------------------------------
+*/
+        START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+
+            GETSTRLEN(i4,v2);
+            GETSTRLEN(i5,v3);
+
+        // step 1 find last not blank character
+            for (i = i4-1; i >= 0;  i--,i4--) {
+                GETSTRCHAR(v2,i);
+                if (v2->int_value!=32) break;
+            }
+            for (i = i5-1; i >= 0;  i--,i5--) {
+                GETSTRCHAR(v3,i);
+                if (v3->int_value!=32) break;
+            }
+         // step 2 find first non blank
+            for (i = 0; i < i4;  i++) {
+                GETSTRCHAR(v2,i);
+                if (v2->int_value!=32) break;
+            }
+            for (i = 0; i < i5;  i++) {
+                GETSTRCHAR(v3,i);
+                if (v3->int_value!=32) break;
+            }
+            i4=i4-v2->string_pos;    // testing length of op1 (without leading and trailing blanks)
+            i5=i5-v3->string_pos;    // testing length of op2  (without leading and trailing blanks)
+            if (i4!=i5) i=0;
+            else {
+               if (string_cmp(v2->string_value+v2->string_pos,i4,v3->string_value+v3->string_pos,i5)==0) i=1;
+                  else i=0;
+            }
+            REG_RETURN_INT(i);
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
+ *  !!! not yet implemented !!!
+ *  -----------------------------------------------------------------------------------
+*/
+        START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3);
+            DEBUG("TRACE - RSEQ R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+                  REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
+                  (CONSTSTRING_OP(3))->string);
+            v1 = op1R;
+            v2 = op2R;
+            s3 = op3S;
+            REG_RETURN_INT(0);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  SNE_REG_REG_REG  String Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
