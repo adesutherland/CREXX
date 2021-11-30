@@ -2,7 +2,7 @@
 options levelb
 
 _dateo: Procedure = .string
-  arg jdn = .int, format = .string
+  arg jdn = .int, format = .string, osep=""
   if format='' then format='NORMAL'
 
   if fabbreV('BASE',format,1)>0 then return JDN-1721426          /* BASE is REXX Type Format, starting 01.01.0001     */
@@ -49,26 +49,26 @@ _dateo: Procedure = .string
   if fabbreV('XNORMAL',format,2) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
 
   if fabbreV('MONTH',format,1) then return word(mlist,mm)
-
-  if fabbreV('EUROPEAN',format,1)   then return right(dd,2,'0')'/'right(mm,2,'0')'/'right(YY,2,'0')
-  if fabbreV('XEUROPEAN',format,2)  then return right(dd,2,'0')'/'right(mm,2,'0')'/'right(YY,4,'0')
-
-  if fabbreV('GERMAN',format,1)     then return right(dd,2,'0')'.'right(mm,2,'0')'.'right(YY,2,'0')
-  if fabbreV('XGERMAN',format,2)    then return right(dd,2,'0')'.'right(mm,2,'0')'.'right(YY,4,'0')
-
-  if fabbreV('USA',format,1)        then return right(mm,2,'0')'/'right(dd,2,'0')'/'right(YY,4,'0')
-  if fabbreV('XUSA',format,2)       then return right(mm,2,'0')'/'right(dd,2,'0')'/'right(YY,4,'0')
+  if osep="" then tsep="/"
+     else tsep=osep
+  if fabbreV('EUROPEAN',format,1)   then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,2,'0')
+  if fabbreV('XEUROPEAN',format,2)  then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,4,'0')
+  if fabbreV('USA',format,1)        then return right(mm,2,'0')||tsep||right(dd,2,'0')||tsep||right(YY,4,'0')
+  if fabbreV('XUSA',format,2)       then return right(mm,2,'0')||tsep||right(dd,2,'0')||tsep||right(YY,4,'0')
+  if fabbreV('ORDERED',format,1)    then  return right(YY,2,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
+  if fabbreV('XORDERED',format,2)   then  return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
+  if osep="" then tsep="."
+     else tsep=osep
+  if fabbreV('GERMAN',format,1)     then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,2,'0')
+  if fabbreV('XGERMAN',format,2)    then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,4,'0')
 
   if fabbreV('STANDARD',format,2)   then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
   if fabbreV('SORTED',format,1)     then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
-
-  if fabbreV('ORDERED',format,1)    then  return right(YY,2,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
-  if fabbreV('XORDERED',format,2)   then  return right(YY,4,'0')'/'right(mm,2,'0')'/'right(dd,2,'0')
-
-  if fabbreV('DEC',format,3)        then  return right(dd,2,'0')'-'right(mm,2,'0')'-'right(yy,2,'0')
-  if fabbreV('XDEC',format,3)       then  return right(dd,2,'0')'-'right(mm,2,'0')'-'right(yy,4,'0')
-
-  if fabbreV('INTERNATIONAL',format,3) then  return right(YY,4,'0')'-'right(mm,2,'0')'-'right(dd,2,'0')
+  if osep="" then tsep="-"
+     else tsep=osep
+  if fabbreV('DEC',format,3)        then  return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(yy,2,'0')
+  if fabbreV('XDEC',format,3)       then  return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(yy,4,'0')
+  if fabbreV('INTERNATIONAL',format,3) then  return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
 
   if fabbreV('QUALIFIED',format,1) then return word(weekday,wday)', 'word(mlist,mm)' 'right(dd,2,'0')', 'right(YY,4,'0') /* Thursday, December 17, 2020 */
 

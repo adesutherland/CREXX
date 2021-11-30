@@ -2,11 +2,12 @@
 options levelb
 
 date: Procedure = .string
- arg oFormat = "", idate = "", iFormat = ""
+ arg oFormat = "", idate = "", iFormat = "", osep="", isep=""
 
   if iformat="" then iformat="NORMAL"
   if oformat="" then oformat="NORMAL"
-
+  if isep\="" then isep=substr(isep,1,1)
+  if osep\="" then osep=substr(osep,1,1)
   iformat=upper(iformat)
   oformat=upper(oformat)
   idate=upper(idate)
@@ -27,11 +28,11 @@ date: Procedure = .string
      daysofyear=substr(idate,5,3)
      iNorm=_jdn(1,1,YY)+daysofyear-1
   end
-  else iNorm=_datei(idate,iformat)
+  else iNorm=_datei(idate,iformat,isep)
 
 /* 2. Translate JDN according to its output format */
 
-return _dateo(iNorm,oFormat)
+return _dateo(iNorm,oFormat,osep)
 
 fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1
@@ -43,10 +44,10 @@ _jdn: Procedure = .int
   arg day = .int, month = .int, year = .int
 
 _datei: Procedure = .string
-  arg jdn = .string, format=""
+  arg jdn = .string, format="", isep=""
 
 _dateo: Procedure = .string
-  arg jdn = .int, format = .string
+  arg jdn = .int, format = .string, osep=""
 
 abbrev: procedure = .string
   arg string = .string, astr = .string, len = 0
