@@ -11,17 +11,17 @@ date: Procedure = .string
   oformat=upper(oformat)
   idate=upper(idate)
 
- /* 1. Check and translate input data according to its format to a JDN */
+  /* 1. Check and translate input data according to its format to a JDN */
   if idate="" then do      /* no date set, take today, ignore input format */
      today=0
      assembler time today
      assembler itos today
      iNorm=today%86400+1721426+719162
   end
-  else if abbreV('JDN',iformat,3)  then nop
-  else if abbreV('BASE',iformat,1) then iNorm=idate+1721426
-  else if abbreV('UNIX',iformat,1) then iNorm=idate+1721426+719162
-  else if abbreV('JULIAN',iformat,1) then do
+  else if fabbreV('JDN',iformat,3)  then nop
+  else if fabbreV('BASE',iformat,1) then iNorm=idate+1721426
+  else if fabbreV('UNIX',iformat,2) then iNorm=idate+1721426+719162
+  else if fabbreV('JULIAN',iformat,1) then do
      idate=right(idate,7,'0')
      YY=substr(idate,1,4)
      daysofyear=substr(idate,5,3)
@@ -32,6 +32,11 @@ date: Procedure = .string
 /* 2. Translate JDN according to its output format */
 
 return _dateo(iNorm,oFormat)
+
+fabbreV: Procedure = .int
+  arg p0 = .string, p1 = .string, flen = 1
+  if substr(p0,1,flen)=substr(p1,1,flen) then return 1
+return 0
 
 /* Prototype functions */
 _jdn: Procedure = .int
