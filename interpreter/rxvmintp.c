@@ -104,6 +104,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
     char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
+    char usedblank = ' ';
 #ifndef NUTF8
     int codepoint;
 #endif
@@ -719,7 +720,19 @@ START_OF_INSTRUCTIONS ;
  *  MTIME get time of the day in microseconds                      pej 31. October 2021
  * ------------------------------------------------------------------------------------
  */
+        START_INSTRUCTION(TTIME_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
+            tzset();
+            printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
+            printf("Current bias is %ld seconds\n", timezone);
+            gettimeofday(&tv, &tz);
+            REG_RETURN_INT(tv.tv_sec);
+            DISPATCH;
 
+/* ---------------------------------------------------------------------------------
+ *  MTIME get time of the day in microseconds                      pej 31. October 2021
+ * ------------------------------------------------------------------------------------
+ */
         START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
             ctime = time(NULL);
