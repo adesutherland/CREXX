@@ -50,5 +50,6 @@ say "date('J','10 Mar 1962')      ==> 1962069     :" date('j','10 Mar 1962')
 /* say "date('J','18 Jan 2021')      ==> 2021018     :" date('j','18 Jan 2021') */
 /* say "date('J','10 Mar 1962')      ==> 1962069     :" date('j','10 Mar 1962') */
 
+/* Prototype functions */
 date: Procedure = .string
-   arg iFormat = "", idate = "", oFormat = ""
+   arg iFormat = "", idate = "", oFormat = "", osep="", isep=""
