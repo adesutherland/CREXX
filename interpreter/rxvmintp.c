@@ -713,8 +713,9 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
+            tzset();
             gettimeofday(&tv, &tz);
-            REG_RETURN_INT(tv.tv_sec);
+            REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  MTIME get time of the day in microseconds                      pej 31. October 2021
@@ -726,7 +727,7 @@ START_OF_INSTRUCTIONS ;
             printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
             printf("Current bias is %ld seconds\n", timezone);
             gettimeofday(&tv, &tz);
-            REG_RETURN_INT(tv.tv_sec);
+            REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 
 /* ---------------------------------------------------------------------------------
