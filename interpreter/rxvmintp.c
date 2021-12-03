@@ -718,16 +718,37 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  MTIME get time of the day in microseconds                      pej 31. October 2021
+ *  XTIME return time properties                                  pej 02. December 2021
  * ------------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TTIME_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
+        START_INSTRUCTION(XTIME_REG_STRING) CALC_DISPATCH(2);
+        DEBUG("TRACE - XTIME R%d\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
+
             tzset();
-            printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
-            printf("Current bias is %ld seconds\n", timezone);
-            gettimeofday(&tv, &tz);
-            REG_RETURN_INT(tv.tv_sec-timezone);
+            switch ((CONSTSTRING_OP(2))->string[0]) {
+                case 'Z':  op1R->int_value  = timezone; break;
+                case 'T':  op1R->int_value  = clock(); break;
+                case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
+                case 'N':  {
+                     prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
+                     op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+                     op1R->string_pos = 0;
+                     PUTSTRLEN(v1,op1R->string_length);
+                     break;
+                }
+                case 'U':  {
+                     ctime = time(NULL);
+                     tmdata = localtime(&ctime);
+                     i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
+                     gettimeofday(&tv, &tz);
+                     op1R->int_value = i1*1000000+tv.tv_usec;
+                     break;
+                }
+            }
+    //        printf("Current bias is %ld seconds\n", timezone);
+    //        printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
+    //        gettimeofday(&tv, &tz);
+    //        REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 
 /* ---------------------------------------------------------------------------------

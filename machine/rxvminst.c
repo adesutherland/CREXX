@@ -177,8 +177,8 @@ void init_ops() {
     instr_f("not", "Logical (int) not op1=!op2", OP_REG, OP_REG, OP_NONE);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("ttime", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("mtime", "Put time in microseconds into op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("xtime", "put special time properties into op1", OP_REG, OP_STRING, OP_NONE);
 
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("map", "Map op1 to var name op2", OP_REG, OP_STRING, OP_NONE);
