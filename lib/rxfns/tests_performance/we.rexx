@@ -27,7 +27,7 @@ do i=today  to 900000
   xv = I - date('b','23 Sep 1958')
   xm = I - date('b','19 Sep 1992')
   p = xm/xv*100
-  if p = 50 then
+  if p >= 50 then
   do
     say date('n',i,'b') 'is the date Venetia is married for half of her life to René.'
     leave
@@ -37,32 +37,32 @@ do i=today  to 900000
   xv = I - date('b','23 Sep 1958')
   xy = I - date('b','26 Mar 1990')
   p = xy/xv*100
-  if p = 50 then
+  if p >= 50 then
   do
     say date('n',i,'b') 'is the date Venetia is together for half of her life with René.'
     leave
   end
 end
-/* do i=today  to 900000 */
-/*   xr = I - date('b','10 Mar 1962') */
-/*   xm = I - date('b','19 Sep 1992') */
-/*   p = xm/xr*100 */
-/*   if p = 50 then */
-/*   do */
-/*     say date('n',i,'b') 'is the date René is married for half of his life to Venetia.' */
-/*     leave */
-/*   end */
-/* end */
-/* do i=today-9000  to 900000 */
-/*   xr = I - date('b','10 Mar 1962') */
-/*   xz = I - date('b','26 Mar 1990') */
-/*   p = xz/xr*100 */
-/*   if p = 50 then */
-/*   do */
-/*     say date('n',i,'b') 'is the date René is together for half of his life with Venetia.' */
-/*     leave */
-/*   end */
-/* end */
+do i=today  to 900000
+  xr = I - date('b','10 Mar 1962')
+  xm = I - date('b','19 Sep 1992')
+  p = xm/xr*100
+  if p = 50 then
+  do
+    say date('n',i,'b') 'is the date René is married for half of his life to Venetia.'
+    leave
+  end
+end
+do i=today-9000  to 900000
+  xr = I - date('b','10 Mar 1962')
+  xz = I - date('b','26 Mar 1990')
+  p = xz/xr*100
+  if p = 50 then
+  do
+    say date('n',i,'b') 'is the date René is together for half of his life with Venetia.'
+    leave
+  end
+end
 /* say */
 say 'Frans   was born on 15 Apr 1934:' xf 'days ago.'
 say 'Dolly   was born on 06 Oct 1939:' xd 'days ago.'
@@ -74,5 +74,6 @@ say 'Aimée   will have her 20000 on :' date('n',twentythou,'b')
  
 /* Prototype functions */
 date: Procedure = .string
-   arg iFormat = "", idate = "", oFormat = ""
+   arg iFormat = "", idate = "", oFormat = "", osep="", isep=""
+
 
