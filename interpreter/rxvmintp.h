@@ -3,7 +3,7 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX I0226"
+#define rxversion "cREXX F0035"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -122,6 +122,28 @@ struct value {
 
 #define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
         else if ((v)->status.type_string) S2FLOAT(i,v);
+ // Get Character
+#ifndef NUTF8
+  #define GETSTRCHAR(v,p)           { string_set_byte_pos(v,p);             \
+        utf8codepoint(v->string_value + v->string_pos, &codepoint);           \
+        v->int_value=codepoint; }
+#else
+  #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
+#endif
+
+#ifndef NUTF8
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_chars; }
+#else
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_len; }
+#endif
+
+#ifndef NUTF8
+  #define PUTSTRLEN(v,i)   { v->string_length=i; v->string_chars=i;}
+#else
+  #define PUTSTRLEN(v,i)   { v->string_length=i; }
+#endif
+
+
 
 // TODO PEJ what kind of checks must be performed in runtime/debug mode
 #define REG_TEST(v)            { if (!(v)) goto notreg; }

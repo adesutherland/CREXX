@@ -2,36 +2,18 @@
 
 options levelb /* Written in REXX Level B */
 
-/* Tests */
-say substr('abc',2,2,'')
-say substr('abcdefgh',1,2,'.')
-say substr("René Vincent Jansen",1,4,".")
-say substr("René Vincent Jansen",6,7,"")
-say substr("12345678",5,6,"é")
-say substr("12345678",10,6,"é")
-say substr("12345678",10,6,"éé")
-
+/* declarations */
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int
-  arg type .string, code .string, parm1 .string
-  /* TODO Variable number of arguments */
-  say "RUNTIME" type "ERROR:" code parm1
-  /*
-  exit /* TODO - the compiler does not supports exit yet */
-  */
-  return
+  arg type = .string, code = .string, parm1 = .string
 
 /* Length() Procedure */
 length: procedure = .int
-  arg string1 .string /* Pass by reference */
-  result = 0
-  assembler strlen result,string1
-  return result
+  arg string1 = .string
 
 /* Substr() Procedure */
 substr: procedure = .string
-  arg string1 .string, start=.int, length=.int, pad .string
-  /* TODO length and pad are optional */
+  arg string1 = .string, start = .int, len = length(string1) + 1 - start, pad = ' '
 
   padchar = 0 /* Is an integer */
   output = ''
@@ -39,8 +21,11 @@ substr: procedure = .string
   padLength = 0;
 
   /* Check Start */
-  if start < 1 then call raise "syntax", "40.??", start /* Invalid start */
+  if start < 1 then call raise "syntax", "40.13", start /* Invalid start */
   start = start - 1 /* 1 base to zero base */
+
+  /* Check Length */
+  if len < 1 then call raise "syntax", "40.13", len /* Invalid start */
 
   /* Check length of pad */
   assembler strlen padLength,pad;
@@ -52,16 +37,16 @@ substr: procedure = .string
 
   if inputLength > 0 then do
     /* Yes there are characters needed from string1 */
-    if length <= inputLength then do
+    if len <= inputLength then do
       /* Just copy from string1 - no padding needed */
-      do i = start to start + length - 1
-         assembler concchar output,string1,i
+      do i = start to start + len - 1
+        assembler concchar output,string1,i
       end
     end
     else do
       /* Copy all of string1 and then pad */
       do i = start to start + inputLength - 1
-         assembler concchar output,string1,i
+        assembler concchar output,string1,i
       end
 
       /* Then add pads */
@@ -69,7 +54,7 @@ substr: procedure = .string
       if padLength = 0 then pad = " "
       assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
       /* Append the pads */
-      do i = 1 to length - inputLength
+      do i = 1 to len - inputLength
         assembler appendchar output,padchar
       end
     end
@@ -81,7 +66,7 @@ substr: procedure = .string
     if padLength = 0 then pad = " "
     assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
     /* Append pads */
-    do i = 1 to length
+    do i = 1 to len
       assembler appendchar output,padchar
     end
   end

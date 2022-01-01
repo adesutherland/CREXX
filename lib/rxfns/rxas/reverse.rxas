@@ -1,12 +1,16 @@
-/* reverse */
+/*
+ * rexx reverse bif in rxas.  */
           .globals=0
-reverse() .locals=4 .expose=global.reverse
-   copy   r1,a1         /* string to reverse  */
-   strlen r2,r1        /* length             */
-   dec    r2
-   load   R3,""         /* reversed string    */
+reverse()  .locals=5 .expose=reverse.reverse
+   load r1,""            /* target string      */
+   copy r2,a1            /* original string    */
+   strlen r3,r2          /* length of string   */
+   dec r3                /* make it offset     */
+   ilt  r4,r3,0          /* <0                 */
+   brt  empty,r4         /* save length        */
+   copy r4,r3
 loop:
-    concchar r3,r1,r2
-    bct loop,r2        /* continue to look for next non blank char */
-    concchar r3,r1,r2  /* byte 0 needs to be concatenated too      */
-    ret r3
+   concchar r1,r2,r3     /* conc one char into target */
+   bctnm loop,r3,r4
+empty:
+   ret r1

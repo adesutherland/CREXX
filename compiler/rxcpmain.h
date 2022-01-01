@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX I0226"
+#define rxversion "cREXX F0035"
 
 #include <stdio.h>
 #include "platform.h"
@@ -185,7 +185,7 @@ typedef enum walker_result {
  *   request_skip - skip this node (only for in - top down - direction
  */
 typedef walker_result (*walker_handler)(walker_direction direction,
-        ASTNode* visited_node, void *payload);
+                                        ASTNode* visited_node, void *payload);
 
 /* And the walker itself
  * It returns

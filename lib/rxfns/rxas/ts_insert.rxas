@@ -1,0 +1,76 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : ts_insert
+ * BUILT                  : 2021-10-13 11:47:16
+ */
+
+.globals=0
+
+main() .locals=9 .expose=ts_insert.main
+   * Line 2: say "test insert"
+   say "test insert"
+   * Line 3: x='CREXX is faster than BREXX'
+   load r1,"CREXX is faster than BREXX"
+   * Line 5: say "'"insert('much',x,10,10)"'"
+   * Line 5: insert('much',x,10,10)
+   load r2,5
+   load r3,"much"
+   swap r4,r1
+   load r5,10
+   load r6,10
+   settp r6,1
+   settp r7,2
+   call r8,insert(),r2
+   swap r1,r4
+   concat r8,"\'",r8
+   concat r8,r8,"\'"
+   say r8
+   * Line 6: say '------'
+   say "------"
+   * Line 7: say "'"insert('much ',x,10)"'"
+   * Line 7: insert('much ',x,10)
+   load r3,5
+   load r4,"much "
+   swap r5,r1
+   load r6,10
+   settp r7,0
+   settp r8,2
+   call r2,insert(),r3
+   swap r1,r5
+   concat r8,"\'",r2
+   concat r8,r8,"\'"
+   say r8
+   * Line 9: say '------'
+   say "------"
+   * Line 10: say "'"insert('The new ',x,1)"'"
+   * Line 10: insert('The new ',x,1)
+   load r3,5
+   load r4,"The new "
+   swap r5,r1
+   load r6,1
+   settp r7,0
+   settp r8,2
+   call r2,insert(),r3
+   swap r1,r5
+   concat r8,"\'",r2
+   concat r8,r8,"\'"
+   say r8
+   * Line 12: say '------'
+   say "------"
+   * Line 13: say "'"insert(' ,isn"t it?',x,27)"'"
+   * Line 13: insert(' ,isn"t it?',x,27)
+   load r3,5
+   load r4," ,isn\"t it\?"
+   swap r5,r1
+   load r6,27
+   settp r7,0
+   settp r8,2
+   call r2,insert(),r3
+   swap r1,r5
+   concat r8,"\'",r2
+   concat r8,r8,"\'"
+   say r8
+   * Line 15: return
+   ret 0
+
+insert() .expose=insert.insert

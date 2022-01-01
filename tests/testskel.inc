@@ -12,20 +12,12 @@ logo()         .locals=2
     load g1,0
     ret
 
-failures:      /* There were failures */
-    itos g1
-    load r0,"***"
-    sconcat r1,r0,g1
-    load r0,"tests failed ***"
-    sconcat r1,r1,r0
-    say r1
-    ret 1
-
 expect_true()  .locals=0
     brt expect_true_ok,a1
     iadd g1,g1,1  /* Failure */
     say " FAILED"
     ret
+    
 expect_true_ok:
     iadd g0,g0,1  /* Success */
     say " ok"
@@ -36,11 +28,11 @@ expect_false() .locals=0
     iadd g1,g1,1  /* Failure */
     say " FAILED"
     ret
+    
 expect_false_ok:
     iadd g0,g0,1 /* Success */
     say " ok"
     ret
-
 
     /* Print Results */
 print_results() .locals=3
@@ -50,7 +42,17 @@ print_results() .locals=3
     sconcat r1,r0,r1
     say r1
     brt failures, g1
-    
+        
     /* No failures */
-    say "Success"
-    ret 0
+    say "Success        "
+    ret 0       
+    
+failures:      /* There were failures */
+    itos g1
+    load r0,"***"
+    sconcat r1,r0,g1
+    load r0,"test(s) failed ***"
+    sconcat r1,r1,r0
+    say r1
+    ret 1
+    

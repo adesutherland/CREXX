@@ -1,0 +1,41 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : ts_reverse
+ * BUILT                  : 2021-10-10 18:13:09
+ */
+
+.globals=0
+
+main() .locals=6 .expose=ts_reverse.main
+   * Line 3: y=reverse(x)
+   * Line 3: reverse(x)
+   load r2,1
+   load r3,"the quick brown fox jumps over the lazy dog"
+   settp r3,0
+   call r1,reverse(),r2
+   * Line 4: say "reverse "y
+   concat r3,"reverse ",r1
+   say r3
+   * Line 5: z=reverse(y)
+   * Line 5: reverse(y)
+   load r4,1
+   settp r1,0
+   swap r5,r1
+   call r3,reverse(),r4
+   swap r1,r5
+   * Line 6: say "double reverse "z
+   concat r5,"double reverse ",r3
+   say r5
+   * Line 7: say "Empty String '"reverse("")"'"
+   * Line 7: reverse("")
+   load r4,1
+   load r5,""
+   settp r5,2
+   call r2,reverse(),r4
+   concat r5,"Empty String \'",r2
+   concat r5,r5,"\'"
+   say r5
+   * Line 7: 
+   ret 0
+
+reverse() .expose=reverse.reverse

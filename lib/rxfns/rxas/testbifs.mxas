@@ -1,17 +1,18 @@
-#include "../../../tests/testskel.inc"
-
-    length()   .expose=global.length
-    substr()   .expose=global.substr
-    copies()   .expose=global.copies
-    reverse()  .expose=global.reverse
-    word()     .expose=global.word
-    words()    .expose=global.words
-    wordindx() .expose=global.wordindx
-    subword()  .expose=global.subword
-    pos()      .expose=global.pos
-    lastpos()  .expose=global.lastpos   
-    right()    .expose=global.right
-    left()     .expose=global.left
+    /* please edit testbifs.mxas, which generates testbifs.rxas */
+    #include "../../../tests/testskel.inc"
+    
+    length()   .expose=length.length
+    substr()   .expose=substr.substr
+    copies()   .expose=copies.copies
+    reverse()  .expose=reverse.reverse
+    word()     .expose=word.word
+    words()    .expose=words.words
+    wordindx() .expose=wordindx.wordindx
+    subword()  .expose=subword.subword
+    pos()      .expose=pos.pos
+    lastpos()  .expose=lastpos.lastpos   
+    right()    .expose=right.right
+    left()     .expose=left.left
 
 main() .locals=8
     call logo()
@@ -24,7 +25,7 @@ main() .locals=8
     ieq  r4,r1,8
     call r0,expect_true(),r3
 
-    say "Test Length function - empty string argument"   
+    say "Test Length function - empty string argument"
     load r3,1 /* there is one argument */
     load r4,"" /* 0, following the book */
     call r1,length(),r3
@@ -32,7 +33,7 @@ main() .locals=8
     call r0,expect_true(),r3
 
     /* the substr function */
-    say "Test Substr function - one arg, start pos, no overrun"           
+    say "Test Substr function - one arg, start pos, no overrun"
     load r3,2  /* there are two arguments*/
     load r4,"1234567890"
     load r5,5 /* second argument, startpos */
@@ -54,7 +55,7 @@ main() .locals=8
     call r0,expect_true(),r3
     
     /* the first example from the book, SUBSTR('abc',2) == 'bc' */
-    say "Test Substr function - no overrun, no pad"    
+    say "Test Substr function - no overrun, no pad"
     load r3,2  /* there are two arguments*/
     load r4,"abc"
     load r5,2 /* second argument, startpos */
@@ -64,7 +65,7 @@ main() .locals=8
     call r0,expect_true(),r3
 
     /* the second example from the book, SUBSTR('abc',2,4) == 'bc  ' */
-    say "Test Substr function - overrun, default pad"    
+    say "Test Substr function - overrun, default pad"
     load r3,3  /* there are three arguments*/
     load r4,"abc"
     load r5,2 /* second argument, startpos */
@@ -75,7 +76,7 @@ main() .locals=8
     call r0,expect_true(),r3
     
     /* the third example from the book, SUBSTR('abc',2,4,'.') == 'bc....' */
-    say "Test Substr function - overrun, pad not default"          
+    say "Test Substr function - overrun, pad not default"
     load r3,4  /* there are four arguments*/
     load r4,"abc"
     load r5,2 /* second argument, startpos */
@@ -99,7 +100,7 @@ main() .locals=8
     call r0,expect_true(),r3
 
     /* an example with unicode pad, SUBSTR('abc',2,6,'.') == 'bc....' */
-    say "Test Substr function - unicode pad "  
+    say "Test Substr function - unicode pad "
     load r3,4  /* there are four arguments*/
     load r4,"abc"
     load r5,2 /* second argument, startpos */
@@ -121,7 +122,6 @@ main() .locals=8
     seq r4,r1,"abcabcabc"
     call r0,expect_true(),r3
 
-    
     /* the second example from the book, COPIES('abc',0) == '' */
     say "Test of copies function, zero copies"
     load r3,2  /* there are two arguments*/
@@ -148,7 +148,7 @@ main() .locals=8
     load r3,3  /* there are three arguments*/
     load r4,"abc  d"
     load r5,8 /* second argument, length */
-    load r6,"." /* third argument, pad */              
+    load r6,"." /* third argument, pad */
     call r1,right(),r3
     load r3,1
     seq r4,r1,"..abc  d"
@@ -159,7 +159,7 @@ main() .locals=8
     load r3,3  /* there are three arguments*/
     load r4,"12"
     load r5,5 /* second argument, length */
-    load r6,"0" /* third argument, pad */               
+    load r6,"0" /* third argument, pad */
     call r1,right(),r3
     load r3,1
     seq r4,r1,"00012"
@@ -176,7 +176,7 @@ main() .locals=8
     call r0,expect_true(),r3
     
     /* a test for the substring (non-copies concatenate , returns 'uvwxyz' */
-    say "Test of Right function, non-copies concatenate version"    
+    say "Test of Right function, non-copies concatenate version"
     load r3,2  /* there are two arguments*/
     load r4,"abcdefghijklmnopqrstuvwxyz"
     load r5,6 /* second argument, length */
@@ -234,7 +234,7 @@ main() .locals=8
     ieq r4,r1,9
     call r0,expect_true(),r3
 
-    /* word */      
+    /* word */
     say "Test word: 7"
     load r3,2  /* there are two arguments*/
     load r4,"The quick brown fox jumps over the lazy dog"

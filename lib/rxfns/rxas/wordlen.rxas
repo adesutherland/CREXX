@@ -1,0 +1,29 @@
+/*
+ * cREXX COMPILER VERSION : cREXX I0134
+ * SOURCE                 : wordlen
+ * BUILT                  : 2021-10-11 13:19:12
+ */
+
+.globals=0
+
+wordlen() .locals=6 .expose=wordlen.wordlen
+   * Line 3: string = .string
+   * Line 3: wordnum = .int
+   * Line 4: wlen=0
+   load r1,0
+   * Line 5: wordstr=word(string,wordnum)
+   * Line 5: word(string,wordnum)
+   load r3,2
+   settp a1,0
+   swap r4,a1
+   swap r5,a2
+   call r2,word(),r3
+   swap a1,r4
+   swap a2,r5
+   * Line 7: strlen wlen,wordstr
+   strlen r1,r2
+   * Line 8: return wlen
+   itos r1
+   ret r1
+
+word() .expose=word.word

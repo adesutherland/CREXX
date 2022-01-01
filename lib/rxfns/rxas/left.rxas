@@ -4,15 +4,24 @@
  */
 
           .globals=0
-substr()  .expose=global.substr
+substr()  .expose=substr.substr
           
-left()    .locals=8 .expose=global.left
-    dec a2
-    inc a0 			/* we pass on one more than we got */
-    move r3,a0  		/* there are a0 arguments          */
-    move r4,a1 			/* the string                      */
+left()    .locals=10 .expose=left.left 
+    ieq  r7,a2,0   /* return empty when length = 0 */
+    brt  return_empty,r7
+    brtpandt havepad,a3,1
+    load a3," "
+havepad:
+    dec  r2
+    load r3,4  		        /* there are 4 arguments           */
+    swap r4,a1 			/* the string                      */
     load r5,1 			/* second argument, startpos == 1  */
-    move r6,a2 			/* third argument, length          */
-    move r7,a3 			/* fourth argument, pad            */
+    settp r5,1
+    swap r6,a2 			/* third argument, length          */
+    settp r6,1
+    swap r7,a3 			/* fourth argument, pad            */
+    settp r7,1
     call r1,substr(),r3		/* call substr                     */
     ret r1
+return_empty:
+    ret ""

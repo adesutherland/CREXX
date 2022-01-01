@@ -79,6 +79,19 @@ void init_ops() {
     instr_f("inc2", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
     instr_f("dec2", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
 
+    instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ior", "bit wise or of 2 integers (op1=op2|op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ixor", "bit wise exclusive OR of 2 integers (op1=op2^op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ixor", "bit wise exclusive OR of 2 integers (op1=op2^op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ishl", "bit wise shift logical left of integer (op1=op2<<op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ishl", "bit wise shift logical left of integer (op1=op2<<op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ishr", "bit wise shift logical right of integer (op1=op2>>op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ishr", "bit wise shift logical right of integer (op1=op2>>op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("inot", "inverts all bits of an integer (op1=~op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("inot", "inverts all bits of an integer (op1=~op2)", OP_REG, OP_INT, OP_NONE);
+
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sconcat", "String Concat with space (op1=op2||op3)", OP_REG, OP_STRING, OP_REG);
@@ -99,6 +112,9 @@ void init_ops() {
     instr_f("strlen", "String Length op1 = length(op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("strchar", "op1 (as int) = op2[op3]", OP_REG, OP_REG, OP_REG);
     instr_f("strchar", "op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
+    instr_f("hexchar", "op1 (as hex) = op2[op3]", OP_REG, OP_REG, OP_REG);
+    instr_f("poschar", "op1 = position of op3 in op2", OP_REG, OP_REG, OP_REG);
+
     instr_f("setstrpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
     instr_f("getstrpos", "Get String (op2) charpos into op1", OP_REG, OP_REG, OP_NONE);
     instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
@@ -139,6 +155,8 @@ void init_ops() {
 
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_STRING);
+    instr_f("rseq", "non strict String Equals op1=(op2=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("rseq", "non strict String Equals op1=(op2=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("sne", "String Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("sgt", "String Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_REG);
@@ -159,6 +177,8 @@ void init_ops() {
     instr_f("not", "Logical (int) not op1=!op2", OP_REG, OP_REG, OP_NONE);
 
     instr_f("time", "Put time into op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("mtime", "Put time in microseconds into op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("xtime", "put special time properties into op1", OP_REG, OP_STRING, OP_NONE);
 
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("map", "Map op1 to var name op2", OP_REG, OP_STRING, OP_NONE);
@@ -225,6 +245,19 @@ void init_ops() {
     instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
+    instr_f("fformat", "Set string value from float value using a format string", OP_REG, OP_REG, OP_REG);
+
+    instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
+    instr_f("dropchar", "set op1 from op2 after dropping all chars from op3", OP_REG, OP_REG, OP_REG);
+    instr_f("substring", "set op1=substr(op2,op3) remaining string", OP_REG, OP_REG, OP_REG);
+    instr_f("substcut", "set op1=substr(op1,,op2) cuts off op1 after position op3", OP_REG, OP_REG, OP_NONE);
+    instr_f("padstr", "set op1=op2[repeated op3 times]", OP_REG, OP_REG, OP_REG);
+
+    instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("cnop", "no operation", OP_NONE, OP_NONE, OP_NONE);
+
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
@@ -256,6 +289,11 @@ void init_ops() {
 
     instr_f("gettp", "gets the register type flag (op1 = op2.typeflag)", OP_REG, OP_REG,OP_NONE);
     instr_f("settp", "sets the register type flag (op1.typeflag = op2)", OP_REG, OP_INT,OP_NONE);
+
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_INT,OP_INT);
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_FLOAT,OP_INT);
+    instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_STRING,OP_INT);
+
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);

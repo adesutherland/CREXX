@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
 #include "platform.h"
@@ -69,11 +70,22 @@ static RX_INLINE void free_frame(stack_frame *frame) {
     free(frame);
 }
 
+int gettimeofday (struct timeval *__restrict __p, void *__restrict __tz);
+
+
 /* Interpreter */
 int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
+
+ // todo: correct location?
+    struct timeval tv;
+    struct timezone tz;
+    time_t	ctime;
+// end of time definitions
+
+    struct tm *tmdata;
     int rc = 0;
     int mod_index;
     bin_code *pc, *next_pc;
@@ -82,7 +94,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     value *v1, *v2, *v3, *v_temp;
     rxinteger i1, i2, i3, i4,i5;
     double f1, f2, f3;
-    char *converr;
+    char *converr, *c;
     string_constant *s1, *s2, *s3;
     proc_constant *p1, *p2, *p3;
     /* Linker Stuff */
@@ -91,6 +103,8 @@ int run(int num_modules, module *program, int argc, char *argv[],
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
     value *g_reg;
+    char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
+    char usedblank = ' ';
 #ifndef NUTF8
     int codepoint;
 #endif
@@ -696,12 +710,60 @@ START_OF_INSTRUCTIONS ;
             CALC_DISPATCH_MANUAL;
             DISPATCH;
 
+
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
-
-            set_int(op1R, time(NULL));
-
+            tzset();
+            gettimeofday(&tv, &tz);
+            REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  XTIME return time properties                                  pej 02. December 2021
+ * ------------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(XTIME_REG_STRING) CALC_DISPATCH(2);
+        DEBUG("TRACE - XTIME R%d\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
+
+            tzset();
+            switch ((CONSTSTRING_OP(2))->string[0]) {
+                case 'Z':  op1R->int_value  = timezone; break;
+                case 'T':  op1R->int_value  = clock(); break;
+                case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
+                case 'N':  {
+                     prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
+                     op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+                     op1R->string_pos = 0;
+                     PUTSTRLEN(v1,op1R->string_length);
+                     break;
+                }
+                case 'U':  {
+                     ctime = time(NULL);
+                     tmdata = localtime(&ctime);
+                     i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
+                     gettimeofday(&tv, &tz);
+                     op1R->int_value = i1*1000000+tv.tv_usec;
+                     break;
+                }
+            }
+    //        printf("Current bias is %ld seconds\n", timezone);
+    //        printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
+    //        gettimeofday(&tv, &tz);
+    //        REG_RETURN_INT(tv.tv_sec-timezone);
+            DISPATCH;
+
+/* ---------------------------------------------------------------------------------
+ *  MTIME get time of the day in microseconds                      pej 31. October 2021
+ * ------------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
+            ctime = time(NULL);
+            tmdata = localtime(&ctime);
+            i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60  ) + (tmdata->tm_sec));
+            gettimeofday(&tv, &tz);
+            REG_RETURN_INT(i1*1000000+tv.tv_usec);
+            DISPATCH;
+
 /* ------------------------------------------------------------------------------------
  *  TRIMR  Trim right                                                 pej 7. April 2021
  * ------------------------------------------------------------------------------------
@@ -1143,6 +1205,62 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
+ *  RSEQ_REG_REG_REG  String Equals op1=(op2=op3) non strict REXX comparison  pej 29. Nov 2021
+ *  -----------------------------------------------------------------------------------
+*/
+        START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+
+            GETSTRLEN(i4,v2);
+            GETSTRLEN(i5,v3);
+
+        // step 1 find last not blank character
+            for (i = i4-1; i >= 0;  i--,i4--) {
+                GETSTRCHAR(v2,i);
+                if (v2->int_value!=32) break;
+            }
+            for (i = i5-1; i >= 0;  i--,i5--) {
+                GETSTRCHAR(v3,i);
+                if (v3->int_value!=32) break;
+            }
+         // step 2 find first non blank
+            for (i = 0; i < i4;  i++) {
+                GETSTRCHAR(v2,i);
+                if (v2->int_value!=32) break;
+            }
+            for (i = 0; i < i5;  i++) {
+                GETSTRCHAR(v3,i);
+                if (v3->int_value!=32) break;
+            }
+            i4=i4-v2->string_pos;    // testing length of op1 (without leading and trailing blanks)
+            i5=i5-v3->string_pos;    // testing length of op2  (without leading and trailing blanks)
+            if (i4!=i5) i=0;
+            else {
+               if (string_cmp(v2->string_value+v2->string_pos,i4,v3->string_value+v3->string_pos,i5)==0) i=1;
+                  else i=0;
+            }
+            REG_RETURN_INT(i);
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
+ *  !!! not yet implemented !!!
+ *  -----------------------------------------------------------------------------------
+*/
+        START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3);
+            DEBUG("TRACE - RSEQ R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+                  REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
+                  (CONSTSTRING_OP(3))->string);
+            v1 = op1R;
+            v2 = op2R;
+            s3 = op3S;
+            REG_RETURN_INT(0);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
  *  SNE_REG_REG_REG  String Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
@@ -1387,6 +1505,109 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI % op3RI);
+            DISPATCH;
+ /* ------------------------------------------------------------------------------------
+  *  IOR_REG_REG_REG bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
+  *  -----------------------------------------------------------------------------------
+  */
+        START_INSTRUCTION(IOR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI | op3RI);
+            DISPATCH;
+ /* -----------------------------------------------------------------------------------
+  *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                          pej 17 Oct 2021
+  *  ----------------------------------------------------------------------------------
+  */
+        START_INSTRUCTION(IOR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI | op3I);
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  IAND_REG_REG_INT  bitwise AND (op1=op2&op3)                         pej 17 Oct 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IAND_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IAND R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI & op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  IAND_REG_REG_REG  bitwise AND (op1=op2&op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IAND_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI & op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  IXOR_REG_REG_REG  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IXOR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI ^ op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  IXOR_REG_REG_INT  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IXOR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI ^ op3I);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHL_REG_REG_REG  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHL_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI << op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHL_REG_REG_INT  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHL_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI << op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  ISHR_REG_REG_REG  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - ISHR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI >> op3RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  ISHR_REG_REG_INT  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(ISHR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IXSHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI >> op3I);
+            DISPATCH;
+/* -----------------------------------------------------------------------------------
+ *  INOT_REG_REG  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(INOT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            REG_RETURN_INT(~op2RI);
+            DISPATCH;
+
+/* -----------------------------------------------------------------------------------
+ *  INOT_REG_INT  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
+ *  ----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(INOT_REG_INT) CALC_DISPATCH(2);
+            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)op2I);
+            REG_RETURN_INT(~op2I);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1743,7 +1964,6 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(i1);
             DISPATCH;
 
-
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Int Prime op1              ???
  *  -----------------------------------------------------------------------------------
@@ -1784,7 +2004,6 @@ START_OF_INSTRUCTIONS ;
             DEBUG("TRACE - FTOS R%llu\n", REG_IDX(1));
             string_from_float(op1R);
             DISPATCH;
-
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
@@ -1836,6 +2055,56 @@ START_OF_INSTRUCTIONS ;
                 goto converror;
             }
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FFORMAT_REG_REG_REG  Set string from float use format string   pej 3. November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FFORMAT_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
+            op3R->string_value[op3R->string_length]='\0';    // terminate format string explicitly, rexx vars aren't!
+            op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+            op1R->string_pos = 0;
+  #ifndef NUTF8
+            op1R->string_char_pos = 0;
+            op1R->string_chars = op1R->string_length;
+  #endif
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  STRLOWER_REG_REG  translate string into lower case string              pej 23.10.21
+ *  -----------------------------------------------------------------------------------
+ */
+// TODO: what to do if there is a length change of chars during translation
+            START_INSTRUCTION(STRLOWER_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - STRLOWER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+
+            v1 = op1R;
+            v2 = op2R;
+            set_value_string(v1,v2);
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)tolower(*c);
+#else
+            utf8lwr(v1->string_value);
+#endif
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  STRUPPER_REG_REG  translate string into upper case string              pej 23.10.21
+ *  -----------------------------------------------------------------------------------
+ */
+// TODO: what to do if there is a length change of chars during translation
+            START_INSTRUCTION(STRUPPER_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - STRUPPER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+
+            v1 = op1R;
+            v2 = op2R;
+            set_value_string(v1,v2);
+#ifdef NUTF8
+            for (c = v1->string_value ; *c; ++c) *c = (char)toupper(*c);
+#else
+            utf8upr(v1->string_value);
+#endif
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STRCHAR_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
@@ -1854,6 +2123,56 @@ START_OF_INSTRUCTIONS ;
 #endif
             REG_RETURN_INT(i1);
             DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                       pej 04 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+
+#ifndef NUTF8
+            string_set_byte_pos(v2, v3->int_value);
+            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+            i3=codepoint;
+#else
+            i3=v2->string_value[v3->int_value];
+#endif
+            i1=(i3>>4)&15;                       // extract left hand side of value
+            i2=(i3)&15;                          // extract right hand side of value
+            v1->string_value[0]=hexconst[i1];    // set first character of hex value
+            v1->string_value[1]=hexconst[i2];    // set first character of hex value
+            v1->string_value[2]='\0';            // set end of string, just to be safe
+            PUTSTRLEN(v1,2);                  // hex length is 2
+            DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  POSCHAR_REG_REG_REG  op1 position of op3 in op2                pej 05 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(POSCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - POSCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            v2 = op2R;
+            v3 = op3R;
+            i3 = v2->string_length;
+            i1=-1;
+            for (i = 0; i<i3; i++) {
+#ifndef NUTF8
+                string_set_byte_pos(v2, i);
+                utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
+                i2=codepoint;
+#else
+                i2=v2->string_value[i];
+#endif
+               if (i2==v3->int_value) {
+                    i1=i;
+                    break;
+                }
+            }
+            REG_RETURN_INT(i1);
+            DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  BGT_ID_REG_REG  if op2>op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
@@ -2124,6 +2443,22 @@ START_OF_INSTRUCTIONS ;
         nonblankfound:
     REG_RETURN_INT(i3);
     DISPATCH;
+ /* ------------------------------------------------------------------------------------
+  *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
+  *  -----------------------------------------------------------------------------------
+  */
+    START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3);
+    DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+
+    v1 = op1R;
+    v2 = op2R;
+    v3 = op3R;
+    printf("V2 %d \n",v2->int_value);
+    printf("V2 %s \n",v2->string_value);
+    i1=v2->status.type_int;
+    REG_RETURN_INT(i1);
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -2145,6 +2480,120 @@ START_OF_INSTRUCTIONS ;
             string_concat_char(v1, v3);
             v3->int_value=i3;   // restore original v3
         DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  TRANSCHAR_REG_REG_REG  replace op1 if it is in op3-list by char in op2-list pej 7 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRANSCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - TRANSCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            i1 = op1R->int_value;
+            v2 = op2R;
+            v3 = op3R;
+
+            GETSTRLEN(i4,v3);
+
+            for (i=0;i<i4; i++) {
+                GETSTRCHAR(v3,i);
+                if (i1==v3->int_value) {
+                   GETSTRCHAR(v2,i);
+                   i1=v2->int_value;
+                   break;
+                }
+            }
+        REG_RETURN_INT(i1);
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  DROPCHAR_REG_REG_REG  removes characters contained in op3-list pej 19 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DROPCHAR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - DROPCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            v3 = op3R;
+
+            GETSTRLEN(i2,v2);
+            GETSTRLEN(i3,v3);
+            if (i3==0) i3=v3->string_length;
+            for (i=0;i<i2; i++) {
+                GETSTRCHAR(v2,i);
+                i5=0;
+                for (i4=0;i4<i3; i4++) {
+                    GETSTRCHAR(v3,i4);
+                    if (v2->int_value==v3->int_value) {
+                       i5=1;  // found drop char
+                       break;
+                    }
+                }
+                if (i5==1) continue;
+                string_concat_char(v1, v2);
+            }
+         DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
+ *
+ *  !!! the position parameter is offset +1, this is an exception from normally     !!!
+ *  !!! using the offset. Reason: this instruction will be used directly from rexx  !!!
+ *  !!  so we save one instruction                                                  !!
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - SUBSTRING R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            i3 = op3R->int_value-1;  /* make position to offset  */
+            PUTSTRLEN(v1,0) ;      /* reset length of target  */
+            GETSTRLEN(i4,v3);
+            for (i=i3;i<i4; i++) {
+                GETSTRCHAR(v2,i);
+                string_concat_char(v1, v2);
+            }
+
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+*  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off after op2   pej 13 November 2021
+*  -----------------------------------------------------------------------------------
+*/
+        START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - SUBSTCUT R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+
+            v1 = op1R;
+            PUTSTRLEN(v1,op2R->int_value) ;
+
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - PADSTR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+
+            v1 = op1R;
+            v2 = op2R;
+            i3 = op3R->int_value;
+            PUTSTRLEN(v1,0) ;        /* reset length of target  */
+            GETSTRCHAR(v2,0);       /* fetch pad character     */
+            for (i=0;i<i3; i++) {
+                string_concat_char(v1, v2);
+            }
+
+        DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(CNOP) CALC_DISPATCH(0);
+        DEBUG("TRACE - CNOP\n");
+        DISPATCH;
+
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */
@@ -2154,6 +2603,7 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             v2 = op2R;
             string_concat_char(v1, v2);
+
             DISPATCH;
 
 /*
@@ -2253,6 +2703,41 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
             op1R->status.all_type_flags = op2I;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_INT load register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3);
+        DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int) v2->int_value,(int) v3->int_value);
+
+            v1->int_value = v2->int_value;
+            op1R->status.all_type_flags = v3->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_string load string to register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),v2->string_value,(int) v3->int_value);
+
+            v1->string_value = v2->string_value;
+            op1R->status.all_type_flags = v3->int_value;
+            DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  LOADSETTP_REG_FLOAT float to load register & set the register type flag pej 11 November 2021
+ *   op1=op2 and (op1.typeflag = op3)
+ *  -----------------------------------------------------------------------------------
+ */
+            START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - LOADSETTP R%d %g %d\n", (int)REG_IDX(1), v2->float_value,(int) v3->int_value);
+            v1->string_value = v2->string_value;
+            op1R->status.all_type_flags = v3->int_value;
             DISPATCH;
 
 /*
