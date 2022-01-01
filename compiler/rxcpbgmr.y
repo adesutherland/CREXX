@@ -389,6 +389,8 @@ return(I) ::= TK_RETURN(T).
 /* Say */
 say(I) ::= TK_SAY(T) expression(E).
     { I = ast_f(context, SAY, T); add_ast(I,E); }
+say(I) ::= TK_SAY(T).
+    { I = ast_f(context, SAY, T); add_ast(I,ast_ft(context, STRING)); }
 
 /* Nop */
 nop(I) ::= TK_NOP(T).
