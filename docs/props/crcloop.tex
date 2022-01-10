@@ -1,0 +1,460 @@
+\subsubsection{Loop instruction}\label{refloop}
+\index{,}
+\index{Instructions,LOOP}
+\index{,}
+\index{FOREVER,repetitor on LOOP instruction}
+\index{FOR,repetitor on LOOP instruction}
+\index{OVER repetitor on LOOP instruction,}
+\index{WHILE phrase of LOOP instruction,}
+\index{UNTIL phrase of LOOP instruction,}
+\index{BY phrase of LOOP instruction,}
+\index{TO phrase of LOOP instruction,}
+\index{FOR,phrase of LOOP instruction}
+\index{,}
+\index{,}
+\index{Loops,repetitive}
+\index{Conditional loops,}
+\index{Infinite loops,}
+\index{Numbers,in LOOP instruction}
+\index{Indefinite loops,}
+\index{Flow control,with LOOP construct}
+\index{= equals sign,in LOOP instruction}
+\begin{shaded}
+\begin{alltt}
+\textbf{loop} [\textbf{label} \emph{name}] [\textbf{protect} \emph{termp}] [\emph{repetitor}] [\emph{conditional}];
+        \emph{instructionlist}
+    [\textbf{catch} [\emph{vare} =] \emph{exception};
+        \emph{instructionlist}]...
+    [\textbf{finally}[;]
+        \emph{instructionlist}]
+    \textbf{end} [\emph{name}];
+
+where \emph{repetitor} is one of:
+
+    \emph{varc} = \emph{expri} [\textbf{to} \emph{exprt}] [\textbf{by} \emph{exprb}] [\textbf{for} \emph{exprf}]
+    \emph{varo} \textbf{over} \emph{termo}
+    \textbf{for} \emph{exprr}
+    \textbf{forever}
+
+and \emph{conditional} is either of:
+
+    \textbf{while} \emph{exprw}
+    \textbf{until} \emph{expru}
+
+and \emph{name} is a non-numeric \emph{symbol}
+
+and \emph{instructionlist} is zero or more \emph{instruction}s
+
+and \emph{expri}, \emph{exprt}, \emph{exprb}, \emph{exprf}, \emph{exprr}, \emph{exprw}, and \emph{expru} are \emph{expressions}.
+\end{alltt}
+\end{shaded}
+ The \keyword{loop} instruction is used to group instructions together
+and execute them repetitively.
+The loop may optionally be given a label, and may protect an object
+while the instructions in the loop are executed; exceptional conditions
+can be handled with \keyword{catch} and \keyword{finally}.
+ \keyword{loop} is the most complicated of the \crexx{} keyword
+instructions.
+It can be used as a simple indefinite loop, a predetermined
+repetitive loop, as a loop with a bounding condition that is
+recalculated on each iteration, or as a loop that steps over the
+contents of a collection of values.
+\section{Syntax notes:}
+\begin{itemize}
+\item 
+The \keyword{label} and \keyword{protect} phrases may be in any order.
+They must precede any \emph{repetitor} or \emph{conditional}.
+\item 
+\index{Body,of a loop}
+The first \emph{instructionlist} is known as the \emph{body} of
+the loop.
+\item 
+The \keyword{to}, \keyword{by}, and \keyword{for} phrases in the first form
+of \emph{repetitor} may be in any order, if used, and will be
+evaluated in the order they are written.
+\item 
+Any instruction allowed in a method is allowed in an
+\emph{instructionlist}, including assignments, method call
+instructions, and keyword instructions (including any of the more
+complex constructions such as \keyword{if}, \keyword{do}, \keyword{select},
+or the \keyword{loop} instruction itself).
+\item 
+If \keyword{for} or \keyword{forever} start the \emph{repetitor} and
+are followed by an "\textbf{=}" character, they are taken as
+control variable names, not keywords (as for assignment instructions).
+\item 
+The expressions \emph{expri}, \emph{exprt}, \emph{exprb}, or
+\emph{exprf} will be ended by any of the keywords \keyword{to},
+\keyword{by}, \keyword{for}, \keyword{while}, or \keyword{until} (unless
+the word is the name of a variable).
+\item 
+The expressions \emph{exprw} or \emph{expru} will be ended by
+either of the keywords \keyword{while} or \keyword{until} (unless the
+word is the name of a variable).
+\end{itemize}
+\section{Indefinite loops}
+\index{Indefinite loops,}
+\index{FOREVER,loops}
+ If neither \emph{repetitor} nor \emph{conditional} are
+present, or the \emph{repetitor} is the keyword \keyword{forever},
+then the loop is an \emph{indefinite loop}.
+It will be ended only when some instruction in the first
+\emph{instructionlist} causes control to leave the loop.
+
+\textbf{Example:}
+\begin{lstlisting}
+/* This displays "Go caving!" at least once */
+loop forever
+  say 'Go caving!'
+  if ask='' then leave
+  end
+\end{lstlisting}
+\section{Bounded loops}
+\index{Bounded loop,}
+\index{Repetitive loops,}
+\index{Loops,repetitive}
+\index{Repetitor phrase,}
+\index{Conditional phrase,}
+ If a \emph{repetitor} (other than \keyword{forever}) or
+\emph{conditional} is given, the first \emph{instructionlist}
+forms a \emph{bounded loop}, and the instruction list is executed
+according to any \emph{repetitor phrase}, optionally modified by a
+\emph{conditional phrase}.
+\begin{description}
+\item[Simple bounded loops]
+\index{Simple repetitor phrase,}
+\index{Bounded loop,simple}
+
+When the \emph{repetitor} starts with the keyword \keyword{for},
+the expression \emph{exprr} is evaluated immediately
+(with \textbf{0} added, to effect any rounding) to give a repetition
+count, which must be a whole number that is zero or positive.
+The loop is then executed that many times, unless it is terminated by
+some other condition.
+
+\textbf{Example:}
+\begin{lstlisting}
+/* This displays "Hello" five times */
+loop for 5
+  say 'Hello'
+  end
+\end{lstlisting}
+\item[Controlled bounded loops]
+\index{Bounded loop,controlled}
+\index{Controlled loops,}
+\index{Control variable,}
+\index{Variables,controlling loops}
+
+A \emph{controlled loop} begins with an \emph{assignment},
+which can be identified by the "\textbf{=}" that follows the name
+of a control variable, \emph{varc}.
+The control variable is assigned an initial value (the result of
+\emph{expri}, formatted as though 0 had been added)
+before the first execution of the instruction list.
+The control variable is then stepped (by adding the result of
+\emph{exprb}) before the second and subsequent times that the
+instruction list is executed.
+ 
+The name of the control variable, \emph{varc}, must be a non-numeric
+symbol that names an existing or new variable in the current method or a
+property in the current class (that is, it cannot be element of an
+array, the property of a superclass, or a more complex term).  It is
+further restricted in that it must not already be used as the name of a
+control variable or label in a loop (or \keyword{do} or \keyword{select}
+construct) that encloses the new loop.
+ 
+\index{End condition of a LOOP loop,}
+The instruction list in the body of the loop is executed repeatedly
+while the end condition (determined by the result of \emph{exprt})
+is not met.
+If \emph{exprb} is positive or zero, then the loop will be
+terminated when \emph{varc} is greater than the result of
+\emph{exprt}.
+If negative, then the loop will be terminated when \emph{varc} is
+less than the result of \emph{exprt}.
+ The expressions \emph{exprt} and \emph{exprb} must result in
+numbers.
+They are evaluated once only (with 0 added, to effect any
+rounding), in the order they appear in the instruction, and before the
+loop begins and before \emph{expri} (which must also result in a
+number) is evaluated and the control variable is set to its initial
+value.
+ 
+The default value for \emph{exprb} is 1.
+If no \emph{exprt} is given then the loop will execute indefinitely
+unless it is terminated by some other condition.
+ \textbf{Example:}
+\begin{lstlisting}
+loop i=3 to -2 by -1
+  say i
+  end
+/* Would display: 3, 2, 1, 0, -1, -2 */
+\end{lstlisting}
+Note that the numbers do not have to be whole numbers:
+ \textbf{Example:}
+\begin{lstlisting}
+x=0.3
+loop y=x to x+4 by 0.7
+  say y
+  end
+/* Would display: 0.3, 1.0, 1.7, 2.4, 3.1, 3.8 */
+\end{lstlisting}
+ The control variable may be altered within the loop, and this may
+affect the iteration of the loop.
+Altering the value of the control variable in this way is normally
+considered to be suspect programming practice, though it may be
+appropriate in certain circumstances.
+ Note that the end condition is tested at the start of each iteration
+(and after the control variable is stepped, on the second and
+subsequent iterations).  It is therefore possible for the body of the
+loop to be skipped entirely if the end condition is met immediately.
+ The execution of a controlled loop may further be bounded by a
+\keyword{for} phrase.
+In this case, \emph{exprf} must be given and must evaluate to a
+non-negative whole number.
+This acts just like the repetition count in a simple bounded loop, and
+sets a limit to the number of iterations around the loop if it is not
+terminated by some other condition.
+ 
+\emph{exprf} is evaluated along with the expressions
+\emph{exprt} and \emph{exprb}.
+That is, it is evaluated once only (with \textbf{0} added), when the
+\keyword{loop} instruction is first executed and before the control
+variable is given its initial value; the three expressions are evaluated
+in the order in which they appear.
+Like the \keyword{to} condition, the \keyword{for} count is checked at the
+start of each iteration, as shown in the  programmer's (see page \pageref{refloopmod}) 
+model:ea..
+ \textbf{Example:}
+\begin{lstlisting}
+loop y=0.3 to 4.3 by 0.7 for 3
+  say y
+  end
+/* Would display: 0.3, 1.0, 1.7 */
+\end{lstlisting}
+ 
+\index{END clause,specifying control variable}
+In a controlled loop, the symbol that describes the control variable may
+be specified on the \keyword{end} clause (unless a label is specified,
+see below).
+\crexx{} will then check that this symbol exactly matches the
+\emph{varc} of the control variable in the \keyword{loop} clause (in
+all respects except case).
+If the symbol does not match, then the program is in error - this
+enables the nesting of loops to be checked automatically.
+ \textbf{Example:}
+\begin{lstlisting}
+loop k=1 to 10
+  ...
+  ...
+  end k  /* Checks this is the END for K loop */
+\end{lstlisting}
+\textbf{Note: }The values taken by the control variable may be affected by the
+\keyword{numeric} settings, since normal \crexx{} arithmetic rules apply
+to the computation of stepping the control variable.
+\item[Over]\label{refloopov}
+\index{Bounded loop,over values}
+\index{Over loops,}
+\index{Control variable,}
+
+When the second token of the \emph{repetitor} is the keyword
+\keyword{over}, the control variable, \emph{varo}, is used
+to work through the sub-values in the collection of indexed strings
+identified by \emph{termo}.
+In this case, the \keyword{loop} instruction takes a "snapshot" of
+the indexes that exist in the collection at the start of the loop, and
+then for each iteration of the loop the control variable is set to the
+next available index from the snapshot.
+ 
+The number of iterations of the loop will be the number of indexes in
+the collection, unless the loop is terminated by some other condition.
+ \textbf{Example:}
+\begin{lstlisting}
+mycoll=''
+mycoll['Tom']=1
+mycoll['Dick']=2
+mycoll['Harry']=3
+loop name over mycoll
+  say mycoll[name]
+  end
+/* might display: 3, 1, 2 */
+\end{lstlisting}
+ \textbf{Notes:}
+\begin{enumerate}
+\item 
+The order in which the values are returned is undefined; all that
+is known is that all indexes available when the loop started will be
+recorded and assigned to \emph{varo} in turn as the loop iterates.
+\item 
+The same restrictions apply to \emph{varo} as apply to
+\emph{varc}, the control variable for controlled loops (see above).
+\item 
+Similarly, the symbol \emph{varo} may be used as a name for the loop
+and be specified on the \keyword{end} clause (unless a label is
+specified, see below).
+\end{enumerate}
+ \emph{In the reference implementation, the \keyword{over} form of
+repetitor may also be used to step though the contents of any object
+that is of a type that is a subclass of \textbf{java.util.Dictionary},
+such as an object of type \textbf{java.util.Hashtable}.
+In this case, \emph{termo} specifies the dictionary, and a snapshot
+(enumeration) of the keys to the Dictionary is taken at the start of the
+loop.
+Each iteration of the loop then assigns a new key to the control
+variable \emph{varo} which must be (or will be given, if it is new)
+the type \textbf{java.lang.Object}.
+}
+\item[Conditional phrases]\label{refloopwu}
+\index{Conditional phrase,}
+
+Any of the forms of loop syntax can be followed by a
+\emph{conditional} phrase which may cause termination of the loop.
+ 
+If \keyword{while} is specified, \emph{exprw} is evaluated, using the
+latest values of all variables in the expression, before the instruction
+list is executed on every iteration, and after the control
+variable (if any) is stepped.
+The expression must evaluate to either 0 or 1, and the instruction list
+will be repeatedly executed while the result is 1 (that is, the loop
+ends if the expression evaluates to 0).
+ \textbf{Example:}
+\begin{lstlisting}
+loop i=1 to 10 by 2 while i<6
+  say i
+  end
+/* Would display: 1, 3, 5 */
+\end{lstlisting}
+ 
+If \keyword{until} is specified, \emph{expru} is evaluated, using the
+latest values of all variables in the expression, on the second and
+subsequent iterations, and before the control variable (if any) is stepped.
+\footnote{
+Thus, it appears that the \keyword{until} condition is tested after the
+instruction list is executed on each iteration.
+However, it is the \keyword{loop} clause that carries out the evaluation.
+}
+The expression must evaluate to either 0 or 1, and the instruction list
+will be repeatedly executed until the result is 1 (that is, the loop
+ends if the expression evaluates to 1).
+ \textbf{Example:}
+\begin{lstlisting}
+loop i=1 to 10 by 2 until i>6
+  say i
+  end
+/* Would display: 1, 3, 5, 7 */
+\end{lstlisting}
+\end{description}
+ Note that the execution of loops may also be modified by
+using the \keyword{iterate} or \keyword{leave} instructions.
+\section{Label phrase}
+\index{Loops,label}
+\index{Loops,naming of}
+\index{LABEL,on LOOP instruction}
+ 
+The \keyword{label} phrase may used to specify a \emph{name} for the
+loop.  The name can then optionally be used on
+\begin{itemize}
+\item a \keyword{leave} instruction, to specify the name of the loop to leave
+\item an \keyword{iterate} instruction, to specify the name of the loop to
+be iterated
+\item the \keyword{end} clause of the loop, to confirm the identity of the
+loop that is being ended, for additional checking.
+\end{itemize}
+ \textbf{Example:}
+\begin{lstlisting}
+loop label pooks i=1 to 10
+  loop label hill while j<3
+    ...
+    if a=b then leave pooks
+    ...
+    end hill
+  end pooks
+\end{lstlisting}
+In this example, the \keyword{leave} instruction leaves both loops.
+ 
+If a label is specified using the \keyword{label} keyword, it overrides
+any name derived from the control variable name (if any).  That is, the
+variable name cannot be used to refer to the loop if a label is
+specified.
+\section{Protect phrase}
+\index{PROTECT,on LOOP instruction}
+ 
+The \keyword{protect} phrase may used to specify a term,
+\emph{termp}, that evaluates to a value that is not just a type and
+is not of a primitive type;
+while the \keyword{loop} construct is being executed, the value (object)
+is protected - that is, all the instructions in the \keyword{loop}
+construct have exclusive access to the object.
+ \textbf{Example:}
+\begin{lstlisting}
+loop protect myobject while a<b
+  ...
+  end
+\end{lstlisting}
+ 
+Both \keyword{label} and \keyword{protect} may be specified, in any order,
+if required.
+\section{Exceptions in loops}
+\index{CATCH,on LOOP instruction}
+\index{FINALLY,on LOOP instruction}
+ 
+Exceptions that are raised by the instructions within a \keyword{loop}
+construct may be caught using one or more \keyword{catch} clauses that
+name the \emph{exception} that they will catch.  When an exception is
+caught, the exception object that holds the details of the exception may
+optionally be assigned to a variable, \emph{vare}.
+ 
+Similarly, a \keyword{finally} clause may be used to introduce
+instructions that will always be executed when the loop ends, even if an
+exception is raised (whether caught or not).
+ 
+The  \emph{Exceptions} section (see page \pageref{refexcep})  has details and
+examples of \keyword{catch} and \keyword{finally}.
+\section{Programmer's model - how a typical loop is executed}\label{refloopmod}
+ This model forms part of the definition of the \keyword{loop}
+instruction.
+\index{Loops,execution model}
+\index{Model,of loop execution}
+\index{Programmer's model of LOOP,}
+ For the following loop:
+\begin{alltt}
+\keyword{loop} \emph{varc} \keyword{=} \emph{expri} \keyword{to} \emph{exprt} \keyword{by} \emph{exprb} \keyword{while} \emph{exprw}
+  ...
+  \emph{instruction list}
+  ...
+  \keyword{end}
+\end{alltt}
+ \crexx{} will execute the following:
+\begin{alltt}
+   $tempt=exprt+0   /* ($variables are internal and   */
+   $tempb=exprb+0   /*   are not accessible.)         */
+   varc=expri+0
+   Transfer control to the point identified as $start:
+
+$loop:
+   /* An UNTIL expression would be tested here, with: */
+   /* if expru then leave                             */
+   varc=varc + $tempb
+$start:
+   if varc > $tempt then leave  /* leave quits a loop */
+   /* A FOR count would be checked here               */
+   if \textbackslash exprw then leave
+      ...
+      instruction list
+      ...
+   Transfer control to the point identified as $loop:
+\end{alltt}
+ \textbf{Notes:}
+\begin{enumerate}
+\item 
+This example is for \emph{exprb} \textbf{>= 0}.
+For a negative \emph{exprb}, the test at the start point of the loop
+would use "\textbf{<}" rather than "\textbf{>}".
+\item 
+The upwards transfer of control takes place at the end of the body of
+the loop, immediately before the \keyword{end} clause (or any
+\keyword{catch} or \keyword{finally} clause).
+The \keyword{end} clause is only reached when the loop is finally
+completed.
+\end{enumerate}
+\index{,}

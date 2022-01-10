@@ -1,0 +1,57 @@
+\subsubsection{Iterate instruction}
+\index{ITERATE instruction,}
+\index{Instructions,ITERATE}
+\index{ITERATE instruction,use of variable on}
+\index{,}
+\index{Loops,modification of}
+\begin{shaded}
+\begin{alltt}
+\textbf{iterate} [\emph{name}];
+
+where \emph{name} is a non-numeric \emph{symbol}.
+\end{alltt}
+\end{shaded}
+ \keyword{iterate} alters the flow of control within a \keyword{loop}
+construct.
+It may only be used in the body (the first \emph{instructionlist})
+of the construct.
+
+Execution of the instruction list stops, and control is passed
+directly back up to the \keyword{loop} clause just as though the last
+clause in the body of the construct had just been executed.
+The control variable (if any) is then stepped (iterated) and termination
+conditions tested as normal and the instruction list is executed again,
+unless the loop is terminated by the \keyword{loop} clause.
+
+If no \emph{name} is specified, then \keyword{iterate} will step
+the innermost active loop.
+ 
+If a \emph{name} is specified, then it must be the name of the
+label, or control variable if there is no label, of a currently active
+loop (which may be the innermost), and this is the loop that is
+iterated.
+Any active \keyword{do}, \keyword{loop}, or \keyword{select} constructs
+inside the loop selected for iteration are terminated (as though by a
+\keyword{leave} instruction).
+
+\textbf{Example:}
+\begin{lstlisting}
+loop i=1 to 4
+  if i=2 then iterate i
+  say i
+  end
+/* Would display the numbers:  1, 3, 4  */
+\end{lstlisting}
+ \textbf{Notes:}
+\begin{enumerate}
+\index{Active constructs,}
+\index{Loops,active}
+\index{Names,on ITERATE instructions}
+\item A loop is active if it is currently being executed.
+If a method (even in the same class) is called during execution of a
+loop, then the loop becomes inactive until the method has returned.
+\keyword{iterate} cannot be used to step an inactive loop.
+\item The \emph{name} symbol, if specified, must exactly match the
+label (or the name of the control variable, if there is no label) in the
+\keyword{loop} clause in all respects except case.
+\end{enumerate}
