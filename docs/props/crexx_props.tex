@@ -19,7 +19,7 @@
 \usepackage{makeidx}
 \usepackage{framed}
 \usepackage{alltt}
-
+\usepackage{barracuda}
 
 % --- Indexing ---
 
@@ -78,27 +78,27 @@
 \newcommand{\stackit}[2][l]{\setlength{\tabcolsep}{0mm}\begin{tabular}{#1}%
     #2\end{tabular}}
 
-% \ifzseries
-% \newcommand{\NBITS}{64}
-% \newcommand{\ADDRBITS}{64}
-% \newcommand{\NBYTES}{8}
-% \newcommand{\STACKSIZE}{160}
-% \newcommand{\ABINAME}{s390x}
-% \newcommand{\ARCH}{z/\kern-1pt Ar\-chi\-tec\-ture}
-% \newcommand{\ARCHarch}{\ARCH}
-% \newcommand{\aARCH}{a \ARCH}
-% \newcommand{\theARCH}{the \ARCH}
-% \else
-% \newcommand{\NBITS}{32}
-% \newcommand{\ADDRBITS}{31}
-% \newcommand{\NBYTES}{4}
-% \newcommand{\STACKSIZE}{96}
-% \newcommand{\ABINAME}{s390}
-% \newcommand{\ARCH}{ESA/390}
-% \newcommand{\ARCHarch}{the \ARCH{} ar\-chi\-tec\-ture}
-% \newcommand{\aARCH}{an \ARCH}
-% \newcommand{\theARCH}{\ARCHarch}
-% \fi
+\ifzseries
+\newcommand{\NBITS}{64}
+\newcommand{\ADDRBITS}{64}
+\newcommand{\NBYTES}{8}
+\newcommand{\STACKSIZE}{160}
+\newcommand{\ABINAME}{s390x}
+\newcommand{\ARCH}{z/\kern-1pt Ar\-chi\-tec\-ture}
+\newcommand{\ARCHarch}{\ARCH}
+\newcommand{\aARCH}{a \ARCH}
+\newcommand{\theARCH}{the \ARCH}
+\else
+\newcommand{\NBITS}{32}
+\newcommand{\ADDRBITS}{31}
+\newcommand{\NBYTES}{4}
+\newcommand{\STACKSIZE}{96}
+\newcommand{\ABINAME}{s390}
+\newcommand{\ARCH}{ESA/390}
+\newcommand{\ARCHarch}{the \ARCH{} ar\-chi\-tec\-ture}
+\newcommand{\aARCH}{an \ARCH}
+\newcommand{\theARCH}{\ARCHarch}
+\fi
 \newcommand{\crexx}{c\textsc{Rexx}}
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -321,8 +321,11 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 \lowertitleback{%
   \noindent \textbf{\myTitle}
 
-  \noindent Version \Version
-
+  \noindent Version \Version\\
+  \\
+  ISBN 978-90-819090-0-6\\
+  \barracuda{ean-13}{9789081909006}\\
+  \\
   \noindent © Copyright RexxLA 2021,2022
 
   \medskip
@@ -358,6 +361,7 @@ for users and implementors alike.
   release, Q1 2022 and is intended for developers only. It documents
   the RXAS instruction set and \crexx{} level B, which is a typed
   subset of Classic Rexx.
+\item[f29] First version, Git feature F0029]
 \end{description}
 
 \chapter{Low-Level System Information}
@@ -397,7 +401,133 @@ hardware.  A software implementation of the architecture conforms to
 the ABI; likewise, the architecture could be implemented in hardware,
 e.g. an FPGA.
 
+\subsection{The Register}
+RXVM is a Register based virtual machine, as opposed to a Stack based
+VM. The number of registers is only limited by memory and, for
+practical purposes, can be considered unlimited. The address size of
+the fields in a register is, for the virtual machine implementations,
+implied by the address size that the host OS can handle. For hardware
+the size is undefined and can follow the hardware address generation
+capacity.
+
+\begin{lstlisting}[style=embed,label=crexxregister,caption={The
+\crexx{} Register}]
+struct value {
+    /* bit field to store value status - these are explicitly set */
+    value_type status;
+
+    /* Value */
+    rxinteger int_value;
+    double float_value;
+    void *decimal_value; /* TODO */
+    char *string_value;
+    size_t string_length;
+    size_t string_buffer_length;
+    size_t string_pos;
+#ifndef NUTF8
+    size_t string_chars;
+    size_t string_char_pos;
+#endif
+    void *object_value;
+\end{lstlisting}
+
+The status field determines for instructions that expect a data type,
+which field is the field to act upon. Conversions are possible but
+never implicit.
+
+\begin{lstlisting}[style=embed,label=crexxregister,caption={Values of
+the Status field}]
+typedef union {
+    struct {
+        unsigned int type_object : 1;
+        unsigned int type_string : 1;
+        unsigned int type_decimal : 1;
+        unsigned int type_float : 1;
+        unsigned int type_int : 1;
+    };
+    unsigned int all_type_flags;
+} value_type;
+\end{lstlisting}
+
+\subsubsection{Layout of a Register}
+
+\subsubsection{Operand Types}
+
+The following operand types are possible for assembler
+instructions. The operand(s), if needed, always follow the instruction
+mnemonic. A small subset of the instructions takes no operands, like
+\keyword{RET}, \keyword{INC0}, \keyword{INC1}, \keyword{INC2}.
+
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{lXl}
+      \toprule
+      Operand Type & Role &  \\
+      \midrule
+      \texttt{REG} & a register & \\
+      \texttt{STRING} & a sequence of Unicode characters & \\
+      \texttt{CHAR} & one Unicode character \\
+      \texttt{FUNC} & a global or local function & \\
+      \texttt{ID} & a label & \\
+      \texttt{INT} & a number of type integer \dagger & \\
+      \texttt{FLOAT} & a number of type float \dagger & \\
+      \bottomrule
+    \end{tabularx}
+    \medskip
+    \begin{tablenotes}
+    \item [\dagger] maximum value implied by the host hardware.
+    \end{tablenotes}
+  \end{threeparttable}
+  \end{DIFnomarkup}
+  \caption{RXAS Assembler Instruction Operands}
+  \label{tab:rxasoperands}
+\end{table}
+
+
 \subsection{RXVM Instruction Set}
+
+\subsubsection{Fixed Point Arithmetic}
+
+\subsubsection{Floating Point Arithmetic}
+
+\subsubsection{Logical Operations}
+
+\subsubsection{Branching}
+
+\subsubsection{Input/Output Operations}
+
+\subsection{RXAS Directives}
+
+The \emph{rxas} assembler language has a number of statements that are
+directives to the assembler as opposed to machine instructions.
+
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{lXl}
+      \toprule
+      Directive & Role &  \\
+      \midrule
+      \texttt{*} & comment until end of line & \\
+      \texttt{/* */} & delimited comment & \\
+      \texttt{.globals=\emph{n}} & specifies number of globals & \\
+      \texttt{.expose} & expose (make globally known) & \\
+      \texttt{.locals=\emph{n}} &  specifies number of locals & \\
+      \bottomrule
+    \end{tabularx}
+    \medskip
+    % \begin{tablenotes}
+    % \item [\dagger] maximum value implied by the host hardware.
+    % \end{tablenotes}
+  \end{threeparttable}
+  \end{DIFnomarkup}
+  \caption{RXAS Assembler Directives}
+  \label{tab:rxasdirectives}
+\end{table}
+
 
 
 % {\ifzseries\else
@@ -512,17 +642,17 @@ e.g. an FPGA.
 % +-------------+-------------+-------------+-------------+
 % \end{verbatim}
 %   \else
-%   \begin{tikzpicture}[x=1.3ex,y=3em]
-%     \path [bitchart box] (0, -1) rectangle (32, 1);
-%     \bitchartfields 0 8/\textrm{msb}/, 16/~/, 24/~/, 32/~/;
-%     \bitchartbytes{0}{0,...,3}
-%     \bitchartsep
-%     \begin{scope}[shift={(0,-1)}]
-%       \bitchartfields 32 40/~/, 48/~/, 56/~/, 64/\textrm{lsb}/;
-%       \bitchartbytes{4}{4,...,7}
-%     \end{scope}
-%   \end{tikzpicture}
-%   \fi
+  \begin{tikzpicture}[x=1.3ex,y=3em]
+    \path [bitchart box] (0, -1) rectangle (32, 1);
+    \bitchartfields 0 8/\textrm{msb}/, 16/~/, 24/~/, 32/~/;
+    \bitchartbytes{0}{0,...,3}
+    \bitchartsep
+    \begin{scope}[shift={(0,-1)}]
+      \bitchartfields 32 40/~/, 48/~/, 56/~/, 64/\textrm{lsb}/;
+      \bitchartbytes{4}{4,...,7}
+    \end{scope}
+  \end{tikzpicture}
+%   % \fi
 %   \caption{Bit and byte numbering in doublewords}
 %   \label{fig:doublewords}
 % \end{figure}
@@ -3985,34 +4115,35 @@ e.g. an FPGA.
 % of the same bits as the bit piece starting at offset zero and having the
 % size of the given type.
 
-\chapter{RXBIN files}
-% \label{chobjfiles}
-% \index{ELF}
+\chapter{The rxbin file layout}
+\label{rxbinfiles}
+\index{.rxbin layout}
 % \index{object file}
-% This section describes the Executable and Linking Format (ELF).
+This section describes the \crexx binary file, \emph{.rxbin} format.
 
-% \section{ELF Header}
+\section{rxbin header}
+Note: at the moment, there is no rxbin header. This is a proposed format.
 % \subsection{Machine Information}
 % For file identification in \texttt{e\_ident} the \ARCH{} processor
 % family requires the values shown in \cref{tab:eident}.
 
-% \begin{table}
-%   \centering
-%   \begin{DIFnomarkup}
-%   \begin{tabular}{lll}
-%     \toprule
-%     Position & Value & Comments \\
-%     \midrule
-%     \texttt{e\_ident[EI\_CLASS]} & \texttt{ELFCLASS\NBITS{}} &
-%     For all \NBITS{}$\,$bit implementations \\
-%     \texttt{e\_ident[EI\_DATA]} & \texttt{ELFDATA\NBITS{}MSB} &
-%     For all Big-Endian implementations \\
-%     \bottomrule
-%   \end{tabular}
-%   \end{DIFnomarkup}
-%   \caption{Machine-specific ELF identification fields}
-%   \label{tab:eident}
-% \end{table}
+\begin{table}
+  \centering
+  \begin{DIFnomarkup}
+  \begin{tabular}{lll}
+    \toprule
+    Position & Value & Comments \\
+    \midrule
+    \texttt{e\_ident[EI\_CLASS]} & \texttt{ELFCLASS\NBITS{}} &
+    For all \NBITS{}$\,$bit implementations \\
+    \texttt{e\_ident[EI\_DATA]} & \texttt{ELFDATA\NBITS{}MSB} &
+    For all Big-Endian implementations \\
+    \bottomrule
+  \end{tabular}
+  \end{DIFnomarkup}
+  \caption{Machine-specific ELF identification fields}
+  \label{tab:eident}
+\end{table}
 
 % The ELF header's \texttt{e\_flags} field holds bit flags associated
 % with the file.  Since the \ARCH{} processor family defines no flags,
@@ -5127,6 +5258,7 @@ in \crexx{} level B.
 % \input{nr3trace}
 
 \subsection{\crexx{} level C Built In Functions (BIF's)}
+\input{../crcrexxc.tex}
 
 \section{\crexx{} level B}
 \crexx{} Level B is a Rexx version that can use native data types and
@@ -5134,9 +5266,17 @@ has a statement to include \emph{rxas} assembler statements in Rexx
 modules. It is used as the implementation language of \crexx{} level
 C. Level B has no \keyword{decimal} type but has \keyword{float} and
 \keyword{int} types which correspond to the native C data types on the platform. 
+
+
+\section{The Toolchain}
+\subsection{Prerequisites for building the \crexx{} translator}
+\subsection{Building \crexx{} Applications}
+
+\section{The AOT compiler}
+
 \appendix
 %% \input{fdl-1.1.tex}
-
+\chapter{Platform differences}
 
 \chapter{Notices}
 %% \input{ibm-notices.tex}
@@ -5147,6 +5287,8 @@ C. Level B has no \keyword{decimal} type but has \keyword{float} and
 \begin{thebibliography}{9}
 
   % Terence Parr, Language Implementation Patterns
+  % Mike Cowlishaw, The Rexx Language
+  % ANSI/INCITS J318, The Rexx Language Standard
   
 % \bibitem{tlshandling}
 %   Ulrich Drepper,
