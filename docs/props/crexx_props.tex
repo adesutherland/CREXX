@@ -20,6 +20,7 @@
 \usepackage{framed}
 \usepackage{alltt}
 
+
 % --- Indexing ---
 
 \makeindex
@@ -77,27 +78,27 @@
 \newcommand{\stackit}[2][l]{\setlength{\tabcolsep}{0mm}\begin{tabular}{#1}%
     #2\end{tabular}}
 
-\ifzseries
-\newcommand{\NBITS}{64}
-\newcommand{\ADDRBITS}{64}
-\newcommand{\NBYTES}{8}
-\newcommand{\STACKSIZE}{160}
-\newcommand{\ABINAME}{s390x}
-\newcommand{\ARCH}{z/\kern-1pt Ar\-chi\-tec\-ture}
-\newcommand{\ARCHarch}{\ARCH}
-\newcommand{\aARCH}{a \ARCH}
-\newcommand{\theARCH}{the \ARCH}
-\else
-\newcommand{\NBITS}{32}
-\newcommand{\ADDRBITS}{31}
-\newcommand{\NBYTES}{4}
-\newcommand{\STACKSIZE}{96}
-\newcommand{\ABINAME}{s390}
-\newcommand{\ARCH}{ESA/390}
-\newcommand{\ARCHarch}{the \ARCH{} ar\-chi\-tec\-ture}
-\newcommand{\aARCH}{an \ARCH}
-\newcommand{\theARCH}{\ARCHarch}
-\fi
+% \ifzseries
+% \newcommand{\NBITS}{64}
+% \newcommand{\ADDRBITS}{64}
+% \newcommand{\NBYTES}{8}
+% \newcommand{\STACKSIZE}{160}
+% \newcommand{\ABINAME}{s390x}
+% \newcommand{\ARCH}{z/\kern-1pt Ar\-chi\-tec\-ture}
+% \newcommand{\ARCHarch}{\ARCH}
+% \newcommand{\aARCH}{a \ARCH}
+% \newcommand{\theARCH}{the \ARCH}
+% \else
+% \newcommand{\NBITS}{32}
+% \newcommand{\ADDRBITS}{31}
+% \newcommand{\NBYTES}{4}
+% \newcommand{\STACKSIZE}{96}
+% \newcommand{\ABINAME}{s390}
+% \newcommand{\ARCH}{ESA/390}
+% \newcommand{\ARCHarch}{the \ARCH{} ar\-chi\-tec\-ture}
+% \newcommand{\aARCH}{an \ARCH}
+% \newcommand{\theARCH}{\ARCHarch}
+% \fi
 \newcommand{\crexx}{c\textsc{Rexx}}
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -326,11 +327,6 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 
   \medskip
   }
-  % \noindent Permission is granted to copy, distribute and/or modify
-  % this document under the terms of the GNU Free Documentation License,
-  % Version 1.1; with no Invariant Sections, with no Front-Cover Texts,
-  % and with no Back-Cover Texts.  A copy of the license is included in
-  % the section entitled ``GNU Free Documentation License.''}
 
 \maketitle
 \end{DIFnomarkup}
@@ -365,36 +361,44 @@ for users and implementors alike.
 \end{description}
 
 \chapter{Low-Level System Information}
+The execution environment of a \crexx{} program is a
+threaded\footnote{an alternative, non-threaded executable is available
+  under the \emph{rxbvm} name} virtual
+machine that is designed for optimal performance. This virtual
+machine, implemented in the \emph{rxvm} executable, executes
+machine instructions produced by the \emph{rxc} \crexx{}
+compiler, or written by hand, assembled into an .rxbin binary file by
+the \emph{rxas} assembler.
+
+\section{RXVM machine instructions}
+
 % \section{Machine Interface}
-% This section describes the processor-specific information for
-% \ARCH{} processors.
+This section describes the processor-specific information for
+\emph{RXVM} processors. The instruction set can be seen as the ISA
+(instruction set architecture) for
+an RXVM processor, of which the microcode is implemented in the C99 language.
 
 % \subsection{Processor Architecture}
-% \index{processor architecture}
-% \index{instruction set}
-% {\ifzseries
-%   \cite{sa22} (SA22-7832) defines \theARCH{}.
-%   \else
-%   \cite{sa22} (SA22-7201) defines \theARCH{}.
-%   \fi}
+\index{processor architecture}
+\index{instruction set}
+Programs intended to execute directly on the processor use the
+\emph{RXVM} instruction set and the
+instruction encoding and semantics of this architecture.
 
-% % TODO: Explain micro-architecture levels
-% % - "based on editions of the z/Architecture"
+An application program can assume that all instructions defined by the
+architecture and that are neither privileged nor optional, exist and work
+as documented.
 
-% Programs intended to execute directly on the processor use the
-% \ARCH{} instruction set and the
-% instruction encoding and semantics of the architecture.
+To be ABI (application binary interface) conforming, the processor must implement the instructions of
+the architecture, perform the specified operations, and produce the
+expected results.  The ABI neither places performance constraints on
+systems nor specifies what instructions must be implemented in
+hardware.  A software implementation of the architecture conforms to
+the ABI; likewise, the architecture could be implemented in hardware,
+e.g. an FPGA.
 
-% An application program can assume that all instructions defined by the
-% architecture and that are neither privileged nor optional, exist and work
-% as documented.
+\subsection{RXVM Instruction Set}
 
-% To be ABI conforming, the processor must implement the instructions of
-% the architecture, perform the specified operations, and produce the
-% expected results.  The ABI neither places performance constraints on
-% systems nor specifies what instructions must be implemented in
-% hardware.  A software emulation of the architecture can conform to
-% the ABI\@.
 
 % {\ifzseries\else
 %   There are some instructions in \ARCHarch{}
@@ -460,11 +464,11 @@ for users and implementors alike.
 % +-------------+-------------+
 % \end{verbatim}
 %   \else
-%   \begin{tikzpicture}[x=1.3ex,y=3em]
-%     \path [bitchart box] (0, 0) rectangle (16, 1);
-%     \bitchartfields 0 8/\textrm{msb}/, 16/\textrm{lsb}/;
-%     \bitchartbytes{0}{0,1}
-%   \end{tikzpicture}
+  % \begin{tikzpicture}[x=1.3ex,y=3em]
+  %   \path [bitchart box] (0, 0) rectangle (16, 1);
+  %   \bitchartfields /\textrm{add}/, /\textrm{r1}/;
+  %   \bitchartbytes{0}{0,1}
+  % \end{tikzpicture}
 %   \fi
 %   \caption{Bit and byte numbering in halfwords}
 %   \label{fig:halfword}
@@ -480,12 +484,14 @@ for users and implementors alike.
 % | 0         7 | 8        15 | 16       23 | 24       31 |
 % +-------------+-------------+-------------+-------------+
 % \end{verbatim}
-%   \else
+% %   \else
 %   \begin{tikzpicture}[x=1.3ex,y=3em]
 %     \path [bitchart box] (0, 0) rectangle (32, 1);
-%     \bitchartfields 0 8/\textrm{msb}/, 16/~/, 24/~/, 32/\textrm{lsb}/;
+%         \bitchartfields x/\textrm{msb}/, 16/~/, 24/~/, 32/~/;
 %     \bitchartbytes{0}{0,...,3}
-%   \end{tikzpicture}
+%     \bitchartsep
+
+%      \end{tikzpicture}
 %   \fi
 %   \caption{Bit and byte numbering in words}
 %   \label{fig:words}
@@ -5094,11 +5100,11 @@ for users and implementors alike.
 
 
 \chapter{The Rexx language}
-\section{\crexx{} Level C}
+ \section{\crexx{} level C - Classic}
 \crexx{} Level C \index{\crexx{} level C}corresponds to The Classic Rexx language as
 implemented on z/VM and ANSI/Incits Standard J318. It is implemented
 in \crexx{} level B.
-\subsection{\crexx{} Level C Statements}
+\subsection{\crexx{} level C Statements}
 % \input{../crcdo}
 \input{../crcexit}
 \input{../crcif}
@@ -5120,11 +5126,17 @@ in \crexx{} level B.
 % \input{nr3signa}
 % \input{nr3trace}
 
-\subsection{\crexx{} Level C Built In Functions (BIF's)}
+\subsection{\crexx{} level C Built In Functions (BIF's)}
 
-
+\section{\crexx{} level B}
+\crexx{} Level B is a Rexx version that can use native data types and
+has a statement to include \emph{rxas} assembler statements in Rexx
+modules. It is used as the implementation language of \crexx{} level
+C. Level B has no \keyword{decimal} type but has \keyword{float} and
+\keyword{int} types which correspond to the native C data types on the platform. 
 \appendix
 %% \input{fdl-1.1.tex}
+
 
 \chapter{Notices}
 %% \input{ibm-notices.tex}
@@ -5133,6 +5145,9 @@ in \crexx{} level B.
 \newcommand{\bibTitle}[1]{``#1''}
 
 \begin{thebibliography}{9}
+
+  % Terence Parr, Language Implementation Patterns
+  
 % \bibitem{tlshandling}
 %   Ulrich Drepper,
 %   \bibTitle{ELF Handling For Thread-Local Storage,}
