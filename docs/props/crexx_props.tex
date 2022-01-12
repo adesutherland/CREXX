@@ -20,8 +20,20 @@
 \usepackage{framed}
 \usepackage{alltt}
 \usepackage{barracuda}
+\usepackage{underscore}
+\usepackage{longtable}
+% \usepackage{filecontents}
 
-% --- Indexing ---
+
+% \begin{filecontents}{beforetable}
+%   \begin{supertabular}{cc}
+%   \end{filecontents}
+  
+%   \begin{filecontents}{aftertable}
+%     \\
+%   \end{supertabular}
+% \end{filecontents}
+%--- Indexing ---
 
 \makeindex
 
@@ -39,9 +51,10 @@
 \setmainfont{IBMPlexSerif-Regular.otf}[
   BoldFont = IBMPlexSerif-Bold.otf,
   ItalicFont = IBMPlexSerif-Italic.otf,
-  BoldItalicFont = IBMPlexSerif-BoldItalic.otf]
+  BoldItalicFont = IBMPlexSerif-BoldItalic.otf,
 \setsansfont{IBM Plex Sans}
-\setmonofont{IBM Plex Mono}
+\setmonofont{IBM Plex Sans Condensed}
+
 
 \setkomafont{captionlabel}{%
   \usekomafont{descriptionlabel}%
@@ -402,6 +415,7 @@ the ABI; likewise, the architecture could be implemented in hardware,
 e.g. an FPGA.
 
 \subsection{The Register}
+\index{register}
 RXVM is a Register based virtual machine, as opposed to a Stack based
 VM. The number of registers is only limited by memory and, for
 practical purposes, can be considered unlimited. The address size of
@@ -411,7 +425,7 @@ the size is undefined and can follow the hardware address generation
 capacity.
 
 \begin{lstlisting}[style=embed,label=crexxregister,caption={The
-\crexx{} Register}]
+\crexx{} Register implementation in C}]
 struct value {
     /* bit field to store value status - these are explicitly set */
     value_type status;
@@ -431,9 +445,17 @@ struct value {
     void *object_value;
 \end{lstlisting}
 
+\subsubsection{Conversions of register values}
+\index{conversions, data type in assembler}
+\index{say instruction, rxas}
+\index{int_value, register}
 The status field determines for instructions that expect a data type,
 which field is the field to act upon. Conversions are possible but
-never implicit.
+never implicit. So for example, when the register contains an int
+value in field \code{int_value}, but it needs to be printed with the rxas
+\keyword{say} instruction, the
+\keyword{itos} takes care of the conversion and the population of the
+memory area the \code{*string_value} points to. 
 
 \begin{lstlisting}[style=embed,label=crexxregister,caption={Values of
 the Status field}]
@@ -5230,12 +5252,15 @@ Note: at the moment, there is no rxbin header. This is a proposed format.
 % \end{enumerate}
 
 
-\chapter{The Rexx language}
- \section{\crexx{} level C - Classic}
+
+\chapter{\crexx{} level C - Classic}
 \crexx{} Level C \index{\crexx{} level C}corresponds to The Classic Rexx language as
 implemented on z/VM and ANSI/Incits Standard J318. It is implemented
 in \crexx{} level B.
-\subsection{\crexx{} level C Statements}
+
+\input{../Level-C-Grammar.tex}
+
+\section{\crexx{} level C Statements}
 % \input{../crcdo}
 \input{../crcexit}
 \input{../crcif}
@@ -5260,26 +5285,45 @@ in \crexx{} level B.
 \subsection{\crexx{} level C Built In Functions (BIF's)}
 \input{../crcrexxc.tex}
 
-\section{\crexx{} level B}
+\chapter{\crexx{} level B}
 \crexx{} Level B is a Rexx version that can use native data types and
 has a statement to include \emph{rxas} assembler statements in Rexx
 modules. It is used as the implementation language of \crexx{} level
 C. Level B has no \keyword{decimal} type but has \keyword{float} and
 \keyword{int} types which correspond to the native C data types on the platform. 
 
+\input{../Level-B-Grammar.tex}
+
 
 \section{The Toolchain}
 \subsection{Prerequisites for building the \crexx{} translator}
 \subsection{Building \crexx{} Applications}
 
-\section{The AOT compiler}
+\section{The Ahead-of-time compiler (AOT)}
+The AOT has \emph{rxas} source as input and LLVM instructions as
+output. This enables \crexx{} to have optimized native targets for the
+platforms LLVM is available on. The AOT compiler is not in the plans
+for the first delivery.
 
 \appendix
-%% \input{fdl-1.1.tex}
 \chapter{Platform differences}
 
 \chapter{Notices}
-%% \input{ibm-notices.tex}
+
+\chapter{Instructions by Mnemonic}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../../refcards/mnemonic.tex}
+\end{longtable}
+
+
+\chapter{Instructions by Opcode}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../../refcards/opcodes.tex}
+\end{longtable}
 
 
 \newcommand{\bibTitle}[1]{``#1''}
