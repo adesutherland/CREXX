@@ -1,42 +1,68 @@
-\item[                                  ]        
 \item[ASSEMBLY IN  STRUCTION List       ]        
-\item[ADDF         {REG,REG,REG}        ]        Convert and Add to Float (op1=op2+op3)
-\item[ADDF         {REG,REG,FLOAT}      ]        Convert and Add to Float (op1=op2+op3)
-\item[ADDI         {REG,REG,REG}        ]        Convert and Add to Integer (op1=op2+op3)
-\item[ADDI         {REG,REG,INT}        ]        Convert and Add to Integer (op1=op2+op3)
+\item[ADDF         {REG,REG,REG}        ]        Convert and Add to Float (op1=op2+op3) (Deprecated)
+\item[ADDF         {REG,REG,FLOAT}      ]        Convert and Add to Float (op1=op2+op3) (Deprecated)
+\item[ADDI         {REG,REG,REG}        ]        Convert and Add to Integer (op1=op2+op3) (Deprecated)
+\item[ADDI         {REG,REG,INT}        ]        Convert and Add to Integer (op1=op2+op3) (Deprecated)
 \item[AMAP         {REG,REG}            ]        Map op1 to arg register index in op2
 \item[AMAP         {REG,INT}            ]        Map op1 to arg register index  op2
 \item[AND          {REG,REG,REG}        ]        Logical (int) and op1=(op2 \&\& op3)
+\item[APPEND       {REG,REG}            ]        String Append (op1=op1||op2)
 \item[APPENDCHAR   {REG,REG}            ]        Append Concat Char op2 (as int) on op1
+\item[BCF          {ID,REG}             ]        if op2=0 goto op1(if false) else dec op2
+\item[BCF          {ID,REG,REG}         ]        if op2=0 goto op1(if false) else dec op2 and inc op3
+\item[BCT          {ID,REG}             ]        dec op2; if op2>0; goto op1(if true)
+\item[BCT          {ID,REG,REG}         ]        dec op2; inc op3, if op2>0; goto op1(if true)
+\item[BCTNM        {ID,REG}             ]        dec op2; if op2>=0; goto op1(if true)
+\item[BCTNM        {ID,REG,REG}         ]        dec op2; inc op3, if op2>=0; goto op1(if true)
+\item[BEQ          {ID,REG,REG}         ]        if op2==op3 then goto op1
+\item[BEQ          {ID,REG,INT}         ]        if op2==op3 then goto op1
+\item[BGE          {ID,REG,REG}         ]        if op2>=op3 then goto op1
+\item[BGE          {ID,REG,INT}         ]        if op2>=op3 then goto op1
+\item[BGT          {ID,REG,REG}         ]        if op2>op3 then goto op1
+\item[BGT          {ID,REG,INT}         ]        if op2>op3 then goto op1
+\item[BLE          {ID,REG,REG}         ]        if op2<=op3 then goto op1
+\item[BLE          {ID,REG,INT}         ]        if op2<=op3 then goto op1
+\item[BLT          {ID,REG,REG}         ]        if op2<op3 then goto op1
+\item[BLT          {ID,REG,INT}         ]        if op2<op3 then goto op1
+\item[BNE          {ID,REG,REG}         ]        if op2!=op3 then goto op1
+\item[BNE          {ID,REG,INT}         ]        if op2!=op3 then goto op1
 \item[BR           {ID}                 ]        Branch to op1
 \item[BRF          {ID,REG}             ]        Branch to op1 if op2 false
 \item[BRT          {ID,REG}             ]        Branch to op1 if op2 true
+\item[BRTF         {ID,ID,REG}          ]        Branch to op1 if op3 true, otherwise branch to op2
+\item[BRTPANDT     {ID,REG,INT}         ]        if op2.typeflag \&\& op3 true then goto op1
+\item[BRTPT        {ID,REG}             ]        if op2.typeflag true then goto op1
 \item[CALL         {REG,FUNC}           ]        Call procedure (op1=op2())
 \item[CALL         {REG,FUNC,REG}       ]        Call procedure (op1=op2(op3...) )
 \item[CALL         {FUNC}               ]        Call procedure (op1())
+\item[CNOP         NO OPERAND           ]        no operation
 \item[CONCAT       {REG,REG,REG}        ]        String Concat (op1=op2||op3)
 \item[CONCAT       {REG,REG,STRING}     ]        String Concat (op1=op2||op3)
 \item[CONCAT       {REG,STRING,REG}     ]        String Concat (op1=op2||op3)
+\item[CONCCHAR     {REG,REG,REG}        ]        Concat Char op1 from op2 position op3
 \item[COPY         {REG,REG}            ]        Copy op2 to op1
 \item[DEC          {REG}                ]        Decrement Int (op1--)
 \item[DEC0         NO OPERAND           ]        Decrement R0-- Int
 \item[DEC1         NO OPERAND           ]        Decrement R0-- Int
 \item[DEC2         NO OPERAND           ]        Decrement R0-- Int
-\item[DIVF         {REG,REG,REG}        ]        Convert and Divide to Float (op1=op2/op3)
-\item[DIVF         {REG,REG,FLOAT}      ]        Convert and Divide to Float (op1=op2/op3)
-\item[DIVF         {REG,FLOAT,REG}      ]        Convert and Divide to Float (op1=op2/op3)
-\item[DIVI         {REG,REG,REG}        ]        Convert and Divide to Integer (op1=op2/op3)
-\item[DIVI         {REG,REG,INT}        ]        Convert and Divide to Integer (op1=op2/op3)
+\item[DIVF         {REG,REG,REG}        ]        Convert and Divide to Float (op1=op2/op3) (Deprecated)
+\item[DIVF         {REG,REG,FLOAT}      ]        Convert and Divide to Float (op1=op2/op3) (Deprecated)
+\item[DIVF         {REG,FLOAT,REG}      ]        Convert and Divide to Float (op1=op2/op3) (Deprecated)
+\item[DIVI         {REG,REG,REG}        ]        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
+\item[DIVI         {REG,REG,INT}        ]        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
+\item[DROPCHAR     {REG,REG,REG}        ]        set op1 from op2 after dropping all chars from op3
 \item[EXIT         NO OPERAND           ]        Exit
 \item[EXIT         {REG}                ]        Exit op1
 \item[EXIT         {INT}                ]        Exit op1
 \item[FADD         {REG,REG,REG}        ]        Float Add (op1=op2+op3)
 \item[FADD         {REG,REG,FLOAT}      ]        Float Add (op1=op2+op3)
+\item[FCOPY        {REG,REG}            ]        Copy Float op2 to op1
 \item[FDIV         {REG,REG,REG}        ]        Float Divide (op1=op2/op3)
 \item[FDIV         {REG,REG,FLOAT}      ]        Float Divide (op1=op2/op3)
 \item[FDIV         {REG,FLOAT,REG}      ]        Float Divide (op1=op2/op3)
 \item[FEQ          {REG,REG,REG}        ]        Float Equals op1=(op2==op3)
 \item[FEQ          {REG,REG,FLOAT}      ]        Float Equals op1=(op2==op3)
+\item[FFORMAT      {REG,REG,REG}        ]        Set string value from float value using a format string
 \item[FGT          {REG,REG,REG}        ]        Float Greater than op1=(op2>op3)
 \item[FGT          {REG,REG,FLOAT}      ]        Float Greater than op1=(op2>op3)
 \item[FGT          {REG,FLOAT,REG}      ]        Float Greater than op1=(op2>op3)
@@ -51,20 +77,31 @@
 \item[FLTE         {REG,FLOAT,REG}      ]        Float Less than equals op1=(op2<=op3)
 \item[FMULT        {REG,REG,REG}        ]        Float Multiply (op1=op2*op3)
 \item[FMULT        {REG,REG,FLOAT}      ]        Float Multiply (op1=op2*op3)
+\item[FNDBLNK      {REG,REG,REG}        ]        op1 = find next blank in op2[op3] and behind
+\item[FNDNBLNK     {REG,REG,REG}        ]        op1 = find next next non blank in op2[op3] and behind
 \item[FNE          {REG,REG,REG}        ]        Float Not equals op1=(op2!=op3)
 \item[FNE          {REG,REG,FLOAT}      ]        Float Not equals op1=(op2!=op3)
+\item[FSEX         {REG}                ]        float op1 = -op1 (sign change)
 \item[FSUB         {REG,REG,REG}        ]        Float Subtract (op1=op2-op3)
 \item[FSUB         {REG,REG,FLOAT}      ]        Float Subtract (op1=op2-op3)
 \item[FSUB         {REG,FLOAT,REG}      ]        Float Subtract (op1=op2-op3)
+\item[FTOB         {REG}                ]        Set register boolean (int 1 or 0) value from its float value
+\item[FTOI         {REG}                ]        Set register int value from its float value
 \item[FTOS         {REG}                ]        Set register string value from its float value
+\item[GETBYTE      {REG,REG,REG}        ]        get byte  (op1=op2(op3)
 \item[GETSTRPOS    {REG,REG}            ]        Get String (op2) charpos into op1
+\item[GETTP        {REG,REG}            ]        gets the register type flag (op1 = op2.typeflag)
 \item[GMAP         {REG,REG}            ]        Map op1 to global var name in op2
 \item[GMAP         {REG,STRING}         ]        Map op1 to global var name op2
+\item[HEXCHAR      {REG,REG,REG}        ]        op1 (as hex) = op2[op3]
 \item[IADD         {REG,REG,REG}        ]        Integer Add (op1=op2+op3)
 \item[IADD         {REG,REG,INT}        ]        Integer Add (op1=op2+op3)
+\item[IAND         {REG,REG,REG}        ]        bit wise and of 2 integers (op1=op2\&op3)
+\item[IAND         {REG,REG,INT}        ]        bit wise and of 2 integers (op1=op2\&op3)
 \item[ICOPY        {REG,REG}            ]        Copy Integer op2 to op1
 \item[IDIV         {REG,REG,REG}        ]        Integer Divide (op1=op2/op3)
 \item[IDIV         {REG,REG,INT}        ]        Integer Divide (op1=op2/op3)
+\item[IDIV         {REG,INT,REG}        ]        Integer Divide (op1=op2/op3)
 \item[IEQ          {REG,REG,REG}        ]        Int Equals op1=(op2==op3)
 \item[IEQ          {REG,REG,INT}        ]        Int Equals op1=(op2==op3)
 \item[IGT          {REG,REG,REG}        ]        Int Greater than op1=(op2>op3)
@@ -79,6 +116,9 @@
 \item[ILTE         {REG,REG,REG}        ]        Int Less than equals op1=(op2<=op3)
 \item[ILTE         {REG,REG,INT}        ]        Int Less than equals op1=(op2<=op3)
 \item[ILTE         {REG,INT,REG}        ]        Int Less than equals op1=(op2<=op3)
+\item[IMOD         {REG,REG,REG}        ]        Integer Modulo (op1=op2%op3)
+\item[IMOD         {REG,REG,INT}        ]        Integer Modulo (op1=op2%op3)
+\item[IMOD         {REG,INT,REG}        ]        Integer Modulo (op1=op2\&op3)
 \item[IMULT        {REG,REG,REG}        ]        Integer Multiply (op1=op2*op3)
 \item[IMULT        {REG,REG,INT}        ]        Integer Multiply (op1=op2*op3)
 \item[INC          {REG}                ]        Increment Int (op1++)
@@ -87,36 +127,60 @@
 \item[INC2         NO OPERAND           ]        Increment R0++ Int
 \item[INE          {REG,REG,REG}        ]        Int Not equals op1=(op2!=op3)
 \item[INE          {REG,REG,INT}        ]        Int Not equals op1=(op2!=op3)
+\item[INOT         {REG,REG}            ]        inverts all bits of an integer (op1=~op2)
+\item[INOT         {REG,INT}            ]        inverts all bits of an integer (op1=~op2)
+\item[IOR          {REG,REG,REG}        ]        bit wise or of 2 integers (op1=op2|op3)
+\item[IOR          {REG,REG,INT}        ]        bit wise or of 2 integers (op1=op2|op3)
+\item[IPOW         {REG,REG,REG}        ]        op1=op2**op3
+\item[IPOW         {REG,REG,INT}        ]        op1=op2**op3
+\item[ISEX         {REG}                ]        dec op1 = -op1 (sign change)
+\item[ISHL         {REG,REG,REG}        ]        bit wise shift logical left of integer (op1=op2<<op3)
+\item[ISHL         {REG,REG,INT}        ]        bit wise shift logical left of integer (op1=op2<<op3)
+\item[ISHR         {REG,REG,REG}        ]        bit wise shift logical right of integer (op1=op2>>op3)
+\item[ISHR         {REG,REG,INT}        ]        bit wise shift logical right of integer (op1=op2>>op3)
 \item[ISUB         {REG,REG,REG}        ]        Integer Subtract (op1=op2-op3)
 \item[ISUB         {REG,REG,INT}        ]        Integer Subtract (op1=op2-op3)
+\item[ISUB         {REG,INT,REG}        ]        Integer Subtract (op1=op2-op3)
 \item[ITOF         {REG}                ]        Set register float value from its int value
 \item[ITOS         {REG}                ]        Set register string value from its int value
+\item[IXOR         {REG,REG,REG}        ]        bit wise exclusive OR of 2 integers (op1=op2^op3)
+\item[IXOR         {REG,REG,INT}        ]        bit wise exclusive OR of 2 integers (op1=op2^op3)
 \item[LINK         {REG,REG}            ]        Link op2 to op1
 \item[LOAD         {REG,INT}            ]        Load op1 with op2
 \item[LOAD         {REG,FLOAT}          ]        Load op1 with op2
 \item[LOAD         {REG,CHAR}           ]        Load op1 with op2
 \item[LOAD         {REG,STRING}         ]        Load op1 with op2
+\item[LOADSETTP    {REG,INT,INT}        ]        load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+\item[LOADSETTP    {REG,FLOAT,INT}      ]        load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+\item[LOADSETTP    {REG,STRING,INT}     ]        load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
 \item[MAP          {REG,REG}            ]        Map op1 to var name in op2
 \item[MAP          {REG,STRING}         ]        Map op1 to var name op2
-\item[MOVE         {REG,REG}            ]        Move op2 to op1
-\item[MULTF        {REG,REG,REG}        ]        Convert and Multiply to Float (op1=op2*op3)
-\item[MULTF        {REG,REG,FLOAT}      ]        Convert and Multiply to Float (op1=op2*op3)
-\item[MULTI        {REG,REG,REG}        ]        Convert and Multiply to Integer (op1=op2*op3)
-\item[MULTI        {REG,REG,INT}        ]        Convert and Multiply to Integer (op1=op2*op3)
+\item[MOVE         {REG,REG}            ]        Move op2 to op1 (Deprecated use swap)
+\item[MTIME        {REG}                ]        Put time in microseconds into op1
+\item[MULTF        {REG,REG,REG}        ]        Convert and Multiply to Float (op1=op2*op3) (Deprecated)
+\item[MULTF        {REG,REG,FLOAT}      ]        Convert and Multiply to Float (op1=op2*op3) (Deprecated)
+\item[MULTI        {REG,REG,REG}        ]        Convert and Multiply to Integer (op1=op2*op3) (Deprecated)
+\item[MULTI        {REG,REG,INT}        ]        Convert and Multiply to Integer (op1=op2*op3) (Deprecated)
+\item[NOT          {REG,REG}            ]        Logical (int) not op1=!op2
 \item[NSMAP        {REG,REG,REG}        ]        Map op1 to namespace in op2 var name in op3
 \item[NSMAP        {REG,REG,STRING}     ]        Map op1 to namespace in op2 var name op3
 \item[NSMAP        {REG,STRING,REG}     ]        Map op1 to namespace op2 var name in op3
 \item[NSMAP        {REG,STRING,STRING}  ]        Map op1 to namespace op2 var name op3
 \item[NULL         {REG}                ]        Null op1
 \item[OR           {REG,REG,REG}        ]        Logical (int) or op1=(op2 || op3)
+\item[PADSTR       {REG,REG,REG}        ]        set op1=op2[repeated op3 times]
 \item[PMAP         {REG,REG}            ]        Map op1 to parent var name in op2
 \item[PMAP         {REG,STRING}         ]        Map op1 to parent var name op2
-\item[RET          NO OPERAND           ]        Return NULL
+\item[POSCHAR      {REG,REG,REG}        ]        op1 = position of op3 in op2
+\item[RET          NO OPERAND           ]        Return VOID
 \item[RET          {REG}                ]        Return op1
 \item[RET          {INT}                ]        Return op1
 \item[RET          {FLOAT}              ]        Return op1
 \item[RET          {CHAR}               ]        Return op1
 \item[RET          {STRING}             ]        Return op1
+\item[RSEQ         {REG,REG,REG}        ]        non strict String Equals op1=(op2=op3)
+\item[RSEQ         {REG,REG,STRING}     ]        non strict String Equals op1=(op2=op3)
+\item[SAPPEND      {REG,REG}            ]        String Append with space (op1=op1||op2)
 \item[SAY          {REG}                ]        Say op1 (as string)
 \item[SAY          {INT}                ]        Say op1
 \item[SAY          {FLOAT}              ]        Say op1
@@ -125,9 +189,12 @@
 \item[SCONCAT      {REG,REG,REG}        ]        String Concat with space (op1=op2||op3)
 \item[SCONCAT      {REG,REG,STRING}     ]        String Concat with space (op1=op2||op3)
 \item[SCONCAT      {REG,STRING,REG}     ]        String Concat with space (op1=op2||op3)
+\item[SCOPY        {REG,REG}            ]        Copy String op2 to op1
 \item[SEQ          {REG,REG,REG}        ]        String Equals op1=(op2==op3)
 \item[SEQ          {REG,REG,STRING}     ]        String Equals op1=(op2==op3)
+\item[SETORTP      {REG,INT}            ]        or the register type flag (op1.typeflag = op1.typeflag || op2)
 \item[SETSTRPOS    {REG,REG}            ]        Set String (op1) charpos set to op2
+\item[SETTP        {REG,INT}            ]        sets the register type flag (op1.typeflag = op2)
 \item[SGT          {REG,REG,REG}        ]        String Greater than op1=(op2>op3)
 \item[SGT          {REG,REG,STRING}     ]        String Greater than op1=(op2>op3)
 \item[SGT          {REG,STRING,REG}     ]        String Greater than op1=(op2>op3)
@@ -143,16 +210,24 @@
 \item[SNE          {REG,REG,REG}        ]        String Not equals op1=(op2!=op3)
 \item[SNE          {REG,REG,STRING}     ]        String Not equals op1=(op2!=op3)
 \item[SSAY         {REG}                ]        String Say op1 (Deprecated use 'say reg')
+\item[STOF         {REG}                ]        Set register float value from its string value
+\item[STOI         {REG}                ]        Set register int value from its string value
 \item[STRCHAR      {REG,REG}            ]        op1 (as int) = op2[charpos]
 \item[STRCHAR      {REG,REG,REG}        ]        op1 (as int) = op2[op3]
 \item[STRLEN       {REG,REG}            ]        String Length op1 = length(op2)
-\item[SUBF         {REG,REG,REG}        ]        Convert and Subtract to Float (op1=op2-op3)
-\item[SUBF         {REG,REG,FLOAT}      ]        Convert and Subtract to Float (op1=op2-op3)
-\item[SUBF         {REG,FLOAT,REG}      ]        Convert and Subtract to Float (op1=op2-op3)
-\item[SUBI         {REG,REG,REG}        ]        Convert and Subtract to Integer (op1=op2-op3)
-\item[SUBI         {REG,REG,INT}        ]        Convert and Subtract to Integer (op1=op2-op3)
+\item[STRLOWER     {REG,REG}            ]        Set string to lower case value
+\item[STRUPPER     {REG,REG}            ]        Set string to upper case value
+\item[SUBF         {REG,REG,REG}        ]        Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+\item[SUBF         {REG,REG,FLOAT}      ]        Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+\item[SUBF         {REG,FLOAT,REG}      ]        Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+\item[SUBI         {REG,REG,REG}        ]        Convert and Subtract to Integer (op1=op2-op3) (Deprecated)
+\item[SUBI         {REG,REG,INT}        ]        Convert and Subtract to Integer (op1=op2-op3) (Deprecated)
+\item[SUBSTCUT     {REG,REG}            ]        set op1=substr(op1,,op2) cuts off op1 after position op3
 \item[SUBSTR       {REG,REG,REG}        ]        op1 = op2[charpos]...op2[charpos+op3-1]
+\item[SUBSTRING    {REG,REG,REG}        ]        set op1=substr(op2,op3) remaining string
+\item[SWAP         {REG,REG}            ]        Swap op1 and op2
 \item[TIME         {REG}                ]        Put time into op1
+\item[TRANSCHAR    {REG,REG,REG}        ]        replace op1 if it is in op3-list by char in op2-list
 \item[TRIML        {REG,REG}            ]        Trim String (op1) from Left by (op2) Chars
 \item[TRIML        {REG,REG,REG}        ]        Trim String (op2) from Left by (op3) Chars into op1
 \item[TRIMR        {REG,REG}            ]        Trim String (op1) from Right by (op2) Chars
@@ -161,4 +236,4 @@
 \item[TRUNC        {REG,REG,REG}        ]        Trunc String (op2) to (op3) Chars into op1
 \item[UNLINK       {REG}                ]        Unlink op1
 \item[UNMAP        {REG}                ]        Unmap op1
-\item[                                  ]        
+\item[XTIME        {REG,STRING}         ]        put special time properties into op1

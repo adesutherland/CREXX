@@ -1,23 +1,23 @@
-% \chapter{Methods for \crexx{} strings}\label{refbmeth}
-% \index{R\textsc{exx},class/methods of}
-%  This section describes the set of methods defined for the \crexx{}
+% \chapter{Functions for \crexx{} strings}\label{refbmeth}
+% \index{R\textsc{exx},class/functions of}
+%  This section describes the set of functions defined for the \crexx{}
 % string class, \textbf{R\textsc{exx}}.  These are called \emph{built-in
-% methods}, and include character manipulation, word manipulation,
-% conversion, and arithmetic methods.
+% functions}, and include character manipulation, word manipulation,
+% conversion, and arithmetic functions.
  
-% Implementations will also provide other methods for the \textbf{R\textsc{exx}}
+% Implementations will also provide other functions for the \textbf{R\textsc{exx}}
 % class (for example, to implement the \crexx{} operators or to provide
 % constructors with primitive arguments), but these are not part of the
 % \crexx{} language.
 % \footnote{
-% \emph{Details of the methods provided in the reference implementation are
+% \emph{Details of the functions provided in the reference implementation are
 % included in  Appendix C (see page \pageref{refappc}) .}
 % }
-% \section{General notes on the built-in methods:}
+% \section{General notes on the built-in functions:}
 % \begin{enumerate}
-% \item All methods work on a \crexx{} string of type \textbf{R\textsc{exx}}; this
+% \item All functions work on a \crexx{} string of type \textbf{R\textsc{exx}}; this
 % is referred to by the name \emph{string} in the descriptions of the
-% methods.  For example, if the \textbf{word} method were invoked using
+% functions.  For example, if the \textbf{word} function were invoked using
 % the term:
 % \begin{lstlisting}
 % "Three word phrase".word(2)
@@ -26,14 +26,14 @@
 % \emph{string} refers to the string "\textbf{Three word
 % phrase}", and the name \emph{n} refers to the string
 % "\textbf{2}".
-% \item All method arguments are of type \textbf{R\textsc{exx}} and all methods
+% \item All function arguments are of type \textbf{R\textsc{exx}} and all functions
 % return a string of type \textbf{R\textsc{exx}}; if a number is returned, it
 % will be formatted as though 0 had been added with no rounding.
 % \item 
-% The first parenthesis in a method call must immediately follow the name
-% of the method, with no space in between.
-% \item The parentheses in a method call can be omitted if no
-% arguments are required and the method call is part of a
+% The first parenthesis in a function call must immediately follow the name
+% of the function, with no space in between.
+% \item The parentheses in a function call can be omitted if no
+% arguments are required and the function call is part of a
 %  \emph{compound term} (see page \pageref{refcomterm}) .
 % \footnote{
 % Unless an implementation-provided option to disallow parenthesis
@@ -46,19 +46,19 @@
 % are not permitted).
 % \item A \emph{pad} argument, if specified, must be exactly one
 % character long.
-% \item If a method has a sub-option selected by the first character of a
+% \item If a function has a sub-option selected by the first character of a
 % string, that character may be in upper or lowercase.
 % \item Conversion between character encodings and decimal or hexadecimal
 % is dependent on the machine representation (encoding) of characters
 % and hence will return appropriately different results for Unicode,
 % ASCII, EBCDIC, and other implementations.
 % \end{enumerate}
-% \subsection{The built-in methods}\label{builtinmethods}
+% \subsection{The built-in functions}\label{builtinfunctions}
 \begin{description}
 \item[abbrev(info [,length{]})]\label{refabbrev}
-\index{ABBREV method,}
-\index{Method, built-in,ABBREV}
-\index{Abbreviations,testing with ABBREV method}
+\index{ABBREV function,}
+\index{Function, built-in,ABBREV}
+\index{Abbreviations,testing with ABBREV function}
 returns 1 if \emph{info} is equal to the leading characters of
 \emph{string} and \emph{info} is not less than
 the minimum length, \emph{length}; 0 is returned
@@ -88,10 +88,10 @@ select  /* keyword1 is to be the default */
   end
 \end{lstlisting}
 \item[abs()]\label{refabs}
-\index{ABS method,}
-\index{Method, built-in,ABS}
-\index{Mathematical method,ABS}
-\index{Absolute,value, finding using ABS method}
+\index{ABS function,}
+\index{Function, built-in,ABS}
+\index{Mathematical function,ABS}
+\index{Absolute,value, finding using ABS function}
 returns the absolute value of \emph{string}, which must be a
 number.
  Any sign is removed from the number, and it is then formatted by adding
@@ -109,9 +109,9 @@ Scientific notation is used, if necessary.
 \end{lstlisting}
 
 \item[b2d([n{]})]\label{refb2x}
-\index{B2D method}
+\index{B2D function}
 \index{Packing a string,with B2D}
-\index{Method, built-in,B2D}
+\index{Function, built-in,B2D}
 \index{Conversion,binary to decimal}
 \index{Binary,conversion to decimal}
 Binary to decimal.
@@ -148,9 +148,9 @@ If necessary, string is padded on the left with '0' characters (note, not “sig
 '0000000000110001'.b2d(0) == 0
 \end{lstlisting} 
 \item[b2x()]\label{refb2x}
-\index{B2X method}
+\index{B2X function}
 \index{Packing a string,with B2X}
-\index{Method, built-in,B2X}
+\index{Function, built-in,B2X}
 \index{Conversion,binary to hexadecimal}
 \index{Binary,conversion to hexadecimal}
 Binary to hexadecimal.
@@ -176,10 +176,10 @@ conversion to make a total that is a multiple of four.
 
 \emph{or}
 \item[centre(length [,pad{]})]\label{refcentre}
-\index{CENTRE method,}
-\index{CENTER method,}
-\index{Method, built-in,CENTRE}
-\index{Method, built-in,CENTER}
+\index{CENTRE function,}
+\index{CENTER function,}
+\index{Function, built-in,CENTRE}
+\index{Function, built-in,CENTER}
 \index{Formatting,text centering}
 
 returns a string of length \emph{length} with \emph{string}
@@ -199,12 +199,12 @@ end loses or gains one more character than the left hand end.
 'The blue sky'.centre(8) == 'e blue s'
 'The blue sky'.center(7) == 'e blue '
 \end{lstlisting}
-\textbf{Note: }This method may be called either \textbf{centre} or \textbf{center},
+\textbf{Note: }This function may be called either \textbf{centre} or \textbf{center},
 which avoids difficulties due to the difference between the British and
 American spellings.
 \item[changestr(needle, new)]\label{refchastr}
-\index{CHANGESTR method,}
-\index{Method, built-in,CHANGESTR}
+\index{CHANGESTR function,}
+\index{Function, built-in,CHANGESTR}
 \index{Replacing strings,using CHANGESTR}
 \index{Changing strings,using CHANGESTR}
 
@@ -228,12 +228,12 @@ If the \emph{needle} is the null string, the result is a copy of
 'elephant'.changestr('e','')     == 'lphant'
 'elephant'.changestr('','!!')    == 'elephant'
 \end{lstlisting}
- The  \textbf{countstr} method (see page \pageref{refcoustr})  can be used to
+ The  \textbf{countstr} function (see page \pageref{refcoustr})  can be used to
 count the number of changes that could be made to a string in this
 fashion.
 \item[compare(target [,pad{]})]\label{refcompar}
-\index{COMPARE method,}
-\index{Method, built-in,COMPARE}
+\index{COMPARE function,}
+\index{Function, built-in,COMPARE}
 \index{Finding a mismatch using COMPARE,}
 \index{Comparison,of strings/using COMPARE}
 
@@ -256,8 +256,8 @@ The default \emph{pad} character is a blank.
 'ab-- '.compare('ab','-') == 5
 \end{lstlisting}
 \item[copies(n)]\label{refcopies}
-\index{COPIES method,}
-\index{Method, built-in,COPIES}
+\index{COPIES function,}
+\index{Function, built-in,COPIES}
 \index{Copying a string using COPIES,}
 \index{Repeating a string with COPIES,}
 returns \emph{n} directly concatenated copies of
@@ -271,8 +271,8 @@ returns \emph{n} directly concatenated copies of
 ''.copies(2)    == ''
 \end{lstlisting}
 \item[copyindexed(sub)]\label{refcopyind}
-\index{COPYINDEXED method,}
-\index{Method, built-in,COPYINDEXED}
+\index{COPYINDEXED function,}
+\index{Function, built-in,COPYINDEXED}
 \index{Indexed strings,merging}
 \index{Indexed strings,copying}
 \index{Copying indexed variables,}
@@ -308,8 +308,8 @@ merged['d'] == 'def'
 \end{lstlisting}
 
 
-\index{COUNTSTR method,}
-\index{Method, built-in,COUNTSTR}
+\index{COUNTSTR function,}
+\index{Function, built-in,COUNTSTR}
 \index{Counting,strings, using COUNTSTR}
 \item[countstr(needle)]\label{refcoustr}
 returns the count of non-overlapping occurrences of the
@@ -325,11 +325,11 @@ If the \emph{needle} is the null string, \textbf{0} is returned.
 'elephant'.countstr('ph') == '1'
 'elephant'.countstr('')   == '0'
 \end{lstlisting}
- The  \textbf{changestr} method (see page \pageref{refchastr})  can be used to
+ The  \textbf{changestr} function (see page \pageref{refchastr})  can be used to
 change occurrences of \emph{needle} to some other string.
 \item[c2d()]\label{refc2d}
-\index{C2D method,}
-\index{Method, built-in,C2D}
+\index{C2D function,}
+\index{Function, built-in,C2D}
 \index{Conversion,coded character to decimal}
 \index{Conversion,character to decimal}
 \index{Character,conversion to decimal}
@@ -349,12 +349,12 @@ insignificant leading zeros, or decimal part.
 '\textbackslash{}r'.c2d == '13'  -- ASCII or Unicode
 '\textbackslash{}0'.c2d == '0'
 \end{lstlisting}
- The  \textbf{c2x} method (see page \pageref{refc2x})  can be used to
+ The  \textbf{c2x} function (see page \pageref{refc2x})  can be used to
 convert the encoding of a character to a hexadecimal representation.
 \item[c2x()]\label{refc2x}
-\index{C2X method,}
+\index{C2X function,}
 \index{Unpacking a string,with C2X}
-\index{Method, built-in,C2X}
+\index{Function, built-in,C2X}
 \index{Conversion,coded character to hexadecimal}
 \index{Conversion,character to hexadecimal}
 \index{Character,conversion to hexadecimal}
@@ -374,12 +374,12 @@ Insignificant leading zeros are removed.
 '\textbackslash{}r'.c2x == 'D'  -- ASCII or Unicode
 '\textbackslash{}0'.c2x == '0'
 \end{lstlisting}
- The  \textbf{c2d} method (see page \pageref{refc2d})  can be used to
+ The  \textbf{c2d} function (see page \pageref{refc2d})  can be used to
 convert the encoding of a character to a decimal number.
 \item[datatype(option)]\label{refdataty}
-\index{DATATYPE method,}
-\index{Method, built-in,DATATYPE}
-\index{Mathematical method,DATATYPE options}
+\index{DATATYPE function,}
+\index{Function, built-in,DATATYPE}
+\index{Mathematical function,DATATYPE options}
 \index{Types,checking with DATATYPE}
 \index{Numbers,checking with DATATYPE}
 \index{Whole numbers,checking with DATATYPE}
@@ -456,7 +456,7 @@ characters from the ranges "a-f", "A-F", and "0-9".
 'BCd3'.datatype('X')   == 1
 'BCgd3'.datatype('X')  == 0
 \end{lstlisting}
-\textbf{Note: }The \textbf{datatype} method tests the meaning of the characters
+\textbf{Note: }The \textbf{datatype} function tests the meaning of the characters
 in a string, independent of the encoding of those characters.  Extra
 letters and Extra digits cause \textbf{datatype} to return 0 except
 for the number tests ("\textbf{N}" and "\textbf{W}"),
@@ -464,8 +464,8 @@ which treat extra digits whose value is in the range 0-9 as though they
 were the corresponding Arabic numeral.
 \item[date()] see page \pageref{refrexxdate}
 \item[delstr(n [,length{]})]\label{refdelstr}
-\index{DELSTR method,}
-\index{Method, built-in,DELSTR}
+\index{DELSTR function,}
+\index{Function, built-in,DELSTR}
 \index{Deleting,part of a string}
 
 returns a copy of \emph{string} with the sub-string of
@@ -485,8 +485,8 @@ length of \emph{string}, the string is returned unchanged.
 'abcde'.delstr(6)   == 'abcde'
 \end{lstlisting}
 \item[delword(n [,length])]\label{refdelword}
-\index{DELWORD method,}
-\index{Method, built-in,DELWORD}
+\index{DELWORD function,}
+\index{Function, built-in,DELWORD}
 \index{Deleting,words from a string}
 \index{Words,deleting from a string}
 
@@ -509,8 +509,8 @@ involved, but none of the blanks preceding the first word involved.
 'Now  time'.delword(5)          == 'Now  time'
 \end{lstlisting}
 
-\index{D2B method,}
-\index{Method, built-in,D2B}
+\index{D2B function,}
+\index{Function, built-in,D2B}
 \index{Conversion,decimal to binary}
 \index{Decimal,conversion to binary}
 \index{Binary,from decimal}
@@ -548,8 +548,8 @@ whole number.
 '12'.d2b(0) == 
 \end{lstlisting}
 
-\index{D2C method,}
-\index{Method, built-in,D2C}
+\index{D2C function,}
+\index{Function, built-in,D2C}
 \index{Conversion,decimal to character}
 \index{Decimal,conversion to character}
 \index{Coded character,from decimal}
@@ -575,8 +575,8 @@ significant bits than the implementation's encoding for characters).
 '0'.d2c   == '\textbackslash 0'
 \end{lstlisting}
 \item[d2x([n])]\label{refd2x}
-\index{D2X method,}
-\index{Method, built-in,D2X}
+\index{D2X function,}
+\index{Function, built-in,D2X}
 \index{Conversion,decimal to hexadecimal}
 \index{Decimal,conversion to hexadecimal}
 \index{Numbers,conversion to hexadecimal}
@@ -615,8 +615,8 @@ truncated on the left.
 \end{lstlisting}
 
 \item[exists(index)]\label{refexists}
-\index{EXISTS method,}
-\index{Method, built-in,EXISTS}
+\index{EXISTS function,}
+\index{Function, built-in,EXISTS}
 \index{Index strings,testing for}
 \index{Indexed strings,testing for}
 \index{Testing for indexed variables,}
@@ -641,9 +641,9 @@ vowel.exists('c') == '0'
 \end{lstlisting}
 
 \item[format([before [,after]])]\label{refformat}
-\index{FORMAT,method}
-\index{Method, built-in,FORMAT}
-\index{Mathematical method,FORMAT}
+\index{FORMAT,function}
+\index{Function, built-in,FORMAT}
+\index{Mathematical function,FORMAT}
 \index{Formatting,numbers for display}
 \index{Numbers,formatting for display}
 \index{Numbers,rounding}
@@ -688,9 +688,9 @@ decimal part or decimal point).
 ' - 12.73'.format(null,4) == '-12.7300'
 \end{lstlisting}
  
-Further arguments may be passed to the \keyword{format} method to control
+Further arguments may be passed to the \keyword{format} function to control
 the use of exponential notation.
-The full syntax of the method is then:
+The full syntax of the function is then:
  
 \keyword{format([before[,after[,explaces[,exdigits[,exform]]]]])}
  The first two arguments are as already described.  The other three
@@ -750,8 +750,8 @@ expressed as an exact integer in default precision, \emph{i.e.}, 999999999.
 Therefore, values for \emph{explaces} of up to 9 should also be
 supported.
 \item[insert(new [,n [,length [,pad{]]]})]\label{refinsert}
-\index{INSERT method,}
-\index{Method, built-in,INSERT}
+\index{INSERT function,}
+\index{Function, built-in,INSERT}
 \index{Inserting a string into another,}
 
 inserts the string \emph{new}, padded or truncated to length
@@ -774,8 +774,8 @@ a blank.
 'abc'.insert('123',0,5,'-') == '123--abc'
 \end{lstlisting}
 
-\index{LASTPOS method,}
-\index{Method, built-in,LASTPOS}
+\index{LASTPOS function,}
+\index{Function, built-in,LASTPOS}
 \index{Finding a string in another string,}
 \index{Locating,a string in another string}
 \item[lastpos(needle [,start{]})]\label{reflastpos}
@@ -801,8 +801,8 @@ value or if not specified (with a minimum default value of one).
 ''.lastpos('?')              == 0
 \end{lstlisting}
 
-\index{LEFT method,}
-\index{Method, built-in,LEFT}
+\index{LEFT function,}
+\index{Function, built-in,LEFT}
 \index{Formatting,text left justification}
 \item[left(length [,pad{]})]\label{refleft}
 returns a string of length \emph{length} containing the
@@ -811,7 +811,7 @@ The string is padded with \emph{pad} characters (or truncated) on
 the right as needed.
 The default \emph{pad} character is a blank.
 \emph{length} must be a non-negative whole number.
-This method is exactly equivalent to
+This function is exactly equivalent to
 \emph{string}\textbf{.substr(1}, \emph{length}
 [, \emph{pad}]\textbf{)}.
  
@@ -822,8 +822,8 @@ This method is exactly equivalent to
 'abc defg'.left(6)  == 'abc de'
 \end{lstlisting}
 
-\index{LENGTH,method}
-\index{Method, built-in,LENGTH}
+\index{LENGTH,function}
+\index{Function, built-in,LENGTH}
 \index{Strings,length of}
 \index{Data,length of}
 \item[length()]\label{reflength}
@@ -835,8 +835,8 @@ returns the number of characters in \emph{string}.
 ''.length         == 0
 \end{lstlisting}
 \item[lower([n [,length{]}])]\label{reflower}
-\index{LOWER method,}
-\index{Method, built-in,LOWER}
+\index{LOWER function,}
+\index{Function, built-in,LOWER}
 \index{Strings,lowercasing}
 \index{Lowercasing strings,}
 
@@ -864,9 +864,9 @@ string (including the \emph{n}\emph{th} character) is assumed.
 \end{lstlisting}
 
 \item[max(number)]\label{refmax}
-\index{MAX method,}
-\index{Method, built-in,MAX}
-\index{Mathematical method,MAX}
+\index{MAX function,}
+\index{Function, built-in,MAX}
+\index{Mathematical function,MAX}
 
 returns the larger of \emph{string} and \emph{number}, which
 must both be numbers.  If they compare equal (that is, when subtracted,
@@ -895,9 +895,9 @@ Scientific notation is used, if necessary.
 \end{lstlisting}
 
 \item[min(number)]\label{refmin}
-\index{MIN method,}
-\index{Method, built-in,MIN}
-\index{Mathematical method,MIN}
+\index{MIN function,}
+\index{Function, built-in,MIN}
+\index{Mathematical function,MIN}
 
 returns the smaller of \emph{string} and \emph{number}, which
 must both be numbers.  If they compare equal (that is, when subtracted,
@@ -925,8 +925,8 @@ Scientific notation is used, if necessary.
 '1234567E+5'.min('123456700000') == '1.234567E+11'
 \end{lstlisting}
 
-\index{OVERLAY method,}
-\index{Method, built-in,OVERLAY}
+\index{OVERLAY function,}
+\index{Function, built-in,OVERLAY}
 \index{Overlaying a string onto another,}
 \item[overlay(new [,n [,length [,pad{]]]})]\label{refoverlay}
 overlays the string \emph{new}, padded or truncated to length
@@ -953,8 +953,8 @@ The default value for \emph{length} is the length of \emph{new}.
 'abc'.overlay('123',5,6,'+') == 'abc+123+++'
 \end{lstlisting}
 
-\index{POS position method,}
-\index{Method, built-in,POS}
+\index{POS position function,}
+\index{Function, built-in,POS}
 \index{Finding a string in another string,}
 \index{Locating,a string in another string}
 \index{Searching a string for a word or phrase,}
@@ -977,8 +977,8 @@ is returned.
 'abc def ghi'.pos(' ',5) == 8
 \end{lstlisting}
 
-\index{REVERSE method,}
-\index{Method, built-in,REVERSE}
+\index{REVERSE function,}
+\index{Function, built-in,REVERSE}
 \item[reverse()]\label{refreverse}
 returns a copy of \emph{string}, swapped end for end.
  
@@ -990,10 +990,10 @@ returns a copy of \emph{string}, swapped end for end.
 \end{lstlisting}
 
 \item[right(length [,pad{]})]\label{refright}
-\index{RIGHT method,}
-\index{Method, built-in,RIGHT}
+\index{RIGHT function,}
+\index{Function, built-in,RIGHT}
 \index{Formatting,text right justification}
-\index{Leading zeros,adding with the RIGHT method}
+\index{Leading zeros,adding with the RIGHT function}
 \index{Zeros,adding on the left}
 \index{Zeros,padding}
 
@@ -1010,8 +1010,8 @@ left as needed.  The default \emph{pad} character is a blank.
 '12'.right(5,'0')  == '00012'
 \end{lstlisting}
 
-\index{SEQUENCE method,}
-\index{Method, built-in,SEQUENCE}
+\index{SEQUENCE function,}
+\index{Function, built-in,SEQUENCE}
 \index{Collating sequence, using SEQUENCE,}
 \item[sequence(final)]\label{refsequen}
  returns a string of all characters, in ascending order of encoding,
@@ -1028,9 +1028,9 @@ reported.
 '\\ufffe'.sequence('\\uffff') == '\\ufffe\\uffff'
 \end{lstlisting}
 
-\index{SIGN method,}
-\index{Method, built-in,SIGN}
-\index{Mathematical method,SIGN}
+\index{SIGN function,}
+\index{Function, built-in,SIGN}
+\index{Mathematical function,SIGN}
 \item[sign()]\label{refsign}
 returns a number that indicates the sign of \emph{string}, which
 must be a number.
@@ -1048,8 +1048,8 @@ otherwise \textbf{'1'} is returned.
 ' -0.307'.sign == -1
 \end{lstlisting}
 
-\index{SOUNDEX method,}
-\index{Method, built-in,SOUNDEX}
+\index{SOUNDEX function,}
+\index{Function, built-in,SOUNDEX}
 \index{Normalizing a string by its sound,SOUNDEX}
 \item[soundex()]\label{refsoundex}
  returns the normalized soundex value of the string. This implementation
@@ -1060,10 +1060,10 @@ is for the English language.
 'EULER'.soundex()  == 'E460'
 \end{lstlisting}
 
-\index{SPACE method,}
-\index{Method, built-in,SPACE}
+\index{SPACE function,}
+\index{Function, built-in,SPACE}
 \index{Formatting,text spacing}
-\index{Blank,removal with SPACE method}
+\index{Blank,removal with SPACE function}
 \item[space([n [,pad{]]})]\label{refspace}
 returns a copy of \emph{string} with the blank-delimited words in
 \emph{string} formatted with \emph{n} (and only \emph{n})
@@ -1083,14 +1083,14 @@ character is a blank.
 'abc  def  '.space(2,'+') == 'abc++def'
 \end{lstlisting}
 
-\index{STRIP method,}
-\index{Method, built-in,STRIP}
-\index{Leading blanks,removal with STRIP method}
-\index{Blank,removal with STRIP method}
-\index{Zeros,removal with STRIP method}
-\index{Leading zeros,removal with STRIP method}
-\index{Character,removal with STRIP method}
-\index{Trailing blanks,removal with STRIP method}
+\index{STRIP function,}
+\index{Function, built-in,STRIP}
+\index{Leading blanks,removal with STRIP function}
+\index{Blank,removal with STRIP function}
+\index{Zeros,removal with STRIP function}
+\index{Leading zeros,removal with STRIP function}
+\index{Character,removal with STRIP function}
+\index{Trailing blanks,removal with STRIP function}
 \item[strip([option [,char{]]}])]\label{refstrip}
 returns a copy of \emph{string} with Leading, Trailing, or Both
 leading and trailing characters removed, when the first character of
@@ -1109,8 +1109,8 @@ If given, \emph{char} must be exactly one character long.
 '0012.700'.strip('b',0) == '12.7'
 \end{lstlisting}
 
-\index{SUBSTR method,}
-\index{Method, built-in,SUBSTR}
+\index{SUBSTR function,}
+\index{Function, built-in,SUBSTR}
 \index{Extracting,a sub-string}
 \index{Sub-string, extracting,}
 \item[substr(n [,length [,pad{]]})]\label{refsubstr}
@@ -1137,8 +1137,8 @@ The default \emph{pad} character is a blank.
 templates are more convenient for selecting sub-strings, especially if
 more than one sub-string is to be extracted from a string.
 
-\index{SUBWORD method,}
-\index{Method, built-in,SUBWORD}
+\index{SUBWORD function,}
+\index{Function, built-in,SUBWORD}
 \index{Extracting,words from a string}
 \index{Words,extracting from a string}
 \item[subword(n [,length{]})]\label{refsubword}
@@ -1161,12 +1161,12 @@ will include all blanks between the selected words.
 \end{lstlisting}
 
 \item[time()] see page \pageref{refrexxtime}
-\index{TRANSLATE method,}
-\index{Method, built-in,TRANSLATE}
-\index{Translation,with TRANSLATE method}
-\index{Re-ordering characters,with TRANSLATE method}
-\index{Moving characters, with TRANSLATE method,}
-\index{Strings,moving with TRANSLATE method}
+\index{TRANSLATE function,}
+\index{Function, built-in,TRANSLATE}
+\index{Translation,with TRANSLATE function}
+\index{Re-ordering characters,with TRANSLATE function}
+\index{Moving characters, with TRANSLATE function,}
+\index{Strings,moving with TRANSLATE function}
 \index{,}
 \index{Replacing strings,using TRANSLATE}
 \index{Changing strings,using TRANSLATE}
@@ -1174,7 +1174,7 @@ will include all blanks between the selected words.
 returns a copy of \emph{string} with each character in
 \emph{string} either unchanged or translated to another character.
  
-The \textbf{translate} method acts by searching the input translate
+The \textbf{translate} function acts by searching the input translate
 table, \emph{tablei}, for each character in \emph{string}.
 If the character is found in \emph{tablei} (the first, leftmost,
 occurrence being used if there are duplicates) then the corresponding
@@ -1197,7 +1197,7 @@ The default \emph{pad} is a blank.
 '4123'.translate('abcd','1234')     == 'dabc'
 '4123'.translate('hods','1234')     == 'shod'
 \end{lstlisting}
-\textbf{Note: }The last two examples show how the \textbf{translate} method
+\textbf{Note: }The last two examples show how the \textbf{translate} function
 may be used to move around the characters in a string.
 In these examples, any 4-character string could be specified as the
 first argument and its last character would be moved to the beginning of
@@ -1208,10 +1208,10 @@ Similarly, the term:
 \end{lstlisting}
 (which returns "\textbf{27.08.1997}") shows how a string (in
 this case perhaps a date) might be re-formatted and merged with other
-characters using the \textbf{translate} method.
+characters using the \textbf{translate} function.
 
-\index{TRUNC method,}
-\index{Method, built-in,TRUNC}
+\index{TRUNC function,}
+\index{Function, built-in,TRUNC}
 \index{Truncating numbers,}
 \index{Numbers,truncating}
 \index{Formatting,numbers with TRUNC}
@@ -1239,8 +1239,8 @@ The result will never be in exponential form.
 '0'.trunc(2)         == 0.00
 \end{lstlisting}
 
-\index{UPPER method,}
-\index{Method, built-in,UPPER}
+\index{UPPER function,}
+\index{Function, built-in,UPPER}
 \index{Strings,uppercasing}
 \index{Uppercasing strings,}
 \item[upper([n [,length{]]})]\label{refupper}
@@ -1269,8 +1269,8 @@ string (including the \emph{n}\emph{th} character) is assumed.
 ''.upper               == ''
 \end{lstlisting}
 
-\index{VERIFY method,}
-\index{Method, built-in,VERIFY}
+\index{VERIFY function,}
+\index{Function, built-in,VERIFY}
 \index{Strings,verifying contents of}
 \item[verify(reference [,option [,start{]]})]\label{refverify}
 verifies that \emph{string} is composed only of characters
@@ -1289,7 +1289,7 @@ returned, or 0 is returned if none of the characters were found.
 the first character of \emph{string}).
 This can be overridden by giving a different \emph{start} point,
 which must be positive.
- If \emph{string} is the null string, the method returns 0,
+ If \emph{string} is the null string, the function returns 0,
 regardless of the value of the \emph{option}.
 Similarly if \emph{start} is greater than
 \emph{string}\textbf{.length}, 0 is returned.
@@ -1308,8 +1308,8 @@ which case 0 is returned.
 'AB3CD5'.verify('1234567890','m',4) == 6
 \end{lstlisting}
 
-\index{WORD method,}
-\index{Method, built-in,WORD}
+\index{WORD function,}
+\index{Function, built-in,WORD}
 \index{Words,extracting from a string}
 \item[word(n)]\label{refword}
 returns the \emph{n}\emph{th} blank-delimited word in
@@ -1317,7 +1317,7 @@ returns the \emph{n}\emph{th} blank-delimited word in
 \emph{n} must be positive.
 If there are fewer than \emph{n} words in \emph{string}, the
 null string is returned.
-This method is exactly equivalent to
+This function is exactly equivalent to
 \emph{string}\textbf{.subword(}\emph{n},\textbf{1)}.
  
 \textbf{Examples:}
@@ -1326,8 +1326,8 @@ This method is exactly equivalent to
 'Now is the time'.word(5) == ''
 \end{lstlisting}
 
-\index{WORDINDEX method,}
-\index{Method, built-in,WORDINDEX}
+\index{WORDINDEX function,}
+\index{Function, built-in,WORDINDEX}
 \index{Words,locating in a string}
 \item[wordindex(n)]\label{refwordind}
 returns the character position of the \emph{n}\emph{th}
@@ -1341,8 +1341,8 @@ If there are fewer than \emph{n} words in the string, 0 is returned.
 'Now is the time'.wordindex(6) == 0
 \end{lstlisting}
 
-\index{WORDLENGTH method,}
-\index{Method, built-in,WORDLENGTH}
+\index{WORDLENGTH function,}
+\index{Function, built-in,WORDLENGTH}
 \index{Words,finding length of}
 \item[wordlength(n)]\label{refwordlen}
 returns the length of the \emph{n}\emph{th} blank-delimited word in
@@ -1357,8 +1357,8 @@ If there are fewer than \emph{n} words in the string, 0 is returned.
 'Now is the time'.wordlength(6)    == 0
 \end{lstlisting}
 
-\index{WORDPOS method,}
-\index{Method, built-in,WORDPOS}
+\index{WORDPOS function,}
+\index{Function, built-in,WORDPOS}
 \index{Searching a string for a word or phrase,}
 \index{Locating,a word or phrase in a string}
 \index{Words,finding in a string}
@@ -1386,8 +1386,8 @@ positive), the word at which to start the search.
 'To be or not to be'.wordpos('be',3)   == 6
 \end{lstlisting}
 
-\index{WORDS method,}
-\index{Method, built-in,WORDS}
+\index{WORDS function,}
+\index{Function, built-in,WORDS}
 \index{Words,counting, using WORDS}
 \index{Counting,words, using WORDS}
 \item[words()]\label{refwords}
@@ -1400,9 +1400,9 @@ returns the number of blank-delimited words in \emph{string}.
 ''.words                == 0
 \end{lstlisting}
 
-\index{X2B method,}
+\index{X2B function,}
 \index{Unpacking a string,with X2B}
-\index{Method, built-in,X2B}
+\index{Function, built-in,X2B}
 \index{Conversion,hexadecimal to binary}
 \index{Hexadecimal,conversion to binary}
 \item[x2b()]\label{refx2b}
@@ -1424,9 +1424,9 @@ will not include any blanks.
 '1C1'.x2b == '000111000001'
 \end{lstlisting}
 
-\index{X2C method,}
+\index{X2C function,}
 \index{Packing a string,with X2C}
-\index{Method, built-in,X2C}
+\index{Function, built-in,X2C}
 \index{Conversion,hexadecimal to character}
 \index{Hexadecimal,conversion to character}
 \index{Coded character,from hexadecimal}
@@ -1457,11 +1457,11 @@ significant bits than the implementation's encoding for characters).
 'A2'.x2c   == 's' -- EBCDIC
 '0'.x2c    == '\textbackslash 0'
 \end{lstlisting}
- The  \textbf{d2c} method (see page \pageref{refd2c})  can be used to
+ The  \textbf{d2c} function (see page \pageref{refd2c})  can be used to
 convert a \crexx{} number to the encoding of a character.
 
-\index{X2D method,}
-\index{Method, built-in,X2D}
+\index{X2D function,}
+\index{Function, built-in,X2D}
 \index{Conversion,hexadecimal to decimal}
 \index{Hexadecimal,conversion to decimal}
 \item[x2d([n{]})]\label{refx2d}
@@ -1506,7 +1506,7 @@ had been executed.)
 'F081'.x2d(1) == 1
 '0031'.x2d(0) == 0
 \end{lstlisting}
- The  \textbf{c2d} method (see page \pageref{refc2d})  can be used to convert
+ The  \textbf{c2d} function (see page \pageref{refc2d})  can be used to convert
 a character to a decimal representation of its encoding.
 \end{description}
 
