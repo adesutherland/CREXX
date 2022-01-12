@@ -51,7 +51,7 @@
 \setmainfont{IBMPlexSerif-Regular.otf}[
   BoldFont = IBMPlexSerif-Bold.otf,
   ItalicFont = IBMPlexSerif-Italic.otf,
-  BoldItalicFont = IBMPlexSerif-BoldItalic.otf,
+  BoldItalicFont = IBMPlexSerif-BoldItalic.otf]
 \setsansfont{IBM Plex Sans}
 \setmonofont{IBM Plex Sans Condensed}
 
@@ -130,29 +130,7 @@
 \definecolor{nrgrey}{RGB}{101,123,131}
 
 
-\usepackage{listings}
-\lstset{%
-  basicstyle={\ttfamily\small},
-  numberstyle={\sffamily\footnotesize\color{lstnumbers}},
-  showstringspaces=false,
-  captionpos=b,
-  abovecaptionskip=2ex,
-  language=C}
-\lstdefinestyle{float}{%
-  frame=single,
-  float=tbp}
-\lstdefinestyle{embed}{%
-  frame=single}
-\lstdefinestyle{long}{%
-  frame=single,
-  captionpos=t}
-\lstdefinestyle{short}{%
-  aboveskip=-1.2ex,
-  belowskip=-\baselineskip}
-\lstdefinelanguage{simpleasm}{%
-  comment=[l]\#,
-  string=[b]{"}}
-
+\input{../crexxformat.tex}
 % --- Hyperref ---
 
 \usepackage[unicode=true,pdfusetitle,
@@ -5252,6 +5230,8 @@ Note: at the moment, there is no rxbin header. This is a proposed format.
 % \end{enumerate}
 
 
+\chapter{Logical Grammar Specification}
+\input{../Logical-Grammar-Specification.tex}
 
 \chapter{\crexx{} level C - Classic}
 \crexx{} Level C \index{\crexx{} level C}corresponds to The Classic Rexx language as
