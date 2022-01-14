@@ -53,7 +53,8 @@
   ItalicFont = IBMPlexSerif-Italic.otf,
   BoldItalicFont = IBMPlexSerif-BoldItalic.otf]
 \setsansfont{IBM Plex Sans}
-\setmonofont{IBM Plex Sans Condensed}
+% \setmonofont{IBM Plex Sans Condensed}
+\setmonofont{IBM Plex Mono }
 
 
 \setkomafont{captionlabel}{%
@@ -365,6 +366,8 @@ machine instructions produced by the \emph{rxc} \crexx{}
 compiler, or written by hand, assembled into an .rxbin binary file by
 the \emph{rxas} assembler.
 
+\input{../Logical-REXX-VM.tex}
+
 \section{RXVM machine instructions}
 
 % \section{Machine Interface}
@@ -450,6 +453,45 @@ typedef union {
 \end{lstlisting}
 
 \subsubsection{Layout of a Register}
+  \begin{tikzpicture}
+    \matrix [memory layout, inner sep=0pt, nodes={inner sep=1ex},
+    description/.style={text width=12em, text badly centered},
+    cells={anchor=center}] (m) {
+      % \node {\texttt{\stackit{f6\\f4\\f2\\f0}}}; &
+      \node [description] {Floating-point argument register save area};
+      \\
+      \coordinate (A);\\
+      % \path (0,1.5ex) node [above] (r15) {\texttt{r15}};
+      % \path (0,-1.5ex) node [below] (r7) {\texttt{r7}}; &
+      \node [description] {Other register save area};
+      \\
+      \coordinate (B);\\
+      % \path (0,1.5ex) node [above] (r6) {\texttt{r6}};
+      % \path (0,-1.5ex) node [below] (r2) {\texttt{r2}}; &
+      \node [description] {Argument register save area};
+      \\
+      \coordinate (C);\\
+      &
+      \node [description] {Unused};
+      \\
+    };
+    % \draw [<->] (r7) -- (r15);
+    % \draw [<->] (r2) -- (r6);
+    \foreach \Node in {A, B, C} {
+      \draw (\Node -| m.west) -- (\Node -| m.east);
+    };
+    % \ifzseries
+    % \foreach \where/\offs in {m.north/160, A/128, B/56, C/16, m.south/8} {
+    %   \path (\where -| m.west) +(-1ex,0)
+    %   node [left] {\texttt{\offs}};
+    % }
+    % \else
+    % \foreach \where/\offs in {m.north/96, A/64, B/28, C/8, m.south/4} {
+    %   \path (\where -| m.west) +(-1ex,0)
+    %   node [left] {\texttt{\offs}};
+    % }
+    % \fi
+  \end{tikzpicture}
 
 \subsubsection{Operand Types}
 
@@ -528,7 +570,7 @@ directives to the assembler as opposed to machine instructions.
   \label{tab:rxasdirectives}
 \end{table}
 
-
+\input{../REXX-Assembler.tex}
 
 % {\ifzseries\else
 %   There are some instructions in \ARCHarch{}
