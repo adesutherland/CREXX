@@ -22,40 +22,30 @@
 \usepackage{barracuda}
 \usepackage{underscore}
 \usepackage{longtable}
-% \usepackage{filecontents}
-
-
-% \begin{filecontents}{beforetable}
-%   \begin{supertabular}{cc}
-%   \end{filecontents}
-  
-%   \begin{filecontents}{aftertable}
-%     \\
-%   \end{supertabular}
-% \end{filecontents}
-%--- Indexing ---
 
 \makeindex
 
 % --- Fonts ---
 
-\ifdefined\ifHtml\else
+% \ifdefined\ifHtml\else
 
 \usepackage{unicode-math}
 \usepackage{fontspec}
 
 \usepackage{microtype}
 
-% Use the IBM Plex font family.
+% Use a combination of the open source IBM Plex and TeX Gyre font families.
 
-\setmainfont{IBMPlexSerif-Regular.otf}[
+% \setmainfont{IBMPlexSerif-Regular.otf}[
+\setmainfont{TeX Gyre Pagella}
+[
   BoldFont = IBMPlexSerif-Bold.otf,
   ItalicFont = IBMPlexSerif-Italic.otf,
   BoldItalicFont = IBMPlexSerif-BoldItalic.otf]
 \setsansfont{IBM Plex Sans}
 % \setmonofont{IBM Plex Sans Condensed}
-\setmonofont{IBM Plex Mono }
 
+\setmonofont[Scale=0.8]{IBM Plex Mono}
 
 \setkomafont{captionlabel}{%
   \usekomafont{descriptionlabel}%
@@ -68,7 +58,7 @@
 
 \setmathfont[Scale=MatchUppercase]{TeX Gyre DejaVu Math}
 
-\fi
+% \fi
 
 % --- Layout definitions ---
 
@@ -189,7 +179,7 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 
 % --- Misc PGF/TikZ style definitions ---
 
-\tikzset{memory layout/.style={fill=yellow!10,draw}}
+\tikzset{memory layout/.style={fill=gray!10,draw}}
 \tikzset{inactive layout/.style={text=black!60}}
 
 % --- Style definitions for bit layout charts ---
@@ -300,10 +290,10 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 % ------------------------------------------------------------
 \begin{document}
 
-\newcommand{\myTitle}{\crexx{} Principles of Operation}
+\newcommand{\myTitle}{\fontspec[Scale=1.4]{TeX Gyre Termes}\crexx{} Principles of Operation}
 
 \begin{DIFnomarkup}
-\title{\myTitle}
+\title{\myTitle}\fontspec{TeX Gyre Pagella}
 \subtitle{Version \Version}
 
 \author{Mike Grossmann \and Peter Jacobs \and René Vincent Jansen%
@@ -337,15 +327,6 @@ The \crexx{} language is a further development, and version of the
 document the workings of this implementation and serves as reference
 for users and implementors alike.
 
-% The \ABINAME{} supplement to the Executable and Linkage
-% Format Application Binary Interface (or ELF ABI) defines a system
-% interface for compiled application programs.  Its purpose is to
-% establish a standard binary interface for application programs on
-% Linux\textregistered{} for \ARCH{}\textregistered{} systems.
-
-% This book is a supplement to the generic ``System V Application Binary
-% Interface'' and should be read in conjunction with it.
-
 \section*{History}
 
 \begin{description}
@@ -353,7 +334,7 @@ for users and implementors alike.
   release, Q1 2022 and is intended for developers only. It documents
   the RXAS instruction set and \crexx{} level B, which is a typed
   subset of Classic Rexx.
-\item[f29] First version, Git feature F0029]
+\item[f29] First version, Git feature [F0029]
 \end{description}
 
 \chapter{Low-Level System Information}
@@ -372,7 +353,7 @@ the \emph{rxas} assembler.
 
 % \section{Machine Interface}
 This section describes the processor-specific information for
-\emph{RXVM} processors. The instruction set can be seen as the ISA
+RXVM processors. The instruction set can be seen as the ISA
 (instruction set architecture) for
 an RXVM processor, of which the microcode is implemented in the C99 language.
 
@@ -380,7 +361,7 @@ an RXVM processor, of which the microcode is implemented in the C99 language.
 \index{processor architecture}
 \index{instruction set}
 Programs intended to execute directly on the processor use the
-\emph{RXVM} instruction set and the
+RXVM instruction set and the
 instruction encoding and semantics of this architecture.
 
 An application program can assume that all instructions defined by the
@@ -5381,6 +5362,7 @@ for the first delivery.
 %   2019
 \end{thebibliography}
 
+\fontspec{TeX Gyre Pagella}
 \printindex
 
 \end{document}
