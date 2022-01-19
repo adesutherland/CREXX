@@ -18,29 +18,44 @@
 typedef struct stack_frame stack_frame;
 
 struct stack_frame {
+    stack_frame *prev_free;
     stack_frame *parent;
     bin_space *module;
     void *return_inst;
     bin_code *return_pc;
     value **return_reg;
+    size_t locals_buffer_size;
     size_t number_locals;
-//    var_pool pool;
     value *locals[1]; /* Must be last member */
 };
 /* Macros */
 
 /* Stack Frame Factory */
-static RX_INLINE stack_frame *frame_f(module *program, proc_constant *procedure, int no_args,
-                     stack_frame *parent, bin_code *return_pc,
-                     void *return_inst,
-                     value **return_reg) {
+static RX_INLINE stack_frame *frame_f(
+                    module *program,
+                    proc_constant *procedure,
+                    int no_args,
+                    stack_frame *parent,
+                    bin_code *return_pc,
+                    void *return_inst,
+                    value **return_reg,
+                    stack_frame **frame_free_list,
+                    value **value_free_list) {
     stack_frame *this;
     int num_locals;
     int i, j;
 
     num_locals = procedure->locals + procedure->module->globals + no_args + 1;
-    this = (stack_frame *) calloc(1, sizeof(stack_frame)
-                                     + (sizeof(value *) * (num_locals)));
+
+    if (*frame_free_list && (*frame_free_list)->locals_buffer_size >= num_locals) {
+        this = *frame_free_list;
+        *frame_free_list = this->prev_free;
+    }
+    else {
+        this = (stack_frame *) malloc( sizeof(stack_frame)
+                                     + (sizeof(value *) * (num_locals * 2)));
+        this->locals_buffer_size = num_locals * 2;
+    }
     this->parent = parent;
     this->return_inst = return_inst;
     this->return_pc = return_pc;
@@ -50,7 +65,7 @@ static RX_INLINE stack_frame *frame_f(module *program, proc_constant *procedure,
 
     /* Locals */
     for (i = 0; i < procedure->locals; i++) {
-        this->locals[i] = value_int_f(this, 0);
+        this->locals[i] = value_int_f(this, 0, value_free_list);
     }
 
     /* Globals */
@@ -62,12 +77,10 @@ static RX_INLINE stack_frame *frame_f(module *program, proc_constant *procedure,
 }
 
 /* Free Stack Frame */
-static RX_INLINE void free_frame(stack_frame *frame) {
-    /* TODO Free Variable Pool */
-    int l;
-    for (l = 0; l < frame->number_locals; l++)
-        free_value(frame, frame->locals[l]);
-    free(frame);
+static RX_INLINE void free_frame(stack_frame *frame, stack_frame **frame_free_list) {
+    /* Add to free list */
+    frame->prev_free = *frame_free_list;
+    *frame_free_list = frame;
 }
 
 int gettimeofday (struct timeval *__restrict __p, void *__restrict __tz);
@@ -78,13 +91,11 @@ int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
     size_t i, j;
-
- // todo: correct location?
+    stack_frame *frame_free_list = 0;
+    value *value_free_list = 0;
     struct timeval tv;
     struct timezone tz;
     time_t	ctime;
-// end of time definitions
-
     struct tm *tmdata;
     int rc = 0;
     int mod_index;
@@ -150,7 +161,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
                         program[mod_index]
                                 .globals[((expose_reg_constant *) c_entry)
                                 ->global_reg] =
-                                value_int_f(program[mod_index].globals, 0);
+                                value_int_f(program[mod_index].globals, 0, &value_free_list);
                         if (add_node(&exposed_reg_tree,
                                      ((expose_reg_constant *) c_entry)->index,
                                      (size_t) (program[mod_index]
@@ -234,7 +245,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
         for (i = 0; i < program[mod_index].segment.globals; i++) {
             if (!program[mod_index].globals[i])
                 program[mod_index].globals[i] =
-                        value_int_f(program[mod_index].globals, 0);
+                        value_int_f(program[mod_index].globals, 0, &value_free_list);
         }
     }
 
@@ -276,13 +287,13 @@ int run(int num_modules, module *program, int argc, char *argv[],
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
+            current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0, &frame_free_list, &value_free_list);
     /* Arguments */
     current_frame->locals[current_frame->module->globals + procedure->locals] =
-            value_int_f(current_frame, argc);
+            value_int_f(current_frame, argc, &value_free_list);
     for (i = 0, j = current_frame->module->globals + procedure->locals + 1;
             i < argc; i++, j++) {
-        current_frame->locals[j] = value_nullstring_f(current_frame, argv[i]);
+        current_frame->locals[j] = value_nullstring_f(current_frame, argv[i], &value_free_list);
     }
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n",
@@ -441,18 +452,19 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI + op3I);
             DISPATCH;
 
-        START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1);
+        START_INSTRUCTION(
+                _FUNC) CALC_DISPATCH(1);
             p1 = PROC_OP(1); /* This is the target */
             /* New stackframe */
             current_frame = frame_f(program, p1, 0, current_frame, next_pc,
-                                    next_inst, 0);
+                                    next_inst, 0, &frame_free_list, &value_free_list);
             DEBUG("TRACE - CALL %s()\n", p1->name);
             /* Prepare dispatch to procedure as early as possible */
             next_pc = &(current_frame->module->binary[p1->start]);
             CALC_DISPATCH_MANUAL;
             /* Arguments - none */
             current_frame->locals[current_frame->module->globals + p1->locals] =
-                    value_int_f(current_frame, 0);
+                    value_int_f(current_frame, 0, &value_free_list);
             /* This gotos the start of the called procedure */
             DISPATCH;
 
@@ -460,18 +472,18 @@ START_OF_INSTRUCTIONS ;
             v1 = op1R;
             p2 = PROC_OP(2); /* This is the target */
             /* Clear target return value register */
-            free_value(current_frame, v1);
+            free_value(current_frame, v1, &value_free_list);
             op1R = 0;
             /* New stackframe */
             current_frame = frame_f(program, p2, 0, current_frame, next_pc,
-                                    next_inst, &(op1R));
+                                    next_inst, &(op1R), &frame_free_list, &value_free_list);
             DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), p2->name);
             /* Prepare dispatch to procedure as early as possible */
             next_pc = &(current_frame->module->binary[p2->start]);
             CALC_DISPATCH_MANUAL;
             /* Arguments - none */
             current_frame->locals[current_frame->module->globals + p2->locals] =
-                    value_int_f(current_frame, 0);
+                    value_int_f(current_frame, 0, &value_free_list);
             /* This gotos the start of the called procedure */
             DISPATCH;
 
@@ -484,7 +496,7 @@ START_OF_INSTRUCTIONS ;
             current_frame =
                     frame_f(program, p2, (int) v3->int_value, current_frame,
                             next_pc,
-                            next_inst, &(op1R));
+                            next_inst, &(op1R),&frame_free_list, &value_free_list);
 
             DEBUG("TRACE - CALL R%llu,%s,R%llu\n", REG_IDX(1),
                   p2->name, REG_IDX(3));
@@ -511,7 +523,9 @@ START_OF_INSTRUCTIONS ;
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            free_frame(temp_frame);
+            for (i = 0; i < temp_frame->number_locals; i++)
+                free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+            free_frame(temp_frame,&frame_free_list);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 rc = 0;
@@ -532,7 +546,7 @@ START_OF_INSTRUCTIONS ;
                      * two registers pointing to the same value */
                     /* OPTIMISATION RULE - Avoid returning argument registers */
                     *(current_frame->return_reg) =
-                            value_f(current_frame->parent);
+                            value_f(current_frame->parent, &value_free_list);
                     copy_value(*(current_frame->return_reg),v1);
                 }
                 else {
@@ -545,7 +559,9 @@ START_OF_INSTRUCTIONS ;
             temp_frame = current_frame;
             current_frame = current_frame->parent;
             if (!current_frame) rc = (int) v1->int_value; /* Exiting - grab the int rc */
-            free_frame(temp_frame);
+            for (i = 0; i < temp_frame->number_locals; i++)
+                free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+            free_frame(temp_frame,&frame_free_list);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 goto interprt_finished;
@@ -562,11 +578,13 @@ START_OF_INSTRUCTIONS ;
             if (current_frame->return_reg)
                 *(current_frame->return_reg) =
                         value_int_f(current_frame->parent,
-                                    i1);
+                                    i1, &value_free_list);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            free_frame(temp_frame);
+            for (i = 0; i < temp_frame->number_locals; i++)
+                free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+            free_frame(temp_frame,&frame_free_list);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 rc = (int) i1;
@@ -587,11 +605,13 @@ START_OF_INSTRUCTIONS ;
             /* Set the result register */
             if (current_frame->return_reg)
                 *(current_frame->return_reg) =
-                        value_float_f(current_frame->parent, f1);
+                        value_float_f(current_frame->parent, f1, &value_free_list);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            free_frame(temp_frame);
+            for (i = 0; i < temp_frame->number_locals; i++)
+                free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+            free_frame(temp_frame,&frame_free_list);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 rc = 0;
@@ -614,11 +634,13 @@ START_OF_INSTRUCTIONS ;
             /* Set the result register */
             if (current_frame->return_reg)
                 *(current_frame->return_reg) =
-                        value_conststring_f(current_frame->parent, s1);
+                        value_conststring_f(current_frame->parent, s1, &value_free_list);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            free_frame(temp_frame);
+            for (i = 0; i < temp_frame->number_locals; i++)
+                free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+            free_frame(temp_frame,&frame_free_list);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 rc = 0;
@@ -629,7 +651,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2); /* Deprecated */
             DEBUG("TRACE - MOVE R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
             /* v1 needs to be deallocated */
-            free_value(current_frame, op1R);
+            free_value(current_frame, op1R, &value_free_list);
             /* Now move the register; if op2 is null, well so be it, no harm done */
             op1R = op2R;
             op2R = NULL;
@@ -1971,7 +1993,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(AMAP_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - AMAP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             /* v1 may need to be deallocated */
-            free_value(current_frame, op1R);
+            free_value(current_frame, op1R, &value_free_list);
             op1R =
                     current_frame->locals[op2RI +
                                           current_frame->module->globals +
@@ -1985,7 +2007,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(AMAP_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - AMAP R%d,%d\n", (int)REG_IDX(1), (int)op2I);
             /* v1 may need to be deallocated */
-            free_value(current_frame, op1R);
+            free_value(current_frame, op1R, &value_free_list);
             op1R = REG_VAL(op2I);
             DISPATCH;
 
@@ -2811,17 +2833,28 @@ START_OF_INSTRUCTIONS ;
     /* Deallocate Frames */
     while (current_frame) {
         temp_frame = current_frame->parent;
-        free_frame(current_frame);
+        for (i = 0; i < temp_frame->number_locals; i++)
+            free_value(temp_frame, temp_frame->locals[i], &value_free_list);
+        free_frame(current_frame,&frame_free_list);
         current_frame = temp_frame;
+    }
+    /* Actually free memory from free list */
+    while (frame_free_list) {
+        temp_frame = frame_free_list->prev_free;
+        free(frame_free_list);
+        frame_free_list = temp_frame;
     }
 
     /* Deallocate Globals */
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
         for (i = 0; i < program[mod_index].segment.globals; i++) {
             free_value(program[mod_index].globals,
-                       program[mod_index].globals[i]);
+                       program[mod_index].globals[i], &value_free_list);
         }
     }
+
+    /* Actually remove memory from values/registers */
+    remove_free_values(&value_free_list);
 
 #ifndef NDEBUG
     if (debug_mode) printf("Interpreter Finished\n");

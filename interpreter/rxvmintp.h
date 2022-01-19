@@ -21,6 +21,8 @@ typedef union {
 } value_type;
 
 struct value {
+    value *prev_free; /* Free List */
+
     /* bit field to store value status - these are explicitly set (not automatic at all) */
     value_type status;
 

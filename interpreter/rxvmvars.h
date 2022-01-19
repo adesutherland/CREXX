@@ -15,24 +15,45 @@
 #include <ctype.h>
 #include <errno.h>
 
+/* value factory - multiple/array of values created */
+/*
+static RX_INLINE void array_value_f(value **array, int num, void* parent) {
+    int i;
+    value* this = malloc(num * sizeof(value));
+    for (i=0; i<num; i++) {
+        this[i].owner = parent;
+        this[i].string_value = 0;
+        array[i] = &(this[i]);
+    }
+}
+*/
+
 /* value factories */
-static RX_INLINE value* value_f(void* parent) {
-    value* this = calloc(1,sizeof(value)); /* Zeros data */
+static RX_INLINE value* value_f(void* parent, value **free_list) {
+    value* this;
+    if (*free_list) {
+        this = *free_list;
+        *free_list = this->prev_free;
+    }
+    else {
+        this = malloc(sizeof(value));
+        this->string_value = 0;
+    }
     this->owner = parent;
     return this;
 }
 
 /* value factories - int value */
-static RX_INLINE value* value_int_f(void* parent, rxinteger initial_value) {
-    value* this = calloc(1,sizeof(value)); /* Zeros data */
-    this->owner = parent;
+static RX_INLINE value* value_int_f(void* parent, rxinteger initial_value,
+                                    value **free_list) {
+    value* this = value_f(parent, free_list);
     this->int_value = initial_value;
     return this;
 }
 
-static RX_INLINE value* value_float_f(void* parent, double initial_value) {
-    value* this = calloc(1,sizeof(value)); /* Zeros data */
-    this->owner = parent;
+static RX_INLINE value* value_float_f(void* parent, double initial_value,
+                                      value **free_list) {
+    value* this = value_f(parent, free_list);
     this->float_value = initial_value;
     return this;
 }
@@ -52,13 +73,27 @@ static RX_INLINE size_t buffer_size(size_t value) {
     return value+1;
 }
 
+static RX_INLINE void prep_string_buffer(value *v, size_t length) {
+    v->string_length = length;
+    if (v->string_value) {
+        if (v->string_length > v->string_buffer_length) {
+            free(v->string_value);
+            v->string_buffer_length = buffer_size(v->string_length);
+            v->string_value = malloc(v->string_buffer_length);
+        }
+    }
+    else {
+        v->string_buffer_length = buffer_size(v->string_length);
+        v->string_value = malloc(v->string_buffer_length);
+    }
+}
+
 /* value factories - constant string value */
-static RX_INLINE value* value_conststring_f(void* parent, string_constant *initial_value) {
-    value* this = calloc(1,sizeof(value)); /* Zeros data */
-    this->owner = parent;
+static RX_INLINE value* value_conststring_f(void* parent, string_constant *initial_value,
+                                            value **free_list) {
+    value* this = value_f(parent, free_list);
     this->string_length = initial_value->string_len;
-    this->string_buffer_length = buffer_size(this->string_length);
-    this->string_value = malloc(this->string_buffer_length);
+    prep_string_buffer(this, this->string_length);
     memcpy(this->string_value, initial_value->string,  this->string_length);
     this->string_pos = 0;
 #ifndef NUTF8
@@ -69,12 +104,11 @@ static RX_INLINE value* value_conststring_f(void* parent, string_constant *initi
 }
 
 /* value factories - null string value */
-static RX_INLINE value* value_nullstring_f(void* parent, char *initial_value) {
-    value* this = calloc(1,sizeof(value)); /* Zeros data */
-    this->owner = parent;
+static RX_INLINE value* value_nullstring_f(void* parent, char *initial_value,
+                                           value **free_list) {
+    value* this = value_f(parent, free_list);
     this->string_length = strlen(initial_value);
-    this->string_buffer_length = buffer_size(this->string_length);
-    this->string_value = malloc(this->string_buffer_length);
+    prep_string_buffer(this, this->string_length);
     memcpy(this->string_value, initial_value,  this->string_length);
     this->string_pos = 0;
 #ifndef NUTF8
@@ -93,8 +127,18 @@ static RX_INLINE void clear_reg(value* reg) {
     return;
 }
 
-static RX_INLINE void free_value(void* parent, value *v) {
+static RX_INLINE void free_value(void* parent, value *v, value **free_list) {
     if (v && v->owner == parent) {
+        v->prev_free = *free_list;
+        *free_list = v;
+    }
+}
+
+static RX_INLINE void remove_free_values(value **free_list) {
+    value *v;
+    while (*free_list) {
+        v = *free_list;
+        *free_list = v->prev_free;
         if (v->string_value) free(v->string_value);
         free(v);
     }
@@ -180,21 +224,6 @@ static RX_INLINE void set_int(value *v, rxinteger value) {
 }
 static RX_INLINE void set_float(value *v, double value) {
     v->float_value = value;
-}
-
-static RX_INLINE void prep_string_buffer(value *v, size_t length) {
-    v->string_length = length;
-    if (v->string_value) {
-        if (v->string_length > v->string_buffer_length) {
-            free(v->string_value);
-            v->string_buffer_length = buffer_size(v->string_length);
-            v->string_value = malloc(v->string_buffer_length);
-        }
-    }
-    else {
-        v->string_buffer_length = buffer_size(v->string_length);
-        v->string_value = malloc(v->string_buffer_length);
-    }
 }
 
 static RX_INLINE void extend_string_buffer(value *v, size_t length) {
