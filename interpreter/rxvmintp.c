@@ -452,8 +452,7 @@ START_OF_INSTRUCTIONS ;
             REG_RETURN_INT(op2RI + op3I);
             DISPATCH;
 
-        START_INSTRUCTION(
-                _FUNC) CALC_DISPATCH(1);
+        START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1);
             p1 = PROC_OP(1); /* This is the target */
             /* New stackframe */
             current_frame = frame_f(program, p1, 0, current_frame, next_pc,
