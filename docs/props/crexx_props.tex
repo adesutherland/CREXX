@@ -1,7 +1,7 @@
 
 \documentclass[english,11pt,twoside,toc=bib,toc=idx]{scrreprt}
 \usepackage{scrhack}
-
+%\usepackage{bashful}
 % --- Version ---
 
 \newcommand{\Version}{0.29}
@@ -376,6 +376,23 @@ hardware.  A software implementation of the architecture conforms to
 the ABI; likewise, the architecture could be implemented in hardware,
 e.g. an FPGA.
 
+% this is just a test
+%% \directlua{ 
+%% function runcommand(cmd) 
+%% local fout = assert(io.popen(cmd, 'r')) 
+%% local str = assert(fout:read('*a')) 
+%% fout:close() 
+%% return str 
+%% end 
+
+%% local sout=runcommand("rxas -i") 
+%% local marg = assert(io.open("command.txt","w")) 
+%% marg:write(sout) 
+%% marg:flush() 
+%% marg:close() 
+%% } 
+%% \verbatiminput{command.txt} 
+
 \subsection{The Register}
 \index{register}
 RXVM is a Register based virtual machine, as opposed to a Stack based
@@ -438,40 +455,36 @@ typedef union {
     \matrix [memory layout, inner sep=0pt, nodes={inner sep=1ex},
     description/.style={text width=12em, text badly centered},
     cells={anchor=center}] (m) {
-      % \node {\texttt{\stackit{f6\\f4\\f2\\f0}}}; &
-      \node [description] {Floating-point argument register save area};
+      \node [description] {status};
       \\
       \coordinate (A);\\
-      % \path (0,1.5ex) node [above] (r15) {\texttt{r15}};
-      % \path (0,-1.5ex) node [below] (r7) {\texttt{r7}}; &
-      \node [description] {Other register save area};
+      \node [description] {int value};
       \\
       \coordinate (B);\\
-      % \path (0,1.5ex) node [above] (r6) {\texttt{r6}};
-      % \path (0,-1.5ex) node [below] (r2) {\texttt{r2}}; &
-      \node [description] {Argument register save area};
+      \node [description] {float value};
       \\
       \coordinate (C);\\
-      &
-      \node [description] {Unused};
+      \node [description] {*decimal value};
+      \\
+      \coordinate (D);\\
+      \node [description] {*string value};
+      \\
+      \coordinate (E);\\
+      \node [description] {string length};
+      \\
+      \coordinate (F);\\
+      \node [description] {string buffer length};
+      \\
+      \coordinate (G);\\
+      \node [description] {string pos};
+      \\
+      \coordinate (H);\\
+      \node [description] {*object value};
       \\
     };
-    % \draw [<->] (r7) -- (r15);
-    % \draw [<->] (r2) -- (r6);
-    \foreach \Node in {A, B, C} {
+    \foreach \Node in {A, B, C, D, E, F, G, H} {
       \draw (\Node -| m.west) -- (\Node -| m.east);
     };
-    % \ifzseries
-    % \foreach \where/\offs in {m.north/160, A/128, B/56, C/16, m.south/8} {
-    %   \path (\where -| m.west) +(-1ex,0)
-    %   node [left] {\texttt{\offs}};
-    % }
-    % \else
-    % \foreach \where/\offs in {m.north/96, A/64, B/28, C/8, m.south/4} {
-    %   \path (\where -| m.west) +(-1ex,0)
-    %   node [left] {\texttt{\offs}};
-    % }
-    % \fi
   \end{tikzpicture}
 
 \subsubsection{Operand Types}
