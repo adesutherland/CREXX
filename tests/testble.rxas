@@ -1,0 +1,33 @@
+/*
+ * rexx TESTBLE branch if op2>op3 to op1
+ */
+.globals=0
+main()  .locals=8
+
+   load r1,"Test BLE with reg reg"
+   say r1
+   load r2,12
+   load r3,10
+loop:
+   ble  endloop,r2,r3
+   dec  r2
+   itos r2
+   say  r2
+   br   loop
+endloop:
+   load r1,"Endloop reached"
+   say r1
+   load r1,"Test BLE with int"
+   say r1
+   load r2,7
+loop2:
+   ble  endloop2,r2,5
+   dec  r2
+   itos r2
+   say  r2
+   br   loop2
+endloop2:
+   load r1,"Endloop reached"
+   say r1
+
+   ret
