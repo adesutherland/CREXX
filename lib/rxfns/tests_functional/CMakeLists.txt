@@ -120,7 +120,6 @@ foreach(_binfile ${REXXBINS})
 
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
           OUTPUT ${_binfile}
-          COMMENT "cREXX compile and assemble ${_basename} ..."
   )
   add_test(NAME ${_basename} COMMAND rxvm ${_basename} ${LIBRPATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
