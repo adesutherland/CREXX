@@ -30,7 +30,6 @@ set(REXXBINS
   ts_sign.rexx
   ts_space.rexx
   ts_strip.rexx
-  ts_substring.rexx
   ts_test.rexx
   ts_time.rexx
   ts_translate.rexx
@@ -50,6 +49,61 @@ set(REXXBINS
   tsword.rexx
         )
 
+set(LIBRPATH
+    ../rexx/substr
+    ../rexx/length
+    ../rexx/raise
+    ../rexx/linesize
+    ../rexx/abbrev
+    ../rexx/x2d
+    ../rexx/x2c
+    ../rexx/x2b
+    ../rexx/d2b
+    ../rexx/d2c    
+    ../rexx/d2x
+    ../rexx/c2x    
+    ../rexx/center
+    ../rexx/changestr
+    ../rexx/delstr
+    ../rxas/right
+    ../rxas/left    
+    ../rxas/copies
+    ../rxas/_elapsed    
+    ../rxas/pos
+    ../rxas/lastpos
+    ../rxas/reverse
+    ../rexx/centre
+    ../rexx/compare
+    ../rexx/countstr
+    ../rexx/insert
+    ../rexx/lower
+    ../rexx/min
+    ../rexx/max    
+    ../rexx/date
+    ../rexx/time
+    ../rexx/_datei
+    ../rexx/_dateo
+    ../rexx/_jdn
+    ../rexx/_itrunc
+    ../rexx/_ftrunc    
+    ../rexx/delword
+    ../rexx/wordlength
+    ../rexx/wordpos    
+    ../rexx/format
+    ../rexx/overlay
+    ../rexx/sign
+    ../rexx/space
+    ../rexx/strip    
+    ../rexx/translate    
+    ../rexx/trunc
+    ../rexx/upper    
+    ../rexx/verify
+    ../rxas/word
+    ../rxas/words    
+    ../rxas/wordindex
+
+    )
+
 add_custom_target(tests_rexx ALL
         DEPENDS ${REXXBINS})
 
@@ -68,7 +122,7 @@ foreach(_binfile ${REXXBINS})
           OUTPUT ${_binfile}
           COMMENT "cREXX compile and assemble ${_basename} ..."
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename} COMMAND rxvm ${_basename} ${LIBRPATH}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 endforeach()
