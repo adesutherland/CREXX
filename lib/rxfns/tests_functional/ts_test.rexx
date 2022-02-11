@@ -1,6 +1,6 @@
 /* rexx test abs bif */
 options levelb
-
+/* TODO */
 a="This is René's test case   "
 b="     This is René's test case"
 say '"Test case A "'a'"'

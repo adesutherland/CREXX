@@ -10,23 +10,55 @@ options levelb
 /* say "'"strip("-----The quick brown fox jumps over the lazy dog---",'t','-')"'" */
 
 /* STRIP */
-say "Look for STRIP OK"
+errors=0
 /* These from the Rexx book. */
-if strip(' ab c ') \= 'ab c' then say 'failed in test 1 '
-if strip(' ab c ','L') \= 'ab c ' then say 'failed in test 2 '
-if strip(' ab c ','t') \= ' ab c' then say 'failed in test 3 '
-if strip('12.7000',,0) \= '12.7' then say 'failed in test 4 '
-if strip('0012.7000',,0) \= '12.7' then say 'failed in test 5 '
+if strip(' ab c ') \= 'ab c' then do
+  errors=errors+1
+  say 'STRIP failed in test 1 '
+end
+if strip(' ab c ','L') \= 'ab c ' then do
+  errors=errors+1
+  say 'STRIP failed in test 2 '
+end
+if strip(' ab c ','t') \= ' ab c' then do
+  errors=errors+1
+  say 'STRIP failed in test 3 '
+end
+if strip('12.7000',,0) \= '12.7' then do
+  errors=errors+1
+  say 'STRIP failed in test 4 '
+end
+if strip('0012.7000',,0) \= '12.7' then do
+  errors=errors+1
+  say 'STRIP failed in test 5 '
+end
 /* These from Mark Hessling. */
-if strip(" foo bar ") \= "foo bar" then say 'failed in test 6 '
-if strip(" foo bar ",'L') \= "foo bar " then say 'failed in test 7 '
-if strip(" foo bar ",'T') \= " foo bar" then say 'failed in test 8 '
-if strip(" foo bar ",'B') \= "foo bar" then say 'failed in test 9 '
-if strip(" foo bar ",'B','*') \= " foo bar " then say 'failed in test 10 '
-if strip(" foo bar",,'r') \= " foo ba" then say 'failed in test 11 '
-say "STRIP OK"
+if strip(" foo bar ") \= "foo bar" then do
+  errors=errors+1
+  say 'STRIP failed in test 6 '
+end
+if strip(" foo bar ",'L') \= "foo bar " then do
+  errors=errors+1
+  say 'STRIP failed in test 7 '
+end
+if strip(" foo bar ",'T') \= " foo bar" then do
+  errors=errors+1
+  say 'STRIP failed in test 8 '
+end
+if strip(" foo bar ",'B') \= "foo bar" then do
+  errors=errors+1
+  say 'STRIP failed in test 9 '
+end
+if strip(" foo bar ",'B','*') \= " foo bar " then do
+  errors=errors+1
+  say 'STRIP failed in test 10 '
+end
+if strip(" foo bar",,'r') \= " foo ba" then do
+  errors=errors+1
+  say 'STRIP failed in test 11 '
+end
 
-return
+return errors<>0
 
 /* strip()  */
 strip: procedure = .string
