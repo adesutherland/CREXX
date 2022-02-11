@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.00)
 
+project(test_bifs)
+
 enable_testing()
 find_program(CTEST ctest)
 

@@ -1,8 +1,9 @@
 /* rexx test abs bif */
 options levelb
 /* RXVM ts_format format right left _itrunc _ftrunc copies pos substr length */
+/* TODO */
+errors=0
 
-say "test Format"
 say 'format(-31415921111111,,4,1,1) "'format(-31415921111111.6,,4,1,1)'"'
 say 'format(-31415.92111111,,4,1,1) "'format(-31415.9211111116,,4,5,1)'"'
 /* Samples taken from the Regina manual, some seem wrong */
