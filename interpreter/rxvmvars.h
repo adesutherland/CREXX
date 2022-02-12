@@ -15,46 +15,33 @@
 #include <ctype.h>
 #include <errno.h>
 
-/* value factory - multiple/array of values created */
-/*
-static RX_INLINE void array_value_f(value **array, int num, void* parent) {
-    int i;
-    value* this = malloc(num * sizeof(value));
-    for (i=0; i<num; i++) {
-        this[i].owner = parent;
-        this[i].string_value = 0;
-        array[i] = &(this[i]);
-    }
+/* Zeros a register value */
+static RX_INLINE void value_zero(value *v) {
+    v->status.all_type_flags = 0;
+    v->int_value = 0;
+    v->float_value = 0;
+    v->decimal_value = 0;
+    v->string_length = 0;
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_chars = 0;
+    v->string_char_pos = 0;
+#endif
+    v->object_value = 0;
 }
-*/
 
-/* value factories */
-static RX_INLINE value* value_f(void* parent, value **free_list) {
+/* Setup a new value structure */
+static RX_INLINE void value_init(value *v) {
+    v->string_value = v->small_string_buffer;
+    v->string_buffer_length = sizeof(v->small_string_buffer);
+    value_zero(v);
+}
+
+/* Value Factory mallocs and inits */
+static RX_INLINE value* value_f() {
     value* this;
-    if (*free_list) {
-        this = *free_list;
-        *free_list = this->prev_free;
-    }
-    else {
-        this = malloc(sizeof(value));
-        this->string_value = 0;
-    }
-    this->owner = parent;
-    return this;
-}
-
-/* value factories - int value */
-static RX_INLINE value* value_int_f(void* parent, rxinteger initial_value,
-                                    value **free_list) {
-    value* this = value_f(parent, free_list);
-    this->int_value = initial_value;
-    return this;
-}
-
-static RX_INLINE value* value_float_f(void* parent, double initial_value,
-                                      value **free_list) {
-    value* this = value_f(parent, free_list);
-    this->float_value = initial_value;
+    this = malloc(sizeof(value));
+    value_init(this);
     return this;
 }
 
@@ -75,73 +62,31 @@ static RX_INLINE size_t buffer_size(size_t value) {
 
 static RX_INLINE void prep_string_buffer(value *v, size_t length) {
     v->string_length = length;
-    if (v->string_value) {
-        if (v->string_length > v->string_buffer_length) {
-            free(v->string_value);
-            v->string_buffer_length = buffer_size(v->string_length);
-            v->string_value = malloc(v->string_buffer_length);
-        }
-    }
-    else {
+    if (v->string_length > v->string_buffer_length) {
+        if (v->string_value != v->small_string_buffer) free(v->string_value);
         v->string_buffer_length = buffer_size(v->string_length);
         v->string_value = malloc(v->string_buffer_length);
     }
 }
 
-/* value factories - constant string value */
-static RX_INLINE value* value_conststring_f(void* parent, string_constant *initial_value,
-                                            value **free_list) {
-    value* this = value_f(parent, free_list);
-    this->string_length = initial_value->string_len;
-    prep_string_buffer(this, this->string_length);
-    memcpy(this->string_value, initial_value->string,  this->string_length);
-    this->string_pos = 0;
-#ifndef NUTF8
-    this->string_char_pos = 0;
-    this->string_chars = initial_value->string_chars;
-#endif
-    return this;
+static RX_INLINE void extend_string_buffer(value *v, size_t length) {
+    v->string_length = length;
+    if (v->string_length > v->string_buffer_length) {
+        v->string_buffer_length = buffer_size(v->string_length);
+        if (v->string_value == v->small_string_buffer) {
+            v->string_value = malloc(v->string_buffer_length);
+            memcpy(v->string_value, v->small_string_buffer, sizeof(v->small_string_buffer));
+        }
+        else {
+            v->string_value = realloc(v->string_value, v->string_buffer_length);
+        }
+    }
 }
 
-/* value factories - null string value */
-static RX_INLINE value* value_nullstring_f(void* parent, char *initial_value,
-                                           value **free_list) {
-    value* this = value_f(parent, free_list);
-    this->string_length = strlen(initial_value);
-    prep_string_buffer(this, this->string_length);
-    memcpy(this->string_value, initial_value,  this->string_length);
-    this->string_pos = 0;
-#ifndef NUTF8
-    this->string_char_pos = 0;
-    this->string_chars = utf8nlen(this->string_value, this->string_length);
-#endif
-    return this;
-}
-
-/* Clears a register */
-static RX_INLINE void clear_reg(value* reg) {
-    void* parent = reg->owner;
-    if (reg->string_value) free(reg->string_value);
-    memset(reg, 0, sizeof(value));
-    reg->owner = parent;
+/* Clears a value of all its children and other malloced buffers */
+static RX_INLINE void clear_value(value* v) {
+    if (v->string_value != v->small_string_buffer) free(v->string_value);
     return;
-}
-
-static RX_INLINE void free_value(void* parent, value *v, value **free_list) {
-    if (v && v->owner == parent) {
-        v->prev_free = *free_list;
-        *free_list = v;
-    }
-}
-
-static RX_INLINE void remove_free_values(value **free_list) {
-    value *v;
-    while (*free_list) {
-        v = *free_list;
-        *free_list = v->prev_free;
-        if (v->string_value) free(v->string_value);
-        free(v);
-    }
 }
 
 /* Int Flag */
@@ -226,20 +171,6 @@ static RX_INLINE void set_float(value *v, double value) {
     v->float_value = value;
 }
 
-static RX_INLINE void extend_string_buffer(value *v, size_t length) {
-    v->string_length = length;
-    if (v->string_value) {
-        if (v->string_length > v->string_buffer_length) {
-            v->string_buffer_length = buffer_size(v->string_length);
-            v->string_value = realloc(v->string_value, v->string_buffer_length);
-        }
-    }
-    else {
-        v->string_buffer_length = buffer_size(v->string_length);
-        v->string_value = malloc(v->string_buffer_length);
-    }
-}
-
 static RX_INLINE void set_string(value *v, char *value, size_t length) {
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
@@ -247,6 +178,17 @@ static RX_INLINE void set_string(value *v, char *value, size_t length) {
 #ifndef NUTF8
     v->string_char_pos = 0;
     v->string_chars = utf8nlen(v->string_value, v->string_length); /* SLOW! */
+#endif
+}
+
+/* set value string from null string value */
+static RX_INLINE void set_null_string(value *v, char *from) {
+    prep_string_buffer(v, strlen(from));
+    memcpy(v->string_value, from, v->string_length);
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_char_pos = 0;
+    v->string_chars = utf8nlen(v->string_value, v->string_length);
 #endif
 }
 
@@ -270,12 +212,16 @@ static RX_INLINE void set_value_string(value *v, value *from) {
 #endif
 }
 
-static RX_INLINE void set_buffer_string(value *v, char *buffer, size_t length, size_t buffer_length
+static RX_INLINE void set_buffer_string(
+        value *v,
+        char *buffer,
+        size_t length,
+        size_t buffer_length
 #ifndef NUTF8
-  , size_t string_chars
+        , size_t string_chars
 #endif
 ) {
-    if (v->string_value) free(v->string_value);
+    if (v->string_value != v->small_string_buffer) free(v->string_value);
     v->string_value = buffer;
     v->string_length = length;
     v->string_buffer_length = buffer_length;
@@ -292,34 +238,94 @@ static RX_INLINE void copy_value(value *dest, value *source) {
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
     dest->decimal_value = source->decimal_value;
-    dest->string_pos = source->string_pos;
-    dest->string_length = source->string_length;
-#ifndef NUTF8
-    dest->string_chars = source->string_chars;
-    dest->string_char_pos = source->string_char_pos;
-#endif
     dest->object_value = source->object_value; /* TODO */
-    /* Copy String Data */
-    if (dest->string_length) {
-        prep_string_buffer(dest, dest->string_length);
+
+    if (source->string_length) {
+        /* Copy String Data */
+        prep_string_buffer(dest, source->string_length);
+        dest->string_pos = source->string_pos;
+#ifndef NUTF8
+        dest->string_chars = source->string_chars;
+        dest->string_char_pos = source->string_char_pos;
+#endif
         memcpy(dest->string_value, source->string_value, dest->string_length);
     }
-    else dest->string_value = 0;
+    else {
+        dest->string_length = 0;
+        dest->string_pos = 0;
+#ifndef NUTF8
+        dest->string_chars = 0;
+        dest->string_char_pos = 0;;
+#endif
+    }
+}
+
+/* Move a value */
+static RX_INLINE void move_value(value *dest, value *source) {
+    dest->status.all_type_flags = source->status.all_type_flags;
+    dest->int_value = source->int_value;
+    dest->float_value = source->float_value;
+    dest->decimal_value = source->decimal_value;
+    dest->object_value = source->object_value; /* TODO */
+
+    if (source->string_length) {
+        if (source->string_value == source->small_string_buffer) {
+            /* Copy String Data */
+            prep_string_buffer(dest, source->string_length);
+            dest->string_pos = source->string_pos;
+#ifndef NUTF8
+            dest->string_chars = source->string_chars;
+            dest->string_char_pos = source->string_char_pos;
+#endif
+            memcpy(dest->string_value, source->string_value,
+                   dest->string_length);
+        }
+        else {
+            /* Move String Data */
+            if (dest->string_value != dest->small_string_buffer)
+                free(dest->string_value);
+            dest->string_value = source->string_value;
+            dest->string_length = source->string_length;
+            dest->string_pos = source->string_pos;
+#ifndef NUTF8
+            dest->string_chars = source->string_chars;
+            dest->string_char_pos = source->string_char_pos;
+#endif
+        }
+    }
+    else {
+        dest->string_length = 0;
+        dest->string_pos = 0;
+#ifndef NUTF8
+        dest->string_chars = 0;
+        dest->string_char_pos = 0;;
+#endif
+    }
+
+    /* Reset source */
+    value_init(source);
 }
 
 /* Copy string value */
 static RX_INLINE void copy_string_value(value *dest, value *source) {
-    dest->string_pos = source->string_pos;
-    dest->string_length = source->string_length;
+    if (source->string_length) {
+        /* Copy String Data */
+        prep_string_buffer(dest, source->string_length);
+        dest->string_pos = source->string_pos;
 #ifndef NUTF8
-    dest->string_chars = source->string_chars;
-    dest->string_char_pos = source->string_char_pos;
+        dest->string_chars = source->string_chars;
+        dest->string_char_pos = source->string_char_pos;
 #endif
-    if (dest->string_length) {
-        prep_string_buffer(dest, dest->string_length);
         memcpy(dest->string_value, source->string_value, dest->string_length);
     }
-    else dest->string_value = 0;
+    else {
+        dest->string_length = 0;
+        dest->string_pos = 0;
+#ifndef NUTF8
+        dest->string_chars = 0;
+        dest->string_char_pos = 0;;
+#endif
+    }
 }
 
 /* Compares two strings. returns -1, 0, 1 as appropriate */
@@ -372,106 +378,205 @@ static RX_INLINE void string_sappend(value *v1, value *v2) {
 static RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v2 || v1 == v3) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string_value, v2->string_length);
-    memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
-    v1->string_pos = 0;
+        memcpy(buffer, v2->string_value, v2->string_length);
+        memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
 
 #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
+        set_buffer_string(v1, buffer, len, buffer_len);
 #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
-    v1->string_char_pos = 0;
+        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+        v1->string_char_pos = 0;
 #endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+        memcpy(v1->string_value, v2->string_value, v2->string_length);
+        memcpy(v1->string_value + v2->string_length, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 static RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v2 || v1 == v3) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string_value, v2->string_length);
-    buffer[v2->string_length] = ' ';
-    memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
-    v1->string_pos = 0;
-
-    #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
-    #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
-    v1->string_char_pos = 0;
-    #endif
+        memcpy(buffer, v2->string_value, v2->string_length);
+        buffer[v2->string_length] = ' ';
+        memcpy(buffer + v2->string_length + 1, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
+#ifdef NUTF8
+        set_buffer_string(v1, buffer, len, buffer_len);
+#else
+        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+        v1->string_char_pos = 0;
+#endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+        memcpy(v1->string_value, v2->string_value, v2->string_length);
+        v1->string_value[v2->string_length] = ' ';
+        memcpy(v1->string_value + v2->string_length + 1, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 static RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v2) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string_value, v2->string_length);
-    memcpy(buffer + v2->string_length, v3->string, v3->string_len);
-    v1->string_pos = 0;
+        memcpy(buffer, v2->string_value, v2->string_length);
+        memcpy(buffer + v2->string_length, v3->string, v3->string_len);
+        v1->string_pos = 0;
 
 #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
+        set_buffer_string(v1, buffer, len, buffer_len);
 #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
-    v1->string_char_pos = 0;
+        set_buffer_string(v1, buffer, len, buffer_len,
+                          v2->string_chars + v3->string_chars);
+        v1->string_char_pos = 0;
 #endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+        memcpy(v1->string_value, v2->string_value, v2->string_length);
+        memcpy(v1->string_value + v2->string_length, v3->string, v3->string_len);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 static RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len + 1;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v2) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string_value, v2->string_length);
-    buffer[v2->string_length] = ' ';
-    memcpy(buffer + v2->string_length + 1, v3->string, v3->string_len);
-    v1->string_pos = 0;
+        memcpy(buffer, v2->string_value, v2->string_length);
+        buffer[v2->string_length] = ' ';
+        memcpy(buffer + v2->string_length + 1, v3->string, v3->string_len);
+        v1->string_pos = 0;
 
 #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
+        set_buffer_string(v1, buffer, len, buffer_len);
 #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
-    v1->string_char_pos = 0;
+        set_buffer_string(v1, buffer, len, buffer_len,
+                          v2->string_chars + v3->string_chars + 1);
+        v1->string_char_pos = 0;
 #endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+        memcpy(v1->string_value, v2->string_value, v2->string_length);
+        v1->string_value[v2->string_length] = ' ';
+        memcpy(v1->string_value + v2->string_length + 1, v3->string, v3->string_len);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 static RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v3) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string, v2->string_len);
-    memcpy(buffer + v2->string_len, v3->string_value, v3->string_length);
-    v1->string_pos = 0;
+        memcpy(buffer, v2->string, v2->string_len);
+        memcpy(buffer + v2->string_len, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
 
 #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
+        set_buffer_string(v1, buffer, len, buffer_len);
 #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
-    v1->string_char_pos = 0;
+        set_buffer_string(v1, buffer, len, buffer_len,
+                          v2->string_chars + v3->string_chars);
+        v1->string_char_pos = 0;
 #endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+
+        memcpy(v1->string_value, v2->string, v2->string_len);
+        memcpy(v1->string_value + v2->string_len, v3->string_value, v3->string_length);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 static RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
-    char *buffer = malloc(buffer_len);
+    char *buffer;
+    if (v1 == v3) {
+        /* Need to use a buffer */
+        buffer = malloc(buffer_len);
 
-    memcpy(buffer, v2->string, v2->string_len);
-    buffer[v2->string_len] = ' ';
-    memcpy(buffer + v2->string_len + 1, v3->string_value, v3->string_length);
-    v1->string_pos = 0;
+        memcpy(buffer, v2->string, v2->string_len);
+        buffer[v2->string_len] = ' ';
+        memcpy(buffer + v2->string_len + 1, v3->string_value,
+               v3->string_length);
+        v1->string_pos = 0;
 
 #ifdef NUTF8
-    set_buffer_string(v1, buffer, len, buffer_len);
+        set_buffer_string(v1, buffer, len, buffer_len);
 #else
-    set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
-    v1->string_char_pos = 0;
+        set_buffer_string(v1, buffer, len, buffer_len,
+                          v2->string_chars + v3->string_chars + 1);
+        v1->string_char_pos = 0;
 #endif
+    }
+    else {
+        /* Can write into v1 directly */
+        prep_string_buffer(v1, len);
+        memcpy(v1->string_value, v2->string, v2->string_len);
+        v1->string_value[v2->string_len] = ' ';
+        memcpy(v1->string_value + v2->string_len + 1, v3->string_value,
+               v3->string_length);
+        v1->string_pos = 0;
+#ifndef NUTF8
+        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_char_pos = 0;
+#endif
+    }
 }
 
 #ifndef NUTF8
@@ -486,9 +591,6 @@ static RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) 
      * - The end of the string, or
      * - from the existing string_pos
      */
-    size_t byte_from;
-    size_t char_from;
-    size_t gap;
     int diff;
 
     diff = (int)(new_string_char_pos - v->string_char_pos);

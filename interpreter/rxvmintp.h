@@ -8,6 +8,7 @@
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
+typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {
@@ -21,8 +22,6 @@ typedef union {
 } value_type;
 
 struct value {
-    value *prev_free; /* Free List */
-
     /* bit field to store value status - these are explicitly set (not automatic at all) */
     value_type status;
 
@@ -39,18 +38,29 @@ struct value {
     size_t string_char_pos;
 #endif
     void *object_value;
+    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
+};
 
-    /*
-     * Each value can either be owned by a stack frame or a variable pool
-     * The owner is responsible for freeing the value, but because value can
-     * be linked other stack frames and variable pools it is important that
-     * none of these free its memory when they are being freed themselves.
-     * The owner member is only used by parents to see if they are the real
-     * parent - if you like a paternity test!
-     * This also allows a value to be adopted by another parent (e.g. for a
-     * returned register from a procedure)
-     */
-    void *owner;
+/* Module Structure */
+typedef struct module {
+    bin_space segment;
+    char *name;
+    value **globals;
+} module;
+
+struct stack_frame {
+    stack_frame *prev_free;
+    stack_frame *parent;
+    module *module;
+    proc_constant *procedure;
+    void *return_inst;
+    bin_code *return_pc;
+    value *return_reg;
+    size_t number_locals;
+    size_t nominal_number_locals;
+    size_t number_args;
+    value **baselocals; /* Initial / base / fixed local pointers */
+    value **locals;   /* Locals pointer mapping (after swaps / links */
 };
 
 #ifdef NDEBUG  // RELEASE
@@ -90,8 +100,8 @@ struct value {
 #define INT_OP(n)                    (pc+(n))->iconst
 #define FLOAT_OP(n)                  (pc+(n))->fconst
 
-#define CONSTSTRING_OP(n)            (string_constant *)(current_frame->module->const_pool + (pc+(n))->index)
-#define PROC_OP(n)                   (proc_constant *)(current_frame->module->const_pool + (pc+(n))->index)
+#define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->module->const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->module->const_pool + (pc+(n))->index))
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
@@ -175,12 +185,6 @@ struct value {
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
 
-/* Module Structure */
-typedef struct module {
-        bin_space segment;
-        char *name;
-        value **globals;
-} module;
 
 /* Signals an error - this function does not return */
 void dosignal(int code);
