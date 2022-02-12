@@ -5,50 +5,52 @@ project(test_bifs)
 enable_testing()
 find_program(CTEST ctest)
 
+#FILE(GLOB REXXBINS "${CMAKE_CURRENT_SOURCE_DIR}/*.rexx")
+
 set(REXXBINS
-  tlinesz.rexx
-  ts_abbrev.rexx
-  ts_c2x.rexx
-  ts_center.rexx
-  ts_changestr.rexx
-  ts_compare.rexx
-  ts_countstr.rexx
-  ts_d2c.rexx
-  ts_d2x.rexx
-  ts_date.rexx
-  ts_date2.rexx
-  ts_delstr.rexx
-  ts_delword.rexx
-  ts_format.rexx
-  ts_insert.rexx
-  ts_left.rexx
-  ts_length.rexx
-  ts_lower.rexx
-  ts_min_max.rexx
-  ts_overlay.rexx
-  ts_pos.rexx
-  ts_reverse.rexx
-  ts_right.rexx
-  ts_sign.rexx
-  ts_space.rexx
-  ts_strip.rexx
-  ts_test.rexx
-  ts_time.rexx
-  ts_translate.rexx
-  ts_trunc.rexx
-  ts_upper.rexx
-  ts_upper_lower.rexx
-  ts_verify.rexx
-  ts_wordlength.rexx
-  ts_wordpos.rexx
-  ts_wrdix.rexx
-  ts_x2b.rexx
-  ts_x2c.rexx
-  ts_x2d.rexx
-  tscopies.rexx
-  tslastpos.rexx
-  tsubstr.rexx
-  tsword.rexx
+  tlinesz.rxbin
+  ts_abbrev.rxbin
+  ts_c2x.rxbin
+  ts_center.rxbin
+  ts_changestr.rxbin
+  ts_compare.rxbin
+  ts_countstr.rxbin
+  ts_d2c.rxbin
+  ts_d2x.rxbin
+  ts_date.rxbin
+  ts_date2.rxbin
+  ts_delstr.rxbin
+  ts_delword.rxbin
+  ts_format.rxbin
+  ts_insert.rxbin
+  ts_left.rxbin
+  ts_length.rxbin
+  ts_lower.rxbin
+  ts_min_max.rxbin
+  ts_overlay.rxbin
+  ts_pos.rxbin
+  ts_reverse.rxbin
+  ts_right.rxbin
+  ts_sign.rxbin
+  ts_space.rxbin
+  ts_strip.rxbin
+  ts_test.rxbin
+  ts_time.rxbin
+  ts_translate.rxbin
+  ts_trunc.rxbin
+  ts_upper.rxbin
+  ts_upper_lower.rxbin
+  ts_verify.rxbin
+  ts_wordlength.rxbin
+  ts_wordpos.rxbin
+  ts_wrdix.rxbin
+  ts_x2b.rxbin
+  ts_x2c.rxbin
+  ts_x2d.rxbin
+  tscopies.rxbin
+  tslastpos.rxbin
+  tsubstr.rxbin
+  tsword.rxbin
         )
 
 set(LIBRPATH
@@ -103,10 +105,9 @@ set(LIBRPATH
     ../rxas/word
     ../rxas/words    
     ../rxas/wordindex
-
     )
 
-add_custom_target(tests_rexx ALL
+add_custom_target(testbifs ALL
         DEPENDS ${REXXBINS})
 
 foreach(_binfile ${REXXBINS})
