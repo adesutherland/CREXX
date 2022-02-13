@@ -8,23 +8,23 @@ if d2x(9) \= '9' then do
 end
 if d2x(129) \= '81' then do
   errors=errors+1
-  say 'D2X failed in test 2 '
+  say 'D2X failed in test 2 d2x(129):' d2x(129) 'must be 81'
 end
 if d2x(129,1) \= '1' then do
   errors=errors+1
-  say 'D2X failed in test 3 '
+  say 'D2X failed in test 3 d2x(129,1)' d2x(129,1) 'must be 1'
 end
 if d2x(129,2) \= '81' then do
   errors=errors+1
-  say 'D2X failed in test 4 '
+  say 'D2X failed in test 4 d2x(129,2)' d2x(129,2) 'must be 81'
 end
 if d2x(129,4) \= '0081' then do
   errors=errors+1
-  say 'D2X failed in test 5 '
+  say 'D2X failed in test 5 d2x(129,4) ' d2x(129,4) 'must be 0081'
 end
 if d2x(257,2) \= '01' then do
   errors=errors+1
-  say 'D2X failed in test 6 '
+  say 'D2X failed in test 6 d2x(257,2)' d2x(257,2) 'must be 01'
 end
 if d2x(-127,2) \= '81' then do
   errors=errors+1
@@ -77,11 +77,11 @@ if d2x(-129,2) \= "7F" then do
 end
 if d2x(-1,3) \= "FFF" then do
   errors=errors+1
-  say 'D2X failed in test 19 '
+  say 'D2X failed in test 19 d2x(-1,3)' d2x(-1,3) 'must be FFF'
 end
 if d2x(-127,3) \= "F81" then do
   errors=errors+1
-  say 'D2X failed in test 20 '
+  say 'D2X failed in test 20 d2x(-127,3)' d2x(-127,3) 'must be F81'
 end
 if d2x(-128,4) \= "FF80" then do
   errors=errors+1
