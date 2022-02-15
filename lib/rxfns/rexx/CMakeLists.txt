@@ -8,6 +8,7 @@ set(REXXBINS
               _jdn.rxbin
               abbrev.rxbin
               c2x.rxbin
+	      c2d.rxbin	
               center.rxbin
               centre.rxbin
               changestr.rxbin

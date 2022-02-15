@@ -52,6 +52,7 @@ set(REXXBINS
   tsubstr.rxbin
   tsword.rxbin
   ts_reradix.rxbin
+  ts_sequence.rxbin
         )
 
 set(LIBRPATH
@@ -66,7 +67,8 @@ set(LIBRPATH
     ../rexx/d2b
     ../rexx/d2c    
     ../rexx/d2x
-    ../rexx/c2x    
+    ../rexx/c2x
+    ../rexx/c2d			
     ../rexx/center
     ../rexx/changestr
     ../rexx/delstr
@@ -107,6 +109,7 @@ set(LIBRPATH
     ../rxas/words    
     ../rxas/wordindex
     ../rexx/reradix
+    ../rxas/sequence
     )
 
 add_custom_target(testbifs ALL
