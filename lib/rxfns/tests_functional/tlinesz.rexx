@@ -2,7 +2,7 @@
 options levelb
 errors=0
 
-if linesize() \= 0 then do
+if linesize() \= 999999999 then do
   errors=errors+1
   say 'LINESIZE failed in test 1'
 end
