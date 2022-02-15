@@ -16,7 +16,7 @@
 #include <errno.h>
 
 /* Zeros a register value */
-static RX_INLINE void value_zero(value *v) {
+RX_INLINE void value_zero(value *v) {
     v->status.all_type_flags = 0;
     v->int_value = 0;
     v->float_value = 0;
@@ -31,14 +31,14 @@ static RX_INLINE void value_zero(value *v) {
 }
 
 /* Setup a new value structure */
-static RX_INLINE void value_init(value *v) {
+RX_INLINE void value_init(value *v) {
     v->string_value = v->small_string_buffer;
     v->string_buffer_length = sizeof(v->small_string_buffer);
     value_zero(v);
 }
 
 /* Value Factory mallocs and inits */
-static RX_INLINE value* value_f() {
+RX_INLINE value* value_f() {
     value* this;
     this = malloc(sizeof(value));
     value_init(this);
@@ -49,7 +49,7 @@ static RX_INLINE value* value_f() {
  * Returns required buffer size - the smallest power of two that's greater or
  * equal to a given value
  */
-static RX_INLINE size_t buffer_size(size_t value) {
+RX_INLINE size_t buffer_size(size_t value) {
     size_t i;
     if (value <= SMALLEST_STRING_BUFFER_LENGTH)
         return SMALLEST_STRING_BUFFER_LENGTH;
@@ -60,7 +60,7 @@ static RX_INLINE size_t buffer_size(size_t value) {
     return value+1;
 }
 
-static RX_INLINE void prep_string_buffer(value *v, size_t length) {
+RX_INLINE void prep_string_buffer(value *v, size_t length) {
     v->string_length = length;
     if (v->string_length > v->string_buffer_length) {
         if (v->string_value != v->small_string_buffer) free(v->string_value);
@@ -69,7 +69,7 @@ static RX_INLINE void prep_string_buffer(value *v, size_t length) {
     }
 }
 
-static RX_INLINE void extend_string_buffer(value *v, size_t length) {
+RX_INLINE void extend_string_buffer(value *v, size_t length) {
     v->string_length = length;
     if (v->string_length > v->string_buffer_length) {
         v->string_buffer_length = buffer_size(v->string_length);
@@ -84,94 +84,94 @@ static RX_INLINE void extend_string_buffer(value *v, size_t length) {
 }
 
 /* Clears a value of all its children and other malloced buffers */
-static RX_INLINE void clear_value(value* v) {
+RX_INLINE void clear_value(value* v) {
     if (v->string_value != v->small_string_buffer) free(v->string_value);
     return;
 }
 
 /* Int Flag */
-static RX_INLINE void set_type_int(value *v) {
+RX_INLINE void set_type_int(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_int = 1;
 }
 
-static RX_INLINE void add_type_int(value *v) {
+RX_INLINE void add_type_int(value *v) {
     v->status.type_int = 1;
 }
 
-static RX_INLINE unsigned int get_type_int(value *v) {
+RX_INLINE unsigned int get_type_int(value *v) {
     return v->status.type_int;
 }
 
 /* Float Flag */
-static RX_INLINE void set_type_float(value *v) {
+RX_INLINE void set_type_float(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_float = 1;
 }
 
-static RX_INLINE void add_type_float(value *v) {
+RX_INLINE void add_type_float(value *v) {
     v->status.type_float = 1;
 }
 
-static RX_INLINE unsigned int get_type_float(value *v) {
+RX_INLINE unsigned int get_type_float(value *v) {
     return v->status.type_float;
 }
 
 /* Decimal Flag */
-static RX_INLINE void set_type_decimal(value *v) {
+RX_INLINE void set_type_decimal(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_decimal = 1;
 }
 
-static RX_INLINE void add_type_decimal(value *v) {
+RX_INLINE void add_type_decimal(value *v) {
     v->status.type_decimal = 1;
 }
 
-static RX_INLINE unsigned int get_type_decimal(value *v) {
+RX_INLINE unsigned int get_type_decimal(value *v) {
     return v->status.type_decimal;
 }
 
 /* String Flag */
-static RX_INLINE void set_type_string(value *v) {
+RX_INLINE void set_type_string(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_string = 1;
 }
 
-static RX_INLINE void add_type_string(value *v) {
+RX_INLINE void add_type_string(value *v) {
     v->status.type_string = 1;
 }
 
-static RX_INLINE unsigned int get_type_string(value *v) {
+RX_INLINE unsigned int get_type_string(value *v) {
     return v->status.type_string;
 }
 
 /* Object Flag */
-static RX_INLINE void set_type_object(value *v) {
+RX_INLINE void set_type_object(value *v) {
     v->status.all_type_flags = 0;
     v->status.type_object = 1;
 }
 
-static RX_INLINE void add_type_object(value *v) {
+RX_INLINE void add_type_object(value *v) {
     v->status.type_object = 1;
 }
 
-static RX_INLINE unsigned int get_type_object(value *v) {
+RX_INLINE unsigned int get_type_object(value *v) {
     return v->status.type_object;
 }
 
 /* Unset Flag */
-static RX_INLINE void unset_type(value *v) {
+RX_INLINE void unset_type(value *v) {
     v->status.all_type_flags = 0;
 }
 
-static RX_INLINE void set_int(value *v, rxinteger value) {
+RX_INLINE void set_int(value *v, rxinteger value) {
     v->int_value = value;
 }
-static RX_INLINE void set_float(value *v, double value) {
+RX_INLINE void set_float(value *v, double value) {
     v->float_value = value;
 }
 
-static RX_INLINE void set_string(value *v, char *value, size_t length) {
+RX_INLINE void set_string(value *v, char *value, size_t length) {
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
     v->string_pos = 0;
@@ -182,7 +182,7 @@ static RX_INLINE void set_string(value *v, char *value, size_t length) {
 }
 
 /* set value string from null string value */
-static RX_INLINE void set_null_string(value *v, char *from) {
+RX_INLINE void set_null_string(value *v, char *from) {
     prep_string_buffer(v, strlen(from));
     memcpy(v->string_value, from, v->string_length);
     v->string_pos = 0;
@@ -192,7 +192,7 @@ static RX_INLINE void set_null_string(value *v, char *from) {
 #endif
 }
 
-static RX_INLINE void set_const_string(value *v, string_constant *from) {
+RX_INLINE void set_const_string(value *v, string_constant *from) {
     prep_string_buffer(v,from->string_len);
     memcpy(v->string_value, from->string, v->string_length);
     v->string_pos = 0;
@@ -202,7 +202,7 @@ static RX_INLINE void set_const_string(value *v, string_constant *from) {
 #endif
 }
 
-static RX_INLINE void set_value_string(value *v, value *from) {
+RX_INLINE void set_value_string(value *v, value *from) {
     prep_string_buffer(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
     v->string_pos = 0;
@@ -212,7 +212,7 @@ static RX_INLINE void set_value_string(value *v, value *from) {
 #endif
 }
 
-static RX_INLINE void set_buffer_string(
+RX_INLINE void set_buffer_string(
         value *v,
         char *buffer,
         size_t length,
@@ -233,7 +233,7 @@ static RX_INLINE void set_buffer_string(
 }
 
 /* Copy a value */
-static RX_INLINE void copy_value(value *dest, value *source) {
+RX_INLINE void copy_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
@@ -261,7 +261,7 @@ static RX_INLINE void copy_value(value *dest, value *source) {
 }
 
 /* Move a value */
-static RX_INLINE void move_value(value *dest, value *source) {
+RX_INLINE void move_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
@@ -307,7 +307,7 @@ static RX_INLINE void move_value(value *dest, value *source) {
 }
 
 /* Copy string value */
-static RX_INLINE void copy_string_value(value *dest, value *source) {
+RX_INLINE void copy_string_value(value *dest, value *source) {
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
@@ -330,7 +330,7 @@ static RX_INLINE void copy_string_value(value *dest, value *source) {
 
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
-static RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
+RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
     rxinteger idiff;
 
     if ((idiff = memcmp(value1, value2,MIN(length1, length2)) != 0))
@@ -340,17 +340,17 @@ static RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size
     return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
 }
 
-static RX_INLINE int string_cmp_value(value *v1, value *v2) {
+RX_INLINE int string_cmp_value(value *v1, value *v2) {
     return string_cmp(v1->string_value, v1->string_length,
                       v2->string_value, v2->string_length);
 }
 
-static RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
+RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
     return string_cmp(v1->string_value, v1->string_length,
                       v2->string, v2->string_len);
 }
 
-static RX_INLINE void string_append(value *v1, value *v2) {
+RX_INLINE void string_append(value *v1, value *v2) {
     size_t start = v1->string_length;
 
     extend_string_buffer(v1, v1->string_length + v2->string_length);
@@ -362,7 +362,7 @@ static RX_INLINE void string_append(value *v1, value *v2) {
 #endif
 }
 
-static RX_INLINE void string_sappend(value *v1, value *v2) {
+RX_INLINE void string_sappend(value *v1, value *v2) {
     size_t start = v1->string_length;
 
     extend_string_buffer(v1, v1->string_length + v2->string_length + 1);
@@ -375,7 +375,7 @@ static RX_INLINE void string_sappend(value *v1, value *v2) {
 #endif
 }
 
-static RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
+RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -407,7 +407,7 @@ static RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     }
 }
 
-static RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
+RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -440,7 +440,7 @@ static RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     }
 }
 
-static RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
+RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -473,7 +473,7 @@ static RX_INLINE void string_concat_var_const(value *v1, value *v2, string_const
     }
 }
 
-static RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
+RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -508,7 +508,7 @@ static RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_cons
     }
 }
 
-static RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
+RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -542,7 +542,7 @@ static RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, va
     }
 }
 
-static RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
+RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
@@ -582,7 +582,7 @@ static RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, v
 #ifndef NUTF8
 /* This sets v's string_pos (the byte index) and v's string_char_pos
  * (the utf8 codepoint index) based on a new string_char_pos */
-static RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
+RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
     assert (v->string_char_pos < v->string_chars);
     /* We need to walk through the UTF8 characters until we get to
      * the required string_char_pos and then we will know the corresponding
@@ -656,7 +656,7 @@ static RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) 
 }
 #endif
 
-static RX_INLINE void string_concat_char(value *v1, value *v2) {
+RX_INLINE void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
 
@@ -680,7 +680,7 @@ static RX_INLINE void string_concat_char(value *v1, value *v2) {
 }
 
 /* Calculate the string value */
-static RX_INLINE void string_from_int(value *v) {
+RX_INLINE void string_from_int(value *v) {
     prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
 #ifdef __32BIT__
     v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",v->int_value);
@@ -695,7 +695,7 @@ static RX_INLINE void string_from_int(value *v) {
 }
 
 /* Calculate the string value */
-static RX_INLINE void string_from_float(value *v) {
+RX_INLINE void string_from_float(value *v) {
     prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
     v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%g",v->float_value);
     v->string_pos = 0;
@@ -706,13 +706,13 @@ static RX_INLINE void string_from_float(value *v) {
 }
 
 /* Calculate the integer value from float */
-static RX_INLINE void int_from_float(value *v) {
+RX_INLINE void int_from_float(value *v) {
     v->int_value = floor(v->float_value);
     if (v->float_value - (double)v->int_value > 0.5) v->int_value++;
 }
 
 /* Convert a string to an integer - returns 1 on error */
-static RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
+RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
     char *buffer = malloc(length + 1);
     char *end = buffer;
     int rc = 0;
@@ -753,7 +753,7 @@ static RX_INLINE int string2integer(rxinteger *out, char *string, size_t length)
 }
 
 /* Convert a string to a float - returns 1 on error */
-static RX_INLINE int string2float(double *out, char *string, size_t length) {
+RX_INLINE int string2float(double *out, char *string, size_t length) {
     char *buffer = malloc(length + 1);
     char *end = buffer;
     int rc = 0;

@@ -133,14 +133,13 @@ struct stack_frame {
                                     else if ((v)->status.type_string) S2INT(i,v); }
 
 #define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
-        else if ((v)->status.type_string) S2FLOAT(i,v);
- // Get Character
+        else if ((v)->status.type_string) S2FLOAT(i,v);                                               \
+                                                                                                      \
+// Get Character
 #ifndef NUTF8
-  #define GETSTRCHAR(v,p)           { string_set_byte_pos(v,p);             \
-        utf8codepoint(v->string_value + v->string_pos, &codepoint);           \
-        v->int_value=codepoint; }
+  #define GETSTRCHAR(c,v,p) {string_set_byte_pos((v),(p)); utf8codepoint((v)->string_value+(v)->string_pos, &(c));}
 #else
-  #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
+  #define GETSTRCHAR(c,v,p) {c=(v)->string_value[(p)]; }
 #endif
 
 #ifndef NUTF8

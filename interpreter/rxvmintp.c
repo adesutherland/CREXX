@@ -21,7 +21,7 @@
 #define NOMINAL_NUM_ARGS 20
 
 /* Stack Frame Factory */
-static RX_INLINE stack_frame *frame_f(
+RX_INLINE stack_frame *frame_f(
                     module *procedure_module,
                     proc_constant *procedure,
                     int no_args,
@@ -109,14 +109,14 @@ static RX_INLINE stack_frame *frame_f(
 }
 
 /* Free Stack Frame */
-static RX_INLINE void free_frame(stack_frame *frame) {
+RX_INLINE void free_frame(stack_frame *frame) {
     /* Add to free list */
     frame->prev_free = *frame->procedure->frame_free_list;
     *frame->procedure->frame_free_list = frame;
 }
 
 /* Clear Stack Frame - deallocating register contents */
-static RX_INLINE void clear_frame(stack_frame *frame) {
+RX_INLINE void clear_frame(stack_frame *frame) {
     int i;
     /* Reset Local Registers */
     for (i = 0; i < frame->procedure->locals; i++) {
@@ -125,36 +125,21 @@ static RX_INLINE void clear_frame(stack_frame *frame) {
 }
 
 /* Interpreter */
-int run(int num_modules, module *program, int argc, char *argv[],
+RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
-    size_t i, j, k;
-    struct timeval tv;
-    struct timezone tz;
-    time_t	ctime;
-    struct tm *tmdata;
     int rc = 0;
-    int mod_index;
     bin_code *pc, *next_pc;
     void *next_inst;
     stack_frame *current_frame = 0, *temp_frame;
-    value *v1, *v2, *v3, *v_temp;
-    rxinteger i1, i2, i3, i4, i5;
-    double f1, f2, f3;
-    char *converr, *c;
-    string_constant *s1, *s2, *s3;
-    proc_constant *p1, *p2, *p3;
     /* Linker Stuff */
+    value *g_reg;
+    int mod_index;
     chameleon_constant *c_entry;
     proc_constant *p_entry, *p_entry_linked;
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
-    value *g_reg;
-    char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
-    char usedblank = ' ';
-#ifndef NUTF8
-    int codepoint;
-#endif
+//    char check_breakpoint = 0;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -165,7 +150,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     /* Link Modules Together */
     DEBUG("Linking - Build Symbols\n");
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
-        i = 0;
+        size_t i = 0;
         while (i < program[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
@@ -238,7 +223,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
 
     DEBUG("Linking - Resolve Symbols\n");
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
-        i = 0;
+        size_t i = 0;
         while (i < program[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
@@ -284,6 +269,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
     /* Allocate Module Globals */
     DEBUG("Allocate Module Globals\n");
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
+        int i;
         for (i = 0; i < program[mod_index].segment.globals; i++) {
             if (!program[mod_index].globals[i]) {
                 program[mod_index].globals[i] = value_f();
@@ -295,7 +281,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
 #ifndef NTHREADED
     DEBUG("Threading\n");
     for (mod_index=0; mod_index<num_modules; mod_index++) {
-        i = 0;
+        int i = 0, j;
         while (i < program[mod_index].segment.inst_size) {
             j = i;
             i += program[mod_index].segment.binary[i].instruction.no_ops + 1;
@@ -309,7 +295,7 @@ int run(int num_modules, module *program, int argc, char *argv[],
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
-        i = 0;
+        size_t i = 0;
         while (i < program[mod_index].segment.const_size) {
             procedure =
                     (proc_constant *) (program[mod_index].segment.const_pool +
@@ -333,11 +319,16 @@ int run(int num_modules, module *program, int argc, char *argv[],
     /* Arguments */
     /* a0 is already set by frame_f() */
     /* a1... */
-    for (i = 0, j = procedure->module->globals + procedure->locals + 1; i < argc; i++, j++) {
-        current_frame->baselocals[j] = value_f(); /* note that a1... needs mallocing */
-        set_null_string(current_frame->baselocals[j], argv[i]);
-        current_frame->locals[j] = current_frame->baselocals[j];
+    {
+        int i, j;
+        for (i = 0, j = procedure->module->globals + procedure->locals + 1; i < argc; i++, j++) {
+            current_frame->baselocals[j] = value_f(); /* note that a1... needs mallocing */
+            set_null_string(current_frame->baselocals[j], argv[i]);
+            current_frame->locals[j] = current_frame->baselocals[j];
+        }
     }
+
+
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n",
           program[current_frame->procedure->module->module_index].name,
@@ -408,59 +399,41 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - SCONCAT R%llu,R%llu,R%llu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-            string_sconcat(v1, v2, v3);
+            string_sconcat(op1R, op2R, op3R);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - CONCAT R%llu,R%llu,R%llu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-            string_concat(v1, v2, v3);
+            string_concat(op1R, op2R, op3R);
             DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_STRING) CALC_DISPATCH(3);
             DEBUG("TRACE - SCONCAT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
-            v1 = op1R;
-            v2 = op2R;
-            s3 = op3S;
-            string_sconcat_var_const(v1, v2, s3);
+            string_sconcat_var_const(op1R, op2R, op3S);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_REG_STRING) CALC_DISPATCH(3);
             DEBUG("TRACE - CONCAT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
-            v1 = op1R;
-            v2 = op2R;
-            s3 = op3S;
-            string_concat_var_const(v1, v2, s3);
+            string_concat_var_const(op1R, op2R, op3S);
             DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_STRING_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - SCONCAT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
-            v1 = op1R;
-            s2 = op2S;
-            v3 = op3R;
-            string_sconcat_const_var(v1, s2, v3);
+            string_sconcat_const_var(op1R, op2S, op3R);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_STRING_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - CONCAT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
-            v1 = op1R;
-            s2 = op2S;
-            v3 = op3R;
-            string_concat_const_var(v1, s2, v3);
+            string_concat_const_var(op1R, op2S, op3R);
             DISPATCH;
 
         START_INSTRUCTION(IMULT_REG_REG_REG) CALC_DISPATCH(3);
@@ -496,28 +469,26 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
         START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1);
-            p1 = PROC_OP(1); /* This is the target */
             /* New stackframe */
-            current_frame = frame_f(program, p1, 0, current_frame, next_pc,
+            current_frame = frame_f(program, PROC_OP(1), 0, current_frame, next_pc,
                                     next_inst, 0);
-            DEBUG("TRACE - CALL %s()\n", p1->name);
+            DEBUG("TRACE - CALL %s()\n", PROC_OP(1)->name);
             /* Prepare dispatch to procedure as early as possible */
-            next_pc = &(current_frame->procedure->module->binary[p1->start]);
+            next_pc = &(current_frame->procedure->module->binary[PROC_OP(1)->start]);
             CALC_DISPATCH_MANUAL;
             /* No Arguments - so nothing to do */
             /* This gotos the start of the called procedure */
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2);
-            p2 = PROC_OP(2); /* This is the target */
             /* Clear target return value register */
             value_zero(op1R);
             /* New stackframe */
-            current_frame = frame_f(program, p2, 0, current_frame, next_pc,
+            current_frame = frame_f(program, PROC_OP(2), 0, current_frame, next_pc,
                                     next_inst, op1R);
-            DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), p2->name);
+            DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), PROC_OP(2)->name);
             /* Prepare dispatch to procedure as early as possible */
-            next_pc = &(current_frame->procedure->module->binary[p2->start]);
+            next_pc = &(current_frame->procedure->module->binary[PROC_OP(2)->start]);
             CALC_DISPATCH_MANUAL;
             /* No Arguments - so nothing to do */
             /* This gotos the start of the called procedure */
@@ -535,10 +506,17 @@ START_OF_INSTRUCTIONS ;
             next_pc = &(current_frame->procedure->module->binary[PROC_OP(2)->start]);
             CALC_DISPATCH_MANUAL;
             /* Arguments - complex lets never have to change this code! */
-            j = current_frame->procedure->module->globals + PROC_OP(2)->locals + 1; /* Callee register index */
-            k = (pc + 3)->index + 1; /* Caller register index */
-            for (i = 0; i < (current_frame->parent->locals[(pc + 3)->index])->int_value; i++, j++, k++) {
-                current_frame->locals[j] = current_frame->parent->locals[k];
+            {
+                size_t j =
+                        current_frame->procedure->module->globals + PROC_OP(2)->locals +
+                        1; /* Callee register index */
+                size_t k = (pc + 3)->index + 1; /* Caller register index */
+                size_t i;
+                for (i = 0;
+                    i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
+                        i++, j++, k++) {
+                    current_frame->locals[j] = current_frame->parent->locals[k];
+                }
             }
             /* This gotos the start of the called procedure */
             DISPATCH;
@@ -555,6 +533,7 @@ START_OF_INSTRUCTIONS ;
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
+                int i, j;
                 for (i = 0, j = temp_frame->procedure->module->globals +
                         temp_frame->procedure->locals + 1;
                         i < argc;
@@ -569,20 +548,20 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(RET_REG);
             DEBUG("TRACE - RET R%llu\n", REG_IDX(1));
-            v1 = op1R;
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
             /* Set the result register */
-            if (current_frame->return_reg) move_value(current_frame->return_reg, v1);
+            if (current_frame->return_reg) move_value(current_frame->return_reg, op1R);
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            if (!current_frame) rc = (int) v1->int_value; /* Exiting - grab the int rc */
+            if (!current_frame) rc = (int) op1R->int_value; /* Exiting - grab the int rc */
             free_frame(temp_frame);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
+                int i, j;
                 for (i = 0, j = temp_frame->procedure->module->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
@@ -596,13 +575,12 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(RET_INT);
             DEBUG("TRACE - RET %d\n", (int)op1I);
-            i1 = op1I;
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                current_frame->return_reg->int_value = i1;
+                current_frame->return_reg->int_value = op1I;
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -610,6 +588,7 @@ START_OF_INSTRUCTIONS ;
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
+                int i, j;
                 for (i = 0, j = temp_frame->procedure->module->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
@@ -617,7 +596,7 @@ START_OF_INSTRUCTIONS ;
                     clear_value(current_frame->baselocals[j]);
                     free(current_frame->baselocals[j]);
                 }
-                rc = (int) i1;
+                rc = (int) op1I;
                 goto interprt_finished;
             }
             DISPATCH;
@@ -628,13 +607,12 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(RET_FLOAT);
             DEBUG("TRACE - RET %g\n", op1F);
 
-            f1 = op1F;
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                current_frame->return_reg->float_value = f1;
+                current_frame->return_reg->float_value = op1F;
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -642,6 +620,7 @@ START_OF_INSTRUCTIONS ;
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
+                int i, j;
                 for (i = 0, j = temp_frame->procedure->module->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
@@ -661,14 +640,12 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(RET_STRING);
             DEBUG("TRACE - RET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
 
-            s1 = CONSTSTRING_OP(1);
-
             /* Where we return to */
             next_pc = current_frame->return_pc;
             next_inst = current_frame->return_inst;
             /* Set the result register */
             if (current_frame->return_reg)
-                set_const_string(current_frame->return_reg, s1);
+                set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
@@ -676,6 +653,7 @@ START_OF_INSTRUCTIONS ;
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
+                int i, j;
                 for (i = 0, j = temp_frame->procedure->module->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
@@ -695,9 +673,12 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(SWAP_REG_REG) CALC_DISPATCH(2); /* Deprecated */
             DEBUG("TRACE - SWAP R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
-            v_temp = op1R;
-            op1R = op2R;
-            op2R = v_temp;
+            {
+                value *v_temp;
+                v_temp = op1R;
+                op1R = op2R;
+                op2R = v_temp;
+            }
             DISPATCH;
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0);
@@ -771,9 +752,13 @@ START_OF_INSTRUCTIONS ;
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
-            tzset();
-            gettimeofday(&tv, &tz);
-            REG_RETURN_INT(tv.tv_sec-timezone);
+            {
+                struct timeval tv;
+                struct timezone tz;
+                tzset();
+                gettimeofday(&tv, &tz);
+                REG_RETURN_INT(tv.tv_sec - timezone);
+            }
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  XTIME return time properties                                  pej 02. December 2021
@@ -791,22 +776,22 @@ START_OF_INSTRUCTIONS ;
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
                      op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
                      op1R->string_pos = 0;
-                     PUTSTRLEN(v1,op1R->string_length);
                      break;
                 }
                 case 'U':  {
+                     time_t ctime;
+                     rxinteger tm;
+                     struct timeval tv;
+                     struct timezone tz;
+                     struct tm *tmdata;
                      ctime = time(NULL);
                      tmdata = localtime(&ctime);
-                     i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
+                     tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
                      gettimeofday(&tv, &tz);
-                     op1R->int_value = i1*1000000+tv.tv_usec;
+                     op1R->int_value = tm*1000000+tv.tv_usec;
                      break;
                 }
             }
-    //        printf("Current bias is %ld seconds\n", timezone);
-    //        printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
-    //        gettimeofday(&tv, &tz);
-    //        REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 
 /* ---------------------------------------------------------------------------------
@@ -815,11 +800,21 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
-            ctime = time(NULL);
-            tmdata = localtime(&ctime);
-            i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60  ) + (tmdata->tm_sec));
-            gettimeofday(&tv, &tz);
-            REG_RETURN_INT(i1*1000000+tv.tv_usec);
+            {
+                rxinteger tm;
+                struct timeval tv;
+                struct timezone tz;
+                time_t	ctime;
+                struct tm *tmdata;
+
+                ctime = time(NULL);
+                tmdata = localtime(&ctime);
+                tm =
+                        ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
+                        (tmdata->tm_sec));
+                gettimeofday(&tv, &tz);
+                REG_RETURN_INT(tm * 1000000 + tv.tv_usec);
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -828,15 +823,14 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(TRIMR_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - TRIMR (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            v1 = op1R;
-
-            i = v1->string_length - 1;
-            while (i >= 0 && v1->string_value[i] == ' ') {
-                v1->string_value[i] = '\0';
-                i--;
+            {
+                int i = op1R->string_length - 1;
+                while (i >= 0 && op1R->string_value[i] == ' ') {
+                    op1R->string_value[i] = '\0';
+                    i--;
+                }
+                op1R->string_length = i + 1;
             }
-            v1->string_length = i + 1;
-            op1R = v1;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -846,20 +840,20 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(TRIML_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - TRIML (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             /* TODO - UTF etc */
-            v1 = op1R;
+            {
+                int j = op1R->string_length - 1;
+                int i = 0;
+                while (i <= j && op1R->string_value[i] == ' ') i++;
 
-            j = v1->string_length - 1;
-            i = 0;
-            while (i <= j && v1->string_value[i] == ' ') i++;
-
-            if (i >= j) {
-                v1->string_length = 0;
-                v1->string_value[0] = '\0';
-            } else {
-                v1->string_length = v1->string_length - i;
-                memcpy(v1->string_value, v1->string_value + i,
-                       v1->string_length);
-                v1->string_value[v1->string_length] = '\0';
+                if (i >= j) {
+                    op1R->string_length = 0;
+                    op1R->string_value[0] = '\0';
+                } else {
+                    op1R->string_length = op1R->string_length - i;
+                    memcpy(op1R->string_value, op1R->string_value + i,
+                           op1R->string_length);
+                    op1R->string_value[op1R->string_length] = '\0';
+                }
             }
             DISPATCH;
 
@@ -1267,54 +1261,53 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3);
+        {
             DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
+            int ch;
+            int p1, p2;
+            int len1, len2;
 
-            GETSTRLEN(i4,v2);
-            GETSTRLEN(i5,v3);
+            GETSTRLEN(len1, op2R);
+            GETSTRLEN(len2, op3R);
 
-        // step 1 find last not blank character
-            for (i = i4-1; i >= 0;  i--,i4--) {
-                GETSTRCHAR(v2,i);
-                if (v2->int_value!=' ') break;
+            // step 1 find last not blank character
+            for (p1 = len1 - 1; p1 >= 0; p1--, len1--) {
+                GETSTRCHAR(ch, op2R, p1);
+                if (ch != ' ') break;
             }
-            for (i = i5-1; i >= 0;  i--,i5--) {
-                GETSTRCHAR(v3,i);
-                if (v3->int_value!=' ') break;
+            for (p2 = len2 - 1; p2 >= 0; p2--, len2--) {
+                GETSTRCHAR(ch, op3R, p2);
+                if (ch != ' ') break;
             }
-         // step 2 find first non blank
-            for (i = 0; i < i4;  i++) {
-                GETSTRCHAR(v2,i);
-                if (v2->int_value!=' ') break;
+
+            // step 2 find first non blank
+            for (p1 = 0; p1 < len1; p1++) {
+                GETSTRCHAR(ch, op2R, p1);
+                if (ch != ' ') break;
             }
-            for (i = 0; i < i5;  i++) {
-                GETSTRCHAR(v3,i);
-                if (v3->int_value!=' ') break;
+            for (p2 = 0; p2 < len2; p2++) {
+                GETSTRCHAR(ch, op3R, p2);
+                if (ch != ' ') break;
             }
-            i4 = i4 - (rxinteger)v2->string_pos;    // testing length of op1 (without leading and trailing blanks)
-            i5 = i5 - (rxinteger)v3->string_pos;    // testing length of op2  (without leading and trailing blanks)
-            if (i4 != i5) i=0;
+            if (len1 - p1 != len2 - p2) REG_RETURN_INT(0)
             else {
-               if (string_cmp(v2->string_value+v2->string_pos,i4,v3->string_value+v3->string_pos,i5)==0) i=1;
-               else i=0;
+                if (string_cmp(op2R->string_value + p1, len1 - p1,
+                           op3R->string_value + p2, len2 - p2) == 0)
+                    REG_RETURN_INT(1)
+                else REG_RETURN_INT(0)
             }
-            REG_RETURN_INT(i);
+        }
         DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
- *  !!! not yet implemented !!!
+ *  TODO !!! not yet implemented !!!
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3);
             DEBUG("TRACE - RSEQ R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
-            v1 = op1R;
-            v2 = op2R;
-            s3 = op3S;
             REG_RETURN_INT(0);
             DISPATCH;
 
@@ -1800,208 +1793,23 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  ADDI_REG_REG_INT  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(ADDI_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - ADDI R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            CONV2INT(i2, op2R);
-            REG_RETURN_INT(i2 + op3I);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  ADDI_REG_REG_REG  Convert and Add to Integer (op1=op2+op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(ADDI_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - ADDI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2INT(i2, op2R);
-            CONV2INT(i3, op3R);
-            REG_RETURN_INT(i2 + i3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  SUBI_REG_REG_REG  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(SUBI_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2INT(i2, op2R);
-            CONV2INT(i3, op3R);
-            REG_RETURN_INT(i2 - i3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  SUBI_REG_REG_INT  Convert and Subtract to Integer (op1=op2-op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(SUBI_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBI R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            CONV2INT(i2, op2R);
-            REG_RETURN_INT(i2 - op3I);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  MULTI_REG_REG_REG  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(MULTI_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - MULTI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2INT(i2, op2R);
-            CONV2INT(i3, op3R);
-            REG_RETURN_INT(i2 * i3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  MULTI_REG_REG_INT  Convert and Multiply to Integer (op1=op2*op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(MULTI_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - MULTI R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            CONV2INT(i2, op2R);
-            REG_RETURN_INT(i2 * op3I);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DIVI_REG_REG_REG  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(DIVI_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVI R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2INT(i2, op2R);
-            CONV2INT(i3, op3R);
-            REG_RETURN_INT(i2 / i3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DIVI_REG_REG_INT  Convert and Divide to Integer (op1=op2/op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(DIVI_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVI R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            CONV2INT(i2, op2R);
-            REG_RETURN_INT(i2 / op3I);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  ADDF_REG_REG_FLOAT  Convert and Add to Float (op1=op2+op3)          pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(ADDF_REG_REG_FLOAT) CALC_DISPATCH(3);
-            DEBUG("TRACE - ADDF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
-            CONV2FLOAT(f2, op2R)
-            REG_RETURN_FLOAT(f2 + op3F);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  ADDF_REG_REG_REG  Convert and Add to Float (op1=op2+op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(ADDF_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - ADDF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2FLOAT(f2, op2R)
-            CONV2FLOAT(f3, op3R)
-            REG_RETURN_FLOAT(f2 + f3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  SUBF_REG_REG_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(SUBF_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2FLOAT(f2, op2R)
-            CONV2FLOAT(f3, op3R)
-            REG_RETURN_FLOAT(f2 - f3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  SUBF_REG_REG_FLOAT  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(SUBF_REG_REG_FLOAT) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
-            CONV2FLOAT(f2, op2R)
-            REG_RETURN_FLOAT(f2 - op3F);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  SUBF_REG_FLOAT_REG  Convert and Subtract to Float (op1=op2-op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(SUBF_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBF R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
-            CONV2FLOAT(f3, op3R)
-            REG_RETURN_FLOAT(op2F - f3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  MULTF_REG_REG_REG  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(MULTF_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - MULTF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2FLOAT(f2, op2R)
-            f3 = op3F;
-            REG_RETURN_FLOAT(f2 * op3RF);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  MULTF_REG_REG_FLOAT  Convert and Multiply to Float (op1=op2*op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(MULTF_REG_REG_FLOAT) CALC_DISPATCH(3);
-            DEBUG("TRACE - MULTF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
-            CONV2FLOAT(f2, op2R)
-            REG_RETURN_FLOAT(f2 * op3F);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DIVF_REG_REG_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(DIVF_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            CONV2FLOAT(f2, op2R)
-            CONV2FLOAT(f3, op3R)
-            REG_RETURN_FLOAT(f2 / f3);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DIVF_REG_REG_FLOAT  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(DIVF_REG_REG_FLOAT) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
-            CONV2FLOAT(f2, op2R)
-            REG_RETURN_FLOAT(f2 / op3F);
-            DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DIVF_REG_FLOAT_REG  Convert and Divide to Float (op1=op2/op3)              pej 14 Apr 2021
- *  -----------------------------------------------------------------------------------
- */
-        START_INSTRUCTION(DIVF_REG_FLOAT_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
-            CONV2FLOAT(f3, op3R)
-            REG_RETURN_FLOAT(op2F / f3);
-            DISPATCH;
-/* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-                i1=1;
-                i2=op2RI;
-                i3=op3RI;
-                while (i3 != 0)
-                {
+            {
+                DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+                    (int) REG_IDX(3));
+                rxinteger  i1 = 1;
+                rxinteger  i2 = op2RI;
+                rxinteger  i3 = op3RI;
+                while (i3 != 0) {
                     if ((i3 & 1) == 1) i1 *= i2;
                     i3 >>= 1;
                     i2 *= i2;
                 }
-            REG_RETURN_INT(i1);
+                REG_RETURN_INT(i1);
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2010,16 +1818,17 @@ START_OF_INSTRUCTIONS ;
  */
             START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
             DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            i1=1;
-            i2=op2RI;
-            i3=op3I;
-            while (i3 != 0)
             {
-                if ((i3 & 1) == 1) i1 *= i2;
-                i3 >>= 1;
-                i2 *= i2;
+                rxinteger i1 = 1;
+                rxinteger i2 = op2RI;
+                rxinteger i3 = op3I;
+                while (i3 != 0) {
+                    if ((i3 & 1) == 1) i1 *= i2;
+                    i3 >>= 1;
+                    i2 *= i2;
+                }
+                REG_RETURN_INT(i1);
             }
-            REG_RETURN_INT(i1);
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2133,15 +1942,15 @@ START_OF_INSTRUCTIONS ;
 // TODO: what to do if there is a length change of chars during translation
             START_INSTRUCTION(STRLOWER_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - STRLOWER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
-
-            v1 = op1R;
-            v2 = op2R;
-            set_value_string(v1,v2);
+            {
+                set_value_string(op1R, op2R);
 #ifdef NUTF8
-            for (c = v1->string_value ; *c; ++c) *c = (char)tolower(*c);
+                char c;
+                for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
 #else
-            utf8lwr(v1->string_value);
+                utf8lwr(op1R->string_value);
 #endif
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2151,15 +1960,15 @@ START_OF_INSTRUCTIONS ;
 // TODO: what to do if there is a length change of chars during translation
             START_INSTRUCTION(STRUPPER_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - STRUPPER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
-
-            v1 = op1R;
-            v2 = op2R;
-            set_value_string(v1,v2);
+            {
+                set_value_string(op1R, op2R);
 #ifdef NUTF8
-            for (c = v1->string_value ; *c; ++c) *c = (char)toupper(*c);
+                char c;
+                for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
 #else
-            utf8upr(v1->string_value);
+                utf8upr(op1R->string_value);
 #endif
+            }
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2168,16 +1977,16 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(STRCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            v2 = op2R;
-            v3 = op3R;
+            {
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value);
-            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-            i1= codepoint;
+                int result;
+                string_set_byte_pos(op2R, op3R->int_value);
+                utf8codepoint(op2R->string_value + op2R->string_pos, &result);
+                REG_RETURN_INT(result);
 #else
-            i1=v2->string_value[v3->int_value];
+                REG_RETURN_INT(v2->string_value[op3R->int_value]);
 #endif
-            REG_RETURN_INT(i1);
+            }
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                       pej 04 November 2021
@@ -2185,48 +1994,48 @@ START_OF_INSTRUCTIONS ;
  */
             START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-
+            {
+                static const char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
+                int ch;
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value);
-            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-            i3=codepoint;
+                string_set_byte_pos(op2R, op3R->int_value);
+                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
 #else
-            i3=v2->string_value[v3->int_value];
+                ch=v2->string_value[v3->int_value];
 #endif
-            i1=(i3>>4)&15;                       // extract left hand side of value
-            i2=(i3)&15;                          // extract right hand side of value
-            v1->string_value[0]=hexconst[i1];    // set first character of hex value
-            v1->string_value[1]=hexconst[i2];    // set first character of hex value
-            v1->string_value[2]='\0';            // set end of string, just to be safe
-            PUTSTRLEN(v1,2);                  // hex length is 2
+                rxinteger lhs = (ch >> 4) & 15;   // extract left hand side of value
+                rxinteger rhs = (ch) & 15; // extract right hand side of value
+                op1R->string_value[0] = hexconst[lhs];    // set first character of hex value
+                op1R->string_value[1] = hexconst[rhs];    // set first character of hex value
+                op1R->string_value[2] = '\0';            // set end of string, just to be safe
+                PUTSTRLEN(op1R, 2);                  // hex length is 2
+            }
             DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  POSCHAR_REG_REG_REG  op1 position of op3 in op2                pej 05 November 2021
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(POSCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - POSCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            v2 = op2R;
-            v3 = op3R;
-            i3 = v2->string_length;
-            i1=-1;
-            for (i = 0; i<i3; i++) {
+            {
+                rxinteger result = -1, i;
+                int ch;
+
+                for (i = 0; i < op2R->string_length; i++) {
 #ifndef NUTF8
-                string_set_byte_pos(v2, i);
-                utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-                i2=codepoint;
+                    string_set_byte_pos(op2R, i);
+                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
 #else
-                i2=v2->string_value[i];
+                    ch=op2R->string_value[i];
 #endif
-               if (i2==v3->int_value) {
-                    i1=i;
-                    break;
+                    if (ch == op3R->int_value) {
+                        result = i;
+                        break;
+                    }
                 }
+                REG_RETURN_INT(result);
             }
-            REG_RETURN_INT(i1);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -2446,30 +2255,31 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FNDBLNK R%llu R%llu\n", REG_IDX(1),
-                  REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-         #ifndef NUTF8
-            i5 = (rxinteger) v2->string_chars;
-         #else
-            i5 = (rxinteger)v2->string_length;
-         #endif
-            for (i3=v3->int_value;i3<i5; i3++) {
-         #ifndef NUTF8
-                string_set_byte_pos(v2, i3);
-                utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-                i4=codepoint;
-        #else
-                i4=v2->string_value[i3];
-        #endif
-                if (i4==' ') goto blankfound;
-            }
-            i3=-i5;
+            DEBUG("TRACE - FNDBLNK R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxinteger len;
+                rxinteger result;
+                int ch;
+#ifndef NUTF8
+                len = (rxinteger) op2R->string_chars;
+#else
+                len = (rxinteger) op2R->string_length;
+#endif
+                for (result = op3R->int_value; result < len; result++) {
+#ifndef NUTF8
+                    string_set_byte_pos(op2R, result);
+                    utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+                    ch = op2R->string_value[result];
+#endif
+                    if (ch == ' ') goto blankfound;
+                }
+                result = -len;
             blankfound:
-    REG_RETURN_INT(i3);
-    DISPATCH;
+                REG_RETURN_INT(result);
+            }
+            DISPATCH;
+
 /* ------------------------------------------------------------------------------------
  *  FndNBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -2477,27 +2287,29 @@ START_OF_INSTRUCTIONS ;
     START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3);
            DEBUG("TRACE - FNDNBLNK R%llu R%llu\n", REG_IDX(1),
               REG_IDX(2));
-          v1 = op1R;
-          v2 = op2R;
-          v3 = op3R;
-        #ifndef NUTF8
-          i5 = (rxinteger) v2->string_chars;
-        #else
-          i5 = (rxinteger)v2->string_length;
-        #endif
-          for (i3=v3->int_value;i3<i5; i3++) {
-        #ifndef NUTF8
-              string_set_byte_pos(v2, i3);
-              utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-              i4=codepoint;
-        #else
-              i4=v2->string_value[i3];
-        #endif
-              if (i4!=' ') goto nonblankfound;
-          }
-          i3=-i5;
-        nonblankfound:
-    REG_RETURN_INT(i3);
+    {
+        rxinteger result;
+        rxinteger len;
+        int ch;
+#ifndef NUTF8
+        len = (rxinteger)op2R->string_chars;
+#else
+        len = (rxinteger)op2R->string_length;
+#endif
+        for (result = op3R->int_value; result < len; result++) {
+#ifndef NUTF8
+            string_set_byte_pos(op2R, result);
+            utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+            ch = op2R->string_value[result];
+#endif
+            if (ch != ' ') goto nonblankfound;
+        }
+        result = -len;
+
+    nonblankfound:
+        REG_RETURN_INT(result);
+    }
     DISPATCH;
  /* ------------------------------------------------------------------------------------
   *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
@@ -2506,14 +2318,8 @@ START_OF_INSTRUCTIONS ;
     START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3);
     DEBUG("TRACE - GETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
 
-    v1 = op1R;
-    v2 = op2R;
-    v3 = op3R;
     /* TODO */
-    printf("V2 %d \n",(int)v2->int_value);
-    printf("V2 %s \n",v2->string_value);
-    i1=v2->status.type_int;
-    REG_RETURN_INT(i1);
+    REG_RETURN_INT(0);
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -2522,44 +2328,45 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - CONCCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
-
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-            i3=v3->int_value;   // save offset, we misuse v3 later
+            {
+                rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
 #ifndef NUTF8
-            string_set_byte_pos(v2, v3->int_value);
-            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-            v3->int_value=codepoint;
+                int ch;
+                string_set_byte_pos(op2R, op3R->int_value);
+                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                op3R->int_value = ch;
 #else
-            v3->int_value=v2->string_value[v3->int_value - 1];
+                op3R->int_value=op2R->string_value[v3->int_value - 1];
 #endif
-            string_concat_char(v1, v3);
-            v3->int_value=i3;   // restore original v3
-        DISPATCH;
+                string_concat_char(op1R, op3R);
+                op3R->int_value = temp;   // restore original v3
+            }
+            DISPATCH;
+
 /* ------------------------------------------------------------------------------------
  *  TRANSCHAR_REG_REG_REG  replace op1 if it is in op3-list by char in op2-list pej 7 November 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(TRANSCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - TRANSCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            {
+                rxinteger val = op1R->int_value;
+                rxinteger len, i;
+                int ch;
 
-            i1 = op1R->int_value;
-            v2 = op2R;
-            v3 = op3R;
+                GETSTRLEN(len, op3R);
 
-            GETSTRLEN(i4,v3);
-
-            for (i=0;i<i4; i++) {
-                GETSTRCHAR(v3,i);
-                if (i1==v3->int_value) {
-                   GETSTRCHAR(v2,i);
-                   i1=v2->int_value;
-                   break;
+                for (i = 0; i < len; i++) {
+                    GETSTRCHAR(ch, op3R, i);
+                    if (val == ch) {
+                        GETSTRCHAR(ch, op2R, i);
+                        val = ch;
+                        break;
+                    }
                 }
+                REG_RETURN_INT(val);
             }
-        REG_RETURN_INT(i1);
-        DISPATCH;
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  DROPCHAR_REG_REG_REG  removes characters contained in op3-list pej 19 November 2021
@@ -2567,28 +2374,31 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(DROPCHAR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - DROPCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
-
-            v1 = op1R;
-            v2 = op2R;
-            v3 = op3R;
-
-            GETSTRLEN(i2,v2);
-            GETSTRLEN(i3,v3);
-            if (i3==0) i3=v3->string_length;
-            for (i=0;i<i2; i++) {
-                GETSTRCHAR(v2,i);
-                i5=0;
-                for (i4=0;i4<i3; i4++) {
-                    GETSTRCHAR(v3,i4);
-                    if (v2->int_value==v3->int_value) {
-                       i5=1;  // found drop char
-                       break;
+            {
+                rxinteger i, len1, len2;
+                int found;
+                int ch;
+                GETSTRLEN(len1, op2R);
+                GETSTRLEN(len2, op3R);
+                if (len2 == 0) len2 = (rxinteger) op3R->string_length;
+                for (i = 0; i < len1; i++) {
+                    rxinteger j;
+                    GETSTRCHAR(ch, op2R, i);
+                    op2R->int_value = ch;
+                    found = 0;
+                    for (j = 0; j < len2; j++) {
+                        GETSTRCHAR(ch, op3R, j);
+                        op3R->int_value = ch;
+                        if (op2R->int_value == op3R->int_value) {
+                            found = 1;  // found drop char
+                            break;
+                        }
                     }
+                    if (found == 1) continue;
+                    string_concat_char(op1R, op2R);
                 }
-                if (i5==1) continue;
-                string_concat_char(v1, v2);
             }
-         DISPATCH;
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
@@ -2600,18 +2410,19 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - SUBSTRING R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
-
-            v1 = op1R;
-            v2 = op2R;
-            i3 = op3R->int_value-1;  /* make position to offset  */
-            PUTSTRLEN(v1,0) ;      /* reset length of target  */
-            GETSTRLEN(i4,v3);
-            for (i=i3;i<i4; i++) {
-                GETSTRCHAR(v2,i);
-                string_concat_char(v1, v2);
+            {
+                rxinteger offset = op3R->int_value - 1;   /* make position to offset  */
+                rxinteger len, i;
+                int ch;
+                PUTSTRLEN(op1R, 0);      /* reset length of target  */
+                GETSTRLEN(len, op3R);
+                for (i = offset; i < len; i++) {
+                    GETSTRCHAR(ch, op2R, i);
+                    op2R->int_value = ch;
+                    string_concat_char(op1R, op2R);
+                }
             }
-
-        DISPATCH;
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
 *  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off after op2   pej 13 November 2021
@@ -2620,8 +2431,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - SUBSTCUT R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
 
-            v1 = op1R;
-            PUTSTRLEN(v1,op2R->int_value) ;
+            PUTSTRLEN(op1R,op2R->int_value) ;
 
         DISPATCH;
 
@@ -2631,17 +2441,17 @@ START_OF_INSTRUCTIONS ;
  */
         START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - PADSTR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
-
-            v1 = op1R;
-            v2 = op2R;
-            i3 = op3R->int_value;
-            PUTSTRLEN(v1,0) ;        /* reset length of target  */
-            GETSTRCHAR(v2,0);       /* fetch pad character     */
-            for (i=0;i<i3; i++) {
-                string_concat_char(v1, v2);
+            {
+                int pad;
+                int i;
+                PUTSTRLEN(op1R, 0);        /* reset length of target  */
+                GETSTRCHAR(pad, op2R, 0);       /* fetch pad character   */
+                op2R->int_value = pad;
+                for (i = 0; i < op3R->int_value; i++) {
+                    string_concat_char(op1R, op2R);
+                }
             }
-
-        DISPATCH;
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021
@@ -2657,10 +2467,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(APPENDCHAR_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - APPENDCHAR R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
-            string_concat_char(v1, v2);
-
+            string_concat_char(op1R, op2R);
             DISPATCH;
 
 /*
@@ -2669,9 +2476,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(APPEND_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - APPEND R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
-            string_append(v1, v2);
+            string_append(op1R, op2R);
             DISPATCH;
 
 /*
@@ -2680,9 +2485,7 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SAPPEND_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - SAPPEND R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
-            string_sappend(v1, v2);
+            string_sappend(op1R, op2R);
             DISPATCH;
 
 /*
@@ -2691,12 +2494,10 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - STRLEN R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
 #ifndef NUTF8
-            v1->int_value = (rxinteger) v2->string_chars;
+            op1R->int_value = (rxinteger)op2R->string_chars;
 #else
-            v1->int_value = (rxinteger)v2->string_length;
+            op1R->int_value = (rxinteger)op2R->string_length;
 #endif
             DISPATCH;
 
@@ -2706,12 +2507,10 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(SETSTRPOS_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - SETSTRPOS R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
 #ifndef NUTF8
-            string_set_byte_pos(v1, v2->int_value);
+            string_set_byte_pos(op1R, op2R->int_value);
 #else
-            v1->string_pos = v2->int_value;
+            op1R->string_pos = op2R->int_value;
 #endif
             DISPATCH;
 
@@ -2721,12 +2520,10 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(GETSTRPOS_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - GETSTRPOS R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
 #ifndef NUTF8
-            v1->int_value = (int) v2->string_char_pos;
+            op1R->int_value = (int) op2R->string_char_pos;
 #else
-            v1->int_value = v2->string_pos;
+            op1R->int_value = op2R->string_pos;
 #endif
             DISPATCH;
 
@@ -2736,14 +2533,15 @@ START_OF_INSTRUCTIONS ;
         START_INSTRUCTION(STRCHAR_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - STRCHAR R%llu R%llu\n", REG_IDX(1),
                   REG_IDX(2));
-            v1 = op1R;
-            v2 = op2R;
+            {
+                int ch;
 #ifndef NUTF8
-            utf8codepoint(v2->string_value + v2->string_pos, &codepoint);
-            v1->int_value = codepoint;
+                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                op1R->int_value = ch;
 #else
-            v1->int_value = v2->string_value[v2->string_pos];
+                op1R->int_value = op2R->string_value[op2R->string_pos];
 #endif
+            }
             DISPATCH;
 
 /*
@@ -2768,10 +2566,10 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int) v2->int_value,(int) v3->int_value);
+        DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int)op2I,(int)op3I);
 
-            v1->int_value = v2->int_value;
-            op1R->status.all_type_flags = v3->int_value;
+            op1R->int_value = op2I;
+            op1R->status.all_type_flags = op3I;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2780,10 +2578,10 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),v2->string_value,(int) v3->int_value);
+            DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),op2S->string,(int) op3I);
 
-            v1->string_value = v2->string_value;
-            op1R->status.all_type_flags = v3->int_value;
+            set_const_string(op1R, op2S);
+            op1R->status.all_type_flags = op3I;
             DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -2792,9 +2590,9 @@ START_OF_INSTRUCTIONS ;
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - LOADSETTP R%d %g %d\n", (int)REG_IDX(1), v2->float_value,(int) v3->int_value);
-            v1->string_value = v2->string_value;
-            op1R->status.all_type_flags = v3->int_value;
+            DEBUG("TRACE - LOADSETTP R%d %g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
+            op1R->float_value = op2F;
+            op1R->status.all_type_flags = op3I;
             DISPATCH;
 
 /*
@@ -2876,7 +2674,7 @@ START_OF_INSTRUCTIONS ;
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
-        i = 0;
+        size_t i = 0;
         while (i < program[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
@@ -2907,6 +2705,7 @@ START_OF_INSTRUCTIONS ;
 
     /* Deallocate Globals */
     for (mod_index = 0; mod_index < num_modules; mod_index++) {
+        int i;
         for (i = 0; i < program[mod_index].segment.globals; i++) {
             clear_value(program[mod_index].globals[i]);
             free(program[mod_index].globals[i]);
