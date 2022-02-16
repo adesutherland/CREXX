@@ -8,8 +8,8 @@ find_program(CTEST ctest)
 #FILE(GLOB REXXBINS "${CMAKE_CURRENT_SOURCE_DIR}/*.rexx")
 
 set(REXXBINS
-	we.rexx
-	test1.rexx
+	we.rxbin
+	test1.rxbin
         )
 
 set(LIBRPATH
