@@ -109,7 +109,7 @@ set(LIBRPATH
     ../rxas/words    
     ../rxas/wordindex
     ../rexx/reradix
-    ../rxas/sequence
+    ../rexx/sequence
     )
 
 add_custom_target(testbifs ALL

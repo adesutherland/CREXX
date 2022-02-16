@@ -1,20 +1,20 @@
 /* rexx center text  */
 
 options levelb
-c2d: procedure = .string
+c2d: procedure = .int
   arg from = .string
   stx=""
   fz=""
   len=0
   assembler strlen len,from
-  if len=0 then return ""
+  if len=0 then return 0
   do  i=0 to len-1
       assembler hexchar fz,from,i
       stx=stx||fz
   end
-  return reradix(stx,16,10)
+  return x2d(stx)
 
-  /* function prototype */
-  
-  reradix: procedure = .string
-  arg Subject = .string, FromRadix = .int, ToRadix = .int
+  /* function prototypes */
+  x2d: procedure = .int
+  arg expose hex = .string, slen = -1
+

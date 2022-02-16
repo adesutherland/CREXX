@@ -9,7 +9,6 @@ set(RXASBINS
               pos.rxbin
               reverse.rxbin
               right.rxbin
-	      sequence.rxbin
               substr.rxbin
               subword.rxbin
               word.rxbin
