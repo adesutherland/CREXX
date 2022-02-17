@@ -10,6 +10,7 @@ find_program(CTEST ctest)
 set(REXXBINS
 	we.rxbin
 	test1.rxbin
+	crexxbrexx.rxbin
         )
 
 set(LIBRPATH

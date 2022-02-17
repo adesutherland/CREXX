@@ -53,6 +53,8 @@ set(REXXBINS
   tsword.rxbin
   ts_reradix.rxbin
   ts_sequence.rxbin
+  ts_find.rxbin
+  ts_index.rxbin
         )
 
 set(LIBRPATH
@@ -110,6 +112,8 @@ set(LIBRPATH
     ../rxas/wordindex
     ../rexx/reradix
     ../rexx/sequence
+    ../rexx/find
+    ../rexx/index
     )
 
 add_custom_target(testbifs ALL

@@ -46,6 +46,8 @@ set(REXXBINS
               x2d.rxbin
 	      reradix.rxbin
 	      sequence.rxbin
+	      find.rxbin
+	      index.rxbin
         )
 
 add_custom_target(lib_rexx ALL
