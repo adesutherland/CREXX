@@ -133,7 +133,9 @@ foreach(_binfile ${REXXBINS})
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
           OUTPUT ${_binfile}
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} ${LIBRPATH}
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} ${LIBRPATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+		add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} ${LIBRPATH}
+	        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 endforeach()
