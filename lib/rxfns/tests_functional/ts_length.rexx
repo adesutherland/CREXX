@@ -29,6 +29,17 @@ if length("abcdefghij") \= 10 then do
   errors=errors+1
   say 'LENGTH failed in test 6 '
 end
+/*Unicode*/
+if length("René") \= 4 then do
+  errors=errors+1
+  say 'LENGTH failed in test 7 '
+end
+
+if length(René) \= 4 then do
+  errors=errors+1
+  say 'LENGTH failed in test 8 '
+end
+
 return errors<>0
   
 /* function prototype */
