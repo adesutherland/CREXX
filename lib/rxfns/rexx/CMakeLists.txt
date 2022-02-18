@@ -48,7 +48,7 @@ set(REXXBINS
 	      sequence.rxbin
 	      find.rxbin
 	      index.rxbin
-	      xrange.rbin
+	      xrange.rxbin
         )
 
 add_custom_target(lib_rexx ALL
