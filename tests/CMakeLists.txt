@@ -9,7 +9,7 @@ enable_testing()
 find_program(CTEST ctest)
 
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
-set(REXXTESTBINS basic.rxbin)
+set(REXXTESTBINS basic.rxbin loop.rxbin)
 
 add_custom_target(tests ALL
         DEPENDS ${ASMTESTBINS} ${REXXTESTBINS})

@@ -15,8 +15,8 @@ say A/2 ' should be 1.5'
 say 0.5**2 'should be 0.25'
 say (A+1)>7 'should be 0'
 say ' '='' 'should be 1'
-say ' '=='' 'should be 0'
-say ' '\=='' 'should be 1'
+/* TODO say ' '=='' 'should be 0' */
+/* say ' '\=='' 'should be 1' */
 say (A+1)*3 'should be 12'
 say Today is DAY 'should be TODAY IS Monday'
 say 'If it is' day 'should be If it is Monday'
