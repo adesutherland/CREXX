@@ -24,7 +24,7 @@ offok:
     brt  empty,r11
     ilt  r11,r10,r2     /* length(ndle, already -1 for BCT) < length(str+off) */
     brf  empty,r11
- outerloop:
+outerloop:
     strchar r8,r1,r3    /* load source char    */
     copy r5,r10         /* length search string*/
     load r6,0           /* inner offset        */

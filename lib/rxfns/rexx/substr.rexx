@@ -2,14 +2,6 @@
 
 options levelb /* Written in REXX Level B */
 
-/* declarations */
-/* Raise() Internal Function to Raise a runtime error */
-raise: procedure = .int
-  arg type = .string, code = .string, parm1 = .string
-
-/* Length() Procedure */
-length: procedure = .int
-  arg string1 = .string
 
 /* Substr() Procedure */
 substr: procedure = .string
@@ -73,3 +65,12 @@ substr: procedure = .string
 
   /* Done */
   return output
+
+  /* declarations */
+/* Raise() Internal Function to Raise a runtime error */
+raise: procedure = .int
+  arg type = .string, code = .string, parm1 = .string
+
+/* Length() Procedure */
+length: procedure = .int
+  arg string1 = .string
