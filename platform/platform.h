@@ -8,11 +8,21 @@
 #include <stdio.h>
 
 #if defined(__clang__) || defined(__GNUC__)
-# define RX_INLINE static inline __attribute__((always_inline))
-# define RX_FLATTEN __attribute__((flatten))
+# ifdef NDEBUG  // RELEASE
+#  define RX_INLINE static inline __attribute__((always_inline))
+#  define RX_FLATTEN __attribute__((flatten))
+# else // DEBUG
+#  define RX_INLINE static
+#  define RX_FLATTEN
+# endif
 #elif defined(_MSC_VER)
-# define RX_INLINE static inline
-# define RX_FLATTEN
+# ifdef NDEBUG  // RELEASE
+#  define RX_INLINE static inline
+#  define RX_FLATTEN
+# else
+#  define RX_INLINE static
+#  define RX_FLATTEN
+# endif
 #else
 # define RX_INLINE static
 # define RX_FLATTEN

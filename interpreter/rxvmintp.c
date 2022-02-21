@@ -132,7 +132,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     proc_constant *procedure;
     int rc = 0;
     bin_code *pc, *next_pc;
-    void *next_inst;
+#ifdef NTHREADED
+    void *next_inst = 0;
+#else
+    void *next_inst = &&IUNKNOWN;
+#endif
     stack_frame *current_frame = 0, *temp_frame;
     /* Linker Stuff */
     value *g_reg;
@@ -560,8 +564,7 @@ START_OF_INSTRUCTIONS ;
                 /* Arguments - complex lets never have to change this code! */
                 size_t j =
                     current_frame->procedure->module->globals +
-                    PROC_OP(2)->locals +
-                    1; /* Callee register index */
+                            current_frame->procedure->locals + 1; /* Callee register index */
                 size_t k = (pc + 3)->index + 1; /* Caller register index */
                 size_t i;
                 for (   i = 0;
