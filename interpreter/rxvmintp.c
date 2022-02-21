@@ -343,8 +343,6 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
-START_OF_INSTRUCTIONS ;
-
         /* Instruction implementations */
         /* ----------------------------------------------------------------------------
          * The following shortcut macros are used in the instruction implementation
@@ -374,9 +372,11 @@ START_OF_INSTRUCTIONS ;
          */
 
         /* Breakpoint Support - this is only used/called when check_breakpoint is set */
-        START_INSTRUCTION(BREAKPOINT)
+    START_BREAKPOINT ;
             DEBUG("BREAKPOINT CHECK\n");
-            goto *next_inst;
+            END_BREAKPOINT ;
+
+    START_OF_INSTRUCTIONS ;
 
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0);

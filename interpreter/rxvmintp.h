@@ -79,19 +79,22 @@ struct stack_frame {
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS }
 #define START_INSTRUCTION(inst) case INST_ ## inst:
+#define START_BREAKPOINT BREAKPOINT:
+#define END_BREAKPOINT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:&&CASE_START; }
 
 #else
 
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
 #define START_INSTRUCTION(inst) inst:
+#define START_BREAKPOINT BREAKPOINT:
+#define END_BREAKPOINT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
 #define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:next_inst; }
-//#define DISPATCH                   { pc = next_pc; goto *next_inst; }
 
 #endif
 
