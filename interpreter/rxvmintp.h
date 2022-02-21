@@ -90,7 +90,8 @@ struct stack_frame {
 #define START_INSTRUCTION(inst) inst:
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *next_inst; }
+#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:next_inst; }
+//#define DISPATCH                   { pc = next_pc; goto *next_inst; }
 
 #endif
 

@@ -88,6 +88,7 @@ typedef struct proc_constant {
     int locals;
     bin_space *module;
     stack_frame **frame_free_list;
+    stack_frame *frame_free_list_head;
     size_t start;
     size_t exposed;
     char name[1]; /* Must be last member */

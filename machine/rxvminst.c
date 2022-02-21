@@ -20,6 +20,9 @@ static int no_instructions = 0;
 
 // Load and initialise Instruction Database
 void init_ops() {
+    instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
+
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
@@ -232,6 +235,8 @@ void init_ops() {
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_STRING, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_CHAR, OP_NONE, OP_NONE);
+
+    instr_f("readline", "Read Line to op1", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("exit", "Exit", OP_NONE, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_REG, OP_NONE, OP_NONE);

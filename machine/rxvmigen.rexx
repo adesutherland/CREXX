@@ -42,6 +42,9 @@
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
   end
 
+  call add_threaded_inst '                         &&BREAKPOINT,'
+  call add_bytecode_inst '                         INST_BREAKPOINT,'
+
   call add_threaded_inst '                         &&IUNKNOWN };'
   call add_bytecode_inst '                         INST_IUNKNOWN };'
 
