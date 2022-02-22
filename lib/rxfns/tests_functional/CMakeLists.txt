@@ -53,11 +53,8 @@ set(REXXBINS
   tsword.rxbin
   ts_reradix.rxbin
   ts_sequence.rxbin
-<<<<<<< HEAD
-=======
   ts_find.rxbin
   ts_index.rxbin
->>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
         )
 
 set(LIBRPATH
