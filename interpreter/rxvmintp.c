@@ -22,7 +22,6 @@
 
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
-                    module *procedure_module,
                     proc_constant *procedure,
                     int no_args,
                     stack_frame *parent,
@@ -36,8 +35,8 @@ RX_INLINE stack_frame *frame_f(
     size_t frame_size;
     value *value_buffer;
 
-    num_locals = procedure->locals + procedure->module->globals + no_args + 1;
-    nominal_num_locals = procedure->locals + procedure->module->globals + NOMINAL_NUM_ARGS + 1;
+    num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
+    nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
 
     /* Do we need an oversized block */
     if (num_locals > nominal_num_locals) nominal_num_locals = num_locals;
@@ -56,7 +55,7 @@ RX_INLINE stack_frame *frame_f(
             value_zero(this->locals[i]);
         }
         /* Make sure global registers are linked correctly */
-        for (j = 0; j < procedure_module->segment.globals; i++, j++) {
+        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
             this->locals[i] = this->baselocals[i];
         }
         /* Reset register a0 - number of arguments */
@@ -85,9 +84,9 @@ RX_INLINE stack_frame *frame_f(
         }
 
         /* Link Globals */
-        for (j = 0; j < procedure_module->segment.globals; i++, j++) {
-            this->baselocals[i] = procedure_module->globals[j];
-            this->locals[i] = procedure_module->globals[j];
+        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
+            this->baselocals[i] =  procedure->binarySpace->module->globals[j];
+            this->locals[i] = procedure->binarySpace->module->globals[j];
         }
 
         /* Link a0 */
@@ -165,7 +164,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 case PROC_CONST:
                     if (((proc_constant *) c_entry)->start != SIZE_MAX) {
                         /* Mark the owning module segment address */
-                        ((proc_constant *) c_entry)->module =
+                        ((proc_constant *) c_entry)->binarySpace =
                                 &program[mod_index].segment;
                         /* Stack Frame Free List */
                         ((proc_constant *) c_entry)->frame_free_list = &(((proc_constant *) c_entry)->frame_free_list_head);
@@ -252,7 +251,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                         /* Patch the procedure entry with the linked one */
                         p_entry->locals = p_entry_linked->locals;
                         p_entry->start = p_entry_linked->start;
-                        p_entry->module = p_entry_linked->module;
+                        p_entry->binarySpace = p_entry_linked->binarySpace;
                         p_entry->frame_free_list = p_entry_linked->frame_free_list;
                     }
                     break;
@@ -320,13 +319,13 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(program, procedure, argc, 0, 0, 0, 0);
+    current_frame = frame_f(procedure, argc, 0, 0, 0, 0);
     /* Arguments */
     /* a0 is already set by frame_f() */
     /* a1... */
     {
         int i, j;
-        for (i = 0, j = procedure->module->globals + procedure->locals + 1; i < argc; i++, j++) {
+        for (i = 0, j = procedure->binarySpace->globals + procedure->locals + 1; i < argc; i++, j++) {
             current_frame->baselocals[j] = value_f(); /* note that a1... needs mallocing */
             set_null_string(current_frame->baselocals[j], argv[i]);
             current_frame->locals[j] = current_frame->baselocals[j];
@@ -336,9 +335,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n",
-          program[current_frame->procedure->module->module_index].name,
-          (int) procedure->start);
-    next_pc = &(current_frame->procedure->module->binary[procedure->start]);
+          procedure->binarySpace->module->name, (int) procedure->start);
+    next_pc = &(current_frame->procedure->binarySpace->binary[procedure->start]);
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
@@ -515,12 +513,12 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(1);
-                current_frame = frame_f(program, called_function, 0, current_frame, next_pc,
+                current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                      next_inst, 0);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
 
                 /* Prepare dispatch to procedure as early as possible */
-                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                 CALC_DISPATCH_MANUAL;
                 /* No Arguments - so nothing to do */
             }
@@ -533,11 +531,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(2);
-                current_frame = frame_f(program, called_function, 0, current_frame, next_pc,
+                current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                         next_inst, op1R);
                 DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), called_function->name);
                 /* Prepare dispatch to procedure as early as possible */
-                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                 CALC_DISPATCH_MANUAL;
                 /* No Arguments - so nothing to do */
             }
@@ -549,7 +547,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             {
                 proc_constant *called_function = PROC_OP(2);
                 current_frame =
-                        frame_f(program, called_function, (int) op3R->int_value,
+                        frame_f(called_function, (int) op3R->int_value,
                                 current_frame,
                                 next_pc, next_inst, op1R);
 
@@ -557,13 +555,13 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                       REG_IDX(3));
 
                 /* Prepare dispatch to procedure as early as possible */
-                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                 CALC_DISPATCH_MANUAL;
 
                 /* Arguments - complex lets never have to change this code! */
                 size_t j =
-                    current_frame->procedure->module->globals +
-                            current_frame->procedure->locals + 1; /* Callee register index */
+                        current_frame->procedure->binarySpace->globals +
+                        current_frame->procedure->locals + 1; /* Callee register index */
                 size_t k = (pc + 3)->index + 1; /* Caller register index */
                 size_t i;
                 for (   i = 0;
@@ -588,8 +586,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
                 int i, j;
-                for (i = 0, j = temp_frame->procedure->module->globals +
-                        temp_frame->procedure->locals + 1;
+                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
+                                temp_frame->procedure->locals + 1;
                         i < argc;
                         i++, j++) {
                     clear_value(current_frame->baselocals[j]);
@@ -616,7 +614,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
                 int i, j;
-                for (i = 0, j = temp_frame->procedure->module->globals +
+                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
                         i++, j++) {
@@ -643,7 +641,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
                 int i, j;
-                for (i = 0, j = temp_frame->procedure->module->globals +
+                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
                         i++, j++) {
@@ -675,7 +673,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
                 int i, j;
-                for (i = 0, j = temp_frame->procedure->module->globals +
+                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
                         i++, j++) {
@@ -708,7 +706,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 DEBUG("TRACE - RET FROM MAIN()\n");
                 /* Free Argument Values a1... */
                 int i, j;
-                for (i = 0, j = temp_frame->procedure->module->globals +
+                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                                 temp_frame->procedure->locals + 1;
                         i < argc;
                         i++, j++) {
@@ -769,7 +767,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         START_INSTRUCTION(BR_ID);
             DEBUG("TRACE - BR 0x%x\n", (unsigned int)REG_IDX(1));
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
             DISPATCH;
 
@@ -782,7 +780,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                                 the real CPUs branch prediction (in theory) */
             DEBUG("TRACE - BRT 0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (op2RI) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
@@ -791,15 +789,15 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                                   the real CPUs branch prediction (in theory) */
             DEBUG("TRACE - BRF 0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (!(op2RI)) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
 
         START_INSTRUCTION(BRTF_ID_ID_REG)
             DEBUG("TRACE - BRTF 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (op3RI) next_pc = current_frame->procedure->module->binary + REG_IDX(1);
-            else next_pc = current_frame->procedure->module->binary + REG_IDX(2);
+            if (op3RI) next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+            else next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(2);
             CALC_DISPATCH_MANUAL;
             DISPATCH;
 
@@ -1892,7 +1890,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(AMAP_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - AMAP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             op1R = current_frame->locals[op2RI +
-                                         current_frame->procedure->module->globals +
+                                         current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
             DISPATCH;
 
@@ -1903,7 +1901,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(AMAP_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - AMAP R%d,%d\n", (int)REG_IDX(1), (int)op2I);
             op1R = current_frame->locals[op2I +
-                                         current_frame->procedure->module->globals +
+                                         current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
 
             DISPATCH;
@@ -2099,7 +2097,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(BGT_ID_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2111,7 +2109,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(BGT_ID_REG_INT) CALC_DISPATCH(3);
             DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
-               next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+               next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2122,7 +2120,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BGE_ID_REG_REG) CALC_DISPATCH(3);
        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
        if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
-          next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+          next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
           CALC_DISPATCH_MANUAL;
        }
     DISPATCH;
@@ -2134,7 +2132,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BGE_ID_REG_INT) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2145,7 +2143,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BLT_ID_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - BLT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2156,7 +2154,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BLT_ID_REG_INT) CALC_DISPATCH(3);
         DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2167,7 +2165,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BLE_ID_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2178,7 +2176,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BLE_ID_REG_INT) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2189,7 +2187,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BNE_ID_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2201,7 +2199,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BNE_ID_REG_INT) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2212,7 +2210,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BEQ_ID_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2223,7 +2221,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_INSTRUCTION(BEQ_ID_REG_INT) CALC_DISPATCH(3);
         DEBUG("TRACE - BGE 0x%x,R%d,%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
         if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
-            next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
         }
     DISPATCH;
@@ -2235,7 +2233,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             (current_frame->locals[REG_IDX(2)]->int_value)--;
             if (current_frame->locals[REG_IDX(2)]->int_value > 0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2248,7 +2246,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             (current_frame->locals[REG_IDX(2)]->int_value)--;
             (current_frame->locals[REG_IDX(3)]->int_value)++;
             if (current_frame->locals[REG_IDX(2)]->int_value>0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2259,7 +2257,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(BCF_ID_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - BCF R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             else (current_frame->locals[REG_IDX(2)]->int_value)--;
@@ -2271,7 +2269,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(BCF_ID_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - BCF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             else {
@@ -2287,7 +2285,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             (current_frame->locals[REG_IDX(2)]->int_value)--;
             if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2300,7 +2298,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             (current_frame->locals[REG_IDX(2)]->int_value)--;
             (current_frame->locals[REG_IDX(3)]->int_value)++;
             if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
         DISPATCH;
@@ -2663,7 +2661,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - BRTPT_ID_REG 0x%x R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (op2R->status.all_type_flags) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
@@ -2676,7 +2674,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                   (unsigned int)REG_IDX(1),
                   (int)REG_IDX(2),(int)op3I);
             if (op2R->status.all_type_flags & op3I) {
-                next_pc = current_frame->procedure->module->binary + REG_IDX(1);
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;

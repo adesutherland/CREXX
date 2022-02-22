@@ -103,8 +103,8 @@ struct stack_frame {
 #define INT_OP(n)                    (pc+(n))->iconst
 #define FLOAT_OP(n)                  (pc+(n))->fconst
 
-#define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->module->const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->module->const_pool + (pc+(n))->index))
+#define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 

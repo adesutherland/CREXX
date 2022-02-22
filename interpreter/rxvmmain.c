@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
         fread(pgm[j].segment.binary, sizeof(bin_code), pgm[j].segment.inst_size, fp);
         fread(pgm[j].segment.const_pool, 1, pgm[j].segment.const_size, fp);
 
-        pgm[j].segment.module_index = j;
+        pgm[j].segment.module = &(pgm[j]);
         pgm[j].globals = calloc(pgm[j].segment.globals, sizeof(value));
 
         fclose(fp);
