@@ -7,6 +7,8 @@ options levelb
 sequence: procedure = .string
 arg from = .string, tos = .string
 
+/* TODO: support hex notation */
+
 fromVal=c2d(from)
 toVal  =c2d(tos)
 

@@ -48,6 +48,7 @@ RX_INLINE stack_frame *frame_f(
         /* We can reuse this stack frame */
         this = *procedure->frame_free_list;
         *procedure->frame_free_list = this->prev_free;
+        this->prev_free = 0;
 
         /* Reset Local Registers */
         for (i = 0; i < procedure->locals; i++) {
@@ -70,6 +71,7 @@ RX_INLINE stack_frame *frame_f(
                      ( sizeof(value) * (procedure->locals + 1)); /* +1 is for a0 */
 
         this = (stack_frame *) malloc( frame_size );
+        this->prev_free = 0;
 
         this->baselocals = (value**)(this + 1);
         this->locals = this->baselocals + nominal_num_locals;
@@ -102,7 +104,6 @@ RX_INLINE stack_frame *frame_f(
     this->number_locals = num_locals;
     this->number_args = no_args;
     this->return_reg = return_reg;
-    this->module = procedure_module;
     this->procedure = procedure;
 
     return this;
@@ -111,8 +112,8 @@ RX_INLINE stack_frame *frame_f(
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
     /* Add to free list */
-    frame->prev_free = *frame->procedure->frame_free_list;
-    *frame->procedure->frame_free_list = frame;
+    frame->prev_free = *(frame->procedure->frame_free_list);
+    *(frame->procedure->frame_free_list) = frame;
 }
 
 /* Clear Stack Frame - deallocating register contents */
@@ -130,7 +131,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     proc_constant *procedure;
     int rc = 0;
     bin_code *pc, *next_pc;
-    void *next_inst;
+#ifdef NTHREADED
+    void *next_inst = 0;
+#else
+    void *next_inst = &&IUNKNOWN;
+#endif
     stack_frame *current_frame = 0, *temp_frame;
     /* Linker Stuff */
     value *g_reg;
@@ -139,13 +144,13 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     proc_constant *p_entry, *p_entry_linked;
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
-//    char check_breakpoint = 0;
+    char check_breakpoint = 0;
 
     /*
      * Instruction database - loaded from a generated header file
      */
     Instruction *instruction;
-#include "instrset.h"  /* Set up void *address_map[] */
+    #include "instrset.h"  /* Set up void *address_map[] */
 
     /* Link Modules Together */
     DEBUG("Linking - Build Symbols\n");
@@ -163,8 +168,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                         ((proc_constant *) c_entry)->module =
                                 &program[mod_index].segment;
                         /* Stack Frame Free List */
-                        ((proc_constant *) c_entry)->frame_free_list = malloc(sizeof(value*));
-                        *((proc_constant *) c_entry)->frame_free_list = 0;
+                        ((proc_constant *) c_entry)->frame_free_list = &(((proc_constant *) c_entry)->frame_free_list_head);
+                        *(((proc_constant *) c_entry)->frame_free_list) = 0;
                     }
                     break;
 
@@ -337,8 +342,6 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     CALC_DISPATCH_MANUAL;
     DISPATCH;
 
-START_OF_INSTRUCTIONS ;
-
         /* Instruction implementations */
         /* ----------------------------------------------------------------------------
          * The following shortcut macros are used in the instruction implementation
@@ -366,6 +369,26 @@ START_OF_INSTRUCTIONS ;
          *      CONV2FLOAT(float-result-variable,value-to-be-converted)
          * ----------------------------------------------------------------------------
          */
+
+        /* Breakpoint Support - this is only used/called when check_breakpoint is set */
+    START_BREAKPOINT ;
+            DEBUG("BREAKPOINT CHECK\n");
+            END_BREAKPOINT ;
+
+    START_OF_INSTRUCTIONS ;
+
+        /* Enable Breakpoints */
+        START_INSTRUCTION(BPON) CALC_DISPATCH(0);
+            DEBUG("TRACE - BPON\n");
+            check_breakpoint = 1;
+            DISPATCH;
+
+        /* Enable Breakpoints */
+        START_INSTRUCTION(BPOFF) CALC_DISPATCH(0);
+            DEBUG("TRACE - BPOFF\n");
+            check_breakpoint = 0;
+            DISPATCH;
+
         START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - LOAD R%llu,%llu\n", REG_IDX(1), op2I);
             set_int(op1R, op2I);
@@ -378,13 +401,33 @@ START_OF_INSTRUCTIONS ;
             set_const_string(op1R, CONSTSTRING_OP(2));
             DISPATCH;
 
-/* String Say - Deprecated */
+        /* Readline - Read a line from stdin to a register */
+        START_INSTRUCTION(READLINE_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - READLINE R%llu\n", REG_IDX(1));
+            {
+                size_t pos = 0;
+                int ch;
+                while ((ch = getchar()) != EOF) {
+                    if (ch == '\n') break;
+                    extend_string_buffer(op1R, pos+1);
+                    op1R->string_value[pos] = (char)ch;
+                    pos++;
+                }
+                op1R->string_pos = 0;
+#ifndef NUTF8
+                op1R->string_char_pos = 0;
+                op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+#endif
+            }
+            DISPATCH;
+
+        /* String Say - Deprecated */
         START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - SSAY (DEPRICATED) R%llu\n", REG_IDX(1));
             printf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH;
 
-/* Say - Print string value of register as a line */
+        /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - SAY R%llu\n", REG_IDX(1));
             printf("%.*s\n", (int) op1R->string_length, op1R->string_value);
@@ -469,51 +512,62 @@ START_OF_INSTRUCTIONS ;
             DISPATCH;
 
         START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1);
-            /* New stackframe */
-            current_frame = frame_f(program, PROC_OP(1), 0, current_frame, next_pc,
-                                    next_inst, 0);
-            DEBUG("TRACE - CALL %s()\n", PROC_OP(1)->name);
-            /* Prepare dispatch to procedure as early as possible */
-            next_pc = &(current_frame->procedure->module->binary[PROC_OP(1)->start]);
-            CALC_DISPATCH_MANUAL;
-            /* No Arguments - so nothing to do */
+            /* New stackframe - grabbing procedure object from the caller frame */
+            {
+                proc_constant *called_function = PROC_OP(1);
+                current_frame = frame_f(program, called_function, 0, current_frame, next_pc,
+                                     next_inst, 0);
+                DEBUG("TRACE - CALL %s()\n", called_function->name);
+
+                /* Prepare dispatch to procedure as early as possible */
+                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                CALC_DISPATCH_MANUAL;
+                /* No Arguments - so nothing to do */
+            }
             /* This gotos the start of the called procedure */
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2);
             /* Clear target return value register */
             value_zero(op1R);
-            /* New stackframe */
-            current_frame = frame_f(program, PROC_OP(2), 0, current_frame, next_pc,
-                                    next_inst, op1R);
-            DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), PROC_OP(2)->name);
-            /* Prepare dispatch to procedure as early as possible */
-            next_pc = &(current_frame->procedure->module->binary[PROC_OP(2)->start]);
-            CALC_DISPATCH_MANUAL;
-            /* No Arguments - so nothing to do */
+            /* New stackframe - grabbing procedure object from the caller frame */
+            {
+                proc_constant *called_function = PROC_OP(2);
+                current_frame = frame_f(program, called_function, 0, current_frame, next_pc,
+                                        next_inst, op1R);
+                DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), called_function->name);
+                /* Prepare dispatch to procedure as early as possible */
+                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                CALC_DISPATCH_MANUAL;
+                /* No Arguments - so nothing to do */
+            }
             /* This gotos the start of the called procedure */
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3);
-            /* New stackframe */
-            current_frame =
-                    frame_f(program, PROC_OP(2), (int) op3R->int_value, current_frame,
-                            next_pc, next_inst, op1R);
-
-            DEBUG("TRACE - CALL R%llu,%s,R%llu\n", REG_IDX(1), PROC_OP(2)->name, REG_IDX(3));
-
-            /* Prepare dispatch to procedure as early as possible */
-            next_pc = &(current_frame->procedure->module->binary[PROC_OP(2)->start]);
-            CALC_DISPATCH_MANUAL;
-            /* Arguments - complex lets never have to change this code! */
+            /* New stackframe - grabbing procedure object from the caller frame */
             {
+                proc_constant *called_function = PROC_OP(2);
+                current_frame =
+                        frame_f(program, called_function, (int) op3R->int_value,
+                                current_frame,
+                                next_pc, next_inst, op1R);
+
+                DEBUG("TRACE - CALL R%llu,%s,R%llu\n", REG_IDX(1), called_function->name,
+                      REG_IDX(3));
+
+                /* Prepare dispatch to procedure as early as possible */
+                next_pc = &(current_frame->procedure->module->binary[called_function->start]);
+                CALC_DISPATCH_MANUAL;
+
+                /* Arguments - complex lets never have to change this code! */
                 size_t j =
-                        current_frame->procedure->module->globals + PROC_OP(2)->locals +
-                        1; /* Callee register index */
+                    current_frame->procedure->module->globals +
+                            current_frame->procedure->locals + 1; /* Callee register index */
                 size_t k = (pc + 3)->index + 1; /* Caller register index */
                 size_t i;
-                for (i = 0;
-                    i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
+                for (   i = 0;
+                        i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                         i++, j++, k++) {
                     current_frame->locals[j] = current_frame->parent->locals[k];
                 }
@@ -556,7 +610,7 @@ START_OF_INSTRUCTIONS ;
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            if (!current_frame) rc = (int) op1R->int_value; /* Exiting - grab the int rc */
+            if (!current_frame) rc = (int)(temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
             free_frame(temp_frame);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
@@ -2683,17 +2737,13 @@ START_OF_INSTRUCTIONS ;
 
                 case PROC_CONST:
                     if (((proc_constant *) c_entry)->start != SIZE_MAX) {
-
                         /* Free frames in the procedures free list */
-                        while (*((proc_constant *) c_entry)->frame_free_list) {
-                            temp_frame = *((proc_constant *) c_entry)->frame_free_list;
-                            *((proc_constant *) c_entry)->frame_free_list = temp_frame->prev_free;
+                        while (*(((proc_constant *) c_entry)->frame_free_list)) {
+                            temp_frame = *(((proc_constant *)c_entry)->frame_free_list);
+                            *(((proc_constant *) c_entry)->frame_free_list) = temp_frame->prev_free;
                             clear_frame(temp_frame);
                             free(temp_frame);
                         }
-
-                        /* Now free the Free List pointer itself */
-                        free( ((proc_constant *) c_entry)->frame_free_list );
                     }
                     break;
 

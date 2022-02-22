@@ -53,6 +53,11 @@ set(REXXBINS
   tsword.rxbin
   ts_reradix.rxbin
   ts_sequence.rxbin
+<<<<<<< HEAD
+=======
+  ts_find.rxbin
+  ts_index.rxbin
+>>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
         )
 
 set(LIBRPATH
@@ -110,6 +115,11 @@ set(LIBRPATH
     ../rxas/wordindex
     ../rexx/reradix
     ../rexx/sequence
+<<<<<<< HEAD
+=======
+    ../rexx/find
+    ../rexx/index
+>>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
     )
 
 add_custom_target(testbifs ALL
@@ -129,7 +139,14 @@ foreach(_binfile ${REXXBINS})
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
           OUTPUT ${_binfile}
   )
+<<<<<<< HEAD
   add_test(NAME ${_basename} COMMAND rxvm ${_basename} ${LIBRPATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+=======
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} ${LIBRPATH}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+		add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} ${LIBRPATH}
+	        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+>>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
 
 endforeach()

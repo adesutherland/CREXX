@@ -1,11 +1,13 @@
 /* rexx test linesize bif */
 options levelb
-say 'Look for LINESIZE OK'
+errors=0
 
-if linesize() \= 0 then say 'failed in test 1'
+if linesize() \= 999999999 then do
+  errors=errors+1
+  say 'LINESIZE failed in test 1'
+end
 
-say 'LINESIZE OK'
-
+return errors<>0
 linesize: procedure = .int
   arg expose string1 = ' '
 

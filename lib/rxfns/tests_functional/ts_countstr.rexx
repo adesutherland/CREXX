@@ -1,25 +1,77 @@
 /* rexx test abs bif */
 options levelb
+errors=0
 
-say "Look for COUNTSTR OK"
-if countstr('bc','abcabcabc') \= 3 then say 'failed in test 1 '
-if countstr('aa','aaaa') \= 2 then say 'failed in test 2 '
-if countstr('','a a') \= 0 then say 'failed in test 3 '
+if countstr('bc','abcabcabc') \= 3 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 1 '
+end
+
+if countstr('aa','aaaa') \= 2 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 2 '
+end
+
+if countstr('','a a') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 3 '
+end
+
 /* These from the Rexx book. */
 /* These from Mark Hessling. */
-if countstr('','') \= 0 then say 'failed in test 4 '
-if countstr('a','abcdef') \= 1 then say 'failed in test 5 '
-if countstr(0,0) \= 1 then say 'failed in test 6 '
-if countstr('a','def') \= 0 then say 'failed in test 7 '
-if countstr('a','') \= 0 then say 'failed in test 8 '
-if countstr('','def') \= 0 then say 'failed in test 9 '
-if countstr('abc','abcdef') \= 1 then say 'failed in test 10 '
-if countstr('abcdefg','abcdef') \= 0 then say 'failed in test 11 '
-if countstr('abc','abcdefabccdabcd') \= 3 then say 'failed in test 12 '
-if countstr('o','the quick brown fox jumps over the lazy dog') \= 4 then say 'failed in test 13 '
+if countstr('','') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 4 '
+end
+
+if countstr('a','abcdef') \= 1 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 5 '
+end
+
+if countstr(0,0) \= 1 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 6 '
+end
+
+if countstr('a','def') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 7 '
+end
+
+if countstr('a','') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 8 '
+end
+
+if countstr('','def') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 9 '
+end
+
+if countstr('abc','abcdef') \= 1 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 10 '
+end
+
+if countstr('abcdefg','abcdef') \= 0 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 11 '
+end
+
+if countstr('abc','abcdefabccdabcd') \= 3 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 12 '
+end
+
+if countstr('o','the quick brown fox jumps over the lazy dog') \= 4 then do
+  errors=errors+1
+  say 'COUNTSTR failed in test 13 '
+end
+
 /* 12345678901234567890123456789012  */
-say "COUNTSTR OK"
-return
+
+return errors<>0
 
 /* function prototype */
 countstr: procedure = .int

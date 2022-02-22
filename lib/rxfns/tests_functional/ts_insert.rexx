@@ -1,19 +1,30 @@
 /* rexx test abs bif */
 options levelb
-say "test insert"
+errors=0
+
 x='CREXX is faster than BREXX'
 
-say "'"insert('much',x,10,10)"'"
-say '------'
-say "'"insert('much ',x,10)"'"
+if insert('much',x,10,10) \= 'CREXX is much      faster than BREXX' then do
+  errors=errors+1
+  say 'INSERT failed in test 1' insert('much',x,10,10)
+end
 
-say '------'
-say "'"insert('The new ',x,1)"'"
+if insert('much ',x,10) \= 'CREXX is much faster than BREXX' then do
+  errors=errors+1
+  say 'INSERT failed in test 2'
+end
 
-say '------'
-say "'"insert(' ,isn"t it?',x,27)"'"
+if insert('The new ',x,1) \= 'The new CREXX is faster than BREXX' then do
+  errors=errors+1
+  say 'INSERT failed in test 3'
+end
 
-return
+if insert(' ,isn"t it?',x,27) \= 'CREXX is faster than BREXX ,isn"t it?' then do
+  errors=errors+1
+  say 'INSERT failed in test 4'
+end
+
+return errors<>0
 
 /* function prototype */
 insert: procedure = .string

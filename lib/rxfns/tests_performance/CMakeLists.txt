@@ -10,6 +10,10 @@ find_program(CTEST ctest)
 set(REXXBINS
 	we.rxbin
 	test1.rxbin
+<<<<<<< HEAD
+=======
+	crexxbrexx.rxbin
+>>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
         )
 
 set(LIBRPATH
@@ -86,7 +90,15 @@ foreach(_binfile ${REXXBINS})
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
           OUTPUT ${_binfile}
   )
+<<<<<<< HEAD
   add_test(NAME ${_basename} COMMAND rxvm ${_basename} ${LIBRPATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+=======
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} ${LIBRPATH}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} ${LIBRPATH}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+>>>>>>> edcfea77434034edd26d8b5e4cfb966bf4096da5
 
 endforeach()
