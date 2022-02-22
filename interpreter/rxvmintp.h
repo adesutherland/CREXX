@@ -51,7 +51,6 @@ typedef struct module {
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
-    module *module;
     proc_constant *procedure;
     void *return_inst;
     bin_code *return_pc;

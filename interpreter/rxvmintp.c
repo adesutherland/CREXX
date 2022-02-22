@@ -104,7 +104,6 @@ RX_INLINE stack_frame *frame_f(
     this->number_locals = num_locals;
     this->number_args = no_args;
     this->return_reg = return_reg;
-    this->module = procedure_module;
     this->procedure = procedure;
 
     return this;
@@ -611,7 +610,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             /* back to the parents stack frame */
             temp_frame = current_frame;
             current_frame = current_frame->parent;
-            if (!current_frame) rc = (int) op1R->int_value; /* Exiting - grab the int rc */
+            if (!current_frame) rc = (int)(temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
             free_frame(temp_frame);
             if (!current_frame) {
                 DEBUG("TRACE - RET FROM MAIN()\n");
