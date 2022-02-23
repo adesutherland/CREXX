@@ -262,6 +262,8 @@ RX_INLINE void copy_value(value *dest, value *source) {
 
 /* Move a value */
 RX_INLINE void move_value(value *dest, value *source) {
+    if (dest == source) return;
+
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;

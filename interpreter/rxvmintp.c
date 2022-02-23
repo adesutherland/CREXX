@@ -806,9 +806,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
                 struct timeval tv;
-                struct timezone tz;
                 tzset();
-                gettimeofday(&tv, &tz);
+                gettimeofday(&tv, NULL);
                 REG_RETURN_INT(tv.tv_sec - timezone);
             }
             DISPATCH;
@@ -821,7 +820,10 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
             tzset();
             switch ((CONSTSTRING_OP(2))->string[0]) {
-                case 'Z':  op1R->int_value  = timezone; break;
+                case 'Z':
+                    tzset();
+                    op1R->int_value  = timezone;
+                    break;
                 case 'T':  op1R->int_value  = clock(); break;
                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
                 case 'N':  {
@@ -834,12 +836,12 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                      time_t ctime;
                      rxinteger tm;
                      struct timeval tv;
-                     struct timezone tz;
                      struct tm *tmdata;
                      ctime = time(NULL);
                      tmdata = localtime(&ctime);
+                     tzset();
                      tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
-                     gettimeofday(&tv, &tz);
+                     gettimeofday(&tv, NULL);
                      op1R->int_value = tm*1000000+tv.tv_usec;
                      break;
                 }
@@ -855,7 +857,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             {
                 rxinteger tm;
                 struct timeval tv;
-                struct timezone tz;
+                //struct timezone tz;
                 time_t	ctime;
                 struct tm *tmdata;
 
@@ -864,7 +866,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 tm =
                         ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
                         (tmdata->tm_sec));
-                gettimeofday(&tv, &tz);
+                gettimeofday(&tv, NULL);
                 REG_RETURN_INT(tm * 1000000 + tv.tv_usec);
             }
             DISPATCH;
