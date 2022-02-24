@@ -6,7 +6,7 @@ subword() .locals=12 .expose=subword.subword
    load  r3,0          /* offset in string      */
    strlen r4,r1        /* length doesn't matter */
    load  r6,0          /* word count            */
-   load  R10,""        /* extracted word        */
+   load  r10,""        /* extracted word        */
 loop:
    fndnblnk r3,r1,r3   /* find first/next non blank offset   */
    ilt r5,r3,0         /* if <0, nothing found, end search   */

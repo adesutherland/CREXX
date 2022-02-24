@@ -38,9 +38,9 @@ doit:
     /* we want to know the length of the string argument */
     load  r3,1 /* there is one argument for the call to length() */
     copy  r4,a1 /* and it is the string in a1 */
-    /* call  r10,length(),r3 /\* what is the length of the string arg *\/ */
+    call  r10,length(),r3 /* what is the length of the string arg */
     /* strlen a1,r12    */
-    /* copy  r12,r10 /\* the preliminary loop counter is the strlength *\/ */
+    copy  r12,r10 /* the preliminary loop counter is the strlength */
     dec   a2
     /* if r6 is nonzero, we have a length argument, a2:=r8+1 */
     igt   r1,r6,0

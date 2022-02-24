@@ -71,12 +71,13 @@ extern "C" {
 #define utf8_nonnull
 #define utf8_pure
 #define utf8_restrict __restrict
-#define utf8_weak __inline
+#define utf8_weak static __inline
 #elif defined(__clang__) || defined(__GNUC__)
 #define utf8_nonnull __attribute__((nonnull))
 #define utf8_pure __attribute__((pure))
 #define utf8_restrict __restrict__
-#define utf8_weak __attribute__((weak))
+//#define utf8_weak __attribute__((weak))
+#define utf8_weak static inline __attribute__((always_inline))
 #else
 #error Non clang, non gcc, non MSVC compiler found!
 #endif

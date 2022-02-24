@@ -1,6 +1,7 @@
 /* rexx test abs bif */
 options levelb
 /* RXVM ts_date date _jdn _dateo _datei abbrev right word words wordindex wordpos pos substr length copies upper */
+/* TODO */
 say "test Date"
 
 say "SEP "date('XGERMAN','31>12>2021','XEUROPEAN',"+$%",">")
