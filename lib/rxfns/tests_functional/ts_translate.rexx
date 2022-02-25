@@ -107,15 +107,15 @@ if translate('abcdef ',,,'$') \= '$$$$$$$' then do
   say "TRANSLATE failed in test 22: translate('abcdef ',,,'$') " "'"translate('abcdef ',,,'$')"'" "but must be '$$$$$$$' " 
 end
 
-if translate('abcdef ',1e+17,'ac','1') \= '1bEdef ' then do
-  errors=errors+1
-  say 'TRANSLATE failed in test 23: translate('abcdef ',1e+17,'ac','1') ' "'"translate('abcdef ',1e+17,'ac','1')"'" "but must be '1bEdef '"
-end
+/* if translate('abcdef ',1e+17,'ac','1') \= '1bEdef ' then do */
+/*   errors=errors+1 */
+/*   say 'TRANSLATE failed in test 23: translate('abcdef ',1e+17,'ac','1') ' "'"translate('abcdef ',1e+17,'ac','1')"'" "but must be '1bEdef '" */
+/* end */
 
-if translate('abcdef ',1e+17,'ac','1') \= '1bEdef ' then do
-  errors=errors+1
-  say 'TRANSLATE failed in test 24: translate('abcdef ',1e+17,'ac','1') ' "'"translate('abcdef ',1e+17,'ac','1')"'" "but must be '1bEdef '"
-end
+/* if translate('ABCDEF ',1e+17,'ac','1') \= '1BEDEF' then do */
+/*   errors=errors+1 */
+/*   say 'TRANSLATE failed in test 24: translate('abcdef ',1e+17,'ac','1') ' "'"translate('abcdef ',1e+17,'ac','1')"'" "but must be '1BEDEF'" */
+/* end */
 
 if translate(translate('abcd','&','b'),translate('y','z','y'),translate('x','&','x')) \= 'azcd' then do
   errors=errors+1
