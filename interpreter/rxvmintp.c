@@ -726,29 +726,25 @@ START_OF_INSTRUCTIONS ;
 
             tzset();
             switch ((CONSTSTRING_OP(2))->string[0]) {
-                case 'Z':  op1R->int_value  = timezone; break;
-                case 'T':  op1R->int_value  = clock(); break;
-                case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
-                case 'N':  {
+                case 'Z':  op1R->int_value  = timezone; break;         // time difference to UTC in seconds
+                case 'T':  op1R->int_value  = clock(); break;          // clock count since program start
+                case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;   // clocks per second
+                case 'N':  {                                           // time zone names
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
                      op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
                      op1R->string_pos = 0;
                      PUTSTRLEN(v1,op1R->string_length);
                      break;
                 }
-                case 'U':  {
+                case 'U':  {                                           // UTC Time
                      ctime = time(NULL);
                      tmdata = localtime(&ctime);
-                     i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
+                     i1=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+timezone;
                      gettimeofday(&tv, &tz);
                      op1R->int_value = i1*1000000+tv.tv_usec;
                      break;
                 }
             }
-    //        printf("Current bias is %ld seconds\n", timezone);
-    //        printf("Current timezone is %s and %s\n", tzname[0], tzname[1]);
-    //        gettimeofday(&tv, &tz);
-    //        REG_RETURN_INT(tv.tv_sec-timezone);
             DISPATCH;
 
 /* ---------------------------------------------------------------------------------
@@ -2771,7 +2767,62 @@ START_OF_INSTRUCTIONS ;
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+       START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
+            v2 = op2R;
+            if (v2->int_value<0) v2->int_value=(time((time_t *)0)%(3600*24));
+            srand((unsigned) v2->int_value);
+            i1=(long)rand();
+            set_int(op1R, i1);
+       DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+       START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
+            DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), v2->int_value);
+            i2 = op2I;
+            if (i2<0) i2=(time((time_t *)0)%(3600*24));
+            srand((unsigned) i2);
+            i1=(long)rand();
+            set_int(op1R, i1);
+       DISPATCH;
 
+/* ------------------------------------------------------------------------------------
+ *  OPENDLL_REG_REG float to load register & set the register type flag pej 24. February 2022
+ *
+ *  -----------------------------------------------------------------------------------
+ */
+/*
+    START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
+    DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
+#include "dllhandler.h"
+
+    int loadDLL( )
+    {
+        int status = 0;
+        TestFunc _TestFunc;
+        HINSTANCE testLibrary = LoadLibrary("test.dll");
+
+        if (testLibrary)
+        {
+            _TestFunc = (TestFunc)GetProcAddress(testLibrary, "Test");
+            if (_TestFunc)
+            {
+                status = _TestFunc();
+            }
+            FreeLibrary(serialLibrary);
+        }
+        return status;
+    }
+    DISPATCH;
+*/
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021
