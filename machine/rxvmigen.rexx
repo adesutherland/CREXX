@@ -38,6 +38,7 @@
      line=strip(linein(file))
      if line='' then iterate
      if pos('instr_f(',line)=0 then leave  /* no more instructions end loop */
+     if substr(strip(line),1,7) <>'instr_f' then iterate
      lino=lino+1
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
   end
