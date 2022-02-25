@@ -2680,32 +2680,32 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021
- *   op1=irand(op2)
- *  -----------------------------------------------------------------------------------
- */
-       START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
-            v2 = op2R;
-            if (v2->int_value<0) v2->int_value=(time((time_t *)0)%(3600*24));
-            srand((unsigned) v2->int_value);
-            i1=(long)rand();
-            set_int(op1R, i1);
-       DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021
- *   op1=irand(op2)
- *  -----------------------------------------------------------------------------------
- */
-       START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
-            DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), v2->int_value);
-            i2 = op2I;
-            if (i2<0) i2=(time((time_t *)0)%(3600*24));
-            srand((unsigned) i2);
-            i1=(long)rand();
-            set_int(op1R, i1);
-       DISPATCH;
+/* /\* ------------------------------------------------------------------------------------ */
+/*  *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021 */
+/*  *   op1=irand(op2) */
+/*  *  ----------------------------------------------------------------------------------- */
+/*  *\/ */
+/*        START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2); */
+/*             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2)); */
+/*             v2 = op2R; */
+/*             if (v2->int_value<0) v2->int_value=(time((time_t *)0)%(3600*24)); */
+/*             srand((unsigned) v2->int_value); */
+/*             i1=(long)rand(); */
+/*             set_int(op1R, i1); */
+/*        DISPATCH; */
+/* /\* ------------------------------------------------------------------------------------ */
+/*  *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021 */
+/*  *   op1=irand(op2) */
+/*  *  ----------------------------------------------------------------------------------- */
+/*  *\/ */
+/*        START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2); */
+/*             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), v2->int_value); */
+/*             i2 = op2I; */
+/*             if (i2<0) i2=(time((time_t *)0)%(3600*24)); */
+/*             srand((unsigned) i2); */
+/*             i1=(long)rand(); */
+/*             set_int(op1R, i1); */
+/*        DISPATCH; */
 
 /* ------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG float to load register & set the register type flag pej 24. February 2022
