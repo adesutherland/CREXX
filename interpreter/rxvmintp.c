@@ -2707,33 +2707,31 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 /*             set_int(op1R, i1); */
 /*        DISPATCH; */
 
-/* ------------------------------------------------------------------------------------
- *  OPENDLL_REG_REG float to load register & set the register type flag pej 24. February 2022
- *
- *  -----------------------------------------------------------------------------------
- */
-/*
-    START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
-    DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
-#include "dllhandler.h"
-    int loadDLL( )
-    {
-        int status = 0;
-        TestFunc _TestFunc;
-        HINSTANCE testLibrary = LoadLibrary("test.dll");
-        if (testLibrary)
-        {
-            _TestFunc = (TestFunc)GetProcAddress(testLibrary, "Test");
-            if (_TestFunc)
-            {
-                status = _TestFunc();
-            }
-            FreeLibrary(serialLibrary);
-        }
-        return status;
-    }
-    DISPATCH;
-*/
+/* ------------------------------------------------------------------------------------ */
+/*  OPENDLL_REG_REG float to load register & set the register type flag pej 24. February 2022 */
+
+/*  ----------------------------------------------------------------------------------- */
+
+/*     START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2); */
+/*     DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1)); */
+/* #include "dllhandler.h" */
+/*     int loadDLL( ) */
+/*     { */
+/*         int status = 0; */
+/*         TestFunc _TestFunc; */
+/*         HINSTANCE testLibrary = LoadLibrary("test.dll"); */
+/*         if (testLibrary) */
+/*         { */
+/*             _TestFunc = (TestFunc)GetProcAddress(testLibrary, "Test"); */
+/*             if (_TestFunc) */
+/*             { */
+/*                 status = _TestFunc(); */
+/*             } */
+/*             FreeLibrary(serialLibrary); */
+/*         } */
+/*         return status; */
+/*     } */
+/*     DISPATCH; */
 
 
 
