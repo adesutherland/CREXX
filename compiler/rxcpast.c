@@ -496,9 +496,17 @@ static walker_result print_error_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
+            /* Print error - truncate source to one line */
+            int len = (int) (node->source_end - node->source_start + 1);
+            int i;
+            for (i=0; i<len; i++) {
+                if (node->source_start[i] == '\n') {
+                    len = i;
+                    break;
+                }
+            }
             fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
-            prt_unex(stderr, node->source_start,
-                     (int) (node->source_end - node->source_start + 1));
+            prt_unex(stderr, node->source_start, len);
             fprintf(stderr,"\"\n");
             (*errors)++;
         }
