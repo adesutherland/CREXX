@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+F0040 - REXX Debugging Support
 I0265 - Fixed Segfault when there is a duplicate procedure definition
 F0031 - VM Performance Optimisations
 F0035 - (Almost) complete REXX/RXAS BIF library
