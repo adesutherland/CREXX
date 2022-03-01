@@ -1,0 +1,42 @@
+-- package .Users.rvj-- ansen.apps.crexx-f0038.lib.rxfns.rexx
+/**
+ * Class clink implements some mechanics for creating crexx libraries 
+ * <BR>
+ * Created on: Mon, 28, Feb 2022 14:17:29 +0100
+ */
+class clink
+  /**
+   * Default constructor
+   */
+  method clink()
+    return
+
+  method main(args=String[]) static
+    c=clink()
+    c.makeLibrary()
+    
+  /**
+   * Method makeLibrary takes the .rexx files in a directory and concatenates them
+   * to be able to have one binary rxbin 'library';
+   * For this purpose we need to:
+   * 1) get all the .rexx files and concatenate them
+   * 2) dedup the 'options levelb' statements
+   * 3) dedup the function prototypes
+   * 4) fixup the package the functions are in; in the case of rxfns, 'function.function'
+   */
+  method makeLibrary()
+    linesList = ArrayList(); dupTree=TreeMap()
+    outstem=''; blank_lines=0; seen_levelb=0
+    address system with output stem outstem
+    'cat *.rexx'
+    say date() 'clink read' outstem[0] 'lines'
+    removeLevelB(outstem)
+
+    
+    
+
+    
+  method skipArgs(outstem,i)
+    i=i+1
+    if outstem[i].wordpos('arg') = 1 then skipArgs(outstem,i)
+    return i
