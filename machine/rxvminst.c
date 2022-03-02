@@ -23,6 +23,13 @@ void init_ops() {
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
+    instr_f("metaloadinst", "Load Instruction Code (op1 = inst[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = int[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadfoperand", "Load Float Operand (op1 = float[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadsoperand", "Load String Operand (op1 = string[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = proc[op2])", OP_REG, OP_REG, OP_NONE);
+
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);

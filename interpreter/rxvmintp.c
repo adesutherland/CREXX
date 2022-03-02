@@ -148,8 +148,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     /*
      * Instruction database - loaded from a generated header file
      */
-    Instruction *instruction;
-    #include "instrset.h"  /* Set up void *address_map[] */
+    #include "instrset.h"  /* Set up void *address_map[], etc. */
 
     /* Link Modules Together */
     DEBUG("Linking - Build Symbols\n");
@@ -375,6 +374,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
     START_OF_INSTRUCTIONS ;
 
+        /* Signal / Interrupt Instructins */
+
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0);
             DEBUG("TRACE - BPON\n");
@@ -387,6 +388,63 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             check_breakpoint = 0;
             DISPATCH;
 
+        /* Meta Instructions */
+
+        /* Load Instruction Code (op1 = inst[op2]) */
+        START_INSTRUCTION(METALOADINST_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METALOADINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        {
+            /* TODO this only works in current module space */
+            bin_code inst = current_frame->procedure->binarySpace->binary[op2R->int_value];
+#ifdef NTHREADED
+            /* Bytecode Version */
+            op1R->int_value = inst.instruction.opcode;
+#else
+            /* Threaded Version - basically we are unthreading, finding the
+             * instruction with the corresponding implementation address
+             * (quite slow ... but not an instruction used in normal code */
+            op1R->int_value = 0;
+            void *impl = inst.impl_address;
+            size_t a;
+            size_t num_instructions = sizeof(address_map) / sizeof(address_map[0]);
+            for (a = 0; a < num_instructions; a++) {
+                if (address_map[a] == impl) {
+                    op1R->int_value = (rxinteger)a;
+                    break;
+                }
+            }
+#endif
+        }
+        DISPATCH;
+
+        /* Decode opcode (op1 decoded op2) */
+        START_INSTRUCTION(METADECODEINST_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METADECODEINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        set_null_string(op1R, meta_map[op2R->int_value].instruction);
+        DISPATCH;
+
+        /* Load Integer/Index Operand (op1 = int[op2]) */
+        START_INSTRUCTION(METALOADIOPERAND_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METALOADIOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        DISPATCH;
+
+        /* Load Float Operand (op1 = float[op2]) */
+        START_INSTRUCTION(METALOADFOPERAND_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METALOADFOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        DISPATCH;
+
+        /* Load String Operand (op1 = string[op2]) */
+        START_INSTRUCTION(METALOADSOPERAND_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METALOADSOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        DISPATCH;
+
+        /* Load Procedure Operand (op1 = proc[op2]) */
+        START_INSTRUCTION(METALOADPOPERAND_REG_REG) CALC_DISPATCH(2);
+        DEBUG("TRACE - METALOADPOPERAND R%llu,%llu\n", REG_IDX(1), REG_IDX(2));
+        DISPATCH;
+
+        /* Regular Instructins */
+        /* LOAD */
         START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2);
             DEBUG("TRACE - LOAD R%llu,%llu\n", REG_IDX(1), op2I);
             set_int(op1R, op2I);
