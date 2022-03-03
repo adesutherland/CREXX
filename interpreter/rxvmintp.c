@@ -1845,33 +1845,52 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         DEBUG("TRACE - FDIV R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF);
             DISPATCH;
-
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_FLOAT  op1=op2**op2w Float operationn                   pej 3 March 2022
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_REG_FLOAT) CALC_DISPATCH(3);
+    DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        REG_RETURN_FLOAT(pow(op2RF,op3F));
+    }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_REG  op1=op2**op2 Float operation                     pej 3 March 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_REG_REG) CALC_DISPATCH(3);
+    {
+        DEBUG("TRACE - FPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+              (int) REG_IDX(3));
+        REG_RETURN_FLOAT(pow(op2RF,op3RF));
+    }
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3);
-            {
-                DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
-                    (int) REG_IDX(3));
-                rxinteger  i1 = 1;
-                rxinteger  i2 = op2RI;
-                rxinteger  i3 = op3RI;
-                while (i3 != 0) {
-                    if ((i3 & 1) == 1) i1 *= i2;
-                    i3 >>= 1;
-                    i2 *= i2;
-                }
-                REG_RETURN_INT(i1);
-            }
-            DISPATCH;
-
+    START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3);
+    {
+        DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+              (int) REG_IDX(3));
+        rxinteger  i1 = 1;
+        rxinteger  i2 = op2RI;
+        rxinteger  i3 = op3RI;
+        while (i3 != 0) {
+            if ((i3 & 1) == 1) i1 *= i2;
+            i3 >>= 1;
+            i2 *= i2;
+        }
+        REG_RETURN_INT(i1);
+    }
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn               pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 rxinteger i1 = 1;
                 rxinteger i2 = op2RI;
