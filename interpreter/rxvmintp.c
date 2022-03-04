@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
@@ -2699,62 +2702,87 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 CALC_DISPATCH_MANUAL;
             }
             DISPATCH;
-/* /\* ------------------------------------------------------------------------------------ */
-/*  *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021 */
-/*  *   op1=irand(op2) */
-/*  *  ----------------------------------------------------------------------------------- */
-/*  *\/ */
-/*        START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2); */
-/*             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2)); */
-/*             v2 = op2R; */
-/*             if (v2->int_value<0) v2->int_value=(time((time_t *)0)%(3600*24)); */
-/*             srand((unsigned) v2->int_value); */
-/*             i1=(long)rand(); */
-/*             set_int(op1R, i1); */
-/*        DISPATCH; */
-/* /\* ------------------------------------------------------------------------------------ */
-/*  *  IRAND_REG_REG Random Number with seed register                 pej 11 November 2021 */
-/*  *   op1=irand(op2) */
-/*  *  ----------------------------------------------------------------------------------- */
-/*  *\/ */
-/*        START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2); */
-/*             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), v2->int_value); */
-/*             i2 = op2I; */
-/*             if (i2<0) i2=(time((time_t *)0)%(3600*24)); */
-/*             srand((unsigned) i2); */
-/*             i1=(long)rand(); */
-/*             set_int(op1R, i1); */
-/*        DISPATCH; */
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2);
+             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
+            {
+             if (op2R->int_value<0) op2R->int_value=(time((time_t *)0)%(3600*24));
+             srand((unsigned) op2R->int_value);
+             set_int(op1R, (long)rand());
+             }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
+             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), op2I);
+            {
+             if (op2I < 0) op2I = (time((time_t *) 0) % (3600 * 24));
+             srand((unsigned) op2I);
+             set_int(op1R, (long) rand());
+            }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------------
+ *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
+ *  -----------------------------------------------------------------------------------------
+ */
+    typedef void (*EntryPointfuncPtr)(int argc, const char * argv );
+/*
+ * //You need to declare types to point on classes/functions in LoadMe.dll
+//Assume, you have a function in your LoadMe.dll with a name
+//EntryPoint, which takes two parameters of types int and const char *,
+//and is of type void. You need to create a new type as a
+//pointer to that function as it is shown below.
 
-/* ------------------------------------------------------------------------------------ */
-/*  OPENDLL_REG_REG float to load register & set the register type flag pej 24. February 2022 */
+typedef void (*EntryPointfuncPtr)(int argc, const char * argv );
 
-/*  ----------------------------------------------------------------------------------- */
+//Declare an HINSTANCE and load the library dynamically. Don’t forget
+//to specify a correct path to the location of LoadMe.dll
 
-/*     START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2); */
-/*     DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1)); */
-/* #include "dllhandler.h" */
-/*     int loadDLL( ) */
-/*     { */
-/*         int status = 0; */
-/*         TestFunc _TestFunc; */
-/*         HINSTANCE testLibrary = LoadLibrary("test.dll"); */
-/*         if (testLibrary) */
-/*         { */
-/*             _TestFunc = (TestFunc)GetProcAddress(testLibrary, "Test"); */
-/*             if (_TestFunc) */
-/*             { */
-/*                 status = _TestFunc(); */
-/*             } */
-/*             FreeLibrary(serialLibrary); */
-/*         } */
-/*         return status; */
-/*     } */
-/*     DISPATCH; */
+HINSTANCE LoadME;
+LoadMe = LoadLibrary("..\\enter a Path To Your Dll here\\LoadMe.dll");
 
+// Check to see if the library was loaded successfully
+if (LoadMe != 0)
+    printf("LoadMe library loaded!\n");
+else
+    printf("LoadMe library failed to load!\n");
 
+//declare a variable of type pointer to EntryPoint function, a name of
+// which you will later use instead of EntryPoint
+EntryPointfuncPtr LibMainEntryPoint;
 
-	    
+// GetProcAddress – is a function, which returns the address of the
+// specified exported dynamic-link library (DLL) function. After
+// performing this step you are allowed to use a variable
+// LibMainEntryPoint as an equivalent of the function exported in
+// LoadMe.dll. In other words, if you need to call
+// EntryPoint(int, const char *) function, you call it as
+// LibMainEntryPoint(int, const char *)
+
+LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(LoadMe,"entryPoint");
+ */
+
+     START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
+     DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
+     HINSTANCE hDLL;               // Handle to DLL
+     EntryPointfuncPtr LibMainEntryPoint;
+     printf("OPENDLL \n");
+     HRESULT hrReturnVal;
+
+    hDLL = LoadLibrary("C:/Users/PeterJ/Dropbox/PeterJ/CREXXDLL.dll");
+    printf("DLL ADDR %d\n",hDLL);
+    LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(hDLL,"EasyRequester");
+    printf("LIB ADDR %d\n",LibMainEntryPoint);
+    LibMainEntryPoint(hDLL, "EasyRequester");
+    REG_RETURN_INT(hrReturnVal);
+    DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021

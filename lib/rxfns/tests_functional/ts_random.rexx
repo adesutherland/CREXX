@@ -6,6 +6,8 @@ say "Random(,555555)    "random(,555555)
 say "Random(,,18601)    "random(,,1860)
 say "Random(,300,31415) "random(,300,31415926)
 say "Random(10,300,314) "random(10,300,314)
+say "Random(10,300,314) "random(10,300,314)
+say "Random(10,300,314) "random(10,300,314)
 say "Random(10,5,123)   "random(10,5,123)
 return
 
