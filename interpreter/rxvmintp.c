@@ -2771,6 +2771,7 @@ LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(LoadMe,"entryPoint");
 
      START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
      DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
+#ifdef _WIN32
      HINSTANCE hDLL;               // Handle to DLL
      EntryPointfuncPtr LibMainEntryPoint;
      printf("OPENDLL \n");
@@ -2782,6 +2783,7 @@ LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(LoadMe,"entryPoint");
     printf("LIB ADDR %d\n",LibMainEntryPoint);
     LibMainEntryPoint(hDLL, "EasyRequester");
     REG_RETURN_INT(hrReturnVal);
+#endif
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
