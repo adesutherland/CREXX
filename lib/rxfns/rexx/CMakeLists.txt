@@ -49,6 +49,7 @@ set(REXXBINS
 	      find.rxbin
 	      index.rxbin
 	      xrange.rxbin
+	      random.rxbin
 #	      datatype.rxbin
         )
 
