@@ -14,10 +14,8 @@
 /*       icc /Gmd4e- /O /Wall RxDes.c RxDes.def desbase.lib         */
 /*------------------------------------------------------------------*/
 
-#define INCL_NOPM
-#include <os2.h>
 #define INCL_REXXSAA
-#include <rexxsaa.h>
+#include "rexxsaa.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -32,8 +30,8 @@ ULONG RxDesEncrypt(
      PRXSTRING Retstr)
 
 {
-  CHAR   desout[9];
-  CHAR   des_in[9];
+  char   desout[9];
+  char   des_in[9];
 
   if ( Argc != 2)
      return 40L;
@@ -88,4 +86,4 @@ ULONG RxDesDecrypt(
   return 0L;
 
 }
-
+
