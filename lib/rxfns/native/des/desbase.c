@@ -63,7 +63,7 @@
  * The key schedule is also precomputed.
  *
  * This version contains just the DES engine for use in a 32-bit DLL
- * for use in various applications (Ren‚ Jansen @ DNB).
+ * for use in various applications (RenÃ© Jansen @ DNB).
  *
  *  it can be called in this way:
  *
