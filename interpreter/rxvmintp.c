@@ -98,12 +98,15 @@ RX_INLINE stack_frame *frame_f(
         this->nominal_number_locals = nominal_num_locals;
     }
     this->parent = parent;
+    if (parent) this->interrupt_mask = parent->interrupt_mask;
+    else this->interrupt_mask.any = 0;
     this->return_inst = return_inst;
     this->return_pc = return_pc;
     this->number_locals = num_locals;
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
+    this->is_interrupt = 0;
 
     return this;
 }
@@ -128,8 +131,12 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
+    proc_constant *step_handler = 0;
     int rc = 0;
     bin_code *pc, *next_pc;
+    interrupt_mask_type interrupt_mask;
+    value *interrupt_arg = value_f();
+
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
@@ -143,7 +150,6 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     proc_constant *p_entry, *p_entry_linked;
     struct avl_tree_node *exposed_proc_tree = 0;
     struct avl_tree_node *exposed_reg_tree = 0;
-    char check_breakpoint = 0;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -294,6 +300,23 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     }
 #endif
 
+    /* Find handlers */
+    DEBUG("Find program interrupt handlers\n");
+    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+        size_t i = 0;
+        while (i < program[mod_index].segment.const_size) {
+            step_handler =
+                    (proc_constant *) (program[mod_index].segment.const_pool +
+                                       i);
+            if (step_handler->base.type == PROC_CONST &&
+                strcmp(step_handler->name, "stephandler") == 0)
+                break;
+            i += step_handler->base.size_in_pool;
+            step_handler = 0;
+        }
+        if (step_handler) break;
+    }
+
     /* Find the program's entry point
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
@@ -369,8 +392,34 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         /* Breakpoint Support - this is only used/called when check_breakpoint is set */
     START_BREAKPOINT ;
-            DEBUG("BREAKPOINT CHECK\n");
-            END_BREAKPOINT ;
+        DEBUG("BREAKPOINT CHECK\n");
+        if (step_handler) {
+            current_frame = frame_f(step_handler, 1, current_frame, pc,
+                                    next_inst, 0);
+
+            /* Prepare dispatch to procedure as early as possible */
+            next_pc =
+                    &(current_frame->procedure->binarySpace
+                            ->binary[step_handler->start]);
+            CALC_DISPATCH_MANUAL;
+
+            /* Disable Interrupts */
+            current_frame->is_interrupt = 1;
+            current_frame->interrupt_mask.any = 0;
+            interrupt_mask.any = 0;
+
+            /* Arguments */
+            size_t arg_index = step_handler->binarySpace->globals + step_handler->locals + 1;
+            value_zero(interrupt_arg);
+            interrupt_arg->int_value = (rxinteger)(pc - step_handler->binarySpace->binary);
+            current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
+
+            /* This gotos the start of the interrupt handler  */
+            DISPATCH;
+        }
+        else {
+            END_BREAKPOINT;
+        }
 
     START_OF_INSTRUCTIONS ;
 
@@ -379,13 +428,15 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0);
             DEBUG("TRACE - BPON\n");
-            check_breakpoint = 1;
+            current_frame->interrupt_mask.step = 1;
+            interrupt_mask = current_frame->interrupt_mask;
             DISPATCH;
 
         /* Enable Breakpoints */
         START_INSTRUCTION(BPOFF) CALC_DISPATCH(0);
             DEBUG("TRACE - BPOFF\n");
-            check_breakpoint = 0;
+            current_frame->interrupt_mask.step = 0;
+            interrupt_mask = current_frame->interrupt_mask;
             DISPATCH;
 
         /* Meta Instructions */
@@ -419,28 +470,56 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         /* Decode opcode (op1 decoded op2) */
         START_INSTRUCTION(METADECODEINST_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METADECODEINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
-        set_null_string(op1R, meta_map[op2R->int_value].instruction);
+            DEBUG("TRACE - METADECODEINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+
+            /* The target register is turned into an object with 7 attributes */
+            set_num_attributes(op1R,7);
+
+            /* Populate the object */
+            op1R->attributes[0]->int_value = meta_map[op2R->int_value].opcode;
+            set_null_string(op1R->attributes[1], meta_map[op2R->int_value].instruction);
+            set_null_string(op1R->attributes[2], meta_map[op2R->int_value].desc);
+            op1R->attributes[3]->int_value = meta_map[op2R->int_value].operands;
+            op1R->attributes[4]->int_value = meta_map[op2R->int_value].op1_type;
+            op1R->attributes[5]->int_value = meta_map[op2R->int_value].op2_type;
+            op1R->attributes[6]->int_value = meta_map[op2R->int_value].op3_type;
         DISPATCH;
 
         /* Load Integer/Index Operand (op1 = int[op2]) */
+        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADIOPERAND_REG_REG) CALC_DISPATCH(2);
         DEBUG("TRACE - METALOADIOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        op1R->int_value = current_frame->procedure->binarySpace->binary[op2R->int_value].iconst;
         DISPATCH;
 
         /* Load Float Operand (op1 = float[op2]) */
+        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADFOPERAND_REG_REG) CALC_DISPATCH(2);
         DEBUG("TRACE - METALOADFOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        op1R->float_value = current_frame->procedure->binarySpace->binary[op2R->int_value].fconst;
         DISPATCH;
 
         /* Load String Operand (op1 = string[op2]) */
+        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADSOPERAND_REG_REG) CALC_DISPATCH(2);
         DEBUG("TRACE - METALOADSOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        set_const_string(op1R,
+                         (string_constant *)(current_frame->procedure->binarySpace->const_pool +
+                         current_frame->procedure->binarySpace->binary[op2R->int_value].index));
         DISPATCH;
 
         /* Load Procedure Operand (op1 = proc[op2]) */
+        /* TODO this only works in current module space */
+        /* TODO needs to do more that get the function name - a function object is needed */
         START_INSTRUCTION(METALOADPOPERAND_REG_REG) CALC_DISPATCH(2);
         DEBUG("TRACE - METALOADPOPERAND R%llu,%llu\n", REG_IDX(1), REG_IDX(2));
+        {
+            proc_constant
+                    *proc =
+                        (proc_constant *)(current_frame->procedure->binarySpace->const_pool +
+                            current_frame->procedure->binarySpace->binary[op2R->int_value].index);
+            set_null_string(op1R, proc->name);
+        }
         DISPATCH;
 
         /* Regular Instructins */
@@ -633,115 +712,163 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         START_INSTRUCTION(RET);
             DEBUG("TRACE - RET\n");
-            /* Where we return to */
-            next_pc = current_frame->return_pc;
-            next_inst = current_frame->return_inst;
-            /* back to the parents stack frame */
-            temp_frame = current_frame;
-            current_frame = current_frame->parent;
-            free_frame(temp_frame);
-            if (!current_frame) {
-                DEBUG("TRACE - RET FROM MAIN()\n");
-                /* Free Argument Values a1... */
-                int i, j;
-                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
-                                temp_frame->procedure->locals + 1;
-                        i < argc;
-                        i++, j++) {
-                    clear_value(current_frame->baselocals[j]);
-                    free(current_frame->baselocals[j]);
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                next_inst = current_frame->return_inst;
+                char is_interrupt = current_frame->is_interrupt;
+                /* back to the parents stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                free_frame(temp_frame);
+                if (!current_frame) {
+                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    for (i = 0, j =
+                                        temp_frame->procedure->binarySpace
+                                                ->globals +
+                                        temp_frame->procedure->locals + 1;
+                            i < argc;
+                            i++, j++) {
+                        clear_value(current_frame->baselocals[j]);
+                        free(current_frame->baselocals[j]);
+                    }
+                    rc = 0;
+                    goto interprt_finished;
                 }
-                rc = 0;
-                goto interprt_finished;
+                interrupt_mask = current_frame->interrupt_mask;
+                if (is_interrupt) {
+                    pc = next_pc;
+                    END_BREAKPOINT;
+                }
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(RET_REG);
             DEBUG("TRACE - RET R%llu\n", REG_IDX(1));
-            /* Where we return to */
-            next_pc = current_frame->return_pc;
-            next_inst = current_frame->return_inst;
-            /* Set the result register */
-            if (current_frame->return_reg) move_value(current_frame->return_reg, op1R);
-            /* back to the parents stack frame */
-            temp_frame = current_frame;
-            current_frame = current_frame->parent;
-            if (!current_frame) rc = (int)(temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
-            free_frame(temp_frame);
-            if (!current_frame) {
-                DEBUG("TRACE - RET FROM MAIN()\n");
-                /* Free Argument Values a1... */
-                int i, j;
-                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
-                                temp_frame->procedure->locals + 1;
-                        i < argc;
-                        i++, j++) {
-                    clear_value(current_frame->baselocals[j]);
-                    free(current_frame->baselocals[j]);
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                next_inst = current_frame->return_inst;
+                char is_interrupt = current_frame->is_interrupt;
+                /* Set the result register */
+                if (current_frame->return_reg) {
+                    if (REG_IDX(1) > current_frame->procedure->locals)
+                        copy_value(current_frame->return_reg,
+                                   op1R); /* Must do a copy from an argument or global because ... */
+                    else
+                        move_value(current_frame->return_reg,
+                                   op1R); /* ... the faster move deletes the source which is ok for locals */
                 }
-                goto interprt_finished;
+                /* back to the parents stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                if (!current_frame) rc =
+                                            (int) (temp_frame->locals[(pc + 1)
+                                                    ->index])
+                                                    ->int_value; /* Exiting - grab the int rc */
+                free_frame(temp_frame);
+                if (!current_frame) {
+                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    for (i = 0, j =
+                                        temp_frame->procedure->binarySpace
+                                                ->globals +
+                                        temp_frame->procedure->locals + 1;
+                            i < argc;
+                            i++, j++) {
+                        clear_value(current_frame->baselocals[j]);
+                        free(current_frame->baselocals[j]);
+                    }
+                    goto interprt_finished;
+                }
+                interrupt_mask = current_frame->interrupt_mask;
+                if (is_interrupt) {
+                    pc = next_pc;
+                    END_BREAKPOINT;
+                }
+                DISPATCH;
             }
-            DISPATCH;
+
 
         START_INSTRUCTION(RET_INT);
             DEBUG("TRACE - RET %d\n", (int)op1I);
-            /* Where we return to */
-            next_pc = current_frame->return_pc;
-            next_inst = current_frame->return_inst;
-            /* Set the result register */
-            if (current_frame->return_reg)
-                current_frame->return_reg->int_value = op1I;
-            /* back to the parents stack frame */
-            temp_frame = current_frame;
-            current_frame = current_frame->parent;
-            free_frame(temp_frame);
-            if (!current_frame) {
-                DEBUG("TRACE - RET FROM MAIN()\n");
-                /* Free Argument Values a1... */
-                int i, j;
-                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
-                                temp_frame->procedure->locals + 1;
-                        i < argc;
-                        i++, j++) {
-                    clear_value(current_frame->baselocals[j]);
-                    free(current_frame->baselocals[j]);
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                next_inst = current_frame->return_inst;
+                char is_interrupt = current_frame->is_interrupt;
+                /* Set the result register */
+                if (current_frame->return_reg)
+                    current_frame->return_reg->int_value = op1I;
+                /* back to the parents stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                free_frame(temp_frame);
+                if (!current_frame) {
+                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    for (i = 0, j =
+                                        temp_frame->procedure->binarySpace
+                                                ->globals +
+                                        temp_frame->procedure->locals + 1;
+                            i < argc;
+                            i++, j++) {
+                        clear_value(current_frame->baselocals[j]);
+                        free(current_frame->baselocals[j]);
+                    }
+                    rc = (int) op1I;
+                    goto interprt_finished;
                 }
-                rc = (int) op1I;
-                goto interprt_finished;
+                interrupt_mask = current_frame->interrupt_mask;
+                if (is_interrupt) {
+                    pc = next_pc;
+                    END_BREAKPOINT;
+                }
+                DISPATCH;
             }
-            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  RET_FLOAT                                                        pej 12. April 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(RET_FLOAT);
             DEBUG("TRACE - RET %g\n", op1F);
-
-            /* Where we return to */
-            next_pc = current_frame->return_pc;
-            next_inst = current_frame->return_inst;
-            /* Set the result register */
-            if (current_frame->return_reg)
-                current_frame->return_reg->float_value = op1F;
-            /* back to the parents stack frame */
-            temp_frame = current_frame;
-            current_frame = current_frame->parent;
-            free_frame(temp_frame);
-            if (!current_frame) {
-                DEBUG("TRACE - RET FROM MAIN()\n");
-                /* Free Argument Values a1... */
-                int i, j;
-                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
-                                temp_frame->procedure->locals + 1;
-                        i < argc;
-                        i++, j++) {
-                    clear_value(current_frame->baselocals[j]);
-                    free(current_frame->baselocals[j]);
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                next_inst = current_frame->return_inst;
+                char is_interrupt = current_frame->is_interrupt;
+                /* Set the result register */
+                if (current_frame->return_reg)
+                    current_frame->return_reg->float_value = op1F;
+                /* back to the parents stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                free_frame(temp_frame);
+                if (!current_frame) {
+                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    for (i = 0, j = temp_frame->procedure->binarySpace->globals +
+                                    temp_frame->procedure->locals + 1;
+                            i < argc;
+                            i++, j++) {
+                        clear_value(current_frame->baselocals[j]);
+                        free(current_frame->baselocals[j]);
+                    }
+                    rc = 0;
+                    goto interprt_finished;
                 }
-                rc = 0;
-                goto interprt_finished;
+                interrupt_mask = current_frame->interrupt_mask;
+                if (is_interrupt) {
+                    pc = next_pc;
+                    END_BREAKPOINT;
+                }
+                DISPATCH;
             }
-            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
             *  RET_STRING                                                        pej 12. April 2021
@@ -749,32 +876,39 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             */
         START_INSTRUCTION(RET_STRING);
             DEBUG("TRACE - RET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
-
-            /* Where we return to */
-            next_pc = current_frame->return_pc;
-            next_inst = current_frame->return_inst;
-            /* Set the result register */
-            if (current_frame->return_reg)
-                set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
-            /* back to the parents stack frame */
-            temp_frame = current_frame;
-            current_frame = current_frame->parent;
-            free_frame(temp_frame);
-            if (!current_frame) {
-                DEBUG("TRACE - RET FROM MAIN()\n");
-                /* Free Argument Values a1... */
-                int i, j;
-                for (i = 0, j = temp_frame->procedure->binarySpace->globals +
-                                temp_frame->procedure->locals + 1;
-                        i < argc;
-                        i++, j++) {
-                    clear_value(current_frame->baselocals[j]);
-                    free(current_frame->baselocals[j]);
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                next_inst = current_frame->return_inst;
+                char is_interrupt = current_frame->is_interrupt;
+                /* Set the result register */
+                if (current_frame->return_reg)
+                    set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
+                /* back to the parents stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                free_frame(temp_frame);
+                if (!current_frame) {
+                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    for (i = 0, j = temp_frame->procedure->binarySpace->globals +
+                            temp_frame->procedure->locals + 1;
+                            i < argc;
+                            i++, j++) {
+                        clear_value(current_frame->baselocals[j]);
+                        free(current_frame->baselocals[j]);
+                    }
+                    rc = 0;
+                    goto interprt_finished;
                 }
-                rc = 0;
-                goto interprt_finished;
+                interrupt_mask = current_frame->interrupt_mask;
+                if (is_interrupt) {
+                    pc = next_pc;
+                    END_BREAKPOINT;
+                }
+                DISPATCH;
             }
-            DISPATCH;
 
         START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2); /* Deprecated */
             DEBUG("TRACE - MOVE R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
@@ -789,6 +923,24 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                 op1R = op2R;
                 op2R = v_temp;
             }
+            DISPATCH;
+
+        /* Link attribute op3 of op2 to op1 */
+        START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - LINKATTR R%llu,R%llu,R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(2));
+            op1R = op2R->attributes[op3R->int_value];
+            DISPATCH;
+
+        /* Link op2 to op1 */
+        START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - LINK R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            op1R = op2R;
+            DISPATCH;
+
+        /* Unlink op1 */
+        START_INSTRUCTION(UNLINK_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - UNLINK R%llu\n", REG_IDX(1));
+            op1R = (current_frame->baselocals[(pc + 1)->index]);
             DISPATCH;
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0);
@@ -2819,6 +2971,10 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             free(program[mod_index].globals[i]);
         }
     }
+
+    /* Free interrupt argument */
+    clear_value(interrupt_arg);
+    free(interrupt_arg);
 
 #ifndef NDEBUG
     if (debug_mode) printf("Interpreter Finished\n");

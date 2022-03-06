@@ -12,6 +12,16 @@ typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {
+        unsigned int step : 1;
+        unsigned int rxstep : 1;
+        unsigned int breakpoint : 1;
+        unsigned int watch : 1;
+    };
+    unsigned char any;
+} interrupt_mask_type;
+
+typedef union {
+    struct {
         unsigned int type_object : 1;
         unsigned int type_string : 1;
         unsigned int type_decimal : 1;
@@ -37,7 +47,11 @@ struct value {
     size_t string_chars;
     size_t string_char_pos;
 #endif
-    void *object_value;
+    value **attributes;
+    value **attribute_buffers;
+    size_t max_num_attributes;
+    size_t num_attributes;
+    size_t num_attribute_buffers;
     char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
 };
 
@@ -54,10 +68,12 @@ struct stack_frame {
     proc_constant *procedure;
     void *return_inst;
     bin_code *return_pc;
+    char is_interrupt;
     value *return_reg;
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
+    interrupt_mask_type interrupt_mask;
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;   /* Locals pointer mapping (after swaps / links */
 };
@@ -82,7 +98,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(interrupt_mask.any)?&&BREAKPOINT:&&CASE_START; }
 
 #else
 
@@ -93,7 +109,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:next_inst; }
+#define DISPATCH                   { pc = next_pc; goto *(interrupt_mask.any)?&&BREAKPOINT:next_inst; }
 
 #endif
 
