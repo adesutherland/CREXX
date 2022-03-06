@@ -132,6 +132,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         int debug_mode) {
     proc_constant *procedure;
     int rc = 0;
+    int initSeed=INT32_MIN;   // keep last seed for Random function within REXX run
     bin_code *pc, *next_pc;
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -2709,11 +2710,17 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
  */
         START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
-            {
-             if (op2R->int_value<0) op2R->int_value=(time((time_t *)0)%(3600*24));
-             srand((unsigned) op2R->int_value);
-             set_int(op1R, (long)rand());
-             }
+
+            if (op2R->int_value<0) {                 // no seed set
+                if (initSeed == INTMAX_MIN)  {      // seed still initial, set time based seed
+                   initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                   srand((unsigned) initSeed);
+                }
+            } else if (op2R->int_value!=initSeed) {   // seed set and NE old seed, set it new
+                initSeed=op2R->int_value;
+                srand((unsigned) initSeed);
+            }
+            set_int(op1R, (long)rand());   // receive new random value
         DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
@@ -2722,17 +2729,23 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
  */
         START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), op2I);
-            {
-             if (op2I < 0) op2I = (time((time_t *) 0) % (3600 * 24));
-             srand((unsigned) op2I);
-             set_int(op1R, (long) rand());
+             if (op2I<0) {                                // no seed set
+                if (initSeed == INTMAX_MIN)  {          // seed still initial, set time based seed
+                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                    srand((unsigned) initSeed);
+                }
+             } else if (op2I!=initSeed) {             // seed set and NE old seed, set it new
+                initSeed=op2I;
+                srand((unsigned) initSeed);
             }
+            set_int(op1R, (long)rand());   // receive new random value
         DISPATCH;
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------
  */
-    typedef void (*EntryPointfuncPtr)(int argc, const char * argv );
+   // typedef int (*strSubproc)(int argc, const char * argv,const char ** pstring);
+
 /*
  * //You need to declare types to point on classes/functions in LoadMe.dll
 //Assume, you have a function in your LoadMe.dll with a name
@@ -2768,22 +2781,36 @@ EntryPointfuncPtr LibMainEntryPoint;
 
 LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(LoadMe,"entryPoint");
  */
+    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);
+    typedef int    (*intSubproc)(int arg1, int arg2, char str1[32]);
+    typedef double (*floatSubproc)(int arg1, int arg2, char str1[32]);
 
-     START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
+START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
      DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
 #ifdef _WIN32
      HINSTANCE hDLL;               // Handle to DLL
-     EntryPointfuncPtr LibMainEntryPoint;
+     strSubproc strProc;
+     intSubproc intProc;
      printf("OPENDLL \n");
      HRESULT hrReturnVal;
+     rxinteger i1;
+     char dllbuffer[512];
+     sprintf( dllbuffer, "%s", "Hello DLL");
+    sprintf( dllbuffer, "%s", "Hello DLL");
 
     hDLL = LoadLibrary("C:/Users/PeterJ/Dropbox/PeterJ/CREXXDLL.dll");
     printf("DLL ADDR %d\n",hDLL);
-    LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(hDLL,"EasyRequester");
-    printf("LIB ADDR %d\n",LibMainEntryPoint);
-    LibMainEntryPoint(hDLL, "EasyRequester");
-    REG_RETURN_INT(hrReturnVal);
+    intProc = (intSubproc)GetProcAddress(hDLL, "GetInteger");
+    printf("INT LIB ADDR %d\n", intProc);
+    printf("Return DLL %d\n", intProc(3, 9, "Hello Purebasic DLL, I send this to you, and you Return it to me!"));
+    strProc = (strSubproc )GetProcAddress(hDLL, "GetString");
+    printf("STR LIB ADDR %d\n", strProc);
+    printf("Return DLL %s\n",(char *) strProc(1860, 123, "Hello Purebasic DLL, I send this to you, and you Return it to me!"));
+
+    FreeLibrary(hDLL);
+    REG_RETURN_INT(i1);
 #endif
+
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
