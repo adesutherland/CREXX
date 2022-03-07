@@ -1,5 +1,16 @@
 /* rexx test center bif */
 options levelb
+say 'random(1,999,8142) 'random(1,999,8142)
+say 'random(1,999,8142) 'random(1,999,8142)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999,8142) 'random(1,999,8142)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
+say 'random(1,999) 'random(1,999)
 say "Random(,,4711)     "random(,,4711)
 say "Random()           "random()
 say "Random()           "random()

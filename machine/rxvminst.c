@@ -305,7 +305,7 @@ void init_ops() {
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
-    instr_f("opendll", "open DLL", OP_REG, OP_REG, OP_NONE);
+    instr_f("opendll", "open DLL", OP_REG, OP_REG, OP_REG);
 
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);

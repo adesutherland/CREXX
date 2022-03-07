@@ -2712,11 +2712,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
 
             if (op2R->int_value<0) {                 // no seed set
-                if (initSeed == INTMAX_MIN)  {      // seed still initial, set time based seed
+                if (initSeed == INTMAX_MIN)  {       // seed still initial, set time based seed
                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
                    srand((unsigned) initSeed);
                 }
-            } else if (op2R->int_value!=initSeed) {   // seed set and NE old seed, set it new
+            } else {                                 // seed set re-init with new seed
                 initSeed=op2R->int_value;
                 srand((unsigned) initSeed);
             }
@@ -2730,11 +2730,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), op2I);
              if (op2I<0) {                                // no seed set
-                if (initSeed == INTMAX_MIN)  {          // seed still initial, set time based seed
+                if (initSeed == INTMAX_MIN)  {            // seed still initial, set time based seed
                     initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
                     srand((unsigned) initSeed);
                 }
-             } else if (op2I!=initSeed) {             // seed set and NE old seed, set it new
+             } else {                                     // seed set and NE old seed, set it new
                 initSeed=op2I;
                 srand((unsigned) initSeed);
             }
@@ -2744,69 +2744,33 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------
  */
-   // typedef int (*strSubproc)(int argc, const char * argv,const char ** pstring);
 
-/*
- * //You need to declare types to point on classes/functions in LoadMe.dll
-//Assume, you have a function in your LoadMe.dll with a name
-//EntryPoint, which takes two parameters of types int and const char *,
-//and is of type void. You need to create a new type as a
-//pointer to that function as it is shown below.
-
-typedef void (*EntryPointfuncPtr)(int argc, const char * argv );
-
-//Declare an HINSTANCE and load the library dynamically. Don’t forget
-//to specify a correct path to the location of LoadMe.dll
-
-HINSTANCE LoadME;
-LoadMe = LoadLibrary("..\\enter a Path To Your Dll here\\LoadMe.dll");
-
-// Check to see if the library was loaded successfully
-if (LoadMe != 0)
-    printf("LoadMe library loaded!\n");
-else
-    printf("LoadMe library failed to load!\n");
-
-//declare a variable of type pointer to EntryPoint function, a name of
-// which you will later use instead of EntryPoint
-EntryPointfuncPtr LibMainEntryPoint;
-
-// GetProcAddress – is a function, which returns the address of the
-// specified exported dynamic-link library (DLL) function. After
-// performing this step you are allowed to use a variable
-// LibMainEntryPoint as an equivalent of the function exported in
-// LoadMe.dll. In other words, if you need to call
-// EntryPoint(int, const char *) function, you call it as
-// LibMainEntryPoint(int, const char *)
-
-LibMainEntryPoint = (EntryPointfuncPtr)GetProcAddress(LoadMe,"entryPoint");
- */
-    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);
+//    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);   // for string
     typedef int    (*intSubproc)(int arg1, int arg2, char str1[32]);
-    typedef double (*floatSubproc)(int arg1, int arg2, char str1[32]);
 
-START_INSTRUCTION(OPENDLL_REG_REG) CALC_DISPATCH(2);
-     DEBUG("TRACE - OPENDLL R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1));
+START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
+     DEBUG("TRACE - OPENDLL R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
 #ifdef _WIN32
      HINSTANCE hDLL;               // Handle to DLL
-     strSubproc strProc;
+//     strSubproc strProc;
      intSubproc intProc;
-     printf("OPENDLL \n");
      HRESULT hrReturnVal;
-     rxinteger i1;
-     char dllbuffer[512];
-     sprintf( dllbuffer, "%s", "Hello DLL");
-    sprintf( dllbuffer, "%s", "Hello DLL");
+     rxinteger i1=-16;
+    // rxfuncadd(rexxname,module,sysname)
+    op2R->string_value[op2R->string_length]=0;
+    op3R->string_value[op3R->string_length]=0;
+    printf("Module %s\n",op3R->string_value);
 
-    hDLL = LoadLibrary("C:/Users/PeterJ/Dropbox/PeterJ/CREXXDLL.dll");
-    printf("DLL ADDR %d\n",hDLL);
-    intProc = (intSubproc)GetProcAddress(hDLL, "GetInteger");
-    printf("INT LIB ADDR %d\n", intProc);
-    printf("Return DLL %d\n", intProc(3, 9, "Hello Purebasic DLL, I send this to you, and you Return it to me!"));
-    strProc = (strSubproc )GetProcAddress(hDLL, "GetString");
-    printf("STR LIB ADDR %d\n", strProc);
-    printf("Return DLL %s\n",(char *) strProc(1860, 123, "Hello Purebasic DLL, I send this to you, and you Return it to me!"));
+    hDLL = LoadLibrary(op2R->string_value);
+    printf("DLL ADDR %d %s %d %d\n",hDLL, op2R->string_value,op2R->string_length,hDLL);
 
+    if (hDLL==0 ) i1=-8;
+    else {
+         intProc = (intSubproc) GetProcAddress(hDLL, op3R->string_value);
+        printf("Module ADDR %d\n",intProc);
+        if (intProc==0 ) i1=-12 ;
+        else i1=intProc;
+      }
     FreeLibrary(hDLL);
     REG_RETURN_INT(i1);
 #endif
