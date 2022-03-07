@@ -47,7 +47,12 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     len = strlen(name) + strlen(type) + strlen(dir) + 3;
 
     file_name = malloc(len);
-    snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+    if (type=="") {
+      snprintf(file_name, len, "%s/%s", dir, name, type);
+    }
+    else {
+      snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+    }
 
     stream = fopen(file_name, mode);
 

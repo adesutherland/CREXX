@@ -62,6 +62,12 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
+const char *get_filename_ext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
 int main(int argc, char *argv[]) {
 
     FILE *fp, *traceFile = 0, *outFile = 0;
@@ -141,7 +147,13 @@ int main(int argc, char *argv[]) {
     if (!output_file_name) output_file_name = file_name;
 
     /* Open input file */
-    fp = openfile(file_name, "rexx", location, "r");
+    char* filename_extension = get_filename_ext(file_name);
+    if (filename_extension == "")
+      { fp = openfile(file_name,"rexx", location, "r");
+      }
+    else {
+      fp = openfile(file_name,"", location, "r");
+    }
     if (fp == NULL) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
         exit(-1);
