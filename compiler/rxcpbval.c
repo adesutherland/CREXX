@@ -375,11 +375,14 @@ static walker_result step2a_walker(walker_direction direction,
                     /* Error */
                     mknd_err(node, "DUPLICATE_SYMBOL");
                 }
+                else symbol = 0;
             }
 
             /* Make a new symbol */
-            symbol = sym_f(*current_scope, node);
-            symbol->is_function = 1;
+            if (!symbol) { /* If there is a symbol we are in an error condition but are pressing on */
+                symbol = sym_f(*current_scope, node);
+                symbol->is_function = 1;
+            }
 
             sym_adnd(symbol, node, 0, 1);
 
@@ -387,7 +390,7 @@ static walker_result step2a_walker(walker_direction direction,
             *current_scope = scp_f(*current_scope, node);
         }
 
-        if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
+        else if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
             /* Find the symbol */
             if (node->parent->node_type == ARG) /* Only search current scope */
                 symbol = sym_lrsv(*current_scope, node);

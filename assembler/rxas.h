@@ -52,7 +52,7 @@ struct bin_space {
     int globals;
     size_t inst_size;
     size_t const_size;
-    int module_index;
+    struct module *module;
     bin_code *binary;
     unsigned char *const_pool;
 };
@@ -80,11 +80,15 @@ typedef struct string_constant {
     char string[1]; /* Must be last member */
 } string_constant;
 
+typedef struct stack_frame stack_frame;
+
 /* cREXX Procedure entry in the constant pool */
 typedef struct proc_constant {
     chameleon_constant base;
     int locals;
-    bin_space *module;
+    bin_space *binarySpace;
+    stack_frame **frame_free_list;
+    stack_frame *frame_free_list_head;
     size_t start;
     size_t exposed;
     char name[1]; /* Must be last member */

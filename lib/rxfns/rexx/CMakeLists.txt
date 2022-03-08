@@ -8,6 +8,7 @@ set(REXXBINS
               _jdn.rxbin
               abbrev.rxbin
               c2x.rxbin
+	      c2d.rxbin	
               center.rxbin
               centre.rxbin
               changestr.rxbin
@@ -43,6 +44,12 @@ set(REXXBINS
               x2b.rxbin
               x2c.rxbin
               x2d.rxbin
+	      reradix.rxbin
+	      sequence.rxbin
+	      find.rxbin
+	      index.rxbin
+	      xrange.rxbin
+#	      datatype.rxbin
         )
 
 add_custom_target(lib_rexx ALL

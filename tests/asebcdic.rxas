@@ -33,7 +33,7 @@ g0 .expose=tests.success
 g1 .expose=tests.failure
 
 main()         .locals=2
-               say "cREXX Assembler Test Suite - EBCDIC - Version cREXX F0035"
+               say "cREXX Assembler Test Suite - EBCDIC - Version cREXX I0265"
 
                * Zero result count
                load g0,0

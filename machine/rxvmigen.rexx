@@ -42,6 +42,9 @@
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
   end
 
+  call add_threaded_inst '                         &&BREAKPOINT,'
+  call add_bytecode_inst '                         INST_BREAKPOINT,'
+
   call add_threaded_inst '                         &&IUNKNOWN };'
   call add_bytecode_inst '                         INST_IUNKNOWN };'
 
@@ -141,10 +144,11 @@ alreadyDefined:
     call inc_miss '    DEBUG("'ucmd' not yet defined\n");'
 	call inc_miss '    goto SIGNAL;'
 
+/*
 	do ni=1 to numparm
 	   call addCode ni
 	end
-
+*/
 	call inc_miss '    // Add your coding '
     call inc_miss '    /* REG_OP(1)="?????"; */'
 

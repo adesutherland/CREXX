@@ -1,5 +1,7 @@
 CREXX History / Change Log
 
+I0265 - Fixed Segfault when there is a duplicate procedure definition
+F0031 - VM Performance Optimisations
 F0035 - (Almost) complete REXX/RXAS BIF library
 I0226 - Support an empty SAY command
 I0180 - Loop TO check is not right for a negative BY value

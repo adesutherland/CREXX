@@ -3,11 +3,12 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX F0035"
+#define rxversion "cREXX I0265"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
+typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {
@@ -37,18 +38,28 @@ struct value {
     size_t string_char_pos;
 #endif
     void *object_value;
+    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
+};
 
-    /*
-     * Each value can either be owned by a stack frame or a variable pool
-     * The owner is responsible for freeing the value, but because value can
-     * be linked other stack frames and variable pools it is important that
-     * none of these free its memory when they are being freed themselves.
-     * The owner member is only used by parents to see if they are the real
-     * parent - if you like a paternity test!
-     * This also allows a value to be adopted by another parent (e.g. for a
-     * returned register from a procedure)
-     */
-    void *owner;
+/* Module Structure */
+typedef struct module {
+    bin_space segment;
+    char *name;
+    value **globals;
+} module;
+
+struct stack_frame {
+    stack_frame *prev_free;
+    stack_frame *parent;
+    proc_constant *procedure;
+    void *return_inst;
+    bin_code *return_pc;
+    value *return_reg;
+    size_t number_locals;
+    size_t nominal_number_locals;
+    size_t number_args;
+    value **baselocals; /* Initial / base / fixed local pointers */
+    value **locals;   /* Locals pointer mapping (after swaps / links */
 };
 
 #ifdef NDEBUG  // RELEASE
@@ -67,18 +78,22 @@ struct value {
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS }
 #define START_INSTRUCTION(inst) case INST_ ## inst:
+#define START_BREAKPOINT BREAKPOINT:
+#define END_BREAKPOINT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:&&CASE_START; }
 
 #else
 
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
 #define START_INSTRUCTION(inst) inst:
+#define START_BREAKPOINT BREAKPOINT:
+#define END_BREAKPOINT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *next_inst; }
+#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:next_inst; }
 
 #endif
 
@@ -88,8 +103,8 @@ struct value {
 #define INT_OP(n)                    (pc+(n))->iconst
 #define FLOAT_OP(n)                  (pc+(n))->fconst
 
-#define CONSTSTRING_OP(n)            (string_constant *)(current_frame->module->const_pool + (pc+(n))->index)
-#define PROC_OP(n)                   (proc_constant *)(current_frame->module->const_pool + (pc+(n))->index)
+#define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   ((proc_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
@@ -121,14 +136,13 @@ struct value {
                                     else if ((v)->status.type_string) S2INT(i,v); }
 
 #define CONV2FLOAT(i,v) if ((v)->status.type_int) (i) = (double) (v)->int_value;                      \
-        else if ((v)->status.type_string) S2FLOAT(i,v);
- // Get Character
+        else if ((v)->status.type_string) S2FLOAT(i,v);                                               \
+                                                                                                      \
+// Get Character
 #ifndef NUTF8
-  #define GETSTRCHAR(v,p)           { string_set_byte_pos(v,p);             \
-        utf8codepoint(v->string_value + v->string_pos, &codepoint);           \
-        v->int_value=codepoint; }
+  #define GETSTRCHAR(c,v,p) {string_set_byte_pos((v),(p)); utf8codepoint((v)->string_value+(v)->string_pos, &(c));}
 #else
-  #define GETSTRCHAR(i,v,p)   {i=v->string_value[p]; }
+  #define GETSTRCHAR(c,v,p) {c=(v)->string_value[(p)]; }
 #endif
 
 #ifndef NUTF8
@@ -173,12 +187,6 @@ struct value {
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
 
-/* Module Structure */
-typedef struct module {
-        bin_space segment;
-        char *name;
-        value **globals;
-} module;
 
 /* Signals an error - this function does not return */
 void dosignal(int code);
