@@ -8,6 +8,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
@@ -2774,7 +2777,37 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
     FreeLibrary(hDLL);
     REG_RETURN_INT(i1);
 #endif
-
+#ifdef __APPLE__
+    void *dl_handle;
+    int (*func)(float);
+    char *error;
+    rxinteger i1=-16;
+    // rxfuncadd(rexxname,module,sysname)
+    op2R->string_value[op2R->string_length]=0;
+    op3R->string_value[op3R->string_length]=0;
+    printf("Module %s\n",op3R->string_value);
+    
+    /* Open the shared object */
+    dl_handle = dlopen( op2R->string_value, RTLD_LAZY );
+    if (!dl_handle) {
+      printf( "!!! %s\n", dlerror() );
+      return i1;
+    }
+    
+    /* Resolve the symbol (method) from the object */
+    func = dlsym( dl_handle, op3R->string_value );
+    error = dlerror();
+    if (error != NULL) {
+      printf( "!!! %s\n", error );
+      return i1;
+    }
+    
+    /* Call the resolved method and print the result */
+    /* printf("  %f\n", (*func)(argument) ); */
+    REG_RETURN_INT(i1);
+    /* Close the object */
+    dlclose( dl_handle );
+#endif
     DISPATCH;
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
