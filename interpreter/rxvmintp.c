@@ -2779,7 +2779,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
 #endif
 #ifdef __APPLE__
     void *dl_handle;
-    int (*func)(float);
+    int (*func) (float);
     char *error;
     rxinteger i1=-16;
     // rxfuncadd(rexxname,module,sysname)
@@ -2789,24 +2789,20 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
     
     /* Open the shared object */
     dl_handle = dlopen( op2R->string_value, RTLD_LAZY );
-    if (!dl_handle) {
-      printf( "!!! %s\n", dlerror() );
-      return i1;
-    }
-    
-    /* Resolve the symbol (method) from the object */
-    func = dlsym( dl_handle, op3R->string_value );
+    if (dl_handle) i1=-8;
+    else {
+      func = dlsym( dl_handle, op3R->string_value );
+      if (func==0 ) i1=-12 ;
+      else i1= func;
+      }
     error = dlerror();
     if (error != NULL) {
       printf( "!!! %s\n", error );
       return i1;
     }
-    
-    /* Call the resolved method and print the result */
-    /* printf("  %f\n", (*func)(argument) ); */
-    REG_RETURN_INT(i1);
     /* Close the object */
     dlclose( dl_handle );
+    REG_RETURN_INT(i1);
 #endif
     DISPATCH;
 /* ---------------------------------------------------------------------------
