@@ -107,4 +107,10 @@ void vfclose(VFILE *vfile);
  */
 void vffree(VFILE *vfile);
 
+/*
+ * Function to cnt all non wildcard files
+ * for given VFILE structure.
+ */
+size_t vfcnt(VFILE *vfile);
+
 #endif //CREXX_PLATFORM_H

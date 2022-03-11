@@ -289,6 +289,25 @@ void vffree(VFILE *vfile) {
 
 }
 
+/*
+ * Function to cnt all non wildcard files
+ * for given VFILE structure.
+ */
+size_t vfcnt(VFILE *vfile) {
+    size_t cnt = 0;
+
+    while(vfile) {
+
+        if (!vfile->wildcarded) {
+            cnt++;
+        }
+
+        vfile = vfile->next;
+    }
+
+    return cnt;
+}
+
 static int hasWildcards(const char *fileName) {
     int hasWildcard;
 

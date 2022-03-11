@@ -38,8 +38,8 @@ static abin loadModule(VFILE *vfile, abin *program) {
 }
 
 static void unloadModule(abin *program) {
-        if ((*program).segment.const_pool)
-            free((*program).segment.const_pool);
+    if ((*program).segment.const_pool)
+        free((*program).segment.const_pool);
 }
 
 QUEUE* findImportedProcedures(VFILE *vfile, QUEUE **procnames) {
@@ -163,7 +163,7 @@ QUEUE* findExposedProcedures(VFILE *vfile, QUEUE **procnames) {
 */
 
                     procs_entry = malloc(sizeof(RXLIB_BIN_PROC_NAME) +
-                            strlen(((expose_proc_constant *) c_entry)->index));
+                                         strlen(((expose_proc_constant *) c_entry)->index));
                     procs_entry->pnlen = (short) strlen(((expose_proc_constant *) c_entry)->index);
 
                     strcpy(procs_entry->pname, ((expose_proc_constant *) c_entry)->index);

@@ -15,6 +15,13 @@ typedef struct {
 #pragma pack(push,1)
 typedef struct {
     BYTE sig[4];        /* Signature / ID / Eycatcher           */
+    long dirpos;
+} RXLIB_LIB_HEADER;
+#pragma pack(pop)
+
+#pragma pack(push,1)
+typedef struct {
+    BYTE sig[4];        /* Signature / ID / Eycatcher           */
     short fnlength;     /* length of the binary file name       */
     short pnlength;     /* length of all proc name elements     */
     BYTE fn_pn[];       /* contains the binaray file name       */
@@ -31,7 +38,13 @@ typedef struct {
 
 #pragma pack(push,1)
 typedef struct {
-} RXLIB_DIRECTORY;
+    short   size;
+    long    offset;
+    long    bytecnt_u;
+    long    bytecnt_c;
+    short   fnlength;
+    BYTE    fn[];
+} RXLIB_DIRECTORY_ENTRY;
 #pragma pack(pop)
 
 #define RXLIB_FILE_SIG          { 0xC0, 0xDE, 0xBA, 0x5E }

@@ -12,22 +12,32 @@ extern BOOL verboseFlag;
 
 int addBinaries(VFILE *library, VFILE *binaries) {
 
-    RXLIB_DIRECTORY     directory;
-
-    if (verboseFlag) {
-        fprintf(stdout, "Library '%s' will be created with following binaries:\n", library->fullname);
-    }
+    RXLIB_DIRECTORY_ENTRY *directoryEntry;
+    QUEUE                 *qDirectoryEntries;
+    long                   directoryOffset;
+    long                   directoryOffsetPos;
+    size_t                 directoryEntryCount;
+    size_t                 binaryCount;
 
     if (binaries) {
         BYTE libFileSig[4] = RXLIB_FILE_SIG;
 
-        library = vfopen(library, "wb");
+        binaryCount = vfcnt(binaries);
 
+        if (verboseFlag) {
+            fprintf(stdout, "Library '%s' will be created from following %lu binary modules:\n", library->fullname, binaryCount);
+        }
+
+        qDirectoryEntries = newqueue(binaryCount);
+        directoryEntryCount = 0;
+
+        library = vfopen(library, "wb");
 
         fwrite(libFileSig, sizeof(libFileSig), 1, library->fp);
 
         // skipping directory offset field, will be written later
-        fseek(library->fp, 4, SEEK_CUR);
+        directoryOffsetPos = ftell(library->fp);
+        fseek(library->fp, 8, SEEK_CUR);
 
         do {
             if (!binaries->wildcarded) {
@@ -36,35 +46,67 @@ int addBinaries(VFILE *library, VFILE *binaries) {
                     VFILE *currentBinary;
                     RXLIB_BIN_HEADER   binHeader;
                     QUEUE *qprocs;
+
                     BYTE binHeaderSig[4] = RXLIB_FILE_HEADER_SIG;
+
+                    long  binHeaderOffset;
+                    long  binStartOffset, binEndOffset;
 
                     currentBinary = binaries;
 
-                    fprintf(stdout, "\t\t- '%s' \n", currentBinary->fullname);
-
                     memcpy(&binHeader.sig, binHeaderSig, sizeof(binHeaderSig));
-
                     binHeader.fnlength = (short) strlen(currentBinary->basename);
                     // will be written later
                     binHeader.pnlength = 0;
 
+                    // remember position von binHeader
+                    binHeaderOffset = ftell(library->fp);
+
+                    directoryEntryCount++;
+                    directoryEntry = calloc(1, sizeof(RXLIB_DIRECTORY_ENTRY) + binHeader.fnlength);
+                    directoryEntry->size = (short) (sizeof(RXLIB_DIRECTORY_ENTRY) + binHeader.fnlength);
+                    directoryEntry->offset   = binHeaderOffset;
+                    directoryEntry->fnlength = binHeader.fnlength;
+                    memcpy(directoryEntry->fn, currentBinary->basename, binHeader.fnlength);
+
+                    if (verboseFlag) {
+                        fprintf(stdout, "\t\t- (%.5lu) '%s' \n", directoryEntryCount, currentBinary->fullname);
+                    }
+
                     fwrite(&binHeader, sizeof(RXLIB_BIN_HEADER), 1, library->fp);
                     fwrite(currentBinary->basename, binHeader.fnlength, 1, library->fp);
 
-                    qprocs = findExposedProcedures(currentBinary, &qprocs);
+                    qprocs      = findExposedProcedures(currentBinary, &qprocs);
 
-                    fprintf(stdout, "\t\t  Exposed procedures: \n");
+                    if (verboseFlag) {
+                        fprintf(stdout, "\t\t  Exposed procedures: \n");
+                    }
 
                     while (!isEmpty(qprocs)) {
                         RXLIB_BIN_PROC_NAME *binProcName;
 
                         binProcName = dequeue(qprocs);
 
-                        fprintf(stdout, "\t\t\t- '%s' \n", binProcName->pname);
+                        if (verboseFlag) {
+                            fprintf(stdout, "\t\t\t- '%s' \n", binProcName->pname);
+                        }
 
+                        // the +2 is the size of the pnlen field, that will be written, too.
                         fwrite(binProcName, binProcName->pnlen + 2, 1, library->fp);
+                        binHeader.pnlength += binProcName->pnlen + 2;
                     }
 
+                    // save current position
+                    binStartOffset = ftell(library->fp);
+
+                    // update header for this binary (+6 to seek directly to the pnlength field)
+                    fseek(library->fp, binHeaderOffset + 6, SEEK_SET);
+                    fwrite(&binHeader.pnlength, 2, 1, library->fp);
+
+                    // seek back to old position
+                    fseek(library->fp, binStartOffset, SEEK_SET);
+
+                    // writing binary file to library
                     currentBinary = vfopen(binaries, "rb");
                     if (currentBinary->opened) {
                         int ch;
@@ -74,6 +116,12 @@ int addBinaries(VFILE *library, VFILE *binaries) {
 
                         vfclose(currentBinary);
                     }
+                    binEndOffset = ftell(library->fp);
+
+                    directoryEntry->bytecnt_u = binEndOffset - binStartOffset;
+
+                    // enqueue current directory entry
+                    enqueue(qDirectoryEntries, directoryEntry);
 
                     // cleanup
                     freequeue(qprocs);
@@ -87,6 +135,29 @@ int addBinaries(VFILE *library, VFILE *binaries) {
 
         } while (binaries);
 
+
+        // write directory
+        if (directoryEntryCount > 0) {
+            directoryOffset = ftell(library->fp);
+
+            // seek back to field holding the directory position
+            // and write postion of the directory to this field
+            fseek(library->fp, directoryOffsetPos, SEEK_SET);
+            fwrite(&directoryOffset, sizeof(long), 1, library->fp);
+
+            // seek back to last position;
+            fseek(library->fp, directoryOffset, SEEK_SET);
+
+            while (!isEmpty(qDirectoryEntries)) {
+                directoryEntry = dequeue(qDirectoryEntries);
+
+                fwrite(directoryEntry, sizeof(RXLIB_DIRECTORY_ENTRY) + directoryEntry->fnlength, 1, library->fp);
+                free(directoryEntry);
+            }
+        }
+
+        // cleanup
+        freequeue(qDirectoryEntries);
         vfclose(library);
     } else {
         // TODO: throw error

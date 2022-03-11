@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
             error_and_exit(-1, "Unknown option selected.");
     }
 
-   return rc;
+    return rc;
 }
 
 static ARCHIVE_ACTION
