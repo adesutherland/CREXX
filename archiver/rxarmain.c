@@ -33,26 +33,14 @@ int main(int argc, char *argv[]) {
     archiveAction = parseOptions(argc, argv, archiverOptions, &library);
 
     switch (archiveAction) {
+
+        VFILE *binaries, *current, *last;
+
         case ADD:
-            if (verboseFlag) {
-                fprintf(stdout, "Adding binaries to %s \n", library->fullname);
-            }
-
             rc = addBinaries(library, NULL);
-
             break;
 
         case CREATE:
-            if (verboseFlag) {
-                if (library->exists) {
-                    fprintf(stdout, "Adding to existing library '%s'. \n", library->fullname);
-                } else {
-                    fprintf(stdout, "Creating library '%s'. \n", library->fullname);
-                }
-            }
-
-            VFILE *binaries, *current, *last;
-
             binaries = calloc(1, sizeof(VFILE));
 
             current = binaries;
@@ -84,18 +72,10 @@ int main(int argc, char *argv[]) {
             break;
 
         case DELETE:
-            if (verboseFlag) {
-                fprintf(stdout, "Deleting binaries from %s \n", library->fullname);
-            }
-
             rc = deleteBinaries(library->basename);
             break;
 
         case LIST:
-            if (verboseFlag) {
-                fprintf(stdout, "List binaries in %s \n", library->fullname);
-            }
-
             rc = listBinaries(library->basename);
             break;
 
@@ -104,13 +84,10 @@ int main(int argc, char *argv[]) {
             break;
 
         case HELP:
-            help();
-            break;
-
         default:
             help();
             break;
-            //error_and_exit(-1, "Unknown option selected.");
+
     }
 
     return rc;

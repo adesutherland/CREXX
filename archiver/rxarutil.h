@@ -15,7 +15,7 @@ typedef struct {
 #pragma pack(push,1)
 typedef struct {
     BYTE sig[4];        /* Signature / ID / Eycatcher           */
-    long dirpos;
+    long dirpos;        /* Offset of the library directory      */
 } RXLIB_LIB_HEADER;
 #pragma pack(pop)
 
