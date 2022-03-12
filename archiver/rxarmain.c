@@ -6,6 +6,7 @@
 #include "types.h"
 #include "license.h"
 #include "rxarmain.h"
+#include "rxarcreate.h"
 #include "rxaradd.h"
 #include "rxarlist.h"
 #include "rxardel.h"
@@ -28,10 +29,20 @@ int main(int argc, char *argv[]) {
     ARCHIVE_ACTION  archiveAction;
     VFILE           *library;
 
+    // TODO: would like to use argp library, but it's GPL
     archiveAction = parseOptions(argc, argv, archiverOptions, &library);
 
     switch (archiveAction) {
         case ADD:
+            if (verboseFlag) {
+                fprintf(stdout, "Adding binaries to %s \n", library->fullname);
+            }
+
+            rc = addBinaries(library, NULL);
+
+            break;
+
+        case CREATE:
             if (verboseFlag) {
                 if (library->exists) {
                     fprintf(stdout, "Adding to existing library '%s'. \n", library->fullname);
@@ -69,7 +80,7 @@ int main(int argc, char *argv[]) {
                 optind++;
             }
 
-            rc = addBinaries(library, binaries);
+            rc = createLibrary(library, binaries);
             break;
 
         case DELETE:
@@ -97,7 +108,9 @@ int main(int argc, char *argv[]) {
             break;
 
         default:
-            error_and_exit(-1, "Unknown option selected.");
+            help();
+            break;
+            //error_and_exit(-1, "Unknown option selected.");
     }
 
     return rc;
@@ -111,7 +124,7 @@ parseOptions(int argc, char *argv[], const struct option *options, VFILE **libra
     while (TRUE) {
         int optionIndex = 0;
 
-        int option = getopt_long(argc, argv, "v?ha:l:d:",
+        int option = getopt_long(argc, argv, "vh?c:a:l:d:x:",
                                  options, &optionIndex);
 
         if (option == -1)
@@ -124,6 +137,16 @@ parseOptions(int argc, char *argv[], const struct option *options, VFILE **libra
                     *library = vfnew(optarg, *library, NULL, RXLIB_EXT);
 
                     action = ADD;
+                }
+
+                break;
+
+            case 'c':
+                if (action == UNKNOWN) {
+                    *library = calloc(1, sizeof(VFILE));
+                    *library = vfnew(optarg, *library, NULL, RXLIB_EXT);
+
+                    action = CREATE;
                 }
 
                 break;
@@ -148,7 +171,7 @@ parseOptions(int argc, char *argv[], const struct option *options, VFILE **libra
 
                 break;
 
-            case 't':
+            case 'x':
                 if (verboseFlag) {
                     fprintf(stdout, "Calling cREXX Linker test function. \n");
                 }
@@ -160,7 +183,7 @@ parseOptions(int argc, char *argv[], const struct option *options, VFILE **libra
                 verboseFlag = 1;
                 break;
 
-            case 'c':
+            case 't':
                 if (action == UNKNOWN)
                     action = LICENSE;
 
