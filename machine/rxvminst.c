@@ -23,12 +23,13 @@ void init_ops() {
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
-    instr_f("metaloadinst", "Load Instruction Code (op1 = inst[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadmodules", "Load Module Array", OP_REG, OP_NONE, OP_NONE);
+    instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = int[op2])", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadfoperand", "Load Float Operand (op1 = float[op2])", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadsoperand", "Load String Operand (op1 = string[op2])", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = proc[op2])", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = (int)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadfoperand", "Load Float Operand (op1 = (float)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadsoperand", "Load String Operand (op1 = (string)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
 
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
@@ -228,6 +229,7 @@ void init_ops() {
     instr_f("fcopy", "Copy Float op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("scopy", "Copy String op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_REG);
+    instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_INT);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);

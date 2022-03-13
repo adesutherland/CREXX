@@ -441,9 +441,9 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         /* Meta Instructions */
 
-        /* Load Instruction Code (op1 = inst[op2]) */
-        START_INSTRUCTION(METALOADINST_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METALOADINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        /* Load Instruction Code (op1 = (inst)op2[op3]) */
+        START_INSTRUCTION(METALOADINST_REG_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         {
             /* TODO this only works in current module space */
             bin_code inst = current_frame->procedure->binarySpace->binary[op2R->int_value];
@@ -468,11 +468,24 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         }
         DISPATCH;
 
+        /* Load Module Array */
+        START_INSTRUCTION(METALOADMODULES_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - METALOADMODULES R%d\n", (int)REG_IDX(1));
+            /* op1R will become an array of module names */
+            value_zero(op1R);
+            set_num_attributes(op1R,num_modules);
+            op1R->int_value = num_modules; /* The cREXX convention for arrays */
+            for (mod_index = 0; mod_index < num_modules; mod_index++) {
+                set_null_string(op1R->attributes[mod_index],program[mod_index].name);
+            }
+            DISPATCH;
+
         /* Decode opcode (op1 decoded op2) */
         START_INSTRUCTION(METADECODEINST_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - METADECODEINST R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - METADECODEINST R%d,R%d\n",(int)REG_IDX(1),(int)REG_IDX(2));
 
             /* The target register is turned into an object with 7 attributes */
+            value_zero(op1R);
             set_num_attributes(op1R,7);
 
             /* Populate the object */
@@ -485,34 +498,34 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             op1R->attributes[6]->int_value = meta_map[op2R->int_value].op3_type;
         DISPATCH;
 
-        /* Load Integer/Index Operand (op1 = int[op2]) */
+        /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
         /* TODO this only works in current module space */
-        START_INSTRUCTION(METALOADIOPERAND_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METALOADIOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        START_INSTRUCTION(METALOADIOPERAND_REG_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - METALOADIOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         op1R->int_value = current_frame->procedure->binarySpace->binary[op2R->int_value].iconst;
         DISPATCH;
 
-        /* Load Float Operand (op1 = float[op2]) */
+        /* Load Float Operand (op1 = (float)op2[op3]) */
         /* TODO this only works in current module space */
-        START_INSTRUCTION(METALOADFOPERAND_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METALOADFOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         op1R->float_value = current_frame->procedure->binarySpace->binary[op2R->int_value].fconst;
         DISPATCH;
 
-        /* Load String Operand (op1 = string[op2]) */
+        /* Load String Operand (op1 = (string)op2[op3]) */
         /* TODO this only works in current module space */
-        START_INSTRUCTION(METALOADSOPERAND_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METALOADSOPERAND R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+        START_INSTRUCTION(METALOADSOPERAND_REG_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - METALOADSOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         set_const_string(op1R,
                          (string_constant *)(current_frame->procedure->binarySpace->const_pool +
                          current_frame->procedure->binarySpace->binary[op2R->int_value].index));
         DISPATCH;
 
-        /* Load Procedure Operand (op1 = proc[op2]) */
+        /* Load Procedure Operand (op1 = (proc)op2[op3]) */
         /* TODO this only works in current module space */
         /* TODO needs to do more that get the function name - a function object is needed */
-        START_INSTRUCTION(METALOADPOPERAND_REG_REG) CALC_DISPATCH(2);
-        DEBUG("TRACE - METALOADPOPERAND R%llu,%llu\n", REG_IDX(1), REG_IDX(2));
+        START_INSTRUCTION(METALOADPOPERAND_REG_REG_REG) CALC_DISPATCH(3);
+        DEBUG("TRACE - METALOADPOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         {
             proc_constant
                     *proc =
@@ -522,10 +535,10 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         }
         DISPATCH;
 
-        /* Regular Instructins */
+        /* Regular Instructions */
         /* LOAD */
         START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2);
-            DEBUG("TRACE - LOAD R%llu,%llu\n", REG_IDX(1), op2I);
+            DEBUG("TRACE - LOAD R%d,%d\n", (int)REG_IDX(1), (int)op2I);
             set_int(op1R, op2I);
             DISPATCH;
 
@@ -542,6 +555,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             {
                 size_t pos = 0;
                 int ch;
+                op1R->string_length = 0;
                 while ((ch = getchar()) != EOF) {
                     if (ch == '\n') break;
                     extend_string_buffer(op1R, pos+1);
@@ -927,11 +941,17 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - LINKATTR R%llu,R%llu,R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(2));
-            op1R = op2R->attributes[op3R->int_value];
+            DEBUG("TRACE - LINKATTR R%llu,R%llu,R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            op1R = op2R->attributes[op3R->int_value - 1];
             DISPATCH;
 
-        /* Link op2 to op1 */
+        /* Link attribute op3 of op2 to op1 */
+        START_INSTRUCTION(LINKATTR_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - LINKATTR R%llu,R%llu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
+            op1R = op2R->attributes[(int)op3I - 1];
+            DISPATCH;
+
+            /* Link op2 to op1 */
         START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - LINK R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
             op1R = op2R;
