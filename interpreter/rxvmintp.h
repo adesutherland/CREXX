@@ -60,6 +60,7 @@ typedef struct module {
     bin_space segment;
     char *name;
     value **globals;
+    size_t module_number;
 } module;
 
 struct stack_frame {
@@ -81,7 +82,7 @@ struct stack_frame {
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
 #else          // DEBUG
-    #define DEBUG(...) if (debug_mode) fprintf(stderr, __VA_ARGS__)
+    #define DEBUG(...) if (context->debug_mode) fprintf(stderr, __VA_ARGS__)
 #endif
 
 #define RXERROR(...)   { fprintf(stderr, __VA_ARGS__); goto SIGNAL; }
@@ -202,13 +203,34 @@ struct stack_frame {
 #define REG_OP_TEST_INT(v,n)    { (v) = REG_OP(n);}
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
-
+/* Runtime context */
+typedef struct rxvm_context {
+    char *location;
+    size_t num_modules;
+    size_t module_buffer_size;
+    module *modules;
+    struct avl_tree_node *exposed_proc_tree;
+    struct avl_tree_node *exposed_reg_tree;
+    char debug_mode;
+} rxvm_context;
 
 /* Signals an error - this function does not return */
 void dosignal(int code);
 
 int initialz();
 int finalize();
-int run(int num_modules, module *program, int argc, char *argv[], int debug_mode);
+int run(rxvm_context *context, int argc, char *argv[]);
+
+/* Initialise modules context */
+void rxinimod(rxvm_context *context);
+
+/* Free Module Context */
+void rxfremod(rxvm_context *context);
+
+/* Loads a new module
+ * returns 0  - Success
+ *         >0 - the number of unresolved references
+ *         -1 - Error loading file */
+int rxldmod(rxvm_context *context, char *new_module_file);
 
 #endif //CREXX_RXVMINTP_H

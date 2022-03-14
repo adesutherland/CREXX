@@ -1,3 +1,5 @@
+/* CREXX VM Main file */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,10 +7,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "platform.h"
-#include "rxvminst.h"
 #include "rxvmintp.h"
-#include "rxas.h"
 
 static void help() {
     char* helpMessage =
@@ -32,10 +31,10 @@ static void help() {
     printf("%s",helpMessage);
 }
 
-static void error_and_exit(int rc, char* message) {
+static void error_and_exit(char* message) {
 
     fprintf(stderr, "ERROR: %s - try \"rxvm -h\"\n", message);
-    exit(rc);
+    exit(2);
 }
 
 static void license() {
@@ -67,23 +66,23 @@ static void license() {
 
 int main(int argc, char *argv[]) {
 
-    FILE *fp;
-    module *pgm;
     char *file_name;
-    int debug_mode = 0;
     int i, j;
-    int num_modules;
-    char *location = 0;
-    int rc = 0;
+    int rc;
+    rxvm_context context;
+    size_t num_modules;
 
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
 #endif
 
+    /* Init Context */
+    rxinimod(&context);
+
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
         if (strlen(argv[i]) > 2) {
-            error_and_exit(2, "Invalid argument");
+            error_and_exit("Invalid argument");
         }
         switch (toupper((argv[i][1]))) {
             case '-':
@@ -92,9 +91,9 @@ int main(int argc, char *argv[]) {
             case 'L': /* Working Location / Directory */
                 i++;
                 if (i >= argc) {
-                    error_and_exit(2, "Missing location after -l");
+                    error_and_exit("Missing location after -l");
                 }
-                location = argv[i];
+                context.location = argv[i];
                 break;
 
             case 'V': /* Version */
@@ -116,75 +115,54 @@ int main(int argc, char *argv[]) {
 
 #ifndef NDEBUG
             case 'D': /* Debug */
-                debug_mode = 1;
+                context.debug_mode = 1;
                 break;
 #endif
 
             default:
-                error_and_exit(2, "Invalid argument");
+                error_and_exit("Invalid argument");
         }
     }
-
     num_modules = argc - i;
     if (!num_modules) {
-        error_and_exit(2, "No input files");
+        error_and_exit("No input files");
     }
-    pgm = malloc(sizeof(module) * num_modules);
 
     for (j=0; j<num_modules; j++) {
 
         file_name = argv[i++];
+
+        /* Check for -a - start of program arguments */
         if (file_name[0] == '-') {
             if (strlen(file_name) > 2) {
-                error_and_exit(2, "Invalid argument, expecting \"-a\"");
+                error_and_exit("Invalid argument, expecting \"-a\"");
             }
             if (toupper((file_name[1])) != 'A') {
-                error_and_exit(2, "Invalid argument, expecting \"-a\"");
+                error_and_exit("Invalid argument, expecting \"-a\"");
             }
             num_modules = j;
             if (!num_modules) {
-                error_and_exit(2, "No input files before arguments");
+                error_and_exit("No input files before arguments");
             }
             break;
         }
 
-        pgm[j].name = file_name;
-        fp = openfile(file_name, "rxbin", location, "rb");
-        if (!fp) {
+        /* Load Module */
+        if (rxldmod(&context, file_name) == -1) {
             fprintf(stderr, "ERROR opening file %s\n", file_name);
             exit(-1);
         }
-
-        fread(&pgm[j].segment.globals, 1, sizeof(int), fp);
-        fread(&pgm[j].segment.inst_size, 1, sizeof(size_t), fp);
-        fread(&pgm[j].segment.const_size, 1, sizeof(size_t), fp);
-
-        pgm[j].segment.binary = calloc(pgm[j].segment.inst_size, sizeof(bin_code));
-        pgm[j].segment.const_pool = calloc(pgm[j].segment.const_size, 1);
-
-        fread(pgm[j].segment.binary, sizeof(bin_code), pgm[j].segment.inst_size, fp);
-        fread(pgm[j].segment.const_pool, 1, pgm[j].segment.const_size, fp);
-
-        pgm[j].segment.module = &(pgm[j]);
-        pgm[j].globals = calloc(pgm[j].segment.globals, sizeof(value));
-
-        fclose(fp);
     }
 
     /* Run the program */
 #ifndef NDEBUG
-    if (debug_mode) printf("Starting Execution\n");
+    if (context.debug_mode) printf("Starting Execution\n");
 #endif
 
-    rc = run(num_modules, pgm, argc - i, argv + i, debug_mode);
+    rc = run(&context, argc - i, argv + i);
 
     /* Free Memory */
-    for (j=0; j<num_modules; j++) {
-        free(pgm[j].segment.binary);
-        free(pgm[j].segment.const_pool);
-        free(pgm[j].globals);
-    }
-    free(pgm);
+    rxfremod(&context);
 
     return rc;
 }

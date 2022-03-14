@@ -128,8 +128,7 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 }
 
 /* Interpreter */
-RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
-        int debug_mode) {
+RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *procedure;
     proc_constant *step_handler = 0;
     int rc = 0;
@@ -148,8 +147,6 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     int mod_index;
     chameleon_constant *c_entry;
     proc_constant *p_entry, *p_entry_linked;
-    struct avl_tree_node *exposed_proc_tree = 0;
-    struct avl_tree_node *exposed_reg_tree = 0;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -158,19 +155,19 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
     /* Link Modules Together */
     DEBUG("Linking - Build Symbols\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
-        while (i < program[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
-                            program[mod_index].segment.const_pool + i);
+                            context->modules[mod_index].segment.const_pool + i);
             switch (c_entry->type) {
 
                 case PROC_CONST:
                     if (((proc_constant *) c_entry)->start != SIZE_MAX) {
                         /* Mark the owning module segment address */
                         ((proc_constant *) c_entry)->binarySpace =
-                                &program[mod_index].segment;
+                                &context->modules[mod_index].segment;
                         /* Stack Frame Free List */
                         ((proc_constant *) c_entry)->frame_free_list = &(((proc_constant *) c_entry)->frame_free_list_head);
                         *(((proc_constant *) c_entry)->frame_free_list) = 0;
@@ -179,20 +176,20 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
                 case EXPOSE_REG_CONST:
                     /* Exposed Register */
-                    if (src_node(exposed_reg_tree,
+                    if (src_node(context->exposed_reg_tree,
                                  ((expose_reg_constant *) c_entry)->index,
                                  (size_t *) &g_reg)) {
                         /* Register already exposed / initialised */
-                        program[mod_index]
+                        context->modules[mod_index]
                                 .globals[((expose_reg_constant *) c_entry)
                                 ->global_reg] =
                                 g_reg;
                     } else {
                         /* Need to initialise a register and expose it in the search tree */
-                        program[mod_index].globals[((expose_reg_constant *) c_entry)->global_reg] = value_f();
-                        if (add_node(&exposed_reg_tree,
+                        context->modules[mod_index].globals[((expose_reg_constant *) c_entry)->global_reg] = value_f();
+                        if (add_node(&context->exposed_reg_tree,
                                      ((expose_reg_constant *) c_entry)->index,
-                                     (size_t) (program[mod_index]
+                                     (size_t) (context->modules[mod_index]
                                              .globals[((expose_reg_constant *) c_entry)
                                              ->global_reg]))) {
                             fprintf(stderr,
@@ -207,12 +204,12 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
                     /* Exposed Procedure */
                     p_entry =
                             (proc_constant *) (
-                                    program[mod_index].segment.const_pool
+                                    context->modules[mod_index].segment.const_pool
                                     + ((expose_proc_constant *) c_entry)
                                             ->procedure);
 
                     if (!((expose_proc_constant *) c_entry)->imported) {
-                        if (add_node(&exposed_proc_tree,
+                        if (add_node(&context->exposed_proc_tree,
                                      ((expose_proc_constant *) c_entry)->index,
                                      (size_t) p_entry)) {
                             fprintf(stderr,
@@ -231,21 +228,21 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     }
 
     DEBUG("Linking - Resolve Symbols\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
-        while (i < program[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
-                            program[mod_index].segment.const_pool + i);
+                            context->modules[mod_index].segment.const_pool + i);
             switch (c_entry->type) {
                 case EXPOSE_PROC_CONST:
                     p_entry =
                             (proc_constant *) (
-                                    program[mod_index].segment.const_pool
+                                    context->modules[mod_index].segment.const_pool
                                     + ((expose_proc_constant *) c_entry)
                                             ->procedure);
                     if (((expose_proc_constant *) c_entry)->imported) {
-                        if (!src_node(exposed_proc_tree,
+                        if (!src_node(context->exposed_proc_tree,
                                       ((expose_proc_constant *) c_entry)->index,
                                       (size_t *) &p_entry_linked)) {
                             fprintf(stderr, "Unimplemented symbol: %s\n",
@@ -268,20 +265,13 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         }
     }
 
-    /* Free Search Trees */
-    DEBUG("Free linking trees\n");
-    free_tree(&exposed_proc_tree);
-    exposed_proc_tree = 0;
-    free_tree(&exposed_reg_tree);
-    exposed_reg_tree = 0;
-
     /* Allocate Module Globals */
     DEBUG("Allocate Module Globals\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         int i;
-        for (i = 0; i < program[mod_index].segment.globals; i++) {
-            if (!program[mod_index].globals[i]) {
-                program[mod_index].globals[i] = value_f();
+        for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
+            if (!context->modules[mod_index].globals[i]) {
+                context->modules[mod_index].globals[i] = value_f();
             }
         }
     }
@@ -289,24 +279,24 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     /* Thread code */
 #ifndef NTHREADED
     DEBUG("Threading\n");
-    for (mod_index=0; mod_index<num_modules; mod_index++) {
+    for (mod_index=0; mod_index<context->num_modules; mod_index++) {
         int i = 0, j;
-        while (i < program[mod_index].segment.inst_size) {
+        while (i < context->modules[mod_index].segment.inst_size) {
             j = i;
-            i += program[mod_index].segment.binary[i].instruction.no_ops + 1;
-            program[mod_index].segment.binary[j].impl_address =
-                    address_map[program[mod_index].segment.binary[j].instruction.opcode];
+            i += context->modules[mod_index].segment.binary[i].instruction.no_ops + 1;
+            context->modules[mod_index].segment.binary[j].impl_address =
+                    address_map[context->modules[mod_index].segment.binary[j].instruction.opcode];
         }
     }
 #endif
 
     /* Find handlers */
     DEBUG("Find program interrupt handlers\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
-        while (i < program[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index].segment.const_size) {
             step_handler =
-                    (proc_constant *) (program[mod_index].segment.const_pool +
+                    (proc_constant *) (context->modules[mod_index].segment.const_pool +
                                        i);
             if (step_handler->base.type == PROC_CONST &&
                 strcmp(step_handler->name, "stephandler") == 0)
@@ -320,11 +310,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     /* Find the program's entry point
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
-        while (i < program[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index].segment.const_size) {
             procedure =
-                    (proc_constant *) (program[mod_index].segment.const_pool +
+                    (proc_constant *) (context->modules[mod_index].segment.const_pool +
                                        i);
             if (procedure->base.type == PROC_CONST &&
                 strcmp(procedure->name, "main") == 0)
@@ -394,6 +384,8 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     START_BREAKPOINT ;
         DEBUG("BREAKPOINT CHECK\n");
         if (step_handler) {
+            size_t mod_no = current_frame->procedure->binarySpace->module->module_number;
+
             current_frame = frame_f(step_handler, 1, current_frame, pc,
                                     next_inst, 0);
 
@@ -408,11 +400,15 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             current_frame->interrupt_mask.any = 0;
             interrupt_mask.any = 0;
 
-            /* Arguments */
+            /* Argument */
             size_t arg_index = step_handler->binarySpace->globals + step_handler->locals + 1;
-            value_zero(interrupt_arg);
-            interrupt_arg->int_value = (rxinteger)(pc - step_handler->binarySpace->binary);
             current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
+
+            /* Populate the interrupt_arg object */
+            value_zero(interrupt_arg);
+            set_num_attributes(interrupt_arg,2);
+            interrupt_arg->attributes[0]->int_value = (rxinteger)mod_no;
+            interrupt_arg->attributes[1]->int_value = (rxinteger)(pc - step_handler->binarySpace->binary);
 
             /* This gotos the start of the interrupt handler  */
             DISPATCH;
@@ -445,8 +441,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         START_INSTRUCTION(METALOADINST_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         {
-            /* TODO this only works in current module space */
-            bin_code inst = current_frame->procedure->binarySpace->binary[op2R->int_value];
+            bin_code inst = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value];
 #ifdef NTHREADED
             /* Bytecode Version */
             op1R->int_value = inst.instruction.opcode;
@@ -473,10 +468,10 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
             DEBUG("TRACE - METALOADMODULES R%d\n", (int)REG_IDX(1));
             /* op1R will become an array of module names */
             value_zero(op1R);
-            set_num_attributes(op1R,num_modules);
-            op1R->int_value = num_modules; /* The cREXX convention for arrays */
-            for (mod_index = 0; mod_index < num_modules; mod_index++) {
-                set_null_string(op1R->attributes[mod_index],program[mod_index].name);
+            set_num_attributes(op1R,context->num_modules);
+            op1R->int_value = context->num_modules; /* The cREXX convention for arrays */
+            for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+                set_null_string(op1R->attributes[mod_index],context->modules[mod_index].name);
             }
             DISPATCH;
 
@@ -499,41 +494,43 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
         DISPATCH;
 
         /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
-        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADIOPERAND_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - METALOADIOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        op1R->int_value = current_frame->procedure->binarySpace->binary[op2R->int_value].iconst;
+        op1R->int_value = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].iconst;
         DISPATCH;
 
         /* Load Float Operand (op1 = (float)op2[op3]) */
-        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        op1R->float_value = current_frame->procedure->binarySpace->binary[op2R->int_value].fconst;
+        op1R->float_value = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].fconst;
         DISPATCH;
 
         /* Load String Operand (op1 = (string)op2[op3]) */
-        /* TODO this only works in current module space */
         START_INSTRUCTION(METALOADSOPERAND_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - METALOADSOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         set_const_string(op1R,
-                         (string_constant *)(current_frame->procedure->binarySpace->const_pool +
-                         current_frame->procedure->binarySpace->binary[op2R->int_value].index));
+                         (string_constant *)(
+                                 context->modules[op2R->int_value - 1].segment.const_pool +
+                                 context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].index
+                         ));
+
         DISPATCH;
 
         /* Load Procedure Operand (op1 = (proc)op2[op3]) */
-        /* TODO this only works in current module space */
         /* TODO needs to do more that get the function name - a function object is needed */
         START_INSTRUCTION(METALOADPOPERAND_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - METALOADPOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         {
             proc_constant
                     *proc =
-                        (proc_constant *)(current_frame->procedure->binarySpace->const_pool +
-                            current_frame->procedure->binarySpace->binary[op2R->int_value].index);
+                        (proc_constant *)(
+                                context->modules[op2R->int_value - 1].segment.const_pool +
+                                context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].index
+                            );
             set_null_string(op1R, proc->name);
         }
         DISPATCH;
+
 
         /* Regular Instructions */
         /* LOAD */
@@ -2934,7 +2931,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
 
         START_INSTRUCTION(EXIT)
 #ifndef NDEBUG
-            if (debug_mode) printf("TRACE - EXIT\n");
+            if (context->debug_mode) printf("TRACE - EXIT\n");
 #endif
             rc = 0;
             goto interprt_finished;
@@ -2957,12 +2954,12 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     /* Deallocate Frames */
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
-        while (i < program[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index].segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
-                            program[mod_index].segment.const_pool + i);
+                            context->modules[mod_index].segment.const_pool + i);
             switch (c_entry->type) {
 
                 case PROC_CONST:
@@ -2984,11 +2981,11 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     }
 
     /* Deallocate Globals */
-    for (mod_index = 0; mod_index < num_modules; mod_index++) {
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         int i;
-        for (i = 0; i < program[mod_index].segment.globals; i++) {
-            clear_value(program[mod_index].globals[i]);
-            free(program[mod_index].globals[i]);
+        for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
+            clear_value(context->modules[mod_index].globals[i]);
+            free(context->modules[mod_index].globals[i]);
         }
     }
 
@@ -2997,7 +2994,7 @@ RX_FLATTEN int run(int num_modules, module *program, int argc, char *argv[],
     free(interrupt_arg);
 
 #ifndef NDEBUG
-    if (debug_mode) printf("Interpreter Finished\n");
+    if (context->debug_mode) printf("Interpreter Finished\n");
 #endif
 
     return rc;
