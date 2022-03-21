@@ -92,7 +92,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(interrupt_mask.any)?&&BREAKPOINT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:&&CASE_START; }
 
 #else
 
