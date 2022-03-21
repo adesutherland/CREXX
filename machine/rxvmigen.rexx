@@ -30,8 +30,8 @@
   do until lines(file)=0 | pos('void init_ops()',linein(file))>0
   end
 
-  call add_meta_inst     'Instruction meta_map[] = {   {0,"null","",0,OP_NONE,OP_NONE,OP_NONE},'
-  call add_threaded_inst 'void *address_map[] = {  &&INULL,'
+  call add_meta_inst     'const Instruction meta_map[] = {   {0,"null","",0,OP_NONE,OP_NONE,OP_NONE},'
+  call add_threaded_inst 'const void *address_map[] = {  &&INULL,'
   call add_bytecode_inst 'enum instructions {      INST_INULL,'
 
 /* run through all instruction definitions in operands.c */
@@ -53,7 +53,7 @@
 
   inst=inst+1
   call add_meta_inst     '                             {'inst',"unknown","",0,OP_NONE,OP_NONE,OP_NONE} };'
-  call add_threaded_inst '                         &&IUNKNOWN };'
+  call add_threaded_inst '                         &&IUNKNOWN };' /* This must be the last */
   call add_bytecode_inst '                         INST_IUNKNOWN };'
 
   call inc_inst ""

@@ -99,7 +99,7 @@ RX_INLINE stack_frame *frame_f(
     }
     this->parent = parent;
     if (parent) this->interrupt_mask = parent->interrupt_mask;
-    else this->interrupt_mask.any = 0;
+    else this->interrupt_mask = 0;
     this->return_inst = return_inst;
     this->return_pc = return_pc;
     this->number_locals = num_locals;
@@ -133,8 +133,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *step_handler = 0;
     int rc = 0;
     bin_code *pc, *next_pc;
-    interrupt_mask_type interrupt_mask;
-    value *interrupt_arg = value_f();
+    int mod_index;
+    value *interrupt_arg;
 
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -142,150 +142,28 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     void *next_inst = &&IUNKNOWN;
 #endif
     stack_frame *current_frame = 0, *temp_frame;
-    /* Linker Stuff */
-    value *g_reg;
-    int mod_index;
-    chameleon_constant *c_entry;
-    proc_constant *p_entry, *p_entry_linked;
 
     /*
      * Instruction database - loaded from a generated header file
      */
     #include "instrset.h"  /* Set up void *address_map[], etc. */
 
-    /* Link Modules Together */
-    DEBUG("Linking - Build Symbols\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
-            c_entry =
-                    (chameleon_constant *) (
-                            context->modules[mod_index].segment.const_pool + i);
-            switch (c_entry->type) {
+    /* Allocate Interrupt Arg */
+    interrupt_arg = value_f();
 
-                case PROC_CONST:
-                    if (((proc_constant *) c_entry)->start != SIZE_MAX) {
-                        /* Mark the owning module segment address */
-                        ((proc_constant *) c_entry)->binarySpace =
-                                &context->modules[mod_index].segment;
-                        /* Stack Frame Free List */
-                        ((proc_constant *) c_entry)->frame_free_list = &(((proc_constant *) c_entry)->frame_free_list_head);
-                        *(((proc_constant *) c_entry)->frame_free_list) = 0;
-                    }
-                    break;
-
-                case EXPOSE_REG_CONST:
-                    /* Exposed Register */
-                    if (src_node(context->exposed_reg_tree,
-                                 ((expose_reg_constant *) c_entry)->index,
-                                 (size_t *) &g_reg)) {
-                        /* Register already exposed / initialised */
-                        context->modules[mod_index]
-                                .globals[((expose_reg_constant *) c_entry)
-                                ->global_reg] =
-                                g_reg;
-                    } else {
-                        /* Need to initialise a register and expose it in the search tree */
-                        context->modules[mod_index].globals[((expose_reg_constant *) c_entry)->global_reg] = value_f();
-                        if (add_node(&context->exposed_reg_tree,
-                                     ((expose_reg_constant *) c_entry)->index,
-                                     (size_t) (context->modules[mod_index]
-                                             .globals[((expose_reg_constant *) c_entry)
-                                             ->global_reg]))) {
-                            fprintf(stderr,
-                                    "Duplicate exposed register symbol: %s\n",
-                                    ((expose_reg_constant *) c_entry)->index);
-                            exit(-1); /* Duplicate */
-                        }
-                    }
-                    break;
-
-                case EXPOSE_PROC_CONST:
-                    /* Exposed Procedure */
-                    p_entry =
-                            (proc_constant *) (
-                                    context->modules[mod_index].segment.const_pool
-                                    + ((expose_proc_constant *) c_entry)
-                                            ->procedure);
-
-                    if (!((expose_proc_constant *) c_entry)->imported) {
-                        if (add_node(&context->exposed_proc_tree,
-                                     ((expose_proc_constant *) c_entry)->index,
-                                     (size_t) p_entry)) {
-                            fprintf(stderr,
-                                    "Duplicate exposed symbol: %s\n",
-                                    ((expose_proc_constant *) c_entry)->index);
-                            exit(-1); /* Duplicate */
-                        }
-                    }
-                    break;
-
-                default:;
-            }
-
-            i += c_entry->size_in_pool;
-        }
-    }
-
-    DEBUG("Linking - Resolve Symbols\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
-            c_entry =
-                    (chameleon_constant *) (
-                            context->modules[mod_index].segment.const_pool + i);
-            switch (c_entry->type) {
-                case EXPOSE_PROC_CONST:
-                    p_entry =
-                            (proc_constant *) (
-                                    context->modules[mod_index].segment.const_pool
-                                    + ((expose_proc_constant *) c_entry)
-                                            ->procedure);
-                    if (((expose_proc_constant *) c_entry)->imported) {
-                        if (!src_node(context->exposed_proc_tree,
-                                      ((expose_proc_constant *) c_entry)->index,
-                                      (size_t *) &p_entry_linked)) {
-                            fprintf(stderr, "Unimplemented symbol: %s\n",
-                                    ((expose_proc_constant *) c_entry)->index);
-                            exit(-1); /* Unimplemented */
-                        }
-
-                        /* Patch the procedure entry with the linked one */
-                        p_entry->locals = p_entry_linked->locals;
-                        p_entry->start = p_entry_linked->start;
-                        p_entry->binarySpace = p_entry_linked->binarySpace;
-                        p_entry->frame_free_list = p_entry_linked->frame_free_list;
-                    }
-                    break;
-
-                default:;
-            }
-
-            i += c_entry->size_in_pool;
-        }
-    }
-
-    /* Allocate Module Globals */
-    DEBUG("Allocate Module Globals\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i;
-        for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
-            if (!context->modules[mod_index].globals[i]) {
-                context->modules[mod_index].globals[i] = value_f();
-            }
-        }
-    }
-
-    /* Thread code */
+    /* Thread code - we need to do it here because address_map is only valid
+     * in this run() function */
 #ifndef NTHREADED
     DEBUG("Threading\n");
-    for (mod_index=0; mod_index<context->num_modules; mod_index++) {
-        int i = 0, j;
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        size_t i = 0, j;
+
         while (i < context->modules[mod_index].segment.inst_size) {
             j = i;
             i += context->modules[mod_index].segment.binary[i].instruction.no_ops + 1;
             context->modules[mod_index].segment.binary[j].impl_address =
-                    address_map[context->modules[mod_index].segment.binary[j].instruction.opcode];
+                    (void *)address_map[context->modules[mod_index].segment
+                            .binary[j].instruction.opcode];
         }
     }
 #endif
@@ -397,8 +275,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
             /* Disable Interrupts */
             current_frame->is_interrupt = 1;
-            current_frame->interrupt_mask.any = 0;
-            interrupt_mask.any = 0;
+            current_frame->interrupt_mask = 0;
 
             /* Argument */
             size_t arg_index = step_handler->binarySpace->globals + step_handler->locals + 1;
@@ -424,15 +301,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0);
             DEBUG("TRACE - BPON\n");
-            current_frame->interrupt_mask.step = 1;
-            interrupt_mask = current_frame->interrupt_mask;
+            current_frame->interrupt_mask = 1;
             DISPATCH;
 
         /* Enable Breakpoints */
         START_INSTRUCTION(BPOFF) CALC_DISPATCH(0);
             DEBUG("TRACE - BPOFF\n");
-            current_frame->interrupt_mask.step = 0;
-            interrupt_mask = current_frame->interrupt_mask;
+            current_frame->interrupt_mask = 0;
             DISPATCH;
 
         /* Meta Instructions */
@@ -469,7 +344,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* op1R will become an array of module names */
             value_zero(op1R);
             set_num_attributes(op1R,context->num_modules);
-            op1R->int_value = context->num_modules; /* The cREXX convention for arrays */
+            op1R->int_value = (rxinteger)context->num_modules; /* The cREXX convention for arrays */
             for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
                 set_null_string(op1R->attributes[mod_index],context->modules[mod_index].name);
             }
@@ -540,7 +415,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         START_INSTRUCTION(LOAD_REG_STRING) CALC_DISPATCH(2);
-            DEBUG("TRACE - LOAD R%llu,\"%.*s\"\n",
+            DEBUG("TRACE - LOAD R%lu,\"%.*s\"\n",
                   REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string);
             set_const_string(op1R, CONSTSTRING_OP(2));
@@ -548,7 +423,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         /* Readline - Read a line from stdin to a register */
         START_INSTRUCTION(READLINE_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - READLINE R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - READLINE R%lu\n", REG_IDX(1));
             {
                 size_t pos = 0;
                 int ch;
@@ -569,13 +444,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         /* String Say - Deprecated */
         START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - SSAY (DEPRICATED) R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1));
             printf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH;
 
         /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - SAY R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
             printf("%.*s\n", (int) op1R->string_length, op1R->string_value);
             DISPATCH;
 
@@ -586,73 +461,73 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SCONCAT R%llu,R%llu,R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SCONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             string_sconcat(op1R, op2R, op3R);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - CONCAT R%llu,R%llu,R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - CONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             string_concat(op1R, op2R, op3R);
             DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SCONCAT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SCONCAT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             string_sconcat_var_const(op1R, op2R, op3S);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - CONCAT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - CONCAT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             string_concat_var_const(op1R, op2R, op3S);
             DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SCONCAT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SCONCAT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
             string_sconcat_const_var(op1R, op2S, op3R);
             DISPATCH;
 
         START_INSTRUCTION(CONCAT_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - CONCAT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - CONCAT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
             string_concat_const_var(op1R, op2S, op3R);
             DISPATCH;
 
         START_INSTRUCTION(IMULT_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - IMULT R%llu,R%llu,R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - IMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             REG_RETURN_INT(op2RI * op3RI);
             DISPATCH;
 
         START_INSTRUCTION(IMULT_REG_REG_INT) {
             CALC_DISPATCH(3);
-            DEBUG("TRACE - IMULT R%llu,R%llu,%llu\n", REG_IDX(1),
+            DEBUG("TRACE - IMULT R%lu,R%lu,%llu\n", REG_IDX(1),
                   REG_IDX(2), op3I);
             REG_RETURN_INT(op2RI * op3I);
             DISPATCH;
         }
 
         START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - IADD R%llu,R%llu,R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             REG_RETURN_INT(op2RI + op3RI);
             DISPATCH;
 
         START_INSTRUCTION(ISUB_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - ISUB R%llu,R%llu,R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - ISUB R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             REG_RETURN_INT(op2RI - op3RI);
             DISPATCH;
 
         START_INSTRUCTION(IADD_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - IADD R%llu,R%llu,%llu\n", REG_IDX(1),
+            DEBUG("TRACE - IADD R%lu,R%lu,%llu\n", REG_IDX(1),
                   REG_IDX(2), op3I);
             REG_RETURN_INT(op2RI + op3I);
             DISPATCH;
@@ -681,7 +556,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 proc_constant *called_function = PROC_OP(2);
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                         next_inst, op1R);
-                DEBUG("TRACE - CALL R%llu,%s()\n", REG_IDX(1), called_function->name);
+                DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
                 /* Prepare dispatch to procedure as early as possible */
                 next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                 CALC_DISPATCH_MANUAL;
@@ -699,7 +574,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                                 current_frame,
                                 next_pc, next_inst, op1R);
 
-                DEBUG("TRACE - CALL R%llu,%s,R%llu\n", REG_IDX(1), called_function->name,
+                DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name,
                       REG_IDX(3));
 
                 /* Prepare dispatch to procedure as early as possible */
@@ -748,7 +623,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     rc = 0;
                     goto interprt_finished;
                 }
-                interrupt_mask = current_frame->interrupt_mask;
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT;
@@ -757,7 +631,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
 
         START_INSTRUCTION(RET_REG);
-            DEBUG("TRACE - RET R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - RET R%lu\n", REG_IDX(1));
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
@@ -795,7 +669,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     }
                     goto interprt_finished;
                 }
-                interrupt_mask = current_frame->interrupt_mask;
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT;
@@ -834,7 +707,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     rc = (int) op1I;
                     goto interprt_finished;
                 }
-                interrupt_mask = current_frame->interrupt_mask;
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT;
@@ -873,7 +745,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     rc = 0;
                     goto interprt_finished;
                 }
-                interrupt_mask = current_frame->interrupt_mask;
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT;
@@ -913,7 +784,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     rc = 0;
                     goto interprt_finished;
                 }
-                interrupt_mask = current_frame->interrupt_mask;
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT;
@@ -922,12 +792,12 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
 
         START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2); /* Deprecated */
-            DEBUG("TRACE - MOVE R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - MOVE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             move_value(op1R, op2R);
             DISPATCH;
 
         START_INSTRUCTION(SWAP_REG_REG) CALC_DISPATCH(2); /* Deprecated */
-            DEBUG("TRACE - SWAP R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - SWAP R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 value *v_temp;
                 v_temp = op1R;
@@ -938,25 +808,25 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - LINKATTR R%llu,R%llu,R%llu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             op1R = op2R->attributes[op3R->int_value - 1];
             DISPATCH;
 
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - LINKATTR R%llu,R%llu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
+            DEBUG("TRACE - LINKATTR R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
             op1R = op2R->attributes[(int)op3I - 1];
             DISPATCH;
 
             /* Link op2 to op1 */
         START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - LINK R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - LINK R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R = op2R;
             DISPATCH;
 
         /* Unlink op1 */
         START_INSTRUCTION(UNLINK_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - UNLINK R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - UNLINK R%lu\n", REG_IDX(1));
             op1R = (current_frame->baselocals[(pc + 1)->index]);
             DISPATCH;
 
@@ -988,7 +858,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         START_INSTRUCTION(DEC_REG) CALC_DISPATCH(1);
             /* TODO This is really idec reg - i.e. it does not prime the int */
-            DEBUG("TRACE - DEC R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
             (current_frame->locals[REG_IDX(1)]->int_value)--;
             DISPATCH;
 
@@ -1043,7 +913,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  * ------------------------------------------------------------------------------------
  */
         START_INSTRUCTION(XTIME_REG_STRING) CALC_DISPATCH(2);
-        DEBUG("TRACE - XTIME R%d\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
+        DEBUG("TRACE - XTIME R%d,\"%s\"\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
 
             tzset();
             switch ((CONSTSTRING_OP(2))->string[0]) {
@@ -1169,7 +1039,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
             (current_frame->locals[REG_IDX(1)]->int_value)=0-(current_frame->locals[REG_IDX(1)]->int_value);
         DISPATCH;
 
@@ -1178,7 +1048,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FSEX_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
             (current_frame->locals[REG_IDX(1)]->float_value)=0-(current_frame->locals[REG_IDX(1)]->float_value);
         DISPATCH;
 
@@ -1531,7 +1401,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SEQ_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SEQ R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(!string_cmp_const(op2R, op3S));
@@ -1586,7 +1456,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - RSEQ R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - RSEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(0);
@@ -1606,7 +1476,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SNE_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SNE R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SNE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(string_cmp_const(op2R, op3S) != 0);
@@ -1627,7 +1497,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SGT_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SGT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SGT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
@@ -1639,7 +1509,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SGT_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SGT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SGT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) < 0);
@@ -1659,7 +1529,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SLT_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SLT R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SLT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
@@ -1671,7 +1541,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SLT_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SLT R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SLT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) > 0);
@@ -1691,7 +1561,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SGTE_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SGTE R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SGTE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
@@ -1703,7 +1573,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SGTE_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SGTE R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SGTE R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) <= 0);
@@ -1723,7 +1593,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SLTE_REG_REG_STRING) CALC_DISPATCH(3);
-            DEBUG("TRACE - SLTE R%llu,R%llu,\"%.*s\"\n", REG_IDX(1),
+            DEBUG("TRACE - SLTE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(string_cmp_const(op2R, op3S) <= 0);
@@ -1734,7 +1604,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SLTE_REG_STRING_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SLTE R%llu,\"%.*s\",R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SLTE R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) >= 0);
@@ -1745,7 +1615,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(COPY_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - COPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - COPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_value(op1R, op2R);
             DISPATCH;
 
@@ -1754,7 +1624,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SCOPY_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - SCOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - SCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_string_value(op1R, op2R);
             DISPATCH;
 
@@ -1763,7 +1633,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(ICOPY_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - ICOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - ICOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R->int_value = op2R->int_value;
             DISPATCH;
 
@@ -1772,7 +1642,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FCOPY_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - FCOPY R%llu,R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - FCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R->float_value = op2R->float_value;
             DISPATCH;
 
@@ -1781,7 +1651,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(INC_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - INC R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
             (current_frame->locals[REG_IDX(1)]->int_value)++;
             DISPATCH;
 
@@ -1929,7 +1799,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  ----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(INOT_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            DEBUG("TRACE - INOT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             REG_RETURN_INT(~op2RI);
             DISPATCH;
 
@@ -1938,7 +1808,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  ----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(INOT_REG_INT) CALC_DISPATCH(2);
-            DEBUG("TRACE - INOT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)op2I);
+            DEBUG("TRACE - INOT R%d,R%d\n", (int)REG_IDX(1), (int)op2I);
             REG_RETURN_INT(~op2I);
             DISPATCH;
 
@@ -2139,7 +2009,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  ITOS_REG  Set register string value from its int value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOS_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - ITOS R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - ITOS R%lu\n", REG_IDX(1));
             string_from_int(op1R);
             DISPATCH;
 
@@ -2147,14 +2017,14 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  FTOS_REG  Set register string value from its float value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOS_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - FTOS R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - FTOS R%lu\n", REG_IDX(1));
             string_from_float(op1R);
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOF_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - ITOF R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - ITOF R%lu\n", REG_IDX(1));
             op1R->float_value = op1R->int_value;
             DISPATCH;
 
@@ -2162,7 +2032,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  FTOI_REG  Set register int value from its float value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOI_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - FTOI R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - FTOI R%lu\n", REG_IDX(1));
             int_from_float(op1R);
             if (op1R->float_value != (double)op1R->int_value) {
                 goto converror;
@@ -2173,7 +2043,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  FTOB_REG  Set register boolean (int set to 1 or 0) value from its float value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOB_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - FTOB R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - FTOB R%lu\n", REG_IDX(1));
             int_from_float(op1R);
 
             if (op1R->float_value) op1R->int_value = 1;
@@ -2184,7 +2054,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  STOI_REG  Set register int value from its string value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(STOI_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - STOI R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - STOI R%lu\n", REG_IDX(1));
             /* Convert a string to a integer - returns 1 on error */
             if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
                 goto converror;
@@ -2195,7 +2065,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  STOF_REG  Set register float value from its string value
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(STOF_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - STOF R%llu\n", REG_IDX(1));
+            DEBUG("TRACE - STOF R%lu\n", REG_IDX(1));
             /* Convert a string to a float - returns 1 on error */
             if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
                 goto converror;
@@ -2222,7 +2092,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
 // TODO: what to do if there is a length change of chars during translation
             START_INSTRUCTION(STRLOWER_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - STRLOWER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
 #ifdef NUTF8
@@ -2240,7 +2110,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
 // TODO: what to do if there is a length change of chars during translation
             START_INSTRUCTION(STRUPPER_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - STRUPPER R%llu\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
 #ifdef NUTF8
@@ -2324,7 +2194,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BGT_ID_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            DEBUG("TRACE - BGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL;
@@ -2336,7 +2206,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BGT_ID_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                CALC_DISPATCH_MANUAL;
@@ -2347,7 +2217,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BGE_ID_REG_REG) CALC_DISPATCH(3);
-       DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+       DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
        if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
           next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
           CALC_DISPATCH_MANUAL;
@@ -2359,7 +2229,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BGE_ID_REG_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2370,7 +2240,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BLT_ID_REG_REG) CALC_DISPATCH(3);
-        DEBUG("TRACE - BLT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BLT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2381,7 +2251,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BLT_ID_REG_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2392,7 +2262,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BLE_ID_REG_REG) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2403,7 +2273,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BLE_ID_REG_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2414,7 +2284,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BNE_ID_REG_REG) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2426,7 +2296,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BNE_ID_REG_INT) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2437,7 +2307,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BEQ_ID_REG_REG) CALC_DISPATCH(3);
-        DEBUG("TRACE - BGE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL;
@@ -2536,7 +2406,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - FNDBLNK R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - FNDBLNK R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxinteger len;
                 rxinteger result;
@@ -2566,7 +2436,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3);
-           DEBUG("TRACE - FNDNBLNK R%llu R%llu\n", REG_IDX(1),
+           DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1),
               REG_IDX(2));
     {
         rxinteger result;
@@ -2608,7 +2478,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - CONCCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - CONCCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
 #ifndef NUTF8
@@ -2629,7 +2499,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(TRANSCHAR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - TRANSCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - TRANSCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger val = op1R->int_value;
                 rxinteger len, i;
@@ -2654,7 +2524,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(DROPCHAR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - DROPCHAR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - DROPCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger i, len1, len2;
                 int found;
@@ -2690,7 +2560,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - SUBSTRING R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger offset = op3R->int_value - 1;   /* make position to offset  */
                 rxinteger len, i;
@@ -2710,7 +2580,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - SUBSTCUT R%llu R%llu\n", REG_IDX(1), REG_IDX(2));
+            DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
             PUTSTRLEN(op1R,op2R->int_value) ;
 
@@ -2721,7 +2591,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3);
-            DEBUG("TRACE - PADSTR R%llu R%llu R%llu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - PADSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 int pad;
                 int i;
@@ -2746,7 +2616,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */
         START_INSTRUCTION(APPENDCHAR_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - APPENDCHAR R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - APPENDCHAR R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_concat_char(op1R, op2R);
             DISPATCH;
@@ -2755,7 +2625,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *   APPEND_REG_REG Append string op2 on op1
  */
         START_INSTRUCTION(APPEND_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - APPEND R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - APPEND R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_append(op1R, op2R);
             DISPATCH;
@@ -2764,7 +2634,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *   SAPPEND_REG_REG Append with space string op2 on op1
  */
         START_INSTRUCTION(SAPPEND_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - SAPPEND R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SAPPEND R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_sappend(op1R, op2R);
             DISPATCH;
@@ -2773,7 +2643,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *   STRLEN_REG_REG String Length op1 = length(op2)
  */
         START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - STRLEN R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - STRLEN R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
 #ifndef NUTF8
             op1R->int_value = (rxinteger)op2R->string_chars;
@@ -2786,7 +2656,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  * SETSTRPOS_REG_REG - Set String (op1) charpos set to op2
  */
         START_INSTRUCTION(SETSTRPOS_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - SETSTRPOS R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
 #ifndef NUTF8
             string_set_byte_pos(op1R, op2R->int_value);
@@ -2799,7 +2669,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  * GETSTRPOS_REG_REG - Get String (op2) charpos into op1
  */
         START_INSTRUCTION(GETSTRPOS_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - GETSTRPOS R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - GETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
 #ifndef NUTF8
             op1R->int_value = (int) op2R->string_char_pos;
@@ -2812,7 +2682,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  * STRCHAR_REG_REG - op1 (as int) = op2[charpos]
  */
         START_INSTRUCTION(STRCHAR_REG_REG) CALC_DISPATCH(2);
-            DEBUG("TRACE - STRCHAR R%llu R%llu\n", REG_IDX(1),
+            DEBUG("TRACE - STRCHAR R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             {
                 int ch;
@@ -2957,7 +2827,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0;
         while (i < context->modules[mod_index].segment.const_size) {
-            c_entry =
+            chameleon_constant *c_entry =
                     (chameleon_constant *) (
                             context->modules[mod_index].segment.const_pool + i);
             switch (c_entry->type) {
@@ -2984,8 +2854,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         int i;
         for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
-            clear_value(context->modules[mod_index].globals[i]);
-            free(context->modules[mod_index].globals[i]);
+            if (!context->modules[mod_index].globals_dont_free[i]) {
+                clear_value(context->modules[mod_index].globals[i]);
+                free(context->modules[mod_index].globals[i]);
+            }
         }
     }
 

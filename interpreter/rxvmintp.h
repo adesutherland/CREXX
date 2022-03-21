@@ -12,16 +12,6 @@ typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {
-        unsigned int step : 1;
-        unsigned int rxstep : 1;
-        unsigned int breakpoint : 1;
-        unsigned int watch : 1;
-    };
-    unsigned char any;
-} interrupt_mask_type;
-
-typedef union {
-    struct {
         unsigned int type_object : 1;
         unsigned int type_string : 1;
         unsigned int type_decimal : 1;
@@ -57,10 +47,13 @@ struct value {
 
 /* Module Structure */
 typedef struct module {
-    bin_space segment;
-    char *name;
-    value **globals;
-    size_t module_number;
+    bin_space segment;         /* Binary and Constant Pool */
+    char *name;                /* Module Name */
+    value **globals;           /* Globals registers array */
+    char *globals_dont_free;   /* Indicates linked global value that should not be freed */
+    size_t module_number;      /* Module Index - 1 base */
+    size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
+    size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
 } module;
 
 struct stack_frame {
@@ -74,7 +67,7 @@ struct stack_frame {
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
-    interrupt_mask_type interrupt_mask;
+    char interrupt_mask;
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;   /* Locals pointer mapping (after swaps / links */
 };
@@ -110,8 +103,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *(interrupt_mask.any)?&&BREAKPOINT:next_inst; }
-
+#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:next_inst; }
 #endif
 
 #define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
