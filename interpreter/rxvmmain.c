@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* Load Module */
-        if (rxldmod(&context, file_name) == -1) {
+        if (rxldmod(&context, file_name) == 0) {
             fprintf(stderr, "ERROR opening file %s\n", file_name);
             exit(-1);
         }

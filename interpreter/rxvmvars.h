@@ -133,6 +133,17 @@ RX_INLINE void extend_string_buffer(value *v, size_t length) {
     }
 }
 
+RX_INLINE void null_terminate_string_buffer(value *v) {
+    /* Make room for the null */
+    extend_string_buffer(v, v->string_length + 1);
+
+    /* extend_string_buffer() increments string_length so put it back */
+    v->string_length--;
+
+    /* Add the null */
+    v->string_value[v->string_length] = 0;
+}
+
 /* Clears a value of all its children and other malloced buffers */
 RX_MOSTLYINLINE void clear_value(value* v) {
     int i;

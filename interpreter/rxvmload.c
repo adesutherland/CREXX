@@ -40,9 +40,8 @@ void rxfremod(rxvm_context *context) {
 }
 
 /* Loads a new module
- * returns 0  - Success
- *         >0 - the number of unresolved references
- *         -1 - Error loading file */
+ * returns 0  - Error
+ *         >0 - Module Number  */
 int rxldmod(rxvm_context *context, char *file_name) {
     FILE *fp;
     size_t n, i;
@@ -62,7 +61,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
     }
 
     fp = openfile(file_name, "rxbin", context->location, "rb");
-    if (!fp) return -1;
+    if (!fp) return 0;
 
     fread(&context->modules[n].segment.globals, 1, sizeof(int), fp);
     fread(&context->modules[n].segment.inst_size, 1, sizeof(size_t), fp);
@@ -168,7 +167,6 @@ int rxldmod(rxvm_context *context, char *file_name) {
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         /* Skip modules without any unresolved symbols */
         if (!context->modules[mod_index].unresolved_symbols) continue;
-
         i = 0;
         while (i < context->modules[mod_index].segment.const_size) {
             c_entry =
@@ -187,14 +185,18 @@ int rxldmod(rxvm_context *context, char *file_name) {
                                             context->modules[mod_index].segment.const_pool
                                             + ((expose_proc_constant *) c_entry)
                                                     ->procedure);
-                            p_entry->locals = p_entry_linked->locals;
-                            p_entry->start = p_entry_linked->start;
-                            p_entry->binarySpace = p_entry_linked->binarySpace;
-                            p_entry->frame_free_list =
-                                    p_entry_linked->frame_free_list;
+                            if (p_entry->start == SIZE_MAX ) { /* If not already linked up */
+                                p_entry->locals = p_entry_linked->locals;
+                                p_entry->start = p_entry_linked->start;
+                                p_entry->binarySpace =
+                                        p_entry_linked->binarySpace;
+                                p_entry->frame_free_list =
+                                        p_entry_linked->frame_free_list;
 
-                            /* Reduce the number of unresolved symbols */
-                            context->modules[mod_index].unresolved_symbols--;
+                                /* Reduce the number of unresolved symbols */
+                                context->modules[mod_index]
+                                        .unresolved_symbols--;
+                            }
                         }
                     }
                     break;
@@ -215,7 +217,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
         }
     }
 
-    return 0;
+    return (int)(n+1); /* Module Number */
 }
 
 

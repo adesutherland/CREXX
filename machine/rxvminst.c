@@ -23,7 +23,9 @@ void init_ops() {
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
-    instr_f("metaloadmodules", "Load Module Array", OP_REG, OP_NONE, OP_NONE);
+    instr_f("metaloadmodule", "Load Module (op1 = module num of loaded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadedmodules", "Loaded Modules (op1 = array loaded modules)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("metaloadedprocs", "Loaded Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = (int)op2[op3])", OP_REG, OP_REG, OP_REG);
@@ -205,10 +207,10 @@ void init_ops() {
     instr_f("nsmap", "Map op1 to namespace op2 var name in op3", OP_REG, OP_STRING, OP_REG);
     instr_f("unmap", "Unmap op1", OP_REG, OP_NONE, OP_NONE);
 
-
     instr_f("call", "Call procedure (op1())", OP_FUNC, OP_NONE, OP_NONE);
     instr_f("call", "Call procedure (op1=op2())", OP_REG, OP_FUNC, OP_NONE);
     instr_f("call", "Call procedure (op1=op2(op3...) )", OP_REG, OP_FUNC, OP_REG);
+    instr_f("dcall", "Dynamic call procedure (op1=op2(op3...) )", OP_REG, OP_REG, OP_REG);
 
     instr_f("ret", "Return VOID", OP_NONE, OP_NONE, OP_NONE);
     instr_f("ret", "Return op1", OP_REG, OP_NONE, OP_NONE);

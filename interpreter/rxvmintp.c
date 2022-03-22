@@ -262,7 +262,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     START_BREAKPOINT ;
         DEBUG("BREAKPOINT CHECK\n");
         if (step_handler) {
-            size_t mod_no = current_frame->procedure->binarySpace->module->module_number;
+            rxinteger mod_no = (rxinteger)current_frame->procedure->binarySpace->module->module_number;
+            rxinteger addr  = (rxinteger)(pc - current_frame->procedure->binarySpace->binary);
 
             current_frame = frame_f(step_handler, 1, current_frame, pc,
                                     next_inst, 0);
@@ -284,8 +285,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* Populate the interrupt_arg object */
             value_zero(interrupt_arg);
             set_num_attributes(interrupt_arg,2);
-            interrupt_arg->attributes[0]->int_value = (rxinteger)mod_no;
-            interrupt_arg->attributes[1]->int_value = (rxinteger)(pc - step_handler->binarySpace->binary);
+            interrupt_arg->attributes[0]->int_value = mod_no;
+            interrupt_arg->attributes[1]->int_value = addr;
 
             /* This gotos the start of the interrupt handler  */
             DISPATCH;
@@ -296,7 +297,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
     START_OF_INSTRUCTIONS ;
 
-        /* Signal / Interrupt Instructins */
+        /* Signal / Interrupt Instructions */
 
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0);
@@ -311,6 +312,30 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         /* Meta Instructions */
+
+        /* Load Module (op1 = module num of loaded op2) */
+        START_INSTRUCTION(METALOADMODULE_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            {
+                null_terminate_string_buffer(op2R);
+                /* Load the module */
+                op1R->int_value = rxldmod(context, op2R->string_value);
+                if (op1R->int_value) {
+                    /* If successfully loaded, thread the binary - must be done in run() */
+#ifndef NTHREADED
+                    DEBUG("Threading\n");
+                    size_t i = 0, j;
+                    int mod = op1R->int_value - 1;
+                    while (i < context->modules[mod].segment.inst_size) {
+                        j = i;
+                        i += context->modules[mod].segment.binary[i].instruction.no_ops + 1;
+                        context->modules[mod].segment.binary[j].impl_address =
+                                (void *) address_map[context->modules[mod].segment.binary[j].instruction.opcode];
+                    }
+#endif
+                }
+            }
+            DISPATCH;
 
         /* Load Instruction Code (op1 = (inst)op2[op3]) */
         START_INSTRUCTION(METALOADINST_REG_REG_REG) CALC_DISPATCH(3);
@@ -338,15 +363,73 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         }
         DISPATCH;
 
-        /* Load Module Array */
-        START_INSTRUCTION(METALOADMODULES_REG) CALC_DISPATCH(1);
-            DEBUG("TRACE - METALOADMODULES R%d\n", (int)REG_IDX(1));
+        /* Loaded Modules (op1=array loaded modules) */
+        START_INSTRUCTION(METALOADEDMODULES_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - METALOADEDMODULES R%d\n", (int)REG_IDX(1));
             /* op1R will become an array of module names */
             value_zero(op1R);
             set_num_attributes(op1R,context->num_modules);
             op1R->int_value = (rxinteger)context->num_modules; /* The cREXX convention for arrays */
             for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
                 set_null_string(op1R->attributes[mod_index],context->modules[mod_index].name);
+            }
+            DISPATCH;
+
+        /* Loaded Procedures (op1 = array procedures in module op2) */
+        START_INSTRUCTION(METALOADEDPROCS_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - METALOADEDPROCS R%d\n", (int)REG_IDX(1));
+            {
+                chameleon_constant *c_entry;
+                proc_constant *p_entry;
+                expose_proc_constant *e_entry;
+                size_t i;
+                size_t entries;
+                value* entry;
+
+                /* Module to be listed */
+                size_t mod = op2R->int_value - 1;
+
+                /* op1R will become an array of procedures names and pointers */
+                value_zero(op1R);
+
+                /* How many entries are needed */
+                i = 0;
+                entries = 0;
+                while (i < context->modules[mod].segment.const_size) {
+                    c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
+                    if (c_entry->type == EXPOSE_PROC_CONST) {
+                        if (!((expose_proc_constant *)c_entry)->imported) entries++;
+                    }
+                    i += c_entry->size_in_pool;
+                }
+
+                /* Set up array */
+                set_num_attributes(op1R, entries);
+                op1R->int_value = (rxinteger)entries; /* The cREXX convention for arrays */
+
+                /* Populate array */
+                i = 0;
+                entries = 0;
+                while (i < context->modules[mod].segment.const_size) {
+                    c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
+                    if (c_entry->type == EXPOSE_PROC_CONST) {
+                        /* Exposed Procedure */
+                        e_entry = (expose_proc_constant *) c_entry;
+                        p_entry = (proc_constant *) (
+                                context->modules[mod].segment.const_pool
+                                + e_entry->procedure);
+                        if (!e_entry->imported) {
+                            /* Exported - Procedure - populate object and add to array  */
+                            entry = op1R->attributes[entries];
+                            set_num_attributes(entry,2);
+                            set_null_string(entry->attributes[0],e_entry->index);
+                            entry->attributes[1]->int_value = (rxinteger)p_entry;
+
+                            entries++;
+                        }
+                    }
+                    i += c_entry->size_in_pool;
+                }
             }
             DISPATCH;
 
@@ -536,6 +619,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(1);
+                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                      next_inst, 0);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
@@ -554,6 +638,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(2);
+                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                         next_inst, op1R);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
@@ -566,9 +651,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3);
+            /* Clear target return value register */
+            value_zero(op1R);
+
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(2);
+                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
                 current_frame =
                         frame_f(called_function, (int) op3R->int_value,
                                 current_frame,
@@ -590,6 +679,41 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 for (   i = 0;
                         i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                         i++, j++, k++) {
+                    current_frame->locals[j] = current_frame->parent->locals[k];
+                }
+            }
+            /* This gotos the start of the called procedure */
+            DISPATCH;
+
+
+        START_INSTRUCTION(DCALL_REG_REG_REG) CALC_DISPATCH(3);
+            /* Clear target return value register */
+            value_zero(op1R);
+
+            {
+                /* Function pointer is in register 2 */
+                proc_constant *called_function = (proc_constant *)op2R->int_value;
+                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
+                current_frame =
+                    frame_f(called_function, (int) op3R->int_value,
+                        current_frame,
+                        next_pc, next_inst, op1R);
+
+                DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+
+                /* Prepare dispatch to procedure as early as possible */
+                next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
+                CALC_DISPATCH_MANUAL;
+
+                /* Arguments - complex lets never have to change this code! */
+                size_t j =
+                    current_frame->procedure->binarySpace->globals +
+                    current_frame->procedure->locals + 1; /* Callee register index */
+                size_t k = (pc + 3)->index + 1; /* Caller register index */
+                size_t i;
+                for (   i = 0;
+                    i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
+                    i++, j++, k++) {
                     current_frame->locals[j] = current_frame->parent->locals[k];
                 }
             }
@@ -2798,19 +2922,22 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         notreg:
             DEBUG("Register not initialised\n");
             goto SIGNAL;
+        NOFUNCTION:
+            DEBUG("Function not found\n");
+            fprintf(stderr,"\nProcedure not found, externals not supported yet - aborting\n");
+            goto SIGNAL;
 
         START_INSTRUCTION(EXIT)
-#ifndef NDEBUG
-            if (context->debug_mode) printf("TRACE - EXIT\n");
-#endif
+            DEBUG("TRACE - EXIT");
             rc = 0;
             goto interprt_finished;
 
     END_OF_INSTRUCTIONS;
+
     SIGNAL:
-    printf("\n\nTRACE - Signal Received - aborting\n");
-    rc = -255;
-    goto interprt_finished;
+        fprintf(stderr,"\nSignal Received - aborting\n");
+        rc = -255;
+        goto interprt_finished;
 
     interprt_finished:
 
