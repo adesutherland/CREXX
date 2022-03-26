@@ -633,10 +633,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2);
-            /* Clear target return value register */
-            value_zero(op1R);
-            /* New stackframe - grabbing procedure object from the caller frame */
             {
+                /* Clear target return value register */
+                value_zero(op1R);
+
+                /* New stackframe - grabbing procedure object from the caller frame */
                 proc_constant *called_function = PROC_OP(2);
                 if (called_function->start == SIZE_MAX) goto NOFUNCTION;
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
@@ -651,8 +652,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3);
-            /* Clear target return value register */
-            value_zero(op1R);
 
             /* New stackframe - grabbing procedure object from the caller frame */
             {
@@ -687,9 +686,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
 
         START_INSTRUCTION(DCALL_REG_REG_REG) CALC_DISPATCH(3);
-            /* Clear target return value register */
-            value_zero(op1R);
-
             {
                 /* Function pointer is in register 2 */
                 proc_constant *called_function = (proc_constant *)op2R->int_value;
@@ -942,10 +938,16 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             op1R = op2R->attributes[(int)op3I - 1];
             DISPATCH;
 
-            /* Link op2 to op1 */
+        /* Link op2 to op1 */
         START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2);
             DEBUG("TRACE - LINK R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R = op2R;
+            DISPATCH;
+
+        /* Link parent-frame-register[op2] to op1 */
+        START_INSTRUCTION(METALINKPREG_REG_REG) CALC_DISPATCH(2);
+            DEBUG("TRACE - METALINKPREG R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            op1R = current_frame->parent->locals[op2R->int_value];
             DISPATCH;
 
         /* Unlink op1 */

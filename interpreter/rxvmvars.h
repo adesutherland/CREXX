@@ -426,13 +426,13 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
-    rxinteger idiff;
+    int ret;
 
-    if ((idiff = memcmp(value1, value2,MIN(length1, length2)) != 0))
-        return (int)idiff;
+    ret = memcmp(value1, value2, MIN(length1, length2));
+    if (!ret) ret = length1 - length2;
+    ret = ret > 0 ? 1 : (ret < 0 ? -1 : 0);
 
-    idiff = (rxinteger)length1 - (rxinteger)length2;
-    return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    return ret;
 }
 
 RX_INLINE int string_cmp_value(value *v1, value *v2) {

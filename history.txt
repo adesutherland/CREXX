@@ -1,6 +1,8 @@
 CREXX History / Change Log
 
 F0040 - REXX Debugging Support
+        Fix String Compare
+        Fix Assembler Keyhole Optimiser confusing register types (r,a,g)
 I0205 - Flexible source file extension
 I0265 - Fixed Segfault when there is a duplicate procedure definition
 F0031 - VM Performance Optimisations
