@@ -3,7 +3,7 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX I0265"
+#define rxversion "cREXX F0040"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -37,15 +37,23 @@ struct value {
     size_t string_chars;
     size_t string_char_pos;
 #endif
-    void *object_value;
+    value **attributes;
+    value **attribute_buffers;
+    size_t max_num_attributes;
+    size_t num_attributes;
+    size_t num_attribute_buffers;
     char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
 };
 
 /* Module Structure */
 typedef struct module {
-    bin_space segment;
-    char *name;
-    value **globals;
+    bin_space segment;         /* Binary and Constant Pool */
+    char *name;                /* Module Name */
+    value **globals;           /* Globals registers array */
+    char *globals_dont_free;   /* Indicates linked global value that should not be freed */
+    size_t module_number;      /* Module Index - 1 base */
+    size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
+    size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
 } module;
 
 struct stack_frame {
@@ -54,10 +62,12 @@ struct stack_frame {
     proc_constant *procedure;
     void *return_inst;
     bin_code *return_pc;
+    char is_interrupt;
     value *return_reg;
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
+    char interrupt_mask;
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;   /* Locals pointer mapping (after swaps / links */
 };
@@ -65,7 +75,7 @@ struct stack_frame {
 #ifdef NDEBUG  // RELEASE
     #define DEBUG(...) (void)0
 #else          // DEBUG
-    #define DEBUG(...) if (debug_mode) fprintf(stderr, __VA_ARGS__)
+    #define DEBUG(...) if (context->debug_mode) fprintf(stderr, __VA_ARGS__)
 #endif
 
 #define RXERROR(...)   { fprintf(stderr, __VA_ARGS__); goto SIGNAL; }
@@ -82,7 +92,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:&&CASE_START; }
 
 #else
 
@@ -93,8 +103,7 @@ struct stack_frame {
 #define END_BREAKPOINT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *(check_breakpoint)?&&BREAKPOINT:next_inst; }
-
+#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:next_inst; }
 #endif
 
 #define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
@@ -186,13 +195,34 @@ struct stack_frame {
 #define REG_OP_TEST_INT(v,n)    { (v) = REG_OP(n);}
 #define REG_OP_TEST_FLOAT(v,n)  { (v) = REG_OP(n);}
 
-
+/* Runtime context */
+typedef struct rxvm_context {
+    char *location;
+    size_t num_modules;
+    size_t module_buffer_size;
+    module *modules;
+    struct avl_tree_node *exposed_proc_tree;
+    struct avl_tree_node *exposed_reg_tree;
+    char debug_mode;
+} rxvm_context;
 
 /* Signals an error - this function does not return */
 void dosignal(int code);
 
 int initialz();
 int finalize();
-int run(int num_modules, module *program, int argc, char *argv[], int debug_mode);
+int run(rxvm_context *context, int argc, char *argv[]);
+
+/* Initialise modules context */
+void rxinimod(rxvm_context *context);
+
+/* Free Module Context */
+void rxfremod(rxvm_context *context);
+
+/* Loads a new module
+ * returns 0  - Success
+ *         >0 - the number of unresolved references
+ *         -1 - Error loading file */
+int rxldmod(rxvm_context *context, char *new_module_file);
 
 #endif //CREXX_RXVMINTP_H
