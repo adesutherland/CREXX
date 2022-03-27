@@ -1,6 +1,7 @@
 CREXX History / Change Log
 
-F0040 - REXX Debugging Support
+F0041 - REXX Enhancements
+F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)
 I0205 - Flexible source file extension
