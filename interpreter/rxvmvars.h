@@ -27,13 +27,17 @@ RX_INLINE void value_zero(value *v) {
     v->string_chars = 0;
     v->string_char_pos = 0;
 #endif
-    v->object_value = 0;
+    v->num_attributes = 0;
 }
 
 /* Setup a new value structure */
 RX_INLINE void value_init(value *v) {
     v->string_value = v->small_string_buffer;
     v->string_buffer_length = sizeof(v->small_string_buffer);
+    v->attributes = 0;
+    v->attribute_buffers = 0;
+    v->num_attribute_buffers = 0;
+    v->max_num_attributes = 0;
     value_zero(v);
 }
 
@@ -43,6 +47,52 @@ RX_INLINE value* value_f() {
     this = malloc(sizeof(value));
     value_init(this);
     return this;
+}
+
+/* Sets up the required number of attributes */
+RX_INLINE void set_num_attributes(value* v, size_t num) {
+    size_t i;
+    value *a;
+
+    if (num <= v->num_attributes) {
+        /* Reducing the number of attributes is easy */
+        v->num_attributes = num;
+    }
+
+    else if (num <= v->max_num_attributes) {
+        /* Just need to reset the recycled attributes */
+        for (i = v->num_attributes; i < num; i++)
+            value_zero(v->attributes[i]);
+        v->num_attributes = num;
+    }
+
+    else {
+        /* We first need to recycle any unused attributes */
+        for (i = v->num_attributes; i < v->max_num_attributes; i++)
+            value_zero(v->attributes[i]);
+
+        /* Now we need to make the pointer arrays big enough */
+        if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * num);
+        else v->attributes = malloc(sizeof(value*) * num);
+
+        v->num_attribute_buffers++;
+        if (v->attribute_buffers) v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * v->num_attribute_buffers);
+        else v->attribute_buffers = malloc(sizeof(value*) * v->num_attribute_buffers);
+
+        /* Create new buffer */
+        v->attribute_buffers[v->num_attribute_buffers - 1] =
+                malloc(sizeof(value) * (num - v->max_num_attributes));
+
+        /* Initiate the new attributes */
+        a = v->attribute_buffers[v->num_attribute_buffers - 1];
+        for (i = v->max_num_attributes; i < num; i++, a++) {
+            value_init(a);
+            v->attributes[i] = a;
+        }
+
+        /* Set the new number of attributes */
+        v->num_attributes = v->max_num_attributes = num;
+    }
 }
 
 /*
@@ -83,8 +133,32 @@ RX_INLINE void extend_string_buffer(value *v, size_t length) {
     }
 }
 
+RX_INLINE void null_terminate_string_buffer(value *v) {
+    /* Make room for the null */
+    extend_string_buffer(v, v->string_length + 1);
+
+    /* extend_string_buffer() increments string_length so put it back */
+    v->string_length--;
+
+    /* Add the null */
+    v->string_value[v->string_length] = 0;
+}
+
 /* Clears a value of all its children and other malloced buffers */
-RX_INLINE void clear_value(value* v) {
+RX_MOSTLYINLINE void clear_value(value* v) {
+    int i;
+
+    /* Clear attribute values */
+    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->attributes[i]);
+
+    /* Free attribute buffer */
+    for (i = 0; i < v->num_attribute_buffers; i++) free(v->attribute_buffers[i]);
+
+    /* Free pointer arrays */
+    if (v->attributes) free(v->attributes);
+    if (v->attribute_buffers) free(v->attribute_buffers);
+
+    /* Free strings */
     if (v->string_value != v->small_string_buffer) free(v->string_value);
     return;
 }
@@ -233,13 +307,17 @@ RX_INLINE void set_buffer_string(
 }
 
 /* Copy a value */
-RX_INLINE void copy_value(value *dest, value *source) {
+RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
+    size_t i;
+
+    if (dest == source) return;
+
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
     dest->decimal_value = source->decimal_value;
-    dest->object_value = source->object_value; /* TODO */
 
+    /* Copy Strings */
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
@@ -258,18 +336,28 @@ RX_INLINE void copy_value(value *dest, value *source) {
         dest->string_char_pos = 0;;
 #endif
     }
+
+    /* Copy Attributes */
+    set_num_attributes(dest,source->num_attributes);
+    for (i = 0; i < dest->num_attributes; i++)
+        copy_value(dest->attributes[i], source->attributes[i]);
 }
 
 /* Move a value */
 RX_INLINE void move_value(value *dest, value *source) {
     if (dest == source) return;
 
+    /* Clear out destination - including string / attributes */
+    clear_value(dest);
+    value_init(dest);
+
+    /* Copy basic values */
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
     dest->decimal_value = source->decimal_value;
-    dest->object_value = source->object_value; /* TODO */
 
+    /* Move String */
     if (source->string_length) {
         if (source->string_value == source->small_string_buffer) {
             /* Copy String Data */
@@ -284,8 +372,6 @@ RX_INLINE void move_value(value *dest, value *source) {
         }
         else {
             /* Move String Data */
-            if (dest->string_value != dest->small_string_buffer)
-                free(dest->string_value);
             dest->string_value = source->string_value;
             dest->string_length = source->string_length;
             dest->string_pos = source->string_pos;
@@ -304,7 +390,14 @@ RX_INLINE void move_value(value *dest, value *source) {
 #endif
     }
 
-    /* Reset source */
+    /* Move Attributes */
+    dest->attributes = source->attributes;
+    dest->attribute_buffers = source->attribute_buffers;
+    dest->max_num_attributes = source->max_num_attributes;
+    dest->num_attributes = source->num_attributes;
+    dest->num_attribute_buffers = source->num_attribute_buffers;
+
+    /* Reset / fixup source */
     value_init(source);
 }
 
@@ -333,13 +426,13 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t length2) {
-    rxinteger idiff;
+    int ret;
 
-    if ((idiff = memcmp(value1, value2,MIN(length1, length2)) != 0))
-        return (int)idiff;
+    ret = memcmp(value1, value2, MIN(length1, length2));
+    if (!ret) ret = length1 - length2;
+    ret = ret > 0 ? 1 : (ret < 0 ? -1 : 0);
 
-    idiff = (rxinteger)length1 - (rxinteger)length2;
-    return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    return ret;
 }
 
 RX_INLINE int string_cmp_value(value *v1, value *v2) {

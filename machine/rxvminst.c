@@ -23,6 +23,17 @@ void init_ops() {
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
+    instr_f("metaloadmodule", "Load Module (op1 = module num of loaded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadedmodules", "Loaded Modules (op1 = array loaded modules)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("metaloadedprocs", "Loaded Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = (int)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadfoperand", "Load Float Operand (op1 = (float)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadsoperand", "Load String Operand (op1 = (string)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metalinkpreg", "Link parent-frame-register[op2] to op1", OP_REG, OP_REG, OP_NONE);
+
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
@@ -197,10 +208,10 @@ void init_ops() {
     instr_f("nsmap", "Map op1 to namespace op2 var name in op3", OP_REG, OP_STRING, OP_REG);
     instr_f("unmap", "Unmap op1", OP_REG, OP_NONE, OP_NONE);
 
-
     instr_f("call", "Call procedure (op1())", OP_FUNC, OP_NONE, OP_NONE);
     instr_f("call", "Call procedure (op1=op2())", OP_REG, OP_FUNC, OP_NONE);
     instr_f("call", "Call procedure (op1=op2(op3...) )", OP_REG, OP_FUNC, OP_REG);
+    instr_f("dcall", "Dynamic call procedure (op1=op2(op3...) )", OP_REG, OP_REG, OP_REG);
 
     instr_f("ret", "Return VOID", OP_NONE, OP_NONE, OP_NONE);
     instr_f("ret", "Return op1", OP_REG, OP_NONE, OP_NONE);
@@ -220,6 +231,8 @@ void init_ops() {
     instr_f("icopy", "Copy Integer op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("fcopy", "Copy Float op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("scopy", "Copy String op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_REG);
+    instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_INT);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);
