@@ -130,7 +130,7 @@ command(I)             ::= expression(E).
 
 keyword_instruction(I) ::= assembler(K). { I = K; }
 //keyword_instruction(I) ::= address(K). { I = K; }
-//keyword_instruction(I) ::= arg(K). { I = K; }
+keyword_instruction(I) ::= arg(K). { I = K; }
 keyword_instruction(I) ::= call(K). { I = K; }
 keyword_instruction(I) ::= iterate(K). { I = K; }
 keyword_instruction(I) ::= leave(K). { I = K; }
@@ -251,12 +251,18 @@ else(T) ::= TK_ELSE(E) ncl0 TK_EOS.
 else(T) ::= TK_ELSE ncl0 TK_END(E).
             { T = ast_err(context, "10.6", E); }
 
-/* Procedure */
-procedure(P) ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C) TK_EOC
-                 TK_ARG arg_list(A).
-                 { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,A);}
-class(C) ::= TK_CLASS(T).
-                 { C = ast_f(context, CLASS, T); }
+/* Procedure / Args */
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
+arg(P)            ::= TK_ARG arg_list(A).
+                      { P = A;}
+/* Classes */
+class(C)          ::= TK_CLASS(T).
+                      { C = ast_f(context, CLASS, T); }
 
 /* Argument Templates */
 arg_list(L)       ::= . { L = ast_ft(context, ARGS); }

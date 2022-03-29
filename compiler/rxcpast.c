@@ -456,6 +456,8 @@ const char *ast_ndtp(NodeType type) {
             return "VAR_SYMBOL";
         case VAR_TARGET:
             return "VAR_TARGET";
+        case VOID:
+            return "VOID";
         default: return "*UNKNOWN*";
     }
 }
@@ -876,6 +878,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case ARGS:
             case PATTERN:
             case CLASS:
+            case VOID:
             case REL_POS:
             case ABS_POS:
             case SIGN:

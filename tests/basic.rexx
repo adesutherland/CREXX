@@ -10,3 +10,5 @@ say hello crexx
 say 1 + 1
 say 0.2 - 0.1
 say 800/81
+
+return 0

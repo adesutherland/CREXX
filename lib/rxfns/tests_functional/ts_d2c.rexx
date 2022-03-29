@@ -122,7 +122,7 @@ if td2c(256*256+256+129,3) \= "010181" then do
  say 'D2C failed in test 25 '
 end
 
-return
+return 0
 
 td2c: procedure = .string
   arg hex = .int, len=-1

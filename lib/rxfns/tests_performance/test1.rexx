@@ -13,7 +13,7 @@ do j=1 to 100000
    end
 end
 say k time('l')
-return
+return 0
 
 length: procedure = .int
   arg string1 = .string

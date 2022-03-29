@@ -32,7 +32,7 @@ say "Option TS  "time("TS")   /* cpu ticks per seconds            */
 say "Option ZN  "time("zN")   /* time zone name ; summer time zone name (if any) */
 say "Option UTC "time("uTc")  /* UTC time */
 
-return
+return 0
 
 /* Prototype functions */
 time: Procedure = .string

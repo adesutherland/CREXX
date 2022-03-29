@@ -154,6 +154,7 @@ int rexbscan(Context* s) {
 //  'VALUE' { return(TK_VALUE); }
 //  'VAR' { return(TK_VAR); }
 //  'VERSION' { return(TK_VERSION); }
+  'VOID' { return(TK_VOID); }
   'WHILE' { return(TK_WHILE); }
 //  'WITH' { return(TK_WITH); }
   class { return(TK_CLASS); }

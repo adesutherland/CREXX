@@ -14,4 +14,4 @@ assembler rseq x,a,b
 if x=1 then say "EQUAL (non strict compare)"
    else say "NOT EQUAL (non strict compare)"
 
-return
+return 0

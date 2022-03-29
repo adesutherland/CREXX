@@ -147,8 +147,8 @@ int main(int argc, char *argv[]) {
     if (!output_file_name) output_file_name = file_name;
 
     /* Open input file */
-    char* filename_extension = get_filename_ext(file_name);
-    if (filename_extension == "")
+    const char* filename_extension = get_filename_ext(file_name);
+    if (filename_extension[0] == 0)
       { fp = openfile(file_name,"rexx", location, "r");
       }
     else {

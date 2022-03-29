@@ -12,6 +12,8 @@ say substr("12345678",5,6,"é")
 say substr("12345678",10,6,"é")
 say substr("12345678",10,6,"éé")
 
+return 0
+
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int
   arg type = .string, code = .string, parm1 = .string
@@ -20,7 +22,7 @@ raise: procedure = .int
   /*
   exit /* TODO - the compiler does not supports exit yet */
   */
-  return
+  return 0
 
 /* Length() Procedure */
 length: procedure = .int

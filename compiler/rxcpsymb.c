@@ -237,6 +237,7 @@ char* type_nm(ValueType type) {
         case TP_FLOAT: return "Float";
         case TP_STRING: return "String";
         case TP_OBJECT: return "Object";
+        case TP_VOID: return "Void";
         default: return "Unknown";
     }
 }
