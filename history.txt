@@ -1,6 +1,9 @@
 CREXX History / Change Log
 
 F0041 - REXX Enhancements
+        Procedures with no arguments
+        Procedures with no return value
+        Line continuation
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

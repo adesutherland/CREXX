@@ -11,8 +11,8 @@ int rexbpars(Context *context) {
 
     char *buff, *buff_end;
     size_t bytes;
-    int token_type, last_token_type;
-    Token *token, *t;
+    int token_type, last_token_type, peek_token_type;
+    Token *token, *t, *peek_token;
     void *parser;
 
     /* Create parser and set up tracing */
@@ -20,10 +20,21 @@ int rexbpars(Context *context) {
 #ifndef NDEBUG
     RexxBTrace(context->traceFile, "Parser(B) >> ");
 #endif
+    peek_token_type = rexbscan(context);
+    peek_token = token_f(context, peek_token_type);
     last_token_type = TK_EOC;
-    while ((token_type = rexbscan(context))) {
-        // Setup and parse token
-        token = token_f(context, token_type);
+    while ( (token_type = peek_token_type) ) {
+        token = peek_token;
+
+        peek_token_type = rexbscan(context);
+        peek_token = token_f(context, peek_token_type);
+
+        // Line Continuation
+        if (token_type == TK_COMMA && peek_token_type == TK_EOC) {
+            peek_token_type = rexbscan(context);
+            peek_token = token_f(context, peek_token_type);
+            continue;
+        }
 
         // Skip multiple end of clause/line
         if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
