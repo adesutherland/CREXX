@@ -75,6 +75,10 @@ if substr("René Vincent Jansen",1,4,".") \= 'René' then
     errors=errors+1
     say 'SUBSTR failed in test 15 '
   end
+/* if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then */
+/*   do errors=errors+1 */
+/*     say 'SUBSTR failed in test 16 ' */
+/*   end */ /* this is actually a case of Error 40.23:  SUBSTR argument 4 must be a single character; found "". */ 
 if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then
   do errors=errors+1
     say 'SUBSTR failed in test 16 '

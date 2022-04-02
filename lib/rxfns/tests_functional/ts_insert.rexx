@@ -24,6 +24,26 @@ if insert(' ,isn"t it?',x,27) \= 'CREXX is faster than BREXX ,isn"t it?' then do
   say 'INSERT failed in test 4'
 end
 
+if insert(' ','abcdef',3) \= 'abc def' then do
+    errors=errors+1
+  say 'INSERT failed in test 5'
+end
+
+if insert('123','abc',5,6) \= 'abc  123   ' then do
+    errors=errors+1
+  say 'INSERT failed in test 6'
+end
+
+if insert('123','abc',5,6,'+') \= 'abc++123+++' then do
+    errors=errors+1
+  say 'INSERT failed in test 7'
+end
+
+/* if insert('123','abc') \= '123abc' then do */
+/*     errors=errors+1 */
+/*   say 'INSERT failed in test 8' */
+/* end */
+
 return errors<>0
 
 /* function prototype */
