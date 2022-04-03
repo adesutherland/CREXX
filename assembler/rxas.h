@@ -110,6 +110,7 @@ typedef struct expose_proc_constant {
 } expose_proc_constant;
 
 typedef struct Assembler_Context {
+    char* file_name;
     char *top, *cursor, *marker, *ctxmarker, *linestart;
     int optimise;
     int line;

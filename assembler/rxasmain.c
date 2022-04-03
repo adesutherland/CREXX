@@ -180,6 +180,7 @@ int main(int argc, char *argv[]) {
     bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize scanner */
+    scanner.file_name = file_name;
     scanner.top = buff;
     scanner.cursor = buff;
     scanner.linestart = buff;
@@ -311,5 +312,5 @@ int main(int argc, char *argv[]) {
     /* Free Binary Buffer */
     if (buff) free(buff);
 
-    return(0);
+    return(scanner.severity);
 }

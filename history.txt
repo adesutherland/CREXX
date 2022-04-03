@@ -4,6 +4,8 @@ F0041 - REXX Enhancements
         Procedures with no arguments
         Procedures with no return value
         Line continuation
+        Hex Escapes (RXAS)
+        Hex/Binary literals (RXC)
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

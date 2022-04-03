@@ -10,5 +10,5 @@ echo "rxas $1"
 echo "rxdas $1"
 ../cmake-build-debug-mingw/disassembler/rxdas $1
 
-#echo "rxvm $1"
-#../cmake-build-debug-mingw/interpreter/rxvm $1
+echo "rxvm $1"
+../cmake-build-debug-mingw/interpreter/rxvm $1

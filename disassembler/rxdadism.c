@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "platform.h"
 #include "rxas.h"
 #include "rxvminst.h"
@@ -16,6 +17,7 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
 
     size_t out_len = 0;
+    char hex_buffer[3];
     while (length) {
         switch (*string) {
             case '\\':
@@ -67,7 +69,21 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
                 ADD_CHAR_TO_BUFFER('?');
                 break;
             default:
-                ADD_CHAR_TO_BUFFER(*string);
+                /* Should we escape this character? */
+                if ((unsigned char)(*string) < 0x80) /* Not utf-8 */ {
+                    if (isprint(*string)) {
+                        ADD_CHAR_TO_BUFFER(*string); /* Normal Character */
+                    }
+                    else {
+                        /* Escape as a hex character */
+                        snprintf(hex_buffer, 3, "%02x", *string);
+                        ADD_CHAR_TO_BUFFER('\\');
+                        ADD_CHAR_TO_BUFFER('x');
+                        ADD_CHAR_TO_BUFFER(hex_buffer[0]);
+                        ADD_CHAR_TO_BUFFER(hex_buffer[1]);
+                    }
+                }
+                else ADD_CHAR_TO_BUFFER(*string); /* Pass through UTF-8 */
         }
         string++;
         length--;

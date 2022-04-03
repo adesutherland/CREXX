@@ -160,9 +160,21 @@ void backptch(Assembler_Context *context) {
     backpatch_labels(context);
 }
 
+/* Convert one hex digit to an int (-1 = error)*/
+static int hexchar2int(char hexbyte) {
+    int val = -1;
+
+    // transform hex character to the 4bit equivalent number
+    if (hexbyte >= '0' && hexbyte <= '9') val = hexbyte - '0';
+    else if (hexbyte >= 'a' && hexbyte <='f') val = hexbyte - 'a' + 10;
+    else if (hexbyte >= 'A' && hexbyte <='F') val = hexbyte - 'A' + 10;
+
+    return val;
+}
 /* Unescape a string in place - returns the new string length */
 static size_t unescape_string(char *to, char* from) {
-    char *c, *d;
+    char *c, *d, *x;
+    int h, hex;
     c = from;
     d = to;
     while (*c) {
@@ -180,7 +192,30 @@ static size_t unescape_string(char *to, char* from) {
                 case '\"': *d = '\"'; break;
                 case '0': *d = '\0'; break;
                 case '?': *d = '\?'; break;
-                    /* TODO add octal, hex, unicode */
+                case 'x':
+                    /* We support a simplified hex sequences \xhh - for single byte hex codes only */
+                    x = c + 1;
+                    hex = hexchar2int(*x);
+                    if (hex != -1) { /* valid */
+                        h = hex;
+                        x++;
+                        hex = hexchar2int(*x);
+                        if (hex != -1) { /* valid */
+                            h = (h << 4) | (hex & 0xF);
+                        }
+                    }
+                    if (hex == -1) {
+                        /* format error */
+                        *d = '\\';
+                        d++;
+                        *d = *c;
+                    }
+                    else {
+                        /* OK */
+                        *d = (char)h;
+                        c += 2;
+                    }
+                    break;
                 case 0:
                     /* Escape sequence at end of string*/
                     *d = '\\';
