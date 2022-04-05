@@ -88,10 +88,10 @@ void init_ops() {
     instr_f("dec", "Decrement Int (op1--)", OP_REG, OP_NONE, OP_NONE);
     instr_f("inc0", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
     instr_f("dec0", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("inc1", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("dec1", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("inc2", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("dec2", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("inc1", "Increment R1++ Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("dec1", "Decrement R1-- Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("inc2", "Increment R2++ Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("dec2", "Decrement R2-- Int", OP_NONE, OP_NONE, OP_NONE);
 
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_INT);
