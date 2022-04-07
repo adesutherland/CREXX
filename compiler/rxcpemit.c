@@ -149,6 +149,39 @@ static size_t encode_comment(char* buffer, size_t buffer_len, char* string, size
     return out_len;
 }
 
+/* Encodes a string to a buffer - stops at a line break */
+static size_t encode_line_source(char* buffer, size_t buffer_len, char* string, size_t length) {
+
+    size_t out_len = 0;
+    while (length) {
+        if (*string == '\n') break;
+        switch (*string) {
+            case '\t':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('t');
+                break;
+            case '\f':
+            ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('f');
+                break;
+            case '\r':
+            ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('r');
+                break;
+            case 0:
+            ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('0');
+                break;
+            default:
+            ADD_CHAR_TO_BUFFER(*string);
+        }
+        string++;
+        length--;
+    }
+    if (buffer_len) *buffer = 0;
+    return out_len;
+}
+
 #undef ADD_CHAR_TO_BUFFER
 
 
@@ -668,6 +701,18 @@ static walker_result register_walker(walker_direction direction,
 
 #define buf_len 512
 
+static void get_metaline(char* meta_line, ASTNode *node) {
+    char temp[buf_len];
+    if (!node->source_start) {
+        meta_line[0] = 0;
+    }
+    else {
+        encode_line_source(temp, buf_len, node->source_start,
+                       (int) (node->source_end - node->source_start) + 1);
+        snprintf(meta_line, buf_len, ".line=%d %s\n", node->line + 1, temp);
+    }
+}
+
 static void get_comment(char* comment, ASTNode *node, char* prefix) {
     char temp[buf_len];
     if (!node->source_start) {
@@ -677,19 +722,19 @@ static void get_comment(char* comment, ASTNode *node, char* prefix) {
         encode_comment(temp, buf_len, node->source_start,
                        (int) (node->source_end - node->source_start) + 1);
         if (prefix)
-            snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line,
+            snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line + 1,
                      prefix, temp);
         else
-            snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, temp);
+            snprintf(comment, buf_len, "   * Line %d: %s\n", node->line + 1, temp);
     }
 }
 
 /* Comment without quoting node text */
 static void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
     if (prefix)
-        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, prefix);
+        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line + 1, prefix);
     else
-        snprintf(comment, buf_len, "   * Line %d:\n", node->line);
+        snprintf(comment, buf_len, "   * Line %d:\n", node->line + 1);
 }
 
 static void type_promotion(ASTNode *node) {
@@ -842,10 +887,12 @@ static walker_result emit_walker(walker_direction direction,
                                          " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                          " */\n"
                                          "\n"
+                                         ".file=%.*s\n"
                                          ".globals=0\n",
                     rxversion,
                     node->node_string_length, node->node_string,
-                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
+                    node->node_string_length, node->node_string);
 
                 node->output = output_fs(temp1);
                 n = child1;
@@ -893,7 +940,15 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
                 n = child1;
                 while (n) {
-                    if (n->output) output_append(node->output, n->output);
+                    /* filtering child INSTRUCTIONS stops duplicate meta lines */
+                    if (n->node_type != INSTRUCTIONS && n->output) {
+                        /* Add the line metadata */
+                        get_metaline(comment, n);
+                        output_append_text(node->output,comment);
+
+                        /* Add the compiled instruction */
+                        output_append(node->output, n->output);
+                    }
                     n = n->sibling;
                 }
                 break;
