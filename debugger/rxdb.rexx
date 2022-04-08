@@ -6,10 +6,14 @@
 */
 options levelb
 
-say "RXDB Version 0.1"
+esc = '1B'x
+green = esc"[32m"
+reset = esc"[0m"
+
+say green"RXDB Version 0.1.1"
 say ""
 say "Loading CREXX Runtime Library Modules"
-call load_library "../cmake-build-debug-mingw/lib/rxfns"
+call load_library "../cmake-build-debug/lib/rxfns"
 
 last_loaded_module = ""
 
@@ -63,19 +67,19 @@ do forever
         else do
           rc = 0
           no_args = 0
-          say "RXDB:" c2 "starting"
+          say "RXDB:" c2 "starting"reset
           assembler bpon
           assembler dcall rc,call_id,no_args
           assembler bpoff
-          say "RXDB:" c2 "returned"
+          say green"RXDB:" c2 "returned"
         end
       end
     end
     else say 'unknown command'
 end
 
-say "RXDB Exiting"
-return
+say "RXDB Exiting"reset
+return 0
 
 /* This is the interrupt handler that is called before every rxas instruction */
 /* Note that interrupts are automatically disabled */
@@ -91,14 +95,14 @@ stephandler: procedure = .int
   /* Are we the last module */
   modules = 0
   assembler metaloadedmodules modules
-  if modules <> module then return /* Don't debug the debugger */
-/*
-  esc = x2c('1B')
-  red = esc"[31m"
+  if modules <> module then return 0/* Don't debug the debugger */
+
+  esc = '1B'x
+  green = esc"[32m"
   reset = esc"[0m"
-*/
+
   do forever
-    say ">"
+    say green">"
     call print_asm module,address
 
     say "Running state command (ENTER=step, h=help):"
@@ -116,6 +120,7 @@ stephandler: procedure = .int
        say '  a        - Print exposed procedures (all modules)'
     end
     else if cmd = 'q' then do
+      say reset"Exiting"
       assembler exit
     end
     else if cmd = 'e' then do
@@ -157,7 +162,8 @@ stephandler: procedure = .int
   end
   say ""
   call print_asm module,address
-  return
+  say reset
+  return 0
 
 /* This disassembles the code at address */
 print_asm: procedure = .int
@@ -289,7 +295,7 @@ dump_procs: procedure = .int
       say "Procedure" proc_name '@' proc_id
     end
   end
-  return
+  return 0
 
 
 /* Find procedure of a name in a module */

@@ -48,6 +48,7 @@ headers ::= header.
 headers ::= headers header.
 header ::= globals NEWLINE.
 header ::= global_reg NEWLINE.
+header ::= file NEWLINE.
 header ::= NEWLINE.
 
 // Header error messages
@@ -55,6 +56,9 @@ header ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid header direct
 
 // Global directive
 globals ::= KW_GLOBALS EQUAL INT(G). {rxassetg(context,G);}
+
+// File directive
+file ::= KW_FILE STRING(F). { /* rxassetg(context,F); */}
 
 // Global directive error messages
 globals ::= KW_GLOBALS EQUAL(T) error. {err_aftr(context, T, "expecting integer");}
@@ -100,10 +104,18 @@ instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
 instruction ::= LABEL(L). {rxasqlbl(context,L);}
+instruction ::= KW_LINE INT(N) STRING(L) NEWLINE. {/* rxasqlbl(context,N, L); */}
+instruction ::= KW_VAR INT(N) STRING(L) NEWLINE. {/* rxasqlbl(context,N, L); */}
 instruction ::= NEWLINE.
 
 // Instruction error messages
 instruction ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid label, opcode or directive");}
+instruction ::= KW_LINE ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting line number after .line");}
+instruction ::= KW_LINE INT ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting line contents after .line");}
+instruction ::= KW_LINE INT STRING ANYTHING(T) error. {err_at(context, T, "expecting {newline}");}
+instruction ::= KW_VAR ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting register number after .var");}
+instruction ::= KW_VAR INT ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting variable name .var");}
+instruction ::= KW_VAR INT STRING ANYTHING(T) error. {err_at(context, T, "expecting {newline}");}
 
 // operation/instruction
 instr ::= ID(IN). {rxasque0(context,IN);}

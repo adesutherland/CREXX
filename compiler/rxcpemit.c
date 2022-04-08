@@ -156,6 +156,10 @@ static size_t encode_line_source(char* buffer, size_t buffer_len, char* string, 
     while (length) {
         if (*string == '\n') break;
         switch (*string) {
+            case '\"':
+                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\"');
+                break;
             case '\t':
                 ADD_CHAR_TO_BUFFER('\\');
                 ADD_CHAR_TO_BUFFER('t');
@@ -709,7 +713,7 @@ static void get_metaline(char* meta_line, ASTNode *node) {
     else {
         encode_line_source(temp, buf_len, node->source_start,
                        (int) (node->source_end - node->source_start) + 1);
-        snprintf(meta_line, buf_len, ".line=%d %s\n", node->line + 1, temp);
+        snprintf(meta_line, buf_len, ".line %d \"%s\"\n", node->line + 1, temp);
     }
 }
 
@@ -887,7 +891,7 @@ static walker_result emit_walker(walker_direction direction,
                                          " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                          " */\n"
                                          "\n"
-                                         ".file=%.*s\n"
+                                         ".file \"%.*s\"\n"
                                          ".globals=0\n",
                     rxversion,
                     node->node_string_length, node->node_string,

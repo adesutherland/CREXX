@@ -74,6 +74,9 @@ int scan(Assembler_Context* s, char *buff_end) {
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
     '.expose' { return(KW_EXPOSE); }
+    '.line' { return(KW_LINE); }
+    '.file' { return(KW_FILE); }
+    '.var' { return(KW_VAR); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;
