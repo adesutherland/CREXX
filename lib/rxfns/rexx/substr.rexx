@@ -22,6 +22,8 @@ substr: procedure = .string
   /* Check length of pad */
   assembler strlen padLength,pad;
   if padLength > 1 then call raise "syntax", "40.23", pad /* Invalid pad length */
+  else if padLength = 0 then call raise "syntax", "40.23", "SUBSTR argument 4 must be a single character; found ''"
+
 
   /* Get the Length of the input string */
   assembler strlen inputLength,string1
