@@ -24,6 +24,8 @@ if insert(' ,isn"t it?',x,27) \= 'CREXX is faster than BREXX  ,isn"t it?' then d
   say 'INSERT failed in test 4' insert(' ,isn"t it?',x,27)
 end
 
+/* These from TRL */
+
 if insert(' ','abcdef',3) \= 'abc def' then do
     errors=errors+1
   say 'INSERT failed in test 5'
@@ -44,11 +46,62 @@ end
 /*   say 'INSERT failed in test 8' */
 /* end */
 
+if insert('123','abc') \= '123abc'                then do
+    errors=errors+1
+  say 'INSERT failed in test 9'
+end
+  
+if insert('123','abc',,5,'-') \= '123--abc'       then do
+      errors=errors+1
+  say 'INSERT failed in test 10'
+end
+
+/* These from Mark Hessling. */
+if insert("abc","def") \=  "abcdef" then do
+      errors=errors+1
+  say 'INSERT failed in test 11'
+end
+
+if insert("abc","def",2) \=  "deabcf" then do
+      errors=errors+1
+  say 'INSERT failed in test 12'
+end
+
+if insert("abc","def",3) \=  "defabc" then do
+      errors=errors+1
+  say 'INSERT failed in test 13'
+end
+
+if insert("abc","def",5) \=  "def  abc" then do
+      errors=errors+1
+  say 'INSERT failed in test 14'
+end
+
+if insert("abc","def",5,,'*') \=  "def**abc" then do
+      errors=errors+1
+  say 'INSERT failed in test 15'
+end
+
+if insert("abc" ,"def",5,4,'*') \=  "def**abc*" then do
+      errors=errors+1
+  say 'INSERT failed in test 16'
+end
+
+if insert("abc","def",,0) \=  "def"       then do
+      errors=errors+1
+  say 'INSERT failed in test 17'
+end
+
+if insert("abc","def",2,1) \=  "deaf"     then do
+      errors=errors+1
+  say 'INSERT failed in test 18'
+end
+
 return errors<>0
 
 /* function prototype */
 insert: procedure = .string
-  arg expose insstr = .string, expose string = .string, position = .int, len = 0, pad = ' '
+  arg expose insstr = .string, expose string = .string, position = 0, len = 0, pad = ' '
 
 
 
