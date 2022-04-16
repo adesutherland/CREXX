@@ -3,7 +3,6 @@ options levelb
 
 date: Procedure = .string
  arg oFormat = "", idate = "", iFormat = "", osep="", isep=""
-
   if iformat="" then iformat="NORMAL"
   if oformat="" then oformat="NORMAL"
   if isep\="" then isep=substr(isep,1,1)
@@ -28,8 +27,10 @@ date: Procedure = .string
      daysofyear=substr(idate,5,3)
      iNorm=_jdn(1,1,YY)+daysofyear-1
   end
-  else iNorm=_datei(idate,iformat,isep)
-
+  else do
+     iNorm=_datei(idate,iformat,isep)
+     if iNorm='SYNTAX' then return ''
+  end
 /* 2. Translate JDN according to its output format */
 
 return _dateo(iNorm,oFormat,osep)

@@ -8,9 +8,14 @@ _datei: Procedure = .string
  * ----------------------------------------------------------
  */
   if format='' then format='NORMAL'
-
-  if fabbreV('DAYS',format,1) then return 'DAYS not allowed as input format'
-  if fabbreV('CENTURY',format,1) then return 'CENTURY not allowed as input format'
+  if fabbreV('DAYS',format,1) then do
+      call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
+      return "SYNTAX"
+  end
+  if fabbreV('CENTURY',format,1) then do
+     call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
+     return "SYNTAX"
+  end
   if fabbreV('EPOCH',format,3) then do
      idate=idate%86400+_jdn(1,1,1970)
      return idate
@@ -77,8 +82,8 @@ _datei: Procedure = .string
   if fabbreV('JDN',format,3) then return idate                   /* is already JDN */
   if fabbreV('BASE',format,1) then return idate+1721426          /* calulate JDN   */
   if fabbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
-
-return format' invalid input format'
+  call raise "SYNTAX","Error 40.28: invalid DATE argument 3",format
+return 'SYNTAX'
 
 fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1
@@ -134,6 +139,10 @@ length: procedure = .int
 /* Substr() Procedure */
 substr: procedure = .string
    arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
+
+/* Raise() Internal Function to Raise a runtime error */
+raise: procedure = .int
+  arg type = .string, code = .string, parm1 = .string
 
 
 
