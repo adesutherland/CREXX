@@ -549,6 +549,23 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                   (int)op1S->string_len, op1S->string);
             printf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH;
+    /* ------------------------------------------------------------------------------------
+     *  SAYX say statemtnt without line feed                             pej 18. April 2022
+     *  -----------------------------------------------------------------------------------
+     */
+        START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1);
+            DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
+            printf("%.*s", (int) op1R->string_length, op1R->string_value);
+        DISPATCH;
+    /* ------------------------------------------------------------------------------------
+     *  SAYX say statemtnt without line feed                             pej 18. April 2022
+     *  -----------------------------------------------------------------------------------
+     */
+    START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1);
+    DEBUG("TRACE - SAY \"%.*s\"\n",
+          (int)op1S->string_len, op1S->string);
+    printf("%.*s", (int) op1S->string_len, op1S->string);
+    DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3);
             DEBUG("TRACE - SCONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
@@ -685,7 +702,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 for (   i = 0;
                         i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                         i++, j++, k++) {
-                    current_frame->locals[j] = current_frame->parent->locals[k];
+                     current_frame->locals[j] = current_frame->parent->locals[k];
                 }
             }
             /* This gotos the start of the called procedure */
@@ -3028,6 +3045,30 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
     REG_RETURN_INT(i1);
 #endif
     DISPATCH;
+
+    START_INSTRUCTION(DLLPARMS_REG_REG_REG) CALC_DISPATCH(3);
+
+        DEBUG("TRACE - DLLPARMS R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
+       /* Arguments - complex lets never have to change this code! */
+        printf("Register containing number of Arguments %d\n",(int) REG_IDX(3));
+        printf("                    number of Arguments %d\n",op3RI);
+   //     current_frame->locals[(pc + (3))->index];
+
+        size_t j =
+                current_frame->procedure->binarySpace->globals +
+                current_frame->procedure->locals + 1; /* Callee register index */
+        size_t k = (pc + 3)->index + 1; /* Caller register index */
+        size_t i;
+        printf("                    first data register %d\n",k);
+        for ( i = 0;
+              i < op3RI;
+              i++, j++,k++) {
+              printf("                         Data register %d\n",k);
+         //   printf("              Register contentLocal Variables %d\n",current_frame->procedure->locals->???);
+        }
+    REG_RETURN_INT(i);
+    DISPATCH;
+
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021

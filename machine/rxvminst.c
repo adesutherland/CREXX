@@ -242,7 +242,9 @@ void init_ops() {
     instr_f("load", "Load op1 with op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_CHAR, OP_NONE);
 
-    instr_f("say", "Say op1 (as string)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("say", "Say op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("sayx", "Say op1 without line feed", OP_REG, OP_NONE, OP_NONE);
+    instr_f("sayx", "Say op1 (as string) without line feed", OP_STRING, OP_NONE, OP_NONE);
     instr_f("ssay", "String Say op1 (Deprecated use 'say reg')", OP_REG, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
@@ -318,7 +320,9 @@ void init_ops() {
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
+
     instr_f("opendll", "open DLL", OP_REG, OP_REG, OP_REG);
+    instr_f("dllparms", "fetches parms for DLL call ", OP_REG, OP_REG, OP_REG);
 
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
