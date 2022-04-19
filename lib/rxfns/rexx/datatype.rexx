@@ -88,7 +88,7 @@ if argc = 1 then return DtypeOne(string_in)
    /* It won't be "Whole" if there is a non-zero after the decimal point. */
    /* This test has to be against the original string, not !DataTypeResult
       which has had zero added. */
-      ExpWas = 0 /* TODO: where does this come from? No idea */
+      ExpWas = 0 /* TODO: some global var */
       string_in = Before||After
       j = length(Before)+ExpWas
       if j<0 then j = 0
@@ -151,9 +151,11 @@ DtypeOne: procedure = .string
    After='' /* BLM Nov 98. Needed as byproduct */
    Before = DigitRun(Residue)
    if Before = '' then return "CHAR"
+   say 'before left in else'
    if left(Residue,1) = '.' then do
      Residue = substr(Residue, 2)
      After = DigitRun(Residue)
+     say 'after left in else'
    end
  end
  Exponent = 0
@@ -213,10 +215,11 @@ do while Residue \= ''
   say 'after pos in digitrun'
   Outcome = Outcome || left(Residue, 1)
   say 'after outcome in digitrun'
-  Residue = substr(Residue, 2)
+  say 'Residue after outcome in digitrun' Residue
+  Residue = substr(Residue,2)
   say 'Residue in digitrun is' Residue
 end
-/* say 'Outcome of digitrun' Outcome */
+say 'Outcome of digitrun' Outcome
 return Outcome
 
 

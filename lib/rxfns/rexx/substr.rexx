@@ -12,6 +12,11 @@ substr: procedure = .string
   inputLength = 0;
   padLength = 0;
 
+/* say 'SUBSTR: start =' start */
+/* say 'SUBSTR: string1 =' string1 */
+/* say 'SUBSTR: len =' len */
+/* say 'SUBSTR: pad =' pad */
+
   /* Check Start */
   if start < 1 then call raise "syntax", "40.13", start /* Invalid start */
   start = start - 1 /* 1 base to zero base */
