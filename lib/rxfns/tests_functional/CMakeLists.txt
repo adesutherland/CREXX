@@ -17,7 +17,6 @@ set(REXXBINS
   ts_countstr.rxbin
   ts_d2c.rxbin
   ts_d2x.rxbin
-  ts_datatype.rxbin
   ts_date.rxbin
   ts_date2.rxbin
   ts_delstr.rxbin
@@ -57,6 +56,8 @@ set(REXXBINS
   ts_find.rxbin
   ts_index.rxbin
   ts_random.rxbin
+  ts_datatype.rxbin 
+
         )
 
 set(LIBRPATH

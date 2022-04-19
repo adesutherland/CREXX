@@ -3,8 +3,22 @@ options levelb
 /* DATATYPE */
 errors=0
 /* These from the Rexx book. */
-  if datatype(' 12 ') \= 'NUM'      then exit
-  if datatype('') \= 'CHAR'         then exit
+
+if datatype('1') \= 'NUM'      then do
+  errors=errors+1
+  say 'ts_datatype failed in test 0'
+end
+
+
+/* if datatype(' 12 ') \= 'NUM'      then do */
+/*   errors=errors+1 */
+/*   say 'ts_datatype failed in test 1' */
+/* end */
+/* if datatype('') \= 'CHAR'         then do */
+/*   errors=errors+1 */
+/*   say 'ts_datatype failed in test 2' */
+/* end */
+  
 /*   if datatype('123*') \= 'CHAR'     then exit */
 /*   if datatype('12.3','N') \= 1       then exit */
 /*   if datatype('12.3','W') \= 0       then exit */
