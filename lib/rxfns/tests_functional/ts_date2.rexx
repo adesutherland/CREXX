@@ -77,10 +77,10 @@ end
 /*   errors=errors+1 */
 /*   say "DATE() failed in test 10: date('w',7688,'c')" date('w','7688','c') "but must be 'Sunday'" */
 /* end */
-/* if date('c','1 Feb 2021') \= 7703 then do */
-/*   errors=errors+1 */
-/*   say "DATE() failed in test 11: date('c','1 Feb 2021')" date('c','1 Feb 2021') "but must be 7703" */
-/* end */
+if date('c','1 Feb 2021') \= 7703 then do
+  errors=errors+1
+  say "DATE() failed in test 11: date('c','1 Feb 2021')" date('c','1 Feb 2021') "but must be 7703"
+end
 if date('J','18 Jan 2021') \= '2021018' then do
   errors=errors+1
   say "DATE() failed in test 12: date('j','18 Jan 2021')" date('j','18 Jan 2021') "but must be '2021018'"

@@ -68,6 +68,7 @@ set(LIBRPATH
     ../rxas/wordindex
     ../rexx/reradix
     ../rexx/sequence
+    ../rexx/datatype
     )
 
 add_custom_target(testperfbifs ALL

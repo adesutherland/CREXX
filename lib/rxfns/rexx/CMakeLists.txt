@@ -50,7 +50,7 @@ set(REXXBINS
 	      index.rxbin
 	      xrange.rxbin
 	      random.rxbin
-#	      datatype.rxbin
+	      datatype.rxbin
         )
 
 add_custom_target(lib_rexx ALL
