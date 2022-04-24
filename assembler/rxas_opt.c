@@ -360,6 +360,21 @@ rule rules[] =
             {END_OF_RULE}
         };
 
+/* Token to reg type */
+static char reg_type(Token *opToken) {
+    if (!opToken) return 0;
+
+    switch(opToken->token_type) {
+        case RREG:
+            return 'r';
+        case GREG:
+            return 'g';
+        case AREG:
+            return 'a';
+        default: return 0;
+    }
+}
+
 /* Check if a hazardous instruction is at the end of the queue. For
  * example a branch instruction (i.e. an instruction with a label or function
  * target changes the flow of control, breaking simple keyhole logic).
@@ -400,19 +415,9 @@ static int is_relevant(op_map *map, Token *opToken) {
     char r_tp;
 
     if (!opToken) return 0;
+    r_tp = reg_type(opToken);
+    if (!r_tp) return 0;
 
-    switch(opToken->token_type) {
-        case RREG:
-            r_tp = 'r';
-            break;
-        case GREG:
-            r_tp = 'g';
-            break;
-        case AREG:
-            r_tp = 'a';
-            break;
-        default: return 0;
-    }
     for (i=0; i<MAX_OP_MAP; i++) {
         if (map->reg_token[i] &&
             map->regtp[i] == r_tp &&
@@ -441,7 +446,7 @@ static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_
                    opToken->token_type == AREG ) ) return 0; /* Wrong Type */
 
             if (map->reg_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->regtp[op_num] != op_type ||
+                if (map->regtp[op_num] != reg_type(opToken) ||
                     map->reg[op_num] != opToken->token_value.integer)
                     return 0; /* Wrong register */
             }
@@ -542,13 +547,13 @@ static int map_operand(op_map *map, Token *opToken, char op_type, size_t op_num)
                    opToken->token_type == AREG ) ) return 0; /* Wrong Type */
 
             if (map->reg_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->regtp[op_num] != op_type ||
+                if (map->regtp[op_num] != reg_type(opToken) ||
                     map->reg[op_num] != opToken->token_value.integer)
                     return 0; /* Wrong register */
             }
             else { /* Not mapped yet - map it */
                 map->reg_token[op_num] = opToken;
-                map->regtp[op_num] = op_type;
+                map->regtp[op_num] = reg_type(opToken);
                 map->reg[op_num] = opToken->token_value.integer;
             }
             return 1;

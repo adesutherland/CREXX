@@ -16,11 +16,13 @@
 
   threaded_inst.0 = 0
   bytecode_inst.0 = 0
+  meta_inst.0 = 0
 
   call inc_inst '/* -------------------------------------------------------------------------------'
   call inc_inst ' * Generate Instruction Set, generated on 'date()' AT 'time()
   call inc_inst ' * -------------------------------------------------------------------------------'
   call inc_inst ' */'
+  call inc_inst '#include "rxvminst.h"'
 
   call fetchLabel   /* Analyse defined labels in rx_intrp.c */
 
@@ -28,12 +30,14 @@
   do until lines(file)=0 | pos('void init_ops()',linein(file))>0
   end
 
-  call add_threaded_inst 'void *address_map[] = {  &&INULL,'
+  call add_meta_inst     'const Instruction meta_map[] = {   {0,"null","",0,OP_NONE,OP_NONE,OP_NONE},'
+  call add_threaded_inst 'const void *address_map[] = {  &&INULL,'
   call add_bytecode_inst 'enum instructions {      INST_INULL,'
 
 /* run through all instruction definitions in operands.c */
   lino=0
   not=0
+  inst=0
   do while lines(file)>0
      line=strip(linein(file))
      if line='' then iterate
@@ -42,11 +46,20 @@
      interpret 'rc='line   /* execute instr_f function via a REXX function call */
   end
 
+  inst=inst+1
+  call add_meta_inst     '                             {'inst',"breakpoint","",0,OP_NONE,OP_NONE,OP_NONE},'
   call add_threaded_inst '                         &&BREAKPOINT,'
   call add_bytecode_inst '                         INST_BREAKPOINT,'
 
-  call add_threaded_inst '                         &&IUNKNOWN };'
+  inst=inst+1
+  call add_meta_inst     '                             {'inst',"unknown","",0,OP_NONE,OP_NONE,OP_NONE} };'
+  call add_threaded_inst '                         &&IUNKNOWN };' /* This must be the last */
   call add_bytecode_inst '                         INST_IUNKNOWN };'
+
+  call inc_inst ""
+  do i = 1 to meta_inst.0
+    call inc_inst meta_inst.i
+  end
 
   call inc_inst ""
   call inc_inst "#ifdef NTHREADED"
@@ -78,6 +91,9 @@ exit 0
  */
 instr_f:
   parse arg cmd,txt,label1,label2,label3
+/* next instruction */
+inst=inst+1
+
 /* set parameter for src_inst instruction, should not happen, maybe always set */
   if label1='' then r1='OP_NONE'
      else r1=label1
@@ -111,6 +127,7 @@ instr_f:
   end
 
   /* generate instruction */
+  call add_meta_inst     '                             {'inst',"'cmd'","'txt'",'numparm','r1','r2','r3'},'
   call add_threaded_inst '                         &&'ucmd','
   call add_bytecode_inst '                         INST_'ucmd','
 
@@ -211,6 +228,17 @@ add_bytecode_inst: procedure expose bytecode_inst.
   i = bytecode_inst.0 + 1
   bytecode_inst.0 = i
   bytecode_inst.i = line
+return
+
+/* -------------------------------------------------------------------------------
+ * Buffer Instruction (Metadata)
+ * -------------------------------------------------------------------------------
+ */
+add_meta_inst: procedure expose meta_inst.
+  parse arg line
+  i = meta_inst.0 + 1
+  meta_inst.0 = i
+  meta_inst.i = line
 return
 
 /* -------------------------------------------------------------------------------
