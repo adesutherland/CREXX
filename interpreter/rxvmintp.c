@@ -533,11 +533,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH;
 
         /* String Say - Deprecated */
-        START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1);
+ /*       START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1));
             printf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH;
-
+ */
         /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1);
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
