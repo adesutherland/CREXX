@@ -216,7 +216,7 @@ int rexbscan(Context* s) {
       s->line = comment_line;
       s->linestart = comment_linestart;
       s->top = comment_top;
-      s->cursor = s->top + 2; /* To get the '/*' */
+      s->cursor = s->top + 2; /* To get the '/ *' */
       return(TK_BADCOMMENT);
   }
   any { goto comment; }

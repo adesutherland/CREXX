@@ -6,6 +6,7 @@ F0041 - REXX Enhancements
         Line continuation
         Hex Escapes (RXAS)
         Hex/Binary literals (RXC)
+        File, line and var meta data
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

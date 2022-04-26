@@ -232,13 +232,12 @@ void ret_regs(Scope *scope, int reg, size_t number) {
 
 char* type_nm(ValueType type) {
     switch (type) {
-        case TP_BOOLEAN: return "Boolean";
-        case TP_INTEGER: return "Integer";
-        case TP_FLOAT: return "Float";
-        case TP_STRING: return "String";
-        case TP_OBJECT: return "Object";
-        case TP_VOID: return "Void";
-        default: return "Unknown";
+        case TP_BOOLEAN: return ".BOOLEAN";
+        case TP_INTEGER: return ".INT";
+        case TP_FLOAT: return ".FLOAT";
+        case TP_STRING: return ".STRING";
+        case TP_OBJECT: return ".OBJECT";
+        default: return ".VOID";
     }
 }
 

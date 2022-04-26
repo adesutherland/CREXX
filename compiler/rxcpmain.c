@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
 
 
     if (!context.ast) {
-        fprintf(stderr,"ERROR: Compiler Exiting - Failure\n");
+        fprintf(stderr,"ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
@@ -244,6 +244,13 @@ int main(int argc, char *argv[]) {
         system("dot astgraph0.dot -Tpng -o astgraph0.png");
     }
 #endif
+
+    errors = prnterrs(&context);
+    if (errors) {
+        fprintf(stderr,"%d error(s) in source file\n", errors);
+        goto finish;
+    }
+
     if (debug_mode)
         printf("Validating AST Tree\n");
     validate(&context);

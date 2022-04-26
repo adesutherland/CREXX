@@ -191,9 +191,14 @@ static walker_result step1_walker(walker_direction direction,
          * handled by a parent or grandparent node
          *
          * And we do the same thing for functions checking the ( after the function name
+         *
+         * And for exposed arguments (to include the expose)
          */
         if (node->token_start) {
-            if (node->node_type == FUNCTION) {
+            if (node->node_type == VAR_REFERENCE) {
+                node->token_start = node->token_start->token_prev;
+            }
+            else if (node->node_type == FUNCTION) {
                 /* Function brackets */
                 left = node->token_start->token_next; /* I.e. after the function name */
                 right = node->token_end->token_next;
@@ -230,7 +235,7 @@ static walker_result step1_walker(walker_direction direction,
 
             /* In case we fail to estimate */
             node->source_start = 0;
-            node->source_end = 0;
+            node->source_end = (char*)(-1);
             node->line = -1;
             node->column = -1;
 

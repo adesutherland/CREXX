@@ -31,6 +31,8 @@ int rexbpars(Context *context) {
 
         // Line Continuation
         if (token_type == TK_COMMA && peek_token_type == TK_EOC) {
+            token_r(context);
+            token_r(context);
             peek_token_type = rexbscan(context);
             peek_token = token_f(context, peek_token_type);
             continue;

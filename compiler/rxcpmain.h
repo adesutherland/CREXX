@@ -112,10 +112,10 @@ struct ASTNode {
     int line, column;
     SymbolNode *symbol;
     /* These are used by the code emitters */
-    OutputFragment *output;
-    OutputFragment *output2;
-    OutputFragment *output3;
-    OutputFragment *output4;
+    OutputFragment *output;          /* Primary node output or loop assign / init instruction */
+    OutputFragment *loopstartchecks; /* Begin Loop exit checks */
+    OutputFragment *loopinc;         /* Loop increments */
+    OutputFragment *loopendchecks;   /* End Loop exit checks */
 };
 
 /* Symbol-ASTNode Connector */
@@ -131,6 +131,8 @@ void prt_unex(FILE* output, const char *ptr, int len);
 
 /* Token Functions */
 Token* token_f(Context* context, int type);
+/* Remove the last (tail) token */
+void token_r(Context *context);
 void free_tok(Context* context);
 void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */

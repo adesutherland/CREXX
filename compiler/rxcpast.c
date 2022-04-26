@@ -34,6 +34,25 @@ Token *token_f(Context *context, int type) {
     return token;
 }
 
+/* Remove the last (tail) token */
+void token_r(Context *context) {
+    Token *tail = context->token_tail;
+    Token *new_tail;
+
+    /* Unlink the tail token */
+    if (tail) {
+        new_tail = tail->token_prev;
+        if (new_tail) {
+            new_tail->token_next = 0;
+            context->token_tail = new_tail;
+        } else {
+            context->token_head = 0;
+            context->token_tail = 0;
+        }
+        free(tail);
+    }
+}
+
 void prnt_tok(Token *token) {
 /*
     printf("%d.%d %s \"%.*s\"",token->line+1,token->column+1,
@@ -66,9 +85,9 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->symbol = 0;
     node->scope = 0;
     node->output = 0;
-    node->output2 = 0;
-    node->output3 = 0;
-    node->output4 = 0;
+    node->loopstartchecks = 0;
+    node->loopinc = 0;
+    node->loopendchecks = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
     node->target_type = TP_UNKNOWN;
@@ -641,11 +660,25 @@ static walker_result print_error_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
+            /* Try and set error position if not already set */
+            if (node->token) {
+                if (node->line == -1) node->line = node->token->line;
+                if (node->column == -1) node->column = node->token->column;
+                if (!node->source_start) node->source_start = node->token->token_string;
+                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+            }
+            if (node->child && node->child->token) {
+                if (node->line == -1) node->line = node->child->token->line;
+                if (node->column == -1) node->column = node->child->token->column;
+                if (!node->source_start) node->source_start = node->child->token->token_string;
+                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+            }
+
             /* Print error - truncate source to one line */
             int len = (int) (node->source_end - node->source_start + 1);
             int i;
             for (i=0; i<len; i++) {
-                if (node->source_start[i] == '\n') {
+                if (!node->source_start || node->source_start[i] == '\n') {
                     len = i;
                     break;
                 }
@@ -819,9 +852,9 @@ void free_ast(Context *context) {
         if (t->free_node_string) free(t->node_string);
         if (t->scope) scp_free(t->scope);
         if (t->output) f_output(t->output);
-        if (t->output2) f_output(t->output2);
-        if (t->output3) f_output(t->output3);
-        if (t->output4) f_output(t->output4);
+        if (t->loopstartchecks) f_output(t->loopstartchecks);
+        if (t->loopinc) f_output(t->loopinc);
+        if (t->loopendchecks) f_output(t->loopendchecks);
         free(t);
         t = n;
     }
