@@ -68,6 +68,7 @@ set(LIBRPATH
     ../rxas/wordindex
     ../rexx/reradix
     ../rexx/sequence
+    ../rexx/datatype
     )
 
 add_custom_target(testperfbifs ALL
@@ -91,5 +92,4 @@ foreach(_binfile ${REXXBINS})
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} ${LIBRPATH}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
 endforeach()

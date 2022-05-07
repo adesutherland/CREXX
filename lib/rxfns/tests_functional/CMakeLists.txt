@@ -55,6 +55,9 @@ set(REXXBINS
   ts_sequence.rxbin
   ts_find.rxbin
   ts_index.rxbin
+  ts_random.rxbin
+  ts_datatype.rxbin 
+
         )
 
 set(LIBRPATH
@@ -114,6 +117,8 @@ set(LIBRPATH
     ../rexx/sequence
     ../rexx/find
     ../rexx/index
+    ../rexx/random
+    ../rexx/datatype
     )
 
 add_custom_target(testbifs ALL

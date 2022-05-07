@@ -10,5 +10,6 @@ add_subdirectory(machine)
 add_subdirectory(assembler)
 add_subdirectory(disassembler)
 add_subdirectory(interpreter)
-add_subdirectory(lib)
+add_subdirectory(lib) 
 add_subdirectory(tests)
+

@@ -1,23 +1,74 @@
-    /* please edit testbifs.mxas, which generates testbifs.rxas */
-    #include "../../../tests/testskel.inc"
     
-    length()   .expose=length.length
-    substr()   .expose=substr.substr
-    copies()   .expose=copies.copies
-    reverse()  .expose=reverse.reverse
-    word()     .expose=word.word
-    words()    .expose=words.words
-    wordindx() .expose=wordindx.wordindx
-    subword()  .expose=subword.subword
-    pos()      .expose=pos.pos
-    lastpos()  .expose=lastpos.lastpos   
-    right()    .expose=right.right
-    left()     .expose=left.left
-
+    
+.globals=2
+g0 .expose=tests.success
+g1 .expose=tests.failure
+logo()         .locals=2
+    say "cREXX Assembler Test Suite - Common - Version cREXX-Phase-0c"
+    
+    * Zero result count
+    load g0,0
+    load g1,0
+    ret
+expect_true()  .locals=0
+    brt expect_true_ok,a1
+    iadd g1,g1,1  
+    say " FAILED"
+    ret
+    
+expect_true_ok:
+    iadd g0,g0,1  
+    say " ok"
+    ret
+    
+expect_false() .locals=0
+    brf expect_false_ok,a1
+    iadd g1,g1,1  
+    say " FAILED"
+    ret
+    
+expect_false_ok:
+    iadd g0,g0,1 
+    say " ok"
+    ret
+    
+print_results() .locals=3
+    iadd r0, g0, g1
+    itos r0
+    load r1,"tests run"
+    sconcat r1,r0,r1
+    say r1
+    brt failures, g1
+        
+    
+    say "Success        "
+    ret 0       
+    
+failures:      
+    itos g1
+    load r0,"***"
+    sconcat r1,r0,g1
+    load r0,"test(s) failed ***"
+    sconcat r1,r1,r0
+    say r1
+    ret 1
+    
+    
+    length()    .expose=length.length
+    substr()    .expose=substr.substr
+    copies()    .expose=copies.copies
+    reverse()   .expose=reverse.reverse
+    word()      .expose=word.word
+    words()     .expose=words.words
+    wordindex() .expose=wordindex.wordindex
+    subword()   .expose=subword.subword
+    pos()       .expose=pos.pos
+    lastpos()   .expose=lastpos.lastpos   
+    right()     .expose=right.right
+    left()      .expose=left.left
 main() .locals=8
     call logo()
-
-    /* the length function */
+     /* the length function */
     say "Test Length function - string argument"
     load r3,1  /* there is one argument */
     load r4,"abcdefgh" /* 8, following the book */
@@ -33,15 +84,15 @@ main() .locals=8
     call r0,expect_true(),r3
 
     /* the substr function */
-    say "Test Substr function - one arg, start pos, no overrun"
-    load r3,2  /* there are two arguments*/
-    load r4,"1234567890"
-    load r5,5 /* second argument, startpos */
-    call r1,substr(),r3
-    load r3,1
-    load r5,"567890"
-    seq  r4,r1,r5
-    call r0,expect_true(),r3
+    /* say "Test Substr function - one arg, start pos, no overrun" */
+    /* load r3,2  /\* there are two arguments*\/ */
+    /* load r4,"1234567890" */
+    /* load r5,5 /\* second argument, startpos *\/ */
+    /* call r1,substr(),r3 */
+    /* load r3,1 */
+    /* load r5,"567890" */
+    /* seq  r4,r1,r5 */
+    /* call r0,expect_true(),r3 */
 
     say "Test Substr function - overrun and pad"
     load r3,4  /* there are four arguments*/
@@ -133,15 +184,15 @@ main() .locals=8
     call r0,expect_true(),r3
  
     /* right */
-    say "Test of Right function, 2 args"
-    /* the first example from the book, RIGHT('abc d',8) == 'abc d   ' */
-    load r3,2  /* there are two arguments*/
-    load r4,"abc  d"
-    load r5,8 /* second argument, length */
-    call r1,right(),r3
-    load r3,1
-    seq r4,r1,"  abc  d"
-    call r0,expect_true(),r3
+    /* say "Test of Right function, 2 args" */
+    /* /\* the first example from the book, RIGHT('abc d',8) == 'abc d   ' *\/ */
+    /* load r3,2  /\* there are two arguments*\/ */
+    /* load r4,"abc  d" */
+    /* load r5,8 /\* second argument, length *\/ */
+    /* call r1,right(),r3 */
+    /* load r3,1 */
+    /* seq r4,r1,"  abc  d" */
+    /* call r0,expect_true(),r3 */
 
     /* the second example from the book, RIGHT('abc d',8,'.') == 'abc d...' */
     say "Test of Right function, 3 args"
@@ -187,14 +238,14 @@ main() .locals=8
 
     /* left */
     /* the first example from the book, LEFT('abc d',8) == 'abc d   ' */
-    say "Test of Left function, no pad"
-    load r3,2  /* there are two arguments */
-    load r4,"abc d"
-    load r5,8 /* second argument, length */
-    call r1,left(),r3
-    load r3,1
-    seq r4,r1,"abc d   "
-    call r0,expect_true(),r3
+    /* say "Test of Left function, no pad" */
+    /* load r3,2  /\* there are two arguments *\/ */
+    /* load r4,"abc d" */
+    /* load r5,8 /\* second argument, length *\/ */
+    /* call r1,left(),r3 */
+    /* load r3,1 */
+    /* seq r4,r1,"abc d   " */
+    /* call r0,expect_true(),r3 */
         
     /* the second example from the book, LEFT('abc d',8,'.') == 'abc d...' */
     say "Test of Left function, pad"
@@ -245,13 +296,13 @@ main() .locals=8
     seq r4,r1,"the"
     call r0,expect_true(),r3
 
-    /* wordindx */
-    say "Test wordindx: 4"
+    /* wordindex */
+    say "Test wordindex: 4"
     load r3,2  /* there are two arguments*/
     load r4,"The quick brown fox jumps over the lazy dog"
     say  r4
     load r5,4  /* pos of 4. word */
-    call r1,wordindx(),r3
+    call r1,wordindex(),r3
     load r3,1
     ieq r4,r1,17
     call r0,expect_true(),r3
@@ -281,16 +332,16 @@ main() .locals=8
     /* we miss pos with one argument */
     
     /* Test Lastpos */
-    say "Test lastpos"
-    load r3,2 /* there are 2 arguments */
-    load r4,"!"
-    load r5,"The quick brown fox jumps over the lazy ! dog"
-    call r1,lastpos(),r3
-    load r3,1
-    ieq r4,r1,41
-    call r0,expect_true(),r3
+    /* say "Test lastpos" */
+    /* load r3,2 /\* there are 2 arguments *\/ */
+    /* load r4,"!" */
+    /* load r5,"The quick brown fox jumps over the lazy ! dog" */
+    /* call r1,lastpos(),r3 */
+    /* load r3,1 */
+    /* ieq r4,r1,41 */
+    /* call r0,expect_true(),r3 */
 
-    /* finished; print the results */
+   
     call print_results()
     
     exit

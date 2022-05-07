@@ -33,7 +33,7 @@ do i=today  to 900000
     leave
   end
 end
-do i=today  to 900000
+do i=today-9000 to 900000
   xv = I - date('b','23 Sep 1958')
   xy = I - date('b','26 Mar 1990')
   p = xy/xv*100

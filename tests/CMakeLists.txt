@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.00)
+add_subdirectory(levelb)
 
 project(tests C)
 
@@ -8,7 +9,7 @@ enable_testing()
 find_program(CTEST ctest)
 
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
-set(REXXTESTBINS basic.rxbin)
+set(REXXTESTBINS basic.rxbin loop.rxbin levelbfunc.rxbin)
 
 add_custom_target(tests ALL
         DEPENDS ${ASMTESTBINS} ${REXXTESTBINS})
@@ -21,13 +22,13 @@ foreach(_binfile ${ASMTESTBINS})
         COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile}
         #
-        COMMAND ${CTEST} -R ${_basename} --output-on-failure
+#        COMMAND ${CTEST} -R ${_basename} --output-on-failure
         DEPENDS ${_basename}.rxas rxas rxvm rxbvm lib_rexx lib_rxas
         OUTPUT ${_binfile}
         COMMENT "cREXX Assemble Test ${_basename} ..."
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 
 foreach(_binfile ${REXXTESTBINS})
@@ -39,11 +40,11 @@ foreach(_binfile ${REXXTESTBINS})
           COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas
           #
           COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
-          COMMAND ${CTEST} -R ${_basename} --output-on-failure
+ #         COMMAND ${CTEST} -R ${_basename} --output-on-failure
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm lib_rexx lib_rxas
           OUTPUT ${_binfile}
           COMMENT "cREXX Assemble Test ${_basename} ..."
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()

@@ -15,7 +15,8 @@ set(RXASBINS
               wordindex.rxbin
               wordlen.rxbin
               wordlength.rxbin
-              words.rxbin              
+              words.rxbin
+              testbifs.rxbin
         )
 
 add_custom_target(lib_rxas ALL
