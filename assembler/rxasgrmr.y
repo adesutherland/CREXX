@@ -24,7 +24,7 @@
 
 %parse_failure {
 printf("parse_failure()\n");
-    error_f(context, 0, 0, 1, "Error parse failure - completely confused");
+    error_f(context, 0, 0, 1, "Error unexpected parse failure (1)");
 }
 
 %start_symbol program
@@ -39,65 +39,52 @@ program ::= functions EOS.
 program ::= EOS.
 
 // Program error messages
-program ::= ANYTHING(T). {err_at(context, T, "Error really confused");}
-program ::= headers ANYTHING(T). {err_at(context, T, "totally confused after headers");}
-program ::= error. { error_f(context, 0, 0, 1, "Error completely confused");}
+program ::= ANYTHING(T) error EOS. {err_at(context, T, "Error unexpected parse failure (2)");}
+program ::= headers ANYTHING(T) error EOS. {err_at(context, T, "Error unexpected parse failure (3)");}
+program ::= error EOS. { error_f(context, 0, 0, 1, "Error unexpected parse failure (4)");}
 
 // Header directives
 headers ::= header.
 headers ::= headers header.
-header ::= globals NEWLINE.
-header ::= global_reg NEWLINE.
-header ::= global_meta NEWLINE.
-header ::= func_meta NEWLINE.
-header ::= file NEWLINE.
+header ::= globals.
+header ::= global_reg.
+header ::= global_meta.
+header ::= file.
 header ::= NEWLINE.
 
 // Header error messages
 header ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid header directive");}
 
 // Global directive
-globals ::= KW_GLOBALS EQUAL INT(G). {rxassetg(context,G);}
-globals ::= KW_GLOBALS EQUAL INT ANYTHING(E) error NEWLINE. {err_at(context, E, "expecting newline");}
-globals ::= KW_GLOBALS EQUAL(T) error NEWLINE. {err_aftr(context, T, "expecting {integer}");}
+globals ::= KW_GLOBALS EQUAL INT(G) NEWLINE. {rxassetg(context,G);}
 globals ::= KW_GLOBALS(T) error NEWLINE. {err_aftr(context, T, "expecting \"={integer}\"");}
 
 // File directive
-file ::= KW_FILE STRING(F). { /* rxassetg(context,F); */}
-file ::= KW_FILE ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting {filename}");}
-file ::= KW_FILE STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting NEWLINE");}
+file ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. { /* rxasmfil(context,F); */}
+file ::= KW_SRCFILE(T) error NEWLINE. {err_at(context, T, "Expecting .srcfile = {filename}");}
 
 // Global register directive
-global_reg ::= GREG(R) KW_EXPOSE EQUAL ID(I). {rxasexre(context,R,I);}
-global_reg ::= AREG(R) KW_EXPOSE error NEWLINE. {err_at(context, R, "can only expose global registers");}
-global_reg ::= RREG(R) KW_EXPOSE error NEWLINE. {err_at(context, R, "can only expose global registers");}
-global_reg ::= GREG(T) error NEWLINE. {err_aftr(context, T, "expecting \".expose={id}\"");}
-global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {err_aftr(context, T, "expecting \"={id}\"");}
+global_reg ::= KW_EXPOSE GREG(R) EQUAL ID(I) NEWLINE. {rxasexre(context,R,I);}
+global_reg ::= KW_EXPOSE AREG(R) error NEWLINE. {err_at(context, R, "can only expose global registers");}
+global_reg ::= KW_EXPOSE RREG(R) error NEWLINE. {err_at(context, R, "can only expose global registers");}
+global_reg ::= KW_EXPOSE(T) error NEWLINE. {err_aftr(context, T, "expecting \".expose={id}\"");}
 
-// Global register metadata
-global_meta ::= KW_META ID(V) EQUAL ID(T) GREG(R). {/* rxasmetr(context,V,R,T); */}
-global_meta ::= KW_META ID EQUAL ID RREG(R) error NEWLINE. {err_at(context, R, "can only define metadata for global registers here");}
-global_meta ::= KW_META ID EQUAL ID AREG(R) error NEWLINE. {err_at(context, R, "can only define metadata for global registers here");}
-global_meta ::= KW_META ID EQUAL ID(R) error NEWLINE. {err_aftr(context, R, "expecting \"g{n}\"");}
-global_meta ::= KW_META ID EQUAL(R) error NEWLINE. {err_aftr(context, R, "expecting \"{type} g{n}\"");}
-global_meta ::= KW_META ID(I) error NEWLINE. {err_aftr(context, I, "expecting \"= {type}  g{n}\"");}
-global_meta ::= KW_META ID EQUAL ID STRING(C) error NEWLINE. {err_at(context, C, "cannot define a constant symbol here");}
-global_meta ::= KW_META ID(I). {err_at(context, I, "cannot clear metadata here");}
-global_meta ::= KW_META(T) error NEWLINE. {err_aftr(context, T, "Expecting {id} or {func}() after .meta");}
-
-// Global Function Meta data
-func_meta ::= KW_META FUNC(F) EQUAL ID(T) STRING(L). {/* rxasqlbl(context,N, L, F, T)``; */}
-func_meta ::= KW_META FUNC EQUAL ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting {type} {metadata string}");}
-func_meta ::= KW_META FUNC EQUAL ID STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "expecting {newline}");}
+// Global metadata
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) GREG(R) NEWLINE. {/* rxasmetr(context,V,OP,T,R); */}
+global_meta ::= KW_META STRING EQUAL STRING STRING AREG(R) NEWLINE. {err_at(context, R, "can only define global registers here");}
+global_meta ::= KW_META STRING EQUAL STRING STRING RREG(R) NEWLINE. {err_at(context, R, "can only define global registers here");}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,I); */}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,0); */}
+global_meta ::= KW_META STRING(V) NEWLINE. {/* rxasmetd(context,V); */}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {/* rxasmetc(context,V,OP,T,C); */}
+global_meta ::= KW_META(T) error NEWLINE. {err_aftr(context, T, "{string} = {meta definition}");}
 
 // Function list and Declarations and Definitions
 functions ::= function.
 functions ::= functions function.
 function ::= functionDefinition NEWLINE instructions.
-function ::= functionDeclaration blank_lines.
+function ::= functionDeclaration NEWLINE decl_instructions.
 function ::= FUNC(T) error NEWLINE. {err_aftr(context, T, "expecting .locals or .expose");}
-blank_lines ::= NEWLINE.
-blank_lines ::= blank_lines NEWLINE.
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_EXPOSE EQUAL ID(D). {rxasexpc(context,F,I,D);}
 functionDeclaration ::= FUNC(F) KW_EXPOSE EQUAL ID(I). {rxasdecl(context,F,I);}
@@ -121,28 +108,40 @@ instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
 instruction ::= LABEL(L). {rxasqlbl(context,L);}
-instruction ::= KW_LINE INT(N) STRING(L) NEWLINE. {/* rxasqlbl(context,N, L); */}
-instruction ::= KW_META ID(V) EQUAL ID(T) reg(R) NEWLINE. {/* rxasmetr(context,V,R,T); */}
-instruction ::= KW_META ID(V) EQUAL ID(T) STRING(S) NEWLINE. {/* rxasmetr(context,V,T,S); */}
-instruction ::= KW_META ID(V) NEWLINE. {/* rxasmetr(context,V,R,S); */}
-instruction ::= KW_META FUNC(F) EQUAL ID(T) STRING(L) NEWLINE. {/* rxasqlbl(context,N, L, F, T)``; */}
-instruction ::= KW_FILE STRING(F) NEWLINE. { /* rxassetg(context,F); */}
+instruction ::= KW_SRC INT(L) COLON INT(C) EQUAL STRING(S) NEWLINE. {/* rxasmets(context, L, C, S); */}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {/* rxasmetr(context,V,OP,T,R); */}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,I); */}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,0); */}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {/* rxasmetc(context,V,OP,T,C); */}
+instruction ::= KW_META STRING(V) NEWLINE. {/* rxasmetd(context,V); */}
+instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. { /* rxasmfil(context,F); */}
 instruction ::= NEWLINE.
 
 // Instruction error messages
+instruction ::= KW_SRCFILE(T) error NEWLINE. {err_at(context, T, "Expecting .srcfile = {filename}");}
+instruction ::= KW_META(T) error NEWLINE. {err_aftr(context, T, "{string} = {meta definition}");}
 instruction ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid label, opcode or directive");}
-instruction ::= KW_LINE ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting line number after .line");}
-instruction ::= KW_LINE INT ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting line contents after .line");}
-instruction ::= KW_LINE INT STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "expecting {newline}");}
-instruction ::= KW_FILE ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting {filename}");}
-instruction ::= KW_FILE STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting NEWLINE");}
-instruction ::= KW_META ID EQUAL ID(R) error NEWLINE. {err_aftr(context, R, "expecting \"r{n}\"");}
-instruction ::= KW_META ID EQUAL(R) error NEWLINE. {err_aftr(context, R, "expecting \"{type} r{n}\"");}
-instruction ::= KW_META ID(I) error NEWLINE. {err_aftr(context, I, "expecting \"= {type} r{n}\"");}
-instruction ::= KW_META ID EQUAL ID STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "expecting {newline}");}
-instruction ::= KW_META(T) error NEWLINE. {err_aftr(context, T, "Expecting {id} or {func}() after .meta");}
-instruction ::= KW_META FUNC EQUAL ANYTHING(T) error NEWLINE. {err_at(context, T, "Expecting {type} {metadata string}");}
-instruction ::= KW_META FUNC EQUAL ID STRING ANYTHING(T) error NEWLINE. {err_at(context, T, "expecting {newline}");}
+instruction ::= KW_SRC(T) error NEWLINE. {err_at(context, T, "Expecting .src {line}:{col} = \"{source}\"");}
+
+// Instructions in a function declaration
+decl_instructions ::= decl_instruction.
+decl_instructions ::= decl_instructions decl_instruction.
+decl_instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. { /* rxasmfil(context,F); */}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,I); */}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {/* rxasmetf(context,V,OP,T,F,A,0); */}
+decl_instruction ::= KW_META STRING(V) NEWLINE. {/* rxasmetd(context,V); */}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {/* rxasmetc(context,V,OP,T,C); */}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) GREG(R) NEWLINE. {/* rxasmetr(context,V,OP,T,R); */}
+decl_instruction ::= NEWLINE.
+
+// Declaration instruction error messages
+decl_instruction ::= KW_SRCFILE(T) error NEWLINE. {err_at(context, T, "Expecting .srcfile = {filename}");}
+decl_instruction ::= KW_META(T) error NEWLINE. {err_aftr(context, T, "{string} = {meta definition}");}
+decl_instruction ::= ANYTHING(T) error NEWLINE. {err_at(context, T, "invalid label, opcode or directive");}
+decl_instruction ::= KW_SRC(T) error NEWLINE. {err_at(context, T, "Expecting .src {line}:{col} = \"{source}\"");}
+decl_instruction ::= KW_SRC(E) INT COLON INT EQUAL STRING NEWLINE. {err_at(context, E, "cannot define source line here");}
+decl_instruction ::= KW_META STRING EQUAL STRING STRING AREG(R) NEWLINE. {err_at(context, R, "can only define global registers here");}
+decl_instruction ::= KW_META STRING EQUAL STRING STRING RREG(R) NEWLINE. {err_at(context, R, "can only define global registers here");}
 
 // operation/instruction
 instr ::= ID(IN). {rxasque0(context,IN);}

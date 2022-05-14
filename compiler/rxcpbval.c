@@ -235,7 +235,7 @@ static walker_result step1_walker(walker_direction direction,
 
             /* In case we fail to estimate */
             node->source_start = 0;
-            node->source_end = (char*)(-1);
+            node->source_end = 0;
             node->line = -1;
             node->column = -1;
 
@@ -252,7 +252,7 @@ static walker_result step1_walker(walker_direction direction,
             }
             if (older && older->line != -1) { /* Check if the older has valid line number (it should!) */
                 node->source_start = older->source_end + 1;
-                node->source_end = node->source_start - 1;
+                node->source_end = node->source_start ? (node->source_start - 1) : 0;
                 node->line = older->line;
                 node->column = older->column + (int)(older->source_end - older->source_start) + 1;
             }
@@ -262,7 +262,7 @@ static walker_result step1_walker(walker_direction direction,
                 while (n) {
                     if (n->token) {
                         node->source_start = n->token->token_string + n->token->length;
-                        node->source_end = node->source_start - 1;
+                        node->source_end = node->source_start ? (node->source_start - 1) : 0;
                         node->line = n->token->line;
                         node->column = n->token->column + n->token->length;
                         break;
@@ -421,6 +421,9 @@ static walker_result step2a_walker(walker_direction direction,
 
             /* Move down to the procedure scope */
             *current_scope = scp_f(*current_scope, node);
+
+            /* Set the scope name to be the procedure symbol name */
+            (*current_scope)->name = symbol->name;
         }
 
         else if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
@@ -465,7 +468,7 @@ static walker_result step2a_walker(walker_direction direction,
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
              * first child (VAR_TARGET)'s symbol
              * Note: If the REPEAT has a TO it has an assign */
-            symbol = node->parent->child->child->symbol->symbol;
+            symbol = node->parent->child->child->symbolNode->symbol;
             sym_adnd(symbol, node, 1, 0);
         }
 
@@ -473,7 +476,7 @@ static walker_result step2a_walker(walker_direction direction,
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
              * first child (VAR_TARGET)'s symbol
              * Note: If the REPEAT has a BY it has an assign*/
-            symbol = node->parent->child->child->symbol->symbol;
+            symbol = node->parent->child->child->symbolNode->symbol;
             sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
     }
@@ -729,14 +732,14 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case FUNCTION:
-                node->value_type = node->symbol->symbol->type;
+                node->value_type = node->symbolNode->symbol->type;
                 node->target_type = node->value_type;
                 break;
 
             case VAR_SYMBOL:
-                if (node->symbol->symbol->type == TP_UNKNOWN)
-                    node->symbol->symbol->type = TP_STRING;
-                node->value_type = node->symbol->symbol->type;
+                if (node->symbolNode->symbol->type == TP_UNKNOWN)
+                    node->symbolNode->symbol->type = TP_STRING;
+                node->value_type = node->symbolNode->symbol->type;
                 node->target_type = node->value_type;
                 break;
 
@@ -770,7 +773,7 @@ static walker_result step4_walker(walker_direction direction,
                     mknd_err(child2, "RETURNS_VOID");
                 }
                 else {
-                    if (child1->symbol->symbol->type == TP_UNKNOWN) {
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet */
                         if (node->parent->node_type == REPEAT) {
                             /* Special logic for LOOP Assignment - type must be numeric */
@@ -783,37 +786,37 @@ static walker_result step4_walker(walker_direction direction,
                         child2->target_type = child1->value_type;
                         node->value_type = child1->value_type;
                         node->target_type = child1->value_type;
-                        child1->symbol->symbol->type = child1->value_type;
+                        child1->symbolNode->symbol->type = child1->value_type;
                     } else {
                         /* The Target Symbol has a type */
-                        child1->value_type = child1->symbol->symbol->type;
-                        child1->target_type = child1->symbol->symbol->type;
-                        child2->target_type = child1->symbol->symbol->type;
-                        node->value_type = child1->symbol->symbol->type;
-                        node->target_type = child1->symbol->symbol->type;
-                        child1->symbol->symbol->type = child1->value_type;
+                        child1->value_type = child1->symbolNode->symbol->type;
+                        child1->target_type = child1->symbolNode->symbol->type;
+                        child2->target_type = child1->symbolNode->symbol->type;
+                        node->value_type = child1->symbolNode->symbol->type;
+                        node->target_type = child1->symbolNode->symbol->type;
+                        child1->symbolNode->symbol->type = child1->value_type;
                     }
                 }
                 break;
 
             case ARG:
-                if (child1->symbol->symbol->type == TP_UNKNOWN) {
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet */
                     child1->value_type = child2->value_type;
                     child1->target_type = child1->value_type;
                     child2->target_type = child1->value_type;
                     node->value_type = child1->value_type;
                     node->target_type = child1->value_type;
-                    child1->symbol->symbol->type = child1->value_type;
+                    child1->symbolNode->symbol->type = child1->value_type;
                 }
                 else {
                     /* The Target Symbol has a type */
-                    child1->value_type = child1->symbol->symbol->type;
-                    child1->target_type = child1->symbol->symbol->type;
-                    child2->target_type = child1->symbol->symbol->type;
-                    node->value_type = child1->symbol->symbol->type;
-                    node->target_type = child1->symbol->symbol->type;
-                    child1->symbol->symbol->type = child1->value_type;
+                    child1->value_type = child1->symbolNode->symbol->type;
+                    child1->target_type = child1->symbolNode->symbol->type;
+                    child2->target_type = child1->symbolNode->symbol->type;
+                    node->value_type = child1->symbolNode->symbol->type;
+                    node->target_type = child1->symbolNode->symbol->type;
+                    child1->symbolNode->symbol->type = child1->value_type;
                 }
                 if (child2->node_type == CLASS) node->is_opt_arg = 0;
                 else node->is_opt_arg = 1;
@@ -882,8 +885,8 @@ static walker_result step4_walker(walker_direction direction,
                             while (n2) {
                                 if (n2->node_type == ASSIGN) {
                                     /* Same Symbol? */
-                                    if (n2->child->symbol->symbol ==
-                                        node->child->symbol->symbol) {
+                                    if (n2->child->symbolNode->symbol ==
+                                        node->child->symbolNode->symbol) {
                                         node->association = n1;
                                         goto found;
                                     }
@@ -964,7 +967,7 @@ static walker_result step5_walker(walker_direction direction,
             case FUNCTION:
                 /* Process all the arguments */
                 n1 = node->child;
-                n2 = sym_trnd(node->symbol->symbol, 0)->node;
+                n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
                 /* n2 is PROCEDURE. Go to the first arg */
                 n2 = n2->child->sibling->child;
 
@@ -981,18 +984,18 @@ static walker_result step5_walker(walker_direction direction,
                     if (n1->node_type == NOVAL) {
                         n1->value_type = n1->target_type;
                         if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbol->symbol->name);
+                            mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbolNode->symbol->name);
                         }
                     }
                     if (n2->child->node_type == VAR_REFERENCE) {
                         n1->is_ref_arg = 1;
-                        if (n1->symbol) {
+                        if (n1->symbolNode) {
                             if (n1->target_type != n1->value_type) {
                                 /* Cannot change type of pass by reference symbol */
-                                mknd_err(n1, "REFERENCE_TYPE_MISMATCH %d %s", arg_num, n2->child->symbol->symbol->name);
+                                mknd_err(n1, "REFERENCE_TYPE_MISMATCH %d %s", arg_num, n2->child->symbolNode->symbol->name);
                             }
                             /* Mark as write access for the optimiser */
-                            n1->symbol->writeUsage = 1;
+                            n1->symbolNode->writeUsage = 1;
                         }
                     }
                     n1 = n1->sibling;
@@ -1006,7 +1009,7 @@ static walker_result step5_walker(walker_direction direction,
                     n1->is_opt_arg = n2->is_opt_arg;
                     add_ast(node, n1);
                     if (!n1->is_opt_arg) {
-                        mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbol->symbol->name);
+                        mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbolNode->symbol->name);
                     }
                     n2 = n2->sibling;
                 }

@@ -110,7 +110,7 @@ struct ASTNode {
     Token *token_start, *token_end;
     char *source_start, *source_end;
     int line, column;
-    SymbolNode *symbol;
+    SymbolNode *symbolNode;
     /* These are used by the code emitters */
     OutputFragment *output;          /* Primary node output or loop assign / init instruction */
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
@@ -210,6 +210,7 @@ int prnterrs(Context *context);
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
+    char *name;
     void *child_array;
     void *symbols_tree;
     size_t num_registers;
@@ -275,6 +276,9 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
+
+/* Returns the fully resolved symbol name in a malloced buffer */
+char* sym_frnm(Symbol *symbol);
 
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);

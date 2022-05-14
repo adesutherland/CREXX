@@ -71,6 +71,7 @@ static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
 Scope *scp_f(Scope *parent, ASTNode *node) {
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
+    scope->name = 0; /* Note that the name is not freed by the destructor - i.e. it points to a constant or buffer owned else where */
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
@@ -362,10 +363,48 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
     connector->writeUsage = writeAccess;
 
     dpa_add((dpa*)(symbol->ast_node_array), connector);
-    node->symbol = connector;
+    node->symbolNode = connector;
 }
 
 /* Returns the number of AST nodes connected to a symbol */
 size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
+}
+
+static void prepend_scope(char* buffer, const char* scope)
+{
+    size_t len = strlen(scope);
+    memmove(buffer + len + 1, buffer, strlen(buffer) + 1);
+    memcpy(buffer, scope, len);
+    buffer[len] = ':';
+}
+
+/* Returns the fully resolved symbol name in a malloced buffer */
+char* sym_frnm(Symbol *symbol) {
+    Scope *s;
+    size_t len;
+    char *result;
+
+    /* Calculate buffer len */
+    len = strlen(symbol->name) + 1; /* +1 for null */
+    s = symbol->scope;
+    while (s) {
+        if (s->name) {
+            len += strlen(s->name) + 1; /* +1 for the ":" */
+        }
+        s = s->parent;
+    }
+    result = malloc(len);
+
+    /* Create name */
+    strcpy(result, symbol->name);
+    s = symbol->scope;
+    while (s) {
+        if (s->name) {
+            prepend_scope(result, s->name);
+        }
+        s = s->parent;
+    }
+
+    return result;
 }

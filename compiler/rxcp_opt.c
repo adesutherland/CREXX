@@ -693,7 +693,7 @@ static walker_result opt2_walker(walker_direction direction,
         if (node->node_type == ARG) {
             if (!node->is_ref_arg) { /* Only if it is pass by reference */
                 is_constant = 1;
-                symbol = node->child->symbol->symbol; /* The symbol is linked to the child node */
+                symbol = node->child->symbolNode->symbol; /* The symbol is linked to the child node */
                 /* Check to see if the symbol is written to in the procedure */
                 for (i=1; i<sym_nond(symbol); i++) {
                     if (sym_trnd(symbol, i)->writeUsage) {

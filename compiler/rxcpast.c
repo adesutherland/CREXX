@@ -27,6 +27,7 @@ Token *token_f(Context *context, int type) {
     token->length = context->cursor - context->top;
     token->line = context->line;
     token->column = context->top - context->linestart + 1;
+    if (token->column < 0) token->column = 0;
     token->token_string = context->top;
 
     context->top = context->cursor;
@@ -82,7 +83,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->sibling = 0;
     node->association = 0;
     node->token = 0;
-    node->symbol = 0;
+    node->symbolNode = 0;
     node->scope = 0;
     node->output = 0;
     node->loopstartchecks = 0;
@@ -749,7 +750,7 @@ static void fix_ast_line_number(ASTNode *node) {
         node->token_start = 0;
         node->token_end = 0;
         node->source_start = older->source_end + 1;
-        node->source_end = node->source_start - 1;
+        node->source_end = node->source_start ? (node->source_start - 1) : 0;
         node->line = older->line;
         node->column = older->column + (int)(older->source_end - older->source_start) + 1;
     }
@@ -758,7 +759,7 @@ static void fix_ast_line_number(ASTNode *node) {
         node->token_start = 0;
         node->token_end = 0;
         node->source_start = node->parent->source_end + 1;
-        node->source_end = node->source_start - 1;
+        node->source_end = node->source_start ? (node->source_start - 1) : 0;
         node->line = node->parent->line;
         node->column = node->parent->column + (int)(node->parent->source_end - node->parent->source_start) + 1;
     }
@@ -1165,30 +1166,30 @@ walker_result pdot_walker_handler(walker_direction direction,
         }
 
         /* Link to Symbol */
-        if (node->symbol) {
-            if (node->symbol->writeUsage && node->symbol->readUsage) {
+        if (node->symbolNode) {
+            if (node->symbolNode->writeUsage && node->symbolNode->readUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"both\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
-            else if (node->symbol->writeUsage) {
+            else if (node->symbolNode->writeUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"forward\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
-            else if (node->symbol->readUsage) {
+            else if (node->symbolNode->readUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"back\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
             else {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"none\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
         }
     }
