@@ -73,10 +73,10 @@ if date('s','716308','b','-') \= '1962-03-10' then do
   errors=errors+1
   say "DATE() failed in test 9: date('s','716308','b','-')" date('s','716308','b','-') "but must be '1962-03-10'"
 end
-/* if date('w','7688','c') \= 'Sunday' then do */
-/*   errors=errors+1 */
-/*   say "DATE() failed in test 10: date('w',7688,'c')" date('w','7688','c') "but must be 'Sunday'" */
-/* end */
+if date('w','7688','c') \= 'Sunday' then do
+  errors=errors+1
+  say "DATE() failed in test 10: date('w',7688,'c')" date('w','7688','c') "but must be 'Sunday'"
+end
 if date('c','1 Feb 2021') \= 7703 then do
   errors=errors+1
   say "DATE() failed in test 11: date('c','1 Feb 2021')" date('c','1 Feb 2021') "but must be 7703"
