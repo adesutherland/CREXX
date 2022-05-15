@@ -1159,10 +1159,19 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
         if (symbol->is_constant) {
             symbol_fqn = sym_frnm(symbol);
             value_node = sym_trnd(symbol, 0)->node->sibling;
-            buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%.*s\"\n",
-                                   symbol_fqn,
-                                   type_nm(symbol->type),
-                                   (int) value_node->node_string_length, value_node->node_string);
+            if (value_node) {
+                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%.*s\"\n",
+                                       symbol_fqn,
+                                       type_nm(symbol->type),
+                                       (int) value_node->node_string_length, value_node->node_string);
+            }
+            else {
+                /* Taken constant so no defining node - the name is its value */
+                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%s\"\n",
+                                       symbol_fqn,
+                                       type_nm(symbol->type),
+                                       symbol->name);
+            }
             free(symbol_fqn);
         }
 

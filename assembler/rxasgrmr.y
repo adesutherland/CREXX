@@ -64,10 +64,11 @@ file ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. { /* rxasmfil(context,F); */}
 file ::= KW_SRCFILE(T) error NEWLINE. {err_at(context, T, "Expecting .srcfile = {filename}");}
 
 // Global register directive
-global_reg ::= KW_EXPOSE GREG(R) EQUAL ID(I) NEWLINE. {rxasexre(context,R,I);}
-global_reg ::= KW_EXPOSE AREG(R) error NEWLINE. {err_at(context, R, "can only expose global registers");}
-global_reg ::= KW_EXPOSE RREG(R) error NEWLINE. {err_at(context, R, "can only expose global registers");}
-global_reg ::= KW_EXPOSE(T) error NEWLINE. {err_aftr(context, T, "expecting \".expose={id}\"");}
+global_reg ::= GREG(R) KW_EXPOSE EQUAL ID(I) NEWLINE. {rxasexre(context,R,I);}
+global_reg ::= AREG(R) KW_EXPOSE error NEWLINE. {err_at(context, R, "can only expose global registers");}
+global_reg ::= RREG(R) KW_EXPOSE error NEWLINE. {err_at(context, R, "can only expose global registers");}
+global_reg ::= GREG(T) error NEWLINE. {err_aftr(context, T, "expecting \".expose={id}\"");}
+global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {err_aftr(context, T, "expecting \"={id}\"");}
 
 // Global metadata
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) GREG(R) NEWLINE. {/* rxasmetr(context,V,OP,T,R); */}
@@ -84,6 +85,7 @@ functions ::= function.
 functions ::= functions function.
 function ::= functionDefinition NEWLINE instructions.
 function ::= functionDeclaration NEWLINE decl_instructions.
+function ::= functionDeclaration NEWLINE.
 function ::= FUNC(T) error NEWLINE. {err_aftr(context, T, "expecting .locals or .expose");}
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I). {rxasproc(context,F,I);}
 functionDefinition ::= FUNC(F) KW_LOCALS EQUAL INT(I) KW_EXPOSE EQUAL ID(D). {rxasexpc(context,F,I,D);}
