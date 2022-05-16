@@ -1062,11 +1062,42 @@ void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
     else rxasgen3(context, instrToken, operand1Token, operand2Token, operand3Token);
 }
 
+/* Queue Label */
 void rxasqlbl(Assembler_Context *context, Token *labelToken) {
     if (context->optimise) {
         queue_instruction(context, labelToken, 0, 0, 0);
     }
     else rxaslabl(context, labelToken);
+}
+
+/* Queue Source filename */
+void rxasqmfl(Assembler_Context *context, Token *file) {
+
+}
+
+/* Queue Source Line */
+void rxasqmsr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+
+}
+
+/* Queue Function Metadata */
+void rxasqmfu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+
+}
+
+/* Queue Register Metadata */
+void rxasqmre(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+
+}
+
+/* Queue Constant Metadata */
+void rxasqmct(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant) {
+
+}
+
+/* Queue Clear Metadata */
+void rxasqmcl(Assembler_Context *context, Token *symbol) {
+
 }
 
 /* Flush the optimiser queue */

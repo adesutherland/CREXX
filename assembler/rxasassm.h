@@ -17,6 +17,18 @@ void rxasque2(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
               Token *operand2Token, Token *operand3Token);
 void rxasqlbl(Assembler_Context *context, Token *labelToken);
+/* Source filename */
+void rxasqmfl(Assembler_Context *context, Token *file);
+/* Source Line */
+void rxasqmsr(Assembler_Context *context, Token *line, Token *column, Token *source);
+/* Function Metadata */
+void rxasqmfu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner);
+/* Register Metadata */
+void rxasqmre(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg);
+/* Constant Metadata */
+void rxasqmct(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant);
+/* Clear Metadata */
+void rxasqmcl(Assembler_Context *context, Token *symbol);
 
 /* Flush the optimiser queue */
 void flushopt(Assembler_Context *context);
