@@ -3,11 +3,17 @@ options levelb
  * which must adhere to the BSN-form of the modulo-11 test
  */
 
-x = 'NL003787643'
-x = substr(x,3)
-if checkBSN(x,11) = 0 then say 'NL'x 'passed'
-else say x 'failed'
-
+y = 'NL003787643'
+y = substr(y,3)
+if checkBSN(y,11) = 0 then
+  do
+    say 'NL'y 'passed'
+    return 0
+  end
+else do
+  say y 'failed'
+  return 1
+end
 /* loop i=0 to 9 */
 /* yy = y||i */
 /* if m.checkBSN(yy,11) == 0 then */
