@@ -4,7 +4,7 @@ options levelb
 
 gcd: procedure = .string
 arg x = .string
-x=abs(arg(1))
+x=abs(x)
 do j=2 to arg()
   y=abs(arg(j))
   if y<>0 then do
