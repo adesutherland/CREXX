@@ -8,7 +8,7 @@
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
-typedef struct stack_frame stack_frame;
+//typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {

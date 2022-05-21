@@ -50,6 +50,18 @@ void rxassetg(Assembler_Context *context, Token *globalsToken);
 void rxasexre(Assembler_Context *context, Token *registerToken, Token *exposeToken);
 void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken, Token *exposeToken);
 void rxasdecl(Assembler_Context *context, Token *funcToken, Token *exposeToken);
+/* Source filename */
+void rxasmefl(Assembler_Context *context, Token *file);
+/* Source Line */
+void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source);
+/* Function Metadata */
+void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner);
+/* Register Metadata */
+void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg);
+/* Constant Metadata */
+void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant);
+/* Clear Metadata */
+void rxasmecl(Assembler_Context *context, Token *symbol);
 
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context);

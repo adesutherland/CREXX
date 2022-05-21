@@ -18,12 +18,17 @@ struct avl_tree_node;
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
+enum queue_item_type {EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, FUNC_META, REG_META, CONST_META, CLEAR_META};
+
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {
+    enum queue_item_type instrType;
     Token *instrToken;
     Token *operand1Token;
     Token *operand2Token;
     Token *operand3Token;
+    Token *operand4Token;
+    Token *operand5Token;
 } instruction_queue;
 
 /* cREXX Instruction Coding */

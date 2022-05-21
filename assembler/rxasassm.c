@@ -844,3 +844,36 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
     /* Proc Entry has a pointer to the external entry */
     pentry->exposed = entry_index;
 }
+
+/* Metadata Implementation */
+
+/* Source filename */
+void rxasmefl(Assembler_Context *context, Token *file) {
+
+}
+
+/* Source Line */
+void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+
+}
+
+/* Function Metadata */
+void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+
+}
+
+/* Register Metadata */
+void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+
+}
+
+/* Constant Metadata */
+void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant){
+
+}
+
+/* Clear Metadata */
+void rxasmecl(Assembler_Context *context, Token *symbol) {
+
+}
+
