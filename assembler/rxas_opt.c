@@ -104,7 +104,7 @@ typedef struct op_map {
  * Hazardous instructions, change the data flow and include:
  * - labels (causes un-analysable flow control)
  * - branches (causes un-analysable flow control)
- * - function calls (these use dynamic registers(
+ * - function calls (these use dynamic registers)
  * - Procedure boundaries
  * - instructions not part of the ruleset but using registers used in the ruleset
  *
@@ -362,8 +362,6 @@ rule rules[] =
 
 /* Token to reg type */
 static char reg_type(Token *opToken) {
-    if (!opToken) return 0;
-
     switch(opToken->token_type) {
         case RREG:
             return 'r';

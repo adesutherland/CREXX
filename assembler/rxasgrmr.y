@@ -20,10 +20,7 @@
 
 %extra_argument { Assembler_Context *context }
 
-// %parse_accept { printf("The parser has completed successfully.\n"); }
-
 %parse_failure {
-printf("parse_failure()\n");
     error_f(context, 0, 0, 1, "Error unexpected parse failure (1)");
 }
 

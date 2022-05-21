@@ -47,8 +47,8 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     len = strlen(name) + strlen(type) + strlen(dir) + 3;
 
     file_name = malloc(len);
-    if (type=="") {
-      snprintf(file_name, len, "%s/%s", dir, name, type);
+    if (type == 0) {
+      snprintf(file_name, len, "%s/%s", dir, name);
     }
     else {
       snprintf(file_name, len, "%s/%s.%s", dir, name, type);
