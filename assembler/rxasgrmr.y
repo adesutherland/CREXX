@@ -33,12 +33,11 @@
 // Program Structure
 program ::= headers functions EOS.
 program ::= functions EOS.
-program ::= EOS.
+program ::= NEWLINE EOS. { error_f(context, 0, 0, 1, "Error empty file"); }
 
 // Program error messages
-program ::= ANYTHING(T) error EOS. {err_at(context, T, "Error unexpected parse failure (2)");}
-program ::= headers ANYTHING(T) error EOS. {err_at(context, T, "Error unexpected parse failure (3)");}
-program ::= error EOS. { error_f(context, 0, 0, 1, "Error unexpected parse failure (4)");}
+program ::= ANYTHING(T) NEWLINE EOS. { err_at(context, T, "Error unexpected parse failure (2)"); }
+program ::= headers ANYTHING(T) NEWLINE EOS. { err_at(context, T, "Error unexpected parse failure after headers");  }
 
 // Header directives
 headers ::= header.
