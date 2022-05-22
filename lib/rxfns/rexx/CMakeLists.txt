@@ -58,7 +58,8 @@ add_custom_target(lib_rexx ALL
 foreach(_binfile ${REXXBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-		  COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
+		  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
+		  COMMAND ${CMAKE_COMMAND} -E cat ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
 		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
           COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
 		  COMMAND ${CMAKE_COMMAND} -E cat ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
