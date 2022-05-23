@@ -1335,9 +1335,11 @@ static walker_result emit_walker(walker_direction direction,
                                          ".srcfile=\"%.*s\"\n"
                                          ".globals=0\n",
                          rxversion,
-                         node->node_string_length, node->node_string,
+                                    (int)node->node_string_length, node->node_string,
                          tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
-                         node->node_string_length, node->node_string);
+                                    (int)node->node_string_length, node->node_string);
+
+printf("buf=(%s) len=%ld\n",buf,strlen(buf));
 
                 node->output = output_fs(buf);
                 free(buf);
