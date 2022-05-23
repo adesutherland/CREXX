@@ -314,21 +314,26 @@ jobs:
         name: instrset.h
         path: machine
 
+    - name: Update gcc
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          base-devel
+
     - name: CMAKE Build Debug
       uses: lukka/run-cmake@v10
-        # with:
+      with:
         # Select the build configuration, typically Debug or Release.
-        #        cmakeBuildType: Debug # optional, default is Debug
-        #buildDirectory: "${{ runner.temp }}/debug"
-      #cmakeGenerator: VS16Win64
+        cmakeBuildType: Debug # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/debug"
 
-      #    - name: CMAKE Build Release
-      #      uses: lukka/run-cmake@v3
-        #with:
-        #  # Select the build configuration, typically Debug or Release.
-        #  cmakeBuildType: MinSizeRel # optional, default is Debug
-        #  buildDirectory: "${{ runner.temp }}/release"
-        #cmakeGenerator: VS16Win64
+    - name: CMAKE Build Release
+      uses: lukka/run-cmake@v3
+      with:
+        # Select the build configuration, typically Debug or Release.
+        cmakeBuildType: MinSizeRel # optional, default is Debug
+        buildDirectory: "${{ runner.temp }}/release"
 
     - name: Get Executable
       run: |
