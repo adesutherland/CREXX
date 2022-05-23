@@ -328,11 +328,13 @@ jobs:
           ninja:p
 
     - name: Build Debug
+      shell: msys2 {0}
       run: |
         cmake -G Ninja -B "${{ runner.temp }}/debug" -DCMAKE_BUILD_TYPE=Debug
         cmake --build "${{ runner.temp }}/debug"
 
     - name: Build Release
+      shell: msys2 {0}
       run: |
         cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel
         cmake --build "${{ runner.temp }}/release"
