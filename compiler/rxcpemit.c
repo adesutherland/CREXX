@@ -62,6 +62,7 @@ static char* printf_malloc(const char* format, ...) {
 
     va_start(argptr, format);
     needed_len = vsnprintf(buffer, buffer_len, format, argptr) + 1;
+    printf("needed=%d\n",needed_len);
     va_end(argptr);
     if (needed_len > buffer_len) {
         /* Buffer not big enough - do it again */
@@ -69,7 +70,8 @@ static char* printf_malloc(const char* format, ...) {
         free(buffer);
         buffer = malloc(buffer_len);
         va_start(argptr, format);
-        needed_len = vsnprintf(buffer, buffer_len, format, argptr) + 1;
+        printf("redone needed=%d\n",buffer_len);
+        vsnprintf(buffer, buffer_len, format, argptr);
         va_end(argptr);
     }
     return buffer;
