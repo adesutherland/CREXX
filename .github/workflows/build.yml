@@ -320,6 +320,7 @@ jobs:
         # Select the build configuration, typically Debug or Release.
         cmakeBuildType: Debug # optional, default is Debug
         buildDirectory: "${{ runner.temp }}/debug"
+        cmakeGenerator: VS16Win64
 
     - name: CMAKE Build Release
       uses: lukka/run-cmake@v3
@@ -327,6 +328,7 @@ jobs:
         # Select the build configuration, typically Debug or Release.
         cmakeBuildType: MinSizeRel # optional, default is Debug
         buildDirectory: "${{ runner.temp }}/release"
+        cmakeGenerator: VS16Win64
 
     - name: Get Executable
       run: |
