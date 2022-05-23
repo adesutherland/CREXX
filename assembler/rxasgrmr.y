@@ -33,7 +33,7 @@
 // Program Structure
 program ::= headers functions EOS.
 program ::= functions EOS.
-program ::= NEWLINE EOS. { error_f(context, 0, 0, 1, "Error empty file"); }
+program ::= headers EOS. { error_f(context, 0, 0, 1, "Error no instructions in file"); }
 
 // Program error messages
 program ::= ANYTHING(T) NEWLINE EOS. { err_at(context, T, "Error unexpected parse failure (2)"); }

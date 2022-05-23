@@ -62,7 +62,6 @@ static char* printf_malloc(const char* format, ...) {
 
     va_start(argptr, format);
     needed_len = vsnprintf(buffer, buffer_len, format, argptr) + 1;
-    printf("needed=%d\n",needed_len);
     va_end(argptr);
     if (needed_len > buffer_len) {
         /* Buffer not big enough - do it again */
@@ -70,7 +69,6 @@ static char* printf_malloc(const char* format, ...) {
         free(buffer);
         buffer = malloc(buffer_len);
         va_start(argptr, format);
-        printf("redone needed=%d\n",buffer_len);
         vsnprintf(buffer, buffer_len, format, argptr);
         va_end(argptr);
     }
@@ -1340,8 +1338,6 @@ static walker_result emit_walker(walker_direction direction,
                                     (int)node->node_string_length, node->node_string,
                          tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
                                     (int)node->node_string_length, node->node_string);
-
-printf("buf=(%s) len=%ld\n",buf,strlen(buf));
 
                 node->output = output_fs(buf);
                 free(buf);
