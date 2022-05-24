@@ -2222,7 +2222,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             {
                 set_value_string(op1R, op2R);
 #ifdef NUTF8
-                char c;
+                char *c;
                 for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
 #else
                 utf8lwr(op1R->string_value);
@@ -2240,7 +2240,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             {
                 set_value_string(op1R, op2R);
 #ifdef NUTF8
-                char c;
+                char *c;
                 for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
 #else
                 utf8upr(op1R->string_value);
@@ -2261,7 +2261,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 utf8codepoint(op2R->string_value + op2R->string_pos, &result);
                 REG_RETURN_INT(result);
 #else
-                REG_RETURN_INT(v2->string_value[op3R->int_value]);
+                REG_RETURN_INT(op2R->string_value[op3R->int_value]);
 #endif
             }
             DISPATCH
@@ -2278,7 +2278,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 string_set_byte_pos(op2R, op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
 #else
-                ch=v2->string_value[v3->int_value];
+                ch=op2R->string_value[op3R->int_value];
 #endif
                 rxinteger lhs = (ch >> 4) & 15;   // extract left hand side of value
                 rxinteger rhs = (ch) & 15; // extract right hand side of value
@@ -2613,7 +2613,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
                 op3R->int_value = ch;
 #else
-                op3R->int_value=op2R->string_value[v3->int_value - 1];
+                op3R->int_value=op2R->string_value[op3R->int_value - 1];
 #endif
                 string_concat_char(op1R, op3R);
                 op3R->int_value = temp;   // restore original v3

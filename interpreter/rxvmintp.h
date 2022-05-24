@@ -156,7 +156,7 @@ struct stack_frame {
 #ifndef NUTF8
   #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_chars; }
 #else
-  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_len; }
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_length; }
 #endif
 
 #ifndef NUTF8
