@@ -13,8 +13,8 @@ _datei: Procedure = .string
       return "SYNTAX"
   end
   if fabbreV('CENTURY',format,1) then do
-     call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
-     return "SYNTAX"
+    call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
+    return "SYNTAX"
   end
   if fabbreV('EPOCH',format,3) then do
      idate=idate%86400+_jdn(1,1,1970)
