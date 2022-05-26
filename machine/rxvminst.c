@@ -280,6 +280,7 @@ void init_ops() {
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
+    instr_f("ipow", "op1=op2**op3", OP_REG, OP_INT, OP_REG);
 
     instr_f("fpow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("fpow", "op1=op2**op3", OP_REG, OP_REG, OP_FLOAT);

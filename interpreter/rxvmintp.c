@@ -2137,7 +2137,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             {
                 rxinteger i1 = 1;
                 rxinteger i2 = op2RI;
@@ -2150,6 +2150,24 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 REG_RETURN_INT(i1);
             }
             DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn                  pej 26 May 2022
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3);
+    DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+    {
+        rxinteger i1 = 1;
+        rxinteger i2 = op2I;
+        rxinteger i3 = op3RI;
+        while (i3 != 0) {
+            if ((i3 & 1) == 1) i1 *= i2;
+            i3 >>= 1;
+            i2 *= i2;
+        }
+        REG_RETURN_INT(i1);
+    }
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Link r1 to Arg[r2]              TODO Rename to ALINK
