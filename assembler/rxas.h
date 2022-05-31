@@ -64,7 +64,7 @@ struct bin_space {
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST
+    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST, META_SRC
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -90,6 +90,7 @@ typedef struct stack_frame stack_frame;
 /* cREXX Procedure entry in the constant pool */
 typedef struct proc_constant {
     chameleon_constant base;
+    size_t next;
     int locals;
     bin_space *binarySpace;
     stack_frame **frame_free_list;
@@ -102,6 +103,7 @@ typedef struct proc_constant {
 /* cREXX Exposed Register entry in the constant pool */
 typedef struct expose_reg_constant {
     chameleon_constant base;
+    size_t next;
     int global_reg;
     char index[1]; /* Must be last member */
 } expose_reg_constant;
@@ -109,10 +111,22 @@ typedef struct expose_reg_constant {
 /* cREXX Exposed Procedure entry in the constant pool */
 typedef struct expose_proc_constant {
     chameleon_constant base;
+    size_t next;
     size_t procedure;
     unsigned char imported : 1;
     char index[1]; /* Must be last member */
 } expose_proc_constant;
+
+/* cREXX Meta Source entry in the constant pool */
+typedef struct meta_src_constant {
+    chameleon_constant base;
+    size_t prev;
+    size_t next;
+    size_t address;
+    size_t line;
+    size_t column;
+    size_t source;
+} meta_src_constant;
 
 typedef struct Assembler_Context {
     char* file_name;
@@ -128,6 +142,12 @@ typedef struct Assembler_Context {
     size_t inst_buffer_size;
     size_t const_buffer_size;
     int current_locals;
+    size_t proc_head;
+    size_t proc_tail;
+    size_t expose_head;
+    size_t expose_tail;
+    size_t meta_head;
+    size_t meta_tail;
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;

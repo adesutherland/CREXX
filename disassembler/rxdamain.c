@@ -5,6 +5,7 @@
 #include "platform.h"
 #include "rxdadism.h"
 #include "rxvminst.h"
+#include "rxbin.h"
 //#include <locale.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -19,10 +20,11 @@ static void help() {
             "Usage   : rxdas [options] binary_file\n"
             "Options :\n"
             "  -h              Help message\n"
-            "  -c              Copyright & License Details\n"
+            "  -c              Copyright & license details\n"
             "  -v              Version\n"
-            "  -l location     Working Location (directory)\n"
-            "  -o output_file  Output File (default is stdout)\n";
+            "  -p              all constant Pool\n"
+            "  -l location     working Location (directory)\n"
+            "  -o output_file  Output file (default is stdout)\n";
 
     printf("%s",helpMessage);
 }
@@ -69,6 +71,9 @@ int main(int argc, char *argv[]) {
     char *output_file_name = 0;
     FILE *output = stdout;
     int i;
+    int print_all_constant_pool = 0;
+    module_file *module;
+    size_t modules_processed = 0;
 
 #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
@@ -112,6 +117,10 @@ int main(int argc, char *argv[]) {
                 license();
                 exit(0);
 
+            case 'P': /* constant Pool */
+                print_all_constant_pool = 1;
+                break;
+
             default:
                 error_and_exit(2, "Invalid argument");
         }
@@ -133,20 +142,6 @@ int main(int argc, char *argv[]) {
         exit (-1);
     }
 
-    fread(&pgm.globals, 1, sizeof(int), fp);
-    fread(&pgm.inst_size, 1, sizeof(size_t), fp);
-    fread(&pgm.const_size, 1, sizeof(size_t), fp);
-
-    pgm.binary     = calloc(pgm.inst_size, sizeof(bin_code));
-    pgm.const_pool = calloc(pgm.const_size, 1);
-
-    fread(pgm.binary, sizeof(bin_code), pgm.inst_size, fp);
-    fread(pgm.const_pool, 1, pgm.const_size, fp);
-
-    fclose(fp);
-
-    init_ops();
-
     if (output_file_name) {
         output = openfile(output_file_name, "rxas", location, "w");
         if (!output) {
@@ -155,11 +150,47 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    disassemble(&pgm, output);
+    init_ops();
+
+    i = 0;
+    module = 0;
+    while (i == 0) {
+
+        switch (i = read_module(&module, fp)) {
+            case 0: /* Success */
+                pgm.globals = module->header.globals;
+                pgm.inst_size = module->header.instruction_size;
+                pgm.const_size = module->header.constant_size;
+                pgm.binary = module->instructions;
+                pgm.const_pool = module->constant;
+                disassemble(&pgm, module, output, print_all_constant_pool);
+                free_module(module);
+                module = 0;
+                modules_processed++;
+                break;
+
+            case 1: /* eof */
+                if (module) free_module(module);
+                if (!modules_processed) {
+                    fprintf(stderr, "ERROR: empty file %s\n", file_name);
+                    exit(-1);
+                }
+                break;
+
+            default: /* error */
+                if (module) free_module(module);
+                fprintf(stderr, "ERROR: reading file %s\n", file_name);
+                exit(-1);
+        }
+    }
+
+    fclose(fp);
 
     if (output_file_name) {
         fclose(output);
     }
+
+    free_ops();
 
     return 0;
 }

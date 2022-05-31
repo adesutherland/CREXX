@@ -168,8 +168,24 @@ typedef struct code_line {
  * to include and where to put the procedure details.
  * So we have to run through the code and flag where to add label and procedure
  * details - in sum, 2 passes */
-#define MAX_LINE_SIZE 5000 /* TODO */
-void disassemble(bin_space *pgm, FILE *stream) {
+
+/* Max buffer size - todo change to a dynamic solution */
+#define MAX_LINE_SIZE 5000
+
+/* Get the constant string */
+char *get_const_string(bin_space *pgm, size_t entry_index) {
+    string_constant *entry = (string_constant *)(pgm->const_pool + entry_index);
+    return entry->string;
+}
+
+/* Get the constant string length */
+size_t get_const_string_length(bin_space *pgm, size_t entry_index) {
+    string_constant *entry = (string_constant *)(pgm->const_pool + entry_index);
+    return entry->string_len;
+}
+
+/* Actual Disassembler */
+void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_all_constant_pool) {
     size_t i, j;
     chameleon_constant *entry;
     proc_constant* pentry;
@@ -182,6 +198,11 @@ void disassemble(bin_space *pgm, FILE *stream) {
 
     /* calloc() so values will be zeroed */
     code_line *source = calloc(pgm->inst_size, sizeof(code_line));
+
+    /* Module Header */
+    fprintf(stream, "*******************************************************************************\n"
+                    "* MODULE - %s\n"
+                    "* DESCRIPTION - %s\n\n", module->name, module->description );
 
     /* Pass 1 - Go through the code, decode and flag destination labels */
     while (i < pgm->inst_size) {
@@ -229,28 +250,31 @@ void disassemble(bin_space *pgm, FILE *stream) {
         entry = (chameleon_constant *)(pgm->const_pool + i);
         switch(entry->type) {
             case STRING_CONST:
-                encode_print(line_buffer, MAX_LINE_SIZE, ((string_constant*)entry)->string,
-                             ((string_constant*)entry)->string_len);
-                fprintf(stream, "* 0x%.6x STRING \"%s\"\n", (unsigned int)i, line_buffer);
+                if (print_all_constant_pool) {
+                    encode_print(line_buffer, MAX_LINE_SIZE, get_const_string(pgm, i),
+                                 get_const_string_length(pgm, i));
+                    fprintf(stream, "* 0x%.6x STRING \"%s\"\n", (unsigned int) i, line_buffer);
+                }
                 break;
             case PROC_CONST:
-                if ( ((proc_constant*)entry)->start == SIZE_MAX ) {
-                    fprintf(stream,
-                            "* 0x%.6x PROC   %s() exposed from external\n",
-                            (unsigned int) i,
-                            ((proc_constant *) entry)->name
-                    );
-                }
-                else {
-                    fprintf(stream,
-                            "* 0x%.6x PROC   %s() @ 0x%.6x (locals=%d)\n",
-                            (unsigned int) i,
-                            ((proc_constant *) entry)->name,
-                            (unsigned int) ((proc_constant *) entry)->start,
-                            ((proc_constant *) entry)->locals
-                    );
-                    source[((proc_constant *) entry)->start].flags = show_proc;
-                    source[((proc_constant *) entry)->start].proc_index = i;
+                if (print_all_constant_pool) {
+                    if (((proc_constant *) entry)->start == SIZE_MAX) {
+                        fprintf(stream,
+                                "* 0x%.6x PROC   %s() exposed from external\n",
+                                (unsigned int) i,
+                                ((proc_constant *) entry)->name
+                        );
+                    } else {
+                        fprintf(stream,
+                                "* 0x%.6x PROC   %s() @ 0x%.6x (locals=%d)\n",
+                                (unsigned int) i,
+                                ((proc_constant *) entry)->name,
+                                (unsigned int) ((proc_constant *) entry)->start,
+                                ((proc_constant *) entry)->locals
+                        );
+                        source[((proc_constant *) entry)->start].flags = show_proc;
+                        source[((proc_constant *) entry)->start].proc_index = i;
+                    }
                 }
                 break;
 
@@ -263,23 +287,36 @@ void disassemble(bin_space *pgm, FILE *stream) {
                 break;
 
             case EXPOSE_PROC_CONST:
-                pentry = (proc_constant *)(pgm->const_pool + ((expose_proc_constant*)entry)->procedure);
+                pentry = (proc_constant *) (pgm->const_pool + ((expose_proc_constant *) entry)->procedure);
 
-                if (((expose_proc_constant *)entry)->imported) {
+                if (((expose_proc_constant *) entry)->imported) {
                     fprintf(stream,
                             "* 0x%.6x EXPOSED-PROC %s() <-- as %s\n",
                             (unsigned int) i,
                             pentry->name,
                             ((expose_proc_constant *) entry)->index
-                        );
-                    }
-                else {
+                    );
+                } else {
                     fprintf(stream,
                             "* 0x%.6x EXPOSED-PROC %s() --> as %s\n",
                             (unsigned int) i,
                             pentry->name,
                             ((expose_proc_constant *) entry)->index
                     );
+                }
+                break;
+
+            case META_SRC:
+                if (print_all_constant_pool) {
+                    meta_src_constant *mentry = (meta_src_constant *) entry;
+                    fprintf(stream, "* 0x%.6x META-SRC @0x%.6x %d:%d ",
+                            (unsigned int) i, (unsigned int) mentry->address,
+                            (int) mentry->line, (int) mentry->column);
+
+                    /* Source */
+                    encode_print(line_buffer, MAX_LINE_SIZE, get_const_string(pgm, mentry->source),
+                                 get_const_string_length(pgm, mentry->source));
+                    fprintf(stream, "\"%s\"\n", line_buffer);
                 }
                 break;
 
@@ -381,6 +418,8 @@ void disassemble(bin_space *pgm, FILE *stream) {
             }
         fprintf(stream, "%-45s * 0x%.6x:%.4x %s\n", line_buffer, (unsigned int)j, source[j].inst->opcode, source[j].comment);
     }
+
+    fprintf(stream, "*******************************************************************************\n\n");
 
     /* Free memory */
     free(source);

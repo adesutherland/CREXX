@@ -319,18 +319,21 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             {
                 null_terminate_string_buffer(op2R);
                 /* Load the module */
+                int num_modules_before = (int)context->num_modules;
                 op1R->int_value = rxldmod(context, op2R->string_value);
                 if (op1R->int_value) {
                     /* If successfully loaded, thread the binary - must be done in run() */
 #ifndef NTHREADED
                     DEBUG("Threading\n");
-                    size_t i = 0, j;
-                    int mod = op1R->int_value - 1;
-                    while (i < context->modules[mod].segment.inst_size) {
-                        j = i;
-                        i += context->modules[mod].segment.binary[i].instruction.no_ops + 1;
-                        context->modules[mod].segment.binary[j].impl_address =
+                    int mod;
+                    for (mod = num_modules_before; mod < op1R->int_value; mod++) {
+                        size_t i = 0, j;
+                        while (i < context->modules[mod].segment.inst_size) {
+                            j = i;
+                            i += context->modules[mod].segment.binary[i].instruction.no_ops + 1;
+                            context->modules[mod].segment.binary[j].impl_address =
                                 (void *) address_map[context->modules[mod].segment.binary[j].instruction.opcode];
+                        }
                     }
 #endif
                 }

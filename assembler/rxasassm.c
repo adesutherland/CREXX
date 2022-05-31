@@ -362,6 +362,33 @@ static void gen_instr(Assembler_Context *context, Instruction *inst) {
     context->binary.binary[context->binary.inst_size++].instruction.no_ops = inst->operands;
 }
 
+static size_t add_string_to_pool(Assembler_Context *context, char* string) {
+    string_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
+
+    /* Search if the constant already exists */
+    if (!src_node(context->string_constants_tree,string,&entry_index)) {
+        /* No it doesn't create one */
+        entry_size = sizeof(string_constant) + strlen(string);
+        entry_index = reserve_in_const_pool(context, entry_size,STRING_CONST);
+
+        sentry = (string_constant *) (context->binary.const_pool + entry_index);
+        sentry-> string_len = unescape_string(sentry->string, string);
+        sentry->string[sentry->string_len] = 0; /* Add a null ... just for safety */
+
+#ifndef NUTF8
+        sentry-> string_chars = utf8nlen(sentry->string, sentry->string_len);
+#endif
+
+        /* TODO resize/shrink entry after unescaping */
+
+        /* Save it in the tree */
+        add_node(&context->string_constants_tree, string,entry_index);
+    }
+    return entry_index;
+}
+
 static void gen_operand(Assembler_Context *context, Token *operandToken) {
     /* Extend the buffer if we need to */
     size_t new_size;
@@ -373,7 +400,6 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
         context->inst_buffer_size = new_size;
     }
 
-    string_constant *sentry;
     size_t entry_index;
     size_t entry_size;
     proc_constant *centry;
@@ -490,39 +516,8 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                     (char)operandToken->token_value.character;
             return;
         case STRING:
-            /* Search if the constant already exists */
-            if (!src_node(context->string_constants_tree,
-                          (char*)operandToken->token_value.string,
-                         &entry_index)) {
-                /* No it doesn't create one */
-                entry_size =
-                        sizeof(string_constant) +
-                        strlen((char*)operandToken->token_value.string);
-                entry_index =
-                        reserve_in_const_pool(context, entry_size,
-                                              STRING_CONST);
-
-                sentry =
-                        (string_constant *) (context->binary.const_pool +
-                                             entry_index);
-                sentry->string_len = unescape_string(sentry->string,
-                                                     (char*)operandToken->token_value
-                                                             .string);
-                sentry->string[sentry->string_len] =
-                        0; /* Add a null ... just for safety */
-
-#ifndef NUTF8
-                sentry->string_chars = utf8nlen(sentry->string, sentry->string_len);
-#endif
-
-                /* TODO resize/shrink entry after unescaping */
-
-                /* Save it in the tree */
-                add_node(&context->string_constants_tree,
-                         (char*)operandToken->token_value.string,
-                         entry_index);
-            }
-            context->binary.binary[context->binary.inst_size++].index = entry_index;
+            context->binary.binary[context->binary.inst_size++].index =
+                    add_string_to_pool(context, (char*)operandToken->token_value.string);
             return;
 
         default:
@@ -721,6 +716,18 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
     centry->locals = (int)localsToken->token_value.integer;
     centry->start = context->binary.inst_size;
 
+    /* Chain the exposed constant entries */
+    if (context->proc_head) {
+        ((proc_constant*)(context->binary.const_pool + context->proc_tail))->next = entry_index;
+        context->proc_tail = entry_index;
+        centry->next = 0;
+    }
+    else {
+        context->proc_head = entry_index;
+        context->proc_tail = entry_index;
+        centry->next = 0;
+    }
+
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
 }
@@ -799,6 +806,18 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
     centry->procedure = pentry_index;
     centry->imported = 0;
 
+    /* Chain the exposed constant entries */
+    if (context->expose_head) {
+        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = entry_index;
+        context->expose_tail = entry_index;
+        centry->next = 0;
+    }
+    else {
+        context->expose_head = entry_index;
+        context->expose_tail = entry_index;
+        centry->next = 0;
+    }
+
     /* Proc Entry has a pointer to the external entry */
     pentry->exposed = entry_index;
 }
@@ -841,6 +860,18 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
     centry->procedure = pentry_index;
     centry->imported = 1;
 
+    /* Chain the exposed constant entries */
+    if (context->expose_head) {
+        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = entry_index;
+        context->expose_tail = entry_index;
+        centry->next = 0;
+    }
+    else {
+        context->expose_head = entry_index;
+        context->expose_tail = entry_index;
+        centry->next = 0;
+    }
+
     /* Proc Entry has a pointer to the external entry */
     pentry->exposed = entry_index;
 }
@@ -854,7 +885,32 @@ void rxasmefl(Assembler_Context *context, Token *file) {
 
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+    meta_src_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
 
+    entry_size = sizeof(meta_src_constant);
+    entry_index = reserve_in_const_pool(context, entry_size,META_SRC);
+
+    sentry = (meta_src_constant*)(context->binary.const_pool + entry_index);
+
+    if (context->meta_head) {
+        ((meta_src_constant*)(context->binary.const_pool + context->meta_tail))->next = entry_index;
+        sentry->prev = context->meta_tail;
+        context->meta_tail = entry_index;
+        sentry->next = 0;
+    }
+    else {
+        context->meta_head = entry_index;
+        context->meta_tail = entry_index;
+        sentry->next = 0;
+        sentry->prev = 0;
+    }
+
+    sentry->address = context->binary.inst_size;
+    sentry->line = line->token_value.integer;
+    sentry->column = column->token_value.integer;
+    sentry->source = add_string_to_pool(context, (char*)source->token_value.string);
 }
 
 /* Function Metadata */

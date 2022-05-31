@@ -22,7 +22,7 @@ add_executable(rxas rxasmain.c rxastoke.c rxaseror.c rxasscan.c rxas_opt.c
         rxasgrmr.c rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
         ../avl_tree/rxastree.h
-        ../utf8/utf.h)
+        ../utf8/utf.h ../machine/rxbin.h)
 
 target_link_libraries(rxas machine avl_tree platform)
 

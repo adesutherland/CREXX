@@ -48,6 +48,7 @@ struct value {
 typedef struct module {
     bin_space segment;         /* Binary and Constant Pool */
     char *name;                /* Module Name */
+    char *description;         /* Module Description */
     value **globals;           /* Globals registers array */
     char *globals_dont_free;   /* Indicates linked global value that should not be freed */
     size_t module_number;      /* Module Index - 1 base */
@@ -219,9 +220,8 @@ void rxinimod(rxvm_context *context);
 void rxfremod(rxvm_context *context);
 
 /* Loads a new module
- * returns 0  - Success
- *         >0 - the number of unresolved references
- *         -1 - Error loading file */
+ * returns 0  - Error
+ *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *new_module_file);
 
 #endif //CREXX_RXVMINTP_H

@@ -4,6 +4,7 @@
 #include "rxvmintp.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
+#include "rxbin.h"
 
 /* Initialise modules context */
 void rxinimod(rxvm_context *context) {
@@ -33,62 +34,24 @@ void rxfremod(rxvm_context *context) {
     for (j=0; j<context->num_modules; j++) {
         free(context->modules[j].segment.binary);
         free(context->modules[j].segment.const_pool);
+        free(context->modules[j].name);
+        free(context->modules[j].description);
         free(context->modules[j].globals);
         free(context->modules[j].globals_dont_free);
     }
     free(context->modules);
 }
 
-/* Loads a new module
- * returns 0  - Error
- *         >0 - Module Number  */
-int rxldmod(rxvm_context *context, char *file_name) {
-    FILE *fp;
-    size_t n, i;
-    value *g_reg;
-    size_t mod_index;
+/* Link a loaded module */
+static void link_module(rxvm_context *context, size_t module_number_to_link) {
+    size_t i, mod_index;
     chameleon_constant *c_entry;
     proc_constant *p_entry, *p_entry_linked;
+    value *g_reg;
 
-    n = context->num_modules;
-
-    DEBUG("Loading Module %s\n", file_name);
-
-    /* Grow the module buffer if need be */
-    while (n + 1 > context->module_buffer_size) {
-        context->module_buffer_size *= 2;
-        context->modules = realloc(context->modules, sizeof(module) * context->module_buffer_size);
-    }
-
-    fp = openfile(file_name, "rxbin", context->location, "rb");
-    if (!fp) return 0;
-
-    fread(&context->modules[n].segment.globals, 1, sizeof(int), fp);
-    fread(&context->modules[n].segment.inst_size, 1, sizeof(size_t), fp);
-    fread(&context->modules[n].segment.const_size, 1, sizeof(size_t), fp);
-
-    context->modules[n].segment.binary = calloc(context->modules[n].segment.inst_size, sizeof(bin_code));
-    context->modules[n].segment.const_pool = calloc(context->modules[n].segment.const_size, 1);
-
-    fread(context->modules[n].segment.binary, sizeof(bin_code), context->modules[n].segment.inst_size, fp);
-    fread(context->modules[n].segment.const_pool, 1, context->modules[n].segment.const_size, fp);
-
-    context->modules[n].segment.module = &(context->modules[n]);
-    context->modules[n].globals = calloc(context->modules[n].segment.globals, sizeof(value*));
-    context->modules[n].globals_dont_free = calloc(context->modules[n].segment.globals, sizeof(char));
-
-    context->modules[n].name = file_name;
-    context->modules[n].unresolved_symbols = 0;
-    context->modules[n].duplicated_symbols = 0;
-
-    context->modules[n].module_number = n + 1;
-    context->num_modules = n + 1;
-    fclose(fp);
-
-    /* Link Module */
     DEBUG("Add Module Symbols\n");
-    mod_index = n;
     i = 0;
+    mod_index = module_number_to_link;
     while (i < context->modules[mod_index].segment.const_size) {
         c_entry =
                 (chameleon_constant *) (
@@ -128,8 +91,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
                             ->global_reg] = value_f();
                     add_node(&context->exposed_reg_tree, ((expose_reg_constant *)c_entry)->index,
                              (size_t)(context->modules[mod_index]
-                                         .globals[((expose_reg_constant *)c_entry)
-                                         ->global_reg]));
+                                     .globals[((expose_reg_constant *)c_entry)
+                                     ->global_reg]));
                 }
                 break;
 
@@ -151,7 +114,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
                                  ((expose_proc_constant *) c_entry)->index,
                                  (size_t) p_entry)) {
                         DEBUG("WARNING: Duplicate exposed symbol: %s\n",
-                                ((expose_proc_constant *) c_entry)->index);
+                              ((expose_proc_constant *) c_entry)->index);
                         context->modules[mod_index].duplicated_symbols++;
                     }
                 }
@@ -176,8 +139,8 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 case EXPOSE_PROC_CONST:
                     if (((expose_proc_constant *) c_entry)->imported) {
                         if (src_node(context->exposed_proc_tree,
-                                      ((expose_proc_constant *) c_entry)->index,
-                                      (size_t *) &p_entry_linked)) {
+                                     ((expose_proc_constant *) c_entry)->index,
+                                     (size_t *) &p_entry_linked)) {
 
                             /* Patch the procedure entry with the linked one */
                             p_entry =
@@ -210,12 +173,90 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
     /* Allocate Module Globals that have not already been allocated during linking */
     DEBUG("Allocate Globals\n");
-    mod_index = n;
+    mod_index = module_number_to_link;
     for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
         if (!context->modules[mod_index].globals[i]) {
             context->modules[mod_index].globals[i] = value_f();
         }
     }
+
+}
+
+/* Loads a new module
+ * returns 0  - Error
+ *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
+int rxldmod(rxvm_context *context, char *file_name) {
+    FILE *fp;
+    size_t n, i;
+    value *g_reg;
+    size_t mod_index;
+    chameleon_constant *c_entry;
+    proc_constant *p_entry, *p_entry_linked;
+    module_file *file_module_section;
+    size_t modules_processed = 0;
+    int loaded_rc;
+
+    DEBUG("Loading Module(s) from file %s\n", file_name);
+
+    fp = openfile(file_name, "rxbin", context->location, "rb");
+    if (!fp) return 0;
+
+    loaded_rc = 0;
+    file_module_section = 0;
+    while (loaded_rc == 0) {
+
+        switch (loaded_rc = read_module(&file_module_section, fp)) {
+            case 0: /* Success */
+                n = context->num_modules;
+
+                DEBUG("Loading Module %s\n", file_module_section->name);
+
+                /* Grow the module buffer if need be */
+                while (n + 1 > context->module_buffer_size) {
+                    context->module_buffer_size *= 2;
+                    context->modules = realloc(context->modules, sizeof(module) * context->module_buffer_size);
+                }
+
+                context->modules[n].segment.globals = file_module_section->header.globals;
+                context->modules[n].segment.inst_size = file_module_section->header.instruction_size;
+                context->modules[n].segment.const_size = file_module_section->header.constant_size;
+                context->modules[n].segment.binary = file_module_section->instructions;
+                context->modules[n].segment.const_pool = file_module_section->constant;
+                context->modules[n].name = file_module_section->name;
+                context->modules[n].description = file_module_section->description;
+                context->modules[n].segment.module = &(context->modules[n]);
+                context->modules[n].globals = calloc(context->modules[n].segment.globals, sizeof(value*));
+                context->modules[n].globals_dont_free = calloc(context->modules[n].segment.globals, sizeof(char));
+                context->modules[n].unresolved_symbols = 0;
+                context->modules[n].duplicated_symbols = 0;
+                context->modules[n].module_number = n + 1;
+
+                context->num_modules = context->modules[n].module_number;
+
+                link_module(context, n);
+
+                // Need to avoid freeing binary / const_pool / name / desc - so don't use free_module(file_module_section)
+                free(file_module_section);
+                file_module_section = 0;
+                modules_processed++;
+                break;
+
+            case 1: /* eof */
+                if (file_module_section) free_module(file_module_section);
+                if (!modules_processed) {
+                    DEBUG("ERROR: empty file %s\n", file_name);
+                    return 0;
+                }
+                break;
+
+            default: /* error */
+                if (file_module_section) free_module(file_module_section);
+                fprintf(stderr, "ERROR: reading file %s\n", file_name);
+                exit(-1);
+        }
+    }
+
+    fclose(fp);
 
     return (int)(n+1); /* Module Number */
 }

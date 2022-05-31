@@ -4,7 +4,7 @@ project(Disassembler C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c)
+add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../machine/rxbin.h)
 
 target_link_libraries(rxdas machine avl_tree platform)
 

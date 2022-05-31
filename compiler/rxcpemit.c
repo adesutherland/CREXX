@@ -1405,9 +1405,11 @@ static walker_result emit_walker(walker_direction direction,
                     }
 
                     /* Add source metadata */
-                    comment_meta = get_metaline_clause(node);
-                    output_append_text(node->output, comment_meta);
-                    free(comment_meta);
+                    if (node->token) {
+                        comment_meta = get_metaline_clause(node);
+                        output_append_text(node->output, comment_meta);
+                        free(comment_meta);
+                    }
 
                     n = child2;
                     while (n) {
