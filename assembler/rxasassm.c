@@ -50,7 +50,7 @@ static void backpatch_procedures(Assembler_Context *context) {
             ref = patch->refs;
             while(ref) {
                 err_at(context, ref->token, "unknown procedure");
-                ref = ref->link;;
+                ref = ref->link;
             }
         }
 
@@ -76,7 +76,7 @@ static struct backpatching* find_patch_index(Assembler_Context *context, size_t 
         ref = patch->refs;
         while (ref) {
             if (ref->index == source) return patch;
-            ref = ref->link;;
+            ref = ref->link;
         }
     }
     return 0;
@@ -132,14 +132,14 @@ static void backpatch_labels(Assembler_Context *context) {
             ref = patch->refs;
             while(ref) {
                 err_at(context, ref->token, "unknown label");
-                ref = ref->link;;
+                ref = ref->link;
             }
         }
         else {
             ref = patch->refs;
             while(ref) {
                 context->binary.binary[ref->index].index = patch->index;
-                ref = ref->link;;
+                ref = ref->link;
             }
         }
 
@@ -239,6 +239,7 @@ static size_t unescape_string(char *to, char* from) {
 
 /* Reserves space in the constant pool for an entry and returns its index;
  * the caller can then populate the entry.
+ * NOTE - THIS CALL MIGHT MOVE THE CONSTANT POOL - CHANGING ENTRY ADDRESSES (USE OFFSETS!)
  * The 'size' parameter is the size of the payload including
  * space for chameleon_constant etc.
  * Returns the index to the entry (from binary.const_pool)
@@ -389,6 +390,79 @@ static size_t add_string_to_pool(Assembler_Context *context, char* string) {
     return entry_index;
 }
 
+static size_t add_func_to_pool(Assembler_Context *context, Token* token) {
+    size_t entry_index;
+    size_t entry_size;
+    struct backpatching *ref_header;
+
+    /* Have we come across this symbol yet? */
+    if (src_node(context->proc_constants_tree,
+                 (char*)token->token_value.string,
+                 &entry_index)) {
+        /* Yes */
+        ref_header = (struct backpatching *)entry_index;
+    }
+    else {
+        /* No - Create entry in the tree */
+        proc_constant *centry;
+        ref_header = malloc(sizeof(struct backpatching));
+        add_node(&context->proc_constants_tree,
+                 (char*)token->token_value.string,
+                 (size_t) ref_header);
+
+        /* Add the entry to the constants pool */
+        entry_size =
+                sizeof(proc_constant) +
+                strlen((char*)token->token_value.string);
+        entry_index =
+                reserve_in_const_pool(context, entry_size,
+                                      PROC_CONST);
+        centry = (proc_constant *) (context->binary.const_pool +
+                                    entry_index);
+        centry->locals = -1;
+        centry->start = SIZE_MAX;
+        centry->exposed = SIZE_MAX;
+        memcpy(centry->name, token->token_value.string,
+               strlen((char*)token->token_value.string) + 1 );
+
+        ref_header->defined = 0;
+        ref_header->index = entry_index;
+//      ref_header->def_token = 0;
+        ref_header->refs = 0;
+    }
+
+    if (ref_header->defined == 0) {
+        /* keep references for error messages generated during backpatching */
+        struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+        ref->index = -1; /* No back-patching */
+        ref->token = token;
+        ref->link = ref_header->refs;
+        ref_header->refs = ref;
+    }
+
+    return ref_header->index;
+}
+
+static size_t get_reg_number(Assembler_Context *context, Token* token) {
+    switch(token->token_type) {
+        case RREG:
+            if (token->token_value.integer >= context->current_locals)
+                err_at(context, token, "register number bigger than the number of locals");
+
+            return token->token_value.integer;
+
+        case GREG:
+            if (token->token_value.integer >= context->binary.globals)
+                err_at(context, token, "global register number bigger than the number of globals");
+
+            return token->token_value.integer + context->current_locals;
+
+        case AREG:
+            return token->token_value.integer + context->current_locals + context->binary.globals;
+    }
+    return 0; /* Should never happen */
+}
+
 static void gen_operand(Assembler_Context *context, Token *operandToken) {
     /* Extend the buffer if we need to */
     size_t new_size;
@@ -401,8 +475,6 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
     }
 
     size_t entry_index;
-    size_t entry_size;
-    proc_constant *centry;
     struct backpatching *ref_header;
 
     switch(operandToken->token_type) {
@@ -435,74 +507,19 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
             ref_header->refs = ref;
             context->binary.binary[context->binary.inst_size++].index = 0;
             return;
+
         case RREG:
-            if (operandToken->token_value.integer >= context->current_locals)
-                err_at(context, operandToken, "register number bigger than the number of locals");
-
-            context->binary.binary[context->binary.inst_size++].index =
-                    operandToken->token_value.integer;
-            return;
         case GREG:
-            if (operandToken->token_value.integer >= context->binary.globals)
-                err_at(context, operandToken, "global register number bigger than the number of globals");
-
-            context->binary.binary[context->binary.inst_size++].index =
-                    operandToken->token_value.integer +
-                    context->current_locals;
-            return;
         case AREG:
             context->binary.binary[context->binary.inst_size++].index =
-                    operandToken->token_value.integer +
-                    context->current_locals +
-                    context->binary.globals;
+                    get_reg_number(context, operandToken);
             return;
+
         case FUNC:
-            /* Have we come across this symbol yet? */
-            if (src_node(context->proc_constants_tree,
-                         (char*)operandToken->token_value.string,
-                         &entry_index)) {
-                /* Yes */
-                ref_header = (struct backpatching *)entry_index;
-            }
-            else {
-                /* No - Create entry in the tree */
-                ref_header = malloc(sizeof(struct backpatching));
-                add_node(&context->proc_constants_tree,
-                         (char*)operandToken->token_value.string,
-                         (size_t) ref_header);
-
-                /* Add the entry to the constants pool */
-                entry_size =
-                        sizeof(proc_constant) +
-                        strlen((char*)operandToken->token_value.string);
-                entry_index =
-                        reserve_in_const_pool(context, entry_size,
-                                              PROC_CONST);
-                centry = (proc_constant *) (context->binary.const_pool +
-                                            entry_index);
-                centry->locals = -1;
-                centry->start = SIZE_MAX;
-                centry->exposed = SIZE_MAX;
-                memcpy(centry->name, operandToken->token_value.string,
-                       strlen((char*)operandToken->token_value.string) + 1 );
-
-                ref_header->defined = 0;
-                ref_header->index = entry_index;
-//                ref_header->def_token = 0;
-                ref_header->refs = 0;
-            }
-
-            context->binary.binary[context->binary.inst_size++].index = ref_header->index;
-            if (ref_header->defined == 0) {
-                /* keep references for backpatching (well in this case just
-                 * for procs just making a good error message) */
-                struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
-                ref->index = context->binary.inst_size;
-                ref->token = operandToken;
-                ref->link = ref_header->refs;
-                ref_header->refs = ref;
-            }
+            context->binary.binary[context->binary.inst_size++].index =
+                    add_func_to_pool(context, operandToken);
             return;
+
         case INT:
             context->binary.binary[context->binary.inst_size++].iconst =
                     operandToken->token_value.integer;
@@ -663,7 +680,6 @@ static size_t define_proc(Assembler_Context *context, Token *funcToken) {
         if (ref_header->defined) {
             err_at(context, funcToken, "duplicate procedure definition");
             /* TODO - Message, proc defined at ref_header->def_token */
-            return 0;
         }
         centry = (proc_constant*)(context->binary.const_pool + ref_header->index);
     }
@@ -717,15 +733,15 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
     centry->start = context->binary.inst_size;
 
     /* Chain the exposed constant entries */
-    if (context->proc_head) {
-        ((proc_constant*)(context->binary.const_pool + context->proc_tail))->next = entry_index;
-        context->proc_tail = entry_index;
-        centry->next = 0;
+    if (context->proc_head != -1) {
+        ((proc_constant*)(context->binary.const_pool + context->proc_tail))->next = (int)entry_index;
+        context->proc_tail = (int)entry_index;
+        centry->next = -1;
     }
     else {
-        context->proc_head = entry_index;
-        context->proc_tail = entry_index;
-        centry->next = 0;
+        context->proc_head = (int)entry_index;
+        context->proc_tail = (int)entry_index;
+        centry->next = -1;
     }
 
     /* Store the current number of locals */
@@ -807,15 +823,15 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
     centry->imported = 0;
 
     /* Chain the exposed constant entries */
-    if (context->expose_head) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = entry_index;
-        context->expose_tail = entry_index;
-        centry->next = 0;
+    if (context->expose_head != -1) {
+        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+        centry->next = -1;
     }
     else {
-        context->expose_head = entry_index;
-        context->expose_tail = entry_index;
-        centry->next = 0;
+        context->expose_head = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+        centry->next = -1;
     }
 
     /* Proc Entry has a pointer to the external entry */
@@ -861,15 +877,15 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
     centry->imported = 1;
 
     /* Chain the exposed constant entries */
-    if (context->expose_head) {
-        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = entry_index;
-        context->expose_tail = entry_index;
-        centry->next = 0;
+    if (context->expose_head != -1) {
+        ((expose_proc_constant*)(context->binary.const_pool + context->expose_tail))->next = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+        centry->next = -1;
     }
     else {
-        context->expose_head = entry_index;
-        context->expose_tail = entry_index;
-        centry->next = 0;
+        context->expose_head = (int)entry_index;
+        context->expose_tail = (int)entry_index;
+        centry->next = -1;
     }
 
     /* Proc Entry has a pointer to the external entry */
@@ -878,58 +894,91 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
 
 /* Metadata Implementation */
 
+/* Add a meta entry to tge constant pool - takes care of prev/next pointers  */
+/* Returns entry offset */
+static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum const_pool_type type) {
+    meta_entry *entry;
+    size_t entry_index;
+
+    entry_index = reserve_in_const_pool(context,entry_size, type);
+
+    entry = (meta_entry*)(context->binary.const_pool + entry_index);
+    if (context->meta_head != -1) {
+        ((meta_entry*)(context->binary.const_pool + context->meta_tail))->next = (int)entry_index;
+        entry->prev = context->meta_tail;
+        context->meta_tail = (int)entry_index;
+        entry->next = -1;
+    }
+    else {
+        context->meta_head = (int)entry_index;
+        context->meta_tail = (int)entry_index;
+        entry->next = -1;
+        entry->prev = -1;
+    }
+
+    entry->address = context->binary.inst_size;
+
+    return entry_index;
+}
+
 /* Source filename */
 void rxasmefl(Assembler_Context *context, Token *file) {
+    size_t entry = add_meta_entry(context,sizeof(meta_file_constant),META_FILE);
 
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_file_constant*)(context->binary.const_pool + entry))->file = add_string_to_pool(context, (char*)file->token_value.string);
 }
 
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source) {
-    meta_src_constant *sentry;
-    size_t entry_index;
-    size_t entry_size;
+    size_t entry = add_meta_entry(context,sizeof(meta_src_constant),META_SRC);
 
-    entry_size = sizeof(meta_src_constant);
-    entry_index = reserve_in_const_pool(context, entry_size,META_SRC);
-
-    sentry = (meta_src_constant*)(context->binary.const_pool + entry_index);
-
-    if (context->meta_head) {
-        ((meta_src_constant*)(context->binary.const_pool + context->meta_tail))->next = entry_index;
-        sentry->prev = context->meta_tail;
-        context->meta_tail = entry_index;
-        sentry->next = 0;
-    }
-    else {
-        context->meta_head = entry_index;
-        context->meta_tail = entry_index;
-        sentry->next = 0;
-        sentry->prev = 0;
-    }
-
-    sentry->address = context->binary.inst_size;
-    sentry->line = line->token_value.integer;
-    sentry->column = column->token_value.integer;
-    sentry->source = add_string_to_pool(context, (char*)source->token_value.string);
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_src_constant*)(context->binary.const_pool + entry))->line = line->token_value.integer;
+    ((meta_src_constant*)(context->binary.const_pool + entry))->column = column->token_value.integer;
+    ((meta_src_constant*)(context->binary.const_pool + entry))->source = add_string_to_pool(context, (char*)source->token_value.string);
 }
 
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+    size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
 
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_func_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->func = add_func_to_pool(context, func);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->args = add_string_to_pool(context, (char*)args->token_value.string);
+    if (inliner) ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = add_string_to_pool(context, (char*)inliner->token_value.string);
+    else ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = add_string_to_pool(context, "");
 }
 
 /* Register Metadata */
 void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+    size_t entry = add_meta_entry(context,sizeof(meta_reg_constant),META_REG);
 
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->reg = get_reg_number(context, reg);
 }
 
-/* Constant Metadata */
+/* Constant Symbol Metadata */
 void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant){
+    size_t entry = add_meta_entry(context,sizeof(meta_const_constant),META_CONST);
 
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_const_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->constant = add_string_to_pool(context, (char*)constant->token_value.string);
 }
 
-/* Clear Metadata */
+/* Clear Symbol Metadata */
 void rxasmecl(Assembler_Context *context, Token *symbol) {
+    size_t entry = add_meta_entry(context,sizeof(meta_clear_constant),META_CLEAR);
 
+    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
+    ((meta_clear_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
 }
-

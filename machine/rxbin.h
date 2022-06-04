@@ -24,6 +24,9 @@ typedef struct module_header {
     size_t instruction_size;  /* number of 64 bit instructions */
     size_t constant_size; /* Number of bytes */
     int globals;
+    int proc_head;
+    int expose_head;
+    int meta_head;
 } module_header;
 
 typedef struct module_file {

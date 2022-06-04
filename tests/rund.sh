@@ -15,8 +15,8 @@ echo "rxc -d $1"
 echo "rxas -d $1"
 ../cmake-build-debug/assembler/rxas -d $1
 
-echo "rxdas $1"
-../cmake-build-debug/disassembler/rxdas $1
+echo "rxdas -p $1"
+../cmake-build-debug/disassembler/rxdas -p $1
 
 echo "rxvm -d $1"
 ../cmake-build-debug/interpreter/rxvm -d $1

@@ -216,12 +216,12 @@ int main(int argc, char *argv[]) {
     scanner.label_constants_tree = 0;
     scanner.extern_constants_tree = 0;
     scanner.extern_regs = 0;
-    scanner.proc_head = 0;
-    scanner.proc_tail = 0;
-    scanner.expose_head = 0;
-    scanner.expose_tail = 0;
-    scanner.meta_head = 0;
-    scanner.meta_tail = 0;
+    scanner.proc_head = -1;
+    scanner.proc_tail = -1;
+    scanner.expose_head = -1;
+    scanner.expose_tail = -1;
+    scanner.meta_head = -1;
+    scanner.meta_tail = -1;
 
     /* Pointer to the end of the buffer */
     buff_end = (char*) (((char*)buff) + bytes);
@@ -284,6 +284,9 @@ int main(int argc, char *argv[]) {
         module.header.instruction_size = pgm->inst_size;
         module.header.constant_size = pgm->const_size;
         module.header.globals = pgm->globals;
+        module.header.meta_head  = scanner.meta_head;
+        module.header.proc_head  = scanner.proc_head;
+        module.header.expose_head  = scanner.expose_head;
         module.name = file_name;
         module.description = file_name;
         module.instructions = pgm->binary;

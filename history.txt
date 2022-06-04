@@ -6,7 +6,9 @@ F0041 - REXX Enhancements
         Line continuation
         Hex Escapes (RXAS)
         Hex/Binary literals (RXC)
-        File, line and var meta data
+        File, line and var meta data (RXC, RXAS, RXDAS)
+        Allow rxbin files to be concatenated together (to create a library)
+        Performance improvement in searching in constant pool - pointers chains for certain types, like procedures
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)
