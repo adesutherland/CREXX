@@ -224,6 +224,9 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 context->modules[n].segment.const_pool = file_module_section->constant;
                 context->modules[n].name = file_module_section->name;
                 context->modules[n].description = file_module_section->description;
+                context->modules[n].proc_head = file_module_section->header.proc_head;
+                context->modules[n].expose_head = file_module_section->header.expose_head;
+                context->modules[n].meta_head = file_module_section->header.meta_head;
                 context->modules[n].segment.module = &(context->modules[n]);
                 context->modules[n].globals = calloc(context->modules[n].segment.globals, sizeof(value*));
                 context->modules[n].globals_dont_free = calloc(context->modules[n].segment.globals, sizeof(char));

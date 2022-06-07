@@ -800,6 +800,18 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
     pentry->locals = (int)localsToken->token_value.integer;
     pentry->start = context->binary.inst_size;
 
+    /* Chain the exposed constant entries */
+    if (context->proc_head != -1) {
+        ((proc_constant*)(context->binary.const_pool + context->proc_tail))->next = (int)pentry_index;
+        context->proc_tail = (int)pentry_index;
+        pentry->next = -1;
+    }
+    else {
+        context->proc_head = (int)pentry_index;
+        context->proc_tail = (int)pentry_index;
+        pentry->next = -1;
+    }
+
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
 

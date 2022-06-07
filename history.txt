@@ -9,6 +9,7 @@ F0041 - REXX Enhancements
         File, line and var meta data (RXC, RXAS, RXDAS)
         Allow rxbin files to be concatenated together (to create a library)
         Performance improvement in searching in constant pool - pointers chains for certain types, like procedures
+        Added some dependencies to the cmake scripts
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

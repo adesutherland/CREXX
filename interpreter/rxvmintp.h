@@ -50,6 +50,9 @@ typedef struct module {
     char *name;                /* Module Name */
     char *description;         /* Module Description */
     value **globals;           /* Globals registers array */
+    int proc_head;             /* Offset to the head of the procs in the constant pool */
+    int expose_head;           /* Offset to the head of the exposed procs in the constant pool */
+    int meta_head;             /* Offset to the head of the meta data in the constant pool */
     char *globals_dont_free;   /* Indicates linked global value that should not be freed */
     size_t module_number;      /* Module Index - 1 base */
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */

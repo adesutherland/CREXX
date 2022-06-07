@@ -171,15 +171,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Find handlers */
     DEBUG("Find program interrupt handlers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
+        int i = context->modules[mod_index].proc_head;
+        while (i != -1) {
             step_handler =
                     (proc_constant *) (context->modules[mod_index].segment.const_pool +
                                        i);
             if (step_handler->base.type == PROC_CONST &&
                 strcmp(step_handler->name, "stephandler") == 0)
                 break;
-            i += step_handler->base.size_in_pool;
+            i = step_handler->next;
             step_handler = 0;
         }
         if (step_handler) break;
@@ -189,15 +189,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
+        int i = context->modules[mod_index].proc_head;
+        while (i != -1) {
             procedure =
                     (proc_constant *) (context->modules[mod_index].segment.const_pool +
                                        i);
             if (procedure->base.type == PROC_CONST &&
                 strcmp(procedure->name, "main") == 0)
                 break;
-            i += procedure->base.size_in_pool;
+            i = procedure->next;
             procedure = 0;
         }
         if (procedure) break;
@@ -385,7 +385,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 chameleon_constant *c_entry;
                 proc_constant *p_entry;
                 expose_proc_constant *e_entry;
-                size_t i;
+                int i;
                 size_t entries;
                 value* entry;
 
@@ -396,14 +396,14 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 value_zero(op1R);
 
                 /* How many entries are needed */
-                i = 0;
+                i = context->modules[mod].expose_head;
                 entries = 0;
-                while (i < context->modules[mod].segment.const_size) {
+                while (i != -1) {
                     c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
                     if (c_entry->type == EXPOSE_PROC_CONST) {
                         if (!((expose_proc_constant *)c_entry)->imported) entries++;
                     }
-                    i += c_entry->size_in_pool;
+                    i = ((expose_proc_constant *)c_entry)->next;
                 }
 
                 /* Set up array */
@@ -411,9 +411,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 op1R->int_value = (rxinteger)entries; /* The cREXX convention for arrays */
 
                 /* Populate array */
-                i = 0;
+                i = context->modules[mod].expose_head;
                 entries = 0;
-                while (i < context->modules[mod].segment.const_size) {
+                while (i != -1) {
                     c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
                     if (c_entry->type == EXPOSE_PROC_CONST) {
                         /* Exposed Procedure */
@@ -431,7 +431,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             entries++;
                         }
                     }
-                    i += c_entry->size_in_pool;
+                    i = e_entry->next;
                 }
             }
             DISPATCH
@@ -492,6 +492,82 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         }
         DISPATCH
 
+        /* Load Metadata (op1 = (metadata)op2[op3]) */
+        START_INSTRUCTION(METALOADDATA_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - METALOADDATA R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                unsigned char *pool = context->modules[op2R->int_value - 1].segment.const_pool;
+                int i = context->modules[op2R->int_value - 1].meta_head;
+                int j;
+                size_t x;
+                meta_entry *meta = 0;
+                int size = 0;
+
+                /* Clear return object */
+                value_zero(op1R);
+
+                /* Find the start of the metadata @ address */
+                while (i != -1) {
+                    meta = (meta_entry *) (pool + i);
+                    if (meta->address < op3R->int_value) i = meta->next;
+                    else break;
+                }
+                if (i == -1 || meta->address > op3R->int_value) {
+                    /* No metadata for the addresss */
+                    DISPATCH
+                }
+                int start = i;
+
+                /* How many entries */
+                size = 0;
+                while (i != -1) {
+                    meta = (meta_entry *) (pool + i);
+                    if (meta->address == op3R->int_value) {
+                        i = meta->next;
+                        size++;
+                    }
+                    else break;
+                }
+                set_num_attributes(op1R,size);
+                op1R->int_value = size; /* TODO Using int to store the size of an array ... approach tbc! */
+
+                /* Populate output with the metadata */
+                for (j=0, i=start; j<size; j++, i=((meta_entry *)(pool+i))->next) {
+                    value_zero(op1R->attributes[j]);
+                    switch ( ((meta_entry *)(pool+i))->base.type ) {
+                        case META_SRC:
+                            /* TODO we are using the string to hold the object type - final approach tbc */
+                            set_null_string(op1R->attributes[j],".META_SRC");
+                            set_num_attributes(op1R->attributes[j],3);
+                            op1R->attributes[j]->attributes[0]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->line;
+                            op1R->attributes[j]->attributes[1]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->column;
+                            x = (rxinteger)((meta_src_constant *)(pool+i))->source;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
+                            break;
+                        case META_FILE:
+                            set_null_string(op1R->attributes[j],".META_FILE");
+                            break;
+                        case META_FUNC:
+                            set_null_string(op1R->attributes[j],".META_FUNC");
+                            break;
+                        case META_REG:
+                            set_null_string(op1R->attributes[j],".META_REG");
+                            break;
+                        case META_CONST:
+                            set_null_string(op1R->attributes[j],".META_CONST");
+                            break;
+                        case META_CLEAR:
+                            set_null_string(op1R->attributes[j],".META_CLEAR");
+                            break;
+                        case STRING_CONST:
+                        case PROC_CONST:
+                        case EXPOSE_REG_CONST:
+                        case EXPOSE_PROC_CONST:
+                            ;
+                    }
+                }
+            }
+            DISPATCH
 
         /* Regular Instructions */
         /* LOAD */
@@ -2957,28 +3033,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
-            chameleon_constant *c_entry =
-                    (chameleon_constant *) (
-                            context->modules[mod_index].segment.const_pool + i);
-            switch (c_entry->type) {
-
-                case PROC_CONST:
-                    if (((proc_constant *) c_entry)->start != SIZE_MAX) {
-                        /* Free frames in the procedures free list */
-                        while (*(((proc_constant *) c_entry)->frame_free_list)) {
-                            temp_frame = *(((proc_constant *)c_entry)->frame_free_list);
-                            *(((proc_constant *) c_entry)->frame_free_list) = temp_frame->prev_free;
-                            clear_frame(temp_frame);
-                            free(temp_frame);
-                        }
-                    }
-                    break;
-
-                default:;
+        int i = context->modules[mod_index].proc_head;
+        while (i != -1) {
+            proc_constant *c_entry = (proc_constant*) (context->modules[mod_index].segment.const_pool + i);
+            if ((c_entry)->start != SIZE_MAX) {
+                /* Free frames in the procedures free list */
+                while (*(c_entry->frame_free_list)) {
+                    temp_frame = *(c_entry->frame_free_list);
+                    *(c_entry->frame_free_list) = temp_frame->prev_free;
+                    clear_frame(temp_frame);
+                    free(temp_frame);
+                }
             }
-            i += c_entry->size_in_pool;
+            i = c_entry->next;
         }
     }
 

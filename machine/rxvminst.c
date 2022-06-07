@@ -32,6 +32,7 @@ void init_ops() {
     instr_f("metaloadfoperand", "Load Float Operand (op1 = (float)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metaloadsoperand", "Load String Operand (op1 = (string)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloaddata", "Load Metadata (op1 = (metadata)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metalinkpreg", "Link parent-frame-register[op2] to op1", OP_REG, OP_REG, OP_NONE);
 
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
