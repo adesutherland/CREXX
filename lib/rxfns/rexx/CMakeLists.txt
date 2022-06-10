@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.18)
 
 set(REXXBINS
               _datei.rxbin
@@ -8,7 +8,7 @@ set(REXXBINS
               _jdn.rxbin
               abbrev.rxbin
               c2x.rxbin
-	      c2d.rxbin	
+	          c2d.rxbin
               center.rxbin
               centre.rxbin
               changestr.rxbin
@@ -38,6 +38,7 @@ set(REXXBINS
               translate.rxbin
               trunc.rxbin
               upper.rxbin
+		      value.rxbin
               verify.rxbin
               wordlength.rxbin
               wordpos.rxbin
@@ -69,5 +70,10 @@ foreach(_binfile ${REXXBINS})
           OUTPUT ${_binfile}
           COMMENT "cREXX compile and assemble ${_basename} ..."
   )
-
 endforeach()
+
+execute_process (
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS}
+		OUTPUT_FILE library.rxbin
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

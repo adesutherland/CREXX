@@ -102,6 +102,7 @@ stephandler: procedure = .int
   address = 0
   module = 0
   r = 0
+  watch = ""
   assembler linkattr module,address_object,1  /* 1 = Module number */
   assembler linkattr address,address_object,2 /* 2 = Address in module */
 
@@ -109,6 +110,8 @@ stephandler: procedure = .int
   modules = 0
   assembler metaloadedmodules modules
   if modules <> module then return 0 /* Don't debug the debugger */
+
+  watch = getwatch()
 
   mode = getmode()
   if mode = "REXX" then do
@@ -131,6 +134,7 @@ stephandler: procedure = .int
   topleft = esc"[1;1H"
   clear = esc"[2J"
   clearline = esc"[2K"
+  cursorup = esc"[A"
   line2 = esc"[2;1H"
   line5 = esc"[5;1H"
   bottom = esc"[99;1H" || esc"[A"
@@ -139,8 +143,111 @@ stephandler: procedure = .int
     say line2 || clearline || green">"
     say clearline || next_instruction
     say clearline
-    say clearline"Running state command (ENTER=step, h=help) - Mode="mode":"
+
+    /* Print watches - can't move into a procedure [yet] because it needs to
+       access the child's stackframe */
+    do k = 2
+      reg = word(watch,k)
+      if reg = "" then leave
+      value = ""
+      ires = 0
+      fres = 0.0
+      sres = ""
+      if isint(reg) then do
+        /* Register Print */
+        r = reg
+        assembler metalinkpreg ires,r       /* Link parent-frame-register */
+        ires_copy = ires /* Don't want to alter ires with any side effects */
+        assembler unlink ires
+        value = "int=" || ires_copy
+
+        assembler metalinkpreg fres,r       /* Link parent-frame-register */
+        fres_copy = fres
+        assembler unlink fres
+        value = value "float=" || fres_copy
+
+        assembler metalinkpreg sres,r       /* Link parent-frame-register */
+        sres_copy = sres
+        assembler unlink sres
+        value = value "string='" || sres_copy || "'"
+
+        say clearline || "r" || r ":" value
+      end
+
+      else do
+        /* REXX Variable Print */
+        reg = upper(reg)
+        symbol = ""
+        type = ""
+        /* Read the addresses backwards */
+        do a = address to 0 by -1
+          /* Get the metadata for that address */
+          meta_array = 0
+          meta_entry = ""
+          assembler metaloaddata meta_array,module,a
+          do i = 1 to meta_array
+            assembler linkattr meta_entry,meta_array,i
+
+            if meta_entry = ".META_CLEAR" then do /* Object type */
+              assembler linkattr symbol,meta_entry,1
+              if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+                leave a
+              end
+            end
+
+            else if meta_entry = ".META_CONST" then do /* Object type */
+              assembler linkattr symbol,meta_entry,1
+              if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+                v = ""
+                type = ""
+                assembler linkattr type,meta_entry,3
+                assembler linkattr v,meta_entry,4
+                value = "(CONSTANT" type")" v
+                leave a
+              end
+            end
+
+            else if meta_entry = ".META_REG" then do /* Object type */
+              assembler linkattr symbol,meta_entry,1
+              if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+                type = ""
+                assembler linkattr type,meta_entry,3
+                r_num = 0
+                assembler linkattr r_num,meta_entry,4
+
+                if type = ".INT" then do
+                  assembler metalinkpreg ires,r_num       /* Link parent-frame-register */
+                  ires_copy = ires /* Don't want to alter ires with any side effects */
+                  assembler unlink ires
+                  value = "(r"r_num ".INT)" ires_copy
+                end
+
+                else if type = ".FLOAT" then do
+                  assembler metalinkpreg fres,r_num       /* Link parent-frame-register */
+                  fres_copy = fres
+                  assembler unlink fres
+                  value = "(r"r_num ".FLOAT)" fres_copy
+                end
+
+                else do
+                  assembler metalinkpreg sres,r_num       /* Link parent-frame-register */
+                  sres_copy = sres
+                  assembler unlink sres
+                  value = "(r"r_num ".STRING)" sres_copy
+                end
+
+              end
+            end
+          end
+        end
+        if value = "" then value = "(TAKEN CONSTANT)" reg
+        say clearline || reg ":" value
+      end
+    end
+
     say clearline
+    say clearline"Running state command (ENTER=step, h=help) - Mode="mode":"
+    say clearline || cursorup
 
     assembler readline cmd
 
@@ -148,13 +255,13 @@ stephandler: procedure = .int
 
     if cmd = '' then leave
     else if cmd = 'h' then do
-       say 'help:'
-       say '  ENTER    - Step to next instruction'
-       say '  q        - Quit'
-       say '  p n ...  - Print regs n ... (space delimited list of numbers)'
-       say '  e        - Print exposed procedures in module being debugged (last module loaded)'
-       say '  a        - Print exposed procedures (all modules)'
-       say '  m        - Toggle mode (REXX/ASM)'
+       say clearline'help:'
+       say clearline'  ENTER    - Step to next instruction'
+       say clearline'  q        - Quit'
+       say clearline'  w n ...  - Watch regs (numbers) or variables (names) ... (space delimited list of numbers and variable names)'
+       say clearline'  e        - Print exposed procedures in module being debugged (last module loaded)'
+       say clearline'  a        - Print exposed procedures (all modules)'
+       say clearline'  m        - Toggle mode (REXX/ASM)'
     end
     else if cmd = 'q' then do
       say reset"Exiting"
@@ -171,36 +278,11 @@ stephandler: procedure = .int
     else if cmd = 'a' then do
       call dump_procs 0
     end
-    else if c1 = 'p' then do
-      do i = 2
-        reg = word(cmd,i)
-        if reg = "" then leave
-        if isint(reg) then do
-          value = ""
-          r = reg
-          ires = 0
-          fres = 0.0
-          sres = ""
-          assembler metalinkpreg ires,r       /* Link parent-frame-register */
-          ires_copy = ires /* Don't want to alter ires with any side effects */
-          assembler unlink ires
-          value = "int=" || ires_copy
-
-          assembler metalinkpreg fres,r       /* Link parent-frame-register */
-          fres_copy = fres
-          assembler unlink fres
-          value = value "float=" || fres_copy
-
-          assembler metalinkpreg sres,r       /* Link parent-frame-register */
-          sres_copy = sres
-          assembler unlink sres
-          value = value "string='" || sres_copy || "'"
-
-          say "r" || r":" value
-        end
-      end
+    else if c1 = 'w' then do
+      watch = cmd;
+      call setwatch watch
     end
-    else say 'unknown command'
+    else say clearline'unknown command'
   end
   say reset || bottom
   return 0
@@ -475,6 +557,11 @@ setrexx: procedure
   arg val = .string
 
 getrexx: procedure = .string
+
+setwatch: procedure
+  arg val = .string
+
+getwatch: procedure = .string
 
 /* Poor mans datatype */
 isint: procedure = .int

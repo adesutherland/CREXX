@@ -19,4 +19,4 @@ echo "rxdas -p $1"
 ../cmake-build-debug/disassembler/rxdas -p $1
 
 echo "rxvm -d $1"
-../cmake-build-debug/interpreter/rxvm -d $1
+../cmake-build-debug/interpreter/rxvm -d $1 ../cmake-build-debug/lib/rxfns/library

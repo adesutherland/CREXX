@@ -14,9 +14,9 @@ void rxinimod(rxvm_context *context) {
     context->debug_mode = 0;
     context->location = 0;
 
-    /* Support 64 modules initially - this grows automatically */
-    context->module_buffer_size = 64;
-    context->modules = malloc(sizeof(module) * context->module_buffer_size);
+    /* Support 128 modules initially - this grows automatically */
+    context->module_buffer_size = 128;
+    context->modules = malloc(sizeof(module*) * context->module_buffer_size);
 }
 
 /* Free Module Context */
@@ -32,12 +32,13 @@ void rxfremod(rxvm_context *context) {
 
     /* Free Program Modules */
     for (j=0; j<context->num_modules; j++) {
-        free(context->modules[j].segment.binary);
-        free(context->modules[j].segment.const_pool);
-        free(context->modules[j].name);
-        free(context->modules[j].description);
-        free(context->modules[j].globals);
-        free(context->modules[j].globals_dont_free);
+        free(context->modules[j]->segment.binary);
+        free(context->modules[j]->segment.const_pool);
+        free(context->modules[j]->name);
+        free(context->modules[j]->description);
+        free(context->modules[j]->globals);
+        free(context->modules[j]->globals_dont_free);
+        free(context->modules[j]);
     }
     free(context->modules);
 }
@@ -52,17 +53,17 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
     DEBUG("Add Module Symbols\n");
     i = 0;
     mod_index = module_number_to_link;
-    while (i < context->modules[mod_index].segment.const_size) {
+    while (i < context->modules[mod_index]->segment.const_size) {
         c_entry =
                 (chameleon_constant *) (
-                        context->modules[mod_index].segment.const_pool + i);
+                        context->modules[mod_index]->segment.const_pool + i);
         switch (c_entry->type) {
 
             case PROC_CONST:
                 if (((proc_constant *) c_entry)->start != SIZE_MAX) {
                     /* Mark the owning module segment address */
                     ((proc_constant *) c_entry)->binarySpace =
-                            &context->modules[mod_index].segment;
+                            &context->modules[mod_index]->segment;
                     /* Stack Frame Free List */
                     ((proc_constant *) c_entry)->frame_free_list =
                             &(((proc_constant *) c_entry)
@@ -78,20 +79,20 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
                              (size_t *) &g_reg)) {
                     /* Register already exposed / initialised */
                     context->modules[mod_index]
-                            .globals[((expose_reg_constant *) c_entry)
+                            ->globals[((expose_reg_constant *) c_entry)
                             ->global_reg] =
                             g_reg;
                     context->modules[mod_index]
-                            .globals_dont_free[((expose_reg_constant *) c_entry)
+                            ->globals_dont_free[((expose_reg_constant *) c_entry)
                             ->global_reg] = 1;
                 } else {
                     /* Need to initialise a register and expose it in the search tree */
                     context->modules[mod_index]
-                            .globals[((expose_reg_constant *) c_entry)
+                            ->globals[((expose_reg_constant *) c_entry)
                             ->global_reg] = value_f();
                     add_node(&context->exposed_reg_tree, ((expose_reg_constant *)c_entry)->index,
                              (size_t)(context->modules[mod_index]
-                                     .globals[((expose_reg_constant *)c_entry)
+                                     ->globals[((expose_reg_constant *)c_entry)
                                      ->global_reg]));
                 }
                 break;
@@ -100,13 +101,13 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
                 /* Exposed Procedure */
                 p_entry =
                         (proc_constant *) (
-                                context->modules[mod_index].segment.const_pool
+                                context->modules[mod_index]->segment.const_pool
                                 + ((expose_proc_constant *) c_entry)
                                         ->procedure);
 
                 if (((expose_proc_constant *) c_entry)->imported) {
                     /* Imported - Add to the unresolved symbols count for later */
-                    context->modules[mod_index].unresolved_symbols++;
+                    context->modules[mod_index]->unresolved_symbols++;
                 }
                 else {
                     /* Exported - check duplicate */
@@ -115,7 +116,7 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
                                  (size_t) p_entry)) {
                         DEBUG("WARNING: Duplicate exposed symbol: %s\n",
                               ((expose_proc_constant *) c_entry)->index);
-                        context->modules[mod_index].duplicated_symbols++;
+                        context->modules[mod_index]->duplicated_symbols++;
                     }
                 }
                 break;
@@ -129,12 +130,12 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
     DEBUG("Resolve Symbols\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         /* Skip modules without any unresolved symbols */
-        if (!context->modules[mod_index].unresolved_symbols) continue;
+        if (!context->modules[mod_index]->unresolved_symbols) continue;
         i = 0;
-        while (i < context->modules[mod_index].segment.const_size) {
+        while (i < context->modules[mod_index]->segment.const_size) {
             c_entry =
                     (chameleon_constant *) (
-                            context->modules[mod_index].segment.const_pool + i);
+                            context->modules[mod_index]->segment.const_pool + i);
             switch (c_entry->type) {
                 case EXPOSE_PROC_CONST:
                     if (((expose_proc_constant *) c_entry)->imported) {
@@ -145,7 +146,7 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
                             /* Patch the procedure entry with the linked one */
                             p_entry =
                                     (proc_constant *) (
-                                            context->modules[mod_index].segment.const_pool
+                                            context->modules[mod_index]->segment.const_pool
                                             + ((expose_proc_constant *) c_entry)
                                                     ->procedure);
                             if (p_entry->start == SIZE_MAX ) { /* If not already linked up */
@@ -158,7 +159,7 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
 
                                 /* Reduce the number of unresolved symbols */
                                 context->modules[mod_index]
-                                        .unresolved_symbols--;
+                                        ->unresolved_symbols--;
                             }
                         }
                     }
@@ -174,9 +175,9 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
     /* Allocate Module Globals that have not already been allocated during linking */
     DEBUG("Allocate Globals\n");
     mod_index = module_number_to_link;
-    for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
-        if (!context->modules[mod_index].globals[i]) {
-            context->modules[mod_index].globals[i] = value_f();
+    for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
+        if (!context->modules[mod_index]->globals[i]) {
+            context->modules[mod_index]->globals[i] = value_f();
         }
     }
 
@@ -187,11 +188,7 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *file_name) {
     FILE *fp;
-    size_t n, i;
-    value *g_reg;
-    size_t mod_index;
-    chameleon_constant *c_entry;
-    proc_constant *p_entry, *p_entry_linked;
+    size_t n;
     module_file *file_module_section;
     size_t modules_processed = 0;
     int loaded_rc;
@@ -214,27 +211,26 @@ int rxldmod(rxvm_context *context, char *file_name) {
                 /* Grow the module buffer if need be */
                 while (n + 1 > context->module_buffer_size) {
                     context->module_buffer_size *= 2;
-                    context->modules = realloc(context->modules, sizeof(module) * context->module_buffer_size);
+                    context->modules = realloc(context->modules, sizeof(module*) * context->module_buffer_size);
                 }
+                context->modules[n] = malloc(sizeof(module));
+                context->modules[n]->segment.globals = file_module_section->header.globals;
+                context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
+                context->modules[n]->segment.const_size = file_module_section->header.constant_size;
+                context->modules[n]->segment.binary = file_module_section->instructions;
+                context->modules[n]->segment.const_pool = file_module_section->constant;
+                context->modules[n]->segment.module = context->modules[n];
+                context->modules[n]->name = file_module_section->name;
+                context->modules[n]->description = file_module_section->description;
+                context->modules[n]->proc_head = file_module_section->header.proc_head;
+                context->modules[n]->expose_head = file_module_section->header.expose_head;
+                context->modules[n]->meta_head = file_module_section->header.meta_head;
+                context->modules[n]->globals = calloc(context->modules[n]->segment.globals, sizeof(value*));
+                context->modules[n]->globals_dont_free = calloc(context->modules[n]->segment.globals, sizeof(char));
+                context->modules[n]->unresolved_symbols = 0;
+                context->modules[n]->duplicated_symbols = 0;
 
-                context->modules[n].segment.globals = file_module_section->header.globals;
-                context->modules[n].segment.inst_size = file_module_section->header.instruction_size;
-                context->modules[n].segment.const_size = file_module_section->header.constant_size;
-                context->modules[n].segment.binary = file_module_section->instructions;
-                context->modules[n].segment.const_pool = file_module_section->constant;
-                context->modules[n].name = file_module_section->name;
-                context->modules[n].description = file_module_section->description;
-                context->modules[n].proc_head = file_module_section->header.proc_head;
-                context->modules[n].expose_head = file_module_section->header.expose_head;
-                context->modules[n].meta_head = file_module_section->header.meta_head;
-                context->modules[n].segment.module = &(context->modules[n]);
-                context->modules[n].globals = calloc(context->modules[n].segment.globals, sizeof(value*));
-                context->modules[n].globals_dont_free = calloc(context->modules[n].segment.globals, sizeof(char));
-                context->modules[n].unresolved_symbols = 0;
-                context->modules[n].duplicated_symbols = 0;
-                context->modules[n].module_number = n + 1;
-
-                context->num_modules = context->modules[n].module_number;
+                context->num_modules = context->modules[n]->module_number = n + 1;
 
                 link_module(context, n);
 

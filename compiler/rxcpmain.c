@@ -318,5 +318,6 @@ int main(int argc, char *argv[]) {
 #endif
     free(buff);
 
-    return(0);
+    if (errors) return(1);
+    else return(0);
 }

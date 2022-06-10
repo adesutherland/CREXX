@@ -158,11 +158,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         size_t i = 0, j;
 
-        while (i < context->modules[mod_index].segment.inst_size) {
+        while (i < context->modules[mod_index]->segment.inst_size) {
             j = i;
-            i += context->modules[mod_index].segment.binary[i].instruction.no_ops + 1;
-            context->modules[mod_index].segment.binary[j].impl_address =
-                    (void *)address_map[context->modules[mod_index].segment
+            i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
+            context->modules[mod_index]->segment.binary[j].impl_address =
+                    (void *)address_map[context->modules[mod_index]->segment
                             .binary[j].instruction.opcode];
         }
     }
@@ -171,10 +171,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Find handlers */
     DEBUG("Find program interrupt handlers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index].proc_head;
+        int i = context->modules[mod_index]->proc_head;
         while (i != -1) {
             step_handler =
-                    (proc_constant *) (context->modules[mod_index].segment.const_pool +
+                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
                                        i);
             if (step_handler->base.type == PROC_CONST &&
                 strcmp(step_handler->name, "stephandler") == 0)
@@ -189,10 +189,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * TODO The assembler should save this in the binary structure */
     DEBUG("Find program entry point\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index].proc_head;
+        int i = context->modules[mod_index]->proc_head;
         while (i != -1) {
             procedure =
-                    (proc_constant *) (context->modules[mod_index].segment.const_pool +
+                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
                                        i);
             if (procedure->base.type == PROC_CONST &&
                 strcmp(procedure->name, "main") == 0)
@@ -328,11 +328,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     int mod;
                     for (mod = num_modules_before; mod < op1R->int_value; mod++) {
                         size_t i = 0, j;
-                        while (i < context->modules[mod].segment.inst_size) {
+                        while (i < context->modules[mod]->segment.inst_size) {
                             j = i;
-                            i += context->modules[mod].segment.binary[i].instruction.no_ops + 1;
-                            context->modules[mod].segment.binary[j].impl_address =
-                                (void *) address_map[context->modules[mod].segment.binary[j].instruction.opcode];
+                            i += context->modules[mod]->segment.binary[i].instruction.no_ops + 1;
+                            context->modules[mod]->segment.binary[j].impl_address =
+                                (void *) address_map[context->modules[mod]->segment.binary[j].instruction.opcode];
                         }
                     }
 #endif
@@ -344,7 +344,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         START_INSTRUCTION(METALOADINST_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         {
-            bin_code inst = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value];
+            bin_code inst = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value];
 #ifdef NTHREADED
             /* Bytecode Version */
             op1R->int_value = inst.instruction.opcode;
@@ -374,7 +374,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             set_num_attributes(op1R,context->num_modules);
             op1R->int_value = (rxinteger)context->num_modules; /* The cREXX convention for arrays */
             for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-                set_null_string(op1R->attributes[mod_index],context->modules[mod_index].name);
+                set_null_string(op1R->attributes[mod_index],context->modules[mod_index]->name);
             }
             DISPATCH
 
@@ -396,10 +396,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 value_zero(op1R);
 
                 /* How many entries are needed */
-                i = context->modules[mod].expose_head;
+                i = context->modules[mod]->expose_head;
                 entries = 0;
                 while (i != -1) {
-                    c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
+                    c_entry = (chameleon_constant *) (context->modules[mod]->segment.const_pool + i);
                     if (c_entry->type == EXPOSE_PROC_CONST) {
                         if (!((expose_proc_constant *)c_entry)->imported) entries++;
                     }
@@ -411,15 +411,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 op1R->int_value = (rxinteger)entries; /* The cREXX convention for arrays */
 
                 /* Populate array */
-                i = context->modules[mod].expose_head;
+                i = context->modules[mod]->expose_head;
                 entries = 0;
                 while (i != -1) {
-                    c_entry = (chameleon_constant *) (context->modules[mod].segment.const_pool + i);
+                    c_entry = (chameleon_constant *) (context->modules[mod]->segment.const_pool + i);
                     if (c_entry->type == EXPOSE_PROC_CONST) {
                         /* Exposed Procedure */
                         e_entry = (expose_proc_constant *) c_entry;
                         p_entry = (proc_constant *) (
-                                context->modules[mod].segment.const_pool
+                                context->modules[mod]->segment.const_pool
                                 + e_entry->procedure);
                         if (!e_entry->imported) {
                             /* Exported - Procedure - populate object and add to array  */
@@ -457,13 +457,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
         START_INSTRUCTION(METALOADIOPERAND_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - METALOADIOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        op1R->int_value = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].iconst;
+        op1R->int_value = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].iconst;
         DISPATCH
 
         /* Load Float Operand (op1 = (float)op2[op3]) */
         START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        op1R->float_value = context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].fconst;
+        op1R->float_value = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].fconst;
         DISPATCH
 
         /* Load String Operand (op1 = (string)op2[op3]) */
@@ -471,8 +471,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         DEBUG("TRACE - METALOADSOPERAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
         set_const_string(op1R,
                          (string_constant *)(
-                                 context->modules[op2R->int_value - 1].segment.const_pool +
-                                 context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].index
+                                 context->modules[op2R->int_value - 1]->segment.const_pool +
+                                 context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index
                          ));
 
         DISPATCH
@@ -485,8 +485,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             proc_constant
                     *proc =
                         (proc_constant *)(
-                                context->modules[op2R->int_value - 1].segment.const_pool +
-                                context->modules[op2R->int_value - 1].segment.binary[op3R->int_value].index
+                                context->modules[op2R->int_value - 1]->segment.const_pool +
+                                context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index
                             );
             set_null_string(op1R, proc->name);
         }
@@ -496,8 +496,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         START_INSTRUCTION(METALOADDATA_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - METALOADDATA R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-                unsigned char *pool = context->modules[op2R->int_value - 1].segment.const_pool;
-                int i = context->modules[op2R->int_value - 1].meta_head;
+                unsigned char *pool = context->modules[op2R->int_value - 1]->segment.const_pool;
+                int i = context->modules[op2R->int_value - 1]->meta_head;
                 int j;
                 size_t x;
                 meta_entry *meta = 0;
@@ -546,26 +546,82 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             break;
                         case META_FILE:
                             set_null_string(op1R->attributes[j],".META_FILE");
+                            set_num_attributes(op1R->attributes[j],1);
+                            x = (rxinteger)((meta_file_constant *)(pool+i))->file;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
                             break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j],".META_FUNC");
+                            set_num_attributes(op1R->attributes[j],6);
+                            x = (rxinteger)((meta_func_constant *)(pool+i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_func_constant *)(pool+i))->option;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_func_constant *)(pool+i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_func_constant *)(pool+i))->args;
+                            set_const_string(op1R->attributes[j]->attributes[3], (string_constant *)(pool + x));
+                            op1R->attributes[j]->attributes[4]->int_value = (rxinteger)((meta_func_constant *)(pool+i))->func;
+                            x = (rxinteger)((meta_func_constant *)(pool+i))-> inliner;
+                            set_const_string(op1R->attributes[j]->attributes[5], (string_constant *)(pool + x));
                             break;
                         case META_REG:
                             set_null_string(op1R->attributes[j],".META_REG");
+                            set_num_attributes(op1R->attributes[j],4);
+                            x = (rxinteger)((meta_reg_constant *)(pool+i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_reg_constant *)(pool+i))->option;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_reg_constant *)(pool+i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
+                            op1R->attributes[j]->attributes[3]->int_value = (rxinteger)((meta_reg_constant *)(pool+i))->reg;
                             break;
                         case META_CONST:
                             set_null_string(op1R->attributes[j],".META_CONST");
+                            set_num_attributes(op1R->attributes[j],4);
+                            x = (rxinteger)((meta_const_constant *)(pool+i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_const_constant *)(pool+i))->option;
+                            set_const_string(op1R->attributes[j]->attributes[1], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_const_constant *)(pool+i))->type;
+                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
+                            x = (rxinteger)((meta_const_constant *)(pool+i))->constant;
+                            set_const_string(op1R->attributes[j]->attributes[3], (string_constant *)(pool + x));
                             break;
                         case META_CLEAR:
                             set_null_string(op1R->attributes[j],".META_CLEAR");
+                            set_num_attributes(op1R->attributes[j],1);
+                            x = (rxinteger)((meta_clear_constant *)(pool+i))->symbol;
+                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
                             break;
                         case STRING_CONST:
                         case PROC_CONST:
                         case EXPOSE_REG_CONST:
-                        case EXPOSE_PROC_CONST:
-                            ;
+                        case EXPOSE_PROC_CONST: ;
+
                     }
                 }
+            }
+            DISPATCH
+
+        /* METALOADCALLERADDR - Load caller address object to op1 */
+        START_INSTRUCTION(METALOADCALLERADDR_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - METALOADCALLERADDR R%d\n", (int)REG_IDX(1));
+            {
+                rxinteger mod_no = -1;
+                rxinteger addr = -1;
+
+                if (current_frame->parent != 0) {
+                    mod_no = (rxinteger) current_frame->parent->procedure->binarySpace->module->module_number;
+                    addr = (rxinteger) (current_frame->return_pc -
+                                        current_frame->parent->procedure->binarySpace->binary);
+                }
+
+                /* Populate the result object */
+                value_zero(op1R);
+                set_num_attributes(op1R, 2);
+                op1R->attributes[0]->int_value = mod_no;
+                op1R->attributes[1]->int_value = addr;
             }
             DISPATCH
 
@@ -874,7 +930,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 }
                 DISPATCH
             }
-
 
         START_INSTRUCTION(RET_INT)
             DEBUG("TRACE - RET %d\n", (int)op1I);
@@ -3033,9 +3088,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* We need to loop through each procedure in each module */
     DEBUG("Deallocating Frames and Registers\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index].proc_head;
+        int i = context->modules[mod_index]->proc_head;
         while (i != -1) {
-            proc_constant *c_entry = (proc_constant*) (context->modules[mod_index].segment.const_pool + i);
+            proc_constant *c_entry = (proc_constant*) (context->modules[mod_index]->segment.const_pool + i);
             if ((c_entry)->start != SIZE_MAX) {
                 /* Free frames in the procedures free list */
                 while (*(c_entry->frame_free_list)) {
@@ -3052,10 +3107,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Deallocate Globals */
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         int i;
-        for (i = 0; i < context->modules[mod_index].segment.globals; i++) {
-            if (!context->modules[mod_index].globals_dont_free[i]) {
-                clear_value(context->modules[mod_index].globals[i]);
-                free(context->modules[mod_index].globals[i]);
+        for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
+            if (!context->modules[mod_index]->globals_dont_free[i]) {
+                clear_value(context->modules[mod_index]->globals[i]);
+                free(context->modules[mod_index]->globals[i]);
             }
         }
     }

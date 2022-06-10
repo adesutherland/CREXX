@@ -203,7 +203,7 @@ typedef struct rxvm_context {
     char *location;
     size_t num_modules;
     size_t module_buffer_size;
-    module *modules;
+    module **modules;
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char debug_mode;

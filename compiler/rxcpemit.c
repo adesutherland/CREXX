@@ -488,7 +488,7 @@ static walker_result register_walker(walker_direction direction,
                 /*
                  * We do not need a register as we can "say" a constant directly
                  */
-                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case RETURN:

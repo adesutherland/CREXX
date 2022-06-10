@@ -14,11 +14,22 @@
 /* Grammar                      */
 
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "rxcpmain.h"
 }
 
 %token TK_UNKNOWN TK_BADCOMMENT.
 %wildcard ANYTHING.
+
+%stack_size 2000
+
+%stack_overflow
+{
+     /* Have to print the error directly - and exit(1) */
+     fprintf(stderr,"Error - PARSER_OVERFLOW\n");
+     exit(1);
+}
 
 /* Program & Structure */
 program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.

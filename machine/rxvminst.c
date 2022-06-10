@@ -23,7 +23,7 @@ void init_ops() {
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
-    instr_f("metaloadmodule", "Load Module (op1 = module num of loaded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadmodule", "Load Module (op1 = module num of last loaded module in rxbin op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("metaloadedmodules", "Loaded Modules (op1 = array loaded modules)", OP_REG, OP_NONE, OP_NONE);
     instr_f("metaloadedprocs", "Loaded Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
     instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
@@ -34,6 +34,7 @@ void init_ops() {
     instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metaloaddata", "Load Metadata (op1 = (metadata)op2[op3])", OP_REG, OP_REG, OP_REG);
     instr_f("metalinkpreg", "Link parent-frame-register[op2] to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadcalleraddr", "Load caller address object to op1", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);

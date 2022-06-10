@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.18)
 
 set(RXASBINS
               _elapsed.rxbin
@@ -35,3 +35,9 @@ foreach(_binfile ${RXASBINS})
   )
 
 endforeach()
+
+execute_process (
+        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS}
+        OUTPUT_FILE library.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

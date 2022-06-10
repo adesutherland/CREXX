@@ -39,7 +39,7 @@ add_executable(rxc rxcpmain.c rxcpast.c rxcpmain.h
                ../platform/platform.h ../platform/platform.c
                ../utf8/utf.h)
 
-add_dependencies(rxc re2c lemon)
+add_dependencies(rxc re2c lemon machine avl_tree platform)
 
 target_link_libraries(rxc machine avl_tree platform m)
 

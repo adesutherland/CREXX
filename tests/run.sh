@@ -15,4 +15,4 @@ echo "rxdas $1"
 ../cmake-build-debug/disassembler/rxdas $1
 
 echo "rxvm $1"
-../cmake-build-debug/interpreter/rxvm $1
+../cmake-build-debug/interpreter/rxvm $1 ../cmake-build-debug/lib/rxfns/library

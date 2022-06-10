@@ -121,6 +121,10 @@ int get_reg(Scope *scope) {
     int reg;
 
     free_array = (dpa*)(scope->free_registers_array);
+
+//    printf("get a reg - free array is ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+
     /* Check the free list */
     if (free_array->size) {
         free_array->size--;
@@ -130,8 +134,8 @@ int get_reg(Scope *scope) {
         reg = (int)((scope->num_registers)++);
     }
 
-//    printf("get %d - ", reg);
-//    {int i; for (i=0; i<free_array->size; i++) printf("%d ",(int)(size_t)free_array->pointers[i]);printf("\n");}
+//    printf("  returned %d - free array is now ", reg);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     return reg;
 }
@@ -142,16 +146,19 @@ void ret_reg(Scope *scope, int reg) {
     dpa *free_array;
     free_array = (dpa*)(scope->free_registers_array);
 
-//    printf("free %d - ", reg);
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    printf("free %d", reg);
 
     for (i=0; i<free_array->size; i++) {
         if (reg == (size_t)free_array->pointers[i]) {
-            printf(" ... already freed\n");
+            printf(" ... already freed - free array remains ");
+            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return;
         }
     }
     dpa_ado(free_array, (void*)(size_t)reg);
+
+//    printf(" - free array is now ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -161,9 +168,11 @@ int get_regs(Scope *scope, size_t number) {
     int reg, r, top, i;
     size_t seq;
 
+    if (number == 1) return get_reg(scope);
+
     free_array = (dpa*)(scope->free_registers_array);
 
-//    printf("get %d regs - ", (int)number);
+//    printf("get %d regs - free array is ", (int)number);
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     /* Check the free list - how many could be used */
@@ -181,7 +190,8 @@ int get_regs(Scope *scope, size_t number) {
                     reg = top; /* Result is the beginning of the sequence */
                     /* Now remove them from the free list */
                     free_array->size -= number;
-//                    printf("get %d-%d\n", reg, reg+(int)number - 1);
+//                    printf("  a-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//                    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
                     return reg;
                 }
             }
@@ -198,7 +208,8 @@ int get_regs(Scope *scope, size_t number) {
             free_array->size -= seq;
             /* Now assign some brand ne ones */
             scope->num_registers += number - seq;
-//            printf("get %d-%d\n", reg, reg+(int)number - 1);
+//            printf("  b-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return reg;
         }
         /* No we can't so just assign new ones */
@@ -206,12 +217,14 @@ int get_regs(Scope *scope, size_t number) {
 
     reg = (int)(scope->num_registers); /* Assign brand-new registers */
     scope->num_registers += number;
-//    printf("get %d-%d\n", reg, reg+(int)number - 1);
+//    printf("  c-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
     return reg;
 }
 
 /* Return no longer used registers to the scope, starting from reg
  * reg, reg+1, ... reg+number */
+/*
 void ret_regs(Scope *scope, int reg, size_t number) {
     dpa *free_array;
     size_t j, i;
@@ -230,6 +243,7 @@ void ret_regs(Scope *scope, int reg, size_t number) {
         reg++;
     }
 }
+*/
 
 char* type_nm(ValueType type) {
     switch (type) {
