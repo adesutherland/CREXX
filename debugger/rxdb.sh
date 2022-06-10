@@ -2,9 +2,6 @@
 rm "rxdb.rxas"
 rm "rxdb.rxbin"
 
-#../cmake-build-debug/compiler/rxc test
-#../cmake-build-debug/assembler/rxas test
-
 ../cmake-build-debug/compiler/rxc rxdb
 ../cmake-build-debug/assembler/rxas rxdb
 ../cmake-build-debug/assembler/rxas globals
