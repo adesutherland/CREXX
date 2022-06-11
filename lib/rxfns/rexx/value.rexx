@@ -34,14 +34,14 @@ value: procedure = .string
 
         if meta_entry = ".META_CLEAR" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
               leave a
            end
         end
 
         else if meta_entry = ".META_CONST" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
              v = ""
              type = ""
              assembler linkattr type,meta_entry,3
@@ -53,7 +53,7 @@ value: procedure = .string
 
         else if meta_entry = ".META_REG" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg,symbol) > 0 then do /* TODO - Rough and ready find */
+           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
               type = ""
               assembler linkattr type,meta_entry,3
               r_num = 0

@@ -53,9 +53,6 @@ set(REXXBINS
 #	      datatype.rxbin
         )
 
-add_custom_target(lib_rexx ALL
-        DEPENDS ${REXXBINS})
-
 foreach(_binfile ${REXXBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
@@ -72,8 +69,9 @@ foreach(_binfile ${REXXBINS})
   )
 endforeach()
 
-execute_process (
-		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS}
-		OUTPUT_FILE library.rxbin
+add_custom_command(
+		OUTPUT library-rexx.rxbin
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > library-rexx.rxbin
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		DEPENDS ${REXXBINS} rxas rxc
 )
