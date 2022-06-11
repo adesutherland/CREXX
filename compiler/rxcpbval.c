@@ -383,6 +383,24 @@ static walker_result step1_walker(walker_direction direction,
     return result_normal;
 }
 
+/* Step 1b
+ * - Set node ordinal values
+ */
+static walker_result step1b_walker(walker_direction direction,
+                                   ASTNode* node,
+                                   void *payload) {
+    int* ordinal_counter = (int*)payload;
+
+    if (direction == out) {
+        /* BOTTOM-UP */
+        node->high_ordinal = (*ordinal_counter)++;
+
+        if (node->child) node->low_ordinal = node->child->low_ordinal;
+        else node->low_ordinal = node->high_ordinal;
+    }
+    return result_normal;
+}
+
 /* Step 2a
  * - Builds the Symbol Table
  */
@@ -1027,6 +1045,7 @@ static walker_result step5_walker(walker_direction direction,
 /* Validate AST */
 void validate(Context *context) {
     Scope *current_scope;
+    int ordinal_counter = 0;
 
     /* We need the assembler db for ASSEMBLE */
     if (context->level == LEVELB) init_ops();
@@ -1037,6 +1056,9 @@ void validate(Context *context) {
      * - Other AST fixups (TBC)
      */
     ast_wlkr(context->ast, step1_walker, (void *) context);
+
+    /* 1b - set node ordinal values */
+    ast_wlkr(context->ast, step1b_walker, (void *)&ordinal_counter);
 
     /* Step 2
      * - Builds the Symbol Table

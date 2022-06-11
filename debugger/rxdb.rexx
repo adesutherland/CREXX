@@ -179,27 +179,27 @@ stephandler: procedure = .int
         reg = upper(reg)
         symbol = ""
         type = ""
-        /* Read the addresses backwards */
-        do a = address to 0 by -1
+        meta_array = 0
+        meta_entry = ""
+        v = ""
+        r_num = 0
+        /* Read the addresses backwards but from the address before the code about to be executed */
+        do a = address - 1 to 0 by -1
           /* Get the metadata for that address */
-          meta_array = 0
-          meta_entry = ""
           assembler metaloaddata meta_array,module,a
           do i = 1 to meta_array
             assembler linkattr meta_entry,meta_array,i
 
             if meta_entry = ".META_CLEAR" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg" ",symbol"@") > 0 then do /* TODO - Rough and ready find */
+              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 leave a
               end
             end
 
             else if meta_entry = ".META_CONST" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg" ",symbol"@") > 0 then do /* TODO - Rough and ready find */
-                v = ""
-                type = ""
+              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 assembler linkattr type,meta_entry,3
                 assembler linkattr v,meta_entry,4
                 value = "(CONSTANT" type")" v
@@ -209,10 +209,8 @@ stephandler: procedure = .int
 
             else if meta_entry = ".META_REG" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg" ",symbol"@") > 0 then do /* TODO - Rough and ready find */
-                type = ""
+              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 assembler linkattr type,meta_entry,3
-                r_num = 0
                 assembler linkattr r_num,meta_entry,4
 
                 if type = ".INT" then do
@@ -239,6 +237,12 @@ stephandler: procedure = .int
               end
             end
           end
+          assembler unlink symbol
+          assembler unlink type
+          assembler unlink meta_array
+          assembler unlink meta_entry
+          assembler unlink v
+          assembler unlink r_num
         end
         if value = "" then value = "(TAKEN CONSTANT)" reg
         say clearline || reg ":" value
@@ -483,63 +487,7 @@ find_proc: procedure = .int
 
 load_library: procedure = .int
   arg dir = .string
-  call load_module dir || "/rexx/substr"
-  call load_module dir || "/rexx/length"
-  call load_module dir || "/rexx/raise"
-  call load_module dir || "/rexx/linesize"
-  call load_module dir || "/rexx/abbrev"
-  call load_module dir || "/rexx/x2d"
-  call load_module dir || "/rexx/x2c"
-  call load_module dir || "/rexx/x2b"
-  call load_module dir || "/rexx/d2b"
-  call load_module dir || "/rexx/d2c"
-  call load_module dir || "/rexx/d2x"
-  call load_module dir || "/rexx/c2x"
-  call load_module dir || "/rexx/c2d"
-  call load_module dir || "/rexx/center"
-  call load_module dir || "/rexx/changestr"
-  call load_module dir || "/rexx/delstr"
-  call load_module dir || "/rxas/right"
-  call load_module dir || "/rxas/left"
-  call load_module dir || "/rxas/copies"
-  call load_module dir || "/rxas/_elapsed"
-  call load_module dir || "/rxas/pos"
-  call load_module dir || "/rxas/lastpos"
-  call load_module dir || "/rxas/reverse"
-  call load_module dir || "/rexx/centre"
-  call load_module dir || "/rexx/compare"
-  call load_module dir || "/rexx/countstr"
-  call load_module dir || "/rexx/insert"
-  call load_module dir || "/rexx/lower"
-  call load_module dir || "/rexx/min"
-  call load_module dir || "/rexx/max"
-  call load_module dir || "/rexx/date"
-  call load_module dir || "/rexx/time"
-  call load_module dir || "/rexx/_datei"
-  call load_module dir || "/rexx/_dateo"
-  call load_module dir || "/rexx/_jdn"
-  call load_module dir || "/rexx/_itrunc"
-  call load_module dir || "/rexx/_ftrunc"
-  call load_module dir || "/rexx/delword"
-  call load_module dir || "/rexx/wordlength"
-  call load_module dir || "/rexx/wordpos"
-  call load_module dir || "/rexx/format"
-  call load_module dir || "/rexx/overlay"
-  call load_module dir || "/rexx/sign"
-  call load_module dir || "/rexx/space"
-  call load_module dir || "/rexx/strip"
-  call load_module dir || "/rexx/translate"
-  call load_module dir || "/rexx/trunc"
-  call load_module dir || "/rexx/upper"
-  call load_module dir || "/rexx/verify"
-  call load_module dir || "/rxas/word"
-  call load_module dir || "/rxas/words"
-  call load_module dir || "/rxas/wordindex"
-  call load_module dir || "/rexx/reradix"
-  call load_module dir || "/rexx/sequence"
-  call load_module dir || "/rexx/find"
-  call load_module dir || "/rexx/index"
-  
+  call load_module dir || "/library"
   return 0
 
 /* Poor mans globals */

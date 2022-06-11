@@ -13,7 +13,8 @@ F0041 - REXX Enhancements:
         Added some dependencies to the cmake scripts
         Debugger PoC Version handles REXX Clauses
         Fix of register assigment logic
-        Increased parser stack (100->2000) for more "if" depth. Trapped stack overflow errors.
+        Increased parser stack (100->2000) for more "if" depth. Trapped stack overflow errors
+        Fix argument constant check for external procedures */
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

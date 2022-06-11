@@ -39,3 +39,5 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${RXASBINS} rxas rxc
 )
+
+add_custom_target(library-rxas ALL DEPENDS library-rxas.rxbin)

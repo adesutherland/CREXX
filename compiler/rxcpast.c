@@ -109,6 +109,10 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     else node->node_number = 1;
     context->free_list = node;
 
+    /*  Note that ordinal is only set before optimisation - new nodes have value -1 */
+    node->high_ordinal = -1;
+    node->low_ordinal = -1;
+
     /* These values are normally set by the set_source_location walker
      *  However nodes (e.g. unspecified optional arguments) can be added after
      *  the walker has been run - so we have added logic to add_ast() and add_sbtr()

@@ -88,6 +88,8 @@ struct ASTNode {
     NodeType node_type;
     ValueType value_type;
     ValueType target_type;
+    int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
+    int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
     char register_type;
     int additional_registers; /* always type 'r' */
@@ -228,6 +230,7 @@ struct Symbol {
     char register_type;
     char is_constant;
     char is_function;
+    char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
 /* Scope Factory */
@@ -276,6 +279,9 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
+
+/* Returns the lowest ASTNode ordinal associated with the symbol */
+int sym_lord(Symbol *symbol);
 
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);

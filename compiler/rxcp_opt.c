@@ -692,6 +692,12 @@ static walker_result opt2_walker(walker_direction direction,
 
         if (node->node_type == ARG) {
             if (!node->is_ref_arg) { /* Only if it is pass by reference */
+
+                /* Check if we are in a definition (external procedure) */
+                /*  ARG > ARGS  > PROC-INSTRUCTIONS */
+                if (node->parent->sibling->node_type == NOP) return result_normal;
+
+                /* Internal Procedure - do constant check */
                 is_constant = 1;
                 symbol = node->child->symbolNode->symbol; /* The symbol is linked to the child node */
                 /* Check to see if the symbol is written to in the procedure */
@@ -731,7 +737,7 @@ void optimise(Context *context) {
         if (!payload.changed) break;
     }
 
-    /* Constant Folding */
+    /* Constant Arguments converted to pass by reference */
     ast_wlkr(context->ast, opt2_walker, (void *) &payload);
 
 }

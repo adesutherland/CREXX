@@ -1150,11 +1150,20 @@ static char* type_to_prefix(ValueType value_type) {
 /* Adds Symbol metadata */
 void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
-    OutputFragment *output = (OutputFragment*)payload;
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
     char* buffer;
     char* symbol_fqn;
+    int symbol_ordinal;
 
     if (!symbol->is_function) {
+
+        /* Logic that works out if we should emit the variable meta data here */
+        if (symbol->meta_emitted) return;     /* Aleady done */
+        if (node->high_ordinal == -1) return; /* Weird optimiser added node - skip as we don't know whats going on */
+        symbol_ordinal = sym_lord(symbol);
+        if (symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
+        symbol->meta_emitted = 1;
 
         if (symbol->is_constant) {
             symbol_fqn = sym_frnm(symbol);
@@ -1193,14 +1202,36 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
     }
 }
 
+/* Add Variable Metadata */
+static void add_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Clears the Procedure's Symbols from metadata */
+    scp_4all(scope, meta_set_symbol, node);
+}
+
 /* Clears Symbol metadata */
 void meta_clear_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
-    OutputFragment *output = (OutputFragment*)payload;
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
     char* buffer;
     char* symbol_fqn;
 
     if (!symbol->is_function) {
+
+        if (!symbol->meta_emitted) {
+            fprintf(stderr, "WARNING: Did not emit metadata for symbol %s\n", symbol->name);
+            return;
+        }
 
         if (symbol->is_constant || symbol->register_num >= 0) {
             symbol_fqn = sym_frnm(symbol);
@@ -1216,6 +1247,22 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
         output_append_text(output,buffer);
         free(buffer);
     }
+}
+
+/* Clear all variable metadata */
+static void clear_variable_metadata(ASTNode *node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Clears the Procedure's Symbols from metadata */
+    scp_4all(scope, meta_clear_symbol, node);
 }
 
 /* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
@@ -1399,11 +1446,6 @@ static walker_result emit_walker(walker_direction direction,
                     free(buf);
                     free(proc_symbol);
 
-                    if (node->scope) {
-                        /* Add the Procedure's Symbols as metadata */
-                        scp_4all(node->scope, meta_set_symbol, node->output);
-                    }
-
                     /* Add source metadata */
                     if (node->token) {
                         comment_meta = get_metaline_clause(node);
@@ -1417,10 +1459,8 @@ static walker_result emit_walker(walker_direction direction,
                         n = n->sibling;
                     }
 
-                    if (node->scope) {
-                        /* Clears the Procedure's Symbols from metadata */
-                        scp_4all(node->scope, meta_clear_symbol, node->output);
-                    }
+                    /* Clear all variable metadata */
+                    clear_variable_metadata(node);
                 }
                 break;
 
@@ -1442,6 +1482,9 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 if (node->is_opt_arg) { /* Optional Argument */
                     /* If the register flag is set then an argument was specified */
@@ -1562,6 +1605,10 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 /* TODO - set result */
                 output_concat(node->output, child1->output);
                 break;
@@ -1578,6 +1625,9 @@ static walker_result emit_walker(walker_direction direction,
                 free(comment_meta);
                 */
                 node->output = output_f();
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 /* Number of arguments */
                 temp1 = printf_malloc("   load r%d,%d\n",
@@ -2184,6 +2234,9 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
 
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 /* We will build the assembler instruction */
                 /* First the command */
                 char* inst = printf_malloc("   %.*s ",
@@ -2249,6 +2302,9 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
 
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 output_concat(node->output, child2->output);
                 if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
@@ -2268,6 +2324,9 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
 
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 output_concat(node->output, child1->output);
                 temp1 = printf_malloc("   address %c%d\n",
                          node->register_type,
@@ -2285,6 +2344,9 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     /* If the register is not set then the child is a constant
@@ -2309,6 +2371,9 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 if (child1 == 0) {
                     temp1 = printf_malloc("   ret\n");
@@ -2685,6 +2750,10 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 temp1 = printf_malloc("   br l%ddoend\n",
                          node->association->node_number);
                 output_append_text(node->output, temp1);
@@ -2697,6 +2766,10 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 temp1 = printf_malloc("   br l%ddoinc\n",
                          node->association->node_number);
                 output_append_text(node->output, temp1);

@@ -75,3 +75,5 @@ add_custom_command(
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		DEPENDS ${REXXBINS} rxas rxc
 )
+
+add_custom_target(library-rexx ALL DEPENDS library-rexx.rxbin)

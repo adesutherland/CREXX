@@ -279,6 +279,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->register_type = 'r';
     symbol->is_constant = 0;
     symbol->is_function = 0;
+    symbol->meta_emitted = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -365,6 +366,22 @@ static void symbol_free(Symbol *symbol) {
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index) {
     return (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
+}
+
+/* Returns the lowest ASTNode ordinal associated with the symbol */
+int sym_lord(Symbol *symbol) {
+
+    dpa* array = (dpa*)(symbol->ast_node_array);
+    size_t i;
+    int o;
+    int ord = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+
+    for (i = 1; i < array->size; i++) {
+        o = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+        if (o < ord) ord = o;
+    }
+
+    return ord;
 }
 
 /* Connect a ASTNode to a Symbol */

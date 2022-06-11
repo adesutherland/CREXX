@@ -17,6 +17,10 @@ value: procedure = .string
   type = ""
   module = 0
   address = 0
+  meta_array = 0
+  meta_entry = ""
+  v = ""
+  r_num = 0
 
   address_object = 0
   assembler metaloadcalleraddr address_object /* Address from where are we called */
@@ -26,12 +30,9 @@ value: procedure = .string
   /* Read the addresses backwards */
   do a = address to 0 by -1
      /* Get the metadata for that address */
-     meta_array = 0
-     meta_entry = ""
      assembler metaloaddata meta_array,module,a
      do i = 1 to meta_array
         assembler linkattr meta_entry,meta_array,i
-
         if meta_entry = ".META_CLEAR" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
            if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
@@ -42,8 +43,6 @@ value: procedure = .string
         else if meta_entry = ".META_CONST" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
            if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
-             v = ""
-             type = ""
              assembler linkattr type,meta_entry,3
              assembler linkattr v,meta_entry,4
              result = v
@@ -54,9 +53,7 @@ value: procedure = .string
         else if meta_entry = ".META_REG" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
            if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
-              type = ""
               assembler linkattr type,meta_entry,3
-              r_num = 0
               assembler linkattr r_num,meta_entry,4
 
               if type = ".INT" then do
