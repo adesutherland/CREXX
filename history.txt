@@ -1,6 +1,21 @@
 CREXX History / Change Log
 
-F0040 - REXX Debugging Support
+F0041 - REXX Enhancements:
+        Procedures with no arguments
+        Procedures with no return value
+        Line continuation
+        Hex Escapes (RXAS)
+        Hex/Binary literals (RXC)
+        File, line and var meta data (RXC, RXAS, RXDAS)
+        Allow rxbin files to be concatenated together (to create a library)
+        Build changes - a consolidate library.rxbin is created in lib/rxfns directory
+        Performance improvement in searching in constant pool - pointers chains for certain types, like procedures
+        Added some dependencies to the cmake scripts
+        Debugger PoC Version handles REXX Clauses
+        Fix of register assigment logic
+        Increased parser stack (100->2000) for more "if" depth. Trapped stack overflow errors
+        Fix argument constant check for external procedures */
+F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)
 I0205 - Flexible source file extension

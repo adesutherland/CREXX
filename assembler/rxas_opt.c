@@ -9,7 +9,7 @@
 
 /* This defines an instruction to be searched for or as a template output */
 typedef struct instruction_pattern {
-    char inst_type; /* 0=nothing, 'l'=label, 'i'=instruction */
+    enum queue_item_type inst_type;
     char* instruction;
     char optype1;
     size_t opnum1;
@@ -88,8 +88,8 @@ typedef struct op_map {
  * all the mapped instructions are replaced by the output templates.
  *
  * Each instruction mapping can have a type of
- * 'i' - INSTRUCTION (a normal instruction)
- * 'l' - LABEL (a label instruction)
+ * OP_CODE - INSTRUCTION (a normal instruction)
+ * ASM_LABEL - LABEL (a label instruction)
  *
  * The operand matching is done by mapping the actual register to the rules register number,
  * when that actual register is found again it keeps the same mapping. So each
@@ -104,7 +104,7 @@ typedef struct op_map {
  * Hazardous instructions, change the data flow and include:
  * - labels (causes un-analysable flow control)
  * - branches (causes un-analysable flow control)
- * - function calls (these use dynamic registers(
+ * - function calls (these use dynamic registers)
  * - Procedure boundaries
  * - instructions not part of the ruleset but using registers used in the ruleset
  *
@@ -119,11 +119,11 @@ typedef struct op_map {
  *
  * 1. Rule for two swaps cancelling out: swap r0,r1; swap r0,r1
  *
- *          *  flag type   type inst    op1     op2     op3
- * input    *  {NO_HAZARD, 'i', "swap", 'r', 0, 'r', 1, 0, 0,
+ *          *  flag type   type      inst   op1     op2     op3
+ * input    *  {NO_HAZARD, OP_CODE, "swap", 'r', 0, 'r', 1, 0, 0,
  * output 1 *               0},
  * output 2 *
- * input    *  {NO_HAZARD, 'i', "swap", 'r', 0, 'r', 1, 0, 0,
+ * input    *  {NO_HAZARD, OP_CODE, "swap", 'r', 0, 'r', 1, 0, 0,
  * output 1 *               0},
  * output 2 *
  * input    *  {END_OF_RULE},
@@ -168,9 +168,9 @@ typedef struct op_map {
  * 2. Rule for converting a concat to a faster append
  *    concat r0,r0,r1 to append r0,r1
  *
- *          *  flag type   type inst      op1     op2     op3
- * input    *  {NO_HAZARD, 'i', "concat", 'r', 0, 'r', 0, 'r', 1,
- * output 1 *              'i', "append", 'r', 0, 'r', 1,  0, 0},
+ *          *  flag type   type     inst      op1     op2     op3
+ * input    *  {NO_HAZARD, OP_CODE, "concat", 'r', 0, 'r', 0, 'r', 1,
+ * output 1 *              OP_CODE, "append", 'r', 0, 'r', 1,  0, 0},
  * output 2 *
  * input    *  {END_OF_RULE},
  *
@@ -190,16 +190,16 @@ typedef struct op_map {
  *    This is a complex ruleset and one of 3 rulesets (currently) designed to improve
  *    performance by reducing branches to branches
  *
- *          *  flag type   type inst    op1     op2     op3
- * input    *  {ANY_GAP,   'i',"br",    'b', 0,  0,  0,  0,  0,
- * output 1 *              'i',"brtf",  'b', 1, 'b', 2, 'r', 0},
+ *          *  flag type   type     inst    op1     op2     op3
+ * input    *  {ANY_GAP,   OP_CODE, "br",    'b', 0,  0,  0,  0,  0,
+ * output 1 *              OP_CODE, "brtf",  'b', 1, 'b', 2, 'r', 0},
  * output 2 *
- * input    *  {ANY_GAP,   'l',0,       'l', 0,  0,  0,  0,  0,
- * output 1 *              'l',0,       'l', 0,  0,  0,  0,  0},
+ * input    *  {ANY_GAP,   ASM_LABEL,0,       'l', 0,  0,  0,  0,  0,
+ * output 1 *              ASM_LABEL,0,       'l', 0,  0,  0,  0,  0},
  * output 2 *
- * input    *  {NO_GAP,    'i',"brt",   'b', 1, 'r', 0,  0,  0,
- * output 1 *              'i',"brt",   'b', 1, 'r', 0,  0,  0,
- * output 2 *              'l',0,       'l', 2,  0,  0,  0,  0},
+ * input    *  {NO_GAP,    OP_CODE, "brt",   'b', 1, 'r', 0,  0,  0,
+ * output 1 *              OP_CODE, "brt",   'b', 1, 'r', 0,  0,  0,
+ * output 2 *              ASM_LABEL,0,       'l', 2,  0,  0,  0,  0},
  * input    *  {END_OF_RULE},
  *
  * Especially with control statements (like IF) the compiler glues the
@@ -263,94 +263,94 @@ rule rules[] =
         {
 
             /* Two swaps cancelling out: swap r0,r1; swap r0,r1 */
-            {NO_HAZARD, 'i',"swap", 'r', 0, 'r', 1, 0, 0,
+            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
                          0},
-            {NO_HAZARD, 'i',"swap", 'r', 0, 'r', 1, 0, 0,
+            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
                          0},
             {END_OF_RULE},
 
             /* Two swaps cancelling out: swap r0,r1; swap r1,r0 */
-            {NO_HAZARD, 'i',"swap", 'r', 0, 'r', 1, 0, 0,
+            {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
                          0},
-            {NO_HAZARD, 'i',"swap", 'r', 1, 'r', 0, 0, 0,
+            {NO_HAZARD, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
                          0},
             {END_OF_RULE},
 
             /* sconcat to sappend: sconcat r0,r0,r1 to sappend r0,r1 */
-            {NO_HAZARD, 'i',"sconcat", 'r', 0, 'r', 0, 'r', 1,
-                        'i',"sappend", 'r', 0, 'r', 1, 0, 0},
+            {NO_HAZARD, OP_CODE,"sconcat", 'r', 0, 'r', 0, 'r', 1,
+                        OP_CODE,"sappend", 'r', 0, 'r', 1, 0, 0},
             {END_OF_RULE},
 
             /* concat to append: concat r0,r0,r1 to append r0,r1 */
-            {NO_HAZARD, 'i',"concat", 'r', 0, 'r', 0, 'r', 1,
-                        'i',"append", 'r', 0, 'r', 1, 0, 0},
+            {NO_HAZARD, OP_CODE,"concat", 'r', 0, 'r', 0, 'r', 1,
+                        OP_CODE,"append", 'r', 0, 'r', 1, 0, 0},
             {END_OF_RULE},
 
             /* Unconditional branch to branch true mapped to brtf*/
-            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
-                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
-            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
-                        'l',0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brt", 'b', 1, 'r', 0,  0,  0,
-                        'i',"brt", 'b', 1, 'r', 0,  0,  0,
-                        'l',0,     'l', 2,  0,  0,  0,  0},
+            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
+                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
+            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brt", 'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brt", 'b', 1, 'r', 0,  0,  0,
+                        ASM_LABEL,0,     'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
             /* Unconditional branch to branch false mapped to brtf*/
-            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
-                        'i',"brtf",'b', 2, 'b', 1, 'r', 0},
-            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
-                        'l',0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brf", 'b', 1, 'r', 0,  0,  0,
-                        'i',"brf", 'b', 1, 'r', 0,  0,  0,
-                        'l',0,     'l', 2,  0,  0,  0,  0},
+            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
+                        OP_CODE,"brtf",'b', 2, 'b', 1, 'r', 0},
+            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brf", 'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brf", 'b', 1, 'r', 0,  0,  0,
+                        ASM_LABEL,0,     'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
             /* Unconditional branch to branch true false to brtf*/
-            {ANY_GAP,   'i',"br",  'b', 0,  0,  0,  0,  0,
-                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
-            {ANY_GAP,   'l',0,     'l', 0,  0,  0,  0,  0,
-                        'l',0,     'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brtf",'b', 1, 'b', 2, 'r', 0,
-                        'i',"brtf",'b', 1, 'b', 2, 'r', 0},
+            {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
+                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
+            {ANY_GAP,   ASM_LABEL,0,     'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,     'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0,
+                        OP_CODE,"brtf",'b', 1, 'b', 2, 'r', 0},
             {END_OF_RULE},
 
             /* brt to brt with same condition */
-            {ANY_GAP,   'i',"brt",  'b', 0, 'r', 0,  0,  0,
-                        'i',"brt",  'b', 1, 'r', 0,  0,  0},
-            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
-                        'l',0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brt",  'b', 1, 'r', 0,  0,  0,
-                        'i',"brt",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   OP_CODE,"brt",  'b', 0, 'r', 0,  0,  0,
+                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0},
             {END_OF_RULE},
 
             /* brf to brf with same condition */
-            {ANY_GAP,   'i',"brf",  'b', 0, 'r', 0,  0,  0,
-                        'i',"brf",  'b', 1, 'r', 0,  0,  0},
-            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
-                        'l',0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brf",  'b', 1, 'r', 0,  0,  0,
-                        'i',"brf",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   OP_CODE,"brf",  'b', 0, 'r', 0,  0,  0,
+                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0},
+            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0},
             {END_OF_RULE},
 
             /* brt to brf with same condition */
-            {ANY_GAP,   'i',"brt",  'b', 0, 'r', 0,  0,  0,
-                        'i',"brt",  'b', 2, 'r', 0,  0,  0},
-            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
-                        'l',0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brf",  'b', 1, 'r', 0,  0,  0,
-                        'i',"brf",  'b', 1, 'r', 0,  0,  0,
-                        'l',0,      'l', 2,  0,  0,  0,  0},
+            {ANY_GAP,   OP_CODE,"brt",  'b', 0, 'r', 0,  0,  0,
+                        OP_CODE,"brt",  'b', 2, 'r', 0,  0,  0},
+            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brf",  'b', 1, 'r', 0,  0,  0,
+                        ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
             /* brf to brt with same condition */
-            {ANY_GAP,   'i',"brf",  'b', 0, 'r', 0,  0,  0,
-                        'i',"brf",  'b', 2, 'r', 0,  0,  0},
-            {ANY_GAP,   'l',0,      'l', 0,  0,  0,  0,  0,
-                        'l',0,      'l', 0,  0,  0,  0,  0},
-            {NO_GAP,    'i',"brt",  'b', 1, 'r', 0,  0,  0,
-                        'i',"brt",  'b', 1, 'r', 0,  0,  0,
-                        'l',0,      'l', 2,  0,  0,  0,  0},
+            {ANY_GAP,   OP_CODE,"brf",  'b', 0, 'r', 0,  0,  0,
+                        OP_CODE,"brf",  'b', 2, 'r', 0,  0,  0},
+            {ANY_GAP,   ASM_LABEL,0,      'l', 0,  0,  0,  0,  0,
+                        ASM_LABEL,0,      'l', 0,  0,  0,  0,  0},
+            {NO_GAP,    OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
+                        OP_CODE,"brt",  'b', 1, 'r', 0,  0,  0,
+                        ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
             /* NOTE Branch to unconditional branch is optimised later anyway so
@@ -362,8 +362,6 @@ rule rules[] =
 
 /* Token to reg type */
 static char reg_type(Token *opToken) {
-    if (!opToken) return 0;
-
     switch(opToken->token_type) {
         case RREG:
             return 'r';
@@ -379,30 +377,31 @@ static char reg_type(Token *opToken) {
  * example a branch instruction (i.e. an instruction with a label or function
  * target changes the flow of control, breaking simple keyhole logic).
  * In which case we flush the queue before adding the next instruction */
-static int is_hazardous(Token *instrToken, Token *operand1Token,
+static int is_hazardous(enum queue_item_type type, Token *instrToken, Token *operand1Token,
                               Token *operand2Token, Token *operand3Token) {
 
-    /* Calls or branches */
-    if (operand1Token &&
-        (operand1Token->token_type == ID || operand1Token->token_type == FUNC))
-        return 1;
+    if (type == OP_CODE) {
+        /* Calls or branches */
+        if (operand1Token &&
+            (operand1Token->token_type == ID || operand1Token->token_type == FUNC))
+            return 1;
 
-    if (operand2Token &&
-        (operand2Token->token_type == ID || operand2Token->token_type == FUNC))
-        return 1;
+        if (operand2Token &&
+            (operand2Token->token_type == ID || operand2Token->token_type == FUNC))
+            return 1;
 
-    if (operand3Token &&
-        (operand3Token->token_type == ID || operand3Token->token_type == FUNC))
-        return 1;
+        if (operand3Token &&
+            (operand3Token->token_type == ID || operand3Token->token_type == FUNC))
+            return 1;
 
-    if (instrToken->token_type == LABEL)
-        return 1;
+        /* Other hazardous instructions - hard coded */
+        /*
+        if (!strcmp((char*)(instrToken->token_value.string), "a_hazardous_instruction")) return 1;
+        */
+    }
 
-    /* Other hazardous instructions */
-    /*
-    else if (!strcmp((char*)(instrToken->token_value.string), "a_hazardous_instruction"))
-        return 1;
-    */
+    else if (type == ASM_LABEL) return 1;
+
     return 0;
 }
 
@@ -432,7 +431,6 @@ static int is_relevant(op_map *map, Token *opToken) {
  * NOTE: The *map structure is NOT updated
  * See map_operand() */
 static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_num) {
-    int i;
 
     if (!opToken) {
         if (op_type) return 0;
@@ -533,7 +531,6 @@ static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_
  * NOTE: if it does map the *map structure is updated
  * See can_map_operand() */
 static int map_operand(op_map *map, Token *opToken, char op_type, size_t op_num) {
-    int i;
 
     if (!opToken) {
         if (op_type) return 0;
@@ -665,8 +662,8 @@ static int map_operand(op_map *map, Token *opToken, char op_type, size_t op_num)
 static int can_map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
 
     switch (rule->in.inst_type) {
-        case 'i':
-            if (instruction->instrToken->token_type != ID)
+        case OP_CODE:
+            if (instruction->instrType != OP_CODE)
                 return 0; /* Not a normal instruction */
 
             if (strcmp((char *) (instruction->instrToken->token_value.string), rule->in.instruction) != 0)
@@ -683,8 +680,8 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
 
             return 1;
 
-        case 'l':
-            if (instruction->instrToken->token_type != LABEL)
+        case ASM_LABEL:
+            if (instruction->instrType != ASM_LABEL)
                 return 0; /* Not a label */
 
             if (!can_map_operand(map, instruction->instrToken,
@@ -702,8 +699,8 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
 static int map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
 
     switch (rule->in.inst_type) {
-        case 'i':
-            if (instruction->instrToken->token_type != ID)
+        case OP_CODE:
+            if (instruction->instrType != OP_CODE)
                 return 0; /* Not a normal instruction */
 
             if (strcmp((char *) (instruction->instrToken->token_value.string), rule->in.instruction) != 0)
@@ -720,8 +717,8 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
 
             return 1;
 
-        case 'l':
-            if (instruction->instrToken->token_type != LABEL)
+        case ASM_LABEL:
+            if (instruction->instrType != ASM_LABEL)
                 return 0; /* Not a label */
 
             if (!map_operand(map, instruction->instrToken,
@@ -814,7 +811,6 @@ static Token* mapped_token(Assembler_Context *context, op_map *map, char op_type
 /* Optimise a rule starting from a specific instruction
  * returns 1 if the rule was successfully applied */
 static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int inst_no) {
-    Token *new_instruction;
     int inst_no2;
 
     /* Clear Map */
@@ -838,22 +834,28 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                 r++;
             } else {
                 /* Not a match - we need to check that skipping the instruction does not break the rule */
-                if (r->flag == NO_GAP) return 0; /* No gap allowed! */
-                if (r->flag == NO_HAZARD) {
-                    /* Is it a hazardous instruction like a branch? */
-                    if (is_hazardous(
-                            context->optimiser_queue[inst_no].instrToken,
-                            context->optimiser_queue[inst_no].operand1Token,
-                            context->optimiser_queue[inst_no].operand2Token,
-                            context->optimiser_queue[inst_no].operand3Token))
-                        return 0;
+                if (    context->optimiser_queue[inst_no].instrType == OP_CODE ||
+                        context->optimiser_queue[inst_no].instrType == ASM_LABEL ) {
+                    /* Meta entries are always ignored */
 
-                    /* Is the instruction relevant (using some of the mapped registers) this
-                     * is also a hazard */
-                    if (is_relevant(map, context->optimiser_queue[inst_no].operand1Token) ||
-                        is_relevant(map, context->optimiser_queue[inst_no].operand2Token) ||
-                        is_relevant(map, context->optimiser_queue[inst_no].operand3Token))
-                        return 0;
+                    if (r->flag == NO_GAP) return 0; /* No gap allowed! */
+                    if (r->flag == NO_HAZARD) {
+                        /* Is it a hazardous instruction like a branch? */
+                        if (is_hazardous(
+                                context->optimiser_queue[inst_no].instrType,
+                                context->optimiser_queue[inst_no].instrToken,
+                                context->optimiser_queue[inst_no].operand1Token,
+                                context->optimiser_queue[inst_no].operand2Token,
+                                context->optimiser_queue[inst_no].operand3Token))
+                            return 0;
+
+                        /* Is the instruction relevant (using some of the mapped registers) this
+                         * is also a hazard */
+                        if (is_relevant(map, context->optimiser_queue[inst_no].operand1Token) ||
+                            is_relevant(map, context->optimiser_queue[inst_no].operand2Token) ||
+                            is_relevant(map, context->optimiser_queue[inst_no].operand3Token))
+                            return 0;
+                    }
                 }
             }
         }
@@ -869,7 +871,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
             if (r) {
                 /* Main output instruction */
                 switch (r->out.inst_type) {
-                    case 'i':
+                    case OP_CODE:
+                        context->optimiser_queue[inst_no].instrType = OP_CODE;
                         context->optimiser_queue[inst_no].instrToken =
                                 token_id(context,
                                          context->optimiser_queue[inst_no].instrToken,
@@ -882,7 +885,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                                 mapped_token(context, map, r->out.optype3, r->out.opnum3);
                         break;
 
-                    case 'l':
+                    case ASM_LABEL:
+                        context->optimiser_queue[inst_no].instrType = ASM_LABEL;
                         context->optimiser_queue[inst_no].instrToken =
                                 mapped_token(context, map, 'l', r->out.opnum1);
                         context->optimiser_queue[inst_no].operand1Token = 0;
@@ -904,7 +908,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
 
                 /* Secondary output instruction */
                 switch (r->out2.inst_type) {
-                    case 'i':
+                    case OP_CODE:
                         /* Insert instruction in the queue */
                         inst_no2 = inst_no + 1;
                         if ((int)context->optimiser_queue_items - inst_no2 > 0) {
@@ -916,6 +920,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         context->optimiser_queue_items++;
 
                         /* Add the instruction */
+                        context->optimiser_queue[inst_no2].instrType = OP_CODE;
                         context->optimiser_queue[inst_no2].instrToken =
                                 token_id(context,
                                          context->optimiser_queue[inst_no2].instrToken,
@@ -928,7 +933,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                                 mapped_token(context, map, r->out2.optype3, r->out2.opnum3);
                         break;
 
-                    case 'l':
+                    case ASM_LABEL:
                         /* Insert instruction in the queue */
                         inst_no2 = inst_no + 1;
                         if ((int)context->optimiser_queue_items - inst_no2 > 0) {
@@ -940,6 +945,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         context->optimiser_queue_items++;
 
                         /* Add the instruction */
+                        context->optimiser_queue[inst_no2].instrType = ASM_LABEL;
                         context->optimiser_queue[inst_no2].instrToken =
                                 mapped_token(context, map, 'l', r->out2.opnum1);
                         context->optimiser_queue[inst_no2].operand1Token = 0;
@@ -996,20 +1002,58 @@ static void optimise(Assembler_Context *context) {
     } while (changed);
 }
 
-static void queue_instruction(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-                              Token *operand2Token, Token *operand3Token) {
+/* Execute Queued Item */
+static void executeQueuedItem(Assembler_Context *context, instruction_queue *item) {
+
+    switch  (item->instrType) {
+        case ASM_LABEL:
+            rxaslabl(context, item->instrToken);
+            break;
+        case OP_CODE:
+            rxasgen(context, item->instrToken,
+                    item->operand1Token,
+                    item->operand2Token,
+                    item->operand3Token);
+            break;
+        case FUNC_META:
+            /* Queue Function Metadata */
+            rxasmefu(context, item->instrToken, item->operand1Token, item->operand2Token,
+                     item->operand3Token, item->operand4Token, item->operand5Token);
+            break;
+        case CONST_META:
+            /* Queue Constant Metadata */
+            rxasmect(context, item->instrToken, item->operand1Token, item->operand2Token,
+                     item->operand3Token);
+            break;
+        case CLEAR_META:
+            /* Queue Clear Metadata */
+            rxasmecl(context, item->instrToken);
+            break;
+        case REG_META:
+            /* Queue Register Metadata */
+            rxasmere(context, item->instrToken, item->operand1Token, item->operand2Token,
+                     item->operand3Token);
+            break;
+        case SRC_LINE:
+            /* Queue Source Line */
+            rxasmesr(context, item->instrToken, item->operand1Token, item->operand2Token);
+            break;
+        case SRC_FILE:
+            /* Source File */
+            rxasmefl(context, item->instrToken);
+            break;
+        default:;
+    }
+}
+
+static void queue_instruction(Assembler_Context *context, enum queue_item_type type,
+                              Token *instrToken, Token *operand1Token, Token *operand2Token,
+                              Token *operand3Token, Token *operand4Token, Token *operand5Token) {
 
     /* Remove old instructions to get queue down to the target length */
     /* Note that instruction rules can add instructions to the queue  */
     while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
-        /* Write the oldest instruction */
-        if (context->optimiser_queue[0].instrToken->token_type == LABEL)
-            rxaslabl(context, context->optimiser_queue[0].instrToken);
-        else
-            rxasgen(context, context->optimiser_queue[0].instrToken,
-                context->optimiser_queue[0].operand1Token,
-                context->optimiser_queue[0].operand2Token,
-                context->optimiser_queue[0].operand3Token);
+        executeQueuedItem(context, context->optimiser_queue);
 
         /* Move the queue */
         memmove(&context->optimiser_queue[0],
@@ -1021,52 +1065,108 @@ static void queue_instruction(Assembler_Context *context, Token *instrToken, Tok
     }
 
     /* Add to the end of the queue */
+    context->optimiser_queue[context->optimiser_queue_items].instrType = type;
     context->optimiser_queue[context->optimiser_queue_items].instrToken = instrToken;
     context->optimiser_queue[context->optimiser_queue_items].operand1Token = operand1Token;
     context->optimiser_queue[context->optimiser_queue_items].operand2Token = operand2Token;
     context->optimiser_queue[context->optimiser_queue_items].operand3Token = operand3Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand4Token = operand4Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand5Token = operand5Token;
     context->optimiser_queue_items++;
 
     /* Optimise */
     optimise(context);
 }
 
-/** Queue code for the keyhole optimiser */
+/* Queue code for the keyhole optimiser */
+/* Queue opcode  */
 void rxasque0(Assembler_Context *context, Token *instrToken) {
     if (context->optimise) {
-        queue_instruction(context, instrToken, 0, 0, 0);
+        queue_instruction( context, OP_CODE, instrToken, 0, 0, 0, 0, 0);
     }
     else rxasgen0(context, instrToken);
 }
 
+/* Queue opcode  */
 void rxasque1(Assembler_Context *context, Token *instrToken, Token *operand1Token) {
     if (context->optimise) {
-        queue_instruction(context, instrToken, operand1Token, 0, 0);
+        queue_instruction(context, OP_CODE, instrToken, operand1Token, 0, 0, 0, 0);
     }
     else rxasgen1(context, instrToken, operand1Token);
 }
 
+/* Queue opcode  */
 void rxasque2(Assembler_Context *context, Token *instrToken, Token *operand1Token,
               Token *operand2Token) {
     if (context->optimise) {
-        queue_instruction(context, instrToken, operand1Token, operand2Token, 0);
+        queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, 0, 0, 0);
     }
     else rxasgen2(context, instrToken, operand1Token, operand2Token);
 }
 
+/* Queue opcode  */
 void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
               Token *operand2Token, Token *operand3Token) {
     if (context->optimise) {
-        queue_instruction(context, instrToken, operand1Token, operand2Token, operand3Token);
+        queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, operand3Token, 0, 0);
     }
     else rxasgen3(context, instrToken, operand1Token, operand2Token, operand3Token);
 }
 
+/* Queue Label */
 void rxasqlbl(Assembler_Context *context, Token *labelToken) {
     if (context->optimise) {
-        queue_instruction(context, labelToken, 0, 0, 0);
+        queue_instruction(context, ASM_LABEL, labelToken, 0, 0, 0, 0, 0);
     }
     else rxaslabl(context, labelToken);
+}
+
+/* Queue Source filename */
+void rxasqmfl(Assembler_Context *context, Token *file) {
+    if (context->optimise) {
+        queue_instruction(context, SRC_FILE, file, 0, 0, 0, 0, 0);
+    }
+    else rxasmefl(context, file);
+}
+
+/* Queue Source Line */
+void rxasqmsr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+    if (context->optimise) {
+        queue_instruction(context, SRC_LINE, line, column, source, 0, 0, 0);
+    }
+    else rxasmesr(context, line, column, source);
+}
+
+/* Queue Function Metadata */
+void rxasqmfu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+    if (context->optimise) {
+        queue_instruction(context, FUNC_META, symbol, option, type, func, args, inliner);
+    }
+    else rxasmefu(context, symbol, option, type, func, args, inliner);
+}
+
+/* Queue Register Metadata */
+void rxasqmre(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+    if (context->optimise) {
+        queue_instruction(context, REG_META, symbol, option, type, reg, 0, 0);
+    }
+    else rxasmere(context, symbol, option, type, reg);
+}
+
+/* Queue Constant Metadata */
+void rxasqmct(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant) {
+    if (context->optimise) {
+        queue_instruction(context, CONST_META, symbol, option, type, constant, 0, 0);
+    }
+    else rxasmect(context, symbol, option, type, constant);
+}
+
+/* Queue Clear Metadata */
+void rxasqmcl(Assembler_Context *context, Token *symbol) {
+    if (context->optimise) {
+        queue_instruction(context, CLEAR_META, symbol, 0, 0, 0, 0, 0);
+    }
+    else rxasmecl(context, symbol);
 }
 
 /* Flush the optimiser queue */
@@ -1075,13 +1175,7 @@ void flushopt(Assembler_Context *context) {
     if (context->optimise) {
         /* Output the queue */
         for (i=0; i<context->optimiser_queue_items; i++) {
-            if (context->optimiser_queue[i].instrToken->token_type == LABEL)
-                rxaslabl(context, context->optimiser_queue[i].instrToken);
-            else
-                rxasgen(context, context->optimiser_queue[i].instrToken,
-                        context->optimiser_queue[i].operand1Token,
-                        context->optimiser_queue[i].operand2Token,
-                        context->optimiser_queue[i].operand3Token);
+            executeQueuedItem(context, context->optimiser_queue +  i);
         }
         context->optimiser_queue_items = 0;
     }

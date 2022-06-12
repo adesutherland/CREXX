@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.18)
 
 set(RXASBINS
               _elapsed.rxbin
@@ -18,9 +18,6 @@ set(RXASBINS
               words.rxbin              
         )
 
-add_custom_target(lib_rxas ALL
-        DEPENDS ${RXASBINS})
-
 foreach(_binfile ${RXASBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
@@ -35,3 +32,12 @@ foreach(_binfile ${RXASBINS})
   )
 
 endforeach()
+
+add_custom_command(
+        OUTPUT library-rxas.rxbin
+        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > library-rxas.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS ${RXASBINS} rxas rxc
+)
+
+add_custom_target(library-rxas ALL DEPENDS library-rxas.rxbin)

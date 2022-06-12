@@ -22,7 +22,7 @@ foreach(_binfile ${ASMTESTBINS})
         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile}
         #
         COMMAND ${CTEST} -R ${_basename} --output-on-failure
-        DEPENDS ${_basename}.rxas rxas rxvm rxbvm lib_rexx lib_rxas
+        DEPENDS ${_basename}.rxas rxas rxvm rxbvm library
         OUTPUT ${_binfile}
         COMMENT "cREXX Assemble Test ${_basename} ..."
   )
@@ -40,7 +40,7 @@ foreach(_binfile ${REXXTESTBINS})
           #
           COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
           COMMAND ${CTEST} -R ${_basename} --output-on-failure
-          DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm lib_rexx lib_rxas
+          DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library
           OUTPUT ${_binfile}
           COMMENT "cREXX Assemble Test ${_basename} ..."
   )

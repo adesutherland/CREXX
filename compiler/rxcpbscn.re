@@ -154,6 +154,7 @@ int rexbscan(Context* s) {
 //  'VALUE' { return(TK_VALUE); }
 //  'VAR' { return(TK_VAR); }
 //  'VERSION' { return(TK_VERSION); }
+  'VOID' { return(TK_VOID); }
   'WHILE' { return(TK_WHILE); }
 //  'WITH' { return(TK_WITH); }
   class { return(TK_CLASS); }
@@ -215,7 +216,7 @@ int rexbscan(Context* s) {
       s->line = comment_line;
       s->linestart = comment_linestart;
       s->top = comment_top;
-      s->cursor = s->top + 2; /* To get the '/*' */
+      s->cursor = s->top + 2; /* To get the '/ *' */
       return(TK_BADCOMMENT);
   }
   any { goto comment; }

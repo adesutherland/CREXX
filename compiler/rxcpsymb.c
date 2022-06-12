@@ -71,6 +71,7 @@ static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
 Scope *scp_f(Scope *parent, ASTNode *node) {
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
+    scope->name = 0; /* Note that the name is not freed by the destructor - i.e. it points to a constant or buffer owned else where */
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
@@ -120,6 +121,10 @@ int get_reg(Scope *scope) {
     int reg;
 
     free_array = (dpa*)(scope->free_registers_array);
+
+//    printf("get a reg - free array is ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+
     /* Check the free list */
     if (free_array->size) {
         free_array->size--;
@@ -129,8 +134,8 @@ int get_reg(Scope *scope) {
         reg = (int)((scope->num_registers)++);
     }
 
-//    printf("get %d - ", reg);
-//    {int i; for (i=0; i<free_array->size; i++) printf("%d ",(int)(size_t)free_array->pointers[i]);printf("\n");}
+//    printf("  returned %d - free array is now ", reg);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     return reg;
 }
@@ -141,16 +146,19 @@ void ret_reg(Scope *scope, int reg) {
     dpa *free_array;
     free_array = (dpa*)(scope->free_registers_array);
 
-//    printf("free %d - ", reg);
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    printf("free %d", reg);
 
     for (i=0; i<free_array->size; i++) {
         if (reg == (size_t)free_array->pointers[i]) {
-            printf(" ... already freed\n");
+            printf(" ... already freed - free array remains ");
+            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return;
         }
     }
     dpa_ado(free_array, (void*)(size_t)reg);
+
+//    printf(" - free array is now ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -160,9 +168,11 @@ int get_regs(Scope *scope, size_t number) {
     int reg, r, top, i;
     size_t seq;
 
+    if (number == 1) return get_reg(scope);
+
     free_array = (dpa*)(scope->free_registers_array);
 
-//    printf("get %d regs - ", (int)number);
+//    printf("get %d regs - free array is ", (int)number);
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     /* Check the free list - how many could be used */
@@ -180,7 +190,8 @@ int get_regs(Scope *scope, size_t number) {
                     reg = top; /* Result is the beginning of the sequence */
                     /* Now remove them from the free list */
                     free_array->size -= number;
-//                    printf("get %d-%d\n", reg, reg+(int)number - 1);
+//                    printf("  a-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//                    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
                     return reg;
                 }
             }
@@ -197,7 +208,8 @@ int get_regs(Scope *scope, size_t number) {
             free_array->size -= seq;
             /* Now assign some brand ne ones */
             scope->num_registers += number - seq;
-//            printf("get %d-%d\n", reg, reg+(int)number - 1);
+//            printf("  b-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return reg;
         }
         /* No we can't so just assign new ones */
@@ -205,12 +217,14 @@ int get_regs(Scope *scope, size_t number) {
 
     reg = (int)(scope->num_registers); /* Assign brand-new registers */
     scope->num_registers += number;
-//    printf("get %d-%d\n", reg, reg+(int)number - 1);
+//    printf("  c-returned %d-%d - free array is now ", reg, reg+(int)number - 1);
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
     return reg;
 }
 
 /* Return no longer used registers to the scope, starting from reg
  * reg, reg+1, ... reg+number */
+/*
 void ret_regs(Scope *scope, int reg, size_t number) {
     dpa *free_array;
     size_t j, i;
@@ -229,15 +243,16 @@ void ret_regs(Scope *scope, int reg, size_t number) {
         reg++;
     }
 }
+*/
 
 char* type_nm(ValueType type) {
     switch (type) {
-        case TP_BOOLEAN: return "Boolean";
-        case TP_INTEGER: return "Integer";
-        case TP_FLOAT: return "Float";
-        case TP_STRING: return "String";
-        case TP_OBJECT: return "Object";
-        default: return "Unknown";
+        case TP_BOOLEAN: return ".BOOLEAN";
+        case TP_INTEGER: return ".INT";
+        case TP_FLOAT: return ".FLOAT";
+        case TP_STRING: return ".STRING";
+        case TP_OBJECT: return ".OBJECT";
+        default: return ".VOID";
     }
 }
 
@@ -264,6 +279,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     symbol->register_type = 'r';
     symbol->is_constant = 0;
     symbol->is_function = 0;
+    symbol->meta_emitted = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -352,6 +368,22 @@ SymbolNode* sym_trnd(Symbol *symbol, size_t index) {
     return (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[index];
 }
 
+/* Returns the lowest ASTNode ordinal associated with the symbol */
+int sym_lord(Symbol *symbol) {
+
+    dpa* array = (dpa*)(symbol->ast_node_array);
+    size_t i;
+    int o;
+    int ord = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+
+    for (i = 1; i < array->size; i++) {
+        o = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+        if (o < ord) ord = o;
+    }
+
+    return ord;
+}
+
 /* Connect a ASTNode to a Symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
               unsigned int writeAccess) {
@@ -362,10 +394,48 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
     connector->writeUsage = writeAccess;
 
     dpa_add((dpa*)(symbol->ast_node_array), connector);
-    node->symbol = connector;
+    node->symbolNode = connector;
 }
 
 /* Returns the number of AST nodes connected to a symbol */
 size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
+}
+
+static void prepend_scope(char* buffer, const char* scope)
+{
+    size_t len = strlen(scope);
+    memmove(buffer + len + 1, buffer, strlen(buffer) + 1);
+    memcpy(buffer, scope, len);
+    buffer[len] = ':';
+}
+
+/* Returns the fully resolved symbol name in a malloced buffer */
+char* sym_frnm(Symbol *symbol) {
+    Scope *s;
+    size_t len;
+    char *result;
+
+    /* Calculate buffer len */
+    len = strlen(symbol->name) + 1; /* +1 for null */
+    s = symbol->scope;
+    while (s) {
+        if (s->name) {
+            len += strlen(s->name) + 1; /* +1 for the ":" */
+        }
+        s = s->parent;
+    }
+    result = malloc(len);
+
+    /* Create name */
+    strcpy(result, symbol->name);
+    s = symbol->scope;
+    while (s) {
+        if (s->name) {
+            prepend_scope(result, s->name);
+        }
+        s = s->parent;
+    }
+
+    return result;
 }

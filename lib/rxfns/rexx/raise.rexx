@@ -8,4 +8,4 @@ raise: procedure = .int
   /*
   exit /* TODO - the compiler does not supports exit yet */
   */
-  return
+  return 0

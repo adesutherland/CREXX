@@ -22,7 +22,19 @@
  */
 #define NUTF8
 
-/* Shocking hack ... */
+
+/* Date / tiem stubs */
+struct timeval {
+    long	tv_sec;		/* seconds */
+    long	tv_usec;	/* and microseconds */
+};
+#define timezone 0
+static char* tzname[] = {"",""};
+static void tzset(void) {};
+#define daylight 0
+
+
+/* Shocking hack ... todo - need to replace with fixed buffer logig for cms */
 #define snprintf(s,sz,...) sprintf(s,__VA_ARGS__)
 #define vsnprintf(s,sz,...) vsprintf(s,__VA_ARGS__)
 

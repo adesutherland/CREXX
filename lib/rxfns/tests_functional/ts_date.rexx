@@ -40,7 +40,7 @@ say date('USA','','XEUROPEAN')
 say date('GERMAN','','XEUROPEAN')
 say date('JULIAN','','XEUROPEAN')
 say date('ORDERED','','XEUROPEAN')
-return
+return 0
 
 /*
 say "Weekday "_dateo(iNorm,'WEEKDAY')

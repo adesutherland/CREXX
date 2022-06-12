@@ -84,7 +84,7 @@ say "'"centre(x,43,)"'"
 say "'"centre(x,50,"!")"'"
 say "'"centre(x,9)"'"
 
-return
+return 0
 
 /* function prototype */
 center: procedure = .string

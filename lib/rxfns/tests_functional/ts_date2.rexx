@@ -90,6 +90,8 @@ if date('J','10 Mar 1962') \= 1962069 then do
   say "DATE() failed in test 13: date('j','10 Mar 1962')" date('j','10 Mar 1962') "but must be 1962069"
 end
 
+return 0
+
 /* Prototype functions */
 date: Procedure = .string
    arg iFormat = "", idate = "", oFormat = "", osep="", isep=""

@@ -21,19 +21,19 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: CMAKE Build Release
-        uses: lukka/run-cmake@v3
-        with:
-          # Select the build configuration, typically Debug or Release.
-          cmakeBuildType: MinSizeRel # optional, default is Debug
-          buildDirectory: "${{ runner.temp }}/release"
-
       - name: CMAKE Build Debug
         uses: lukka/run-cmake@v3
         with:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: Debug # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/debug"
+
+      - name: CMAKE Build Release
+        uses: lukka/run-cmake@v3
+        with:
+          # Select the build configuration, typically Debug or Release.
+          cmakeBuildType: MinSizeRel # optional, default is Debug
+          buildDirectory: "${{ runner.temp }}/release"
 
       - name: Get Executables
         run: |
@@ -314,19 +314,30 @@ jobs:
         name: instrset.h
         path: machine
 
-    - name: CMAKE Build Release
-      uses: lukka/run-cmake@v3
+    - name: Update Toolchain (MSYS2)
+      uses: msys2/setup-msys2@v2
       with:
-        # Select the build configuration, typically Debug or Release.
-        cmakeBuildType: MinSizeRel # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/release"
+        update: true
+        install: >-
+          base-devel
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          ninja:p
 
-    - name: CMAKE Build Debug
-      uses: lukka/run-cmake@v3
-      with:
-        # Select the build configuration, typically Debug or Release.
-        cmakeBuildType: Debug # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/debug"
+    - name: Build Debug
+      shell: msys2 {0}
+      run: |
+        cmake -G Ninja -B "${{ runner.temp }}/debug" -DCMAKE_BUILD_TYPE=Debug
+        cmake --build "${{ runner.temp }}/debug"
+
+    - name: Build Release
+      shell: msys2 {0}
+      run: |
+        cmake -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel
+        cmake --build "${{ runner.temp }}/release"
 
     - name: Get Executable
       run: |
@@ -400,19 +411,19 @@ jobs:
           name: instrset.h
           path: machine
 
-      - name: CMAKE Build Release
-        uses: lukka/run-cmake@v3
-        with:
-          # Select the build configuration, typically Debug or Release.
-          cmakeBuildType: MinSizeRel # optional, default is Debug
-          buildDirectory: "${{ runner.temp }}/release"
-
       - name: CMAKE Build Debug
         uses: lukka/run-cmake@v3
         with:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: Debug # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/debug"
+
+      - name: CMAKE Build Release
+        uses: lukka/run-cmake@v3
+        with:
+          # Select the build configuration, typically Debug or Release.
+          cmakeBuildType: MinSizeRel # optional, default is Debug
+          buildDirectory: "${{ runner.temp }}/release"
 
       - name: Get Executable
         run: |

@@ -336,6 +336,9 @@ if trunc(123.12345,5) \= 123.12345 then do
   errors=errors+1
   say 'TRUNC failed in test 78 '
 end
+
+return 0
+
   /* trunc()  */
 trunc: procedure = .string
 arg number = .string, fraction = 0

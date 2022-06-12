@@ -19,7 +19,7 @@ do i=0 to hlen-1
    assembler poschar offset,trtab,char  /* position in hex table   */
    if offset<0 then do
       say "hex string contains invalid character "hex
-      return
+      return ""
    end
    if added=0 & offset=0 then iterate  /* ignore first leading zero */
    added=added+1

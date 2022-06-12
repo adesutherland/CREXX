@@ -3,9 +3,11 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include "platform.h"
+#include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
@@ -43,110 +45,247 @@ static int is_constant(ASTNode* node) {
 
 /* Tests if a node is a symbol */
 static int is_var_symbol(ASTNode* node) {
-    if (node->symbol && node->node_type != FUNCTION) return 1;
+    if (node->symbolNode && node->node_type != FUNCTION) return 1;
     else return 0;
 }
 
-/* Encodes a string to a buffer. Like snprintf() it returns the number of characters
- * that would have been written */
+/* printf - but returns a malloced buffer with the result */
+static char* printf_malloc(const char* format, ...) {
+    char *buffer;
+    size_t buffer_len;
+    size_t needed_len;
+    va_list argptr;
+
+    /* Guess a length which is likely to be big enough */
+    buffer_len = 100; /* A stab in the dark! */
+    buffer = malloc(buffer_len);
+
+    va_start(argptr, format);
+    needed_len = vsnprintf(buffer, buffer_len, format, argptr) + 1;
+    va_end(argptr);
+    if (needed_len > buffer_len) {
+        /* Buffer not big enough - do it again */
+        buffer_len = needed_len;
+        free(buffer);
+        buffer = malloc(buffer_len);
+        va_start(argptr, format);
+        vsnprintf(buffer, buffer_len, format, argptr);
+        va_end(argptr);
+    }
+    return buffer;
+}
+
+/* Encodes a string to a buffer without overflow. Like snprintf() it returns the number of characters
+ * that would have been written if the buffer had been big enough */
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
 static size_t encode_print(char* buffer, size_t buffer_len, const char* string, size_t length) {
 
     size_t out_len = 0;
+    if (!length) {
+        *buffer = 0;
+        return 0;
+    }
     while (length) {
         switch (*string) {
             case '\\':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\\');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\\')
                 break;
             case '\n':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('n');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('n')
                 break;
             case '\t':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('t');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('t')
                 break;
             case '\a':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('a');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('a')
                 break;
             case '\b':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('b');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('b')
                 break;
             case '\f':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('f');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('f')
                 break;
             case '\r':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('r');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('r')
                 break;
             case '\v':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('v');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('v')
                 break;
             case '\'':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\'');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\'')
                 break;
             case '\"':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\"');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\"')
                 break;
             case 0:
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('0');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('0')
                 break;
             case '\?':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('?');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('?')
                 break;
             default:
-                ADD_CHAR_TO_BUFFER(*string);
+                ADD_CHAR_TO_BUFFER(*string)
         }
         string++;
         length--;
     }
     if (buffer_len) *buffer = 0;
+    else *(buffer - 1) = 0;
     return out_len;
 }
 
-/* Encodes a string to a buffer - just handling line breaks etc for comment strings */
-static size_t encode_comment(char* buffer, size_t buffer_len, char* string, size_t length) {
+/* encode_print - but returns a malloced buffer with the result */
+static char* encode_print_malloc(const char* string, size_t length) {
+    char *buffer;
+    size_t buffer_len;
+    size_t needed_len;
+
+    /* Guess a length which is likely to be big enough */
+    buffer_len = (length * 2) + 1;
+    buffer = malloc(buffer_len);
+
+    needed_len = encode_print(buffer, buffer_len, string, length) + 1;
+    if (needed_len > buffer_len) {
+        /* Buffer not big enough - do it again */
+        buffer_len = needed_len;
+        free(buffer);
+        buffer = malloc(buffer_len);
+        encode_print(buffer, buffer_len, string, length);
+    }
+    return buffer;
+}
+
+/* Encodes a string to a buffer without buffer overflow - just handling line breaks etc for comment strings */
+static size_t encode_comment(char* buffer, size_t buffer_len, const char* string, size_t length) {
 
     size_t out_len = 0;
     while (length) {
         switch (*string) {
             case '\n':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('n');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('n')
                 break;
             case '\t':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('t');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('t')
                 break;
             case '\f':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('f');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('f')
                 break;
             case '\r':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('r');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('r')
                 break;
             case 0:
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('0');
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('0')
                 break;
             default:
-                ADD_CHAR_TO_BUFFER(*string);
+                ADD_CHAR_TO_BUFFER(*string)
         }
         string++;
         length--;
     }
     if (buffer_len) *buffer = 0;
+    else *(buffer - 1) = 0;
     return out_len;
+}
+
+/* encode_comment - but returns a malloced buffer with the result */
+static char* encode_comment_malloc(const char* string, size_t length) {
+    char *buffer;
+    size_t buffer_len;
+    size_t needed_len;
+
+    /* Guess a length which is likely to be big enough */
+    buffer_len = (length * 2) + 1;
+    buffer = malloc(buffer_len);
+
+    needed_len = encode_comment(buffer, buffer_len, string, length) + 1;
+    if (needed_len > buffer_len) {
+        /* Buffer not big enough - do it again */
+        buffer_len = needed_len;
+        free(buffer);
+        buffer = malloc(buffer_len);
+        encode_comment(buffer, buffer_len, string, length);
+    }
+    return buffer;
+}
+
+/* Encodes a string to a buffer - stops at a line break or buffer end */
+static size_t encode_line_source(char* buffer, size_t buffer_len, const char* string, size_t length) {
+
+    size_t out_len = 0;
+    while (length) {
+//        if (*string == '\n') break;
+        switch (*string) {
+            case '\n':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('n')
+                break;
+            case '\"':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\"')
+                break;
+            case '\t':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('t')
+                break;
+            case '\f':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('f')
+                break;
+            case '\r':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('r')
+                break;
+            case 0:
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('0')
+                break;
+            default:
+                ADD_CHAR_TO_BUFFER(*string)
+        }
+        string++;
+        length--;
+    }
+    if (buffer_len) *buffer = 0;
+    else *(buffer - 1) = 0;
+    return out_len;
+}
+
+/* encode_line_source - but returns a malloced buffer with the result */
+static char* encode_line_source_malloc(const char* string, size_t length) {
+    char *buffer;
+    size_t buffer_len;
+    size_t needed_len;
+
+    /* Guess a length which is likely to be big enough */
+    buffer_len = (length * 2) + 1;
+    buffer = malloc(buffer_len);
+
+    needed_len = encode_line_source(buffer, buffer_len, string, length) + 1;
+    if (needed_len > buffer_len) {
+        /* Buffer not big enough - do it again */
+        buffer_len = needed_len;
+        free(buffer);
+        buffer = malloc(buffer_len);
+        encode_line_source(buffer, buffer_len, string, length);
+    }
+    return buffer;
 }
 
 #undef ADD_CHAR_TO_BUFFER
@@ -187,26 +326,43 @@ static void output_insert_after(OutputFragment* existing, OutputFragment* after)
     existing->after = after;
 }
 
-static void output_append(OutputFragment* before, OutputFragment* after) {
-    while (before->after) before = before->after;
-    before->after = after;
+static void output_concat(OutputFragment* before, OutputFragment* after) {
+    if (before) {
+        while (before->after) before = before->after;
+    }
+    if (after) {
+        while (after->before) after = after->before;
+    }
+    if (before) before->after = after;
     if (after) after->before = before;
 }
 
 static void output_append_text(OutputFragment* before, char* after) {
-    char *buffer;
     while (before->after) before = before->after;
     if (before->output) {
-        buffer = malloc(strlen(before->output) + strlen(after) + 1);
-        strcpy(buffer, before->output);
+        before->output = realloc(before->output, strlen(before->output) + strlen(after) + 1);
+        strcat(before->output, after);
     }
     else {
-        buffer = malloc(strlen(after) + 1);
-        buffer[0] = 0;
+        before->output = malloc(strlen(after) + 1);
+        strcpy(before->output, after);
     }
-    strcat(buffer, after);
-    free(before->output);
-    before->output = buffer;
+}
+
+static void output_prepend_text(char* before, OutputFragment* after) {
+    char* buffer;
+    while (after->before) after = after->before;
+    if (after->output) {
+        buffer = malloc(strlen(after->output) + strlen(before) + 1);
+        strcpy(buffer, before);
+        strcat(buffer, after->output);
+        free(after->output);
+        after->output = buffer;
+    }
+    else {
+        after->output = malloc(strlen(before) + 1);
+        strcpy(after->output, before);
+    }
 }
 
 static void print_output(FILE* file, OutputFragment* existing) {
@@ -254,8 +410,8 @@ static walker_result register_walker(walker_direction direction,
                     c->register_type ='a';
                     if (c->is_ref_arg) {
                         /* Pass by reference - no copy so just use the 'a' register */
-                        c->child->symbol->symbol->register_num = a;
-                        c->child->symbol->symbol->register_type = 'a';
+                        c->child->symbolNode->symbol->register_num = a;
+                        c->child->symbolNode->symbol->register_type = 'a';
                     }
                     /* Otherwise, a normal register will be assigned to the symbol later */
 
@@ -307,7 +463,7 @@ static walker_result register_walker(walker_direction direction,
                      * 1. If it is a symbol with call by reference it may be possible to
                      *    assign the symbol to the right register
                      * In this case we try to set the symbol register */
-                    if (c->symbol && c->is_ref_arg) {
+                    if (c->symbolNode && c->is_ref_arg) {
                         /* If the register has not been assigned a register set it
                          * to the arguments register - later the node will therefore be giving
                          * this register too */
@@ -315,8 +471,8 @@ static walker_result register_walker(walker_direction direction,
                         /* NOTE This does nothing as the symbols have always
                          * already been assigned :-( TODO to solve this */
 
-                        if (c->symbol->symbol->register_num == UNSET_REGISTER)
-                            c->symbol->symbol->register_num = i;
+                        if (c->symbolNode->symbol->register_num == UNSET_REGISTER)
+                            c->symbolNode->symbol->register_num = i;
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
@@ -332,7 +488,7 @@ static walker_result register_walker(walker_direction direction,
                 /*
                  * We do not need a register as we can "say" a constant directly
                  */
-                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case RETURN:
@@ -494,11 +650,11 @@ static walker_result register_walker(walker_direction direction,
             case VAR_TARGET:
             case VAR_REFERENCE:
                 /* Set the symbols register */
-                if (node->symbol->symbol->register_num == UNSET_REGISTER)
-                    node->symbol->symbol->register_num = get_reg(payload->current_scope);
+                if (node->symbolNode->symbol->register_num == UNSET_REGISTER)
+                    node->symbolNode->symbol->register_num = get_reg(payload->current_scope);
                 /* The node uses the symbol register number */
-                node->register_num = node->symbol->symbol->register_num;
-                node->register_type = node->symbol->symbol->register_type;
+                node->register_num = node->symbolNode->symbol->register_num;
+                node->register_type = node->symbolNode->symbol->register_type;
                 break;
 
             case FLOAT:
@@ -534,9 +690,9 @@ static walker_result register_walker(walker_direction direction,
                 c = child1;
                 while (c) {
                     /* If it is a symbol with the same register as i don't return the register */
-                    if ( !( is_var_symbol(c) &&
-                            c->symbol->symbol->register_num == i &&
-                            c->symbol->symbol->register_type == 'r') )
+                    if ( !(is_var_symbol(c) &&
+                           c->symbolNode->symbol->register_num == i &&
+                           c->symbolNode->symbol->register_type == 'r') )
                         ret_reg(payload->current_scope, i);
 
                     i++;
@@ -666,36 +822,230 @@ static walker_result register_walker(walker_direction direction,
     return result_normal;
 }
 
-#define buf_len 512
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline(ASTNode *node) {
+    char *result, *src;
+    int line, column;
+    char *source_start, *source_end;
 
-static void get_comment(char* comment, ASTNode *node, char* prefix) {
-    char temp[buf_len];
-    if (!node->source_start) {
-        comment[0] = 0;
+    line = node->line;
+    column = node->column;
+    source_start = node->source_start;
+    source_end = node->source_end;
+
+    /* Try and set error position if not already set */
+    if (node->token) {
+        if (line == -1) line = node->token->line;
+        if (column == -1) column = node->token->column;
+        if (!source_start) source_start = node->token->token_string;
+        if (!source_end) source_end = node->token->token_string + node->token->length - 1;
+    }
+
+    if (!source_start) {
+        result = malloc(1);
+        result[0] = 0;
     }
     else {
-        encode_comment(temp, buf_len, node->source_start,
-                       (int) (node->source_end - node->source_start) + 1);
-        if (prefix)
-            snprintf(comment, buf_len, "   * Line %d: %s %s\n", node->line,
-                     prefix, temp);
-        else
-            snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, temp);
+        src = encode_line_source_malloc(source_start,
+                       (int) (source_end - source_start) + 1);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
+        free(src);
     }
+    return result;
 }
 
-/* Comment without quoting node text */
-static void get_comment_line_number_only(char* comment, ASTNode *node, char* prefix) {
-    if (prefix)
-        snprintf(comment, buf_len, "   * Line %d: %s\n", node->line, prefix);
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline_range(ASTNode *from, ASTNode *to) {
+    char *result, *src;
+    int from_line, from_column;
+    char *from_source_start, *from_source_end;
+    int to_line, to_column;
+    char *to_source_start, *to_source_end;
+
+    from_line = from->line;
+    from_column = from->column;
+    from_source_start = from->source_start;
+    from_source_end = from->source_end;
+    to_line = to->line;
+    to_column = to->column;
+    to_source_start = to->source_start;
+    to_source_end = to->source_end;
+
+    /* Try and set error position if not already set */
+    if (from->token_start) {
+        if (from_line == -1) from_line = from->token_start->line;
+        if (from_column == -1) from_column = from->token_start->column;
+        if (!from_source_start) from_source_start = from->token_start->token_string;
+        if (!from_source_end) from_source_end = from->token_start->token_string + from->token_start->length - 1;
+    }
+    if (to->token_end) {
+        if (to_line == -1) to_line = to->token_end->line;
+        if (to_column == -1) to_column = to->token_end->column;
+        if (!to_source_start) to_source_start = to->token_end->token_string;
+        if (!to_source_end) to_source_end = to->token_end->token_string + to->token_end->length - 1;
+    }
+
+    if (!from_source_start || !to_source_end) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        src = encode_line_source_malloc(from_source_start,
+                                        (int) (to_source_end - from_source_start) + 1);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", from_line + 1, from_column, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline_between(ASTNode *from, ASTNode *to) {
+    char *result, *src;
+    Token *start = 0;
+    Token *end = 0;
+
+    if (from->token_end) start = from->token_end->token_next;
+    if (to->token_start) end = to->token_start->token_prev;
+
+    /* Get rid of leading and training newlines */
+    if (start == end) {
+        if (start->token_type == TK_EOC) start = 0; /* Weird empty string condition */
+    }
+    else {
+        if (start->token_type == TK_EOC) {
+            /* Skip the newline */
+            start = start->token_next;
+        }
+        if (start != end) {
+            if (end->token_type == TK_EOC) {
+                /* Skip the newline */
+                end = end->token_prev;
+            }
+        }
+    }
+
+    if (!start || !end) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        src = encode_line_source_malloc(start->token_string,
+                                        (int) (end->token_string - start->token_string) + end->length);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline_token_after(ASTNode *node) {
+    char *result, *src;
+    Token *start = 0;
+
+    if (node->token_end) start = node->token_end->token_next;
+
+    /* Get rid of leading newline */
+    if (start && start->token_type == TK_EOC) {
+        /* Skip the newline */
+        start = start->token_next;
+    }
+
+    if (!start) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        src = encode_line_source_malloc(start->token_string,
+                                        start->length);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline_clause(ASTNode *node) {
+    char *result, *src;
+    Token *start = 0;
+    Token *end = 0;
+
+    if (node->token_start) start = node->token_start;
+
+    if (!start) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        end = start;
+        while (end->token_next->token_type != TK_EOC && end->token_next->token_type != TK_EOS)
+            end = end->token_next;
+
+        src = encode_line_source_malloc(start->token_string,
+                                        (int) (end->token_string - start->token_string) + end->length);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Returns the meta .src line in a malloced buffer */
+static char* get_metaline_token_at(ASTNode *node) {
+    char *result, *src;
+    Token *start = 0;
+
+    if (node->token_start) start = node->token_start;
+
+    /* Get rid of leading newline - unlikely that there will be one! */
+    if (start && start->token_type == TK_EOC) {
+        /* Skip the newline */
+        start = start->token_next;
+    }
+
+    if (!start) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        src = encode_line_source_malloc(start->token_string,
+                                        start->length);
+        result = printf_malloc("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Get Comment from a node (in a malloced buffer) */
+static char* get_comment(ASTNode *node, char* prefix) {
+    char *result, *src;
+    if (!node->source_start) {
+        result = malloc(1);
+        result[0] = 0;
+    }
+    else {
+        src = encode_comment_malloc(node->source_start,
+                       (int) (node->source_end - node->source_start) + 1);
+        if (prefix)
+            result = printf_malloc("   * Line %d: %s %s\n", node->line + 1,
+                     prefix, src);
+        else
+            result = printf_malloc("   * Line %d: %s\n", node->line + 1, src);
+        free(src);
+    }
+    return result;
+}
+
+/* Comment without quoting node text (in a malloced buffer) */
+static char* get_comment_line_number_only(ASTNode *node, char* comment_text) {
+    if (comment_text)
+        return printf_malloc("   * Line %d: %s\n", node->line + 1, comment_text);
     else
-        snprintf(comment, buf_len, "   * Line %d:\n", node->line);
+        return printf_malloc("   * Line %d:\n", node->line + 1);
 }
 
 static void type_promotion(ASTNode *node) {
 
     char *op1, *op2;
-    char temp[buf_len];
+    char *temp;
 
     if (node->value_type != node->target_type) {
 
@@ -734,24 +1084,25 @@ static void type_promotion(ASTNode *node) {
         }
 
         if (*op1 != *op2) { /* Check that there is a promotion (i.e. boolean / integer) */
-            snprintf(temp, buf_len, "   %sto%s %c%d\n",
+            temp = printf_malloc("   %sto%s %c%d\n",
                      op1,
                      op2,
                      node->register_type,
                      node->register_num);
-            node->output3 = output_fs(temp);
-            output_append(node->output, node->output3);
+            output_append_text(node->output, temp);
+            free(temp);
         }
     }
 }
 
-/* Formats a constant value into buffer */
-static void format_constant(char* buffer, ValueType type, ASTNode* node) {
+/* Formats a constant value returend as a malloced buffer */
+static char* format_constant(ValueType type, ASTNode* node) {
+    char *buffer;
     int flag;
     size_t i;
 
     if (type == TP_STRING) {
-        snprintf(buffer, buf_len, "\"%.*s\"",
+        buffer = printf_malloc("\"%.*s\"",
                  node->node_string_length,
                  node->node_string);
     }
@@ -766,19 +1117,20 @@ static void format_constant(char* buffer, ValueType type, ASTNode* node) {
             }
         }
         if (flag)
-            snprintf(buffer, buf_len, "%.*s.0",
+            buffer = printf_malloc("%.*s.0",
                      node->node_string_length,
                      node->node_string);
         else
-            snprintf(buffer, buf_len, "%.*s",
+            buffer = printf_malloc("%.*s",
                      node->node_string_length,
                      node->node_string);
     }
     else {
-        snprintf(buffer, buf_len, "%.*s",
+        buffer = printf_malloc("%.*s",
                  node->node_string_length,
                  node->node_string);
     }
+    return buffer;
 }
 
 static char* type_to_prefix(ValueType value_type) {
@@ -795,6 +1147,190 @@ static char* type_to_prefix(ValueType value_type) {
     }
 }
 
+/* Adds Symbol metadata */
+void meta_set_symbol(Symbol *symbol, void *payload) {
+    ASTNode* value_node;
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+    int symbol_ordinal;
+
+    if (!symbol->is_function) {
+
+        /* Logic that works out if we should emit the variable meta data here */
+        if (symbol->meta_emitted) return;     /* Aleady done */
+        if (node->high_ordinal == -1) return; /* Weird optimiser added node - skip as we don't know whats going on */
+        symbol_ordinal = sym_lord(symbol);
+        if (symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
+        symbol->meta_emitted = 1;
+
+        if (symbol->is_constant) {
+            symbol_fqn = sym_frnm(symbol);
+            value_node = sym_trnd(symbol, 0)->node->sibling;
+            if (value_node) {
+                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%.*s\"\n",
+                                       symbol_fqn,
+                                       type_nm(symbol->type),
+                                       (int) value_node->node_string_length, value_node->node_string);
+            }
+            else {
+                /* Taken constant so no defining node - the name is its value */
+                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%s\"\n",
+                                       symbol_fqn,
+                                       type_nm(symbol->type),
+                                       symbol->name);
+            }
+            free(symbol_fqn);
+        }
+
+        else if (symbol->register_num >= 0) {
+            symbol_fqn = sym_frnm(symbol);
+            buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" %c%d\n",
+                                   symbol_fqn,
+                                   type_nm(symbol->type),
+                                   symbol->register_type, symbol->register_num
+                                   );
+            free(symbol_fqn);
+        }
+
+        else return; /* No symbol information ... */
+
+        /* Add the metadata to the output fragment */
+        output_append_text(output,buffer);
+        free(buffer);
+    }
+}
+
+/* Add Variable Metadata */
+static void add_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Clears the Procedure's Symbols from metadata */
+    scp_4all(scope, meta_set_symbol, node);
+}
+
+/* Clears Symbol metadata */
+void meta_clear_symbol(Symbol *symbol, void *payload) {
+    ASTNode* value_node;
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (!symbol->is_function) {
+
+        if (!symbol->meta_emitted) {
+            fprintf(stderr, "WARNING: Did not emit metadata for symbol %s\n", symbol->name);
+            return;
+        }
+
+        if (symbol->is_constant || symbol->register_num >= 0) {
+            symbol_fqn = sym_frnm(symbol);
+
+            value_node = sym_trnd(symbol, 0)->node->sibling;
+            buffer = printf_malloc("   .meta \"%s\"\n", symbol_fqn);
+
+            free(symbol_fqn);
+        }
+        else return; /* No symbol information ... */
+
+        /* Add the metadata to the output fragment */
+        output_append_text(output,buffer);
+        free(buffer);
+    }
+}
+
+/* Clear all variable metadata */
+static void clear_variable_metadata(ASTNode *node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Clears the Procedure's Symbols from metadata */
+    scp_4all(scope, meta_clear_symbol, node);
+}
+
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+static char *clean_print_node(ASTNode *node) {
+    ASTNode *n;
+    Token *t;
+    size_t buffer_len;
+    char *buffer, *b;
+    size_t i;
+
+    /* Calculate required buffer length */
+    buffer_len = 0;
+    for  (t = node->token_start; t; t = t->token_next) {
+        buffer_len += t->length + 1; /* +1 for space */
+        if (t == node->token_end) break;
+    }
+
+    /* Empty Source Line */
+    if (!buffer_len) {
+        buffer = malloc(1);
+        buffer[0] = 0;
+        return buffer;
+    }
+
+    /* Create and write to buffer */
+    b = buffer = malloc(buffer_len);
+    for  (t = node->token_start; t; t = t->token_next) {
+        if (t->token_type != TK_STRING)  {
+            /* Upper case it - because we are REXX */
+            for (i = 0; i < t->length; i++) {
+                *(b++) = (char)toupper(t->token_string[i]);
+            }
+        }
+        else {
+            memcpy(b, t->token_string, t->length);
+            b += t->length;
+        }
+        *(b++) = ' '; /* Add Space */
+        if (t == node->token_end) break;
+    }
+
+    /* Turn the last space to a terminating null */
+    *(--b) = 0;
+
+    return buffer;
+}
+/* Returns the type of a node as a malloced buffer */
+char* node_type(ASTNode *node) {
+    char *buffer;
+    ValueType type = node->value_type;
+
+    if (type == TP_OBJECT) {
+        buffer = clean_print_node(node);
+        if (buffer[0]) return buffer;  /* I.e. not an empty line */
+        else free(buffer); /* set to .OBJECT below */
+    }
+    buffer = malloc(sizeof(".BOOLEAN") + 1); /* Make it long enough for the longest option */
+    switch (type) {
+        case TP_BOOLEAN: strcpy(buffer, ".BOOLEAN"); break;
+        case TP_INTEGER: strcpy(buffer, ".INT"); break;
+        case TP_FLOAT:   strcpy(buffer, ".FLOAT"); break;
+        case TP_STRING:  strcpy(buffer, ".STRING"); break;
+        case TP_OBJECT:  strcpy(buffer, ".OBJECT"); break;
+        default:         strcpy(buffer, ".VOID");
+    }
+    return buffer;
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -804,9 +1340,9 @@ static walker_result emit_walker(walker_direction direction,
     char *op;
     char *tp_prefix;
     OutputFragment *o;
-    char temp1[buf_len];
-    char temp2[buf_len];
-    char comment[buf_len];
+    char *temp1;
+    char *temp2;
+    char *comment_meta;
     size_t i;
     int j, k;
     int flag;
@@ -836,55 +1372,95 @@ static walker_result emit_walker(walker_direction direction,
         switch (node->node_type) {
 
             case PROGRAM_FILE:
-                snprintf(temp1, buf_len, "/*\n"
+            {
+                char *buf = printf_malloc( "/*\n"
                                          " * cREXX COMPILER VERSION : %s\n"
                                          " * SOURCE                 : %.*s\n"
                                          " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                          " */\n"
                                          "\n"
+                                         ".srcfile=\"%.*s\"\n"
                                          ".globals=0\n",
-                    rxversion,
-                    node->node_string_length, node->node_string,
-                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+                         rxversion,
+                                    (int)node->node_string_length, node->node_string,
+                         tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
+                                    (int)node->node_string_length, node->node_string);
 
-                node->output = output_fs(temp1);
+                node->output = output_fs(buf);
+                free(buf);
+
                 n = child1;
                 while (n) {
-                    if (n->output) output_append(node->output, n->output);
+                    if (n->output) output_concat(node->output, n->output);
                     n = n->sibling;
                 }
 
                 print_output(payload->file, node->output);
-                break;
+            }
+            break;
 
             case PROCEDURE:
                 if (!child3 || child3->node_type == NOP) {
                     /* A declaration - external */
-                    snprintf(temp1, buf_len, ""
-                                             "\n"
-                                             "%.*s() .expose=%.*s.%.*s\n", /* TODO */
-                             node->node_string_length, node->node_string,
-                             node->node_string_length, node->node_string,
-                             node->node_string_length, node->node_string);
-                    node->output = output_fs(temp1);
+                    char* type = node_type(child1);
+                    char* source = clean_print_node(child2);
+                    char* coded = encode_print_malloc(source, strlen(source));
+                    char* proc_symbol= sym_frnm(node->symbolNode->symbol);
+                    char* buf = printf_malloc("\n%.*s() .expose=%.*s.%.*s\n"
+                                              "   .meta \"%s\"=\"B\" \"%s\" %.*s() \"%s\"\n",
+                                (int)node->node_string_length, node->node_string,
+                                (int)node->node_string_length, node->node_string,
+                                (int)node->node_string_length, node->node_string,
+                                proc_symbol, /* Symbol Name */
+                                type, /* Type */
+                                (int)node->node_string_length, node->node_string, /* Func Name */
+                                coded /* Args */
+                             );
+                    node->output = output_fs(buf);
+                    free(type);
+                    free(source);
+                    free(coded);
+                    free(buf);
+                    free(proc_symbol);
                 }
                 else {
                     /* Definition */
-                    snprintf(temp1, buf_len, ""
-                                             "\n"
-                                             "%.*s() .locals=%d .expose=%.*s.%.*s\n",
-                             node->node_string_length,
-                             node->node_string,
-                             node->scope->num_registers,
-                             node->parent->node_string_length, node->parent->node_string,
-                             node->node_string_length, node->node_string);
-                    node->output = output_fs(temp1);
+                    char* type = node_type(child1);
+                    char* source = clean_print_node(child2);
+                    char* coded = encode_print_malloc(source, strlen(source));
+                    char* proc_symbol= sym_frnm(node->symbolNode->symbol);
+                    char* buf = printf_malloc( "\n%.*s() .locals=%d .expose=%.*s.%.*s\n"
+                                       "   .meta \"%s\"=\"B\" \"%s\" %.*s() \"%s\" \"\"\n",
+                             (int)node->node_string_length, node->node_string, /* Function name */
+                             (int)node->scope->num_registers, /* Locals */
+                             (int)node->parent->node_string_length, node->parent->node_string, /* name space */
+                             (int)node->node_string_length, node->node_string, /* Function name */
+                             proc_symbol, /* Symbol Name */
+                             type, /* Return Type */
+                             (int)node->node_string_length, node->node_string, /* Function name */
+                             coded /* Args */);
+                    node->output = output_fs(buf);
+                    free(type);
+                    free(source);
+                    free(coded);
+                    free(buf);
+                    free(proc_symbol);
 
-                    n = child1;
+                    /* Add source metadata */
+                    if (node->token) {
+                        comment_meta = get_metaline_clause(node);
+                        output_append_text(node->output, comment_meta);
+                        free(comment_meta);
+                    }
+
+                    n = child2;
                     while (n) {
-                        if (n->output) output_append(node->output, n->output);
+                        if (n->output) output_concat(node->output, n->output);
                         n = n->sibling;
                     }
+
+                    /* Clear all variable metadata */
+                    clear_variable_metadata(node);
                 }
                 break;
 
@@ -893,45 +1469,53 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
                 n = child1;
                 while (n) {
-                    if (n->output) output_append(node->output, n->output);
+                    if (n->output) {
+                        /* Add Child Instrutctions */
+                        output_concat(node->output, n->output);
+                    }
                     n = n->sibling;
                 }
                 break;
 
             case ARG:
-                get_comment(comment, node, NULL);
-                node->output = output_fs(comment);
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 if (node->is_opt_arg) { /* Optional Argument */
                     /* If the register flag is set then an argument was specified */
-                    snprintf(temp1, buf_len, "   brtpandt l%da,%c%d,%d\n",
+                    temp1 = printf_malloc("   brtpandt l%da,%c%d,%d\n",
                              child1->node_number,
                              node->register_type,
                              node->register_num,
                              REGTP_VAL);
                     output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* Set the default value */
-                    output_append(node->output, child2->output);
+                    output_concat(node->output, child2->output);
 
                     if (child1->register_num != child2->register_num ||
                         child1->register_type != child2->register_type) {
-                        snprintf(temp1, buf_len, "   copy %c%d,%c%d\n",
+                        temp1 = printf_malloc("   copy %c%d,%c%d\n",
                                  child1->register_type,
                                  child1->register_num,
                                  child2->register_type,
                                  child2->register_num);
-                        node->output2 = output_fs(temp1);
-                        output_append(node->output, node->output2);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
                     }
 
                     /* End of logic */
                     if (node->is_ref_arg) {
                         /* Reference so no copy needed */
-                        snprintf(temp1, buf_len, "l%da:\n",
-                                 child1->node_number);
-                        node->output3 = output_fs(temp1);
-                        output_append(node->output, node->output3);
+                        temp1 = printf_malloc("l%da:\n", child1->node_number);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
                     }
                     else {
                         /* Pass by value - so if the default is not used we may need to
@@ -939,7 +1523,7 @@ static walker_result emit_walker(walker_direction direction,
 
                         /* Only worry about it if it is a big register */
                         if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
-                            snprintf(temp1, buf_len,
+                            temp1 = printf_malloc(
                                      "   br l%dd\n"
                                             "l%da:\n"
                                             "   brtpandt l%dc,%c%d,%d\n"
@@ -961,9 +1545,10 @@ static walker_result emit_walker(walker_direction direction,
                                      node->register_type, node->register_num,
                                      child1->node_number);
                             output_append_text(node->output, temp1);
+                            free(temp1);
                         }
                         else {
-                            snprintf(temp1, buf_len, "   br l%db\n"
+                            temp1 = printf_malloc("   br l%db\n"
                                                      "l%da:\n"
                                                      "   %scopy %c%d,%c%d\n"
                                                      "l%db:\n",
@@ -972,8 +1557,8 @@ static walker_result emit_walker(walker_direction direction,
                                      child1->register_num,
                                      node->register_type, node->register_num,
                                      child1->node_number);
-                            node->output3 = output_fs(temp1);
-                            output_append(node->output, node->output3);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
                         }
                     }
                 }
@@ -983,7 +1568,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Only worry about it if it is a big register */
                     if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
-                        snprintf(temp1, buf_len, "   brtpandt l%dc,%c%d,%d\n"
+                        temp1 = printf_malloc("   brtpandt l%dc,%c%d,%d\n"
                                                 "   %scopy %c%d,%c%d\n"
                                                 "   br l%dd\n"
                                                 "l%dc:\n"
@@ -1001,24 +1586,31 @@ static walker_result emit_walker(walker_direction direction,
                                  node->register_type, node->register_num,
                                  child1->node_number);
                         output_append_text(node->output, temp1);
+                        free(temp1);
                     }
                     else {
                         /* Just need to copy register */
-                        snprintf(temp1, buf_len, "   %scopy %c%d,%c%d\n",
+                        temp1 = printf_malloc("   %scopy %c%d,%c%d\n",
                                  tp_prefix, child1->register_type,
                                  child1->register_num,
                                  node->register_type, node->register_num);
                         output_append_text(node->output, temp1);
+                        free(temp1);
                     }
                 }
                 break;
 
             case CALL:
-                /* Comment */
-                get_comment(comment, node, NULL);
-                node->output = output_fs(comment);
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 /* TODO - set result */
-                output_append(node->output,child1->output);
+                output_concat(node->output, child1->output);
                 break;
 
             case FUNCTION:
@@ -1026,15 +1618,23 @@ static walker_result emit_walker(walker_direction direction,
                 ret_type = node->register_type;
                 ret_num = node->register_num;
 
-                /* Comment */
-                get_comment(comment, node, NULL);
-                node->output = output_fs(comment);
+                /* META */
+                /*
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+                */
+                node->output = output_f();
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
 
                 /* Number of arguments */
-                snprintf(temp1, buf_len, "   load r%d,%d\n",
+                temp1 = printf_malloc("   load r%d,%d\n",
                          node->additional_registers,
                          node->num_additional_registers - 1);
                 output_append_text(node->output, temp1);
+                free(temp1);
 
                 /* Step through the arguments - evaluating them */
                 n = child1;
@@ -1049,7 +1649,7 @@ static walker_result emit_walker(walker_direction direction,
                     if (!n->is_ref_arg &&
                         (n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
                         k = 1; /* This means we will settp */
-                        if (!n->symbol) j = REGTP_NOTSYM; /* Mark it as not a symbol */
+                        if (!n->symbolNode) j = REGTP_NOTSYM; /* Mark it as not a symbol */
                     }
 
                     /* Optional arguments need to use the settp flag */
@@ -1061,18 +1661,20 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
                     if (k) { /* We need to settp */
-                        snprintf(temp1, buf_len, "   settp %c%d,%d\n",
+                        temp1 = printf_malloc("   settp %c%d,%d\n",
                                  n->register_type,
                                  n->register_num,
                                  j);
                         output_append_text(n->output, temp1);
+                        free(temp1);
                     }
 
                     if (n->register_type != 'r' ||  n->register_num != i) {
                         /* We need to swap registers to get it right for the call */
-                        snprintf(temp1, buf_len, "   swap r%d,%c%d\n",
+                        temp1 = printf_malloc("   swap r%d,%c%d\n",
                                  i, n->register_type, n->register_num);
                         output_append_text(n->output, temp1);
+                        free(temp1);
 
                         /* Fix up return register so its swapped correctly */
                         if (node->register_type == n->register_type &&
@@ -1082,16 +1684,17 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
 
-                    if (n->output) output_append(node->output, n->output);
+                    if (n->output) output_concat(node->output, n->output);
                     n = n->sibling; i++;
                 }
 
                 /* Actual Call */
-                snprintf(temp1, buf_len, "   call %c%d,%.*s(),r%d\n",
+                temp1 = printf_malloc("   call %c%d,%.*s(),r%d\n",
                          ret_type, ret_num,
                          node->node_string_length, node->node_string,
                          node->additional_registers);
                 output_append_text(node->output, temp1);
+                free(temp1);
 
                 /* Step through for swapping registers back */
                 n = child1;
@@ -1100,9 +1703,10 @@ static walker_result emit_walker(walker_direction direction,
                     if (n->register_num != i) {
                         /* We need to swap registers */
                         /* I have reversed arguments just for readability */
-                        snprintf(temp1, buf_len, "   swap %c%d,r%d\n",
+                        temp1 = printf_malloc("   swap %c%d,r%d\n",
                                  n->register_type, n->register_num,i);
                         output_append_text(node->output, temp1);
+                        free(temp1);
                     }
                     n = n->sibling; i++;
                 }
@@ -1119,10 +1723,10 @@ static walker_result emit_walker(walker_direction direction,
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     if (child2->output)
-                        output_append(node->output, child2->output);
+                        output_concat(node->output, child2->output);
                     /* It MUST have been converted to a STRING
                      * We don't need to worry about ".0" to show a float literal */
-                    snprintf(temp1, buf_len, "   %s %c%d,\"%.*s\",%c%d\n",
+                    temp1 = printf_malloc("   %s %c%d,\"%.*s\",%c%d\n",
                                  op,
                                  node->register_type,
                                  node->register_num,
@@ -1134,10 +1738,10 @@ static walker_result emit_walker(walker_direction direction,
                 /* If the register is not set then the child is a constant */
                 else if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     if (child1->output)
-                        output_append(node->output, child1->output);
+                        output_concat(node->output, child1->output);
                     /* It MUST have been converted to a STRING
                      * We don't need to worry about ".0" to show a float literal */
-                    snprintf(temp1, buf_len, "   %s %c%d,%c%d,\"%.*s\"\n",
+                    temp1 = printf_malloc("   %s %c%d,%c%d,\"%.*s\"\n",
                              op,
                              node->register_type,
                              node->register_num,
@@ -1148,9 +1752,9 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Neither are constants */
                 else {
-                    if (child1->output) output_append(node->output, child1->output);
-                    if (child2->output) output_append(node->output, child2->output);
-                    snprintf(temp1, buf_len, "   %s %c%d,%c%d,%c%d\n",
+                    if (child1->output) output_concat(node->output, child1->output);
+                    if (child2->output) output_concat(node->output, child2->output);
+                    temp1 = printf_malloc("   %s %c%d,%c%d,%c%d\n",
                              op,
                              node->register_type,
                              node->register_num,
@@ -1160,8 +1764,8 @@ static walker_result emit_walker(walker_direction direction,
                              child2->register_num);
                 }
 
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 type_promotion(node);
             break;
 
@@ -1213,9 +1817,9 @@ static walker_result emit_walker(walker_direction direction,
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     if (child2->output)
-                        output_append(node->output, child2->output);
+                        output_concat(node->output, child2->output);
                     if (child1->target_type == TP_STRING) {
-                        snprintf(temp1, buf_len, "   %s%s %c%d,\"%.*s\",%c%d\n",
+                        temp1 = printf_malloc("   %s%s %c%d,\"%.*s\",%c%d\n",
                                  tp_prefix,
                                  op,
                                  node->register_type,
@@ -1237,7 +1841,7 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         }
                         if (flag) {
-                            snprintf(temp1, buf_len, "   %s%s %c%d,%.*s.0,%c%d\n",
+                            temp1 = printf_malloc("   %s%s %c%d,%.*s.0,%c%d\n",
                                      tp_prefix,
                                      op,
                                      node->register_type,
@@ -1246,7 +1850,7 @@ static walker_result emit_walker(walker_direction direction,
                                      child2->register_type,
                                      child2->register_num);
                         } else {
-                            snprintf(temp1, buf_len, "   %s%s %c%d,%.*s,%c%d\n",
+                            temp1 = printf_malloc("   %s%s %c%d,%.*s,%c%d\n",
                                      tp_prefix,
                                      op,
                                      node->register_type,
@@ -1259,7 +1863,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* INTEGER */
                     else {
-                        snprintf(temp1, buf_len, "   %s%s %c%d,%.*s,%c%d\n",
+                        temp1 = printf_malloc("   %s%s %c%d,%.*s,%c%d\n",
                                  tp_prefix,
                                  op,
                                  node->register_type,
@@ -1273,10 +1877,10 @@ static walker_result emit_walker(walker_direction direction,
                 /* If the register is not set then the child is a constant */
                 else if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     if (child1->output)
-                        output_append(node->output, child1->output);
+                        output_concat(node->output, child1->output);
 
                     if (child2->target_type == TP_STRING) {
-                        snprintf(temp1, buf_len, "   %s%s %c%d,%c%d,\"%.*s\"\n",
+                        temp1 = printf_malloc("   %s%s %c%d,%c%d,\"%.*s\"\n",
                                  tp_prefix,
                                  op,
                                  node->register_type,
@@ -1298,7 +1902,7 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         }
                         if (flag) {
-                            snprintf(temp1, buf_len, "   %s%s %c%d,%c%d,%.*s.0\n",
+                            temp1 = printf_malloc("   %s%s %c%d,%c%d,%.*s.0\n",
                                      tp_prefix,
                                      op,
                                      node->register_type,
@@ -1307,7 +1911,7 @@ static walker_result emit_walker(walker_direction direction,
                                      child1->register_num,
                                      child2->node_string_length, child2->node_string);
                         } else {
-                            snprintf(temp1, buf_len, "   %s%s %c%d,%c%d,%.*s\n",
+                            temp1 = printf_malloc("   %s%s %c%d,%c%d,%.*s\n",
                                      tp_prefix,
                                      op,
                                      node->register_type,
@@ -1320,7 +1924,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* INTEGER */
                     else {
-                        snprintf(temp1, buf_len, "   %s%s %c%d,%c%d,%.*s\n",
+                        temp1 = printf_malloc("   %s%s %c%d,%c%d,%.*s\n",
                                  tp_prefix,
                                  op,
                                  node->register_type,
@@ -1334,10 +1938,10 @@ static walker_result emit_walker(walker_direction direction,
                 /* Neither are constants */
                 else {
                     if (child1->output)
-                        output_append(node->output, child1->output);
+                        output_concat(node->output, child1->output);
                     if (child2->output)
-                        output_append(node->output, child2->output);
-                    snprintf(temp1, buf_len, "   %s%s %c%d,%c%d,%c%d\n",
+                        output_concat(node->output, child2->output);
+                    temp1 = printf_malloc("   %s%s %c%d,%c%d,%c%d\n",
                              tp_prefix,
                              op,
                              node->register_type,
@@ -1348,14 +1952,14 @@ static walker_result emit_walker(walker_direction direction,
                              child2->register_num);
                 }
 
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 type_promotion(node);
                 break;
 
             case OP_AND:
                 node->output = output_f();
-                output_append(node->output, child1->output);
+                output_concat(node->output, child1->output);
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
                     /* If child1 and result are the same registers the logic
@@ -1363,35 +1967,35 @@ static walker_result emit_walker(walker_direction direction,
                      *
                      * If result is false - we can just lazily set the result to false
                      * and not bother with the second expression */
-                    snprintf(temp1, buf_len, "   brf l%dandend,%c%d\n",
+                    temp1 = printf_malloc("   brf l%dandend,%c%d\n",
                              node->node_number,
                              child1->register_type,
                              child1->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* Evaluate child2 */
-                    output_append(node->output, child2->output);
+                    output_concat(node->output, child2->output);
 
                     /* Result is child2's result */
                     if (! (node->register_num == child2->register_num &&
                            node->register_type == child2->register_type) ) {
-                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                        temp1 = printf_malloc("   icopy %c%d,%c%d\n",
                                  node->register_type,
                                  node->register_num,
                                  child2->register_type,
                                  child2->register_num);
-                        node->output3 = output_fs(temp1);
-                        output_append(node->output, node->output3);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
                     }
 
                     /* End of logic */
                     /* Result is already set */
-                    snprintf(temp1, buf_len,
+                    temp1 = printf_malloc(
                              "l%dandend:\n",
                              node->node_number);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output, node->output4);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 else {
                     /* If child1 and result are not the same registers the logic
@@ -1399,50 +2003,50 @@ static walker_result emit_walker(walker_direction direction,
                      *
                      * If result is false - we can just lazily set the result to false
                      * and not bother with the second expression */
-                    snprintf(temp1, buf_len, "   brf l%dandfalse,%c%d\n",
+                    temp1 = printf_malloc("   brf l%dandfalse,%c%d\n",
                              node->node_number,
                              child1->register_type,
                              child1->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* Evaluate child2 */
-                    output_append(node->output, child2->output);
+                    output_concat(node->output, child2->output);
 
                     /* Result is child2's result & branch to end */
                     if (node->register_num == child2->register_num &&
                         node->register_type == child2->register_type) {
                         /* No need to copy if the registers are the same */
-                        snprintf(temp1, buf_len, "   br l%dandend\n", node->node_number);
+                        temp1 = printf_malloc("   br l%dandend\n", node->node_number);
                     }
                     else {
-                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%dandend\n",
+                        temp1 = printf_malloc("   icopy %c%d,%c%d\n   br l%dandend\n",
                                  node->register_type,
                                  node->register_num,
                                  child2->register_type,
                                  child2->register_num,
                                  node->node_number);
                     }
-                    node->output3 = output_fs(temp1);
-                    output_append(node->output, node->output3);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* End of logic */
                     /* Result is 0/false */
-                    snprintf(temp1, buf_len,
+                    temp1 = printf_malloc(
                              "l%dandfalse:\n   load %c%d,0\nl%dandend:\n",
                              node->node_number,
                              node->register_type,
                              node->register_num,
                              node->node_number);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output, node->output4);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 type_promotion(node);
                 break;
 
             case OP_OR:
                 node->output = output_f();
-                output_append(node->output, child1->output);
+                output_concat(node->output, child1->output);
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
                     /* If child1 and result are the same registers the logic
@@ -1450,35 +2054,35 @@ static walker_result emit_walker(walker_direction direction,
                      *
                      * If result is true - we can just lazily set the result to true
                      * and not bother with the second expression */
-                    snprintf(temp1, buf_len, "   brt l%dorend,%c%d\n",
+                    temp1 = printf_malloc("   brt l%dorend,%c%d\n",
                              node->node_number,
                              child1->register_type,
                              child1->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* Evaluate child2 */
-                    output_append(node->output, child2->output);
+                    output_concat(node->output, child2->output);
 
                     /* Result is child2's result */
                     if (! (node->register_num == child2->register_num &&
                            node->register_type == child2->register_type) ) {
-                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                        temp1 = printf_malloc("   icopy %c%d,%c%d\n",
                                  node->register_type,
                                  node->register_num,
                                  child2->register_type,
                                  child2->register_num);
-                        node->output3 = output_fs(temp1);
-                        output_append(node->output, node->output3);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
                     }
 
                     /* End of logic */
                     /* Result is already set */
-                    snprintf(temp1, buf_len,
+                    temp1 = printf_malloc(
                                  "l%dorend:\n",
                                  node->node_number);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output, node->output4);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 else {
                     /* If child1 and result are not the same registers the logic
@@ -1486,88 +2090,88 @@ static walker_result emit_walker(walker_direction direction,
                      *
                      * If result is true - we can just lazily set the result to true
                      * and not bother with the second expression */
-                    snprintf(temp1, buf_len, "   brt l%dortrue,%c%d\n",
+                    temp1 = printf_malloc("   brt l%dortrue,%c%d\n",
                              node->node_number,
                              child1->register_type,
                              child1->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* Evaluate child2 */
-                    output_append(node->output, child2->output);
+                    output_concat(node->output, child2->output);
 
                     /* Result is child2's result & branch to end */
                     if (node->register_num == child2->register_num &&
                         node->register_type == child2->register_type) {
                         /* No need to copy if the registers are the same */
-                        snprintf(temp1, buf_len, "   br l%dorend\n", node->node_number);
+                        temp1 = printf_malloc("   br l%dorend\n", node->node_number);
                     }
                     else {
-                        snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n   br l%dorend\n",
+                        temp1 = printf_malloc("   icopy %c%d,%c%d\n   br l%dorend\n",
                                  node->register_type,
                                  node->register_num,
                                  child2->register_type,
                                  child2->register_num,
                                  node->node_number);
                     }
-                    node->output3 = output_fs(temp1);
-                    output_append(node->output, node->output3);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
 
                     /* End of logic */
                     /* Result is 1/true */
-                    snprintf(temp1, buf_len,
+                    temp1 = printf_malloc(
                                  "l%dortrue:\n   load %c%d,1\nl%dorend:\n",
                                  node->node_number,
                                  node->register_type,
                                  node->register_num,
                                  node->node_number);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output, node->output4);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 type_promotion(node);
                 break;
 
             case OP_NOT:
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
-                snprintf(temp1, buf_len, "   not %c%d,%c%d\n",
+                if (child1->output) output_concat(node->output, child1->output);
+                temp1 = printf_malloc("   not %c%d,%c%d\n",
                          node->register_type,
                          node->register_num,
                          child1->register_type,
                          child1->register_num);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 type_promotion(node);
                 break;
 
             case OP_NEG:
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
+                if (child1->output) output_concat(node->output, child1->output);
                 if (node->value_type == TP_FLOAT) {
-                    snprintf(temp1, buf_len, "   fsub %c%d,0.0,%c%d\n",
+                    temp1 = printf_malloc("   fsub %c%d,0.0,%c%d\n",
                              node->register_type,
                              node->register_num,
                              child1->register_type,
                              child1->register_num);
                 }
                 else {
-                    snprintf(temp1, buf_len, "   isub %c%d,0,%c%d\n",
+                    temp1 = printf_malloc("   isub %c%d,0,%c%d\n",
                              node->register_type,
                              node->register_num,
                              child1->register_type,
                              child1->register_num);
                 }
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 type_promotion(node);
                 break;
 
             case OP_PLUS:
                 node->output = output_f();
-                if (child1->output) output_append(node->output, child1->output);
+                if (child1->output) output_concat(node->output, child1->output);
                 if (node->register_type != child1->register_type ||
                     node->register_num != child1->register_num) {
-                    snprintf(temp1, buf_len, "   %scopy %c%d,%c%d\n",
+                    temp1 = printf_malloc("   %scopy %c%d,%c%d\n",
                              tp_prefix,
                              node->register_type,
                              node->register_num,
@@ -1575,10 +2179,10 @@ static walker_result emit_walker(walker_direction direction,
                              child1->register_num);
                 }
                 else {
-                    strncpy(temp1,"   * \"+\" is a nop here\n",buf_len);
+                    temp1 = printf_malloc("   * \"+\" is a nop here\n");
                 }
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 type_promotion(node);
                 break;
 
@@ -1604,191 +2208,231 @@ static walker_result emit_walker(walker_direction direction,
                  * as a constant - we just set the value as a string */
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
                     /* Get the constant string */
-                    format_constant(temp2, node->value_type, node);
+                    temp2 = format_constant(node->value_type, node);
 
                     /* Make the register load instruction */
-                    snprintf(temp1, buf_len, "   load %c%d,%s\n",
+                    temp1 = printf_malloc("   load %c%d,%s\n",
                              node->register_type,
                              node->register_num,
                              temp2);
 
                     /* Set the node output */
                     node->output = output_fs(temp1);
+                    free(temp1);
+                    free(temp2);
 
                     /* Do any type promotion */
                     type_promotion(node);
                 }
                 break;
 
-            case ASSEMBLER:
-                get_comment(comment,node, NULL);
-                /* Child instructions */
-                node->output = output_fs(comment);
+            case ASSEMBLER: {
+                char *arg1 = 0, *arg2 = 0, *arg3 = 0;
 
-                /* We will build temp1 to be the assembler instruction */
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                /* We will build the assembler instruction */
                 /* First the command */
-                snprintf(temp1, buf_len, "   %.*s ",
-                         node->node_string_length ,node->node_string);
+                char* inst = printf_malloc("   %.*s ",
+                         node->node_string_length, node->node_string);
 
                 /* Argument 1 */
                 if (child1) {
                     if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        format_constant(temp2, child1->target_type, child1);
-                    }
-                    else { /* A register */
-                        output_append(node->output, child1->output);
-                        snprintf(temp2, buf_len, "%c%d",
+                        arg1 = format_constant(child1->target_type, child1);
+                    } else { /* A register */
+                        output_concat(node->output, child1->output);
+                        arg1 = printf_malloc("%c%d",
                                  child1->register_type,
                                  child1->register_num);
                     }
-                    strcat(temp1, temp2);
                 }
 
                 /* Argument 2 */
                 if (child2) {
-                    strcat(temp1, ",");
                     if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        format_constant(temp2, child2->target_type, child2);
+                        arg2 = format_constant(child2->target_type, child2);
+                    } else { /* A register */
+                        output_concat(node->output, child2->output);
+                        arg2 = printf_malloc("%c%d",
+                                             child2->register_type,
+                                             child2->register_num);
                     }
-                    else { /* A register */
-                        output_append(node->output, child2->output);
-                        snprintf(temp2, buf_len, "%c%d",
-                                 child2->register_type,
-                                 child2->register_num);
-                    }
-                    strcat(temp1, temp2);
                 }
 
                 /* Argument 3 */
                 if (child3) {
-                    strcat(temp1, ",");
                     if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        format_constant(temp2, child3->target_type, child3);
+                        arg3 = format_constant(child3->target_type, child3);
+                    } else { /* A register */
+                        output_concat(node->output, child3->output);
+                        arg3 = printf_malloc("%c%d",
+                                             child3->register_type,
+                                             child3->register_num);
                     }
-                    else { /* A register */
-                        output_append(node->output, child3->output);
-                        snprintf(temp2, buf_len, "%c%d",
-                                 child3->register_type,
-                                 child3->register_num);
-                    }
-                    strcat(temp1, temp2);
                 }
-                /* End of Line */
-                strcat(temp1, "\n");
 
-                /* Finally, append our output */
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
-                break;
+                /* Create the whole instruction */
+                if (arg3) temp1 = printf_malloc("%s %s,%s,%s\n", inst, arg1, arg2, arg3);
+                else if (arg2) temp1 = printf_malloc("%s %s,%s\n", inst, arg1, arg2);
+                else if (arg1) temp1 = printf_malloc("%s %s\n", inst, arg1);
+                else temp1 = printf_malloc("%s\n", inst);
+
+                /* Finally, append it to the output */
+                output_append_text(node->output, temp1);
+
+                /* Clean up */
+                free(temp1);
+                free(inst);
+                if (arg1) free(arg1);
+                if (arg2) free(arg2);
+                if (arg3) free(arg3);
+            }
+            break;
 
             case ASSIGN:
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                output_append(node->output, child2->output);
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                output_concat(node->output, child2->output);
                 if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
-                    snprintf(temp1, buf_len, "   copy %c%d,%c%d\n",
+                    temp1 = printf_malloc("   copy %c%d,%c%d\n",
                              child1->register_type,
                              child1->register_num,
                              child2->register_type,
                              child2->register_num);
-                    node->output2 = output_fs(temp1);
-                    output_append(node->output, node->output2);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 break;
 
             case ADDRESS:
-                get_comment(comment,node,NULL);
-                node->output = output_fs(comment);
-                output_append(node->output, child1->output);
-                snprintf(temp1, buf_len, "   address %c%d\n",
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                output_concat(node->output, child1->output);
+                temp1 = printf_malloc("   address %c%d\n",
                          node->register_type,
                          node->register_num);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 break;
 
             case NOP:
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
+                node->output = output_f();
                 break;
 
             case SAY:
-                get_comment(comment,node, NULL);
-                /* Child instructions */
-                node->output = output_fs(comment);
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     /* If the register is not set then the child is a constant
                      * which we SAY directly. Get the constant string - target type */
-                    format_constant(temp2, child1->target_type, child1);
-                    snprintf(temp1, buf_len, "   say %s\n", temp2);
+                    temp2 = format_constant(child1->target_type, child1);
+                    temp1 = printf_malloc("   say %s\n", temp2);
+                    free(temp2);
                 }
                 else {
-                    output_append(node->output, child1->output);
-                    snprintf(temp1, buf_len, "   say %c%d\n",
+                    output_concat(node->output, child1->output);
+                    temp1 = printf_malloc("   say %c%d\n",
                              child1->register_type,
                              child1->register_num);
                 }
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
                 break;
 
             case RETURN:
-                get_comment(comment,node, NULL);
-                /* Child instructions */
-                node->output = output_fs(comment);
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
                 if (child1 == 0) {
-                    snprintf(temp1, buf_len, "   ret\n");
+                    temp1 = printf_malloc("   ret\n");
                 }
                 else if (child1->register_num == DONT_ASSIGN_REGISTER) {
                     /* If the register is not set then the child is a constant
                      * which we RET directly. Get the constant string - target type */
-                    format_constant(temp2, child1->target_type, child1);
-                    snprintf(temp1, buf_len, "   ret %s\n", temp2);
+                    temp2 = format_constant(child1->target_type, child1);
+                    temp1 = printf_malloc("   ret %s\n", temp2);
+                    free(temp2);
                 }
                 else {
-                    output_append(node->output, child1->output);
-                    snprintf(temp1, buf_len, "   ret %c%d\n",
+                    output_concat(node->output, child1->output);
+                    temp1 = printf_malloc("   ret %c%d\n",
                              child1->register_type,
                              child1->register_num);
                 }
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
+                output_append_text(node->output, temp1);
+                free(temp1);
                 break;
 
             case IF:
-                get_comment(comment,child1, "{IF}");
-                node->output = output_fs(comment);
-                if (child1->output) output_append(node->output, child1->output);
-                get_comment_line_number_only(comment,child2,"{THEN}");
-                snprintf(temp1, buf_len, "   brf l%diffalse,%c%d\n%s",
-                         node->node_number,
-                         node->register_type,
-                         node->register_num,
-                         comment);
-                node->output2 = output_fs(temp1);
-                output_append(node->output, node->output2);
-                output_append(node->output,child2->output);
-                if (child3) {
-                    get_comment_line_number_only(comment,child3,"{ELSE}");
-                    snprintf(temp1, buf_len, "   br l%difend\n%sl%diffalse:\n",
-                             node->node_number,
-                             comment,
-                             node->node_number);
-                    node->output3 = output_fs(temp1);
-                    output_append(node->output, node->output3);
-                    output_append(node->output,child3->output);
+                /* Add source metadata */
+                comment_meta = get_metaline_range(node, child1);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
 
-                    snprintf(temp1, buf_len, "l%difend:\n",
+                if (child1->output) output_concat(node->output, child1->output);
+                comment_meta = get_metaline_token_after(child1);
+                temp1 = printf_malloc("   brf l%diffalse,%c%d\n%s",
+                                      node->node_number,
+                                      node->register_type,
+                                      node->register_num,
+                                      comment_meta);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                free(comment_meta);
+                output_concat(node->output, child2->output);
+                if (child3) {
+                    comment_meta = get_metaline_token_after(child2);
+                    temp1 = printf_malloc("   br l%difend\n%sl%diffalse:\n",
+                                          node->node_number,
+                                          comment_meta,
+                                          node->node_number);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    free(comment_meta);
+                    output_concat(node->output, child3->output);
+
+                    temp1 = printf_malloc("l%difend:\n",
                              node->node_number);
-                    node->output4 = output_fs(temp1);
-                    output_append(node->output, node->output4);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 else {
-                    snprintf(temp1, buf_len, "l%diffalse:\n",
+                    temp1 = printf_malloc("l%diffalse:\n",
                              node->node_number);
-                    node->output3 = output_fs(temp1);
-                    output_append(node->output, node->output3);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
                 break;
 
@@ -1797,67 +2441,74 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
 
-                get_comment_line_number_only(comment,child1, "{DO}");
-                node->output = output_fs(comment);
+                comment_meta = get_metaline_token_at(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
                 /* Init */
-                output_append(node->output, child1->output);
+                output_concat(node->output, child1->output);
 
                 /* Loop Start */
-                snprintf(temp1, buf_len, "l%ddostart:\n",
+                temp1 = printf_malloc("l%ddostart:\n",
                          node->node_number);
                 output_append_text(node->output, temp1);
+                free(temp1);
 
-                /* Loop Begin Checks REPEAT->output2 */
-                output_append(node->output, child1->output2);
+                /* Loop Begin Checks REPEAT->loopstartchecks */
+                output_concat(node->output, child1->loopstartchecks);
 
                 /* Loop Body - instructions */
-                output_append(node->output, child2->output);
+                output_concat(node->output, child2->output);
 
-                /* Loop End Checks REPEAT->output4 */
-                snprintf(temp1, buf_len, "l%ddoinc:\n",
+                /* Loop End Checks REPEAT->loopendchecks */
+                temp1 = printf_malloc("l%ddoinc:\n",
                          node->node_number);
                 output_append_text(node->output, temp1);
-                output_append(node->output, child1->output4);
+                free(temp1);
+                output_concat(node->output, child1->loopendchecks);
 
-                /* Loop increments REPEAT->output3 */
-                output_append(node->output, child1->output3);
+                /* Loop increments REPEAT->loopinc */
+                output_concat(node->output, child1->loopinc);
 
                 /* Loop End */
-                get_comment_line_number_only(comment, child1, "{DO-END}");
-                output_append_text(node->output, comment);
-                snprintf(temp1, buf_len, "   br l%ddostart\nl%ddoend:\n",
+                comment_meta = get_metaline_token_after(child2);
+
+                output_append_text(node->output, comment_meta);
+                temp1 = printf_malloc("   br l%ddostart\nl%ddoend:\n",
                          node->node_number, node->node_number);
                 output_append_text(node->output, temp1);
+                free(temp1);
+                free(comment_meta);
                 break;
 
             case REPEAT:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
                 node->output = output_f(); /* Assign / init instruction */
-                node->output2 = output_f(); /* Begin Loop exit checks */
-                node->output3 = output_f(); /* Loop increments */
-                node->output4 = output_f(); /* End Loop exit checks */
+                node->loopstartchecks = output_f(); /* Begin Loop exit checks */
+                node->loopinc = output_f(); /* Loop increments */
+                node->loopendchecks = output_f(); /* End Loop exit checks */
                 while (child1) {
                     if (child1->node_type == ASSIGN) {
                         /* Only output is valid - does not follow convention */
-                        if (child1->output) output_append(node->output, child1->output);
+                        if (child1->output) output_concat(node->output, child1->output);
                     }
                     else {
                         if (child1->output)
-                            output_append(node->output, child1->output);
-                        if (child1->output2)
-                            output_append(node->output2, child1->output2);
-                        if (child1->output3)
-                            output_append(node->output3, child1->output3);
-                        if (child1->output4)
-                            output_append(node->output4, child1->output4);
+                            output_concat(node->output, child1->output);
+                        if (child1->loopstartchecks)
+                            output_concat(node->loopstartchecks, child1->loopstartchecks);
+                        if (child1->loopinc)
+                            output_concat(node->loopinc, child1->loopinc);
+                        if (child1->loopendchecks)
+                            output_concat(node->loopendchecks, child1->loopendchecks);
                     }
                     child1 = child1->sibling;
                 }
@@ -1866,39 +2517,42 @@ static walker_result emit_walker(walker_direction direction,
             case FOR:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                output_append(node->output, child1->output);
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                output_concat(node->output, child1->output);
                 if (child1->register_num != node->register_num ||
                     child1->register_type != node->register_type) {
-                    snprintf(temp1, buf_len, "   icopy %c%d,%c%d\n",
+                    temp1 = printf_malloc("   icopy %c%d,%c%d\n",
                              node->register_type,
                              node->register_num,
                              child1->register_type,
                              child1->register_num);
                     output_append_text(node->output, temp1);
+                    free(temp1);
                 }
-                node->output2 = output_fs(comment);
-                snprintf(temp1, buf_len, "   bcf l%ddoend,%c%d\n",
+                node->loopstartchecks = output_fs(comment_meta);
+                temp1 = printf_malloc("   bcf l%ddoend,%c%d\n",
                          node->parent->parent->node_number,
                          node->register_type,
                          node->register_num);
-                output_append_text(node->output2, temp1);
+                output_append_text(node->loopstartchecks, temp1);
+                free(comment_meta);
+                free(temp1);
                 break;
 
             case TO:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
 
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                output_append(node->output, child1->output);
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                output_concat(node->output, child1->output);
 
                 /* Need to determine the sign of the BY */
                 /* Find the BY */
@@ -1933,10 +2587,10 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* If the REPEAT has a TO it has an ASSIGN and its register
                  * number will have been set to the ASSIGN Variable */
-                node->output2 = output_fs(comment);
+                node->loopstartchecks = output_fs(comment_meta);
                 switch (j) {
                     case 1: /* Positive */
-                        snprintf(temp1, buf_len, "   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                        temp1 = printf_malloc("   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
                                  tp_prefix,
                                  node->parent->register_type,
                                  node->parent->register_num,
@@ -1945,7 +2599,7 @@ static walker_result emit_walker(walker_direction direction,
                                  node->parent->parent->node_number);
                         break;
                     case -1: /* Negative */
-                        snprintf(temp1, buf_len, "   %slt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                        temp1 = printf_malloc("   %slt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
                                  tp_prefix,
                                  node->parent->register_type,
                                  node->parent->register_num,
@@ -1957,7 +2611,7 @@ static walker_result emit_walker(walker_direction direction,
                         /* We need a zero (int or flaot */
                         if (*tp_prefix == 'i') op = "0";
                         else op = "0.0";
-                        snprintf(temp1, buf_len,
+                        temp1 = printf_malloc(
                                  "   %slt r0,%c%d,%s\n" /* Check the by value sign */
                                  "   brt l%ddoneg1,r0\n"    /* JMP to Negative BY (r0 - todo) */
 
@@ -1993,27 +2647,29 @@ static walker_result emit_walker(walker_direction direction,
                                  node->parent->parent->node_number,
                                  node->parent->parent->node_number);
                 }
-                output_append_text(node->output2, temp1);
+                output_append_text(node->loopstartchecks, temp1);
+                free(temp1);
+                free(comment_meta);
                 break;
 
             case BY:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
 
                 /* If the REPEAT has a BY it has an ASSIGN and its register
                  * number will have been set to the ASSIGN Variable */
 
                 if (child1) {
                     /* BY explicitly stated */
-                    get_comment(comment, node, NULL);
-                    node->output = output_fs(comment);
-                    output_append(node->output, child1->output);
+                    comment_meta = get_metaline(node);
+                    node->output = output_fs(comment_meta);
+                    output_concat(node->output, child1->output);
 
-                    node->output3 = output_fs(comment);
-                    snprintf(temp1, buf_len, "   %sadd %c%d,%c%d,%c%d\n",
+                    node->loopinc = output_fs(comment_meta);
+                    temp1 = printf_malloc("   %sadd %c%d,%c%d,%c%d\n",
                              tp_prefix,
                              node->parent->register_type,
                              node->parent->register_num,
@@ -2021,78 +2677,103 @@ static walker_result emit_walker(walker_direction direction,
                              node->child->register_num,
                              node->parent->register_type,
                              node->parent->register_num);
-                    output_append_text(node->output3, temp1);
+                    output_append_text(node->loopinc, temp1);
+                    free(comment_meta);
+                    free(temp1);
                 }
                 else {
                     /* BY Added implicitly - increment by 1 */
-                    get_comment_line_number_only(comment, node->parent, "{Implicit \"BY 1\"}");
+                    /* For the source we can only reference the symbol in the loop assignment node */
 
-                    node->output3 = output_fs(comment);
+//                    comment_meta = get_comment_line_number_only(node->parent, "{Implicit \"BY 1\"}");
+                    comment_meta = get_metaline_token_at(node->parent->child);
+                    node->loopinc = output_fs(comment_meta);
+                    free(comment_meta);
+
                     if (*tp_prefix == 'i') {
-                        snprintf(temp1, buf_len, "   inc %c%d\n",
+                        temp1 = printf_malloc("   inc %c%d\n",
                                  node->parent->register_type,
                                  node->parent->register_num);
                     }
                     else {
-                        snprintf(temp1, buf_len, "   %sadd %c%d,%c%d,1.0\n",
+                        temp1 = printf_malloc("   %sadd %c%d,%c%d,1.0\n",
                                  tp_prefix,
                                  node->parent->register_type,
                                  node->parent->register_num,
                                  node->parent->register_type,
                                  node->parent->register_num);
                     }
-                    output_append_text(node->output3, temp1);
+                    output_append_text(node->loopinc, temp1);
+                    free(temp1);
                 }
                 break;
 
             case WHILE:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
-                get_comment(comment,node, NULL);
-                node->output2 = output_fs(comment);
-                output_append(node->output2, child1->output);
-                snprintf(temp1, buf_len, "   brf l%ddoend,%c%d\n",
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
+                comment_meta = get_metaline(node);
+                node->loopstartchecks = output_fs(comment_meta);
+                free(comment_meta);
+                output_concat(node->loopstartchecks, child1->output);
+                temp1 = printf_malloc("   brf l%ddoend,%c%d\n",
                          node->parent->parent->node_number,
                          node->register_type,
                          node->register_num);
-                output_append_text(node->output2, temp1);
+                output_append_text(node->loopstartchecks, temp1);
+                free(temp1);
                 break;
 
             case UNTIL:
                 /* Loop output mapping / convention
                  * output =  Loop Assign / init instruction
-                 * output2 = Loop iteration beginning exit checks
-                 * output3 = Loop iteration increments
-                 * output4 = Loop iteration end exit checks */
-                get_comment(comment,node, NULL);
-                node->output4 = output_fs(comment);
-                output_append(node->output4, child1->output);
-                snprintf(temp1, buf_len, "   brt l%ddoend,%c%d\n",
+                 * loopstartchecks = Loop iteration beginning exit checks
+                 * loopinc = Loop iteration increments
+                 * loopendchecks = Loop iteration end exit checks */
+                comment_meta = get_metaline(node);
+                node->loopendchecks = output_fs(comment_meta);
+                free(comment_meta);
+                output_concat(node->loopendchecks, child1->output);
+                temp1 = printf_malloc("   brt l%ddoend,%c%d\n",
                          node->parent->parent->node_number,
                          node->register_type,
                          node->register_num);
-                output_append_text(node->output4, temp1);
+                output_append_text(node->loopendchecks, temp1);
+                free(temp1);
                 break;
 
             case LEAVE:
                 /* Leave Loop */
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                snprintf(temp1, buf_len, "   br l%ddoend\n",
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                temp1 = printf_malloc("   br l%ddoend\n",
                          node->association->node_number);
                 output_append_text(node->output, temp1);
+                free(temp1);
                 break;
 
             case ITERATE:
                 /* Iterate Loop */
-                get_comment(comment,node, NULL);
-                node->output = output_fs(comment);
-                snprintf(temp1, buf_len, "   br l%ddoinc\n",
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                temp1 = printf_malloc("   br l%ddoinc\n",
                          node->association->node_number);
                 output_append_text(node->output, temp1);
+                free(temp1);
                 break;
 
             default:;
