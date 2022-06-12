@@ -71,7 +71,9 @@ say 'Dolly   has lived              :' xd-md 'days  '
 say 'Aimée   was born on 23 Aug 1967:' xa 'days ago.'
 twentythou = date('b','23 Aug 1967')+20000
 say 'Aimée   will have her 20000 on :' date('n',twentythou,'b')
- 
+
+return 0
+
 /* Prototype functions */
 date: Procedure = .string
    arg iFormat = "", idate = "", oFormat = "", osep="", isep=""

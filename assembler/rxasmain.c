@@ -8,6 +8,7 @@
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxasassm.h"
+#include "rxbin.h"
 
 static void help() {
     char* helpMessage =
@@ -77,6 +78,9 @@ int main(int argc, char *argv[]) {
     int i;
     bin_space *pgm;
     int optimise = 1;
+    module_file module;
+
+    memset(&module,0,sizeof(module_file)); /* Xezo module file (valgrind complains otherwise) */
 
     // Load Instruction Database
     init_ops();
@@ -180,6 +184,7 @@ int main(int argc, char *argv[]) {
     bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize scanner */
+    scanner.file_name = file_name;
     scanner.top = buff;
     scanner.cursor = buff;
     scanner.linestart = buff;
@@ -213,6 +218,12 @@ int main(int argc, char *argv[]) {
     scanner.label_constants_tree = 0;
     scanner.extern_constants_tree = 0;
     scanner.extern_regs = 0;
+    scanner.proc_head = -1;
+    scanner.proc_tail = -1;
+    scanner.expose_head = -1;
+    scanner.expose_tail = -1;
+    scanner.meta_head = -1;
+    scanner.meta_tail = -1;
 
     /* Pointer to the end of the buffer */
     buff_end = (char*) (((char*)buff) + bytes);
@@ -269,13 +280,19 @@ int main(int argc, char *argv[]) {
         }
 
         pgm = &scanner.binary;
-        fwrite(&pgm->globals, sizeof(pgm->globals), 1, outFile);
-        fwrite(&pgm->inst_size, sizeof(pgm->inst_size), 1, outFile);
-        fwrite(&pgm->const_size, sizeof(pgm->const_size), 1, outFile);
-
-        fwrite(pgm->binary, sizeof(bin_code), pgm->inst_size, outFile);
-        fwrite(pgm->const_pool, pgm->const_size, 1, outFile);
-
+        module.header.name_size = strlen(file_name) + 1;
+        module.header.description_size = strlen(file_name) + 1;
+        module.header.instruction_size = pgm->inst_size;
+        module.header.constant_size = pgm->const_size;
+        module.header.globals = pgm->globals;
+        module.header.meta_head  = scanner.meta_head;
+        module.header.proc_head  = scanner.proc_head;
+        module.header.expose_head  = scanner.expose_head;
+        module.name = file_name;
+        module.description = file_name;
+        module.instructions = pgm->binary;
+        module.constant = pgm->const_pool;
+        write_module(&module,outFile);
         fclose(outFile);
     }
 
@@ -311,5 +328,5 @@ int main(int argc, char *argv[]) {
     /* Free Binary Buffer */
     if (buff) free(buff);
 
-    return(0);
+    return(scanner.severity);
 }

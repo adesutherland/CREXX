@@ -70,10 +70,14 @@ int scan(Assembler_Context* s, char *buff_end) {
     id ":" {return(LABEL);}
     id {return(ID);}
     '=' {return(EQUAL);}
+    ':' {return(COLON);}
     ',' {return(COMMA);}
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
     '.expose' { return(KW_EXPOSE); }
+    '.src' { return(KW_SRC); }
+    '.srcfile' { return(KW_SRCFILE); }
+    '.meta' { return(KW_META); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;

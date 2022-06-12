@@ -93,6 +93,8 @@ say 'end of date2 test'
 say errors 'errors'
 return errors<>0
 
+return 0
+
 /* Prototype functions */
 date: Procedure = .string
    arg iFormat = "", idate = "", oFormat = "", osep="", isep=""

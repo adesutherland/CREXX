@@ -1,0 +1,40 @@
+/* Simple RXAS library to save globals */
+/* Until the compiler can do it ...    */
+
+.globals=4
+
+setasm() .locals=0 .expose=setasm.setasm
+   .meta "SETASM"="B" ".VOID" setasm() "VAL = .STRING" ""
+   scopy g0,a1
+   ret
+
+getasm() .locals=0 .expose=getasm.getasm
+   .meta "GETASM"="B" ".STRING" getasm() "" ""
+   ret g0
+
+setmode() .locals=0 .expose=setmode.setmode
+   .meta "SETMODE"="B" ".VOID" setmode() "VAL = .STRING" ""
+   scopy g1,a1
+   ret
+
+getmode() .locals=0 .expose=getmode.getmode
+   .meta "GETMODE"="B" ".STRING" getmode() "" ""
+   ret g1
+
+setrexx() .locals=0 .expose=setrexx.setrexx
+   .meta "SETREXX"="B" ".VOID" setrexx() "VAL = .STRING" ""
+   scopy g2,a1
+   ret
+
+getrexx() .locals=0 .expose=getrexx.getrexx
+   .meta "GETREXX"="B" ".STRING" getrexx() "" ""
+   ret g2
+
+setwatch() .locals=0 .expose=setwatch.setwatch
+   .meta "SETWATCH"="B" ".VOID" setwatch() "VAL = .STRING" ""
+   scopy g3,a1
+   ret
+
+getwatch() .locals=0 .expose=getwatch.getwatch
+   .meta "GETWATCH"="B" ".STRING" getwatch() "" ""
+   ret g3

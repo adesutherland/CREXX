@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0040"
+#define rxversion "cREXX F0041"
 
 #include <stdio.h>
 #include "platform.h"
@@ -34,7 +34,7 @@ typedef enum RexxLevel {
 } RexxLevel;
 
 typedef enum ValueType {
-    TP_UNKNOWN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
+    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
 } ValueType;
 
 /* Compiler Context Object */
@@ -69,7 +69,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, CONSTANT, WHILE, UNTIL
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -88,6 +88,8 @@ struct ASTNode {
     NodeType node_type;
     ValueType value_type;
     ValueType target_type;
+    int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
+    int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
     char register_type;
     int additional_registers; /* always type 'r' */
@@ -110,12 +112,12 @@ struct ASTNode {
     Token *token_start, *token_end;
     char *source_start, *source_end;
     int line, column;
-    SymbolNode *symbol;
+    SymbolNode *symbolNode;
     /* These are used by the code emitters */
-    OutputFragment *output;
-    OutputFragment *output2;
-    OutputFragment *output3;
-    OutputFragment *output4;
+    OutputFragment *output;          /* Primary node output or loop assign / init instruction */
+    OutputFragment *loopstartchecks; /* Begin Loop exit checks */
+    OutputFragment *loopinc;         /* Loop increments */
+    OutputFragment *loopendchecks;   /* End Loop exit checks */
 };
 
 /* Symbol-ASTNode Connector */
@@ -131,6 +133,8 @@ void prt_unex(FILE* output, const char *ptr, int len);
 
 /* Token Functions */
 Token* token_f(Context* context, int type);
+/* Remove the last (tail) token */
+void token_r(Context *context);
 void free_tok(Context* context);
 void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */
@@ -208,6 +212,7 @@ int prnterrs(Context *context);
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
+    char *name;
     void *child_array;
     void *symbols_tree;
     size_t num_registers;
@@ -225,6 +230,7 @@ struct Symbol {
     char register_type;
     char is_constant;
     char is_function;
+    char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
 /* Scope Factory */
@@ -273,6 +279,12 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
+
+/* Returns the lowest ASTNode ordinal associated with the symbol */
+int sym_lord(Symbol *symbol);
+
+/* Returns the fully resolved symbol name in a malloced buffer */
+char* sym_frnm(Symbol *symbol);
 
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);

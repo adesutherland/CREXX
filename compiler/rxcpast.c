@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 
 /* Token Factory */
@@ -26,11 +27,31 @@ Token *token_f(Context *context, int type) {
     token->length = context->cursor - context->top;
     token->line = context->line;
     token->column = context->top - context->linestart + 1;
+    if (token->column < 0) token->column = 0;
     token->token_string = context->top;
 
     context->top = context->cursor;
 
     return token;
+}
+
+/* Remove the last (tail) token */
+void token_r(Context *context) {
+    Token *tail = context->token_tail;
+    Token *new_tail;
+
+    /* Unlink the tail token */
+    if (tail) {
+        new_tail = tail->token_prev;
+        if (new_tail) {
+            new_tail->token_next = 0;
+            context->token_tail = new_tail;
+        } else {
+            context->token_head = 0;
+            context->token_tail = 0;
+        }
+        free(tail);
+    }
 }
 
 void prnt_tok(Token *token) {
@@ -62,12 +83,12 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->sibling = 0;
     node->association = 0;
     node->token = 0;
-    node->symbol = 0;
+    node->symbolNode = 0;
     node->scope = 0;
     node->output = 0;
-    node->output2 = 0;
-    node->output3 = 0;
-    node->output4 = 0;
+    node->loopstartchecks = 0;
+    node->loopinc = 0;
+    node->loopendchecks = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
     node->target_type = TP_UNKNOWN;
@@ -87,6 +108,10 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
     context->free_list = node;
+
+    /*  Note that ordinal is only set before optimisation - new nodes have value -1 */
+    node->high_ordinal = -1;
+    node->low_ordinal = -1;
 
     /* These values are normally set by the set_source_location walker
      *  However nodes (e.g. unspecified optional arguments) can be added after
@@ -111,17 +136,109 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     return node;
 }
 
+/* Convert one hex digit to an int (-1 = error)*/
+static int hexchar2int(char hexbyte) {
+    int val = -1;
+
+    // transform hex character to the 4bit equivalent number
+    if (hexbyte >= '0' && hexbyte <= '9') val = hexbyte - '0';
+    else if (hexbyte >= 'a' && hexbyte <='f') val = hexbyte - 'a' + 10;
+    else if (hexbyte >= 'A' && hexbyte <='F') val = hexbyte - 'A' + 10;
+
+    return val;
+}
+
+/* Helper Function to turn 4 binary bits to an int (hex) character */
+static int binchar2int(const char* bin) {
+    int result = 0;
+
+    if (bin[0] == '1') result += 8;
+    if (bin[1] == '1') result += 4;
+    if (bin[2] == '1') result += 2;
+    if (bin[3] == '1') result++;
+
+    return result;
+}
+
+/*
+ * Escape a character
+ * input - character to be escaped
+ * Returns a static buffer with the escaped character string
+ */
+static char* escape_character(unsigned char c) {
+    static char buffer[5];
+    buffer[0] = '\\';
+    buffer[2] = 0;
+    /* Encode C style */
+    switch (c) {
+        case '\\':
+            buffer[1] = '\\';
+            break;
+        case '\n':
+            buffer[1] = 'n';
+            break;
+        case '\t':
+            buffer[1] = 't';
+            break;
+        case '\a':
+            buffer[1] = 'a';
+            break;
+        case '\b':
+            buffer[1] = 'b';
+            break;
+        case '\f':
+            buffer[1] = 'f';
+            break;
+        case '\r':
+            buffer[1] = 'r';
+            break;
+        case '\v':
+            buffer[1] = 'v';
+            break;
+        case '\'':
+            buffer[1] = '\'';
+            break;
+        case '\"':
+            buffer[1] = '\"';
+            break;
+        case 0:
+            buffer[1] = '0';
+            break;
+        case '\?':
+            buffer[1] = '\?';
+            break;
+        default:
+            /* Should we escape this character? */
+            if (isprint(c)) {
+                buffer[0] = (char)c;
+                buffer[1] = 0;
+            } else {
+                /* Escape as a hex character */
+                buffer[1] = 'x';
+                snprintf(buffer + 2, 3, "%02x", c);
+            }
+            break;
+    }
+    return buffer;
+}
+
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
- * and decoding / encoding the string nicely */
-/* TODO - X and B suffix */
+ * and decoding / encoding the string nicely - or converting to an error string */
 #define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
 ASTNode *ast_fstr(Context* context, Token *token) {
     unsigned char separator;
     char* raw_string;
     size_t raw_length;
+    size_t hex_bin_length;
     char *processed_string;
     char *buffer;
+    char c;
+    size_t i;
     size_t processed_length;
+    char hex_bin_buffer[9];
+    size_t hex_buffer_len;
+    char string_type;
+    char *escaped_char;
 
     /* Make the token */
     ASTNode *node = ast_ft(context, STRING);
@@ -130,78 +247,128 @@ ASTNode *ast_fstr(Context* context, Token *token) {
     /* Prepare for processing string */
     separator = token->token_string[0];
     raw_string = token->token_string + 1;
-    if (token->token_string[token->length - 1] != separator)
-        raw_length = token->length - 3; /* I.e. There "must" be an X or B suffix which we don't support yet */
-    else
+    if (token->token_string[token->length - 1] != separator) {
+        if ( token->token_string[token->length - 1] == 'x' ||
+             token->token_string[token->length - 1] == 'X') string_type = 'x'; /* Hex */
+        else string_type = 'b'; /* Binary */
+        raw_length = token->length - 3; /* I.e. There "must" be an X or B suffix */
+    }
+    else {
+        string_type = 'n'; /* Normal */
         raw_length = token->length - 2;
-    processed_length = 0;
-    processed_string = malloc(raw_length * 2); /* Worse case */
+    }
+
+    if (!raw_length) {
+        /* Zero Length String */
+        node->node_string = 0;
+        node->node_string_length = 0;
+        node->free_node_string = 0;
+        return node;
+    }
 
     /* Code String - basically RexxAssembler uses C type escapes */
-    buffer = processed_string;
-    while (raw_length) {
-        /* Decode REXX style */
-        if (*raw_string == separator) {
-            /* Just skip to the repeated speech mark */
+    if (string_type == 'n') { /* Normal String */
+        processed_length = 0;
+        processed_string = malloc(raw_length * 4); /* Worse case */
+        buffer = processed_string;
+
+        while (raw_length) {
+            /* Decode REXX style */
+            if (*raw_string == separator) {
+                /* Just skip to the repeated speech mark */
+                raw_string++;
+                raw_length--;
+            }
+
+            /* Encode C style */
+            escaped_char = escape_character(*raw_string);
+            while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
             raw_string++;
             raw_length--;
         }
+    }
 
-        /* Encode C style */
-        switch (*raw_string) {
-            case '\\':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\\');
-                break;
-            case '\n':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('n');
-                break;
-            case '\t':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('t');
-                break;
-            case '\a':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('a');
-                break;
-            case '\b':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('b');
-                break;
-            case '\f':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('f');
-                break;
-            case '\r':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('r');
-                break;
-            case '\v':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('v');
-                break;
-            case '\'':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\'');
-                break;
-            case '\"':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('\"');
-                break;
-            case 0:
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('0');
-                break;
-            case '\?':
-                ADD_CHAR_TO_BUFFER('\\');
-                ADD_CHAR_TO_BUFFER('?');
-                break;
-            default:
-                ADD_CHAR_TO_BUFFER(*raw_string);
+    else if (string_type == 'x') { /* Hex String */
+        /* Validate hex string and work out length */
+        for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
+            c = raw_string[i];
+            if (c == ' ') continue;
+            if ( !( (c >= '0' && c <= '9') ||
+                    (c >= 'a' && c <= 'f') ||
+                    (c >= 'A' && c <= 'F') ) ) {
+                mknd_err(node, "INVALID_HEX");
+                return node;
+            }
+            hex_bin_length++;
         }
-        raw_string++;
-        raw_length--;
+
+        processed_length = 0;
+        processed_string = malloc(raw_length * 4); /* Worse case */
+        buffer = processed_string;
+
+        /* Output the hex string */
+        if (hex_bin_length % 2) { /* Odd number of digits - add a leading zero */
+            hex_buffer_len = 1;
+            hex_bin_buffer[0] = '0';
+        }
+        else hex_buffer_len = 0;
+
+        while (raw_length) {
+            if (*raw_string != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+                hex_buffer_len++;
+                if (hex_buffer_len == 2) {
+
+                    escaped_char = escape_character(
+                            (hexchar2int(hex_bin_buffer[0]) * 16) +
+                            hexchar2int(hex_bin_buffer[1]));
+
+                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
+                    hex_buffer_len = 0;
+                }
+            }
+            raw_string++;
+            raw_length--;
+        }
+    }
+
+    else  { /* Binary String */
+        /* Validate binary string and work out length */
+        for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
+            c = raw_string[i];
+            if (c == ' ') continue;
+            if (c != '0' && c != '1') {
+                mknd_err(node, "INVALID_BIN");
+                return node;
+            }
+            hex_bin_length++;
+        }
+
+        processed_length = 0;
+        processed_string = malloc(raw_length * 4); /* Worse case */
+        buffer = processed_string;
+
+        /* Output the bin string */
+        /* Add leaving '0's */
+        hex_buffer_len = (hex_bin_length % 8) ? 8 - (int)(hex_bin_length % 8) : 0;
+        for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
+
+        while (raw_length) {
+            if (*raw_string != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+                hex_buffer_len++;
+                if (hex_buffer_len == 8) {
+                    escaped_char = escape_character(
+                            (binchar2int(hex_bin_buffer) * 16) +
+                            binchar2int(hex_bin_buffer + 4));
+
+                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
+                    hex_buffer_len = 0;
+                }
+            }
+            raw_string++;
+            raw_length--;
+        }
     }
 
     /* Get rid of excess memory */
@@ -456,6 +623,8 @@ const char *ast_ndtp(NodeType type) {
             return "VAR_SYMBOL";
         case VAR_TARGET:
             return "VAR_TARGET";
+        case VOID:
+            return "VOID";
         default: return "*UNKNOWN*";
     }
 }
@@ -496,11 +665,25 @@ static walker_result print_error_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
+            /* Try and set error position if not already set */
+            if (node->token) {
+                if (node->line == -1) node->line = node->token->line;
+                if (node->column == -1) node->column = node->token->column;
+                if (!node->source_start) node->source_start = node->token->token_string;
+                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+            }
+            if (node->child && node->child->token) {
+                if (node->line == -1) node->line = node->child->token->line;
+                if (node->column == -1) node->column = node->child->token->column;
+                if (!node->source_start) node->source_start = node->child->token->token_string;
+                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+            }
+
             /* Print error - truncate source to one line */
             int len = (int) (node->source_end - node->source_start + 1);
             int i;
             for (i=0; i<len; i++) {
-                if (node->source_start[i] == '\n') {
+                if (!node->source_start || node->source_start[i] == '\n') {
                     len = i;
                     break;
                 }
@@ -571,7 +754,7 @@ static void fix_ast_line_number(ASTNode *node) {
         node->token_start = 0;
         node->token_end = 0;
         node->source_start = older->source_end + 1;
-        node->source_end = node->source_start - 1;
+        node->source_end = node->source_start ? (node->source_start - 1) : 0;
         node->line = older->line;
         node->column = older->column + (int)(older->source_end - older->source_start) + 1;
     }
@@ -580,7 +763,7 @@ static void fix_ast_line_number(ASTNode *node) {
         node->token_start = 0;
         node->token_end = 0;
         node->source_start = node->parent->source_end + 1;
-        node->source_end = node->source_start - 1;
+        node->source_end = node->source_start ? (node->source_start - 1) : 0;
         node->line = node->parent->line;
         node->column = node->parent->column + (int)(node->parent->source_end - node->parent->source_start) + 1;
     }
@@ -674,9 +857,9 @@ void free_ast(Context *context) {
         if (t->free_node_string) free(t->node_string);
         if (t->scope) scp_free(t->scope);
         if (t->output) f_output(t->output);
-        if (t->output2) f_output(t->output2);
-        if (t->output3) f_output(t->output3);
-        if (t->output4) f_output(t->output4);
+        if (t->loopstartchecks) f_output(t->loopstartchecks);
+        if (t->loopinc) f_output(t->loopinc);
+        if (t->loopendchecks) f_output(t->loopendchecks);
         free(t);
         t = n;
     }
@@ -724,7 +907,14 @@ void prt_unex(FILE* output, const char *ptr, int len) {
                 fprintf(output, "\\\"");
                 break;
             default:
-                fprintf(output, "%c", *ptr);
+                /* Should we escape this character? */
+                if (isprint(*ptr)) {
+                    fprintf(output, "%c", *ptr);
+                }
+                else {
+                    /* Escape as a hex character */
+                    fprintf(output, "\\x%02x", *ptr);
+                }
         }
     }
 }
@@ -876,6 +1066,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case ARGS:
             case PATTERN:
             case CLASS:
+            case VOID:
             case REL_POS:
             case ABS_POS:
             case SIGN:
@@ -979,30 +1170,30 @@ walker_result pdot_walker_handler(walker_direction direction,
         }
 
         /* Link to Symbol */
-        if (node->symbol) {
-            if (node->symbol->writeUsage && node->symbol->readUsage) {
+        if (node->symbolNode) {
+            if (node->symbolNode->writeUsage && node->symbolNode->readUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"both\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
-            else if (node->symbol->writeUsage) {
+            else if (node->symbolNode->writeUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"forward\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
-            else if (node->symbol->readUsage) {
+            else if (node->symbolNode->readUsage) {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"back\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
             else {
                 fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"none\"]\n",
                         node->node_number,
-                        node->symbol->symbol->scope->defining_node->node_number,
-                        node->symbol->symbol->name);
+                        node->symbolNode->symbol->scope->defining_node->node_number,
+                        node->symbolNode->symbol->name);
             }
         }
     }

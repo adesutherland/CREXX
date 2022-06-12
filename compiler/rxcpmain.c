@@ -147,8 +147,8 @@ int main(int argc, char *argv[]) {
     if (!output_file_name) output_file_name = file_name;
 
     /* Open input file */
-    char* filename_extension = get_filename_ext(file_name);
-    if (filename_extension == "")
+    const char* filename_extension = get_filename_ext(file_name);
+    if (filename_extension[0] == 0)
       { fp = openfile(file_name,"rexx", location, "r");
       }
     else {
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
 
 
     if (!context.ast) {
-        fprintf(stderr,"ERROR: Compiler Exiting - Failure\n");
+        fprintf(stderr,"ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
@@ -244,6 +244,13 @@ int main(int argc, char *argv[]) {
         system("dot astgraph0.dot -Tpng -o astgraph0.png");
     }
 #endif
+
+    errors = prnterrs(&context);
+    if (errors) {
+        fprintf(stderr,"%d error(s) in source file\n", errors);
+        goto finish;
+    }
+
     if (debug_mode)
         printf("Validating AST Tree\n");
     validate(&context);
@@ -311,5 +318,6 @@ int main(int argc, char *argv[]) {
 #endif
     free(buff);
 
-    return(0);
+    if (errors) return(1);
+    else return(0);
 }

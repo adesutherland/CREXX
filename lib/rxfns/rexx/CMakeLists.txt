@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.18)
 
 set(REXXBINS
               _datei.rxbin
@@ -9,7 +9,7 @@ set(REXXBINS
               abbrev.rxbin
 	      abs.rxbin 
               c2x.rxbin
-	      c2d.rxbin	
+	          c2d.rxbin
               center.rxbin
               centre.rxbin
               changestr.rxbin
@@ -39,6 +39,7 @@ set(REXXBINS
               translate.rxbin
               trunc.rxbin
               upper.rxbin
+		      value.rxbin
               verify.rxbin
               wordlength.rxbin
               wordpos.rxbin
@@ -54,23 +55,27 @@ set(REXXBINS
 	      datatype.rxbin
         )
 
-add_custom_target(lib_rexx ALL
-        DEPENDS ${REXXBINS})
-
 foreach(_binfile ${REXXBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-          #COMMAND ${CMAKE_COMMAND} -E chdir  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/compiler/rxc ${_basename}
-          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-          COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-          COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas
-
-          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-          COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-
+		  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
+#		  COMMAND ${CMAKE_COMMAND} -E cat ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
+		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
+#		  COMMAND ${CMAKE_COMMAND} -E cat ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
+          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
+		  COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx
+		  COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm
           OUTPUT ${_binfile}
           COMMENT "cREXX compile and assemble ${_basename} ..."
   )
-
 endforeach()
+
+add_custom_command(
+		OUTPUT library-rexx.rxbin
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > library-rexx.rxbin
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		DEPENDS ${REXXBINS} rxas rxc
+)
+
+add_custom_target(library-rexx ALL DEPENDS library-rexx.rxbin)

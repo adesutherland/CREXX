@@ -73,7 +73,18 @@ int main(int argc, char *argv[]) {
     size_t num_modules;
 
 #ifdef _WIN32
+    /* Enable UTF-8 Processes */
     SetConsoleOutputCP(CP_UTF8);
+
+    /* Enable ANSI virtual terminal sequences */
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    GetConsoleMode(hOut, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
 #endif
 
     /* Init Context */

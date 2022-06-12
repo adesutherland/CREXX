@@ -20,7 +20,7 @@ say 'format(-3.14,,4) "'format('-3.14',,4)'"'
 say 'format(-3.14,4,3) "'format('-3.14',4,3)'"'
 say 'format(-3.14,1,4) "'format('-3.14',1,4)'"'
 
-return
+return 0
 
 format: procedure = .string
    arg innum = .string, before = 0, after = 0, expp = 0, expt=-1

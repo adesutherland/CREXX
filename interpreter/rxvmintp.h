@@ -3,12 +3,11 @@
 
 #include "rxas.h"
 
-#define rxversion "cREXX F0040"
+#define rxversion "cREXX F0041"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
-typedef struct stack_frame stack_frame;
 
 typedef union {
     struct {
@@ -49,7 +48,11 @@ struct value {
 typedef struct module {
     bin_space segment;         /* Binary and Constant Pool */
     char *name;                /* Module Name */
+    char *description;         /* Module Description */
     value **globals;           /* Globals registers array */
+    int proc_head;             /* Offset to the head of the procs in the constant pool */
+    int expose_head;           /* Offset to the head of the exposed procs in the constant pool */
+    int meta_head;             /* Offset to the head of the meta data in the constant pool */
     char *globals_dont_free;   /* Indicates linked global value that should not be freed */
     size_t module_number;      /* Module Index - 1 base */
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
@@ -157,7 +160,7 @@ struct stack_frame {
 #ifndef NUTF8
   #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_chars; }
 #else
-  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_len; }
+  #define GETSTRLEN(i,v)   { i = (rxinteger) v->string_length; }
 #endif
 
 #ifndef NUTF8
@@ -200,7 +203,7 @@ typedef struct rxvm_context {
     char *location;
     size_t num_modules;
     size_t module_buffer_size;
-    module *modules;
+    module **modules;
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char debug_mode;
@@ -220,9 +223,8 @@ void rxinimod(rxvm_context *context);
 void rxfremod(rxvm_context *context);
 
 /* Loads a new module
- * returns 0  - Success
- *         >0 - the number of unresolved references
- *         -1 - Error loading file */
+ * returns 0  - Error
+ *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *new_module_file);
 
 #endif //CREXX_RXVMINTP_H

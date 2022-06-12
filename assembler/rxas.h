@@ -18,12 +18,17 @@ struct avl_tree_node;
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
+enum queue_item_type {EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, FUNC_META, REG_META, CONST_META, CLEAR_META};
+
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {
+    enum queue_item_type instrType;
     Token *instrToken;
     Token *operand1Token;
     Token *operand2Token;
     Token *operand3Token;
+    Token *operand4Token;
+    Token *operand5Token;
 } instruction_queue;
 
 /* cREXX Instruction Coding */
@@ -59,7 +64,8 @@ struct bin_space {
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST
+    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
+    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -85,6 +91,7 @@ typedef struct stack_frame stack_frame;
 /* cREXX Procedure entry in the constant pool */
 typedef struct proc_constant {
     chameleon_constant base;
+    int next;
     int locals;
     bin_space *binarySpace;
     stack_frame **frame_free_list;
@@ -97,6 +104,7 @@ typedef struct proc_constant {
 /* cREXX Exposed Register entry in the constant pool */
 typedef struct expose_reg_constant {
     chameleon_constant base;
+    int next;
     int global_reg;
     char index[1]; /* Must be last member */
 } expose_reg_constant;
@@ -104,12 +112,67 @@ typedef struct expose_reg_constant {
 /* cREXX Exposed Procedure entry in the constant pool */
 typedef struct expose_proc_constant {
     chameleon_constant base;
+    int next;
     size_t procedure;
     unsigned char imported : 1;
     char index[1]; /* Must be last member */
 } expose_proc_constant;
 
+/* cREXX Generic meta entry to hold prev/next offsets */
+typedef struct meta_entry {
+    chameleon_constant base;
+    int prev;
+    int next;
+    size_t address;
+} meta_entry;
+
+/* cREXX Meta Source entry in the constant pool */
+typedef struct meta_src_constant {
+    meta_entry base;
+    size_t line;
+    size_t column;
+    size_t source;
+} meta_src_constant;
+
+/* cREXX Meta File entry in the constant pool */
+typedef struct meta_file_constant {
+    meta_entry base;
+    size_t file;
+} meta_file_constant;
+
+typedef struct meta_func_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t func;
+    size_t args;
+    size_t inliner;
+} meta_func_constant;
+
+typedef struct meta_reg_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t reg;
+} meta_reg_constant;
+
+typedef struct meta_const_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t constant;
+} meta_const_constant;
+
+typedef struct meta_clear_constant {
+    meta_entry base;
+    size_t symbol;
+} meta_clear_constant;
+
 typedef struct Assembler_Context {
+    char* file_name;
     char *top, *cursor, *marker, *ctxmarker, *linestart;
     int optimise;
     int line;
@@ -122,6 +185,12 @@ typedef struct Assembler_Context {
     size_t inst_buffer_size;
     size_t const_buffer_size;
     int current_locals;
+    int proc_head; /* int because we need -1 */
+    int proc_tail;
+    int expose_head;
+    int expose_tail;
+    int meta_head;
+    int meta_tail;
     struct avl_tree_node *string_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;

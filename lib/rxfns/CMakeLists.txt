@@ -1,7 +1,22 @@
-cmake_minimum_required(VERSION 3.00)
+cmake_minimum_required(VERSION 3.18)
 
 add_subdirectory(rexx)
 add_subdirectory(rxas)
 add_subdirectory(native)
 add_subdirectory(tests_functional)
 add_subdirectory(tests_performance)
+
+# Consolidate Rexx Library
+set(SUBLIBS
+        rexx/library-rexx.rxbin
+        rxas/library-rxas.rxbin
+        )
+
+add_custom_command(
+        OUTPUT library.rxbin
+        COMMAND ${CMAKE_COMMAND} -E cat ${SUBLIBS} > library.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library-rexx library-rxas rxas rxc
+)
+
+add_custom_target(library ALL DEPENDS library.rxbin)
