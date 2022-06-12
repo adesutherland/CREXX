@@ -2,7 +2,6 @@ options levelb
 /* used to check a customs client number ("eori")
  * which must adhere to the BSN-form of the modulo-11 test
  */
-
 y = 'NL003787643'
 y = substr(y,3)
 if checkBSN(y,11) = 0 then
@@ -14,6 +13,7 @@ else do
   say y 'failed'
   return 1
 end
+return 99
 /* loop i=0 to 9 */
 /* yy = y||i */
 /* if m.checkBSN(yy,11) == 0 then */

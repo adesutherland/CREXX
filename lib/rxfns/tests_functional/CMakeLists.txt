@@ -58,7 +58,7 @@ set(REXXBINS
   ts_index.rxbin
   ts_random.rxbin
   ts_datatype.rxbin 
-#  checkBSN.rxbin
+  checkBSN.rxbin
         )
 
 set(LIBRPATH
