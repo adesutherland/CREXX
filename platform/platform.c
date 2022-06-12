@@ -22,14 +22,14 @@ char* file2buf(FILE *file) {
     rewind(file);
 
     /* Allocate buffer and read */
-    buff = (char*) malloc((bytes + 1) * sizeof(char) );
+    buff = (char*) malloc((bytes + 2) * sizeof(char) );
     bytes = fread(buff, 1, bytes, file);
     if (!bytes) {
         fprintf(stderr, "Error reading input file\n");
         exit(-1);
     }
     buff[bytes] = 0;
-
+    buff[bytes+1] = 0; /* Add an extra byte for the token peak */
     return buff;
 }
 

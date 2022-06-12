@@ -80,6 +80,8 @@ int main(int argc, char *argv[]) {
     int optimise = 1;
     module_file module;
 
+    memset(&module,0,sizeof(module_file)); /* Xezo module file (valgrind complains otherwise) */
+
     // Load Instruction Database
     init_ops();
 
@@ -278,7 +280,6 @@ int main(int argc, char *argv[]) {
         }
 
         pgm = &scanner.binary;
-
         module.header.name_size = strlen(file_name) + 1;
         module.header.description_size = strlen(file_name) + 1;
         module.header.instruction_size = pgm->inst_size;

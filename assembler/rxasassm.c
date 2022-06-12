@@ -464,6 +464,7 @@ static size_t get_reg_number(Assembler_Context *context, Token* token) {
 }
 
 static void gen_operand(Assembler_Context *context, Token *operandToken) {
+    size_t s_index;
     /* Extend the buffer if we need to */
     size_t new_size;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
@@ -516,8 +517,8 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
             return;
 
         case FUNC:
-            context->binary.binary[context->binary.inst_size++].index =
-                    add_func_to_pool(context, operandToken);
+            s_index = add_func_to_pool(context, operandToken);
+            context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
 
         case INT:
@@ -533,8 +534,8 @@ static void gen_operand(Assembler_Context *context, Token *operandToken) {
                     (char)operandToken->token_value.character;
             return;
         case STRING:
-            context->binary.binary[context->binary.inst_size++].index =
-                    add_string_to_pool(context, (char*)operandToken->token_value.string);
+            s_index = add_string_to_pool(context, (char*)operandToken->token_value.string);;
+            context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
 
         default:
@@ -936,61 +937,86 @@ static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum
 /* Source filename */
 void rxasmefl(Assembler_Context *context, Token *file) {
     size_t entry = add_meta_entry(context,sizeof(meta_file_constant),META_FILE);
+    size_t sentry = add_string_to_pool(context, (char*)file->token_value.string);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_file_constant*)(context->binary.const_pool + entry))->file = add_string_to_pool(context, (char*)file->token_value.string);
+    ((meta_file_constant*)(context->binary.const_pool + entry))->file = sentry;
 }
 
 /* Source Line */
 void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source) {
     size_t entry = add_meta_entry(context,sizeof(meta_src_constant),META_SRC);
+    size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     ((meta_src_constant*)(context->binary.const_pool + entry))->line = line->token_value.integer;
     ((meta_src_constant*)(context->binary.const_pool + entry))->column = column->token_value.integer;
-    ((meta_src_constant*)(context->binary.const_pool + entry))->source = add_string_to_pool(context, (char*)source->token_value.string);
+    sentry = add_string_to_pool(context, (char*)source->token_value.string);
+    ((meta_src_constant*)(context->binary.const_pool + entry))->source = sentry;
 }
 
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
     size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
+    size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_func_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
-    ((meta_func_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
-    ((meta_func_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
-    ((meta_func_constant*)(context->binary.const_pool + entry))->func = add_func_to_pool(context, func);
-    ((meta_func_constant*)(context->binary.const_pool + entry))->args = add_string_to_pool(context, (char*)args->token_value.string);
-    if (inliner) ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = add_string_to_pool(context, (char*)inliner->token_value.string);
-    else ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = add_string_to_pool(context, "");
+    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->symbol = sentry;
+    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->option = sentry;
+    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->type = sentry;
+    sentry = add_func_to_pool(context, func);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->func = sentry;
+    sentry = add_string_to_pool(context, (char*)args->token_value.string);
+    ((meta_func_constant*)(context->binary.const_pool + entry))->args = sentry;
+    if (inliner) {
+        sentry = add_string_to_pool(context, (char*)inliner->token_value.string);
+        ((meta_func_constant*)(context->binary.const_pool + entry))->inliner = sentry;
+    }
+    else {
+        sentry = add_string_to_pool(context, "");
+        ((meta_func_constant *) (context->binary.const_pool + entry))->inliner = sentry;
+    }
 }
 
 /* Register Metadata */
 void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
     size_t entry = add_meta_entry(context,sizeof(meta_reg_constant),META_REG);
+    size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_reg_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
-    ((meta_reg_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
-    ((meta_reg_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
+    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->symbol = sentry;
+    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->option = sentry;
+    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_reg_constant*)(context->binary.const_pool + entry))->type = sentry;
     ((meta_reg_constant*)(context->binary.const_pool + entry))->reg = get_reg_number(context, reg);
 }
 
 /* Constant Symbol Metadata */
 void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant){
     size_t entry = add_meta_entry(context,sizeof(meta_const_constant),META_CONST);
+    size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_const_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
-    ((meta_const_constant*)(context->binary.const_pool + entry))->option = add_string_to_pool(context, (char*)option->token_value.string);
-    ((meta_const_constant*)(context->binary.const_pool + entry))->type = add_string_to_pool(context, (char*)type->token_value.string);
-    ((meta_const_constant*)(context->binary.const_pool + entry))->constant = add_string_to_pool(context, (char*)constant->token_value.string);
+    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->symbol = sentry;
+    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->option = sentry;
+    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->type = sentry;
+    sentry = add_string_to_pool(context, (char*)constant->token_value.string);
+    ((meta_const_constant*)(context->binary.const_pool + entry))->constant = sentry;
 }
 
 /* Clear Symbol Metadata */
 void rxasmecl(Assembler_Context *context, Token *symbol) {
     size_t entry = add_meta_entry(context,sizeof(meta_clear_constant),META_CLEAR);
+    size_t sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_clear_constant*)(context->binary.const_pool + entry))->symbol = add_string_to_pool(context, (char*)symbol->token_value.string);
+    ((meta_clear_constant*)(context->binary.const_pool + entry))->symbol = sentry;
 }
