@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+F0042 - REXX Library C Linking
 F0041 - REXX Enhancements:
         Procedures with no arguments
         Procedures with no return value
