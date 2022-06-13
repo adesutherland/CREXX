@@ -62,70 +62,8 @@ set(REXXBINS
         )
 
 set(LIBRPATH
-# <<<<<<< HEAD
-#     ../rexx/substr
-#     ../rexx/length
-#     ../rexx/raise
-#     ../rexx/linesize
-#     ../rexx/abbrev
-#     ../rexx/x2d
-#     ../rexx/x2c
-#     ../rexx/x2b
-#     ../rexx/d2b
-#     ../rexx/d2c    
-#     ../rexx/d2x
-#     ../rexx/c2x
-#     ../rexx/c2d			
-#     ../rexx/center
-#     ../rexx/changestr
-#     ../rexx/delstr
-#     ../rxas/right
-#     ../rxas/left    
-#     ../rxas/copies
-#     ../rxas/_elapsed    
-#     ../rxas/pos
-#     ../rxas/lastpos
-#     ../rxas/reverse
-#     ../rexx/centre
-#     ../rexx/compare
-#     ../rexx/countstr
-#     ../rexx/insert
-#     ../rexx/lower
-#     ../rexx/min
-#     ../rexx/max    
-#     ../rexx/date
-#     ../rexx/time
-#     ../rexx/_datei
-#     ../rexx/_dateo
-#     ../rexx/_jdn
-#     ../rexx/_itrunc
-#     ../rexx/_ftrunc    
-#     ../rexx/delword
-#     ../rexx/wordlength
-#     ../rexx/wordpos    
-#     ../rexx/format
-#     ../rexx/overlay
-#     ../rexx/sign
-#     ../rexx/space
-#     ../rexx/strip    
-#     ../rexx/translate    
-#     ../rexx/trunc
-#     ../rexx/upper    
-#     ../rexx/verify
-#     ../rxas/word
-#     ../rxas/words    
-#     ../rxas/wordindex
-#     ../rexx/reradix
-#     ../rexx/sequence
-#     ../rexx/find
-#     ../rexx/index
-#     ../rexx/random
-#     ../rexx/datatype
-#     )
-# =======
 ../library
 )
-#>>>>>>> develop
 
 add_custom_target(testbifs ALL
 DEPENDS ${REXXBINS})

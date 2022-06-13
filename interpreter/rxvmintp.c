@@ -668,19 +668,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
         /* String Say - Deprecated */
-/* <<<<<<< HEAD */
-/*  /\*       START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1); */
-/*             DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1)); */
-/*             printf("%.*s", (int) op1R->string_length, op1R->string_value); */
-/*             DISPATCH; */
-/*  *\/ */
-/* ======= */
         /* START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1) */
         /*     DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1)); */
         /*     printf("%.*s", (int) op1R->string_length, op1R->string_value); */
         /*     DISPATCH */
 
-/* >>>>>>> develop */
         /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
@@ -691,28 +683,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int)op1S->string_len, op1S->string);
             printf("%.*s\n", (int) op1S->string_len, op1S->string);
-	    //<<<<<<< HEAD
             DISPATCH;
-    /* /\* ------------------------------------------------------------------------------------ */
-    /*  *  SAYX say statemtnt without line feed                             pej 18. April 2022 */
-    /*  *  ----------------------------------------------------------------------------------- */
-    /*  *\/ */
-    /*     START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1); */
-    /*         DEBUG("TRACE - SAY R%lu\n", REG_IDX(1)); */
-    /*         printf("%.*s", (int) op1R->string_length, op1R->string_value); */
-    /*     DISPATCH; */
-    /* ------------------------------------------------------------------------------------
-     *  SAYX say statemtnt without line feed                             pej 18. April 2022
-     *  -----------------------------------------------------------------------------------
-     */
-    START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1);
-    DEBUG("TRACE - SAY \"%.*s\"\n",
-          (int)op1S->string_len, op1S->string);
-    printf("%.*s", (int) op1S->string_len, op1S->string);
-    DISPATCH;
-/* ======= */
-/*             DISPATCH */
-/* >>>>>>> develop */
+
+        /* ------------------------------------------------------------------------------------
+         *  SAYX say statemtnt without line feed                             pej 18. April 2022
+         *  -----------------------------------------------------------------------------------
+         */
+        START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1);
+            DEBUG("TRACE - SAYX \"%.*s\"\n",
+                (int)op1S->string_len, op1S->string);
+            printf("%.*s", (int) op1S->string_len, op1S->string);
+            DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SCONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
@@ -1216,15 +1197,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 case 'Z':
                     tzset();
                     op1R->int_value  = timezone;
-/* <<<<<<< HEAD */
-/*                     break;  // time difference to UTC in seconds */
-/*                 case 'T':  op1R->int_value  = clock(); break; // clock count since program start */
-/*                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;   // clocks per second */
-/* ======= */
                     break;
                 case 'T':  op1R->int_value  = (rxinteger)clock(); break;
                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
-/* >>>>>>> develop */
                 case 'N':  {
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
                      op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
@@ -2242,7 +2217,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
         START_INSTRUCTION(FDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FDIV R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
-/* <<<<<<< HEAD */
             REG_RETURN_FLOAT(op2F / op3RF);
             DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -2266,35 +2240,14 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         REG_RETURN_FLOAT(pow(op2RF,op3RF));
     }
     DISPATCH;
-/* ======= */
-/*             REG_RETURN_FLOAT(op2F / op3RF) */
-/*             DISPATCH */
 
-/* >>>>>>> develop */
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
-/* <<<<<<< HEAD */
-/*     START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3); */
-/*     { */
-/*         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), */
-/*               (int) REG_IDX(3)); */
-/*         rxinteger  i1 = 1; */
-/*         rxinteger  i2 = op2RI; */
-/*         rxinteger  i3 = op3RI; */
-/*         while (i3 != 0) { */
-/*             if ((i3 & 1) == 1) i1 *= i2; */
-/*             i3 >>= 1; */
-/*             i2 *= i2; */
-/*         } */
-/*         REG_RETURN_INT(i1); */
-/*     } */
-/*     DISPATCH; */
-/* ======= */
             START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
             {
-                DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+                DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
                     (int) REG_IDX(3));
                 rxinteger  i1 = 1;
                 rxinteger  i2 = op2RI;
@@ -2308,18 +2261,12 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
             DISPATCH
 
-/* >>>>>>> develop */
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn               pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
-/* <<<<<<< HEAD */
             START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
-            DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-/* ======= */
-/*             START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3) */
-/*             DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3)); */
-/* >>>>>>> develop */
+            DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             {
                 rxinteger i1 = 1;
                 rxinteger i2 = op2RI;
@@ -2331,14 +2278,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 }
                 REG_RETURN_INT(i1)
             }
-/* <<<<<<< HEAD */
 /*             DISPATCH; */
 /* ------------------------------------------------------------------------------------
- *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn                  pej 26 May 2022
+ *  IPOW_REG_INT_REG  op1=op2**op2w Integer operationn                  pej 26 May 2022
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3);
-    DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+    DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
     {
         rxinteger i1 = 1;
         rxinteger i2 = op2I;
@@ -2351,9 +2297,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         REG_RETURN_INT(i1);
     }
     DISPATCH;
-/* ======= */
-/*             DISPATCH */
-/* >>>>>>> develop */
 
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Link r1 to Arg[r2]              TODO Rename to ALINK
@@ -3149,7 +3092,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
-/* <<<<<<< HEAD */
             DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
@@ -3273,9 +3215,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
         }
     REG_RETURN_INT(i);
     DISPATCH;
-/* ======= */
-/*             DISPATCH */
-/* >>>>>>> develop */
 
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table

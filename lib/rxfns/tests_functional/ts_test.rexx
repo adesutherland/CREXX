@@ -1,12 +1,6 @@
 /* rexx test abs bif */
 options levelb
-/* <<<<<<< HEAD */
-/* say translate(ABCDEF,1e+17,'ac','1') "\= '1bEdef '" */
-/* return */
 
-/* translate: procedure = .string */
-/* arg source = .string, tochar = "?????", fromchar = "?????", pad=" " */
-/* ======= */
 /* TODO */
 a="This is René's test case   "
 z="     This is René's test case"
@@ -22,4 +16,4 @@ if x=1 then say "EQUAL (non strict compare)"
    else say "NOT EQUAL (non strict compare)"
 
 return 0
-/* >>>>>>> develop */
+
