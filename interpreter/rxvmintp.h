@@ -2,6 +2,7 @@
 #define CREXX_RXVMINTP_H
 
 #include "rxas.h"
+#include "rxbin.h"
 
 #define rxversion "cREXX F0042"
 
@@ -57,6 +58,7 @@ typedef struct module {
     size_t module_number;      /* Module Index - 1 base */
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
+    module_file *file;         /* File section the module was loaded from */
 } module;
 
 struct stack_frame {
@@ -226,5 +228,10 @@ void rxfremod(rxvm_context *context);
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *new_module_file);
+
+/* Loads a module from a memory buffer
+ * returns 0  - Error
+ *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
+int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 
 #endif //CREXX_RXVMINTP_H
