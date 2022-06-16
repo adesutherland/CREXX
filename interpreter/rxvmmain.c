@@ -9,6 +9,12 @@
 #endif
 #include "rxvmintp.h"
 
+/* Library Buffer */
+#ifdef LINK_CREXX_LIB
+char *__rxpg;
+int __rxpg_l;
+#endif
+
 static void help() {
     char* helpMessage =
             "cREXX VM/Interpreter\n"
@@ -164,6 +170,14 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
     }
+
+#ifdef LINK_CREXX_LIB
+    /* Load CREXX Library from linked buffer */
+    if (rxldmodm(&context, (char*)&__rxpg, __rxpg_l) == 0) {
+        fprintf(stderr, "ERROR reading linked library buffer\n");
+        exit(-1);
+    }
+#endif
 
     /* Run the program */
 #ifndef NDEBUG

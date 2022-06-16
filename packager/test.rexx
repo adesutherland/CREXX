@@ -1,8 +1,13 @@
 /* Test REXX Program */
 options levelb
-Say "Welcome to cREXX!"
-do i = 1 to 5
- say "i =" i
+string =  "René Vincent Jansen, Welcome to cREXX!"
+do i = 1 to words(string)
+ say word(string, i)
 end
-say finished
 return 0
+
+word: procedure = .string
+  arg string1 = .string, int2 = .int
+
+words: procedure = .int
+  arg string1 = .string
