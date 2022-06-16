@@ -29,21 +29,30 @@ target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 
 ##########################################
 # Interpreter linked to CREXX Stdlib
+
+# Packed Library
+add_custom_command(
+        OUTPUT library.c
+        COMMAND ${CMAKE_BINARY_DIR}/packager/rxpack -o library ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        DEPENDS library rxpack
+)
+
 # Threaded Version
 add_executable(rxvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h ${CMAKE_BINARY_DIR}/lib/rxfns/library.c)
+        ../utf8/utf.h ../machine/rxbin.h ${CMAKE_CURRENT_BINARY_DIR}/library.c)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
-add_dependencies(rxvme machine avl_tree platform library_c)
+add_dependencies(rxvme machine avl_tree platform library)
 target_link_libraries(rxvme machine avl_tree platform m)
 target_include_directories(rxvme PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 
 add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h ${CMAKE_BINARY_DIR}/lib/rxfns/library.c)
-add_dependencies(rxbvme machine avl_tree platform library_c)
+        ../utf8/utf.h ../machine/rxbin.h ${CMAKE_CURRENT_BINARY_DIR}/library.c)
+add_dependencies(rxbvme machine avl_tree platform library)
 target_link_libraries(rxbvme machine avl_tree platform m)
 target_include_directories(rxbvme PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ../assembler ../machine ../platform ../avl_tree ../utf8)

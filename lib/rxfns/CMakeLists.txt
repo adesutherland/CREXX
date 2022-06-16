@@ -19,12 +19,3 @@ add_custom_command(
 )
 
 add_custom_target(library ALL DEPENDS library.rxbin)
-
-add_custom_command(
-        OUTPUT library.c
-        COMMAND ${CMAKE_BINARY_DIR}/packager/rxpack library
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library rxpack
-)
-
-add_custom_target(library_c ALL DEPENDS library.c)
