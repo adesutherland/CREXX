@@ -11,8 +11,8 @@
 
 /* Library Buffer */
 #ifdef LINK_CREXX_LIB
-char *__rxpg;
-int __rxpg_l;
+extern char __rxpg[];
+extern size_t __rxpg_l;
 #endif
 
 static void help() {
