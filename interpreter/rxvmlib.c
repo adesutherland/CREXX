@@ -10,8 +10,8 @@
 #include "rxvmintp.h"
 
 /* Program Buffer */
-char *__rxpg;
-int __rxpg_l;
+extern char rx__pg[];
+extern size_t rx__pg_l;
 
 
 static void help() {
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Load Module */
-    if (rxldmodm(&context, (char*)&__rxpg, __rxpg_l) == 0) {
+    if (rxldmodm(&context, (char*)&rx__pg, rx__pg_l) == 0) {
         fprintf(stderr, "ERROR reading buffer\n");
         exit(-1);
     }

@@ -8,8 +8,8 @@ add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o rxdb ${CMAKE_CURRENT_SOURCE_DIR}/rxdb
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxdb
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o globals ${CMAKE_CURRENT_SOURCE_DIR}/globals
-        COMMAND ${CMAKE_BINARY_DIR}/packager/rxpack rxdb globals ${CMAKE_BINARY_DIR}/lib/rxfns/library
-        DEPENDS rxas rxc rxdb.rexx globals.rxas library rxpack
+        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack rxdb globals ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        DEPENDS rxas rxc rxdb.rexx globals.rxas library rxcpack
         OUTPUT rxdb.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble and package rxdb ..."

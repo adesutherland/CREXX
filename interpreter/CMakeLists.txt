@@ -33,9 +33,9 @@ target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 # Packed Library
 add_custom_command(
         OUTPUT library.c
-        COMMAND ${CMAKE_BINARY_DIR}/packager/rxpack -o library ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack -o library ${CMAKE_BINARY_DIR}/lib/rxfns/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library rxpack
+        DEPENDS library rxcpack
 )
 
 # Threaded Version

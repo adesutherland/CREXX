@@ -11,8 +11,8 @@
 
 /* Library Buffer */
 #ifdef LINK_CREXX_LIB
-extern char __rxpg[];
-extern size_t __rxpg_l;
+extern char rx__pg[];
+extern size_t rx__pg_l;
 #endif
 
 static void help() {
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef LINK_CREXX_LIB
     /* Load CREXX Library from linked buffer */
-    if (rxldmodm(&context, (char*)&__rxpg, __rxpg_l) == 0) {
+    if (rxldmodm(&context, (char*)&rx__pg, rx__pg_l) == 0) {
         fprintf(stderr, "ERROR reading linked library buffer\n");
         exit(-1);
     }

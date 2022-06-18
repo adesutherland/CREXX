@@ -1,5 +1,5 @@
 /*
- * rxpack tool to convert rxbin files (or any binary file) into a c file
+ * rxcpack tool to convert rxbin files (or any binary file) into a c file
  * that can be linked to a C exe.
  *
  * This is based on the public domain bin2c by Serge Fukanchik.
@@ -15,14 +15,14 @@
 #define rxversion "cREXX F0042"
 
 #define NAME_BUFFER_SIZE 256
-#define GLOBAL_SYMBOL "__rxpg"
+#define GLOBAL_SYMBOL "rx__pg"
 
 static void help() {
     char* helpMessage =
-                        "cREXX rxpack. Tool to convert rxbin files (or any binary file) into a c file\n"
+                        "cREXX rxcpack. Tool to convert rxbin files (or any binary file) into a c file\n"
                         "              that can be linked to a C exe\n"
                         "Version : " rxversion "\n"
-                        "Usage   : rxpack [options] input_file_1 input_file_2 ... input_file_n\n"
+                        "Usage   : rxcpack [options] input_file_1 input_file_2 ... input_file_n\n"
                         "                           (.rxbin is appended to input file names)\n"
                         "Options :\n"
                         "  -h              Help Message\n"
@@ -64,7 +64,7 @@ static void license() {
 }
 
 static void error_and_exit(char* message) {
-    fprintf(stderr, "ERROR: %s - try \"rxpack -h\"\n", message);
+    fprintf(stderr, "ERROR: %s - try \"rxcpack -h\"\n", message);
     exit(2);
 }
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "%s: can't open %s for writing\n", argv[0], n_output);
         return 2;
     }
-    fprintf(f_output, "/* Auto-generated rxbin file(s) converted to a c buffer - %s */\n\n#include <stddef.h>\n\nchar %s[] = {", n_output, GLOBAL_SYMBOL);
+    fprintf(f_output, "/* Auto-generated rxbin file(s) converted to a c array - %s */\n\n#include <stddef.h>\n\nchar %s[] = {", n_output, GLOBAL_SYMBOL);
 
     for (a=i; a<argc; a++) {
         snprintf(n_input, NAME_BUFFER_SIZE, "%s.rxbin", argv[a]);
