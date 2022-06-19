@@ -15,7 +15,8 @@ add_custom_command(
         OUTPUT library.rxbin
         COMMAND ${CMAKE_COMMAND} -E cat ${SUBLIBS} > library.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library-rexx library-rxas rxas rxc
+        DEPENDS ${SUBLIBS}
+        COMMENT "cREXX Combined Library Archive ..."
 )
 
 add_custom_target(library ALL DEPENDS library.rxbin)

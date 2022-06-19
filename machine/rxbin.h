@@ -10,7 +10,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <rxas.h>
+#include "rxas.h"
 
 #define BIN_VERSION "001"
 

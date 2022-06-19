@@ -15,7 +15,7 @@ set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 add_dependencies(rxvm machine avl_tree platform)
 target_link_libraries(rxvm machine avl_tree platform m)
-target_include_directories(rxvm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxvm PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 
 # Bytecode Version
@@ -23,7 +23,7 @@ add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxa
         ../utf8/utf.h ../machine/rxbin.h)
 add_dependencies(rxbvm machine avl_tree platform)
 target_link_libraries(rxbvm machine avl_tree platform m)
-target_include_directories(rxbvm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxbvm PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 
@@ -47,14 +47,14 @@ set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 add_dependencies(rxvme machine avl_tree platform library)
 target_link_libraries(rxvme machine avl_tree platform m)
-target_include_directories(rxvme PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxvme PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 
 add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
         ../utf8/utf.h ../machine/rxbin.h ${CMAKE_CURRENT_BINARY_DIR}/library.c)
 add_dependencies(rxbvme machine avl_tree platform library)
 target_link_libraries(rxbvme machine avl_tree platform m)
-target_include_directories(rxbvme PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxbvme PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 
@@ -68,13 +68,13 @@ set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 add_dependencies(rxvml machine avl_tree platform)
-target_include_directories(rxvml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxvml PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 
 # Bytecode Version
 add_library(rxbvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
         ../utf8/utf.h ../machine/rxbin.h)
 add_dependencies(rxbvml machine avl_tree platform)
-target_include_directories(rxbvml PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(rxbvml PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)

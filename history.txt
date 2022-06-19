@@ -1,6 +1,13 @@
 CREXX History / Change Log
 
-F0042 - REXX Library C Linking
+F0042 - cREXX Build and Packaging enhancements
+        rxcpack - converts rxbin files to c linkable source (aka a C array)
+        rxvme / rxvbme - interpreter linked with the cREXX stdlib
+        rxvml / rxbvml - interpreter library used to support standalone native exe's generated from cREXX source
+        rxdb (degugger, currently PoC status) - now provided as a standalone native exe
+        Note: The generated exe's are quite big (not too bad) however the use of the upx exe compressor mitigates this
+        CMAKE scripts updated to remove writing to source directories
+
 F0041 - REXX Enhancements:
         Procedures with no arguments
         Procedures with no return value
