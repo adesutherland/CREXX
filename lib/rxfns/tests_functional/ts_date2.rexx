@@ -89,11 +89,15 @@ if date('J','10 Mar 1962') \= 1962069 then do
   errors=errors+1
   say "DATE() failed in test 13: date('j','10 Mar 1962')" date('j','10 Mar 1962') "but must be 1962069"
 end
+if date('N','2022166','J') \= '15 Jun 2022' then do
+  errors=errors+1
+  say "DATE() failed in test 14: date('N','2022166','J')" date('N','2022166','J') "but must be 15 Jun 2022"
+end
+
 say 'end of date2 test'
 say errors 'errors'
 return errors<>0
 
-return 0
 
 /* Prototype functions */
 date: Procedure = .string
