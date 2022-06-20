@@ -12,5 +12,4 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_CURRENT_SOURCE_DIR}/lempar.c
         ${CMAKE_CURRENT_BINARY_DIR}/lempar.c
-        COMMENT "Create Lemon Parser Generator ..."
 )

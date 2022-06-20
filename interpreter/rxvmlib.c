@@ -1,4 +1,4 @@
-/* CREXX VM Main file */
+/* CREXX VM Library Main */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,15 +9,14 @@
 #endif
 #include "rxvmintp.h"
 
-/* Library Buffer */
-#ifdef LINK_CREXX_LIB
+/* Program Buffer */
 extern char rx__pg[];
 extern size_t rx__pg_l;
-#endif
+
 
 static void help() {
     char* helpMessage =
-            "cREXX VM/Interpreter\n"
+            "cREXX Embedded VM/Interpreter\n"
             "Version : " rxversion "\n"
 #ifdef NTHREADED
             "        : Bytecode Mode\n"
@@ -76,7 +75,6 @@ int main(int argc, char *argv[]) {
     int i, j;
     int rc;
     rxvm_context context;
-    size_t num_modules;
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */
@@ -102,8 +100,6 @@ int main(int argc, char *argv[]) {
             error_and_exit("Invalid argument");
         }
         switch (toupper((argv[i][1]))) {
-            case '-':
-                break;
 
             case 'L': /* Working Location / Directory */
                 i++;
@@ -140,44 +136,13 @@ int main(int argc, char *argv[]) {
                 error_and_exit("Invalid argument");
         }
     }
-    num_modules = argc - i;
-    if (!num_modules) {
-        error_and_exit("No input files");
-    }
 
-    for (j=0; j<num_modules; j++) {
-
-        file_name = argv[i++];
-
-        /* Check for -a - start of program arguments */
-        if (file_name[0] == '-') {
-            if (strlen(file_name) > 2) {
-                error_and_exit("Invalid argument, expecting \"-a\"");
-            }
-            if (toupper((file_name[1])) != 'A') {
-                error_and_exit("Invalid argument, expecting \"-a\"");
-            }
-            num_modules = j;
-            if (!num_modules) {
-                error_and_exit("No input files before arguments");
-            }
-            break;
-        }
-
-        /* Load Module */
-        if (rxldmod(&context, file_name) == 0) {
-            fprintf(stderr, "ERROR opening file %s\n", file_name);
-            exit(-1);
-        }
-    }
-
-#ifdef LINK_CREXX_LIB
-    /* Load CREXX Library from linked buffer */
+    /* Load Module */
     if (rxldmodm(&context, (char*)&rx__pg, rx__pg_l) == 0) {
-        fprintf(stderr, "ERROR reading linked library buffer\n");
+        fprintf(stderr, "ERROR reading buffer\n");
         exit(-1);
     }
-#endif
+
 
     /* Run the program */
 #ifndef NDEBUG

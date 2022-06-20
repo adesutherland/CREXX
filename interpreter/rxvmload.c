@@ -32,10 +32,7 @@ void rxfremod(rxvm_context *context) {
 
     /* Free Program Modules */
     for (j=0; j<context->num_modules; j++) {
-        free(context->modules[j]->segment.binary);
-        free(context->modules[j]->segment.const_pool);
-        free(context->modules[j]->name);
-        free(context->modules[j]->description);
+        free_module(context->modules[j]->file);
         free(context->modules[j]->globals);
         free(context->modules[j]->globals_dont_free);
         free(context->modules[j]);
@@ -183,15 +180,50 @@ static void link_module(rxvm_context *context, size_t module_number_to_link) {
 
 }
 
-/* Loads a new module
+/* Common Functionality to prep and link a module */
+static size_t prep_and_link_module(rxvm_context *context, module_file *file_module_section) {
+    size_t n = context->num_modules;
+
+    DEBUG("Loading Module %s\n", file_module_section->name);
+
+    /* Grow the module buffer if need be */
+    while (n + 1 > context->module_buffer_size) {
+        context->module_buffer_size *= 2;
+        context->modules = realloc(context->modules, sizeof(module*) * context->module_buffer_size);
+    }
+    context->modules[n] = malloc(sizeof(module));
+    context->modules[n]->segment.globals = file_module_section->header.globals;
+    context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
+    context->modules[n]->segment.const_size = file_module_section->header.constant_size;
+    context->modules[n]->segment.binary = file_module_section->instructions;
+    context->modules[n]->segment.const_pool = file_module_section->constant;
+    context->modules[n]->segment.module = context->modules[n];
+    context->modules[n]->name = file_module_section->name;
+    context->modules[n]->description = file_module_section->description;
+    context->modules[n]->proc_head = file_module_section->header.proc_head;
+    context->modules[n]->expose_head = file_module_section->header.expose_head;
+    context->modules[n]->meta_head = file_module_section->header.meta_head;
+    context->modules[n]->globals = calloc(context->modules[n]->segment.globals, sizeof(value*));
+    context->modules[n]->globals_dont_free = calloc(context->modules[n]->segment.globals, sizeof(char));
+    context->modules[n]->unresolved_symbols = 0;
+    context->modules[n]->duplicated_symbols = 0;
+    context->modules[n]->file = file_module_section;
+
+    context->num_modules = context->modules[n]->module_number = n + 1;
+
+    link_module(context, n);
+    return n;
+}
+
+/* Loads a module from a file
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmod(rxvm_context *context, char *file_name) {
     FILE *fp;
-    size_t n;
     module_file *file_module_section;
     size_t modules_processed = 0;
     int loaded_rc;
+    size_t n;
 
     DEBUG("Loading Module(s) from file %s\n", file_name);
 
@@ -199,44 +231,11 @@ int rxldmod(rxvm_context *context, char *file_name) {
     if (!fp) return 0;
 
     loaded_rc = 0;
-    file_module_section = 0;
     while (loaded_rc == 0) {
-
+        file_module_section = 0;
         switch (loaded_rc = read_module(&file_module_section, fp)) {
             case 0: /* Success */
-                n = context->num_modules;
-
-                DEBUG("Loading Module %s\n", file_module_section->name);
-
-                /* Grow the module buffer if need be */
-                while (n + 1 > context->module_buffer_size) {
-                    context->module_buffer_size *= 2;
-                    context->modules = realloc(context->modules, sizeof(module*) * context->module_buffer_size);
-                }
-                context->modules[n] = malloc(sizeof(module));
-                context->modules[n]->segment.globals = file_module_section->header.globals;
-                context->modules[n]->segment.inst_size = file_module_section->header.instruction_size;
-                context->modules[n]->segment.const_size = file_module_section->header.constant_size;
-                context->modules[n]->segment.binary = file_module_section->instructions;
-                context->modules[n]->segment.const_pool = file_module_section->constant;
-                context->modules[n]->segment.module = context->modules[n];
-                context->modules[n]->name = file_module_section->name;
-                context->modules[n]->description = file_module_section->description;
-                context->modules[n]->proc_head = file_module_section->header.proc_head;
-                context->modules[n]->expose_head = file_module_section->header.expose_head;
-                context->modules[n]->meta_head = file_module_section->header.meta_head;
-                context->modules[n]->globals = calloc(context->modules[n]->segment.globals, sizeof(value*));
-                context->modules[n]->globals_dont_free = calloc(context->modules[n]->segment.globals, sizeof(char));
-                context->modules[n]->unresolved_symbols = 0;
-                context->modules[n]->duplicated_symbols = 0;
-
-                context->num_modules = context->modules[n]->module_number = n + 1;
-
-                link_module(context, n);
-
-                // Need to avoid freeing binary / const_pool / name / desc - so don't use free_module(file_module_section)
-                free(file_module_section);
-                file_module_section = 0;
+                n = prep_and_link_module(context, file_module_section);
                 modules_processed++;
                 break;
 
@@ -260,4 +259,41 @@ int rxldmod(rxvm_context *context, char *file_name) {
     return (int)(n+1); /* Module Number */
 }
 
+/* Loads a module from a memory buffer
+ * returns 0  - Error
+ *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
+int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
+    module_file *file_module_section;
+    size_t modules_processed = 0;
+    int loaded_rc;
+    size_t n;
+    char *buffer_end = buffer_start + buffer_length;
 
+    DEBUG("Loading Module(s) from memory\n");
+
+    loaded_rc = 0;
+    while (loaded_rc == 0) {
+        file_module_section = 0;
+        switch (loaded_rc = read_module_mem(&file_module_section, &buffer_start, buffer_end)) {
+            case 0: /* Success */
+                n = prep_and_link_module(context, file_module_section);
+                modules_processed++;
+                break;
+
+            case 1: /* eof */
+                if (file_module_section) free_module(file_module_section);
+                if (!modules_processed) {
+                    DEBUG("ERROR: empty buffer\n");
+                    return 0;
+                }
+                break;
+
+            default: /* error */
+                if (file_module_section) free_module(file_module_section);
+                fprintf(stderr, "ERROR: reading buffer\n");
+                exit(-1);
+        }
+    }
+
+    return (int)(n+1); /* Module Number */
+}

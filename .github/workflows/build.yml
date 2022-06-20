@@ -92,13 +92,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: instrmiss.h
-          path: machine/instrmiss.h
+          path: ${{ runner.temp }}/release/machine/instrmiss.h
 
       - name: Upload instrset.h
         uses: actions/upload-artifact@v2
         with:
           name: instrset.h
-          path: machine/instrset.h
+          path: ${{ runner.temp }}/release/machine/instrset.h
 
       - name: Upload rxasscan.c
         uses: actions/upload-artifact@v2
@@ -116,13 +116,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxasgrmr.c
-          path: assembler/rxasgrmr.c
+          path: ${{ runner.temp }}/release/assembler/rxasgrmr.c
 
       - name: Upload rxasgrmr.h
         uses: actions/upload-artifact@v2
         with:
           name: rxasgrmr.h
-          path: assembler/rxasgrmr.h
+          path: ${{ runner.temp }}/release/assembler/rxasgrmr.h
 
       - name: Upload rxcposcn.c
         uses: actions/upload-artifact@v2
@@ -140,13 +140,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxcpopgr.c
-          path: compiler/rxcpopgr.c
+          path: ${{ runner.temp }}/release/compiler/rxcpopgr.c
 
       - name: Upload rxcpopgr.h
         uses: actions/upload-artifact@v2
         with:
           name: rxcpopgr.h
-          path: compiler/rxcpopgr.h
+          path: ${{ runner.temp }}/release/compiler/rxcpopgr.h
 
       - name: Upload rexbscan.c
         uses: actions/upload-artifact@v2
@@ -164,13 +164,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: rxcpbgmr.c
-          path: compiler/rxcpbgmr.c
+          path: ${{ runner.temp }}/release/compiler/rxcpbgmr.c
 
       - name: Upload rxcpbgmr.h
         uses: actions/upload-artifact@v2
         with:
           name: rxcpbgmr.h
-          path: compiler/rxcpbgmr.h
+          path: ${{ runner.temp }}/release/compiler/rxcpbgmr.h
 
 #**************************************************#
   build-cms:
