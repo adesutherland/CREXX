@@ -68,13 +68,30 @@ const char *get_filename_ext(const char *filename) {
     return dot + 1;
 }
 
+const char *get_filename(const char *path)
+{
+    size_t len = strlen(path);
+    size_t i;
+    if (!len) return "";
+
+    for (i = len - 1; i; i--)
+    {
+        if ( path[i] == '\\' || path[i] == '/' )
+        {
+            path = path + i + 1;
+            break;
+        }
+    }
+    return path;
+}
+
 int main(int argc, char *argv[]) {
 
     FILE *fp, *traceFile = 0, *outFile = 0;
     char *buff;
     size_t bytes;
     Context context;
-    int errors;
+    int errors = 0;
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
@@ -181,7 +198,7 @@ int main(int argc, char *argv[]) {
     bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize context */
-    context.file_name = file_name;
+    context.file_name = (char*)get_filename(file_name);
     context.traceFile = traceFile;
     context.top = buff;
     context.cursor = buff;

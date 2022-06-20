@@ -10,11 +10,11 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <rxas.h>
+#include "rxas.h"
 
 #define BIN_VERSION "001"
 
-#define BIN_HEADER "cReXx"
+#define BIN_HEADER "cReXx" /* Do not change */
 
 typedef struct module_header {
     char FILE_HEADER[sizeof(BIN_HEADER)];
@@ -31,16 +31,19 @@ typedef struct module_header {
 
 typedef struct module_file {
     module_header header;
+    char fromfile; /* Marks if the module file etc was fromfile */
     char* name; /* Null Terminated */
     char* description; /* Null Terminated */
     void* instructions;
     void* constant;
 } module_file;
 
-/* Sets Header Version */
-static void set_header_version(module_header *header) {
-    memcpy(header->FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER));
-    memcpy(header->FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION));
+/* Sets Header Version and initialises the header */
+static void init_module(module_file *module) {
+    memset(module,0,sizeof(module_file)); /* Zezo module file (valgrind complains otherwise) */
+    memcpy(module->header.FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER));
+    memcpy(module->header.FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION));
+    module->fromfile = 0;
 }
 
 /* Check Header Version */
@@ -56,9 +59,6 @@ static int check_header_version(module_header *header) {
 /* Write out the module */
 /* 0 on success, 1 on error (use perror) */
 static int write_module(module_file *module, FILE *outFile) {
-
-    set_header_version( &(module->header) );
-
     if (fwrite(&(module->header), sizeof(module->header), 1, outFile) != 1)
         return 1;
 
@@ -78,7 +78,7 @@ static int write_module(module_file *module, FILE *outFile) {
 }
 
 /* Read in the module */
-/* The module is malloced (with more than one malloc call) - it must be freed with free_module() */
+/* The module is fromfile (with more than one malloc call) - it must be freed with free_module() */
 /* 0 on success,
  * 1 on eof
  * 2 on file version mismatch
@@ -89,6 +89,7 @@ static int read_module(module_file **module, FILE *inFile) {
     if (*module == 0) return -1;
 
     /* Zero these so free_module() will not crash after read_module() error */
+    (*module)->fromfile = 1;
     (*module)->name = 0;
     (*module)->description = 0;
     (*module)->instructions = 0;
@@ -137,13 +138,71 @@ static int read_module(module_file **module, FILE *inFile) {
     return 0;
 }
 
+/* "Read" in the module from a memory buffer */
+/* The module is not fromfile however it "should" or at least "can" be freed with free_module() */
+/* end_of_buffer is the first byte AFTER the buffer - i.e. not part of the buffer */
+/* 0 on success,
+ * 1 on eof
+ * 2 on file version mismatch
+ * -1 on error
+ * (use perror), on an error you can/should use free_module() */
+static int read_module_mem(module_file **module, char** in_buffer, const char *end_of_buffer) {
+    *module = 0;
+    if ( *in_buffer >= end_of_buffer) return 1; /* "eof" */
+
+    *module = malloc(sizeof(module_file));
+    if (*module == 0) return -1;
+
+    /* Zero these so free_module() will not crash after read_module() error */
+    (*module)->fromfile = 0;
+    (*module)->name = 0;
+    (*module)->description = 0;
+    (*module)->instructions = 0;
+    (*module)->constant = 0;
+
+    if (*in_buffer + sizeof(module_header) > end_of_buffer) {
+        *module = 0;
+        return -1; /* "error" */
+    }
+
+    memcpy(*module, *in_buffer, sizeof(module_header));
+    *in_buffer += sizeof(module_header);
+
+    /* Check Header */
+    switch (check_header_version(&(*module)->header)) {
+        case 1: return -1; /* Unknown error */
+        case 2: return 2; /* Version mismatch */
+        default:;
+    }
+
+    (*module)->name = *in_buffer;
+    *in_buffer += (*module)->header.name_size;
+    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+
+    (*module)->description = *in_buffer;
+    *in_buffer += (*module)->header.description_size;
+    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+
+    (*module)->instructions = *in_buffer;
+    *in_buffer += (*module)->header.instruction_size * sizeof(bin_code);
+    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+
+    (*module)->constant = *in_buffer;
+    *in_buffer += (*module)->header.constant_size;
+    if (*in_buffer > end_of_buffer) return -1; /* "error" */
+
+    return 0;
+}
+
 /* Free the module */
-/* Free's the module returned by read_module() */
+/* Free's the module returned by read_module() or read_module_mem() */
 static void free_module(module_file *module) {
-    if (module->name) free(module->name);
-    if (module->description) free(module->description);
-    if (module->instructions) free(module->instructions);
-    if (module->constant) free(module->constant);
+    if (module->fromfile) {
+        if (module->name) free(module->name);
+        if (module->description) free(module->description);
+        if (module->instructions) free(module->instructions);
+        if (module->constant) free(module->constant);
+    }
     free(module);
 }
 

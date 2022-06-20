@@ -1,44 +1,41 @@
 cmake_minimum_required(VERSION 3.18)
 
 set(RXASBINS
-              _elapsed.rxbin
-              copies.rxbin
-              lastpos.rxbin
-              left.rxbin
-              length.rxbin
-              pos.rxbin
-              reverse.rxbin
-              right.rxbin
-              substr.rxbin
-              subword.rxbin
-              word.rxbin
-              wordindex.rxbin
-              wordlen.rxbin
-              wordlength.rxbin
-              words.rxbin
-              testbifs.rxbin
-        )
+        _elapsed.rxbin
+        copies.rxbin
+        lastpos.rxbin
+        left.rxbin
+        # length.rxbin
+        pos.rxbin
+        reverse.rxbin
+        right.rxbin
+        # substr.rxbin
+        subword.rxbin
+        word.rxbin
+        wordindex.rxbin
+        wordlen.rxbin
+        # wordlength.rxbin
+        words.rxbin
+)
 
 foreach(_binfile ${RXASBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
+  set(_member "libmember_${_basename}")
   add_custom_command(
-          #COMMAND ${CMAKE_COMMAND} -E chdir  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR}/compiler/rxas ${_basename}
-          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-          COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxbin ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxbin
-          COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxbin
-
-          DEPENDS ${_basename}.rxas rxas rxc rxvm rxbvm
+          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+          DEPENDS rxas ${_basename}.rxas
           OUTPUT ${_binfile}
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "cREXX assemble ${_basename} ..."
   )
-
+  add_custom_target(${_member} ALL DEPENDS ${_binfile})
 endforeach()
 
 add_custom_command(
         OUTPUT library-rxas.rxbin
         COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > library-rxas.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${RXASBINS} rxas rxc
+        COMMENT "cREXX RXAS Library Archive ..."
+        DEPENDS ${RXASBINS}
 )
 
 add_custom_target(library-rxas ALL DEPENDS library-rxas.rxbin)

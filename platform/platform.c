@@ -35,23 +35,25 @@ char* file2buf(FILE *file) {
 
 /*
  * Function opens and returns a file handle
- * dir can be null - the default is platform specific (e.g. ./ )
+ * dir can be null
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode) {
     size_t len;
     char *file_name;
     FILE *stream;
-    if (!dir) dir = ".";
 
-    len = strlen(name) + strlen(type) + strlen(dir) + 3;
+    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
+    else len = strlen(name) + strlen(type) + 2;
 
     file_name = malloc(len);
     if (type == 0) {
-      snprintf(file_name, len, "%s/%s", dir, name);
+        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
+        else snprintf(file_name, len, "%s", name);
     }
     else {
-      snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+        else snprintf(file_name, len, "%s.%s", name, type);
     }
 
     stream = fopen(file_name, mode);

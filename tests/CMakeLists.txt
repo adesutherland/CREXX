@@ -17,14 +17,11 @@ add_custom_target(tests ALL
 foreach(_binfile ${ASMTESTBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-        #COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
-        COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
-        COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile}
-        #
+        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
         COMMAND ${CTEST} -R ${_basename} --output-on-failure
         DEPENDS ${_basename}.rxas rxas rxvm rxbvm library
         OUTPUT ${_binfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX Assemble Test ${_basename} ..."
   )
   add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -34,15 +31,12 @@ endforeach()
 foreach(_binfile ${REXXTESTBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-          #COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-          COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-          COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas
-          #
-          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
+          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
           COMMAND ${CTEST} -R ${_basename} --output-on-failure
           DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library
           OUTPUT ${_binfile}
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "cREXX Assemble Test ${_basename} ..."
   )
   add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

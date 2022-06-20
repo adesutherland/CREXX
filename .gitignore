@@ -87,3 +87,6 @@ _deps
 /compiler/rxcpbgmr.h
 /compiler/rxcpopgr.c
 /compiler/rxcpopgr.h
+
+* cREXX
+*.rxbin

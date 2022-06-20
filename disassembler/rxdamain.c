@@ -153,9 +153,8 @@ int main(int argc, char *argv[]) {
     init_ops();
 
     i = 0;
-    module = 0;
     while (i == 0) {
-
+        module = 0;
         switch (i = read_module(&module, fp)) {
             case 0: /* Success */
                 pgm.globals = module->header.globals;

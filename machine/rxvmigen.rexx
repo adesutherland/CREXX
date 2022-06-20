@@ -3,13 +3,13 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-  parse arg path
+  parse arg inpath "," outpath
 
-  file=path"/machine/rxvminst.c"
-  ofile=path"/machine/instrset.h"
+  file=inpath"/machine/rxvminst.c"
+  ofile=outpath"/machine/instrset.h"
 
-  asm=path"/interpreter/rxvmintp.c"
-  asmmiss=path"/machine/instrmiss.h"
+  asm=inpath"/interpreter/rxvmintp.c"
+  asmmiss=outpath"/machine/instrmiss.h"
 
   call lineout ofile,,1 /* truncation */
   call lineout asmmiss,,1 /* truncation */
