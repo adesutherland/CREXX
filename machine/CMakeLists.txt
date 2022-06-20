@@ -17,7 +17,7 @@ if(NOT REXX)
 else()
     message(STATUS "NOTE: REXX found - using ${REXX}")
     add_custom_command(
-        COMMAND ${REXX} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmigen.rexx ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}
+        COMMAND ${REXX} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmigen.rexx "${CMAKE_SOURCE_DIR},${CMAKE_BINARY_DIR}"
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxvminst.c ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter/rxvmintp.c
             ${CMAKE_CURRENT_SOURCE_DIR}/rxvmigen.rexx
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/instrmiss.h ${CMAKE_CURRENT_BINARY_DIR}/instrset.h

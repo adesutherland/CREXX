@@ -3,7 +3,7 @@
  * Generate Instruction set statements
  * -------------------------------------------------------------------------------
  */
-  parse arg inpath outpath
+  parse arg inpath "," outpath
 
   file=inpath"/machine/rxvminst.c"
   ofile=outpath"/machine/instrset.h"
