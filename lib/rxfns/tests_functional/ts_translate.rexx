@@ -99,7 +99,7 @@ end
 
 if translate('abcdef','123456','aaabbbcc','.') \= '14.def' then do
   errors=errors+1
-  say 'TRANSLATE failed in test 21: translate('abcdef','123456','aaabbbcc','.') ' translate('abcdef','123456','aaabbbcc','.') 'but must be 14.def'
+  say 'TRANSLATE failed in test 21: translate(''abcdef'',''123456'',''aaabbbcc'',''.'')' translate('abcdef','123456','aaabbbcc','.') 'but must be 14.def'
 end
 
 if translate('abcdef ',,,'$') \= '$$$$$$$' then do

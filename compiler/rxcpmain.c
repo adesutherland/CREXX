@@ -203,13 +203,20 @@ int main(int argc, char *argv[]) {
     context.top = buff;
     context.cursor = buff;
     context.linestart = buff;
+    context.prev_linestart = buff;
     context.line = 0;
     context.token_head = 0;
     context.token_tail = 0;
     context.token_counter = 0;
     context.ast = 0;
     context.free_list = 0;
+    /* Source Options */
+    context.processedComments = 0;
     context.level = UNKNOWN;
+    context.hashcomments = 1; /* This is the recommended & default line comment style */
+    context.dashcomments = 0;
+    context.slashcomments = 0;
+
     context.optimise = do_optimise;
     context.buff_end = (char*) (((char*)buff) + bytes);
     context.buff_start = buff;
@@ -222,6 +229,7 @@ int main(int argc, char *argv[]) {
     context.top = buff;
     context.cursor = buff;
     context.linestart = buff;
+    context.prev_linestart = buff;
     context.line = 0;
     context.token_head = 0;
     context.token_tail = 0;
@@ -245,12 +253,12 @@ int main(int argc, char *argv[]) {
             break;
 
         default:
-            fprintf(stderr, "Internal Error - Failed to determine REXX Level\n");
+            fprintf(stderr, "INTERNAL ERROR: Failed to determine REXX Level\n");
     }
 
 
     if (!context.ast) {
-        fprintf(stderr,"ERROR: Compiler Exiting - Failure to create AST\n");
+        fprintf(stderr,"INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 

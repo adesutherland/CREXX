@@ -43,14 +43,20 @@ typedef struct Context {
     FILE *traceFile;
     char *buff_start;
     char *buff_end;
-    char *top, *cursor, *marker, *ctxmarker, *linestart;
+    char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
     int line;
     int token_counter;
     Token* token_head;
     Token* token_tail;
     ASTNode* ast;
     ASTNode* free_list;
+    /* Source Options */
+    char processedComments;
     RexxLevel level;
+    char hashcomments;
+    char dashcomments;
+    char slashcomments;
+    /* Optimiser Options */
     int optimise;
 } Context;
 
@@ -133,6 +139,10 @@ void prt_unex(FILE* output, const char *ptr, int len);
 
 /* Token Functions */
 Token* token_f(Context* context, int type);
+/* Split a token - returns the first token (token->token_next) points to the next twin; */
+/* the first token has len characters, the second twin as the remaining characters.       */
+/* The caller can then change the tokens' types as needed.                              */
+Token *tok_splt(Context *context, Token *token, int len);
 /* Remove the last (tail) token */
 void token_r(Context *context);
 void free_tok(Context* context);

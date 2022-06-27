@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include "rxcpmain.h"
+#include "rxcpbgmr.h"
 
 /* Token Factory */
 Token *token_f(Context *context, int type) {
@@ -24,15 +25,58 @@ Token *token_f(Context *context, int type) {
     }
     token->token_number = ++(context->token_counter);
     token->token_subtype = 0; /* TODO */
-    token->length = context->cursor - context->top;
-    token->line = context->line;
-    token->column = context->top - context->linestart + 1;
+
+    if (token->token_type == TK_EOL) {
+        /* EOL Special processing to get line / column number right */
+        token->length = context->cursor - context->top;
+        token->line = context->line - 1;
+        token->column = context->top - context->prev_linestart + 1;
+    }
+    else {
+        token->length = context->cursor - context->top;
+        token->line = context->line;
+        token->column = context->top - context->linestart + 1;
+    }
     if (token->column < 0) token->column = 0;
     token->token_string = context->top;
-
     context->top = context->cursor;
 
     return token;
+}
+
+/* Split a token - returns the first token (token->token_next) points to the next twin; */
+/* the first token has len characters, the second twin as the remaining characters.       */
+/* The caller can then change the tokens' types as needed.                              */
+Token *tok_splt(Context *context, Token *token, int len) {
+    int n;
+    Token *t;
+
+    /* Copy token to make twin */
+    Token *twin = malloc(sizeof(Token));
+    memcpy(twin, token, sizeof(Token));
+
+    /* Fix up linked list - the twin comes before token */
+    twin->token_next = token;
+    token->token_prev = twin;
+    if (twin->token_prev) twin->token_prev->token_next = twin;
+    else context->token_head = twin;
+
+    /* Fix up token numbers */
+    n = twin->token_number;
+    t = twin->token_next;
+    while (t) {
+        t->token_number = ++n;
+        t = t->token_next;
+    }
+    context->token_counter = n;
+
+    /* Fix up token lengths / pos / string */
+    twin->length = len;
+    token->length -= len;
+    token->column += len;
+    token->token_string += len;
+
+    return twin;
 }
 
 /* Remove the last (tail) token */
@@ -51,6 +95,7 @@ void token_r(Context *context) {
             context->token_tail = 0;
         }
         free(tail);
+        context->token_counter--;
     }
 }
 
@@ -471,7 +516,7 @@ void ast_str(ASTNode* node, char *string) {
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
-    add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev));
+    add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
     return errorAST;
 }
 

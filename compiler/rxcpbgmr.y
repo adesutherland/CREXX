@@ -19,16 +19,36 @@
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS.
 %wildcard ANYTHING.
 
-%stack_size 2000
+/* 0 Sets the stack to grow dynamically! */
+%stack_size 0
 
 %stack_overflow
 {
-     /* Have to print the error directly - and exit(1) */
-     fprintf(stderr,"Error - PARSER_OVERFLOW\n");
+     /* This should never happen as the stack grows dynamically
+        Have to print the error directly - and exit(1) */
+     fprintf(stderr,"INTERNAL ERROR: Parser Overflow\n");
      exit(1);
+}
+
+%syntax_error {
+    /*
+    int i;
+    int n = YYNTOKEN;
+    // Example of getting the offending token
+    Token *badToken = yypParser->yytos->minor.yy0;
+    prnt_tok(badToken);
+
+    // Example of getting expected tokens
+    for (i = 0; i < n; ++i) {
+        int a = yy_find_shift_action((YYCODETYPE)i, yypParser->yytos->stateno);
+        if (a != YY_ERROR_ACTION) {
+            fprintf(stderr, "possible token: %s\n", yyTokenName[i]);
+        }
+    }
+    */
 }
 
 /* Program & Structure */
@@ -55,44 +75,39 @@ program(P)       ::= rexx_options(R) TK_EOS.
                      }
 
 program(E)       ::= ANYTHING(T) error.
-                     { E = ast_err(context, "49.1", T); context->ast = E; }
+                     { E = ast_err(context, "MISSING_OPTIONS", T); context->ast = E; }
 
 program(E)       ::=  error.
-                     { E = ast_errh(context, "49.2"); }
+                     { E = ast_errh(context, "PARSE_FAILURE"); context->ast = E; }
 
 /* Optional EOC */
 ncl0             ::= TK_EOC.
 ncl0             ::= .
 
-/* Junk sync - also for error reporting */
+/* Skip junk for syncing and for error reporting */
 junk(J)          ::= . { J = 0; }
-junk(J)          ::= junk_list(L). { J = L; }
-junk_list(L)     ::= ANYTHING(L1).
-                   { L = ast_err(context, "49.3", L1); }
-junk_list(L)     ::= junk_list(L1) ANYTHING.
-                   { L = L1; } /* We are only reporting the first error */
+junk(J)          ::= ANYTHING(A) error.
+                     { J = ast_err(context, "EXTRANEOUS", A); }
+junk(J)          ::= TK_BADCOMMENT(C).
+                     { J = ast_err(context, "BAD_COMMENT", C); }
+junk(J)          ::= error.
+                     { J = ast_errh(context, "SYNTAX_ERROR"); }
 
 /* Variables / Labels */
 var_symbol(A)    ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
 label(A)         ::= TK_LABEL(S). { A = ast_f(context, LABEL, S); }
 
 /* Language Options */
-rexx_options(I)    ::= .
-                   { I = ast_ft(context, REXX_OPTIONS); }
-rexx_options(I)    ::= TK_OPTIONS(T) TK_EOC.
-                   { I = ast_f(context, REXX_OPTIONS, T); }
-rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) TK_EOC.
-                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,L); }
+rexx_options(I)    ::= TK_OPTIONS(T) junk(J) TK_EOC.
+                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,J); }
+rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) junk(J) TK_EOC.
+                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,L); add_ast(I,J); }
 option_list(L)     ::= option(L1).
                    { L = L1; }
-option_list(L)     ::= option_list(L1) option(L2).
-                   { L = L1; add_sbtr(L,L2); }
-option(C)          ::= TK_SYMBOL(S).
-                   { C = ast_f(context, CONST_SYMBOL, S); }
+option_list(L)     ::= option_list(L1) junk(J) option(L2).
+                   { L = L1; add_sbtr(L,J); add_sbtr(L,L2); }
 option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, CONST_SYMBOL, S); }
-option(E)          ::= error.
-                   { E = ast_errh(context, "100.1"); }
 
 instruction_list(I)  ::= labeled_instruction(L).
                          { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
@@ -100,22 +115,27 @@ instruction_list(I)  ::= instruction_list(I1) labeled_instruction(L).
                          { I = I1; add_ast(I,L); }
 
 labeled_instruction(I) ::= group(B). { I = B; }
+
 labeled_instruction(I) ::= single_instruction(B) junk(J) TK_EOC.
-                           { I = B; add_ast(I, J); }
+                           { I = B; add_sbtr(I,J); }
 labeled_instruction(I) ::= label(B). { I = B; }
 labeled_instruction(I) ::= TK_EOC. { I = 0; }
+labeled_instruction(E) ::= TK_BADCOMMENT(C).
+                           { E = ast_err(context, "BAD_COMMENT", C); }
+labeled_instruction(E) ::= error.
+                           { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 instruction(I)         ::= group(B). { I = B; }
 instruction(I)         ::= single_instruction(B) junk(J) TK_EOC.
-                           { I = B; add_ast(I, J); }
+                           { I = B; add_sbtr(I,J); }
+instruction(E)         ::= TK_BADCOMMENT(C).
+                           { E = ast_err(context, "BAD_COMMENT", C); }
+instruction(E)         ::= error.
+                           { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
-single_instruction(E)  ::= TK_BADCOMMENT.
-                          { E = ast_errh(context, "6.1"); }
-single_instruction(E)  ::= error.
-                          { E = ast_errh(context, "49.4"); }
 
 assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
     {
@@ -129,11 +149,6 @@ assignment(I) ::=  TK_FLOAT(T) TK_EQUAL expression(E).
 
 assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
     { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
-      add_ast(I,E); }
-
-
-assignment(I) ::=  TK_SYMBOL(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.2", T));
       add_ast(I,E); }
 
 command(I)             ::= expression(E).
@@ -151,24 +166,29 @@ keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
 keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
+/* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
+   sure if the error virtual token is only enabled when in error recovery node. If so this
+   would explain it, and be a great (undocumented) feature */
 keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "8.1", T); }
 keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
 keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "9.1", T); }
 keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "9.2", T); }
 keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "10.1", T); }
 
-group(I) ::= simple_do(K). { I = K; }
-group(I) ::= do(K). { I = K; }
+group(I) ::= simple_do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
+group(I) ::= do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
 group(I) ::= if(K). { I = K; }
 
 /* Groups */
 
 /* Simple DO Group */
-simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END TK_EOC.
+simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END.
           { G = I; }
-simple_do(G) ::= TK_DO TK_EOC TK_END TK_EOC.
+simple_do(G) ::= TK_DO TK_EOC TK_END.
           { G = ast_ft(context, NOP); }
-simple_do(G) ::= TK_DO ANYTHING(E).
+simple_do(G) ::= TK_DO error.
+          { G = ast_errh(context, "14.1"); }
+simple_do(G) ::= TK_DO ANYTHING(E) error.
           { G = ast_err(context, "14.1", E); }
 simple_do(G) ::= TK_DO(E) TK_EOS.
           { G = ast_err(context, "35.1", E); }
@@ -183,25 +203,27 @@ tk_doloop(D)  ::= TK_DO(T).
                   { D = ast_f(context, DO, T); }
 tk_doloop(D)  ::= TK_LOOP(T).
                   { D = ast_f(context, DO, T); }
-do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END.
                   { G = T; add_ast(G,R); add_ast(G,I); }
-do(G)         ::= tk_doloop(T) dorep(R) TK_EOC TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC TK_END.
                   { G = T; add_ast(G,R); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END.
                   { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,I); }
-do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC TK_END.
                   { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= tk_doloop(T) docond(D) TK_EOC instruction_list(I) TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC instruction_list(I) TK_END.
                   { G = T; ASTNode* R = ast_ft(context, REPEAT);
                     add_ast(G,R); add_ast(R,D); add_ast(G,I); }
-do(G)         ::= tk_doloop(T) docond(D) TK_EOC TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC TK_END.
                   { G = T; ASTNode* R = ast_ft(context, REPEAT);
                     add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= tk_doloop(T) doforever(F) TK_EOC instruction_list(I) TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC instruction_list(I) TK_END.
                   { G = T; add_ast(G,F); add_ast(G,I); }
-do(G)         ::= tk_doloop(T) doforever(F) TK_EOC TK_END TK_EOC.
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC TK_END.
                   { G = T; add_ast(G,F); add_ast(G,ast_ft(context, NOP)); }
-do(G)         ::= tk_doloop dorep ANYTHING(E).
+do(G)         ::= tk_doloop dorep error.
+                  { G = ast_errh(context, "27.1"); }
+do(G)         ::= tk_doloop dorep ANYTHING(E) error.
                   { G = ast_err(context, "27.1", E); }
 do(G)         ::= tk_doloop(E) dorep TK_EOC instruction_list(I) TK_EOS.
                   { G = I; mknd_err(E, "14.1"); add_ast(G,E); }
@@ -436,7 +458,7 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_SYMBOL TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL TK_SYMBOL_COMPOUND.
+%left TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL TK_SYMBOL_COMPOUND.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
@@ -470,8 +492,6 @@ function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. 
                            { P = E; }
 term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
-term(A)                ::= TK_SYMBOL(S).
-                         { A = ast_f(context, CONST_SYMBOL, S); }
 term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
 term(A)                ::= TK_INTEGER(S).
@@ -581,19 +601,43 @@ and_expression(P)    ::= or_expression(E).
                          { P = E; }
 and_expression(A)    ::= and_expression(B) TK_AND(O) or_expression(C).
                          { A = ast_f(context, OP_AND, O); add_ast(A,B); add_ast(A,C); }
-expression(P)        ::= and_expression(E).
-                         { P = E; }
 
-/* Support Standard REXX Errors */
-expression(E)        ::= TK_COMMA(S). [TK_EQUAL] /* Low precedence */
-                         { E = ast_err(context, "37.1", S); }
-expression(E)        ::= TK_CLOSE_BRACKET(S). [TK_EQUAL] /* Low precedence */
-                         { E = ast_err(context, "37.2", S); }
-/* expressions in a list cannot have these errors above because of parsing conflicta */
-expression_in_list(P) ::= and_expression(E).
-                         { P = E; }
+/* Errors */
+and_expression(E)  ::= TK_UNKNOWN(U) error. { E = ast_err(context, "BADCHAR", U); }
+and_expression(E)  ::= TK_CONCAT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_MULT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_DIV(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_IDIV(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_MOD(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_POWER(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_EQUAL(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NEQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_GT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_LT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_GTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_EQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_NEQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_GT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_LT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_GTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_AND(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_OR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
-/*
+expression(P)  ::= and_expression(E). { P = E; }
+expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }
+expression(E)  ::= TK_CLOSE_BRACKET(U) error. { E = ast_err(context, "BADEXPR", U); }
+
+/* expressions in a list cannot expresssion() errors above because of parsing conflicta */
+expression_in_list(P) ::= and_expression(E). { P = E; }
+
+/* ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+
 valueexp(P)            ::= TK_VALUE(T) expression(E). { P = ast_f(T); add_ast(P,E); }
 
 expression0(P)         ::= . { P = ast_ft(TK_NULL); }
@@ -605,7 +649,7 @@ expression_list1(L)    ::= expression(E). { L = ast_ft(TK_LIST); add_ast(L,E); }
 expression_list1(L)    ::= expression_list1(L1) TK_COMMA expression(E). { L = L1; add_ast(L,E); }
 
 // VARIABLE & SYMBOLS
-var_symbol(T)          ::= TK_SYMBOL(S). { T = ast_f(S); }
+var_symbol(T)          ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
 var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S);
 var_symbol(T)          ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
 var_symbol_list1(L)    ::= var_symbol(V). { L = ast_ft(TK_LIST); add_ast(L,V); }
@@ -620,7 +664,7 @@ variable_list(L)       ::= variable_list(L1) variable(V). { L = L1; add_ast(L,V)
 // FUNCTIONS
 function(F)            ::= taken_constant(T) function_parameters(P).
                            { F = ast_ft(TK_FUNCTION); add_ast(F,T); add_ast(F,P); }
-taken_constant(T)      ::= TK_SYMBOL(S). { T = ast_f(S); }
+taken_constant(T)      ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
 taken_constant(T)      ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
 taken_constant(T)      ::= TK_STRING(S). { T = ast_f(S); }
 function_parameters(P) ::= TK_BOPEN expression_list(E) TK_BCLOSE. { P = E; }

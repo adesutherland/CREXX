@@ -44,6 +44,12 @@ int opt_scan(Context* s) {
     'LEVELD' { return(TK_LEVELD); }
     'LEVELG' { return(TK_LEVELG); }
     'LEVELL' { return(TK_LEVELL); }
+    'HASHCOMMENTS' { return(TK_HASHCOMMENTS); }
+    'DASHCOMMENTS' { return(TK_DASHCOMMENTS); }
+    'SLASHCOMMENTS' { return(TK_SLASHCOMMENTS); }
+    'NOHASHCOMMENTS' { return(TK_NOHASHCOMMENTS); }
+    'NODASHCOMMENTS' { return(TK_NODASHCOMMENTS); }
+    'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
     whitespace {
@@ -51,6 +57,16 @@ int opt_scan(Context* s) {
         goto regular;
     }
     ";" { return(TK_EOC); }
+    // Accept all line comment formats
+    [#] .* {
+        goto regular;
+    }
+    "//" .* {
+        goto regular;
+    }
+    "--" .* {
+        goto regular;
+    }
     eol2 {
         s->line++;
         s->linestart = s->cursor+2;

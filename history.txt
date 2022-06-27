@@ -1,6 +1,13 @@
 CREXX History / Change Log
 
-F0043 - cREXX Level B Language Completion
+F0043 - cREXX Level B Language enhancements
+        Dash '--' line comments. Options dashcomment  / nodashcomment (default)
+        Slash '//' line comments. Options slashcomment  / noslashcomment (default)
+        Hash '#' line comments. Options hashcomment (default) / nohashcomment
+        Fix Parsing - stopping some syntax errors causing the parser to abort
+        Fix Parsing - Parser stack made dynamic
+        Fix parsing - bug related to invalid symbol formats being accepted
+        ... more to come
 F0042 - cREXX Build and Packaging enhancements
         rxcpack - converts rxbin files to c linkable source (aka a C array)
         rxvme / rxvbme - interpreter linked with the cREXX stdlib
