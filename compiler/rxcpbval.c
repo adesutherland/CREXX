@@ -279,7 +279,7 @@ static walker_result step1_walker(walker_direction direction,
             }
         }
         else if (node->node_type == REXX_OPTIONS) {
-            /* TODO Process any REXX options */
+            /* TODO Process any REXX options specific for levelb */
         }
         else if (node->node_type == REPEAT) {
             /* Validate Sub-commands - Error 27.1 */
