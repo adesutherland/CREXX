@@ -52,6 +52,14 @@
 }
 
 /* Program & Structure */
+program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I) TK_EOS.
+                     {
+                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        add_ast(P,R);
+                        add_ast(R,N);
+                        add_ast(P,I);
+                     }
+
 program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.
                      {
                         P = ast_ft(context, PROGRAM_FILE); context->ast = P;
@@ -59,13 +67,29 @@ program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.
                         add_ast(P,I);
                      }
 
+
 /* This case covers when the EOS was handled by an error (e.g. a missing END) in
  * sub-rules */
+program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I).
+                     {
+                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        add_ast(P,R);
+                        add_ast(R,N);
+                        add_ast(P,I);
+                     }
+
 program(P)       ::= rexx_options(R) instruction_list(I).
                      {
                         P = ast_ft(context, PROGRAM_FILE); context->ast = P;
                         add_ast(P,R);
                         add_ast(P,I);
+                     }
+
+program(P)       ::= rexx_options(R) namespace_list(N) TK_EOS.
+                     {
+                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        add_ast(P,R);
+                        add_ast(R,N);
                      }
 
 program(P)       ::= rexx_options(R) TK_EOS.
@@ -109,6 +133,25 @@ option_list(L)     ::= option_list(L1) junk(J) option(L2).
 option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, CONST_SYMBOL, S); }
 
+/* Namespace Instructions */
+namespace_list(I)        ::= namespace_instruction(L).
+                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
+namespace_list(I)        ::= namespace_list(I1) namespace_instruction(L).
+                         { I = I1; add_ast(I,L); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_IMPORT(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
+                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_IMPORT(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
+                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC. { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
+namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC. { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC. { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
+namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC. { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+
+/* Program file body */
 instruction_list(I)  ::= labeled_instruction(L).
                          { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
 instruction_list(I)  ::= instruction_list(I1) labeled_instruction(L).
@@ -174,6 +217,8 @@ keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
 keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "9.1", T); }
 keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "9.2", T); }
 keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "10.1", T); }
+keyword_instruction(I) ::= TK_NAMESPACE(T) error. { I = ast_err(context, "BAD_NAMESPACE", T); }
+keyword_instruction(I) ::= TK_IMPORT(T) error. { I = ast_err(context, "BAD_IMPORT", T); }
 
 group(I) ::= simple_do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
 group(I) ::= do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
