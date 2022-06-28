@@ -558,6 +558,8 @@ const char *ast_ndtp(NodeType type) {
             return "FUNCTION";
         case IF:
             return "IF";
+        case IMPORT:
+            return "IMPORT";
         case INSTRUCTIONS:
             return "INSTRUCTIONS";
         case ITERATE:
@@ -570,6 +572,8 @@ const char *ast_ndtp(NodeType type) {
             return "FLOAT";
         case INTEGER:
             return "INTEGER";
+        case NAMESPACE:
+            return "NAMESPACE";
         case NOP:
             return "NOP";
         case NOVAL:
@@ -1036,6 +1040,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case BY:
             case IF:
             case REXX_OPTIONS:
+            case IMPORT:
+            case NAMESPACE:
             case TO:
                 attributes = "color=blue";
                 only_type = 1;

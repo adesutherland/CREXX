@@ -234,6 +234,10 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                     fprintf(stream, " %s",line_buffer);
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
+                    fprintf(stream, " %s",line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
+                    fprintf(stream, " %s",line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
                 }
                 m = mentry->base.next;
@@ -361,7 +365,12 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
                         get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                         fprintf(stream, " %s", line_buffer);
                         get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
-                        fprintf(stream, " %s\n", line_buffer);
+                        fprintf(stream, " %s", line_buffer);
+                        get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
+                        fprintf(stream, " %s",line_buffer);
+                        get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
+                        fprintf(stream, " %s\n",line_buffer);
+
                     }
                     m = mentry->base.next;
                 }
@@ -469,7 +478,12 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
                         get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                         fprintf(stream, " %s", line_buffer);
                         get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
-                        fprintf(stream, " %s\n", line_buffer);
+                        fprintf(stream, " %s", line_buffer);
+                        get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
+                        fprintf(stream, " %s",line_buffer);
+                        get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
+                        fprintf(stream, " %s\n",line_buffer);
+
                     }
                     m = mentry->base.next;
                 }
@@ -697,7 +711,12 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->type);
                     fprintf(stream, " %s",line_buffer);
                     get_func_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->func);
+                    fprintf(stream, " %s",line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
+                    fprintf(stream, " %s",line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->inliner);
                     fprintf(stream, " %s\n",line_buffer);
+
                 }
                 break;
 

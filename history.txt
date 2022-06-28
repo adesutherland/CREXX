@@ -1,9 +1,9 @@
 CREXX History / Change Log
 
 F0043 - cREXX Level B Language enhancements
-        Dash '--' line comments. Options dashcomment  / nodashcomment (default)
-        Slash '//' line comments. Options slashcomment  / noslashcomment (default)
-        Hash '#' line comments. Options hashcomment (default) / nohashcomment
+        Dash '--' line comments. Options dashcomments  / nodashcomments (default)
+        Slash '//' line comments. Options slashcomments  / noslashcomments (default)
+        Hash '#' line comments. Options hashcomments (default) / nohashcomments
         Fix Parsing - stopping some syntax errors causing the parser to abort
         Fix Parsing - Parser stack made dynamic
         Fix parsing - bug related to invalid symbol formats being accepted
