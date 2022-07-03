@@ -50,6 +50,8 @@ typedef struct Context {
     Token* token_tail;
     ASTNode* ast;
     ASTNode* free_list;
+    ASTNode* namespace;
+    Scope *current_scope;
     /* Source Options */
     char processedComments;
     RexxLevel level;
@@ -66,7 +68,7 @@ int opt_scan(Context* s);
 int opt_pars(Context *context);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, CONST_SYMBOL,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
     DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
@@ -227,19 +229,27 @@ struct Scope {
     void *symbols_tree;
     size_t num_registers;
     void *free_registers_array;
+    size_t temp_flag;
 };
 
+/* Returns string name of a Value type */
 char* type_nm(ValueType type);
+
+typedef enum SymbolType {
+    CONSTANT_SYMBOL, VARIABLE_SYMBOL, FUNCTION_SYMBOL, CLASS_SYMBOL, NAMESPACE_SYMBOL
+} SymbolType;
+
+/* Returns string name of a SymbolValue type */
+char* stype_nm(SymbolType type);
 
 struct Symbol {
     char *name;
     void *ast_node_array;
     Scope *scope;
     ValueType type;
+    SymbolType symbol_type;
     int register_num;
     char register_type;
-    char is_constant;
-    char is_function;
     char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
@@ -268,11 +278,19 @@ int get_regs(Scope *scope, size_t number);
  * reg, reg+1, ... reg+number */
 void ret_regs(Scope *scope, int reg, size_t number);
 
+/* Set the temp_flag for the scope and all its sub-scopes */
+void scp_stmp(Scope *scope, size_t temp_flag);
+
 /* Frees scope and all its symbols */
 void scp_free(Scope *scope);
 
 /* Symbol Factory - define a symbol */
+/* Returns NULL if the symbol is a duplicate */
 Symbol *sym_f(Scope *scope, ASTNode *node);
+
+/* Symbol Factory - define a symbol with a name */
+/* Returns NULL if the symbol is a duplicate */
+Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length);
 
 /* Resolve a Symbol - including parent scopes */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);

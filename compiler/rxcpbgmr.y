@@ -22,6 +22,9 @@
 %token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS.
 %wildcard ANYTHING.
 
+/* Low precedence */
+%left ANYTHING.
+
 /* 0 Sets the stack to grow dynamically! */
 %stack_size 0
 
@@ -131,25 +134,30 @@ option_list(L)     ::= option(L1).
 option_list(L)     ::= option_list(L1) junk(J) option(L2).
                    { L = L1; add_sbtr(L,J); add_sbtr(L,L2); }
 option(C)          ::= TK_VAR_SYMBOL(S).
-                   { C = ast_f(context, CONST_SYMBOL, S); }
+                   { C = ast_f(context, LITERAL, S); }
 
 /* Namespace Instructions */
 namespace_list(I)        ::= namespace_instruction(L).
-                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
+//                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
+                         { I = L; }
 namespace_list(I)        ::= namespace_list(I1) namespace_instruction(L).
-                         { I = I1; add_ast(I,L); }
+                         { I = I1; add_sbtr(I,L); }
 namespace_instruction(I) ::= TK_NAMESPACE(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
 namespace_instruction(I) ::= TK_NAMESPACE(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
 namespace_instruction(I) ::= TK_IMPORT(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
+                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
 namespace_instruction(I) ::= TK_IMPORT(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, CONST_SYMBOL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC. { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
-namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC. { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
-namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC. { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
-namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC. { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC.
+                         { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
+namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC.
+                         { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC.
+                         { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
+namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC.
+                         { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
 
 /* Program file body */
 instruction_list(I)  ::= labeled_instruction(L).
@@ -217,8 +225,14 @@ keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
 keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "9.1", T); }
 keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "9.2", T); }
 keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "10.1", T); }
-keyword_instruction(I) ::= TK_NAMESPACE(T) error. { I = ast_err(context, "BAD_NAMESPACE", T); }
-keyword_instruction(I) ::= TK_IMPORT(T) error. { I = ast_err(context, "BAD_IMPORT", T); }
+keyword_instruction(I) ::= TK_NAMESPACE(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+keyword_instruction(I) ::= TK_IMPORT(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
+keyword_instruction(I) ::= TK_NAMESPACE(T) error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+keyword_instruction(I) ::= TK_IMPORT(T) error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
 
 group(I) ::= simple_do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
 group(I) ::= do(K) junk(J) TK_EOC. { I = K; add_sbtr(I,J); }
@@ -676,6 +690,9 @@ expression(E)  ::= TK_CLOSE_BRACKET(U) error. { E = ast_err(context, "BADEXPR", 
 
 /* expressions in a list cannot expresssion() errors above because of parsing conflicta */
 expression_in_list(P) ::= and_expression(E). { P = E; }
+
+/* Finally set the node with the highest precedence */
+%left TK_EOC.
 
 /* ******************************* END *************************************
    ******************************* END *************************************

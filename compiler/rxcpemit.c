@@ -373,7 +373,7 @@ static void print_output(FILE* file, OutputFragment* existing) {
 }
 
 typedef struct walker_payload {
-    Scope *current_scope;
+    Context *context;
     FILE *file;
 } walker_payload;
 
@@ -395,7 +395,7 @@ static walker_result register_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         if (node->scope) {
-            payload->current_scope = node->scope;
+            payload->context->current_scope = node->scope;
         }
         switch (node->node_type) {
             case ARGS:
@@ -451,7 +451,7 @@ static walker_result register_walker(walker_direction direction,
                     c = c->sibling;
                 }
                 node->num_additional_registers = i + 1;
-                node->additional_registers = get_regs(payload->current_scope, node->num_additional_registers);
+                node->additional_registers = get_regs(payload->context->current_scope, node->num_additional_registers);
 
                 /* The children register need to be assigned */
                 c = child1;
@@ -599,14 +599,14 @@ static walker_result register_walker(walker_direction direction,
 
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->context->current_scope, child1->register_num);
                 if (!is_var_symbol(child2) && child2->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(payload->current_scope, child2->register_num);
+                    ret_reg(payload->context->current_scope, child2->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                    node->register_num = get_reg(payload->current_scope);
+                    node->register_num = get_reg(payload->context->current_scope);
                 break;
 
             case OP_AND:
@@ -618,7 +618,7 @@ static walker_result register_walker(walker_direction direction,
                     /* If we are assigning a register to either children we
                      * will assign to this node and children, overriding/ignoring
                      * any DONT_ASSIGN_REGISTER flag for this node */
-                    node->register_num = get_reg(payload->current_scope);
+                    node->register_num = get_reg(payload->context->current_scope);
                     if (child1->register_num == DONT_ASSIGN_REGISTER)
                         child1->register_num = node->register_num;
                     if (child2->register_num == DONT_ASSIGN_REGISTER)
@@ -629,7 +629,7 @@ static walker_result register_walker(walker_direction direction,
                      * so just set the node's register */
                     if (node->register_num != DONT_ASSIGN_REGISTER)
                         /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                        node->register_num = get_reg(payload->current_scope);
+                        node->register_num = get_reg(payload->context->current_scope);
                 }
                 break;
 
@@ -638,12 +638,12 @@ static walker_result register_walker(walker_direction direction,
             case OP_PLUS:
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1))
-                    ret_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->context->current_scope, child1->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                    node->register_num = get_reg(payload->current_scope);
+                    node->register_num = get_reg(payload->context->current_scope);
                 break;
 
             case VAR_SYMBOL:
@@ -651,7 +651,7 @@ static walker_result register_walker(walker_direction direction,
             case VAR_REFERENCE:
                 /* Set the symbols register */
                 if (node->symbolNode->symbol->register_num == UNSET_REGISTER)
-                    node->symbolNode->symbol->register_num = get_reg(payload->current_scope);
+                    node->symbolNode->symbol->register_num = get_reg(payload->context->current_scope);
                 /* The node uses the symbol register number */
                 node->register_num = node->symbolNode->symbol->register_num;
                 node->register_type = node->symbolNode->symbol->register_type;
@@ -665,14 +665,14 @@ static walker_result register_walker(walker_direction direction,
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
-                    node->register_num = get_reg(payload->current_scope);
+                    node->register_num = get_reg(payload->context->current_scope);
                 break;
 
             case FUNCTION:
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
-                    node->register_num = get_reg(payload->current_scope);
+                    node->register_num = get_reg(payload->context->current_scope);
 
                 /* Assign additional Registers for arguments if assignment was deferred  */
                 i = node->additional_registers + 1; /* First one is the number of arguments */
@@ -685,7 +685,7 @@ static walker_result register_walker(walker_direction direction,
                 }
 
                 /* Free registers except where it has been given to a symbol */
-                ret_reg(payload->current_scope, node->additional_registers); /* First one is the number of arguments */
+                ret_reg(payload->context->current_scope, node->additional_registers); /* First one is the number of arguments */
                 i = node->additional_registers + 1;
                 c = child1;
                 while (c) {
@@ -693,7 +693,7 @@ static walker_result register_walker(walker_direction direction,
                     if ( !(is_var_symbol(c) &&
                            c->symbolNode->symbol->register_num == i &&
                            c->symbolNode->symbol->register_type == 'r') )
-                        ret_reg(payload->current_scope, i);
+                        ret_reg(payload->context->current_scope, i);
 
                     i++;
                     c = c->sibling;
@@ -726,7 +726,7 @@ static walker_result register_walker(walker_direction direction,
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
                     /* Then if it is a temporary mark the register for reuse */
                     if (!is_var_symbol(child1))
-                        ret_reg(payload->current_scope, child1->register_num);
+                        ret_reg(payload->context->current_scope, child1->register_num);
                 }
                 break;
 
@@ -738,7 +738,7 @@ static walker_result register_walker(walker_direction direction,
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
                         if (!is_var_symbol(child1))
-                            ret_reg(payload->current_scope,
+                            ret_reg(payload->context->current_scope,
                                     child1->register_num);
                     }
                 }
@@ -750,7 +750,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1))
-                    ret_reg(payload->current_scope, child1->register_num);
+                    ret_reg(payload->context->current_scope, child1->register_num);
                 break;
 
             case TO:
@@ -771,7 +771,7 @@ static walker_result register_walker(walker_direction direction,
                     node->register_type = node->child->register_type;
                 }
                 /* Else new register for copy */
-                else node->register_num = get_reg(payload->current_scope);
+                else node->register_num = get_reg(payload->context->current_scope);
                 break;
 
             case REPEAT:
@@ -798,13 +798,13 @@ static walker_result register_walker(walker_direction direction,
                 while (c) {
                     if (c->node_type == FOR) {
                         /* Always node register  */
-                        ret_reg(payload->current_scope, c->register_num);
+                        ret_reg(payload->context->current_scope, c->register_num);
                     }
                     /* Don't do it for the ASSIGN node - it takes care of itself */
                     else if (c->node_type != ASSIGN && c->child) {
                         /* release the temporary register */
                         if (!is_var_symbol(c->child))
-                            ret_reg(payload->current_scope, c->register_num);
+                            ret_reg(payload->context->current_scope, c->register_num);
                     }
                     c = c->sibling;
                 }
@@ -816,7 +816,7 @@ static walker_result register_walker(walker_direction direction,
             default:;
         }
 
-        if (node->scope) payload->current_scope = payload->current_scope->parent;
+        payload->context->current_scope = node->scope;
     }
 
     return result_normal;
@@ -1156,7 +1156,7 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
     int symbol_ordinal;
 
-    if (!symbol->is_function) {
+    if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         /* Logic that works out if we should emit the variable meta data here */
         if (symbol->meta_emitted) return;     /* Aleady done */
@@ -1165,18 +1165,18 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
         if (symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
         symbol->meta_emitted = 1;
 
-        if (symbol->is_constant) {
+        if (symbol->symbol_type == CONSTANT_SYMBOL) {
             symbol_fqn = sym_frnm(symbol);
             value_node = sym_trnd(symbol, 0)->node->sibling;
             if (value_node) {
-                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%.*s\"\n",
+                buffer = printf_malloc("   .meta \"%s\"=\"b\" \"%s\" \"%.*s\"\n",
                                        symbol_fqn,
                                        type_nm(symbol->type),
                                        (int) value_node->node_string_length, value_node->node_string);
             }
             else {
                 /* Taken constant so no defining node - the name is its value */
-                buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" \"%s\"\n",
+                buffer = printf_malloc("   .meta \"%s\"=\"b\" \"%s\" \"%s\"\n",
                                        symbol_fqn,
                                        type_nm(symbol->type),
                                        symbol->name);
@@ -1186,7 +1186,7 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
 
         else if (symbol->register_num >= 0) {
             symbol_fqn = sym_frnm(symbol);
-            buffer = printf_malloc("   .meta \"%s\"=\"B\" \"%s\" %c%d\n",
+            buffer = printf_malloc("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
                                    symbol_fqn,
                                    type_nm(symbol->type),
                                    symbol->register_type, symbol->register_num
@@ -1226,14 +1226,14 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
     char* buffer;
     char* symbol_fqn;
 
-    if (!symbol->is_function) {
+    if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         if (!symbol->meta_emitted) {
             fprintf(stderr, "WARNING: Did not emit metadata for symbol %s\n", symbol->name);
             return;
         }
 
-        if (symbol->is_constant || symbol->register_num >= 0) {
+        if (symbol->symbol_type == CONSTANT_SYMBOL || symbol->register_num >= 0) {
             symbol_fqn = sym_frnm(symbol);
 
             value_node = sym_trnd(symbol, 0)->node->sibling;
@@ -1293,7 +1293,7 @@ static char *clean_print_node(ASTNode *node) {
         if (t->token_type != TK_STRING)  {
             /* Upper case it - because we are REXX */
             for (i = 0; i < t->length; i++) {
-                *(b++) = (char)toupper(t->token_string[i]);
+                *(b++) = (char)tolower(t->token_string[i]);
             }
         }
         else {
@@ -1321,12 +1321,12 @@ char* node_type(ASTNode *node) {
     }
     buffer = malloc(sizeof(".BOOLEAN") + 1); /* Make it long enough for the longest option */
     switch (type) {
-        case TP_BOOLEAN: strcpy(buffer, ".BOOLEAN"); break;
-        case TP_INTEGER: strcpy(buffer, ".INT"); break;
-        case TP_FLOAT:   strcpy(buffer, ".FLOAT"); break;
-        case TP_STRING:  strcpy(buffer, ".STRING"); break;
-        case TP_OBJECT:  strcpy(buffer, ".OBJECT"); break;
-        default:         strcpy(buffer, ".VOID");
+        case TP_BOOLEAN: strcpy(buffer, ".boolean"); break;
+        case TP_INTEGER: strcpy(buffer, ".int"); break;
+        case TP_FLOAT:   strcpy(buffer, ".float"); break;
+        case TP_STRING:  strcpy(buffer, ".string"); break;
+        case TP_OBJECT:  strcpy(buffer, ".object"); break;
+        default:         strcpy(buffer, ".void");
     }
     return buffer;
 }
@@ -1353,9 +1353,7 @@ static walker_result emit_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) {
-            payload->current_scope = node->scope;
-        }
+        payload->context->current_scope = node->scope;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -1375,16 +1373,18 @@ static walker_result emit_walker(walker_direction direction,
             {
                 char *buf = printf_malloc( "/*\n"
                                          " * cREXX COMPILER VERSION : %s\n"
-                                         " * SOURCE                 : %.*s\n"
+                                         " * SOURCE                 : %s\n"
+                                         " * NAMESPACE              : %.*s\n"
                                          " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                          " */\n"
                                          "\n"
                                          ".srcfile=\"%.*s\"\n"
                                          ".globals=0\n",
                          rxversion,
-                                    (int)node->node_string_length, node->node_string,
+                         payload->context->file_name,
+                         (int)node->node_string_length, node->node_string,
                          tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
-                                    (int)node->node_string_length, node->node_string);
+                         (int)node->node_string_length, node->node_string);
 
                 node->output = output_fs(buf);
                 free(buf);
@@ -1406,12 +1406,11 @@ static walker_result emit_walker(walker_direction direction,
                     char* source = clean_print_node(child2);
                     char* coded = encode_print_malloc(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = printf_malloc("\n%.*s() .expose=%.*s.%.*s\n"
-                                              "   .meta \"%s\"=\"B\" \"%s\" %.*s() \"%s\"\n",
+                    char* buf = printf_malloc("\n%.*s() .expose=%s\n"
+                                              "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
                                 (int)node->node_string_length, node->node_string,
-                                (int)node->node_string_length, node->node_string,
-                                (int)node->node_string_length, node->node_string,
-                                proc_symbol, /* Symbol Name */
+                                proc_symbol, /* FQ Symbol Name */
+                                proc_symbol, /* FQ Symbol Name */
                                 type, /* Type */
                                 (int)node->node_string_length, node->node_string, /* Func Name */
                                 coded /* Args */
@@ -1429,13 +1428,12 @@ static walker_result emit_walker(walker_direction direction,
                     char* source = clean_print_node(child2);
                     char* coded = encode_print_malloc(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = printf_malloc( "\n%.*s() .locals=%d .expose=%.*s.%.*s\n"
-                                       "   .meta \"%s\"=\"B\" \"%s\" %.*s() \"%s\" \"\"\n",
+                    char* buf = printf_malloc( "\n%.*s() .locals=%d .expose=%s\n"
+                                               "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
                              (int)node->node_string_length, node->node_string, /* Function name */
                              (int)node->scope->num_registers, /* Locals */
-                             (int)node->parent->node_string_length, node->parent->node_string, /* name space */
-                             (int)node->node_string_length, node->node_string, /* Function name */
-                             proc_symbol, /* Symbol Name */
+                             proc_symbol, /* FQ Symbol name */
+                             proc_symbol, /* FQ Symbol Name */
                              type, /* Return Type */
                              (int)node->node_string_length, node->node_string, /* Function name */
                              coded /* Args */);
@@ -2779,7 +2777,7 @@ static walker_result emit_walker(walker_direction direction,
             default:;
         }
 
-        if (node->scope) payload->current_scope = payload->current_scope->parent;
+        payload->context->current_scope = node->scope;
     }
 
     return result_normal;
@@ -2788,11 +2786,13 @@ static walker_result emit_walker(walker_direction direction,
 void emit(Context *context, FILE *output) {
     walker_payload payload;
 
-    payload.current_scope = 0;
+    payload.context = context;
+
+    payload.context->current_scope = 0;
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
     payload.file = output;
-    payload.current_scope = 0;
+    payload.context->current_scope = 0;
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
 }
 

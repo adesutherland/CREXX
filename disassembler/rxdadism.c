@@ -224,7 +224,7 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
         switch ( ((chameleon_constant*)(module->constant + m))->type ) {
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".INT" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 if (mentry->func == func) {
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -350,7 +350,7 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             break;
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".INT" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
 
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 if (mentry->base.address == address) {
@@ -389,7 +389,7 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             break;
 
             case META_REG: {
-                /* META clear symbol - .meta "PROC:I"="B" ".INT" a1 */
+                /* META clear symbol - .meta "PROC:I"="B" ".int" a1 */
                 meta_reg_constant *mentry = ((meta_reg_constant *) (module->constant + m));
                 if (mentry->base.address == address) {
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
@@ -463,7 +463,7 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             break;
 
             case META_FUNC: {
-                /* META function symbol - .meta "MAIN"="B" ".INT" main() "" "" */
+                /* META function symbol - .meta "MAIN"="B" ".int" main() "" "" */
 
                 meta_func_constant *mentry = ((meta_func_constant *) (module->constant + m));
                 if (mentry->base.address == address) {
@@ -504,7 +504,7 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             break;
 
             case META_REG: {
-                /* META clear symbol - .meta "PROC:I"="B" ".INT" a1 */
+                /* META clear symbol - .meta "PROC:I"="B" ".int" a1 */
                 meta_reg_constant *mentry = ((meta_reg_constant *) (module->constant + m));
                 if (mentry->base.address == address) {
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);

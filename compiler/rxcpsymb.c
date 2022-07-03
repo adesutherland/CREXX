@@ -75,7 +75,7 @@ Scope *scp_f(Scope *parent, ASTNode *node) {
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
-    scope->num_registers = 1; /* r0 is always available as a temp register */
+    scope->num_registers = 1; /* r0 is always available as a temp register - todo get rid of this! */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();
     if (scope->parent) dpa_add((dpa*)(parent->child_array), scope);
@@ -96,9 +96,10 @@ void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     }
 }
 
-/* Frees scope and all its symbols */
+/* Frees scope and all its symbols and sub-scopes */
 void scp_free(Scope *scope) {
     struct symbol_wrapper *i;
+    size_t j;
 
     if (scope->symbols_tree) {
         /* This walks the tree in post order which allows each node be freed */
@@ -110,9 +111,28 @@ void scp_free(Scope *scope) {
         }
         scope->symbols_tree = 0; /* Pedantic ... */
     }
+
+    /* Free sub-scopes */
+    for (j=0; j < ((dpa*)(scope->child_array))->size; j++) {
+        scp_free( ((dpa*)(scope->child_array))->pointers[j] );
+    }
+
     free_dpa(scope->child_array);
     free_dpa(scope->free_registers_array);
     free(scope);
+}
+
+/* Set the temp_flag for the scope and all its sub-scopes */
+void scp_stmp(Scope *scope, size_t temp_flag) {
+    size_t j;
+
+    /* Set the temp_flag for this scope */
+    scope->temp_flag = temp_flag;
+
+    /* Set the temp_flag for child sub-scopes */
+    for (j = 0; j < ((dpa *) (scope->child_array))->size; j++) {
+        scp_stmp(((dpa *) (scope->child_array))->pointers[j], temp_flag);
+    }
 }
 
 /* Get a free register from scope */
@@ -245,14 +265,27 @@ void ret_regs(Scope *scope, int reg, size_t number) {
 }
 */
 
+/* Returns string name of a Value type */
 char* type_nm(ValueType type) {
     switch (type) {
-        case TP_BOOLEAN: return ".BOOLEAN";
-        case TP_INTEGER: return ".INT";
-        case TP_FLOAT: return ".FLOAT";
-        case TP_STRING: return ".STRING";
-        case TP_OBJECT: return ".OBJECT";
-        default: return ".VOID";
+        case TP_BOOLEAN: return ".boolean";
+        case TP_INTEGER: return ".int";
+        case TP_FLOAT: return ".float";
+        case TP_STRING: return ".string";
+        case TP_OBJECT: return ".object";
+        default: return ".void";
+    }
+}
+
+/* Returns string name of a SymbolValue type */
+char* stype_nm(SymbolType type) {
+    switch (type) {
+        case CONSTANT_SYMBOL: return "Constant";
+        case VARIABLE_SYMBOL: return "Variable";
+        case FUNCTION_SYMBOL: return "Function";
+        case CLASS_SYMBOL: return "Class";
+        case NAMESPACE_SYMBOL: return "Namespace";
+        default: return "UnknownSymbolType";
     }
 }
 
@@ -264,39 +297,44 @@ size_t scp_noch(Scope *scope) {
     return ((dpa*)(scope->child_array))->size;
 }
 
-/* Symbol Factory - define a symbol */
+/* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_f(Scope *scope, ASTNode *node) {
+Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
     symbol->scope = scope;
     symbol->type = TP_UNKNOWN;
     symbol->register_num = -1;
-    symbol->name = (char*)malloc(node->node_string_length + 1);
-    memcpy(symbol->name, node->node_string, node->node_string_length);
+    symbol->name = (char*)malloc(name_length + 1);
+    memcpy(symbol->name, name, name_length);
     symbol->name[node->node_string_length] = 0;
     symbol->register_type = 'r';
-    symbol->is_constant = 0;
-    symbol->is_function = 0;
+    symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
-    for (c = symbol->name ; *c; ++c) *c = (char)toupper(*c);
+    for (c = symbol->name ; *c; ++c) *c = (char)tolower(*c);
 #else
-    utf8upr(symbol->name);
+    utf8lwr(symbol->name);
 #endif
     symbol->ast_node_array = dpa_f();
 
     /* Returns 1 on duplicate */
     if (add_symbol_to_tree((struct avl_tree_node **)&(scope->symbols_tree),
-            symbol)) {
+                           symbol)) {
         symbol_free(symbol);
         return NULL;
     }
 
     return symbol;
+}
+
+/* Symbol Factory - define a symbol */
+/* Returns NULL if the symbol is a duplicate */
+Symbol *sym_f(Scope *scope, ASTNode *node) {
+    return sym_fn(scope, node, node->node_string, node->node_string_length);
 }
 
 /* Resolve a Symbol - including parent scope */
@@ -310,9 +348,9 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
 
     /* Uppercase symbol name */
 #ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)toupper(*c);
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
 #else
-    utf8upr(name);
+    utf8lwr(name);
 #endif
 
     /* Look for the symbol - looking up in each parent scope */
@@ -339,9 +377,9 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
 
     /* Uppercase symbol name */
 #ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)toupper(*c);
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
 #else
-    utf8upr(name);
+    utf8lwr(name);
 #endif
 
     result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
@@ -407,7 +445,7 @@ static void prepend_scope(char* buffer, const char* scope)
     size_t len = strlen(scope);
     memmove(buffer + len + 1, buffer, strlen(buffer) + 1);
     memcpy(buffer, scope, len);
-    buffer[len] = ':';
+    buffer[len] = '.';
 }
 
 /* Returns the fully resolved symbol name in a malloced buffer */
@@ -436,6 +474,5 @@ char* sym_frnm(Symbol *symbol) {
         }
         s = s->parent;
     }
-
     return result;
 }

@@ -84,11 +84,11 @@ int main(int argc, char *argv[]) {
         if (strlen(argv[i]) > 2) {
             error_and_exit(2, "Invalid argument");
         }
-        switch (toupper((argv[i][1]))) {
+        switch (tolower((argv[i][1]))) {
             case '-':
                 break;
 
-            case 'O': /* Output File */
+            case 'o': /* Output File */
                 i++;
                 if (i >= argc) {
                     error_and_exit(2, "Missing output file after -o");
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
                 output_file_name = argv[i];
                 break;
 
-            case 'L': /* Working Location / Directory */
+            case 'l': /* Working Location / Directory */
                 i++;
                 if (i >= argc) {
                     error_and_exit(2, "Missing location after -l");
@@ -104,20 +104,20 @@ int main(int argc, char *argv[]) {
                 location = argv[i];
                 break;
 
-            case 'V': /* Version */
+            case 'v': /* Version */
                 printf("%s\n", rxversion);
                 exit(0);
 
-            case 'H': /* Help */
+            case 'h': /* Help */
             case '?':
                 help();
                 exit(0);
 
-            case 'C': /* License */
+            case 'c': /* License */
                 license();
                 exit(0);
 
-            case 'P': /* constant Pool */
+            case 'p': /* constant Pool */
                 print_all_constant_pool = 1;
                 break;
 
