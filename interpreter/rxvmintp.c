@@ -537,7 +537,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     switch ( ((meta_entry *)(pool+i))->base.type ) {
                         case META_SRC:
                             /* TODO we are using the string to hold the object type - final approach tbc */
-                            set_null_string(op1R->attributes[j],".META_SRC");
+                            set_null_string(op1R->attributes[j],".meta_src");
                             set_num_attributes(op1R->attributes[j],3);
                             op1R->attributes[j]->attributes[0]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->line;
                             op1R->attributes[j]->attributes[1]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->column;
@@ -545,13 +545,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
                             break;
                         case META_FILE:
-                            set_null_string(op1R->attributes[j],".META_FILE");
+                            set_null_string(op1R->attributes[j],".meta_file");
                             set_num_attributes(op1R->attributes[j],1);
                             x = (rxinteger)((meta_file_constant *)(pool+i))->file;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
                             break;
                         case META_FUNC:
-                            set_null_string(op1R->attributes[j],".META_FUNC");
+                            set_null_string(op1R->attributes[j],".meta_func");
                             set_num_attributes(op1R->attributes[j],6);
                             x = (rxinteger)((meta_func_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -566,7 +566,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[5], (string_constant *)(pool + x));
                             break;
                         case META_REG:
-                            set_null_string(op1R->attributes[j],".META_REG");
+                            set_null_string(op1R->attributes[j],".meta_reg");
                             set_num_attributes(op1R->attributes[j],4);
                             x = (rxinteger)((meta_reg_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -577,7 +577,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             op1R->attributes[j]->attributes[3]->int_value = (rxinteger)((meta_reg_constant *)(pool+i))->reg;
                             break;
                         case META_CONST:
-                            set_null_string(op1R->attributes[j],".META_CONST");
+                            set_null_string(op1R->attributes[j],".meta_const");
                             set_num_attributes(op1R->attributes[j],4);
                             x = (rxinteger)((meta_const_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -589,7 +589,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[3], (string_constant *)(pool + x));
                             break;
                         case META_CLEAR:
-                            set_null_string(op1R->attributes[j],".META_CLEAR");
+                            set_null_string(op1R->attributes[j],".meta_clear");
                             set_num_attributes(op1R->attributes[j],1);
                             x = (rxinteger)((meta_clear_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));

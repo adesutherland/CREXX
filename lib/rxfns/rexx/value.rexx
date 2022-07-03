@@ -12,7 +12,7 @@ value: procedure = .string
   ires = 0
   fres = 0.0
   sres = ""
-  reg = upper(input)
+  reg = lower(input)
   symbol = ""
   type = ""
   module = 0
@@ -33,16 +33,16 @@ value: procedure = .string
      assembler metaloaddata meta_array,module,a
      do i = 1 to meta_array
         assembler linkattr meta_entry,meta_array,i
-        if meta_entry = ".META_CLEAR" then do /* Object type */
+        if meta_entry = ".meta_clear" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+           if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
               leave a
            end
         end
 
-        else if meta_entry = ".META_CONST" then do /* Object type */
+        else if meta_entry = ".meta_const" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+           if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
              assembler linkattr type,meta_entry,3
              assembler linkattr v,meta_entry,4
              result = v
@@ -50,20 +50,20 @@ value: procedure = .string
            end
         end
 
-        else if meta_entry = ".META_REG" then do /* Object type */
+        else if meta_entry = ".meta_reg" then do /* Object type */
            assembler linkattr symbol,meta_entry,1
-           if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+           if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
               assembler linkattr type,meta_entry,3
               assembler linkattr r_num,meta_entry,4
 
-              if type = ".INT" then do
+              if type = ".int" then do
                  assembler metalinkpreg ires,r_num       /* Link parent-frame-register */
                  ires_copy = ires /* Don't want to alter ires with any side effects */
                  assembler unlink ires
                  result = ires_copy
               end
 
-              else if type = ".FLOAT" then do
+              else if type = ".float" then do
                  assembler metalinkpreg fres,r_num       /* Link parent-frame-register */
                  fres_copy = fres
                  assembler unlink fres
@@ -80,9 +80,12 @@ value: procedure = .string
         end
      end
    end
-  if result = "" then result = reg
+  if result = "" then result = upper(input)
 
   return result
+
+lower: procedure = .string
+  arg expose string = .string
 
 upper: procedure = .string
   arg expose string = .string

@@ -176,7 +176,7 @@ stephandler: procedure = .int
 
       else do
         /* REXX Variable Print */
-        reg = upper(reg)
+        reg = lower(reg)
         symbol = ""
         type = ""
         meta_array = 0
@@ -190,16 +190,16 @@ stephandler: procedure = .int
           do i = 1 to meta_array
             assembler linkattr meta_entry,meta_array,i
 
-            if meta_entry = ".META_CLEAR" then do /* Object type */
+            if meta_entry = ".meta_clear" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 leave a
               end
             end
 
-            else if meta_entry = ".META_CONST" then do /* Object type */
+            else if meta_entry = ".meta_const" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 assembler linkattr type,meta_entry,3
                 assembler linkattr v,meta_entry,4
                 value = "(CONSTANT" type")" v
@@ -207,24 +207,24 @@ stephandler: procedure = .int
               end
             end
 
-            else if meta_entry = ".META_REG" then do /* Object type */
+            else if meta_entry = ".meta_reg" then do /* Object type */
               assembler linkattr symbol,meta_entry,1
-              if pos(":"reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
                 assembler linkattr type,meta_entry,3
                 assembler linkattr r_num,meta_entry,4
 
-                if type = ".INT" then do
+                if type = ".int" then do
                   assembler metalinkpreg ires,r_num       /* Link parent-frame-register */
                   ires_copy = ires /* Don't want to alter ires with any side effects */
                   assembler unlink ires
-                  value = "(r"r_num ".INT)" ires_copy
+                  value = "(r"r_num ".int)" ires_copy
                 end
 
-                else if type = ".FLOAT" then do
+                else if type = ".float" then do
                   assembler metalinkpreg fres,r_num       /* Link parent-frame-register */
                   fres_copy = fres
                   assembler unlink fres
-                  value = "(r"r_num ".FLOAT)" fres_copy
+                  value = "(r"r_num ".float)" fres_copy
                 end
 
                 else do
@@ -308,7 +308,7 @@ next_rexx: procedure = .int
   assembler metaloaddata meta_array,module,address
   do i = 1 to meta_array
     assembler linkattr meta_entry,meta_array,i
-    if meta_entry = ".META_SRC" then do /* Object type */
+    if meta_entry = ".meta_src" then do /* Object type */
       rc = 1; /* We are at the start of a clause */
       assembler linkattr line,meta_entry,1
       assembler linkattr column,meta_entry,2
@@ -612,7 +612,6 @@ insert: procedure = .string
 linesize: procedure = .int
   arg expose string1 = .string
 
-/* upper(string) translate to upper cases */
 lower: procedure = .string
   arg expose string = .string
 
@@ -671,7 +670,6 @@ translate: procedure = .string
 trunc: procedure = .string
        arg innum = .string, fraction = 0
 
-/* upper(string) translate to upper cases */
 upper: procedure = .string
   arg expose string = .string
 

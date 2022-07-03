@@ -568,6 +568,8 @@ const char *ast_ndtp(NodeType type) {
             return "LABEL";
         case LEAVE:
             return "LEAVE";
+        case LITERAL:
+            return "LITERAL";
         case FLOAT:
             return "FLOAT";
         case INTEGER:
@@ -904,7 +906,6 @@ void free_ast(Context *context) {
     while (t) {
         n = t->free_list;
         if (t->free_node_string) free(t->node_string);
-        if (t->scope) scp_free(t->scope);
         if (t->output) f_output(t->output);
         if (t->loopstartchecks) f_output(t->loopstartchecks);
         if (t->loopinc) f_output(t->loopinc);
@@ -971,29 +972,45 @@ void prt_unex(FILE* output, const char *ptr, int len) {
 /* Prints to dot file one symbol */
 void pdot_scope(Symbol *symbol, void *payload) {
     char reg[20];
+    char *name;
+
     if (symbol->register_num >= 0)
         sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
     else
         reg[0] = 0;
 
-    if (symbol->is_function) {
-        fprintf((FILE*)payload,
-                "s%d_%s[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
-                symbol->scope->defining_node->node_number,
-                symbol->name,
-                symbol->name,
-                type_nm(symbol->type),
-                reg);
+    name = sym_frnm(symbol);
+
+    switch (symbol->symbol_type) {
+        case CLASS_SYMBOL:
+        case NAMESPACE_SYMBOL:
+            fprintf((FILE *) payload,
+                    "\"s%d_%s\"[style=filled fillcolor=green shape=box label=\"%s\"]\n",
+                    symbol->scope->defining_node->node_number,
+                    symbol->name,
+                    name);
+            break;
+
+        case FUNCTION_SYMBOL:
+            fprintf((FILE *) payload,
+                    "\"s%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    symbol->scope->defining_node->node_number,
+                    symbol->name,
+                    name,
+                    type_nm(symbol->type),
+                    reg);
+            break;
+        default:
+            fprintf((FILE *) payload,
+                    "\"s%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    symbol->scope->defining_node->node_number,
+                    symbol->name,
+                    name,
+                    type_nm(symbol->type),
+                    reg);
     }
-    else {
-        fprintf((FILE*)payload,
-                "s%d_%s[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
-                symbol->scope->defining_node->node_number,
-                symbol->name,
-                symbol->name,
-                type_nm(symbol->type),
-                reg);
-    }
+
+    free(name);
 }
 
 /* Works out the which child index a child has */
@@ -1130,6 +1147,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case VAR_TARGET:
             case VAR_REFERENCE:
             case CONST_SYMBOL:
+            case LITERAL:
                 attributes = "color=cyan3 shape=cds";
 //                only_label = 1;
                 break;
@@ -1223,25 +1241,25 @@ walker_result pdot_walker_handler(walker_direction direction,
         /* Link to Symbol */
         if (node->symbolNode) {
             if (node->symbolNode->writeUsage && node->symbolNode->readUsage) {
-                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"both\"]\n",
+                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"both\"]\n",
                         node->node_number,
                         node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else if (node->symbolNode->writeUsage) {
-                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"forward\"]\n",
+                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"forward\"]\n",
                         node->node_number,
                         node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else if (node->symbolNode->readUsage) {
-                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"back\"]\n",
+                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"back\"]\n",
                         node->node_number,
                         node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else {
-                fprintf(output,"n%d -> s%d_%s [color=cyan dir=\"none\"]\n",
+                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"none\"]\n",
                         node->node_number,
                         node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
@@ -1253,7 +1271,17 @@ walker_result pdot_walker_handler(walker_direction direction,
         /* OUT - Bottom Up */
         /* Scope == DOT Subgraph */
         if (node->scope) {
-            scp_4all(node->scope, pdot_scope, output);
+            if (node->node_type == PROGRAM_FILE) {
+                /* Print the top top level namespace scope */
+                if (node->scope->parent && !node->scope->parent->temp_flag) {
+                    scp_4all(node->scope->parent, pdot_scope, output);
+                    node->scope->parent->temp_flag = 1;
+                }
+            }
+            if (!node->scope->temp_flag) {
+                scp_4all(node->scope, pdot_scope, output);
+                node->scope->temp_flag = 1;
+            }
             fprintf(output, "}\n");
         }
     }
@@ -1263,6 +1291,12 @@ walker_result pdot_walker_handler(walker_direction direction,
 
 void pdot_tree(ASTNode *tree, char* output_file) {
     FILE *output;
+
+    /* Clear the temp_flag for all the scopes - we use this flag to stop repeat printing scope symbols */
+    if (tree->scope) {
+        if (tree->scope->parent) scp_stmp(tree->scope->parent, 0);
+        else scp_stmp(tree->scope, 0);
+    }
 
     if (output_file) output = fopen(output_file, "w");
     else output = stdout;
