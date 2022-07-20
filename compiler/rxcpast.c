@@ -118,6 +118,9 @@ void free_tok(Context *context) {
         free(t);
         t = n;
     }
+    context->token_head = 0;
+    context->token_tail = 0;
+    context->token_counter = 0;
 }
 
 /* ASTNode Factory - With node type*/
@@ -560,6 +563,8 @@ const char *ast_ndtp(NodeType type) {
             return "IF";
         case IMPORT:
             return "IMPORT";
+        case IMPORTED_FILE:
+            return "IMPORTED_FILE";
         case INSTRUCTIONS:
             return "INSTRUCTIONS";
         case ITERATE:
@@ -652,6 +657,8 @@ const char *ast_ndtp(NodeType type) {
             return "RETURN";
         case REXX_OPTIONS:
             return "REXX_OPTIONS";
+        case REXX_UNIVERSE:
+            return "REXX_UNIVERSE";
         case SAY:
             return "SAY";
         case SIGN:
@@ -913,6 +920,8 @@ void free_ast(Context *context) {
         free(t);
         t = n;
     }
+    context->ast = 0;
+    context->free_list = 0;
 }
 
 void prt_unex(FILE* output, const char *ptr, int len) {
@@ -1051,7 +1060,9 @@ walker_result pdot_walker_handler(walker_direction direction,
         switch (node->node_type) {
 
             /* Groupings */
+            case REXX_UNIVERSE:
             case PROGRAM_FILE:
+            case IMPORTED_FILE:
             case INSTRUCTIONS:
             case DO:
             case BY:
@@ -1271,13 +1282,6 @@ walker_result pdot_walker_handler(walker_direction direction,
         /* OUT - Bottom Up */
         /* Scope == DOT Subgraph */
         if (node->scope) {
-            if (node->node_type == PROGRAM_FILE) {
-                /* Print the top top level namespace scope */
-                if (node->scope->parent && !node->scope->parent->temp_flag) {
-                    scp_4all(node->scope->parent, pdot_scope, output);
-                    node->scope->parent->temp_flag = 1;
-                }
-            }
             if (!node->scope->temp_flag) {
                 scp_4all(node->scope, pdot_scope, output);
                 node->scope->temp_flag = 1;
@@ -1294,8 +1298,7 @@ void pdot_tree(ASTNode *tree, char* output_file) {
 
     /* Clear the temp_flag for all the scopes - we use this flag to stop repeat printing scope symbols */
     if (tree->scope) {
-        if (tree->scope->parent) scp_stmp(tree->scope->parent, 0);
-        else scp_stmp(tree->scope, 0);
+        scp_stmp(tree->scope, 0);
     }
 
     if (output_file) output = fopen(output_file, "w");

@@ -7,6 +7,8 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxvminst.h"
+#include "rxcpdary.h"
 
 static void help() {
     char* helpMessage =
@@ -62,13 +64,13 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
-const char *get_filename_ext(const char *filename) {
+static const char *get_filename_ext(const char *filename) {
     const char *dot = strrchr(filename, '.');
     if(!dot || dot == filename) return "";
     return dot + 1;
 }
 
-const char *get_filename(const char *path)
+static const char *get_filename(const char *path)
 {
     size_t len = strlen(path);
     size_t i;
@@ -85,12 +87,73 @@ const char *get_filename(const char *path)
     return path;
 }
 
+/* Context Factory */
+Context *cntx_f() {
+    Context *context;
+    context = calloc(1, sizeof(Context)); /* Zero Contents */
+
+    context->level = UNKNOWN;
+    context->hashcomments = 1; /* This is the recommended & default line comment style */
+
+    return context;
+}
+
+/* Set Context Buffer */
+void cntx_buf(Context *context, char* buff_start, size_t bytes) {
+    size_t i;
+    context->buff_start = buff_start;
+    context->buff_end = context->buff_start + bytes;
+    context->top = context->buff_start;
+    context->cursor = context->buff_start;
+    context->linestart = context->buff_start;
+    context->prev_linestart = context->buff_start;
+    context->line = 0;
+    context->namespace = 0;
+    context->current_scope = 0;
+    if (context->importable_function_array) {
+        /* Deallocate importable_function_array */
+        for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
+            freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
+        }
+        free_dpa(context->importable_function_array);
+        context->importable_function_array  = 0;
+    }
+    context->importable_function_array = dpa_f();
+}
+
+/* Free Context */
+void fre_cntx(Context *context)  {
+    size_t i;
+    if (context->file_pointer) fclose(context->file_pointer);
+    if (context->traceFile) fclose(context->traceFile);
+
+    /* Deallocate Scope and Symbols */
+    if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
+
+    /* Deallocate AST */
+    free_ast(context);
+
+    /* Deallocate importable_function_array */
+    for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
+        freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
+    }
+    free_dpa(context->importable_function_array);
+    context->importable_function_array  = 0;
+
+    /* Deallocate Tokens */
+    free_tok(context);
+
+    free(context->buff_start);
+
+    free(context);
+}
+
 int main(int argc, char *argv[]) {
 
-    FILE *fp, *traceFile = 0, *outFile = 0;
-    char *buff;
+    FILE *outFile = 0;
     size_t bytes;
-    Context context;
+    char* buff_start;
+    Context *context;
     int errors = 0;
     int i;
     char *output_file_name = 0;
@@ -163,15 +226,19 @@ int main(int argc, char *argv[]) {
 
     if (!output_file_name) output_file_name = file_name;
 
+    /* Context Structure */
+    context = cntx_f();
+
     /* Open input file */
     const char* filename_extension = get_filename_ext(file_name);
     if (filename_extension[0] == 0)
-      { fp = openfile(file_name,"rexx", location, "r");
+      {
+        context->file_pointer = openfile(file_name,"rexx", location, "r");
       }
     else {
-      fp = openfile(file_name,"", location, "r");
+        context->file_pointer = openfile(file_name,"", location, "r");
     }
-    if (fp == NULL) {
+    if (context->file_pointer == NULL) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
         exit(-1);
     }
@@ -179,70 +246,41 @@ int main(int argc, char *argv[]) {
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
-        traceFile = openfile(file_name, "trace", location, "w");
-        if (traceFile == NULL) {
+        context->traceFile = openfile(file_name, "trace", location, "w");
+        if (context->traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
             exit(-1);
         }
     }
 #endif
 
-    buff = file2buf(fp);
+    buff_start = file2buf(context->file_pointer, &bytes);
     /* Close file */
-    fclose(fp);
+    fclose(context->file_pointer);
+    context->file_pointer = 0;
 
-    if(buff == NULL) {
+    if(buff_start == NULL) {
         fprintf(stderr, "Can't read input file\n");
         exit(-1);
     }
-    bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize context */
-    context.file_name = (char*)get_filename(file_name);
-    context.traceFile = traceFile;
-    context.top = buff;
-    context.cursor = buff;
-    context.linestart = buff;
-    context.prev_linestart = buff;
-    context.line = 0;
-    context.token_head = 0;
-    context.token_tail = 0;
-    context.token_counter = 0;
-    context.ast = 0;
-    context.free_list = 0;
-    context.namespace = 0;
-    context.current_scope = 0;
-    /* Source Options */
-    context.processedComments = 0;
-    context.level = UNKNOWN;
-    context.hashcomments = 1; /* This is the recommended & default line comment style */
-    context.dashcomments = 0;
-    context.slashcomments = 0;
-
-    context.optimise = do_optimise;
-    context.buff_end = (char*) (((char*)buff) + bytes);
-    context.buff_start = buff;
+    cntx_buf(context, buff_start, bytes);
+    context->debug_mode = debug_mode;
+    context->optimise = do_optimise;
+    context->location = location;
+    context->file_name = (char*)get_filename(file_name);
 
     /* Create Options parser to work out required language level */
-    opt_pars(&context);
+    opt_pars(context);
 
     /* Deallocate memory and reset context */
-    free_tok(&context);
-    context.top = buff;
-    context.cursor = buff;
-    context.linestart = buff;
-    context.prev_linestart = buff;
-    context.line = 0;
-    context.token_head = 0;
-    context.token_tail = 0;
-    context.token_counter = 0;
-    context.ast = 0;
-    context.free_list = 0;
-    context.namespace = 0;
-    context.current_scope = 0;
+    free_ast(context);
+    free_tok(context);
+    cntx_buf(context, buff_start, bytes);
 
     /* Parse program for real */
-    switch (context.level){
+    switch (context->level){
         case LEVELA:
         case LEVELC:
         case LEVELD:
@@ -250,10 +288,13 @@ int main(int argc, char *argv[]) {
             break;
 
         case LEVELB:
+            /* We need the assembler db for ASSEMBLE */
+            init_ops();
+
         case LEVELG:
         case LEVELL:
             if (debug_mode) printf("REXX Level B/G/L (cREXX)\n");
-            rexbpars(&context);
+            rexbpars(context);
             break;
 
         default:
@@ -261,54 +302,52 @@ int main(int argc, char *argv[]) {
     }
 
 
-    if (!context.ast) {
+    if (!context->ast) {
         fprintf(stderr,"INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context.ast, "astgraph0.dot");
+        pdot_tree(context->ast, "astgraph0.dot");
         /* Get dot from https://graphviz.org/download/ */
         system("dot astgraph0.dot -Tpng -o astgraph0.png");
     }
 #endif
 
-    errors = prnterrs(&context);
+    errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
         goto finish;
     }
 
-    if (debug_mode)
-        printf("Validating AST Tree\n");
-    validate(&context);
+    if (debug_mode) printf("Validating AST Tree\n");
+    validate(context);
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context.ast, "astgraph1.dot");
+        pdot_tree(context->ast, "astgraph1.dot");
         system("dot astgraph1.dot -Tpng -o astgraph1.png");
     }
 #endif
-    errors = prnterrs(&context);
+    errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
         goto finish;
     }
 
     /* Optimise AST Tree */
-    if (context.optimise) {
-        if (debug_mode)
-            printf("Optimising AST Tree\n");
-        optimise(&context);
+    if (context->optimise) {
+        if (debug_mode) printf("Optimising AST Tree\n");
+        optimise(context);
 #ifndef __CMS__
         if (debug_mode) {
-            pdot_tree(context.ast, "astgraph2.dot");
+            pdot_tree(context->ast, "astgraph2.dot");
             system("dot astgraph2.dot -Tpng -o astgraph2.png");
         }
 #endif
     }
 
-    errors = prnterrs(&context);
+    errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
         goto finish;
@@ -320,13 +359,12 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Can't open output file %s\n", output_file_name);
         exit(-1);
     }
-    if (debug_mode)
-        printf("Generating Assembler file %s\n", output_file_name);
-    emit(&context, outFile);
+    if (debug_mode) printf("Generating Assembler file %s\n", output_file_name);
+    emit(context, outFile);
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context.ast, "astgraph3.dot");
+        pdot_tree(context->ast, "astgraph3.dot");
         system("dot astgraph3.dot -Tpng -o astgraph3.png");
     }
 #endif
@@ -334,21 +372,11 @@ int main(int argc, char *argv[]) {
 
     finish:
 
-    /* Deallocate Scope and Symbols */
-    scp_free(context.ast->scope->parent);
-
-    /* Deallocate AST */
-    free_ast(&context);
-
-    /* Deallocate Tokens */
-    free_tok(&context);
-
-    /* Close files and deallocate */
+    /* Close outfile */
     if (outFile) fclose(outFile);
-#ifndef NDEBUG
-    if (traceFile) fclose(traceFile);
-#endif
-    free(buff);
+
+    /* Free context */
+    fre_cntx(context);
 
     if (errors) return(1);
     else return(0);

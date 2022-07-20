@@ -75,7 +75,7 @@ Scope *scp_f(Scope *parent, ASTNode *node) {
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
-    scope->num_registers = 1; /* r0 is always available as a temp register - todo get rid of this! */
+    scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();
     if (scope->parent) dpa_add((dpa*)(parent->child_array), scope);
@@ -459,7 +459,7 @@ char* sym_frnm(Symbol *symbol) {
     s = symbol->scope;
     while (s) {
         if (s->name) {
-            len += strlen(s->name) + 1; /* +1 for the ":" */
+            len += strlen(s->name) + 1; /* +1 for the "." */
         }
         s = s->parent;
     }
@@ -476,3 +476,63 @@ char* sym_frnm(Symbol *symbol) {
     }
     return result;
 }
+
+/* Returns the fully resolved scope name in a malloced buffer */
+char* scp_frnm(Scope *scope) {
+    Scope *s;
+    size_t len;
+    char *result;
+
+    /* Calculate buffer len */
+    len = strlen(scope->name) + 1; /* +1 for null */
+    s = scope->parent;
+    while (s) {
+        if (s->name) {
+            len += strlen(s->name) + 1; /* +1 for the "." */
+        }
+        s = s->parent;
+    }
+    result = malloc(len);
+
+    /* Create name */
+    strcpy(result, scope->name);
+    s = scope->parent;
+    while (s) {
+        if (s->name) {
+            prepend_scope(result, s->name);
+        }
+        s = s->parent;
+    }
+    return result;
+}
+
+/* Returns the fully resolved node name in a malloced buffer */
+char* ast_frnm(ASTNode *node) {
+    Scope *s;
+    size_t len;
+    char *result;
+
+    /* Calculate buffer len */
+    len = node->node_string_length + 1; /* +1 for null */
+    s = node->scope;
+    while (s) {
+        if (s->name) {
+            len += strlen(s->name) + 1; /* +1 for the "." */
+        }
+        s = s->parent;
+    }
+    result = malloc(len);
+
+    /* Create name */
+    memcpy(result, node->node_string, node->node_string_length);
+    result[node->node_string_length] = 0;
+    s = node->scope;
+    while (s) {
+        if (s->name) {
+            prepend_scope(result, s->name);
+        }
+        s = s->parent;
+    }
+    return result;
+}
+
