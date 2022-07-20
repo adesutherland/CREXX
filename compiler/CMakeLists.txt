@@ -39,7 +39,7 @@ add_executable(rxc
         rxcpbval.c rxcpsymb.c
         rxcpdary.h rxcpemit.c rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h)
+        ../utf8/utf.h rxcpfunc.c)
 
 add_dependencies(rxc re2c lemon machine avl_tree platform)
 

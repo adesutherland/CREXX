@@ -25,7 +25,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
  * - Sets the token and source start / finish position for each node
  * - Fixes SCONCAT to CONCAT
  * - Removes excess NOPs
- * - Process and Prune OPTIONS
+ * - Process OPTIONS
  * - Validate REPEAT BY/FOR/DO
  * - Validate ASSEMBLER instructions
  */
@@ -418,10 +418,12 @@ static walker_result step2a_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->node_type == PROGRAM_FILE) {
-            /* This top level scope will contain the namespace symbols and the project file scope - next */
+        if (node->node_type == REXX_UNIVERSE) {
+            /* This top level scope will contain the project file scope & imported file scopes */
             context->current_scope = scp_f(context->current_scope, node);
+        }
 
+        else if (node->node_type == PROGRAM_FILE) {
             /* Now create the namespace symbol and scope */
             /* Make the new symbol */
             symbol = sym_f(context->current_scope, node);
@@ -466,7 +468,7 @@ static walker_result step2a_walker(walker_direction direction,
 
         else if (node->node_type == IMPORT) {
             /* Get the toplevel scope that contains all the namespaces */
-            Scope* namespaces = context->ast->scope->parent;
+            Scope* namespaces = context->ast->scope;
             Scope* imported_namespace;
 
             /* Now create the imported namespace symbol and scope */
@@ -474,7 +476,6 @@ static walker_result step2a_walker(walker_direction direction,
             symbol = sym_f(namespaces, node->child);
             if (symbol) {
                 symbol->symbol_type = NAMESPACE_SYMBOL;
-              //  sym_adnd(symbol, context->ast, 1, 0);
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
@@ -587,14 +588,23 @@ static walker_result step2b_walker(walker_direction direction,
             /* Find the symbol */
             symbol = sym_rslv(node->scope, node);
 
-            /* If there is not a symbol or it's not a function  */
-            if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL ) {
+            /* If there is a symbol and it's a function - found  */
+            if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
+                sym_adnd(symbol, node, 1, 0);
+            }
+
+            /* If there is a symbol and it's not a function - error */
+            else if (symbol && symbol->symbol_type != FUNCTION_SYMBOL ) {
                 mknd_err(node, "NOT_A_FUNCTION");
             }
 
-            else sym_adnd(symbol, node, 1, 0);
+            /* We have to try and import the function  */
+            else {
+                symbol = sym_imfn(context, node);
+                if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
+                else sym_adnd(symbol, node, 1, 0);
+            }
         }
-
     }
 
     return result_normal;
@@ -659,7 +669,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         n->node->target_type = symbol->type;
         n->node->parent->target_type = symbol->type;
     }
-    else {
+    else if (symbol->symbol_type != NAMESPACE_SYMBOL) {
         /* Used without definition/declaration - Taken Constant */
         /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
         symbol->type = TP_STRING;
@@ -1102,9 +1112,6 @@ static walker_result step5_walker(walker_direction direction,
 void validate(Context *context) {
     Scope *current_scope;
     int ordinal_counter = 0;
-
-    /* We need the assembler db for ASSEMBLE */
-    if (context->level == LEVELB) init_ops();
 
     /* Step 1
      * - Sets the source start / finish for eac node

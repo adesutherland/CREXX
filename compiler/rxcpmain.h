@@ -39,7 +39,10 @@ typedef enum ValueType {
 
 /* Compiler Context Object */
 typedef struct Context {
+    int debug_mode;
+    char* location;
     char* file_name;
+    FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;
     char *buff_end;
@@ -52,6 +55,7 @@ typedef struct Context {
     ASTNode* free_list;
     ASTNode* namespace;
     Scope *current_scope;
+    void* importable_function_array;
     /* Source Options */
     char processedComments;
     RexxLevel level;
@@ -62,21 +66,37 @@ typedef struct Context {
     int optimise;
 } Context;
 
+/* Context Factory */
+Context *cntx_f();
+/* Set Context Buffer */
+void cntx_buf(Context *context, char* buff_start, size_t bytes);
+/* Free Context */
+void fre_cntx(Context *context);
+
 int rexbscan(Context* s);
 int rexbpars(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
+/* Returns the type of a node as a malloced buffer */
+char* nodetype(ASTNode *node);
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *clnnode(ASTNode *node);
+/* Encodes a string into a malloced buffer */
+char* encdstrg(const char* string, size_t length);
+
+/* Try and import an external function - return its symbol if successful */
+Symbol *sym_imfn(Context *context, ASTNode *node);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
-    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
+    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
-    RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
+    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
     VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WHILE, UNTIL
 } NodeType;
 
@@ -186,6 +206,8 @@ void ast_str(ASTNode* node, char *string);
 void ast_rpl(ASTNode* replaced_node, ASTNode* new_node);
 /* Delete / Remove node (i.e. the whole subtree) from the tree */
 void ast_del(ASTNode* node);
+/* Returns the fully resolved node name in a malloced buffer */
+char* ast_frnm(ASTNode* node);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -264,6 +286,9 @@ void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 Scope* scp_chd(Scope *scope, size_t index);
 size_t scp_noch(Scope *scope);
 
+/* Returns the fully resolved scope name in a malloced buffer */
+char* scp_frnm(Scope *scope);
+
 /* Get a free register from scope */
 int get_reg(Scope *scope);
 
@@ -324,5 +349,25 @@ struct OutputFragment {
     char *output;
 };
 void f_output(OutputFragment *output);
+
+/* printf - but returns a malloced buffer with the result */
+char* mprintf(const char* format, ...);
+
+/*  Importable Functions */
+typedef struct imported_func {
+    char *namespace;
+    char *fqname;
+    char *name;
+    char *options;
+    char *type;
+    char *args;
+    char *implementation;
+    Context *context;
+} imported_func;
+
+/* imported_func factory  */
+imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, char *options, char *type, char *args, char *implementation);
+/* Free an imported_func */
+void freimpfc(imported_func *func);
 
 #endif //CREXX_RXCPMAIN_H

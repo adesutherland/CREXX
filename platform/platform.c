@@ -12,24 +12,23 @@
  * This function malloc()s the buffer to the right size therefore it needs
  * to be free()d by the caller
  */
-char* file2buf(FILE *file) {
-    size_t bytes;
+char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
 
     /* Get file size */
     fseek(file, 0, SEEK_END);
-    bytes = ftell(file);
+    *bytes = ftell(file);
     rewind(file);
 
     /* Allocate buffer and read */
-    buff = (char*) malloc((bytes + 2) * sizeof(char) );
-    bytes = fread(buff, 1, bytes, file);
-    if (!bytes) {
+    buff = (char*) malloc((*bytes + 2) * sizeof(char) );
+    *bytes = fread(buff, 1, *bytes, file);
+    if (!*bytes) {
         fprintf(stderr, "Error reading input file\n");
         exit(-1);
     }
-    buff[bytes] = 0;
-    buff[bytes+1] = 0; /* Add an extra byte for the token peak */
+    buff[*bytes] = 0;
+    buff[*bytes+1] = 0; /* Add an extra byte for the token peak */
     return buff;
 }
 
@@ -47,7 +46,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     else len = strlen(name) + strlen(type) + 2;
 
     file_name = malloc(len);
-    if (type == 0) {
+    if (type[0] == 0) {
         if (dir) snprintf(file_name, len, "%s/%s", dir, name);
         else snprintf(file_name, len, "%s", name);
     }

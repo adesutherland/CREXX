@@ -57,7 +57,8 @@
 /* Program & Structure */
 program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(R,N);
                         add_ast(P,I);
@@ -65,7 +66,8 @@ program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I) TK_EO
 
 program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(P,I);
                      }
@@ -75,7 +77,8 @@ program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.
  * sub-rules */
 program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I).
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(R,N);
                         add_ast(P,I);
@@ -83,21 +86,24 @@ program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I).
 
 program(P)       ::= rexx_options(R) instruction_list(I).
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(P,I);
                      }
 
 program(P)       ::= rexx_options(R) namespace_list(N) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(R,N);
                      }
 
 program(P)       ::= rexx_options(R) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                      }
 

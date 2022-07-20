@@ -51,7 +51,7 @@ typedef long long rxinteger;
  * This function malloc()s the buffer to the right size therefore it needs
  * to be free()d by the caller
  */
-char* file2buf(FILE *file);
+char* file2buf(FILE *file, size_t *bytes);
 
 /*
  * Function opens and returns a file handle
