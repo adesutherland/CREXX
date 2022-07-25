@@ -126,6 +126,7 @@ void free_tok(Context *context) {
 /* ASTNode Factory - With node type*/
 ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
+    node->context = context;
     node->parent = 0;
     node->child = 0;
     node->sibling = 0;
@@ -994,7 +995,8 @@ void pdot_scope(Symbol *symbol, void *payload) {
         case CLASS_SYMBOL:
         case NAMESPACE_SYMBOL:
             fprintf((FILE *) payload,
-                    "\"s%d_%s\"[style=filled fillcolor=green shape=box label=\"%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=green shape=box label=\"%s\"]\n",
+                    (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name);
@@ -1002,7 +1004,8 @@ void pdot_scope(Symbol *symbol, void *payload) {
 
         case FUNCTION_SYMBOL:
             fprintf((FILE *) payload,
-                    "\"s%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
@@ -1011,7 +1014,8 @@ void pdot_scope(Symbol *symbol, void *payload) {
             break;
         default:
             fprintf((FILE *) payload,
-                    "\"s%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
@@ -1052,8 +1056,8 @@ walker_result pdot_walker_handler(walker_direction direction,
         child_index = get_child_index(node);
 
         /* Scope == DOT Subgraph */
-        if (node->scope) {
-            fprintf(output, "subgraph scope_%d {\n", node->node_number);
+        if (!node->parent || node->scope != node->parent->scope) {
+            fprintf(output, "subgraph scope_%p{\n", (void*)node->scope);
         }
 
         /* Attributes */
@@ -1219,15 +1223,15 @@ walker_result pdot_walker_handler(walker_direction direction,
         }
 
         if (only_type) {
-            fprintf(output, "n%d[ordering=\"out\" label=\"%s%s", node->node_number,
+            fprintf(output, "n%p%d[ordering=\"out\" label=\"%s%s", (void*)node->context,node->node_number,
                     ast_ndtp(node->node_type), value_type_buffer);
         } else if (only_label) {
-            fprintf(output, "n%d[ordering=\"out\" label=\"", node->node_number);
+            fprintf(output, "n%p%d[ordering=\"out\" label=\"", (void*)node->context,node->node_number);
             prt_unex(output, node->node_string,
                      (int) node->node_string_length);
             fprintf(output, "%s", value_type_buffer);
         } else {
-            fprintf(output, "n%d[ordering=\"out\" label=\"%s\\n", node->node_number,
+            fprintf(output, "n%p%d[ordering=\"out\" label=\"%s\\n", (void*)node->context,node->node_number,
                     ast_ndtp(node->node_type));
             prt_unex(output, node->node_string,
                      (int) node->node_string_length);
@@ -1237,42 +1241,42 @@ walker_result pdot_walker_handler(walker_direction direction,
 
         /* Link to Parent */
         if (node->parent) {
-            fprintf(output,"n%d -> n%d [xlabel=\"%d\"]\n",
-                    node->parent->node_number,
-                    node->node_number, child_index);
+            fprintf(output,"n%p%d -> n%p%d [xlabel=\"%d\"]\n",
+                    (void*)node->parent->context,  node->parent->node_number,
+                    (void*)node->context,node->node_number, child_index);
         }
 
         /* Link to Associated Node */
         if (node->association) {
-            fprintf(output,"n%d -> n%d [color=red dir=\"forward\"]\n",
-                    node->node_number,
-                    node->association->node_number);
+            fprintf(output,"n%p%d -> n%p%d [color=red dir=\"forward\"]\n",
+                    (void*)node->context,node->node_number,
+                    (void*)node->association->context,node->association->node_number);
         }
 
         /* Link to Symbol */
         if (node->symbolNode) {
             if (node->symbolNode->writeUsage && node->symbolNode->readUsage) {
-                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"both\"]\n",
-                        node->node_number,
-                        node->symbolNode->symbol->scope->defining_node->node_number,
+                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"both\"]\n",
+                        (void*)node->context,node->node_number,
+                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else if (node->symbolNode->writeUsage) {
-                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"forward\"]\n",
-                        node->node_number,
-                        node->symbolNode->symbol->scope->defining_node->node_number,
+                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"forward\"]\n",
+                        (void*)node->context,node->node_number,
+                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else if (node->symbolNode->readUsage) {
-                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"back\"]\n",
-                        node->node_number,
-                        node->symbolNode->symbol->scope->defining_node->node_number,
+                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"back\"]\n",
+                        (void*)node->context,node->node_number,
+                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
             else {
-                fprintf(output,"n%d -> \"s%d_%s\" [color=cyan dir=\"none\"]\n",
-                        node->node_number,
-                        node->symbolNode->symbol->scope->defining_node->node_number,
+                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"none\"]\n",
+                        (void*)node->context,node->node_number,
+                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
                         node->symbolNode->symbol->name);
             }
         }
@@ -1280,12 +1284,13 @@ walker_result pdot_walker_handler(walker_direction direction,
 
     else {
         /* OUT - Bottom Up */
+        /* Scope Symbols */
+        if (!node->parent || node->scope != node->parent->scope) {
+            scp_4all(node->scope, pdot_scope, output);
+        }
+
         /* Scope == DOT Subgraph */
-        if (node->scope) {
-            if (!node->scope->temp_flag) {
-                scp_4all(node->scope, pdot_scope, output);
-                node->scope->temp_flag = 1;
-            }
+        if (!node->parent || node->scope != node->parent->scope) {
             fprintf(output, "}\n");
         }
     }
@@ -1295,11 +1300,6 @@ walker_result pdot_walker_handler(walker_direction direction,
 
 void pdot_tree(ASTNode *tree, char* output_file) {
     FILE *output;
-
-    /* Clear the temp_flag for all the scopes - we use this flag to stop repeat printing scope symbols */
-    if (tree->scope) {
-        scp_stmp(tree->scope, 0);
-    }
 
     if (output_file) output = fopen(output_file, "w");
     else output = stdout;

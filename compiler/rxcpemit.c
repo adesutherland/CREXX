@@ -1413,7 +1413,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case IMPORTED_FILE:
             {
-                char *buf = mprintf("/* Imported  Declaration: \"%.*s\" */\n",
+                char *buf = mprintf("\n/* Imported  Declaration: \"%.*s\" */\n",
                                     (int)node->node_string_length, node->node_string);
 
                 node->output = output_fs(buf);
@@ -1424,8 +1424,6 @@ static walker_result emit_walker(walker_direction direction,
                     if (n->output) output_concat(node->output, n->output);
                     n = n->sibling;
                 }
-
-                print_output(payload->file, node->output);
             }
             break;
 

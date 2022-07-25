@@ -119,6 +119,12 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
         context->importable_function_array  = 0;
     }
     context->importable_function_array = dpa_f();
+
+    /* Reset importable_file_list */
+    if (context->importable_file_list) {
+        rxfl_fre(context->importable_file_list);
+        context->importable_file_list = 0;
+    }
 }
 
 /* Free Context */
@@ -139,6 +145,12 @@ void fre_cntx(Context *context)  {
     }
     free_dpa(context->importable_function_array);
     context->importable_function_array  = 0;
+
+    /* Deallocate importable_file_list */
+    if (context->importable_file_list) {
+        rxfl_fre(context->importable_file_list);
+        context->importable_file_list = 0;
+    }
 
     /* Deallocate Tokens */
     free_tok(context);

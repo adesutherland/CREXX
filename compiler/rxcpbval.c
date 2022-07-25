@@ -420,7 +420,7 @@ static walker_result step2a_walker(walker_direction direction,
         /* IN - TOP DOWN */
         if (node->node_type == REXX_UNIVERSE) {
             /* This top level scope will contain the project file scope & imported file scopes */
-            context->current_scope = scp_f(context->current_scope, node);
+            context->current_scope = scp_f(context->current_scope, node, 0);
         }
 
         else if (node->node_type == PROGRAM_FILE) {
@@ -432,10 +432,7 @@ static walker_result step2a_walker(walker_direction direction,
             if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
             /* Move down to the project file scope */
-            context->current_scope = scp_f(context->current_scope, node);
-
-            /* Set the scope name to be the new symbol name */
-            (context->current_scope)->name = symbol->name;
+            context->current_scope = scp_f(context->current_scope, node, symbol->name);
         }
 
         else if (node->node_type == PROCEDURE) {
@@ -460,10 +457,7 @@ static walker_result step2a_walker(walker_direction direction,
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the procedure scope */
-            context->current_scope = scp_f(context->current_scope, node);
-
-            /* Set the scope name to be the procedure symbol name */
-            (context->current_scope)->name = symbol->name;
+            context->current_scope = scp_f(context->current_scope, node, symbol->name);
         }
 
         else if (node->node_type == IMPORT) {
@@ -479,8 +473,7 @@ static walker_result step2a_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                imported_namespace = scp_f(namespaces, node->child);
-                imported_namespace->name = symbol->name;
+                imported_namespace = scp_f(namespaces, node->child, symbol->name);
             }
             else {
                 mknd_err(node->child, "DUPLICATE_NAMESPACE");
