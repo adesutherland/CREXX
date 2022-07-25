@@ -37,11 +37,15 @@ typedef enum ValueType {
     TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
 } ValueType;
 
+/*  Importable Functions */
+typedef struct importable_file importable_file;
+
 /* Compiler Context Object */
 typedef struct Context {
     int debug_mode;
     char* location;
     char* file_name;
+    importable_file **importable_file_list;
     FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;
@@ -85,7 +89,7 @@ char *clnnode(ASTNode *node);
 char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *context, ASTNode *node);
+Symbol *sym_imfn(Context *master_context, ASTNode *node);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
@@ -113,6 +117,8 @@ struct Token {
 typedef struct SymbolNode SymbolNode;
 
 struct ASTNode {
+    Context *context;
+    int node_number;
     NodeType node_type;
     ValueType value_type;
     ValueType target_type;
@@ -125,7 +131,6 @@ struct ASTNode {
     char is_ref_arg;
     char is_opt_arg;
     ASTNode *free_list;
-    int node_number;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
     Token *token;
@@ -246,7 +251,7 @@ int prnterrs(Context *context);
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
-    char *name;
+    char *name; /* Note that the name is free()'d by the destructor */
     void *child_array;
     void *symbols_tree;
     size_t num_registers;
@@ -276,18 +281,26 @@ struct Symbol {
 };
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node);
+Scope *scp_f(Scope *parent, ASTNode *node, char *name);
 
 /* Calls the handler for each symbol in scope */
 typedef void (*symbol_worker)(Symbol *symbol, void *payload);
 void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 
-/* To get sub-scopes */
+/* Returns all the symbols in a scope as a null terminated malloced array (must be freed) */
+Symbol **scp_syms(Scope *scope);
+
+/* Get the index sub-scope */
 Scope* scp_chd(Scope *scope, size_t index);
+
+/* Get the number of sub-scopes */
 size_t scp_noch(Scope *scope);
 
 /* Returns the fully resolved scope name in a malloced buffer */
 char* scp_frnm(Scope *scope);
+
+/* Removes a Symbol from a scope - does not free symbol, see free_sym() */
+void scp_rmsy(Scope *scope, Symbol *symbol);
 
 /* Get a free register from scope */
 int get_reg(Scope *scope);
@@ -315,7 +328,10 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length);
+Symbol *sym_fn(Scope *scope, char* name, size_t name_length);
+
+/* Frees a symbol - does not remove symbol from scope see scp_rmsy() which probably should be used as well */
+void free_sym(Symbol *symbol);
 
 /* Resolve a Symbol - including parent scopes */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
@@ -365,9 +381,28 @@ typedef struct imported_func {
     Context *context;
 } imported_func;
 
-/* imported_func factory  */
+/* imported_func factory - returns null if the function is not in an applicable namespace */
 imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, char *options, char *type, char *args, char *implementation);
+
 /* Free an imported_func */
 void freimpfc(imported_func *func);
+
+/* Imported file types */
+typedef enum file_type {
+    REXX_FILE, RXBIN_FILE, RXAS_FILE
+} file_type;
+
+/*  Importable Functions */
+struct importable_file {
+    char *name;
+    file_type type;
+    char imported;
+};
+
+/* Get the list of importable files as a null terminated malloced array */
+importable_file **rxfl_lst(Context *context);
+
+/* free the list of importable files */
+void rxfl_fre(importable_file **file_list);
 
 #endif //CREXX_RXCPMAIN_H

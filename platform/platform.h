@@ -60,4 +60,22 @@ char* file2buf(FILE *file, size_t *bytes);
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode);
 
+/*
+ * Get the first file from a directory (or null if there isn't one)
+ * (pass the & of void *dir_ptr to hold an opaque directory context)
+ * if dir is null then the "current" (platform specific) dir is searched
+ */
+char *dirfstfl(const char *dir, char *type, void **dir_ptr);
+
+/*
+ * Get the next file from a directory (or null if there isn't one)
+ * (pass the & of void *dir_ptr to hold an opaque directory context)
+ */
+char *dirnxtfl(void **dir_ptr);
+
+/*
+ * Close the opaque directory context
+ */
+void dirclose(void **dir_ptr);
+
 #endif //CREXX_PLATFORM_H

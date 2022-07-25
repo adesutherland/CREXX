@@ -75,15 +75,9 @@ static walker_result procedure_signature_walker(walker_direction direction,
                 char *args = encdstrg(source, strlen(source));
                 char *fqname = sym_frnm(node->symbolNode->symbol);
 
-                printf("   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
-                       fqname, /* FQ Symbol Name */
-                       type, /* Return Type */
-                       (int) node->node_string_length, node->node_string, /* Function name */
-                       args /* Args */);
-
                 func = rximpfc_f(master_context, fqname, node->symbolNode->symbol->name, "b", type, args, 0);
 
-                dpa_add(master_context->importable_function_array, func);
+                if (func) dpa_add(master_context->importable_function_array, func);
 
                 free(type);
                 free(source);
@@ -95,13 +89,14 @@ static walker_result procedure_signature_walker(walker_direction direction,
     return result_normal;
 }
 
-void parseFileForFunctions(Context *master_context, char* file_name) {
+void parseRexxFileForFunctions(Context *master_context, char* file_name) {
     size_t bytes;
     Context *context;
     char *buff_start;
 
-    if (master_context->debug_mode) printf("Reading file %s for possible procedure imports\n", file_name);
+    if (master_context->debug_mode) printf("Importing Procedures - Reading file %s for possible procedure imports\n", file_name);
 
+    /* Context for parsing */
     context = cntx_f();
 
     /* Open input file */
@@ -202,7 +197,7 @@ void parseFileForFunctions(Context *master_context, char* file_name) {
 Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
 
-    if (debug_mode) printf("Parsing Rexx: %.*s\n", (int)bytes, rexx_source);
+    if (debug_mode) printf("Parsing REXX\n");
 
     context = cntx_f();
     cntx_buf(context, rexx_source, bytes);
@@ -211,11 +206,30 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
     context->location = location;
     context->file_name = file_name;
     context->level = level;
+    context->debug_mode = debug_mode;
+
+    switch (context->level){
+        case LEVELA:
+        case LEVELC:
+        case LEVELD:
+            fprintf(stderr,"INTERNAL ERROR: REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            break;
+
+        case LEVELB:
+        case LEVELG:
+        case LEVELL:
+            if (context->debug_mode) printf("Parsing REXX - Level B/G/L (cREXX)\n");
+            rexbpars(context);
+            break;
+
+        default:
+            fprintf(stderr, "INTERNAL ERROR: Failed to determine REXX Level\n");
+    }
 
     rexbpars(context); /* TODO Handle Levels, this is level B only  */
 
     if (!context->ast) {
-        if (debug_mode) fprintf(stderr,"Parsing Rexx - INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
+        if (debug_mode) fprintf(stderr,"INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
@@ -229,9 +243,7 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
     }
 #endif
 
-    if (error_in_node(context->ast)) printf("Error in the Args\n");
-
-    if (debug_mode) printf("Parsing REXX - Compiler read exiting - Success\n");
+    if (debug_mode) printf("Parsing REXX - Success\n");
 
     finish:
 
@@ -239,59 +251,142 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
 }
 
 /* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *context, ASTNode *node) {
-    size_t i;
-    dpa *func_array = context->importable_function_array;
+Symbol *sym_imfn(Context *master_context, ASTNode *node) {
+    size_t i, f;
+    dpa *func_array = master_context->importable_function_array;
+    Symbol *symbol;
+    ASTNode *func_node;
+    Symbol *func_symbol;
+    Symbol *found_symbol = 0;
 
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
 
-    /* For each file */
-    parseFileForFunctions(context, "dummy.rexx");
-    for (i = 0; i < func_array->size; i++) {
-        imported_func *func = (imported_func*)func_array->pointers[i];
-        if ( strcmp(name,func->name) == 0 ) {
-            /* Found it! */
+    /* Load files from the importable_file_list */
+    if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);
+    if (!master_context->importable_file_list) {
+        /* No files to import */
+        free(name);
+        return 0;
+    }
 
-            break;
+    i = 0;
+    for (f = 0; master_context->importable_file_list[f] && !found_symbol; f++) {
+        /* Already imported? */
+        if (master_context->importable_file_list[f]->imported) continue;
+        master_context->importable_file_list[f]->imported = 1;
+
+        /* Import File */
+        switch (master_context->importable_file_list[f]->type) {
+            case REXX_FILE:
+                parseRexxFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                break;
+            case RXBIN_FILE:
+            case RXAS_FILE:
+                ;
+        }
+
+        /* Check the added functions in the function list */
+        for ( ; i < func_array->size; i++) {
+            found_symbol = 0;
+            imported_func *func = (imported_func *) func_array->pointers[i];
+
+            if (strcmp(name, func->name) == 0) {
+                /* Found it! */
+
+                /* Splice the ASTs together */
+                add_ast(master_context->ast, func->context->ast->child);
+
+                /* Splice in namespace symbol */
+                symbol = sym_rslv(master_context->ast->scope, func->context->ast->child);
+                if (!symbol) {
+                    symbol = sym_f(master_context->ast->scope, func->context->ast->child);
+                    symbol->symbol_type = NAMESPACE_SYMBOL;
+                }
+                sym_adnd(symbol, func->context->ast->child, 1, 1);
+                if (func->context->namespace) sym_adnd(symbol, func->context->namespace, 0, 1);
+
+                /* Splice new procedure symbol */
+                /* Find the current procedure symbol */
+                func_node = func->context->ast->child->child;
+                if (func_node->node_type != PROCEDURE) func_node = func_node->sibling;
+
+                if (func_node->node_type != PROCEDURE)
+                    fprintf(stderr, "INTERNAL ERROR: Could not find imported procedure in AST\n");
+                else {
+                    func_symbol = func_node->symbolNode->symbol;
+
+                    /* Make a duplicate symbol in the master_context */
+                    found_symbol = sym_fn(master_context->ast->child->scope, func_symbol->name,
+                                          strlen(func_symbol->name));
+                    if (!found_symbol) {
+                        fprintf(stderr, "INTERNAL ERROR: Could not duplicate imported procedure symbol\n");
+                    } else {
+                        /* Set symbol type */
+                        found_symbol->symbol_type = func_symbol->symbol_type;
+
+                        /* Splice by linking the new symbol to the function node */
+                        sym_adnd(found_symbol, func_node, 0, 1);
+
+                        /* remove old symbol */
+                        scp_rmsy(func_symbol->scope, func_symbol); /* Remove from scope */
+                        free_sym(func_symbol); /* Free symbol  */
+                    }
+                }
+
+                break;
+            }
         }
     }
 
     free(name);
-    return 0;
+    return found_symbol;
 }
 
-/* imported_func factory  */
+/* imported_func factory - returns null if the function is not in an applicable namespace */
 imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, char *options, char *type, char *args, char *implementation)  {
-    imported_func *func = malloc(sizeof(imported_func));
+    imported_func *func;
     char *buffer;
+    Scope **namespace;
+    size_t i;
+    char found;
 
+    if (!fqname) return 0;
+
+    /* Get the namespace (string before the last ".") from the fqn */
+    size_t len  = strlen(fqname);
+    while (len) {
+        len--;
+        if (fqname[len] == '.') break;
+    }
+    if (len) {
+        /* Check the namespace has been imported */
+        found = 0;
+        for (i = 0; i < scp_noch(master_context->ast->scope); i++) {
+            if ( strncmp(fqname, scp_chd(master_context->ast->scope, i)->name, len) == 0) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) return 0;
+    }
+    else return 0; /* No namespace */
+
+    /* OK - Create func */
+    func = malloc(sizeof(imported_func));
     func->context = 0;
 
-    if (fqname) {
-        /* Store fqname */
-        size_t len  = strlen(fqname);
-        func->fqname = malloc(len + 1);
-        strcpy(func->fqname,fqname);
+    /* Store the namespace */
+    func->namespace = malloc(len + 1);
+    memcpy(func->namespace, fqname, len);
+    func->namespace[len] = 0;
 
-        /* Get the namespace (string before the last ".") from the fqn */
-        while (len) {
-            len--;
-            if (fqname[len] == '.') break;
-        }
-        if (len) {
-            func->namespace = malloc(len + 1);
-            memcpy(func->namespace, fqname, len);
-            func->namespace[len] = 0;
-        }
-        else func->namespace = 0;
-    }
-    else {
-        func->fqname = 0;
-        func->namespace = 0;
-    }
+    /* Store fqname */
+    func->fqname = malloc(strlen(fqname) + 1);
+    strcpy(func->fqname,fqname);
 
+    /* Store the rest of the fields */
     if (name) {
         func->name = malloc(strlen(name) + 1);
         strcpy(func->name,name);
@@ -324,8 +419,24 @@ imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, cha
 
     /* Generate Function Declaration AST */
     buffer = mprintf("options levelb\n%s: procedure = %s\narg %s\n\0", func->name, func->type, func->args); // NOLINT
+// TODO Level detection from options
+    func->context = parseRexx(master_context->location, func->namespace, LEVELB, master_context->debug_mode, buffer, strlen(buffer) + 1);
 
-    parseRexx(master_context->location, func->namespace, LEVELB, master_context->debug_mode, buffer, strlen(buffer) + 1);
+    if (error_in_node(func->context->ast)) {
+        fprintf(stderr, "ERROR: Error parsing imported procedure arguments for %s, skipping\n", func->fqname);
+        freimpfc(func);
+        return 0;
+    }
+
+    /* Make sure the AST seems sane */
+    if (func->context->ast->child->node_type != PROGRAM_FILE) {
+        fprintf(stderr, "ERROR: Unexpected syntax error parsing imported procedure arguments for %s, skipping\n", func->fqname);
+        freimpfc(func);
+        return 0;
+    }
+
+    /* Fixup the node type */
+    func->context->ast->child->node_type = IMPORTED_FILE;
 
     return func;
 }
@@ -344,6 +455,60 @@ void freimpfc(imported_func *func) {
     free(func);
 }
 
-typedef struct func_payload  {
-    imported_func *function;
-} func_payload;
+/* free the list of importable files */
+void rxfl_fre(importable_file **file_list) {
+    importable_file *file;
+    for (file = *file_list; file; file++) {
+        free(file->name);
+        free(file);
+    }
+    free(file_list);
+}
+
+static add_file_to_list(importable_file *file, size_t *number, importable_file ***list) {
+    (*number)++;
+    **list = (importable_file*)realloc(*list, (*number + 1) * sizeof(importable_file*));
+    (*list)[(*number)-1] = file;
+    (*list)[*number] = 0;
+}
+
+static importable_file* importable_file_f(char* name, file_type type) {
+    importable_file *file;
+    file = malloc(sizeof(importable_file));
+    file->name = malloc(strlen(name) + 1);
+    strcpy(file->name, name);
+    file->imported = 0;
+    file->type = type;
+    return file;
+}
+
+/* Get the list of importable files as a null terminated malloced array */
+importable_file **rxfl_lst(Context *context) {
+    size_t number = 0;
+    importable_file **list = 0;
+    importable_file *file;
+    void *dir_ptr = 0;
+    char* name;
+
+    list = malloc( sizeof(importable_file*) );
+    list[0] = 0;
+
+    /* Read REXX files in the current directory */
+    name = dirfstfl(context->location, "rexx", &dir_ptr);
+    if (name) {
+        file = importable_file_f(name, REXX_FILE);
+        add_file_to_list(file, &number, &list);
+
+        do {
+            name = dirnxtfl(&dir_ptr);
+            if (name) {
+                file = importable_file_f(name, REXX_FILE);
+                add_file_to_list(file, &number, &list);
+            }
+        } while (name);
+        dirclose(&dir_ptr);
+    }
+
+    return list;
+}
+

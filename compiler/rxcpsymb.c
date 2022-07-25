@@ -13,15 +13,14 @@
 #include "utf.h"
 #endif
 
-/* Frees a symbol */
-static void symbol_free(Symbol *symbol);
-
 /* Internal Tree node structure */
 struct symbol_wrapper {
     char *index;
     Symbol *value;
     struct avl_tree_node index_node;
 };
+
+#define SYMBOL_WRAPPER(i) avl_tree_entry((i), struct symbol_wrapper, index_node)
 
 #define GET_INDEX(i) avl_tree_entry((i), struct symbol_wrapper, index_node)->index
 
@@ -68,10 +67,14 @@ static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
 }
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node) {
+Scope *scp_f(Scope *parent, ASTNode *node, char* name) {
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
-    scope->name = 0; /* Note that the name is not freed by the destructor - i.e. it points to a constant or buffer owned else where */
+    if (name) {
+        scope->name = malloc(strlen(name) + 1);
+        strcpy(scope->name, name);
+    }
+    else scope->name = 0;
     node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
@@ -87,7 +90,7 @@ Scope *scp_f(Scope *parent, ASTNode *node) {
 void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     struct symbol_wrapper *i;
 
-    if (scope->symbols_tree) {
+    if (scope && scope->symbols_tree) {
         /* This walks the tree in sort order - do not alter list! */
         avl_tree_for_each_in_order(i, scope->symbols_tree, struct symbol_wrapper,
                                        index_node) {
@@ -96,17 +99,51 @@ void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     }
 }
 
+/* Returns all the symbols in a scope as a null terminated malloced array (must be freed) */
+Symbol **scp_syms(Scope *scope) {
+    Symbol **symbols;
+    size_t num;
+    struct symbol_wrapper *i;
+
+    /* Null - return an empty array */
+    if (!scope || !scope->symbols_tree) {
+        symbols = malloc(sizeof(Symbol*));
+        symbols[0] = 0;
+        return symbols;
+    }
+
+    /* How many symbols? */
+    num = 0;
+    {
+        avl_tree_for_each_in_order(i, scope->symbols_tree, struct symbol_wrapper, index_node) num++;
+    }
+
+    /* malloc the array */
+    symbols = malloc(sizeof(Symbol*) * num);
+    symbols[num] = 0;
+
+    /* Populate the array */
+    num = 0;
+    {
+        avl_tree_for_each_in_order(i, scope->symbols_tree, struct symbol_wrapper, index_node) symbols[num++] = i->value;
+    }
+
+    return symbols;
+}
+
 /* Frees scope and all its symbols and sub-scopes */
 void scp_free(Scope *scope) {
     struct symbol_wrapper *i;
     size_t j;
+
+    if (scope->name) free(scope->name);
 
     if (scope->symbols_tree) {
         /* This walks the tree in post order which allows each node be freed */
         avl_tree_for_each_in_postorder(i, scope->symbols_tree,
                                        struct symbol_wrapper,
                                        index_node) {
-            symbol_free(i->value);
+            free_sym(i->value);
             free(i);
         }
         scope->symbols_tree = 0; /* Pedantic ... */
@@ -121,6 +158,25 @@ void scp_free(Scope *scope) {
     free_dpa(scope->free_registers_array);
     free(scope);
 }
+
+/* Removes a Symbol from a scope - does not free symbol, see free_sym() */
+void scp_rmsy(Scope *scope, Symbol *symbol) {
+    struct avl_tree_node *result;
+
+    /* Find the symbol */
+    result = avl_tree_lookup((struct avl_tree_node *)scope->symbols_tree, symbol->name, compare_node_value);
+
+    if (result)  {
+        /* If found ... */
+
+        /* Remove from tree */
+        avl_remv((struct avl_tree_node **)&(scope->symbols_tree), result);
+
+        /* Free the symbol_wrapper */
+        free(SYMBOL_WRAPPER(result));
+    }
+}
+
 
 /* Set the temp_flag for the scope and all its sub-scopes */
 void scp_stmp(Scope *scope, size_t temp_flag) {
@@ -299,7 +355,7 @@ size_t scp_noch(Scope *scope) {
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length) {
+Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
@@ -308,7 +364,7 @@ Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length) {
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
     memcpy(symbol->name, name, name_length);
-    symbol->name[node->node_string_length] = 0;
+    symbol->name[name_length] = 0;
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
@@ -324,7 +380,7 @@ Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length) {
     /* Returns 1 on duplicate */
     if (add_symbol_to_tree((struct avl_tree_node **)&(scope->symbols_tree),
                            symbol)) {
-        symbol_free(symbol);
+        free_sym(symbol);
         return NULL;
     }
 
@@ -334,7 +390,7 @@ Symbol *sym_fn(Scope *scope, ASTNode *node, char* name, size_t name_length) {
 /* Symbol Factory - define a symbol */
 /* Returns NULL if the symbol is a duplicate */
 Symbol *sym_f(Scope *scope, ASTNode *node) {
-    return sym_fn(scope, node, node->node_string, node->node_string_length);
+    return sym_fn(scope, node->node_string, node->node_string_length);
 }
 
 /* Resolve a Symbol - including parent scope */
@@ -388,7 +444,7 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
 }
 
 /* Frees a symbol */
-static void symbol_free(Symbol *symbol) {
+void free_sym(Symbol *symbol) {
     size_t i;
     free(symbol->name);
 

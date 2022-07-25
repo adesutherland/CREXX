@@ -34,7 +34,7 @@ static void tzset(void) {};
 #define daylight 0
 
 
-/* Shocking hack ... todo - need to replace with fixed buffer logig for cms */
+/* Shocking hack ... todo - need to replace with fixed buffer logic for cms */
 #define snprintf(s,sz,...) sprintf(s,__VA_ARGS__)
 #define vsnprintf(s,sz,...) vsprintf(s,__VA_ARGS__)
 
