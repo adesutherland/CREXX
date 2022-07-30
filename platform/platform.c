@@ -28,6 +28,8 @@
 
 #include "platform.h"
 
+#define MAXFILEPATH 4096
+
 /*
  * Read a file into a returned buffer
  *
@@ -91,12 +93,19 @@ struct fl_dir {
 };
 #endif
 
-#if defined(__APPLE__) || defined(__linux__)
 static const char *get_filename_ext(const char *filename) {
     const char *dot = strrchr(filename, '.');
     if(!dot || dot == filename) return "";
     return dot + 1;
 }
+
+#ifdef _WIN32
+struct WIN_FILE_DATA {
+    HANDLE hFind;
+    WIN32_FIND_DATA fdFile;
+    char sPath[MAXFILEPATH];
+    char dir[MAXFILEPATH];
+};
 #endif
 
 /*
@@ -105,7 +114,9 @@ static const char *get_filename_ext(const char *filename) {
  * if dir is null then the "current" (platform specific) dir is searched
  */
 char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
+
 #if defined(__APPLE__) || defined(__linux__)
+
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
     *dir_ptr = ptr;
 
@@ -116,6 +127,34 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
     if (!ptr->d) return 0;
 
     return dirnxtfl(dir_ptr);
+
+#elif defined(_WIN32)
+
+    struct WIN_FILE_DATA *win_data = malloc(sizeof(struct WIN_FILE_DATA));
+    if (dir) strncpy(win_data->dir, dir, MAXFILEPATH);
+    else strncpy(win_data->dir, ".", MAXFILEPATH);
+    snprintf(win_data->sPath, MAXFILEPATH, "%s\\*.%s", win_data->dir, type);
+
+    if ( (win_data->hFind = FindFirstFile(win_data->sPath, &(win_data->fdFile) ) ) == INVALID_HANDLE_VALUE)
+    {
+        *dir_ptr = 0;
+        free(win_data);
+        return 0;
+    }
+
+    *dir_ptr = win_data;
+
+    if( win_data->fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) {
+        return dirnxtfl(dir_ptr); /* Return the next valid file */
+    }
+
+    sprintf(win_data->sPath, "%s\\%s", win_data->dir, win_data->fdFile.cFileName);
+    return win_data->sPath;
+
+#else
+
+    return 0;
+
 #endif
 }
 
@@ -124,7 +163,9 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
  * (pass the & of void *dir_ptr to hold an opaque directory context)
  */
 char *dirnxtfl(void **dir_ptr) {
+
 #if defined(__APPLE__) || defined(__linux__)
+
     struct dirent *dirent;
     struct fl_dir *ptr = *dir_ptr;
     const char *ext;
@@ -134,6 +175,25 @@ char *dirnxtfl(void **dir_ptr) {
         ext = get_filename_ext(dirent->d_name);
         if ( strcmp(ext,ptr->type) == 0 ) return dirent->d_name;
     } while (1);
+
+#elif defined(_WIN32)
+
+    struct WIN_FILE_DATA *win_data = *dir_ptr;
+    if (!win_data) return 0;
+
+    while ( FindNextFile(win_data->hFind, &(win_data->fdFile)) ) {
+
+        if (win_data->fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+
+        sprintf(win_data->sPath, "%s\\%s", win_data->dir, win_data->fdFile.cFileName);
+        return win_data->sPath;
+    }
+    return 0;
+
+#else
+
+    return 0;
+
 #endif
 }
 
@@ -141,12 +201,24 @@ char *dirnxtfl(void **dir_ptr) {
  * Close the opaque directory context
  */
 void dirclose(void **dir_ptr) {
+
 #if defined(__APPLE__) || defined(__linux__)
+
     struct fl_dir *ptr = *dir_ptr;
     closedir(ptr->d);
     free(ptr);
     *dir_ptr = 0;
+
+#elif defined(_WIN32)
+
+    struct WIN_FILE_DATA *win_data = *dir_ptr;
+    if (!win_data) return;
+
+    FindClose(win_data->hFind);
+    free(win_data);
+
 #endif
+
 }
 
 /* Returns the executable directory in a malloced buffer */
@@ -169,17 +241,15 @@ char* exepath()
     return name;
 }
 
-#define PATH_MAX 4096
-
 /* Returns the executable path name in a malloced buffer */
 char* exefqname()
 {
-    char *exePath = malloc(PATH_MAX);
+    char *exePath = malloc(MAXFILEPATH);
 
 #ifdef _WIN32
 
-    DWORD len = GetModuleFileNameA(NULL, exePath, PATH_MAX);
-	if(len <= 0 || len == PATH_MAX)
+    DWORD len = GetModuleFileNameA(NULL, exePath, MAXFILEPATH);
+	if(len <= 0 || len == MAXFILEPATH)
 	{
 		// an error occured, clear exe path
 		exePath[0] = '\0';
@@ -187,10 +257,10 @@ char* exefqname()
 
 #elif defined(__linux)
 
-    char buf[PATH_MAX] = {0};
+    char buf[MAXFILEPATH] = {0};
     snprintf(buf, sizeof(buf), "/proc/%d/exe", getpid());
     // readlink() doesn't null-terminate!
-    ssize_t len = readlink(buf, exePath, PATH_MAX-1);
+    ssize_t len = readlink(buf, exePath, MAXFILEPATH-1);
     if (len <= 0)
     {
         // an error occured, clear exe path
@@ -203,7 +273,7 @@ char* exefqname()
 
 #elif defined(__APPLE__)
 
-	uint32_t bufSize = PATH_MAX;
+	uint32_t bufSize = MAXFILEPATH;
 	if(_NSGetExecutablePath(exePath, &bufSize) != 0)
 	{
 		// an error occured, clear exe path
