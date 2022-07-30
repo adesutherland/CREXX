@@ -131,7 +131,6 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
 void fre_cntx(Context *context)  {
     size_t i;
     if (context->file_pointer) fclose(context->file_pointer);
-    if (context->traceFile) fclose(context->traceFile);
 
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
@@ -156,6 +155,8 @@ void fre_cntx(Context *context)  {
     free_tok(context);
 
     free(context->buff_start);
+
+    if (context->traceFile) fclose(context->traceFile);
 
     free(context);
 }
@@ -306,7 +307,8 @@ int main(int argc, char *argv[]) {
         case LEVELG:
         case LEVELL:
             if (debug_mode) printf("REXX Level B/G/L (cREXX)\n");
-            rexbpars(context);
+            rexbpars(context); // Built AST
+            free_ops(); // Free Instruction Database
             break;
 
         default:

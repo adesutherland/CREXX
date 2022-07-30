@@ -1,5 +1,6 @@
 /* Tests for latest show and tells */
 options levelb
+namespace scratch
 # comment
 say "Début"
 
@@ -11,6 +12,7 @@ do i = 1 to 10
 end
 say "a =" a
 
+call dummy
 
 
 return 0

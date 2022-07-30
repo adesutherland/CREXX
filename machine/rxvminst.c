@@ -492,7 +492,7 @@ void free_ops() {
     no_instructions = 0;
 }
 
-/* Free Instruction Database */
+/* Print Instruction Database */
 void prt_ops() {
     struct instruction_wrapper *i;
     char buffer[100];

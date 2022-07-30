@@ -1057,7 +1057,7 @@ walker_result pdot_walker_handler(walker_direction direction,
 
         /* Scope == DOT Subgraph */
         if (!node->parent || node->scope != node->parent->scope) {
-            fprintf(output, "subgraph scope_%p{\n", (void*)node->scope);
+            if (node->scope) fprintf(output, "subgraph scope_%p{\n", (void*)node->scope);
         }
 
         /* Attributes */
@@ -1286,12 +1286,12 @@ walker_result pdot_walker_handler(walker_direction direction,
         /* OUT - Bottom Up */
         /* Scope Symbols */
         if (!node->parent || node->scope != node->parent->scope) {
-            scp_4all(node->scope, pdot_scope, output);
+            if (node->scope) scp_4all(node->scope, pdot_scope, output);
         }
 
         /* Scope == DOT Subgraph */
         if (!node->parent || node->scope != node->parent->scope) {
-            fprintf(output, "}\n");
+            if (node->scope) fprintf(output, "}\n");
         }
     }
 

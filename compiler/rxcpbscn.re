@@ -11,6 +11,7 @@
 
 #define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
+#define   YYLIMIT     s->buff_end
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
@@ -22,6 +23,7 @@ int rexbscan(Context* s) {
 
 /*!re2c
   re2c:yyfill:enable = 0;
+  re2c:eof = 0;
 */
   regular:
 
@@ -30,6 +32,7 @@ int rexbscan(Context* s) {
 
 /*!re2c
   re2c:yyfill:enable = 0;
+  re2c:eof = 0;
 
   eol2 = "\r\n";
   eol1 = [\r] | [\n];
@@ -185,6 +188,7 @@ int rexbscan(Context* s) {
     str [bB] / (any\symchr) { return(TK_STRING); }
     str [xX] / (any\symchr) { return(TK_STRING); }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     whitespace {
       s->top = s->cursor;
       goto regular;
@@ -239,6 +243,14 @@ int rexbscan(Context* s) {
       s->cursor = s->top + 2; /* To get the '/ *' */
       return(TK_BADCOMMENT);
   }
+  $ {
+      s->line = comment_line;
+      s->prev_linestart = s->linestart;
+      s->linestart = comment_linestart;
+      s->top = comment_top;
+      s->cursor = s->top + 2; /* To get the '/ *' */
+      return(TK_BADCOMMENT);
+  }
   any { goto comment; }
 */
 
@@ -259,6 +271,7 @@ skip_line_comment:
     return(TK_EOL);
   }
   eof { return(TK_EOS); }
+  $ { return(TK_EOS); }
   any {
     goto skip_line_comment;
   }

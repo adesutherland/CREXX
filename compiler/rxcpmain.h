@@ -18,13 +18,13 @@ typedef struct OutputFragment OutputFragment;
 
 /* functions to interface the lemon parser */
 /* OPTIONS Parser */
-void *Opts_Alloc();
+void *Opts_Alloc(void *(*mallocProc)(size_t));
 void Opts_();
 void Opts_Free();
 void Opts_Trace(FILE *stream, char *zPrefix);
 
 /* Level B Parser */
-void *RexxBAlloc();
+void *RexxBAlloc(void *(*mallocProc)(size_t));
 void RexxB();
 void RexxBFree();
 void RexxBTrace(FILE *stream, char *zPrefix);
@@ -43,6 +43,7 @@ typedef struct importable_file importable_file;
 /* Compiler Context Object */
 typedef struct Context {
     int debug_mode;
+    int dont_import; /* Don't import files looking for procedures */
     char* location;
     char* file_name;
     importable_file **importable_file_list;
