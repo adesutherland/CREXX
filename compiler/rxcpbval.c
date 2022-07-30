@@ -586,14 +586,14 @@ static walker_result step2b_walker(walker_direction direction,
                 sym_adnd(symbol, node, 1, 0);
             }
 
-            /* If there is a symbol and it's not a function - error */
-            else if (symbol && symbol->symbol_type != FUNCTION_SYMBOL ) {
+            /* If there is a symbol (and it's not a function) - error */
+            else if (symbol) {
                 mknd_err(node, "NOT_A_FUNCTION");
             }
 
             /* We have to try and import the function  */
             else {
-                symbol = sym_imfn(context, node);
+                if (!context->dont_import) symbol = sym_imfn(context, node);
                 if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
                 else sym_adnd(symbol, node, 1, 0);
             }
@@ -1143,7 +1143,4 @@ void validate(Context *context) {
      */
     context->current_scope = 0;
     ast_wlkr(context->ast, step5_walker, (void *)context);
-
-    // Free Instruction Database
-    if (context->level == LEVELB) free_ops();
  }

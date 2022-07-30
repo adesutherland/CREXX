@@ -78,4 +78,10 @@ char *dirnxtfl(void **dir_ptr);
  */
 void dirclose(void **dir_ptr);
 
+/* Returns the executable directory path in a malloced buffer */
+char* exepath();
+
+/* Returns the executable fully qualified name in a malloced buffer */
+char* exefqname();
+
 #endif //CREXX_PLATFORM_H

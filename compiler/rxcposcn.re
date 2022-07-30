@@ -6,6 +6,7 @@
 
 #define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
+#define   YYLIMIT     s->buff_end
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
@@ -14,6 +15,7 @@ int opt_scan(Context* s) {
 
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:eof = 0;
 */
     regular:
 
@@ -22,6 +24,7 @@ int opt_scan(Context* s) {
 
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:eof = 0;
 
     eol2 = "\r\n";
     eol1 = [\r] | [\n];
@@ -52,6 +55,7 @@ int opt_scan(Context* s) {
     'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     whitespace {
         s->top = s->cursor;
         goto regular;
@@ -104,6 +108,7 @@ int opt_scan(Context* s) {
         goto comment;
     }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     any { goto comment; }
 */
 }

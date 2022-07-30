@@ -5,10 +5,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "platform.h"
-#if defined(__APPLE__) || defined(__linux__)
+#include <limits.h>
+
+#ifdef __linux__
+#include <unistd.h>
 #include <dirent.h>
 #endif
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+#ifndef _MSC_VER // Windows Visual Studio
+#include <stdint.h>
+#endif
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#include <dirent.h>
+#include <unistd.h>
+#endif
+
+#include "platform.h"
 
 /*
  * Read a file into a returned buffer
@@ -129,4 +147,74 @@ void dirclose(void **dir_ptr) {
     free(ptr);
     *dir_ptr = 0;
 #endif
+}
+
+/* Returns the executable directory in a malloced buffer */
+char* exepath()
+{
+    char *name = exefqname();
+    size_t len = strlen(name);
+    size_t i;
+
+    if (!len) return name;
+
+    for (i = len - 1; i; i--)
+    {
+        if ( name[i] == '\\' || name[i] == '/' )
+        {
+            name[i] = 0;
+            break;
+        }
+    }
+    return name;
+}
+
+#define PATH_MAX 4096
+
+/* Returns the executable path name in a malloced buffer */
+char* exefqname()
+{
+    char *exePath = malloc(PATH_MAX);
+
+#ifdef _WIN32
+
+    DWORD len = GetModuleFileNameA(NULL, exePath, PATH_MAX);
+	if(len <= 0 || len == PATH_MAX)
+	{
+		// an error occured, clear exe path
+		exePath[0] = '\0';
+	}
+
+#elif defined(__linux)
+
+    char buf[PATH_MAX] = {0};
+    snprintf(buf, sizeof(buf), "/proc/%d/exe", getpid());
+    // readlink() doesn't null-terminate!
+    ssize_t len = readlink(buf, exePath, PATH_MAX-1);
+    if (len <= 0)
+    {
+        // an error occured, clear exe path
+        exePath[0] = '\0';
+    }
+    else
+    {
+        exePath[len] = '\0';
+    }
+
+#elif defined(__APPLE__)
+
+	uint32_t bufSize = PATH_MAX;
+	if(_NSGetExecutablePath(exePath, &bufSize) != 0)
+	{
+		// an error occured, clear exe path
+		exePath[0] = '\0';
+	}
+
+#else
+
+    exePath[0] = '\0'
+
+#endif
+
+    return exePath;
 }

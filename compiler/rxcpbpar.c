@@ -28,19 +28,6 @@ int rexbpars(Context *context) {
         if (token->token_type == TK_EOL) token->token_type = TK_EOC;
         token_type = token->token_type;
 
-        peek_token = token_f(context, rexbscan(context));
-
-        // Line Continuation
-        if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
-            token_r(context);  /* Discard tokens , and EOC tokens */
-            token_r(context);
-            peek_token = token_f(context, rexbscan(context));
-            continue;
-        }
-
-        // Skip multiple end of clause/line
-        if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
-
         // EOS Special Processing
         if (token_type == TK_EOS || token_type == TK_BADCOMMENT) {
             // Send an EOC
@@ -63,6 +50,20 @@ int rexbpars(Context *context) {
             RexxB(parser, 0, NULL, context);
             break;
         }
+
+        peek_token = token_f(context, rexbscan(context));
+
+        // Line Continuation
+        if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
+            token_r(context);  /* Discard tokens , and EOC tokens */
+            token_r(context);
+            peek_token = token_f(context, rexbscan(context));
+            continue;
+        }
+
+        // Skip multiple end of clause/line
+        if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
+
 
         /* Special Processing */
         if (token_type == TK_MINUSMINUS) {
