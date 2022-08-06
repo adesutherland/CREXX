@@ -373,6 +373,7 @@ char* mprintf(const char* format, ...);
 /*  Importable Functions */
 typedef struct imported_func {
     char *namespace;
+    char *file_name;
     char *fqname;
     char *name;
     char *options;
@@ -383,7 +384,7 @@ typedef struct imported_func {
 } imported_func;
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
-imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, char *options, char *type, char *args, char *implementation);
+imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation);
 
 /* Free an imported_func */
 void freimpfc(imported_func *func);

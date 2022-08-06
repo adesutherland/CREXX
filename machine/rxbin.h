@@ -10,11 +10,153 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "rxas.h"
+#include <stdlib.h>
 
 #define BIN_VERSION "001"
 
 #define BIN_HEADER "cReXx" /* Do not change */
+
+typedef struct bin_space bin_space;
+
+/* cREXX Instruction Coding */
+#pragma pack(push,4)
+typedef struct instruction_coding {
+    int opcode;
+    int no_ops;
+} instruction_coding;
+#pragma pack(pop)
+
+/* Single cREXX Binary Code Entry */
+#pragma pack(push,4)
+typedef union bin_code {
+    instruction_coding instruction;
+    void* impl_address;
+    double fconst;
+    rxinteger iconst;
+    char cconst;
+    size_t index;
+} bin_code;
+#pragma pack(pop)
+
+/* cREXX Binary Program */
+#pragma pack(push,4)
+struct bin_space {
+    int globals;
+    size_t inst_size;
+    size_t const_size;
+    struct module *module;
+    bin_code *binary;
+    unsigned char *const_pool;
+};
+#pragma pack(pop)
+
+enum const_pool_type {
+    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
+    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR
+};
+
+/* cREXX chameleon entry in the constant pool
+ * A poor C users abstract class!
+ * */
+typedef struct chameleon_constant {
+    size_t size_in_pool; /* including any padding for alignment */
+    enum const_pool_type type;
+} chameleon_constant;
+
+/* cREXX String entry in the constant pool */
+typedef struct string_constant {
+    chameleon_constant base;
+    size_t string_len;
+#ifndef NUTF8
+    size_t string_chars;
+#endif
+    char string[1]; /* Must be last member */
+} string_constant;
+
+typedef struct stack_frame stack_frame;
+
+/* cREXX Procedure entry in the constant pool */
+typedef struct proc_constant {
+    chameleon_constant base;
+    int next;
+    int locals;
+    bin_space *binarySpace;
+    stack_frame **frame_free_list;
+    stack_frame *frame_free_list_head;
+    size_t start;
+    size_t exposed;
+    char name[1]; /* Must be last member */
+} proc_constant;
+
+/* cREXX Exposed Register entry in the constant pool */
+typedef struct expose_reg_constant {
+    chameleon_constant base;
+    int next;
+    int global_reg;
+    char index[1]; /* Must be last member */
+} expose_reg_constant;
+
+/* cREXX Exposed Procedure entry in the constant pool */
+typedef struct expose_proc_constant {
+    chameleon_constant base;
+    int next;
+    size_t procedure;
+    unsigned char imported : 1;
+    char index[1]; /* Must be last member */
+} expose_proc_constant;
+
+/* cREXX Generic meta entry to hold prev/next offsets */
+typedef struct meta_entry {
+    chameleon_constant base;
+    int prev;
+    int next;
+    size_t address;
+} meta_entry;
+
+/* cREXX Meta Source entry in the constant pool */
+typedef struct meta_src_constant {
+    meta_entry base;
+    size_t line;
+    size_t column;
+    size_t source;
+} meta_src_constant;
+
+/* cREXX Meta File entry in the constant pool */
+typedef struct meta_file_constant {
+    meta_entry base;
+    size_t file;
+} meta_file_constant;
+
+typedef struct meta_func_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t func;
+    size_t args;
+    size_t inliner;
+} meta_func_constant;
+
+typedef struct meta_reg_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t reg;
+} meta_reg_constant;
+
+typedef struct meta_const_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t constant;
+} meta_const_constant;
+
+typedef struct meta_clear_constant {
+    meta_entry base;
+    size_t symbol;
+} meta_clear_constant;
 
 typedef struct module_header {
     char FILE_HEADER[sizeof(BIN_HEADER)];

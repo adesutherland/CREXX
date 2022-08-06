@@ -394,9 +394,6 @@ static walker_result register_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) {
-            payload->context->current_scope = node->scope;
-        }
         switch (node->node_type) {
             case ARGS:
                 /*
@@ -451,7 +448,7 @@ static walker_result register_walker(walker_direction direction,
                     c = c->sibling;
                 }
                 node->num_additional_registers = i + 1;
-                node->additional_registers = get_regs(payload->context->current_scope, node->num_additional_registers);
+                node->additional_registers = get_regs(node->scope, node->num_additional_registers);
 
                 /* The children register need to be assigned */
                 c = child1;
@@ -599,14 +596,14 @@ static walker_result register_walker(walker_direction direction,
 
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(payload->context->current_scope, child1->register_num);
+                    ret_reg(node->scope, child1->register_num);
                 if (!is_var_symbol(child2) && child2->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(payload->context->current_scope, child2->register_num);
+                    ret_reg(node->scope, child2->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                    node->register_num = get_reg(payload->context->current_scope);
+                    node->register_num = get_reg(node->scope);
                 break;
 
             case OP_AND:
@@ -618,7 +615,7 @@ static walker_result register_walker(walker_direction direction,
                     /* If we are assigning a register to either children we
                      * will assign to this node and children, overriding/ignoring
                      * any DONT_ASSIGN_REGISTER flag for this node */
-                    node->register_num = get_reg(payload->context->current_scope);
+                    node->register_num = get_reg(node->scope);
                     if (child1->register_num == DONT_ASSIGN_REGISTER)
                         child1->register_num = node->register_num;
                     if (child2->register_num == DONT_ASSIGN_REGISTER)
@@ -629,7 +626,7 @@ static walker_result register_walker(walker_direction direction,
                      * so just set the node's register */
                     if (node->register_num != DONT_ASSIGN_REGISTER)
                         /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                        node->register_num = get_reg(payload->context->current_scope);
+                        node->register_num = get_reg(node->scope);
                 }
                 break;
 
@@ -638,12 +635,12 @@ static walker_result register_walker(walker_direction direction,
             case OP_PLUS:
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1))
-                    ret_reg(payload->context->current_scope, child1->register_num);
+                    ret_reg(node->scope, child1->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                    node->register_num = get_reg(payload->context->current_scope);
+                    node->register_num = get_reg(node->scope);
                 break;
 
             case VAR_SYMBOL:
@@ -651,7 +648,7 @@ static walker_result register_walker(walker_direction direction,
             case VAR_REFERENCE:
                 /* Set the symbols register */
                 if (node->symbolNode->symbol->register_num == UNSET_REGISTER)
-                    node->symbolNode->symbol->register_num = get_reg(payload->context->current_scope);
+                    node->symbolNode->symbol->register_num = get_reg(node->scope);
                 /* The node uses the symbol register number */
                 node->register_num = node->symbolNode->symbol->register_num;
                 node->register_type = node->symbolNode->symbol->register_type;
@@ -665,14 +662,14 @@ static walker_result register_walker(walker_direction direction,
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
-                    node->register_num = get_reg(payload->context->current_scope);
+                    node->register_num = get_reg(node->scope);
                 break;
 
             case FUNCTION:
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
-                    node->register_num = get_reg(payload->context->current_scope);
+                    node->register_num = get_reg(node->scope);
 
                 /* Assign additional Registers for arguments if assignment was deferred  */
                 i = node->additional_registers + 1; /* First one is the number of arguments */
@@ -685,7 +682,7 @@ static walker_result register_walker(walker_direction direction,
                 }
 
                 /* Free registers except where it has been given to a symbol */
-                ret_reg(payload->context->current_scope, node->additional_registers); /* First one is the number of arguments */
+                ret_reg(node->scope, node->additional_registers); /* First one is the number of arguments */
                 i = node->additional_registers + 1;
                 c = child1;
                 while (c) {
@@ -693,7 +690,7 @@ static walker_result register_walker(walker_direction direction,
                     if ( !(is_var_symbol(c) &&
                            c->symbolNode->symbol->register_num == i &&
                            c->symbolNode->symbol->register_type == 'r') )
-                        ret_reg(payload->context->current_scope, i);
+                        ret_reg(node->scope, i);
 
                     i++;
                     c = c->sibling;
@@ -726,7 +723,7 @@ static walker_result register_walker(walker_direction direction,
                 if (node->register_num != DONT_ASSIGN_REGISTER) {
                     /* Then if it is a temporary mark the register for reuse */
                     if (!is_var_symbol(child1))
-                        ret_reg(payload->context->current_scope, child1->register_num);
+                        ret_reg(node->scope, child1->register_num);
                 }
                 break;
 
@@ -738,7 +735,7 @@ static walker_result register_walker(walker_direction direction,
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
                         if (!is_var_symbol(child1))
-                            ret_reg(payload->context->current_scope,
+                            ret_reg(node->scope,
                                     child1->register_num);
                     }
                 }
@@ -750,7 +747,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
                 if (!is_var_symbol(child1))
-                    ret_reg(payload->context->current_scope, child1->register_num);
+                    ret_reg(node->scope, child1->register_num);
                 break;
 
             case TO:
@@ -771,7 +768,7 @@ static walker_result register_walker(walker_direction direction,
                     node->register_type = node->child->register_type;
                 }
                 /* Else new register for copy */
-                else node->register_num = get_reg(payload->context->current_scope);
+                else node->register_num = get_reg(node->scope);
                 break;
 
             case REPEAT:
@@ -798,13 +795,13 @@ static walker_result register_walker(walker_direction direction,
                 while (c) {
                     if (c->node_type == FOR) {
                         /* Always node register  */
-                        ret_reg(payload->context->current_scope, c->register_num);
+                        ret_reg(node->scope, c->register_num);
                     }
                     /* Don't do it for the ASSIGN node - it takes care of itself */
                     else if (c->node_type != ASSIGN && c->child) {
                         /* release the temporary register */
                         if (!is_var_symbol(c->child))
-                            ret_reg(payload->context->current_scope, c->register_num);
+                            ret_reg(node->scope, c->register_num);
                     }
                     c = c->sibling;
                 }
@@ -815,8 +812,6 @@ static walker_result register_walker(walker_direction direction,
              * so we do not have a case ASSEMBLER: */
             default:;
         }
-
-        payload->context->current_scope = node->scope;
     }
 
     return result_normal;
@@ -1351,11 +1346,7 @@ static walker_result emit_walker(walker_direction direction,
     char ret_type;
     int ret_num;
 
-    if (direction == in) {
-        /* IN - TOP DOWN */
-        payload->context->current_scope = node->scope;
-    }
-    else {
+    if (direction == out) {
         /* OUT - BOTTOM UP */
         child1 = node->child;
         if (child1) child2 = child1->sibling;
@@ -1413,8 +1404,8 @@ static walker_result emit_walker(walker_direction direction,
 
             case IMPORTED_FILE:
             {
-                char *buf = mprintf("\n/* Imported  Declaration: \"%.*s\" */\n",
-                                    (int)node->node_string_length, node->node_string);
+                char *buf = mprintf("\n/* Imported Declaration from file: %s */",
+                                    node->context->file_name);
 
                 node->output = output_fs(buf);
                 free(buf);
@@ -2804,8 +2795,6 @@ static walker_result emit_walker(walker_direction direction,
 
             default:;
         }
-
-        payload->context->current_scope = node->scope;
     }
 
     return result_normal;
@@ -2816,10 +2805,8 @@ void emit(Context *context, FILE *output) {
 
     payload.context = context;
 
-    payload.context->current_scope = 0;
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
     payload.file = output;
-    payload.context->current_scope = 0;
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
 }
