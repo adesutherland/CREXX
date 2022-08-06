@@ -174,12 +174,11 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    buff = file2buf(fp);
+    buff = file2buf(fp, &bytes);
     if(buff == NULL) {
         fprintf(stderr, "Can't read input file\n");
         exit(-1);
     }
-    bytes = strlen(buff); // TODO Remove the need for this
 
     /* Initialize scanner */
     scanner.file_name = file_name;

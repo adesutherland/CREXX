@@ -10,6 +10,7 @@
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcpdary.h"
+#include "rxbin.h"
 
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
@@ -84,7 +85,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
                 char *args = encdstrg(source, strlen(source));
                 char *fqname = sym_frnm(node->symbolNode->symbol);
 
-                func = rximpfc_f(master_context, fqname, node->symbolNode->symbol->name, "b", type, args, 0);
+                func = rximpfc_f(master_context, node->context->file_name, fqname, "b", type, args, 0);
 
                 if (func) dpa_add(master_context->importable_function_array, func);
 
@@ -98,12 +99,117 @@ static walker_result procedure_signature_walker(walker_direction direction,
     return result_normal;
 }
 
-void parseRexxFileForFunctions(Context *master_context, char* file_name) {
+/* Get the constant string in a malloced buffer */
+static char* get_const_string(void* constpool, size_t ix) {
+    char *result;
+    char *c;
+    size_t sz;
+
+    if (ix == -1) return 0;
+
+    c = ((string_constant *)(constpool + ix))->string;
+    sz = ((string_constant *)(constpool + ix))->string_len;
+
+    result = malloc(sz + 1);
+    memcpy(result, c, sz);
+    result[sz] = 0;
+    return result;
+}
+
+static void parseRxbinFileForFunctions(Context *master_context, char* file_name) {
+    FILE *fp;
+    module_file *file_module_section;
+    size_t modules_processed = 0;
+    int loaded_rc;
+    size_t n;
+    chameleon_constant *entry;
+    size_t i;
+    imported_func *func;
+    size_t exposed_ix;
+    expose_proc_constant *exposed;
+    char *fqname;
+    char *option;
+    char *type;
+    char *args;
+    char *inliner;
+    char *full_file_name;
+
+    if (master_context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
+
+    fp = openfile(file_name, "", 0, "rb");
+    if (!fp) {
+        if (master_context->debug_mode) printf("Importing Procedures - Could not open file\n");
+        return;
+    }
+
+    loaded_rc = 0;
+    while (loaded_rc == 0) {
+        file_module_section = 0;
+        switch (loaded_rc = read_module(&file_module_section, fp)) {
+            case 0: /* Success */
+                i = 0;
+                while (i < file_module_section->header.constant_size) {
+                    entry = (chameleon_constant *)(file_module_section->constant + i);
+                    if (entry->type == META_FUNC) {
+                        meta_func_constant *mentry = (meta_func_constant *) entry;
+
+                        /* Check it is exposed */
+                        exposed_ix = ((proc_constant *) (file_module_section->constant + mentry->func))->exposed;
+                        if ( (int)exposed_ix != -1 ) {
+                            exposed =  (expose_proc_constant *) (file_module_section->constant + exposed_ix);
+
+                            /* Exported */
+                            if (!exposed->imported) {
+                                fqname = exposed->index;
+                                option = get_const_string(file_module_section->constant, mentry->option);
+                                type = get_const_string(file_module_section->constant, mentry->type);
+                                args = get_const_string(file_module_section->constant, mentry->args);
+                                inliner = get_const_string(file_module_section->constant, mentry->inliner);
+                                full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
+
+                                func = rximpfc_f(master_context, full_file_name, fqname, option, type, args, inliner);
+
+                                if (func) dpa_add(master_context->importable_function_array, func);
+
+                                if (option) free(option);
+                                if (type) free(type);
+                                if (args) free(args);
+                                if (inliner) free(inliner);
+                                if (full_file_name) free(full_file_name);
+                            }
+                        }
+                    }
+
+                    i += entry->size_in_pool;
+                }
+
+                modules_processed++;
+                break;
+
+            case 1: /* eof */
+                if (file_module_section) free_module(file_module_section);
+                if (!modules_processed) {
+                    if (master_context->debug_mode) printf("Importing Procedures - Empty file\n");
+                    return;
+                }
+                break;
+
+            default: /* error */
+                if (file_module_section) free_module(file_module_section);
+                if (master_context->debug_mode) printf("Importing Procedures - Error reading file\n");
+                return;
+        }
+    }
+
+    fclose(fp);
+}
+
+static void parseRexxFileForFunctions(Context *master_context, char* file_name) {
     size_t bytes;
     Context *context;
     char *buff_start;
 
-    if (master_context->debug_mode) printf("Importing Procedures - Reading file %s for possible procedure imports\n", file_name);
+    if (master_context->debug_mode) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
     /* Context for parsing */
     context = cntx_f();
@@ -269,17 +375,20 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
     i = 0;
     for (f = 0; master_context->importable_file_list[f] && !found_symbol; f++) {
         /* Already imported? */
-        if (master_context->importable_file_list[f]->imported) continue;
-        master_context->importable_file_list[f]->imported = 1;
+        if (!master_context->importable_file_list[f]->imported) {
+            master_context->importable_file_list[f]->imported = 1;
 
-        /* Import File */
-        switch (master_context->importable_file_list[f]->type) {
-            case REXX_FILE:
-                parseRexxFileForFunctions(master_context, master_context->importable_file_list[f]->name);
-                break;
-            case RXBIN_FILE:
-            case RXAS_FILE:
-                ;
+            /* Import File */
+            switch (master_context->importable_file_list[f]->type) {
+                case REXX_FILE:
+                    parseRexxFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    break;
+                case RXBIN_FILE:
+                    parseRxbinFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    break;
+
+                case RXAS_FILE:;
+            }
         }
 
         /* Check the added functions in the function list */
@@ -344,12 +453,13 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
-imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, char *options, char *type, char *args, char *implementation)  {
+imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation)  {
     imported_func *func;
     char *buffer;
     Scope **namespace;
     size_t i;
     char found;
+    char *name;
 
     if (!fqname) return 0;
 
@@ -372,6 +482,8 @@ imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, cha
     }
     else return 0; /* No namespace */
 
+    name = fqname + len + 1;
+
     /* OK - Create func */
     func = malloc(sizeof(imported_func));
     func->context = 0;
@@ -380,6 +492,10 @@ imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, cha
     func->namespace = malloc(len + 1);
     memcpy(func->namespace, fqname, len);
     func->namespace[len] = 0;
+
+    /* Store the file name */
+    func->file_name = malloc(strlen(file_name) + 1);
+    strcpy(func->file_name,file_name);
 
     /* Store fqname */
     func->fqname = malloc(strlen(fqname) + 1);
@@ -417,10 +533,10 @@ imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, cha
     else func->implementation = 0;
 
     /* Generate Function Declaration AST */
-    buffer = mprintf("options levelb\n%s: procedure = %s\narg %s\n", func->name, func->type, func->args);
+    buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name, func->type, func->args);
 // TODO Level detection from options
     if (master_context->debug_mode) printf("Importing Procedures - Generate AST for args for procedure %s\n", func->fqname);
-    func->context = parseRexx(master_context->location, func->namespace, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
+    func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
 
     if (error_in_node(func->context->ast)) {
         fprintf(stderr, "Importing Procedures - ERROR: Error parsing imported procedure arguments for %s, skipping\n", func->fqname);
@@ -447,6 +563,7 @@ imported_func *rximpfc_f(Context*  master_context, char *fqname, char *name, cha
 /* Free an imported_func */
 void freimpfc(imported_func *func) {
     if (func->namespace) free(func->namespace);
+    if (func->file_name) free(func->file_name);
     if (func->fqname) free(func->fqname);
     if (func->name) free(func->name);
     if (func->options) free(func->options);
@@ -514,6 +631,22 @@ importable_file **rxfl_lst(Context *context) {
                     file = importable_file_f(name, REXX_FILE);
                     add_file_to_list(file, &number, &list);
                 }
+            }
+        } while (name);
+    }
+    dirclose(&dir_ptr);
+
+
+    /* Read RXBIN files in the current directory */
+    name = dirfstfl(context->location, "rxbin", &dir_ptr);
+    if (name) {
+        file = importable_file_f(name, RXBIN_FILE);
+        add_file_to_list(file, &number, &list);
+        do {
+            name = dirnxtfl(&dir_ptr);
+            if (name) {
+                file = importable_file_f(name, RXBIN_FILE);
+                add_file_to_list(file, &number, &list);
             }
         } while (name);
     }

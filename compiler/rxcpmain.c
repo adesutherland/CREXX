@@ -308,7 +308,6 @@ int main(int argc, char *argv[]) {
         case LEVELL:
             if (debug_mode) printf("REXX Level B/G/L (cREXX)\n");
             rexbpars(context); // Built AST
-            free_ops(); // Free Instruction Database
             break;
 
         default:
@@ -388,6 +387,8 @@ int main(int argc, char *argv[]) {
 
     /* Close outfile */
     if (outFile) fclose(outFile);
+
+    if (context->level == LEVELB) free_ops(); // Free Instruction Database
 
     /* Free context */
     fre_cntx(context);
