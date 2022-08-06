@@ -7,13 +7,17 @@ add_subdirectory(tests_performance)
 
 # Consolidate Rexx Library
 set(SUBLIBS
-        rexx/library-rexx.rxbin
-        rxas/library-rxas.rxbin
-        )
+        rexx/library-rexx
+        rxas/library-rxas
+)
+
+foreach (LIB ${SUBLIBS})
+    set(LIB_FILES ${LIB_FILES} ${LIB}".rxbin")
+endforeach ()
 
 add_custom_command(
         OUTPUT library.rxbin
-        COMMAND ${CMAKE_COMMAND} -E cat ${SUBLIBS} > library.rxbin
+        COMMAND ${CMAKE_COMMAND} -E cat ${LIB_FILES} > library.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${SUBLIBS}
         COMMENT "cREXX Combined Library Archive ..."
