@@ -42,9 +42,9 @@ add_executable(rxc
         ../platform/platform.h ../platform/platform.c
         ../utf8/utf.h rxcpfunc.c)
 
-add_dependencies(rxc re2c lemon machine avl_tree platform)
+add_dependencies(rxc re2c lemon machine avl_tree platform rxaslib)
 
-target_link_libraries(rxc machine avl_tree platform m)
+target_link_libraries(rxc machine avl_tree platform rxaslib m)
 
 target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ../avl_tree ../machine ../platform ../utf8)

@@ -20,6 +20,8 @@ static int no_instructions = 0;
 
 // Load and initialise Instruction Database
 void init_ops() {
+    if (instructions) return; /* Stops double initialising */
+    /* STARTINSTRUCTION */
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
@@ -317,6 +319,7 @@ void init_ops() {
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
+    /* ENDINSTRUCTIONS */
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;

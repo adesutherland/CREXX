@@ -54,14 +54,14 @@ typedef struct op_map {
    char* proc[MAX_OP_MAP]; /* Procedure IDs */
 
    /* Tokens to show what maps are set and the holding the defining token */
-   Token *reg_token[MAX_OP_MAP];
-   Token *integer_token[MAX_OP_MAP];
-   Token *string_token[MAX_OP_MAP];
-   Token *character_token[MAX_OP_MAP];
-   Token *real_token[MAX_OP_MAP];
-   Token *branch_token[MAX_OP_MAP];
-   Token *label_token[MAX_OP_MAP];
-   Token *proc_token[MAX_OP_MAP];
+   Assembler_Token *reg_token[MAX_OP_MAP];
+   Assembler_Token *integer_token[MAX_OP_MAP];
+   Assembler_Token *string_token[MAX_OP_MAP];
+   Assembler_Token *character_token[MAX_OP_MAP];
+   Assembler_Token *real_token[MAX_OP_MAP];
+   Assembler_Token *branch_token[MAX_OP_MAP];
+   Assembler_Token *label_token[MAX_OP_MAP];
+   Assembler_Token *proc_token[MAX_OP_MAP];
 
    /* Instructions matched in the rules */
    rule *inst_mapped[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
@@ -360,8 +360,8 @@ rule rules[] =
             {END_OF_RULE}
         };
 
-/* Token to reg type */
-static char reg_type(Token *opToken) {
+/* Assembler_Token to reg type */
+static char reg_type(Assembler_Token *opToken) {
     switch(opToken->token_type) {
         case RREG:
             return 'r';
@@ -377,8 +377,8 @@ static char reg_type(Token *opToken) {
  * example a branch instruction (i.e. an instruction with a label or function
  * target changes the flow of control, breaking simple keyhole logic).
  * In which case we flush the queue before adding the next instruction */
-static int is_hazardous(enum queue_item_type type, Token *instrToken, Token *operand1Token,
-                              Token *operand2Token, Token *operand3Token) {
+static int is_hazardous(enum queue_item_type type, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+                        Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
     if (type == OP_CODE) {
         /* Calls or branches */
@@ -409,7 +409,7 @@ static int is_hazardous(enum queue_item_type type, Token *instrToken, Token *ope
  * Return 1 if the instrToken is relevant
  * Relevant means it uses a mapped register
  */
-static int is_relevant(op_map *map, Token *opToken) {
+static int is_relevant(op_map *map, Assembler_Token *opToken) {
     int i;
     char r_tp;
 
@@ -430,7 +430,7 @@ static int is_relevant(op_map *map, Token *opToken) {
  * returns 1 if it can map, otherwise 0
  * NOTE: The *map structure is NOT updated
  * See map_operand() */
-static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_num) {
+static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
 
     if (!opToken) {
         if (op_type) return 0;
@@ -530,7 +530,7 @@ static int can_map_operand(op_map *map, Token *opToken, char op_type, size_t op_
  * returns 1 if is does mapped successfully, otherwise 0
  * NOTE: if it does map the *map structure is updated
  * See can_map_operand() */
-static int map_operand(op_map *map, Token *opToken, char op_type, size_t op_num) {
+static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
 
     if (!opToken) {
         if (op_type) return 0;
@@ -732,8 +732,8 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
 }
 
 /* Returns the mapped token for a rule */
-static Token* mapped_token(Assembler_Context *context, op_map *map, char op_type, size_t op_num) {
-    Token *t;
+static Assembler_Token* mapped_token(Assembler_Context *context, op_map *map, char op_type, size_t op_num) {
+    Assembler_Token *t;
     char buffer[20];
 
     switch(op_type) {
@@ -761,14 +761,14 @@ static Token* mapped_token(Assembler_Context *context, op_map *map, char op_type
 
                 /* If the intrinsically linked branch id is set make a pair */
                 t = map->branch_token[op_num];
-                if (t) t = token_id(context, t, (char*)t->token_value.string);
+                if (t) t = rxas_tid(context, t, (char *) t->token_value.string);
 
                     /* Otherwise make a unique label - note that as it does not start with
                      * a letter, it cannot be a duplicate of a label from the
                      * rxas source file */
                 else {
                     snprintf(buffer, 20, "%d", context->optimiser_counter++);
-                    t = token_id(context, NULL, buffer);
+                    t = rxas_tid(context, NULL, buffer);
                 }
                 /* Store the created token */
                 t->token_type = LABEL;
@@ -785,14 +785,14 @@ static Token* mapped_token(Assembler_Context *context, op_map *map, char op_type
 
                 /* If the intrinsically linked label is set make a pair */
                 t = map->label_token[op_num];
-                if (t) t = token_id(context, t, (char*)t->token_value.string);
+                if (t) t = rxas_tid(context, t, (char *) t->token_value.string);
 
                 /* Otherwise make a unique label - note that as it does not start with
                  * a letter, it cannot be a duplicate of a label from the
                  * rxas source file */
                 else {
                     snprintf(buffer, 20, "%d", context->optimiser_counter++);
-                    t = token_id(context, NULL, buffer);
+                    t = rxas_tid(context, NULL, buffer);
                 }
                 /* Store the created token */
                 map->branch_token[op_num] = t;
@@ -874,7 +874,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                     case OP_CODE:
                         context->optimiser_queue[inst_no].instrType = OP_CODE;
                         context->optimiser_queue[inst_no].instrToken =
-                                token_id(context,
+                                rxas_tid(context,
                                          context->optimiser_queue[inst_no].instrToken,
                                          r->out.instruction);
                         context->optimiser_queue[inst_no].operand1Token =
@@ -922,7 +922,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         /* Add the instruction */
                         context->optimiser_queue[inst_no2].instrType = OP_CODE;
                         context->optimiser_queue[inst_no2].instrToken =
-                                token_id(context,
+                                rxas_tid(context,
                                          context->optimiser_queue[inst_no2].instrToken,
                                          r->out2.instruction);
                         context->optimiser_queue[inst_no2].operand1Token =
@@ -1047,8 +1047,8 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
 }
 
 static void queue_instruction(Assembler_Context *context, enum queue_item_type type,
-                              Token *instrToken, Token *operand1Token, Token *operand2Token,
-                              Token *operand3Token, Token *operand4Token, Token *operand5Token) {
+                              Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                              Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token) {
 
     /* Remove old instructions to get queue down to the target length */
     /* Note that instruction rules can add instructions to the queue  */
@@ -1080,7 +1080,7 @@ static void queue_instruction(Assembler_Context *context, enum queue_item_type t
 
 /* Queue code for the keyhole optimiser */
 /* Queue opcode  */
-void rxasque0(Assembler_Context *context, Token *instrToken) {
+void rxasque0(Assembler_Context *context, Assembler_Token *instrToken) {
     if (context->optimise) {
         queue_instruction( context, OP_CODE, instrToken, 0, 0, 0, 0, 0);
     }
@@ -1088,7 +1088,7 @@ void rxasque0(Assembler_Context *context, Token *instrToken) {
 }
 
 /* Queue opcode  */
-void rxasque1(Assembler_Context *context, Token *instrToken, Token *operand1Token) {
+void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, 0, 0, 0, 0);
     }
@@ -1096,8 +1096,8 @@ void rxasque1(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 }
 
 /* Queue opcode  */
-void rxasque2(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-              Token *operand2Token) {
+void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+              Assembler_Token *operand2Token) {
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, 0, 0, 0);
     }
@@ -1105,8 +1105,8 @@ void rxasque2(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 }
 
 /* Queue opcode  */
-void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-              Token *operand2Token, Token *operand3Token) {
+void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, operand3Token, 0, 0);
     }
@@ -1114,7 +1114,7 @@ void rxasque3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 }
 
 /* Queue Label */
-void rxasqlbl(Assembler_Context *context, Token *labelToken) {
+void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken) {
     if (context->optimise) {
         queue_instruction(context, ASM_LABEL, labelToken, 0, 0, 0, 0, 0);
     }
@@ -1122,7 +1122,7 @@ void rxasqlbl(Assembler_Context *context, Token *labelToken) {
 }
 
 /* Queue Source filename */
-void rxasqmfl(Assembler_Context *context, Token *file) {
+void rxasqmfl(Assembler_Context *context, Assembler_Token *file) {
     if (context->optimise) {
         queue_instruction(context, SRC_FILE, file, 0, 0, 0, 0, 0);
     }
@@ -1130,7 +1130,7 @@ void rxasqmfl(Assembler_Context *context, Token *file) {
 }
 
 /* Queue Source Line */
-void rxasqmsr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
     if (context->optimise) {
         queue_instruction(context, SRC_LINE, line, column, source, 0, 0, 0);
     }
@@ -1138,7 +1138,7 @@ void rxasqmsr(Assembler_Context *context, Token *line, Token *column, Token *sou
 }
 
 /* Queue Function Metadata */
-void rxasqmfu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner) {
     if (context->optimise) {
         queue_instruction(context, FUNC_META, symbol, option, type, func, args, inliner);
     }
@@ -1146,7 +1146,7 @@ void rxasqmfu(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Queue Register Metadata */
-void rxasqmre(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+void rxasqmre(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg) {
     if (context->optimise) {
         queue_instruction(context, REG_META, symbol, option, type, reg, 0, 0);
     }
@@ -1154,7 +1154,7 @@ void rxasqmre(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Queue Constant Metadata */
-void rxasqmct(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant) {
+void rxasqmct(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant) {
     if (context->optimise) {
         queue_instruction(context, CONST_META, symbol, option, type, constant, 0, 0);
     }
@@ -1162,7 +1162,7 @@ void rxasqmct(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Queue Clear Metadata */
-void rxasqmcl(Assembler_Context *context, Token *symbol) {
+void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol) {
     if (context->optimise) {
         queue_instruction(context, CLEAR_META, symbol, 0, 0, 0, 0, 0);
     }

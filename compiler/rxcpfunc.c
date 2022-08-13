@@ -11,6 +11,7 @@
 #include "rxcpmain.h"
 #include "rxcpdary.h"
 #include "rxbin.h"
+#include "rxas.h"
 
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
@@ -55,6 +56,8 @@ static char error_in_node(ASTNode* node) {  // NOLINT
     return 0;
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantFunctionResult"
 static walker_result procedure_signature_walker(walker_direction direction,
                                                 ASTNode* node,
                                                 void *pl) {
@@ -98,6 +101,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
     }
     return result_normal;
 }
+#pragma clang diagnostic pop
 
 /* Get the constant string in a malloced buffer */
 static char* get_const_string(void* constpool, size_t ix) {
@@ -116,22 +120,96 @@ static char* get_const_string(void* constpool, size_t ix) {
     return result;
 }
 
-static void parseRxbinFileForFunctions(Context *master_context, char* file_name) {
-    FILE *fp;
-    module_file *file_module_section;
-    size_t modules_processed = 0;
-    int loaded_rc;
-    size_t n;
+static void read_constant_pool_for_functions(Context *master_context, char *full_file_name, void* constant, size_t constant_size) {
     chameleon_constant *entry;
     size_t i;
     imported_func *func;
     size_t exposed_ix;
     expose_proc_constant *exposed;
-    char *fqname;
-    char *option;
-    char *type;
-    char *args;
-    char *inliner;
+    char* fqname;
+    char* option;
+    char* type;
+    char* args;
+    char* inliner;
+
+    i = 0;
+    while (i < constant_size) {
+        entry = (chameleon_constant *) (constant + i);
+        if (entry->type == META_FUNC) {
+            meta_func_constant *mentry = (meta_func_constant *) entry;
+
+            /* Check it is exposed */
+            exposed_ix = ((proc_constant *) (constant + mentry->func))->exposed;
+            if ((int) exposed_ix != -1) {
+                exposed = (expose_proc_constant *) (constant + exposed_ix);
+
+                /* Exported */
+                if (!exposed->imported) {
+                    fqname = exposed->index;
+                    option = get_const_string(constant, mentry->option);
+                    type = get_const_string(constant, mentry->type);
+                    args = get_const_string(constant, mentry->args);
+                    inliner = get_const_string(constant, mentry->inliner);
+
+                    func = rximpfc_f(master_context, full_file_name, fqname, option, type, args, inliner);
+
+                    if (func) dpa_add(master_context->importable_function_array, func);
+
+                    if (option) free(option);
+                    if (type) free(type);
+                    if (args) free(args);
+                    if (inliner) free(inliner);
+                }
+            }
+        }
+
+        i += entry->size_in_pool;
+    }
+}
+
+static void parseRxasFileForFunctions(Context *master_context, char* file_name) {
+    FILE *outFile;
+    int token_type;
+    Assembler_Token *token;
+    bin_space *pgm;
+    module_file module;
+
+    Assembler_Context scanner;
+    int i;
+
+    /* Zero Context */
+    memset(&scanner, 0, sizeof(Assembler_Context));
+
+    /* scanner context parameter */
+    scanner.debug_mode = master_context->debug_mode;
+    scanner.traceFile = 0;
+    scanner.optimise = 0;
+    scanner.file_name = file_name;
+    scanner.output_file_name = 0;
+    scanner.location = 0;
+
+    if (master_context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
+
+    /* Opening and Assemble file */
+    if (rxasinfl(&scanner, 1)) {
+        rxasclrc(&scanner);
+        return;
+    }
+
+    /* Parse & Process */
+    rxaspars(&scanner);
+
+    read_constant_pool_for_functions(master_context, file_name, scanner.binary.const_pool,
+                                     scanner.binary.const_size);
+
+    rxasclrc(&scanner);
+}
+
+static void parseRxbinFileForFunctions(Context *master_context, char* file_name) {
+    FILE *fp;
+    module_file *file_module_section;
+    size_t modules_processed = 0;
+    int loaded_rc;
     char *full_file_name;
 
     if (master_context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
@@ -147,42 +225,12 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name)
         file_module_section = 0;
         switch (loaded_rc = read_module(&file_module_section, fp)) {
             case 0: /* Success */
-                i = 0;
-                while (i < file_module_section->header.constant_size) {
-                    entry = (chameleon_constant *)(file_module_section->constant + i);
-                    if (entry->type == META_FUNC) {
-                        meta_func_constant *mentry = (meta_func_constant *) entry;
 
-                        /* Check it is exposed */
-                        exposed_ix = ((proc_constant *) (file_module_section->constant + mentry->func))->exposed;
-                        if ( (int)exposed_ix != -1 ) {
-                            exposed =  (expose_proc_constant *) (file_module_section->constant + exposed_ix);
+                full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
 
-                            /* Exported */
-                            if (!exposed->imported) {
-                                fqname = exposed->index;
-                                option = get_const_string(file_module_section->constant, mentry->option);
-                                type = get_const_string(file_module_section->constant, mentry->type);
-                                args = get_const_string(file_module_section->constant, mentry->args);
-                                inliner = get_const_string(file_module_section->constant, mentry->inliner);
-                                full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
-
-                                func = rximpfc_f(master_context, full_file_name, fqname, option, type, args, inliner);
-
-                                if (func) dpa_add(master_context->importable_function_array, func);
-
-                                if (option) free(option);
-                                if (type) free(type);
-                                if (args) free(args);
-                                if (inliner) free(inliner);
-                                if (full_file_name) free(full_file_name);
-                            }
-                        }
-                    }
-
-                    i += entry->size_in_pool;
-                }
-
+                read_constant_pool_for_functions(master_context, full_file_name, file_module_section->constant,
+                                                 file_module_section->header.constant_size);
+                free(full_file_name);
                 modules_processed++;
                 break;
 
@@ -263,7 +311,6 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
         case LEVELB:
         case LEVELG:
         case LEVELL:
-            if (master_context->debug_mode) printf("Importing Procedures - REXX Level B/G/L (cREXX)\n");
             rexbpars(context);
             break;
 
@@ -276,13 +323,9 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
         goto finish;
     }
 
-    if (master_context->debug_mode) printf("Importing Procedures - Validating AST Tree\n");
-    validate(context);
-
     /* Extract Function Definitions  */
+    validate(context);
     ast_wlkr(context->ast, procedure_signature_walker, master_context);
-
-    if (master_context->debug_mode) printf("Importing Procedures - Compiler read exiting - Success\n");
 
     finish:
 
@@ -296,8 +339,6 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
 /* Parse and validate a rexx program in a string and return the context */
 Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
-
-    if (debug_mode) printf("Importing Procedures - Parsing REXX for file %s\n", file_name);
 
     context = cntx_f();
     cntx_buf(context, rexx_source, bytes);
@@ -319,7 +360,6 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
         case LEVELB:
         case LEVELG:
         case LEVELL:
-            if (context->debug_mode) printf("Importing Procedures - Is Level B/G/L (cREXX)\n");
             rexbpars(context);
             break;
 
@@ -344,8 +384,6 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
     }
 #endif
 
-    if (debug_mode) printf("Importing Procedures - Parsing REXX - Success\n");
-
     finish:
 
     return context;
@@ -363,6 +401,8 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
+
+    if (master_context->debug_mode) printf("Importing Procedures - Looking for Procedure %s\n", name);
 
     /* Load files from the importable_file_list */
     if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);
@@ -386,8 +426,9 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
                 case RXBIN_FILE:
                     parseRxbinFileForFunctions(master_context, master_context->importable_file_list[f]->name);
                     break;
-
                 case RXAS_FILE:;
+                    parseRxasFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    break;
             }
         }
 
@@ -398,6 +439,8 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
 
             if (strcmp(name, func->name) == 0) {
                 /* Found it! */
+
+                if (master_context->debug_mode) printf("Importing Procedures - Found Procedure %s\n", func->fqname);
 
                 /* Splice the ASTs together */
                 add_ast(master_context->ast, func->context->ast->child);
@@ -456,7 +499,6 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
 imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation)  {
     imported_func *func;
     char *buffer;
-    Scope **namespace;
     size_t i;
     char found;
     char *name;
@@ -533,9 +575,9 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     else func->implementation = 0;
 
     /* Generate Function Declaration AST */
+    // TODO This only does Level B
     buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name, func->type, func->args);
-// TODO Level detection from options
-    if (master_context->debug_mode) printf("Importing Procedures - Generate AST for args for procedure %s\n", func->fqname);
+    if (master_context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
     func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
 
     if (error_in_node(func->context->ast)) {
@@ -602,13 +644,52 @@ static importable_file* importable_file_f(char* name, file_type type) {
     return file;
 }
 
+/* Get a list of files if a type in a directory (can be null), skipping skip_name (can be null) */
+static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number) {
+
+    void *dir_ptr;
+    char* name;
+    importable_file *file;
+    char* type_name;
+
+    switch (type) {
+        case REXX_FILE:
+            type_name = "rexx";
+            break;
+        case RXAS_FILE:
+            type_name = "rxas";
+            break;
+        case RXBIN_FILE:
+            type_name = "rxbin";
+            break;
+        default: return;
+    }
+
+    /* Read files in the directory */
+    name = dirfstfl(directory, type_name, &dir_ptr);
+    if (name) {
+        if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+            file = importable_file_f(name, type);
+            add_file_to_list(file, number, list);
+        }
+        do {
+            name = dirnxtfl(&dir_ptr);
+            if (name) {
+                if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+                    file = importable_file_f(name, type);
+                    add_file_to_list(file, number, list);
+                }
+            }
+        } while (name);
+    }
+    dirclose(&dir_ptr);
+
+}
+
 /* Get the list of importable files as a null terminated malloced array */
 importable_file **rxfl_lst(Context *context) {
     size_t number = 0;
     importable_file **list = 0;
-    importable_file *file;
-    void *dir_ptr;
-    char* name;
     char* full_name;
     char* exe_dir;
 
@@ -616,58 +697,26 @@ importable_file **rxfl_lst(Context *context) {
     list[0] = 0;
 
     full_name = mprintf("%s.rexx", context->file_name);
+    exe_dir = exepath();
 
     /* Read REXX files in the current directory */
-    name = dirfstfl(context->location, "rexx", &dir_ptr);
-    if (name) {
-        if ( strcmp(name, full_name) != 0 ) { // Skip if the same name as the main rexx file
-            file = importable_file_f(name, REXX_FILE);
-            add_file_to_list(file, &number, &list);
-        }
-        do {
-            name = dirnxtfl(&dir_ptr);
-            if (name) {
-                if ( strcmp(name, full_name) != 0 ) { // Skip if the same name as the main rexx file
-                    file = importable_file_f(name, REXX_FILE);
-                    add_file_to_list(file, &number, &list);
-                }
-            }
-        } while (name);
-    }
-    dirclose(&dir_ptr);
+    list_files_in_dir(context->location, REXX_FILE, full_name, &list, &number);
 
+    /* Read RXAS files in the current directory */
+    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number);
 
     /* Read RXBIN files in the current directory */
-    name = dirfstfl(context->location, "rxbin", &dir_ptr);
-    if (name) {
-        file = importable_file_f(name, RXBIN_FILE);
-        add_file_to_list(file, &number, &list);
-        do {
-            name = dirnxtfl(&dir_ptr);
-            if (name) {
-                file = importable_file_f(name, RXBIN_FILE);
-                add_file_to_list(file, &number, &list);
-            }
-        } while (name);
-    }
-    dirclose(&dir_ptr);
+    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number);
 
-    /* Read in REXX files in the directory holding the compiler */
-    exe_dir = exepath();
     if (exe_dir) {
-        name = dirfstfl(exe_dir, "rexx", &dir_ptr);
-        if (name) {
-            file = importable_file_f(name, REXX_FILE);
-            add_file_to_list(file, &number, &list);
-            do {
-                name = dirnxtfl(&dir_ptr);
-                if (name) {
-                    file = importable_file_f(name, REXX_FILE);
-                    add_file_to_list(file, &number, &list);
-                }
-            } while (name);
-        }
-        dirclose(&dir_ptr);
+        /* Read in REXX files in the directory holding the compiler */
+        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number);
+
+        /* Read in RXAS files in the directory holding the compiler */
+        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number);
+
+        /* Read in RXBIN files in the directory holding the compiler */
+        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number);
 
         free(exe_dir);
     }

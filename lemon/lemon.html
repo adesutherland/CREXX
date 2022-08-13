@@ -182,27 +182,27 @@ complete system.</p>
 must first create the parser.
 A new parser is created as follows:</p>
 <pre>
-   void *pParser = ParseAlloc( malloc );
+   void *pParser = RxasmAlloc( malloc );
 </pre>
-<p>The ParseAlloc() routine allocates and initializes a new parser and
+<p>The RxasmAlloc() routine allocates and initializes a new parser and
 returns a pointer to it.
 The actual data structure used to represent a parser is opaque &mdash;
 its internal structure is not visible or usable by the calling routine.
-For this reason, the ParseAlloc() routine returns a pointer to void
+For this reason, the RxasmAlloc() routine returns a pointer to void
 rather than a pointer to some particular structure.
-The sole argument to the ParseAlloc() routine is a pointer to the
+The sole argument to the RxasmAlloc() routine is a pointer to the
 subroutine used to allocate memory.  Typically this means malloc().</p>
 
 <p>After a program is finished using a parser, it can reclaim all
 memory allocated by that parser by calling</p>
 <pre>
-   ParseFree(pParser, free);
+   RxasmFree(pParser, free);
 </pre>
-<p>The first argument is the same pointer returned by ParseAlloc().  The
+<p>The first argument is the same pointer returned by RxasmAlloc().  The
 second argument is a pointer to the function used to release bulk
 memory back to the system.</p>
 
-<p>After a parser has been allocated using ParseAlloc(), the programmer
+<p>After a parser has been allocated using RxasmAlloc(), the programmer
 must supply the parser with a sequence of tokens (terminal symbols) to
 be parsed.  This is accomplished by calling the following function
 once for each token:<p>
@@ -210,7 +210,7 @@ once for each token:<p>
    Parse(pParser, hTokenID, sTokenData, pArg);
 </pre>
 <p>The first argument to the Parse() routine is the pointer returned by
-ParseAlloc().
+RxasmAlloc().
 The second argument is a small positive integer that tells the parser the
 type of the next token in the data stream.
 There is one token type for each terminal symbol in the grammar.
@@ -245,13 +245,13 @@ following:</p>
     6    ParserState sState;
     7
     8    pTokenizer = TokenizerCreate(zFilename);
-    9    pParser = ParseAlloc( malloc );
+    9    pParser = RxasmAlloc( malloc );
    10    InitParserState(&amp;sState);
    11    while( GetNextToken(pTokenizer, &amp;hTokenId, &amp;sToken) ){
    12       Parse(pParser, hTokenId, sToken, &amp;sState);
    13    }
    14    Parse(pParser, 0, sToken, &amp;sState);
-   15    ParseFree(pParser, free );
+   15    RxasmFree(pParser, free );
    16    TokenizerFree(pTokenizer);
    17    return sState.treeRoot;
    18 }
@@ -282,12 +282,12 @@ tree.</p>
 <p>The core of this example as it relates to Lemon is as follows:</p>
 <pre>
    ParseFile(){
-      pParser = ParseAlloc( malloc );
+      pParser = RxasmAlloc( malloc );
       while( GetNextToken(pTokenizer,&amp;hTokenId, &amp;sToken) ){
          Parse(pParser, hTokenId, sToken);
       }
       Parse(pParser, 0, sToken);
-      ParseFree(pParser, free );
+      RxasmFree(pParser, free );
    }
 </pre>
 <p>Basically, what a program has to do to use a Lemon-generated parser
@@ -296,20 +296,20 @@ tokenizing an input source.  When the end of input is reached, the
 Parse() routine should be called one last time with a token type
 of 0.  This step is necessary to inform the parser that the end of
 input has been reached.  Finally, we reclaim memory used by the
-parser by calling ParseFree().</p>
+parser by calling RxasmFree().</p>
 
 <p>There is one other interface routine that should be mentioned
 before we move on.
-The ParseTrace() function can be used to generate debugging output
+The RxasmTrace() function can be used to generate debugging output
 from the parser.  A prototype for this routine is as follows:</p>
 <pre>
-   ParseTrace(FILE *stream, char *zPrefix);
+   RxasmTrace(FILE *stream, char *zPrefix);
 </pre>
 <p>After this routine is called, a short (one-line) message is written
 to the designated output stream every time the parser changes states
 or calls an action routine.  Each such message is prefaced using
 the text given by zPrefix.  This debugging output can be turned off
-by calling ParseTrace() again with a first argument of NULL (0).</p>
+by calling RxasmTrace() again with a first argument of NULL (0).</p>
 
 <a id="onstack"></a>
 <h4>3.2.1 Allocating The Parse Object On Stack</h4>
@@ -347,10 +347,10 @@ These are the steps:
 Lemon-generated parser:</p>
 
 <blockquote><pre>
-void *ParseAlloc( (void*(*malloc)(size_t) );
-void ParseFree(void *pParser, (void(*free)(void*) );
+void *RxasmAlloc( (void*(*malloc)(size_t) );
+void RxasmFree(void *pParser, (void(*free)(void*) );
 void Parse(void *pParser, int tokenCode, ParseTOKENTYPE token, ...);
-void ParseTrace(FILE *stream, char *zPrefix);
+void RxasmTrace(FILE *stream, char *zPrefix);
 </pre></blockquote>
 
 <p>Notes:</p>
@@ -758,7 +758,7 @@ the stack.  This includes all of the following circumstances:</p>
 <li> When a rule reduces and the value of a non-terminal on
      the right-hand side is not linked to C code.
 <li> When the stack is popped during error processing.
-<li> When the ParseFree() function runs.
+<li> When the RxasmFree() function runs.
 </ul>
 <p>The destructor can do whatever it wants with the value of
 the non-terminal, but its design is to deallocate memory
@@ -812,14 +812,14 @@ a variable named "pAbc" that is the value of the 4th parameter
 in the most recent call to Parse().</p>
 
 <p>The <tt>%extra_context</tt> directive works the same except that it
-is passed in on the ParseAlloc() or ParseInit() routines instead of
+is passed in on the RxasmAlloc() or ParseInit() routines instead of
 on Parse().</p>
 
 <a id='extractx'></a>
 <h4>4.4.6 The <tt>%extra_context</tt> directive</h4>
 
 <p>The <tt>%extra_context</tt> directive instructs Lemon to add a 2nd parameter
-to the parameter list of the ParseAlloc() and ParseInit() functions.  Lemon
+to the parameter list of the RxasmAlloc() and ParseInit() functions.  Lemon
 doesn't do anything itself with these extra argument, but it does
 store the value make it available to C-code action routines, destructors,
 and so forth.  For example, if the grammar file contains:</p>
@@ -828,12 +828,12 @@ and so forth.  For example, if the grammar file contains:</p>
     %extra_context { MyStruct *pAbc }
 </pre>
 
-<p>Then the ParseAlloc() and ParseInit() functions will have an 2nd parameter
+<p>Then the RxasmAlloc() and ParseInit() functions will have an 2nd parameter
 of type "MyStruct*" and all action routines will have access to
 a variable named "pAbc" that is the value of that 2nd parameter.</p>
 
 <p>The <tt>%extra_argument</tt> directive works the same except that it
-is passed in on the Parse() routine instead of on ParseAlloc()/ParseInit().</p>
+is passed in on the Parse() routine instead of on RxasmAlloc()/ParseInit().</p>
 
 <a id='pfallback'></a>
 <h4>4.4.7 The <tt>%fallback</tt> directive</h4>

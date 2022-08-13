@@ -27,7 +27,7 @@
   call fetchLabel   /* Analyse defined labels in rx_intrp.c */
 
 /* find first instruction definition in operands.c */
-  do until lines(file)=0 | pos('void init_ops()',linein(file))>0
+  do until lines(file)=0 | pos('/* STARTINSTRUCTION */',linein(file))>0
   end
 
   call add_meta_inst     'const Instruction meta_map[] = {   {0,"null","",0,OP_NONE,OP_NONE,OP_NONE},'
