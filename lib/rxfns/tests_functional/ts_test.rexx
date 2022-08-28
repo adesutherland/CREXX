@@ -1,5 +1,6 @@
 /* rexx test abs bif */
 options levelb
+
 /* TODO */
 a="This is René's test case   "
 z="     This is René's test case"
@@ -15,3 +16,4 @@ if x=1 then say "EQUAL (non strict compare)"
    else say "NOT EQUAL (non strict compare)"
 
 return 0
+

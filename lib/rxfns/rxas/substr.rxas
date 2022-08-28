@@ -2,7 +2,6 @@
  * rexx SUBSTR bif in rxas. Uses length.rxas
  * rudimentary error checking
  */
-
           .globals=0
 length()  .expose=length.length          
 substr()  .locals=18 .expose=substr.substr

@@ -90,10 +90,10 @@ void init_ops() {
     instr_f("dec", "Decrement Int (op1--)", OP_REG, OP_NONE, OP_NONE);
     instr_f("inc0", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
     instr_f("dec0", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("inc1", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("dec1", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("inc2", "Increment R0++ Int", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("dec2", "Decrement R0-- Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("inc1", "Increment R1++ Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("dec1", "Decrement R1-- Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("inc2", "Increment R2++ Int", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("dec2", "Decrement R2-- Int", OP_NONE, OP_NONE, OP_NONE);
 
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iand", "bit wise and of 2 integers (op1=op2&op3)", OP_REG, OP_REG, OP_INT);
@@ -244,8 +244,10 @@ void init_ops() {
     instr_f("load", "Load op1 with op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_CHAR, OP_NONE);
 
-    instr_f("say", "Say op1 (as string)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("ssay", "String Say op1 (Deprecated use 'say reg')", OP_REG, OP_NONE, OP_NONE);
+    instr_f("say", "Say op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("sayx", "Say op1 without line feed", OP_REG, OP_NONE, OP_NONE);
+    instr_f("sayx", "Say op1 (as string) without line feed", OP_STRING, OP_NONE, OP_NONE);
+ //   instr_f("ssay", "String Say op1 (Deprecated use 'say reg')", OP_REG, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_STRING, OP_NONE, OP_NONE);
@@ -280,6 +282,10 @@ void init_ops() {
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
+    instr_f("ipow", "op1=op2**op3", OP_REG, OP_INT, OP_REG);
+
+    instr_f("fpow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
+    instr_f("fpow", "op1=op2**op3", OP_REG, OP_REG, OP_FLOAT);
 
     instr_f("bct", "dec op2; if op2>0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
     instr_f("bct", "dec op2; inc op3, if op2>0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
@@ -317,6 +323,13 @@ void init_ops() {
     instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
+
+    instr_f("opendll", "open DLL", OP_REG, OP_REG, OP_REG);
+    instr_f("dllparms", "fetches parms for DLL call ", OP_REG, OP_REG, OP_REG);
+
+    instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
+    instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
+
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;

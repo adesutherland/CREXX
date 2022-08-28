@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.00)
+add_subdirectory(levelb)
 
 project(tests C)
 
@@ -8,7 +9,7 @@ enable_testing()
 find_program(CTEST ctest)
 
 set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
-set(REXXTESTBINS basic.rxbin)
+set(REXXTESTBINS basic.rxbin loop.rxbin levelbfunc.rxbin)
 
 add_custom_target(tests ALL
         DEPENDS ${ASMTESTBINS} ${REXXTESTBINS})
@@ -23,8 +24,8 @@ foreach(_binfile ${ASMTESTBINS})
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX Assemble Test ${_basename} ..."
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()
 
 foreach(_binfile ${REXXTESTBINS})
@@ -38,6 +39,6 @@ foreach(_binfile ${REXXTESTBINS})
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "cREXX Assemble Test ${_basename} ..."
   )
-  add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endforeach()

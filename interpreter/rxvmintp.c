@@ -5,6 +5,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
@@ -132,6 +138,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *procedure;
     proc_constant *step_handler = 0;
     int rc = 0;
+    int initSeed=INT32_MIN;   // keep last seed for Random function within REXX run
     bin_code *pc, *next_pc;
     int mod_index;
     value *interrupt_arg;
@@ -661,10 +668,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
         /* String Say - Deprecated */
-        START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1)
-            DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1));
-            printf("%.*s", (int) op1R->string_length, op1R->string_value);
-            DISPATCH
+        /* START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1) */
+        /*     DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1)); */
+        /*     printf("%.*s", (int) op1R->string_length, op1R->string_value); */
+        /*     DISPATCH */
 
         /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
@@ -676,7 +683,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int)op1S->string_len, op1S->string);
             printf("%.*s\n", (int) op1S->string_len, op1S->string);
-            DISPATCH
+            DISPATCH;
+
+        /* ------------------------------------------------------------------------------------
+         *  SAYX say statemtnt without line feed                             pej 18. April 2022
+         *  -----------------------------------------------------------------------------------
+         */
+        START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1);
+            DEBUG("TRACE - SAYX \"%.*s\"\n",
+                (int)op1S->string_len, op1S->string);
+            printf("%.*s", (int) op1S->string_len, op1S->string);
+            DISPATCH;
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SCONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
@@ -813,7 +830,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 for (   i = 0;
                         i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                         i++, j++, k++) {
-                    current_frame->locals[j] = current_frame->parent->locals[k];
+                     current_frame->locals[j] = current_frame->parent->locals[k];
                 }
             }
             /* This gotos the start of the called procedure */
@@ -1187,7 +1204,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
                      op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
                      op1R->string_pos = 0;
-                     break;
+                     break;  // time zone names
                 }
                 case 'U':  {
                      time_t ctime;
@@ -1197,10 +1214,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                      ctime = time(NULL);
                      tmdata = localtime(&ctime);
                      tzset();
-                     tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+ timezone;
+                     tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+timezone;
                      gettimeofday(&tv, NULL);
                      op1R->int_value = tm*1000000+tv.tv_usec;
-                     break;
+                     break;  // UTC Time
                 }
             }
             DISPATCH
@@ -2200,8 +2217,29 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
         START_INSTRUCTION(FDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FDIV R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
-            REG_RETURN_FLOAT(op2F / op3RF)
-            DISPATCH
+            REG_RETURN_FLOAT(op2F / op3RF);
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_FLOAT  op1=op2**op2w Float operationn                   pej 3 March 2022
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_REG_FLOAT) CALC_DISPATCH(3);
+    DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        REG_RETURN_FLOAT(pow(op2RF,op3F));
+    }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_REG  op1=op2**op2 Float operation                     pej 3 March 2021
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_REG_REG) CALC_DISPATCH(3);
+    {
+        DEBUG("TRACE - FPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+              (int) REG_IDX(3));
+        REG_RETURN_FLOAT(pow(op2RF,op3RF));
+    }
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation                pej 22 August 2021
@@ -2209,7 +2247,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
             START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
             {
-                DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
+                DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
                     (int) REG_IDX(3));
                 rxinteger  i1 = 1;
                 rxinteger  i2 = op2RI;
@@ -2227,8 +2265,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn               pej 22 August 2021
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
-            DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3);
+            DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             {
                 rxinteger i1 = 1;
                 rxinteger i2 = op2RI;
@@ -2240,7 +2278,25 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 }
                 REG_RETURN_INT(i1)
             }
-            DISPATCH
+/*             DISPATCH; */
+/* ------------------------------------------------------------------------------------
+ *  IPOW_REG_INT_REG  op1=op2**op2w Integer operationn                  pej 26 May 2022
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3);
+    DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+    {
+        rxinteger i1 = 1;
+        rxinteger i2 = op2I;
+        rxinteger i3 = op3RI;
+        while (i3 != 0) {
+            if ((i3 & 1) == 1) i1 *= i2;
+            i3 >>= 1;
+            i2 *= i2;
+        }
+        REG_RETURN_INT(i1);
+    }
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  AMAP_REG_REG  Link r1 to Arg[r2]              TODO Rename to ALINK
@@ -3036,7 +3092,129 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
-            DISPATCH
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2);
+             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
+
+            if (op2R->int_value<0) {                 // no seed set
+                if (initSeed == INTMAX_MIN)  {       // seed still initial, set time based seed
+                   initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                   srand((unsigned) initSeed);
+                }
+            } else {                                 // seed set re-init with new seed
+                initSeed=op2R->int_value;
+                srand((unsigned) initSeed);
+            }
+            set_int(op1R, (long)rand());   // receive new random value
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
+ *   op1=irand(op2)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
+             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), op2I);
+             if (op2I<0) {                                // no seed set
+                if (initSeed == INTMAX_MIN)  {            // seed still initial, set time based seed
+                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+                    srand((unsigned) initSeed);
+                }
+             } else {                                     // seed set and NE old seed, set it new
+                initSeed=op2I;
+                srand((unsigned) initSeed);
+            }
+            set_int(op1R, (long)rand());   // receive new random value
+        DISPATCH;
+/* ------------------------------------------------------------------------------------------
+ *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
+ *  -----------------------------------------------------------------------------------------
+ */
+
+//    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);   // for string
+    typedef int    (*intSubproc)(int arg1, int arg2, char str1[32]);
+
+START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
+     DEBUG("TRACE - OPENDLL R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
+#ifdef _WIN32
+     HINSTANCE hDLL;               // Handle to DLL
+//     strSubproc strProc;
+     intSubproc intProc;
+     HRESULT hrReturnVal;
+     rxinteger i1=-16;
+    // rxfuncadd(rexxname,module,sysname)
+    op2R->string_value[op2R->string_length]=0;
+    op3R->string_value[op3R->string_length]=0;
+    printf("Module %s\n",op3R->string_value);
+
+    hDLL = LoadLibrary(op2R->string_value);
+    printf("DLL ADDR %d %s %d %d\n",hDLL, op2R->string_value,op2R->string_length,hDLL);
+
+    if (hDLL==0 ) i1=-8;
+    else {
+         intProc = (intSubproc) GetProcAddress(hDLL, op3R->string_value);
+        printf("Module ADDR %d\n",intProc);
+        if (intProc==0 ) i1=-12 ;
+        else i1=intProc;
+      }
+    FreeLibrary(hDLL);
+    REG_RETURN_INT(i1);
+#endif
+#ifdef __APPLE__
+    void *dl_handle;
+    int (*func) (float);
+    char *error;
+    rxinteger i1=-16;
+    // rxfuncadd(rexxname,module,sysname)
+    op2R->string_value[op2R->string_length]=0;
+    op3R->string_value[op3R->string_length]=0;
+    printf("Module %s\n",op3R->string_value);
+    
+    /* Open the shared object */
+    dl_handle = dlopen( op2R->string_value, RTLD_LAZY );
+    if (dl_handle) i1=-8;
+    else {
+      func = dlsym( dl_handle, op3R->string_value );
+      if (func==0 ) i1=-12 ;
+      else i1= func;
+      }
+    error = dlerror();
+    if (error != NULL) {
+      printf( "!!! %s\n", error );
+      return i1;
+    }
+    /* Close the object */
+    dlclose( dl_handle );
+    REG_RETURN_INT(i1);
+#endif
+    DISPATCH;
+
+    START_INSTRUCTION(DLLPARMS_REG_REG_REG) CALC_DISPATCH(3);
+
+        DEBUG("TRACE - DLLPARMS R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
+       /* Arguments - complex lets never have to change this code! */
+        printf("Register containing number of Arguments %d\n",(int) REG_IDX(3));
+        printf("                    number of Arguments %d\n",op3RI);
+   //     current_frame->locals[(pc + (3))->index];
+
+        size_t j =
+                current_frame->procedure->binarySpace->globals +
+                current_frame->procedure->locals + 1; /* Callee register index */
+        size_t k = (pc + 3)->index + 1; /* Caller register index */
+        size_t i;
+        printf("                    first data register %d\n",k);
+        for ( i = 0;
+              i < op3RI;
+              i++, j++,k++) {
+              printf("                         Data register %d\n",k);
+         //   printf("              Register contentLocal Variables %d\n",current_frame->procedure->locals->???);
+        }
+    REG_RETURN_INT(i);
+    DISPATCH;
 
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table

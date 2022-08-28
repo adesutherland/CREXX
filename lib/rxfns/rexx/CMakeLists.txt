@@ -7,6 +7,7 @@ set(REXXBINS
 		_itrunc.rxbin
 		_jdn.rxbin
 		abbrev.rxbin
+		abs.rxbin
 		c2x.rxbin
 		c2d.rxbin
 		center.rxbin
