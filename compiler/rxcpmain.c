@@ -25,6 +25,7 @@ static void help() {
             "                    https://graphviz.org/download/\n"
 #endif
             "  -l location     Working Location (directory)\n"
+            "  -i import       Locations to import file - \";\" delimited list\n"
             "  -o output_file  REXX Assembler Output File\n"
             "  -n              No Optimising\n";
 
@@ -87,6 +88,29 @@ static const char *get_filename(const char *path)
     return path;
 }
 
+/* TODO Move to Platform */
+/* Gets the directory of a filename in a malloced buffer */
+/* returns null if there is no directory part */
+static char *get_filename_directory(const char *file_name)
+{
+    size_t len = strlen(file_name);
+    if (!len) return 0;
+    char* result;
+
+    for (len--; len; len--)
+    {
+        if (file_name[len] == '\\' || file_name[len] == '/' )
+        {
+            result = malloc(len + 1);
+            result[len] = 0;
+            memcpy(result, file_name, len);
+            return result;
+        }
+    }
+
+    return 0;
+}
+
 /* Context Factory */
 Context *cntx_f() {
     Context *context;
@@ -132,6 +156,8 @@ void fre_cntx(Context *context)  {
     size_t i;
     if (context->file_pointer) fclose(context->file_pointer);
 
+    if (context->import_locations) free(context->import_locations);
+
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
 
@@ -173,7 +199,12 @@ int main(int argc, char *argv[]) {
     int debug_mode = 0;
     char *file_name;
     char *location = 0;
+    char *import_locations = 0;
+    int num_import_locations;
+    size_t ix;
+    char c;
     int do_optimise = 1;
+    char *file_directory = 0;
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
@@ -199,6 +230,15 @@ int main(int argc, char *argv[]) {
                 }
                 location = argv[i];
                 break;
+
+            case 'i': /* Import Locations */
+                i++;
+                if (i >= argc) {
+                    error_and_exit(2, "Missing import location list -i");
+                }
+                import_locations = argv[i];
+                break;
+
             case 'n': /* No Optimisation */
                 do_optimise = 0;
                 break;
@@ -242,6 +282,33 @@ int main(int argc, char *argv[]) {
     /* Context Structure */
     context = cntx_f();
 
+    /* Derive the location from the file name */
+    if (!location) {
+        file_directory = get_filename_directory(file_name);
+    }
+
+    if (debug_mode) printf("Input file is %s\n", file_name);
+
+    /* Import location list */
+    if (import_locations) {
+        /* How many import locations */
+        num_import_locations = 1;
+        for (ix = 0; import_locations[ix]; ix++) if (import_locations[ix] == ';') num_import_locations++;
+
+        /* Malloc array */
+        context->import_locations = malloc((num_import_locations + 1) * sizeof(char*));
+
+        /* Copy Pointers */
+        num_import_locations = 0;
+        context->import_locations[num_import_locations] = import_locations;
+        for (ix = 0; import_locations[ix]; ix++) if (import_locations[ix] == ';') {
+            num_import_locations++;
+            import_locations[ix] = 0;
+            context->import_locations[num_import_locations] = import_locations + ix + 1;
+        }
+        context->import_locations[++num_import_locations] = 0;
+    }
+
     /* Open input file */
     const char* filename_extension = get_filename_ext(file_name);
     if (filename_extension[0] == 0)
@@ -259,7 +326,7 @@ int main(int argc, char *argv[]) {
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
-        context->traceFile = openfile(file_name, "trace", location, "w");
+        context->traceFile = openfile((char*)get_filename(file_name), "trace", location, "w");
         if (context->traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
             exit(-1);
@@ -281,7 +348,8 @@ int main(int argc, char *argv[]) {
     cntx_buf(context, buff_start, bytes);
     context->debug_mode = debug_mode;
     context->optimise = do_optimise;
-    context->location = location;
+    if (file_directory) context->location = file_directory;
+    else context->location = location;
     context->file_name = (char*)get_filename(file_name);
 
     /* Create Options parser to work out required language level */
@@ -322,9 +390,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph0.dot");
-        /* Get dot from https://graphviz.org/download/ */
-        system("dot astgraph0.dot -Tpng -o astgraph0.png");
+        pdot_tree(context->ast, "astgraph0", context->file_name);
     }
 #endif
 
@@ -335,11 +401,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (debug_mode) printf("Validating AST Tree\n");
-    validate(context);
+    rxcp_val(context);
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph1.dot");
-        system("dot astgraph1.dot -Tpng -o astgraph1.png");
+        pdot_tree(context->ast, "astgraph1", context->file_name);
     }
 #endif
     errors = prnterrs(context);
@@ -354,8 +419,7 @@ int main(int argc, char *argv[]) {
         optimise(context);
 #ifndef __CMS__
         if (debug_mode) {
-            pdot_tree(context->ast, "astgraph2.dot");
-            system("dot astgraph2.dot -Tpng -o astgraph2.png");
+            pdot_tree(context->ast, "astgraph2", context->file_name);
         }
 #endif
     }
@@ -377,8 +441,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph3.dot");
-        system("dot astgraph3.dot -Tpng -o astgraph3.png");
+        pdot_tree(context->ast, "astgraph3", context->file_name);
     }
 #endif
     if (debug_mode) printf("Compiler Exiting - Success\n");
@@ -392,6 +455,8 @@ int main(int argc, char *argv[]) {
 
     /* Free context */
     fre_cntx(context);
+
+    if (file_directory) free(file_directory);
 
     if (errors) return(1);
     else return(0);

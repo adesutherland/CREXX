@@ -1,5 +1,7 @@
 /* LASTPOS */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 if lastpos(' ','abc def ghi') \= 8 then do
@@ -84,6 +86,3 @@ if lastpos('abc','abcdefabccdabcd',4) \= 1 then do
   say 'LASTPOS failed in test 19 '
 end
 return errors<>0
-/* function prototype */
-lastpos: procedure = .int
-arg needle = .string, haystack = .string, start = 0

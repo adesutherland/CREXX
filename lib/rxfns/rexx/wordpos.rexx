@@ -1,5 +1,8 @@
 /* rexx wordpos searches for string and returns word position */
 options levelb
+
+namespace rxfnsb
+
 wordpos: procedure = .int
   arg expose search = .string, string = .string, start = 1
 
@@ -28,23 +31,3 @@ do i=start to wnum
    end
 end
 return 0
-
-/* function prototype */
-words: procedure = .int
-arg string1 = .string
-
-word: procedure = .string
-arg string1 = .string, wordnum = .int
-
-wordindex: procedure = .int
-arg string1 = .string, wordnum = .int
-
-pos: procedure = .int
-arg string1 = .string, string2 = .string, start = 1
-
-strip: procedure = .string
-       arg instr = .string, option = "B", schar= " "
-
-abbrev: procedure = .string
-  arg string = .string, astr = .string, len = 0
-

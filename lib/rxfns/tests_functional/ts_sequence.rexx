@@ -1,5 +1,7 @@
 /* rexx test sequence */
 options levelb
+import rxfnsb
+
 errors=0
 
 if sequence('i','j') \= 'ij' then do
@@ -14,8 +16,3 @@ if sequence('i','y') \= 'ijklmnopqrstuvwxy' then do
 end
 
 return errors<>0
-
-/* function prototypes */
-sequence: procedure = .string
-arg expose startrange = .string, endrange = .string
-

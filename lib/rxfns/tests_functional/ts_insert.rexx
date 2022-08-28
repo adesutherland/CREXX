@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 
 x='CREXX is faster than BREXX'
@@ -25,10 +27,3 @@ if insert(' ,isn"t it?',x,27) \= 'CREXX is faster than BREXX ,isn"t it?' then do
 end
 
 return errors<>0
-
-/* function prototype */
-insert: procedure = .string
-  arg expose insstr = .string, expose string = .string, position = .int, len = 0, pad = ' '
-
-
-

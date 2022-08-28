@@ -1,6 +1,8 @@
 /* rexx */
 options levelb
 
+namespace rxfnsb
+
 /* countstr(needle,haystack) returns number occurrences of needle in haystack */
 countstr: procedure = .int
   arg expose needle = .string, expose haystack = .string /* Pass by reference */
@@ -17,7 +19,3 @@ countstr: procedure = .int
      count=count+1
   end
 return count
-
-/* pos() Procedure */
-pos: procedure = .int
-arg needle = .string, haystack = .string, offset = 1

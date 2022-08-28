@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 /* say "test insert" */
 /* x='CREXX is faster  than BREXX' */
@@ -105,11 +107,3 @@ end
    say 'OVERLAY failed in test         18 ' */
 
 return errors<>0
-
-
-/* function prototype */
-overlay: procedure = .string
-arg insstr = .string, string = .string, position = .int, len = 0, pad = ""
-
-
-

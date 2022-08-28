@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace _rxsysb
+
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int
   arg type = .string, code = .string, parm1 = .string

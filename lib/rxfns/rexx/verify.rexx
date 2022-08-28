@@ -1,6 +1,8 @@
 /* rexx */
   options levelb
 
+namespace rxfnsb
+
 verify: procedure = .int
        arg instring = .string, intab = .string, match='N', spos=1
 

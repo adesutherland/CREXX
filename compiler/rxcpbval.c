@@ -432,7 +432,7 @@ static walker_result step2a_walker(walker_direction direction,
             if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
             /* Move down to the project file scope */
-            context->current_scope = scp_f(context->current_scope, node, symbol->name);
+            context->current_scope = scp_f(context->current_scope, node, symbol);
         }
 
         else if (node->node_type == PROCEDURE) {
@@ -457,7 +457,7 @@ static walker_result step2a_walker(walker_direction direction,
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the procedure scope */
-            context->current_scope = scp_f(context->current_scope, node, symbol->name);
+            context->current_scope = scp_f(context->current_scope, node, symbol);
         }
 
         else if (node->node_type == IMPORT) {
@@ -473,7 +473,7 @@ static walker_result step2a_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                imported_namespace = scp_f(namespaces, node->child, symbol->name);
+                imported_namespace = scp_f(namespaces, node->child, symbol);
             }
             else {
                 mknd_err(node->child, "DUPLICATE_NAMESPACE");
@@ -579,7 +579,7 @@ static walker_result step2b_walker(walker_direction direction,
     else {
         if (node->node_type == FUNCTION) {
             /* Find the symbol */
-            symbol = sym_rslv(node->scope, node);
+            symbol = sym_rvfc(context->ast, node);
 
             /* If there is a symbol and it's a function - found  */
             if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
@@ -1102,8 +1102,7 @@ static walker_result step5_walker(walker_direction direction,
 }
 
 /* Validate AST */
-void validate(Context *context) {
-    Scope *current_scope;
+void rxcp_val(Context *context) {
     int ordinal_counter = 0;
 
     /* Step 1
@@ -1144,3 +1143,26 @@ void validate(Context *context) {
     context->current_scope = 0;
     ast_wlkr(context->ast, step5_walker, (void *)context);
  }
+
+/* Basic validation for a AST (typically the AST will be attached to a main AST as part of
+ * function import) */
+void rxcp_bvl(Context *context) {
+    int ordinal_counter = 0;
+
+    /* Step 1
+     * - Sets the source start / finish for eac node
+     * - Fixes SCONCAT to CONCAT
+     * - Other AST fixups (TBC)
+     */
+    ast_wlkr(context->ast, step1_walker, (void *) context);
+
+    /* 1b - set node ordinal values */
+    ast_wlkr(context->ast, step1b_walker, (void *)&ordinal_counter);
+
+    /* Step 2
+     * - Builds the Symbol Table
+     */
+    /* Mainly build symbols - procedures, members */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step2a_walker, (void *) context);
+}

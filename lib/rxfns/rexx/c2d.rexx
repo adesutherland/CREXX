@@ -1,6 +1,7 @@
 /* rexx center text  */
-
 options levelb
+namespace rxfnsb
+
 c2d: procedure = .int
   arg from = .string
   stx=""
@@ -14,7 +15,4 @@ c2d: procedure = .int
   end
   return x2d(stx)
 
-  /* function prototypes */
-  x2d: procedure = .int
-  arg expose hex = .string, slen = -1
 

@@ -1,6 +1,8 @@
 /* rexx */
 options levelb
 
+namespace rxfnsb
+
 /* delstr(string,position,length) delete string from certain position and length and returns it */
 delstr: procedure = .string
   arg expose string = .string, position = .int, dellen = 0
@@ -18,11 +20,3 @@ delstr: procedure = .string
     else retstr=substr(string,1,position-1)||substr(string,position+dellen)
   end
 return retstr
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

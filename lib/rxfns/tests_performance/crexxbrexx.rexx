@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* the performance measure that started it all */
 x='the quick brown fox jumps over the lazy dog'
 len=length(x)
@@ -14,10 +16,3 @@ do j=1 to 100000
 end
 say k time('l')
 return 0
-
-length: procedure = .int
-  arg string1 = .string
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '
-time: procedure = .string
-arg option = ""

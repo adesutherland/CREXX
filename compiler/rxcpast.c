@@ -747,7 +747,7 @@ static walker_result print_error_walker(walker_direction direction,
                     break;
                 }
             }
-            fprintf(stderr,"Error @ %d:%d - #%s, \"", node->line+1, node->column+1, node->node_string);
+            fprintf(stderr,"Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line+1, node->column+1, node->node_string);
             prt_unex(stderr, node->source_start, len);
             fprintf(stderr,"\"\n");
             (*errors)++;
@@ -1298,18 +1298,24 @@ walker_result pdot_walker_handler(walker_direction direction,
     return result_normal;
 }
 
-void pdot_tree(ASTNode *tree, char* output_file) {
+void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {
+    char dot_filename[250];
+    char command[250];
     FILE *output;
 
-    if (output_file) output = fopen(output_file, "w");
-    else output = stdout;
+    snprintf(dot_filename, 250, "%s.%s.dot", prefix, output_file);
+    output = fopen(dot_filename, "w");
 
     if (tree) {
         fprintf(output, "digraph REXXAST { pad=0.25\n");
         ast_wlkr(tree, pdot_walker_handler, (void *) output);
         fprintf(output, "\n}\n");
     }
-    if (output_file) fclose(output);
+    fclose(output);
+
+    /* Get dot from https://graphviz.org/download/ */
+    snprintf(command, 250, "dot %s.%s.dot -Tpng -o %s.%s.png", prefix, output_file, prefix, output_file);
+    system(command);
 }
 
 /* AST Walker

@@ -20,4 +20,4 @@ return
 
 /* fakesubstr: procedure = .string */
 /*    arg string1 = .string, start = .int, length1 = 1, pad = ' ' */
-return "x"
+/* return "x" */

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* VERIFY */
 errors=0
 /* These from the Rexx book. */
@@ -63,6 +65,3 @@ end
 /* return */
 /* verify()  */
 return errors<>0
-
-verify: procedure = .int
-  arg instring = .string, intab = .string, match = 'N',pos=1

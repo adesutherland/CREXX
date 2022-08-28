@@ -1,7 +1,10 @@
 /* rexx */
 options levelb
 
-_datei: Procedure = .string
+namespace _rxsysb
+import rxfnsb
+
+_datei: Procedure = .int
  arg idate = .string, format = .string, isep=""
 /* ----------------------------------------------------------
  *  Converts given Date in Julian Day Number
@@ -9,8 +12,16 @@ _datei: Procedure = .string
  */
   if format='' then format='NORMAL'
 
-  if fabbreV('DAYS',format,1) then return 'DAYS not allowed as input format'
-  if fabbreV('CENTURY',format,1) then return 'CENTURY not allowed as input format'
+  if fabbreV('DAYS',format,1) then do
+    say '_idate: DAYS not allowed as input format'
+    /* TODO Throw signal */
+    return -1;
+  end
+  if fabbreV('CENTURY',format,1) then do
+    say '_idate: CENTURY not allowed as input format'
+    /* TODO Throw signal */
+    return -1
+  end
   if fabbreV('EPOCH',format,3) then do
      idate=idate%86400+_jdn(1,1,1970)
      return idate
@@ -105,35 +116,3 @@ split: Procedure = .string
   end
   if words(retstr)<3 then say "invalid input date "retstr
 return retstr
-
-
-/* Prototypes */
-
-_jdn: Procedure = .int
-  arg day = .int, month = .int, year = .int
-
-abbrev: procedure = .string
-  arg string = .string, astr = .string, len = 0
-
-right:  procedure = .string
-  arg string = .string, len =  .int, pad = " "
-
-word: procedure = .string
-  arg string1 = .string, string2 = .int
-
-words: procedure = .int
-  arg string1 = .string
-
-wordpos: procedure = .int
-  arg string1 = .string, string2 = .string, offset = 0
-
-
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
-
-
-

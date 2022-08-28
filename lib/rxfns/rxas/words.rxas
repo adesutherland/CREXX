@@ -1,5 +1,10 @@
+/*
+ * words: procedure = .int
+ *   arg string1 = .string
+ */
           .globals=0
-words()   .locals=8 .expose=words.words
+words()   .locals=8 .expose=rxfnsb.words
+   .meta "rxfnsb.words"="b" ".int" words() "string1 = .string" ""
     /* string    = arg1    */
    copy  r1,a1
    load  r3,0   /* offset in string */
@@ -16,5 +21,4 @@ loop:
    brt break,r5
    bct loop,r4,r3      /* then look for next non blank char  */
 break:
-   itos r6
    ret r6

@@ -1,6 +1,8 @@
 /* REXX Levelb VALUE Implementation */
 options levelb
 
+namespace rxfnsb
+
 /* Only does a read (and value is always returned as a string) for the initial release */
 
 value: procedure = .string
@@ -83,12 +85,3 @@ value: procedure = .string
   if result = "" then result = upper(input)
 
   return result
-
-lower: procedure = .string
-  arg expose string = .string
-
-upper: procedure = .string
-  arg expose string = .string
-
-pos: procedure = .int
-  arg needle = .string, haystack = .string, offset = 1

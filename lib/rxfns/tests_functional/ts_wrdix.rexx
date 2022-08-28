@@ -1,5 +1,7 @@
 /* WORDINDEX */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 
@@ -73,6 +75,3 @@ if wordindex('This is certainly a test  ',7) \=  '0'    then do
   say 'WORDINDEX failed in test         17 '
 end
 return errors<>0
-/* function prototype */
-wordindex: procedure = .int
-arg string1 = .string, int2 = .int

@@ -1,9 +1,14 @@
 /* 
  * rexx COPIES bif in rxas.
  * rudimentary error checking
+ *
+ *
+ * copies: procedure = .string
+ *  arg string1 = .string, count = .int
  */
           .globals=0
-copies()  .locals=8 .expose=copies.copies
+copies()  .locals=5 .expose=rxfnsb.copies
+   .meta "rxfnsb.copies"="b" ".string" copies() "string1 = .string, count = .int" ""
           ieq   r1,a0,2 /* copies needs two args */
           brf   wrongargs,r1
           ieq   r1,a2,0

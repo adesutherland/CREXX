@@ -46,6 +46,7 @@ typedef struct Context {
     int dont_import; /* Don't import files looking for procedures */
     char* location;
     char* file_name;
+    char** import_locations;
     importable_file **importable_file_list;
     FILE *file_pointer;
     FILE *traceFile;
@@ -199,7 +200,7 @@ ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns yo
 /* Turn a node to an ERROR */
 void mknd_err(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
-void pdot_tree(ASTNode *tree, char* output_file);
+void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
  * then managed by the AST Library (the caller must not free it) */
 void ast_sstr(ASTNode *node, char* string, size_t length);
@@ -240,7 +241,8 @@ typedef walker_result (*walker_handler)(walker_direction direction,
 walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload);
 
 /* Validator AST Tree */
-void validate(Context *context);
+void rxcp_val(Context *context);
+void rxcp_bvl(Context *context);
 
 /* Optimise AST Tree */
 void optimise(Context *context);
@@ -274,6 +276,7 @@ struct Symbol {
     char *name;
     void *ast_node_array;
     Scope *scope;
+    Scope *defines_scope;
     ValueType type;
     SymbolType symbol_type;
     int register_num;
@@ -282,7 +285,7 @@ struct Symbol {
 };
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node, char *name);
+Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol);
 
 /* Calls the handler for each symbol in scope */
 typedef void (*symbol_worker)(Symbol *symbol, void *payload);
@@ -340,6 +343,11 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node);
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);
 
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfc(ASTNode *root, ASTNode *node);
+
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);
 
@@ -381,6 +389,7 @@ typedef struct imported_func {
     char *args;
     char *implementation;
     Context *context;
+    char already_loaded;
 } imported_func;
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
@@ -398,6 +407,7 @@ typedef enum file_type {
 struct importable_file {
     char *name;
     file_type type;
+    char *location;
     char imported;
 };
 

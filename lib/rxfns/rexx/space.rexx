@@ -1,5 +1,8 @@
 /* rexx space adds n padding chars between words */
 options levelb
+
+namespace rxfnsb
+
 space: procedure = .string
   arg expose string = .string, spacenr = 1,  pad = " "
 
@@ -28,12 +31,3 @@ end
 newstr=newstr||word(string,wrds)
 
 return newstr
-
-/* function prototype */
-word: procedure = .string
-arg string1 = .string, string2 = .int
-
-words: procedure = .int
-arg string1 = .string
-
-

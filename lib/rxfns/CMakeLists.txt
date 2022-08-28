@@ -12,14 +12,14 @@ set(SUBLIBS
 )
 
 foreach (LIB ${SUBLIBS})
-    set(LIB_FILES ${LIB_FILES} ${LIB}".rxbin")
+    set(LIB_FILES ${LIB_FILES} ${LIB}.rxbin)
 endforeach ()
 
 add_custom_command(
         OUTPUT library.rxbin
         COMMAND ${CMAKE_COMMAND} -E cat ${LIB_FILES} > library.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${SUBLIBS}
+        DEPENDS library-rexx library-rxas rexx/library-rexx.rxbin rxas/library-rxas.rxbin
         COMMENT "cREXX Combined Library Archive ..."
 )
 

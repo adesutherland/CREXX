@@ -67,12 +67,16 @@ static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
 }
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node, char* name) {
+Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
+    char* name;
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
-    if (name) {
+    if (symbol) {
+        name = symbol->name;
         scope->name = malloc(strlen(name) + 1);
         strcpy(scope->name, name);
+        /* Update Symbol */
+        symbol->defines_scope = scope;
     }
     else scope->name = 0;
     node->scope = scope;
@@ -360,6 +364,7 @@ Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
     symbol->scope = scope;
+    symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
@@ -393,6 +398,41 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     return sym_fn(scope, node->node_string, node->node_string_length);
 }
 
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
+    Symbol *result;
+    size_t i;
+    Scope *s;
+
+    /* Make a null terminated string */
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    /* Process top layer - files */
+    for (i = 0; i < scp_noch(root->scope); i++) {
+        s = scp_chd(root->scope, i);
+
+        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
+        if (result) {
+            free(name);
+            return result;
+        }
+        /* Process second level - Classes (todo) */
+    }
+    free(name);
+    return 0;
+}
+
 /* Resolve a Symbol - including parent scope */
 Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     Symbol *result;
@@ -402,7 +442,7 @@ Symbol *sym_rslv(Scope *scope, ASTNode *node) {
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
 
-    /* Uppercase symbol name */
+    /* Lowercase symbol name */
 #ifdef NUTF8
     for (c = name ; *c; ++c) *c = (char)tolower(*c);
 #else

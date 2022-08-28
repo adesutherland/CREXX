@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 
 if delword('Now is the time',2,2) \= 'Now time' then do
@@ -171,9 +173,3 @@ end
 /* say "delword(x,5,3) '"delword(x,5,3)"'" */
 /* say "delword(x,99,4) '"delword(x,99,4)"'" */
 return errors<>0
-
-/* function prototype */
-delword: procedure = .string
-arg string1 = .string, wnum = .int, wcount = -1
-
-

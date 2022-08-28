@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* X2b(hex-string)  returns bit combination of hex string */
 
 x2b: procedure = .string

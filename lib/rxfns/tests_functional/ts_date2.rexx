@@ -1,6 +1,8 @@
 /* These are the testcases for the Classic Rexx 4.02 compatible bRexx/NetRexx Ibmdate() */
 /* trace 'r' */
 options levelb
+import rxfnsb
+
 errors=0
 say 'Date single options'
 say "date() -->" date()
@@ -91,7 +93,3 @@ if date('J','10 Mar 1962') \= 1962069 then do
 end
 
 return 0
-
-/* Prototype functions */
-date: Procedure = .string
-   arg iFormat = "", idate = "", oFormat = "", osep="", isep=""

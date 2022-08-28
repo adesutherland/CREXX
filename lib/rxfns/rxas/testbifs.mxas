@@ -1,18 +1,18 @@
     /* please edit testbifs.mxas, which generates testbifs.rxas */
     #include "../../../tests/testskel.inc"
     
-    length()   .expose=length.length
-    substr()   .expose=substr.substr
-    copies()   .expose=copies.copies
-    reverse()  .expose=reverse.reverse
-    word()     .expose=word.word
-    words()    .expose=words.words
-    wordindx() .expose=wordindx.wordindx
-    subword()  .expose=subword.subword
-    pos()      .expose=pos.pos
-    lastpos()  .expose=lastpos.lastpos   
-    right()    .expose=right.right
-    left()     .expose=left.left
+    length()   .expose=rxfnsb.length
+    substr()   .expose=rxfnsb.substr
+    copies()   .expose=rxfnsb.copies
+    reverse()  .expose=rxfnsb.reverse
+    word()     .expose=rxfnsb.word
+    words()    .expose=rxfnsb.words
+    wordindx() .expose=rxfnsb.wordindx
+    subword()  .expose=rxfnsb.subword
+    pos()      .expose=rxfnsb.pos
+    lastpos()  .expose=rxfnsb.lastpos
+    right()    .expose=rxfnsb.right
+    left()     .expose=rxfnsb.left
 
 main() .locals=8
     call logo()

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* These from TRL */
 errors=0
 if left('abc d',8) \= 'abc d   '  then do
@@ -42,9 +44,3 @@ if left("foobar",1,'*') \=  "f"            then do
 end
 
 return errors<>0
-
-/* function prototype */
-left: procedure = .string
-arg string1 = .string, length = .int, pad = ' '
-
-

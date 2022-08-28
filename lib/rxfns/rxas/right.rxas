@@ -1,14 +1,17 @@
 /* 
  * rexx RIGHT bif in rxas.
  * rudimentary error checking
+ * right: procedure = .string
+ *  arg string1 = .string, length = .int, pad = ' '
  */
           .globals=0
 /* externals used */          
-copies()  .expose=copies.copies
-length()  .expose=length.length
-substr()  .expose=substr.substr
+copies()  .expose=rxfnsb.copies
+length()  .expose=rxfnsb.length
+substr()  .expose=rxfnsb.substr
 
-right()   .locals=15 .expose=right.right
+right()   .locals=15 .expose=rxfnsb.right
+   .meta "rxfnsb.right"="b" ".string" right() "string = .string, length1 = .int, pad = \' \'" ""
     ieq  r7,a2,0            /* return empty when length = 0 */
     brt  return_empty,r7
     copy r9,a1          

@@ -1,7 +1,10 @@
 /* rexx center text  */
 /* CENTER and CENTRE are exact copies, any change must be reflected in both functions */
-
+/* todo fix this bit of ugliness when crexx allows */
 options levelb
+
+namespace rxfnsb
+
 centre: procedure = .string
   arg expose string = .string, centlen = .int,  pad = " "
 
@@ -30,15 +33,3 @@ else do
 end
 
 return newstr
-
-/* copies()  create copies of a char/string */
-copies: procedure = .string
-  arg string1 = .string, count = .int
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

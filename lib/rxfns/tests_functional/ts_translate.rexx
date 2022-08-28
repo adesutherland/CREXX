@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* translate  */
 errors=0
 /* TRANSLATE */
@@ -175,10 +177,3 @@ end
 /* end */
   
 return errors<>0
-
-translate: procedure = .string
-arg source = .string, tochar = "?????", fromchar = "?????", pad=" "
-
-/* copies function prototype */
-copies: procedure = .string
-arg string1 = .string, times= .int

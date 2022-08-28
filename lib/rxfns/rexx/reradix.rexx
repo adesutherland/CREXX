@@ -6,6 +6,9 @@
  */ 
 options levelb
 
+namespace _rxsysb
+import rxfnsb
+
 reradix: procedure = .string
 arg subject = .string, FromRadix = .int, ToRadix = .int
 
@@ -32,23 +35,3 @@ subject = upper(subject)
  else if FromRadix=16 & ToRadix=2 then
    r=right(r,length(subject)*4,'0')
  return r
-
-/* Length() Procedure */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-  arg string1 = .string, start = .int, len = length(string1) + 1 - start, pad = ' '
-
-/* function prototype */
-right: procedure = .string
-arg string1 = .string, length = .int, pad = ' '
-
- /* function prototype */
-pos: procedure = .int
-arg string1 = .string, string2 = .string, start = 1
-
-/* upper()  */
-upper: procedure = .string
-  arg expose string1 = .string

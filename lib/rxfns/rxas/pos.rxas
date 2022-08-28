@@ -1,6 +1,10 @@
-/* reverse */
+/*
+   pos: procedure = .int
+   arg needle = .string, haystack = .string, start = 1
+ */
     .globals=0
-pos() .locals=13 .expose=pos.pos
+pos() .locals=13 .expose=rxfnsb.pos
+    .meta "rxfnsb.pos"="b" ".int" pos() "needle = .string, haystack = .string, start = 1" ""
     brtpandt havestart,a3,1
     load a3,1
     isub a0,a0,1

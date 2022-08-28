@@ -121,7 +121,7 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
     *dir_ptr = ptr;
 
     ptr->type = type;
-    if (dir) ptr->d = opendir(dir);
+    if (dir && strlen(dir)) ptr->d = opendir(dir);
     else ptr->d = opendir(".");
 
     if (!ptr->d) return 0;
@@ -131,7 +131,7 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
 #elif defined(_WIN32)
 
     struct WIN_FILE_DATA *win_data = malloc(sizeof(struct WIN_FILE_DATA));
-    if (dir) strncpy(win_data->dir, dir, MAXFILEPATH);
+    if (dir && strlen(dir)) strncpy(win_data->dir, dir, MAXFILEPATH);
     else strncpy(win_data->dir, ".", MAXFILEPATH);
     snprintf(win_data->sPath, MAXFILEPATH, "%s\\*.%s", win_data->dir, type);
 

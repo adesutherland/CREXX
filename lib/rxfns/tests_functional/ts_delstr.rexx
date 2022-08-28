@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from TRL */
 if delstr('abcd',3) \= 'ab' then do
@@ -79,9 +81,3 @@ end
 /* say "99  " "'"delstr(x,99)"'" */
 /* say "0   " "'"delstr(x,0)"'" */
 return errors<>0
-
-/* function prototype */
-delstr: procedure = .string
-arg string1 = .string, pos = .int, dlen = 0
-
-

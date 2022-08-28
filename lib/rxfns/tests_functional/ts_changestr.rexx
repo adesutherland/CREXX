@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 /*                     12345  */
 x='the quick brown fox jumps over the lazy dog'
@@ -22,7 +24,3 @@ if changestr('quicker',x,'fast') \= 'the quick brown fox jumps over the lazy dog
 end
 
 return errors<>0
-
-/* function prototype */
-changestr: procedure = .string
-  arg string1 = .string, string2 = .string, string3 = .string

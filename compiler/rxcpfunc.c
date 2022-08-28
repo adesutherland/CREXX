@@ -12,23 +12,26 @@
 #include "rxcpdary.h"
 #include "rxbin.h"
 #include "rxas.h"
+#ifndef NUTF8
+#include "utf.h"
+#endif
 
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
     if (context->debug_mode) {
-        pdot_tree(context->ast, "error.dot");
-        /* Get dot from https://graphviz.org/download/ */
-        system("dot error.dot -Tpng -o error.png");
+        pdot_tree(context->ast, "error", context->file_name);
     }
 #endif
 }
 
+/* TODO Move to Platform - need to make the output mallocked */
 static const char *get_filename_ext(const char *filename) {
     const char *dot = strrchr(filename, '.');
     if(!dot || dot == filename) return "";
     return dot + 1;
 }
 
+/* TODO Move to Platform - need to make the output mallocked */
 static const char *get_filename(const char *path)
 {
     size_t len = strlen(path);
@@ -44,6 +47,29 @@ static const char *get_filename(const char *path)
         }
     }
     return path;
+}
+
+/* TODO Move to Platform */
+/* Gets the directory of a filename in a malloced buffer */
+/* returns null if there is no directory part */
+static char *get_filename_directory(const char *path)
+{
+    size_t len = strlen(path);
+    if (!len) return 0;
+    char* result;
+
+    for (len--; len; len--)
+    {
+        if ( path[len] == '\\' || path[len] == '/' )
+        {
+            result = malloc(len + 1);
+            result[len] = 0;
+            memcpy(result, path, len);
+            return result;
+        }
+    }
+
+    return 0;
 }
 
 static char error_in_node(ASTNode* node) {  // NOLINT
@@ -85,7 +111,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 char *type = nodetype(child1);
                 char *source = clnnode(child2);
-                char *args = encdstrg(source, strlen(source));
+                char *args = source;
                 char *fqname = sym_frnm(node->symbolNode->symbol);
 
                 func = rximpfc_f(master_context, node->context->file_name, fqname, "b", type, args, 0);
@@ -94,7 +120,6 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 free(type);
                 free(source);
-                free(args);
                 free(fqname);
             }
         }
@@ -167,7 +192,7 @@ static void read_constant_pool_for_functions(Context *master_context, char *full
     }
 }
 
-static void parseRxasFileForFunctions(Context *master_context, char* file_name) {
+static void parseRxasFileForFunctions(Context *master_context, char* file_name, char* location) {
     FILE *outFile;
     int token_type;
     Assembler_Token *token;
@@ -186,7 +211,7 @@ static void parseRxasFileForFunctions(Context *master_context, char* file_name) 
     scanner.optimise = 0;
     scanner.file_name = file_name;
     scanner.output_file_name = 0;
-    scanner.location = 0;
+    scanner.location = location;
 
     if (master_context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
 
@@ -205,7 +230,7 @@ static void parseRxasFileForFunctions(Context *master_context, char* file_name) 
     rxasclrc(&scanner);
 }
 
-static void parseRxbinFileForFunctions(Context *master_context, char* file_name) {
+static void parseRxbinFileForFunctions(Context *master_context, char* file_name, char* location) {
     FILE *fp;
     module_file *file_module_section;
     size_t modules_processed = 0;
@@ -214,7 +239,7 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name)
 
     if (master_context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
 
-    fp = openfile(file_name, "", 0, "rb");
+    fp = openfile(file_name, "", location, "rb");
     if (!fp) {
         if (master_context->debug_mode) printf("Importing Procedures - Could not open file\n");
         return;
@@ -252,7 +277,7 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name)
     fclose(fp);
 }
 
-static void parseRexxFileForFunctions(Context *master_context, char* file_name) {
+static void parseRexxFileForFunctions(Context *master_context, char* file_name, char* location) {
     size_t bytes;
     Context *context;
     char *buff_start;
@@ -263,7 +288,7 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
     context = cntx_f();
 
     /* Open input file */
-    context->file_pointer = openfile(file_name, "", master_context->location, "r");
+    context->file_pointer = openfile(file_name, "", location, "r");
     if (context->file_pointer == NULL) {
         fprintf(stderr, "Importing Procedures - Can't open input file: %s\n", file_name);
         exit(-1);
@@ -324,7 +349,7 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
     }
 
     /* Extract Function Definitions  */
-    validate(context);
+    rxcp_val(context); /* Full validation to ensure procedure types are handled */
     ast_wlkr(context->ast, procedure_signature_walker, master_context);
 
     finish:
@@ -336,30 +361,30 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name) 
     fre_cntx(context);
 }
 
-/* Parse and validate a rexx program in a string and return the context */
+/* Parse and rxcp_val a rexx program in a string and return the context */
 Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
 
-    context = cntx_f();
-    cntx_buf(context, rexx_source, bytes);
-
-    /* Initialize context */
-    context->location = location;
-    context->file_name = file_name;
-    context->level = level;
-    context->debug_mode = debug_mode;
-    context->dont_import = 1;
-
-    switch (context->level){
+    switch (level){
         case LEVELA:
         case LEVELC:
         case LEVELD:
             fprintf(stderr,"INTERNAL ERROR: Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
-            break;
+            return 0;
 
         case LEVELB:
         case LEVELG:
         case LEVELL:
+            context = cntx_f();
+            cntx_buf(context, rexx_source, bytes);
+
+            /* Initialize context */
+            context->location = location;
+            context->file_name = file_name;
+            context->level = level;
+            context->debug_mode = debug_mode;
+            context->dont_import = 1;
+
             rexbpars(context);
             break;
 
@@ -367,21 +392,19 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
             fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Failed to determine REXX Level\n");
     }
 
-    rexbpars(context); /* TODO Handle Levels, this is level B only  */
-
     if (!context->ast) {
         if (debug_mode) fprintf(stderr,"INTERNAL ERROR: Importing Procedures - Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
-    validate(context);
+    rxcp_bvl(context);
 
 #ifndef __CMS__
-    if (debug_mode) {
+//    if (debug_mode) {
 //        pdot_tree(context->ast, "parserexx.dot");
-        /* Get dot from https://graphviz.org/download/ */
+//        /* Get dot from https://graphviz.org/download/ */
 //        system("dot parserexx.dot -Tpng -o parserexx.png");
-    }
+//    }
 #endif
 
     finish:
@@ -397,10 +420,18 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
     ASTNode *func_node;
     Symbol *func_symbol;
     Symbol *found_symbol = 0;
+    Scope *namespace;
 
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
     name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    for (c = name ; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
 
     if (master_context->debug_mode) printf("Importing Procedures - Looking for Procedure %s\n", name);
 
@@ -421,13 +452,19 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
             /* Import File */
             switch (master_context->importable_file_list[f]->type) {
                 case REXX_FILE:
-                    parseRexxFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    parseRexxFileForFunctions(master_context,
+                                              master_context->importable_file_list[f]->name,
+                                              master_context->importable_file_list[f]->location);
                     break;
                 case RXBIN_FILE:
-                    parseRxbinFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    parseRxbinFileForFunctions(master_context,
+                                               master_context->importable_file_list[f]->name,
+                                               master_context->importable_file_list[f]->location);
                     break;
                 case RXAS_FILE:;
-                    parseRxasFileForFunctions(master_context, master_context->importable_file_list[f]->name);
+                    parseRxasFileForFunctions(master_context,
+                                              master_context->importable_file_list[f]->name,
+                                              master_context->importable_file_list[f]->location);
                     break;
             }
         }
@@ -440,6 +477,12 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
             if (strcmp(name, func->name) == 0) {
                 /* Found it! */
 
+                if (func->already_loaded) {
+                    fprintf(stderr, "INTERNAL ERROR: Attempted to load funtion %s twice\n", func->name);
+                    return 0;
+                }
+                func->already_loaded = 1;
+
                 if (master_context->debug_mode) printf("Importing Procedures - Found Procedure %s\n", func->fqname);
 
                 /* Splice the ASTs together */
@@ -450,6 +493,10 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
                 if (!symbol) {
                     symbol = sym_f(master_context->ast->scope, func->context->ast->child);
                     symbol->symbol_type = NAMESPACE_SYMBOL;
+                    namespace = scp_f(master_context->ast->scope, node, symbol);
+                }
+                else {
+                    namespace = symbol->defines_scope;
                 }
                 sym_adnd(symbol, func->context->ast->child, 1, 1);
                 if (func->context->namespace) sym_adnd(symbol, func->context->namespace, 0, 1);
@@ -468,7 +515,7 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
                     func_symbol = func_node->symbolNode->symbol;
 
                     /* Make a duplicate symbol in the master_context */
-                    found_symbol = sym_fn(master_context->ast->child->scope, func_symbol->name,
+                    found_symbol = sym_fn(namespace, func_symbol->name,
                                           strlen(func_symbol->name));
                     if (!found_symbol) {
                         fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Could not duplicate imported procedure symbol\n");
@@ -529,6 +576,7 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     /* OK - Create func */
     func = malloc(sizeof(imported_func));
     func->context = 0;
+    func->already_loaded = 0;
 
     /* Store the namespace */
     func->namespace = malloc(len + 1);
@@ -580,7 +628,7 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     if (master_context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
     func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
 
-    if (error_in_node(func->context->ast)) {
+    if (!func->context || error_in_node(func->context->ast)) {
         fprintf(stderr, "Importing Procedures - ERROR: Error parsing imported procedure arguments for %s, skipping\n", func->fqname);
         fprintf(stderr, "buffer is %s\n", buffer);
         dump_error_ast(func->context);
@@ -622,6 +670,7 @@ void rxfl_fre(importable_file **file_list) {
     importable_file **file;
     for (file = file_list; *file; file++) {
         free((*file)->name);
+        if ((*file)->location) free((*file)->location);
         free(*file);
     }
     free(file_list);
@@ -634,11 +683,16 @@ static void add_file_to_list(importable_file *file, size_t *number, importable_f
     (*list)[*number] = 0;
 }
 
-static importable_file* importable_file_f(char* name, file_type type) {
+static importable_file* importable_file_f(char* name, file_type type, char *location) {
     importable_file *file;
     file = malloc(sizeof(importable_file));
     file->name = malloc(strlen(name) + 1);
     strcpy(file->name, name);
+    if (location) {
+        file->location = malloc(strlen(location) + 1);
+        strcpy(file->location, location);
+    }
+    else file->location = 0;
     file->imported = 0;
     file->type = type;
     return file;
@@ -669,14 +723,14 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     name = dirfstfl(directory, type_name, &dir_ptr);
     if (name) {
         if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
-            file = importable_file_f(name, type);
+            file = importable_file_f(name, type, directory);
             add_file_to_list(file, number, list);
         }
         do {
             name = dirnxtfl(&dir_ptr);
             if (name) {
                 if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
-                    file = importable_file_f(name, type);
+                    file = importable_file_f(name, type, directory);
                     add_file_to_list(file, number, list);
                 }
             }
@@ -692,6 +746,7 @@ importable_file **rxfl_lst(Context *context) {
     importable_file **list = 0;
     char* full_name;
     char* exe_dir;
+    size_t d;
 
     list = malloc( sizeof(importable_file*) );
     list[0] = 0;
@@ -707,6 +762,20 @@ importable_file **rxfl_lst(Context *context) {
 
     /* Read RXBIN files in the current directory */
     list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number);
+
+    /* Look in the imported location */
+    if (context->import_locations) {
+        for (d = 0; context->import_locations[d]; d++) {
+            /* Read in REXX files in the directory */
+            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number);
+
+            /* Read in RXAS files in the directory */
+            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number);
+
+            /* Read in RXBIN files in the directory */
+            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number);
+        }
+    }
 
     if (exe_dir) {
         /* Read in REXX files in the directory holding the compiler */

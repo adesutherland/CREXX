@@ -1,5 +1,6 @@
 /* rexx */
 options levelb
+import rxfnsb
 
 /* say trunc(3.1415926,0) */
 /* say trunc(3.1415926,1) */
@@ -338,7 +339,3 @@ if trunc(123.12345,5) \= 123.12345 then do
 end
 
 return 0
-
-  /* trunc()  */
-trunc: procedure = .string
-arg number = .string, fraction = 0

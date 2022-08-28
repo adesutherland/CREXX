@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 /* TODO */
 a="This is René's test case   "
 z="     This is René's test case"

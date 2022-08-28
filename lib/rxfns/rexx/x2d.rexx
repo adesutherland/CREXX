@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+namespace rxfnsb
+
 /* X2d(hex-string)  returns decimal number of hex string */
 
 x2d: procedure = .int
@@ -42,7 +44,3 @@ x2d: procedure = .int
      dec=dec-char          /* create integer out of complement */
   end
 return dec
-
-/* Right() Procedure */
-   right: procedure = .string
-          arg string = .string, length1 = .int, pad = '0'

@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 
 x='the quick brown fox jumps over the lazy dog'
@@ -19,7 +21,3 @@ if reverse("") \= '' then do
 end
   
 return errors<>0
-
-/* function prototype */
-reverse: procedure = .string
-arg string1 = .string

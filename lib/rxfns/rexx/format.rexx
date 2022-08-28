@@ -1,6 +1,9 @@
  /* rexx */
   options levelb
 
+namespace rxfnsb
+import _rxsysb
+
 format: procedure = .string
    arg innum = .string, before = 0, after = 0, expp = 0, expt=-1
 /* --------------------------------------------------------------------------------------
@@ -50,22 +53,4 @@ format: procedure = .string
       return formatx"E"||sign||formatz /* return result          */
    end
 return ''
-
-
-
-/* Prototype functions */
-_itrunc: procedure = .string
-       arg innum = .float
-_ftrunc: procedure = .string
-       arg innum = .float
-right: procedure = .string
-       arg string = .string, length1 = .int, pad = '0'
-left: procedure = .string
-       arg string = .string, length1 = .int, pad = '0'
-length: procedure = .int
-  arg string1 = .string
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '
-
-
 

@@ -1,7 +1,10 @@
 /* rexx center text  */
 /* CENTER and CENTRE are exact copies, any change must be reflected in both functions */
-
+/* TODO Fix this bit of uglyness when crexx allows ... */
 options levelb
+
+namespace rxfnsb
+
 center: procedure = .string
   arg expose string = .string, centlen = .int,  pad = " "
 
@@ -20,7 +23,7 @@ padlen=centlen-slen
 assembler idiv padlen,padlen,2
 if padlen=0 then return string   /* if nothing to add return original string */
 
-if padlen<0 then newstr=substr(string,-padlen+1,centlen," ")
+if padlen<0 then newstr=Substr(string,-padlen+1,centlen," ")
 else do
 /* create padding string */
    padstr=copies(pad,padlen)
@@ -30,15 +33,3 @@ else do
 end
 
 return newstr
-
-/* copies()  create copies of a char/string */
-copies: procedure = .string
-  arg string1 = .string, count = .int
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

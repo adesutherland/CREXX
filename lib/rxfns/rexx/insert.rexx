@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* insert(insstr,string,position,length,pad) inserts string into existing string at certain position and length */
 insert: procedure = .string
   arg insstr = .string, string = .string, position = .int, len = 0, pad = " "
@@ -18,11 +21,3 @@ insert: procedure = .string
  end
 
 return str1||insstr||str2                   /* return newly constructed string         */
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

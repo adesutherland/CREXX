@@ -12,7 +12,4 @@ do i = 1 to 10
 end
 say "a =" a
 
-call dummy
-
-
 return 0

@@ -1,8 +1,13 @@
+/*
+ * _elapsed: procedure = .int
+ *           arg value = .int
+ */
 .globals=2
-g0 .expose=elapsed_flag
-g1 .expose=elapsed_time
+g0 .expose=_rxsysb.elapsed_flag
+g1 .expose=_rxsysb.elapsed_time
 /* Elapsed time, requires global variables */
-_elapsed()   .locals=2 .expose=_elapsed._elapsed
+_elapsed()   .locals=2 .expose=_rxsysb._elapsed
+         .meta "_rxsysb._elapsed"="b" ".int" _elapsed() "value = .int" ""
          seq r1,g0,"Y"
          brf notset,r1
          ieq r1,a1,0
