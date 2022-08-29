@@ -1,6 +1,8 @@
 /* rexx */
 options levelb
 
+namespace rxfnsb
+
 /* delword(string,wordnumber-to-delete,length) delete one word, or the remaining words in string */
 delword: procedure = .string
   arg expose string = .string, wnum = .int, wcount = -1
@@ -49,19 +51,3 @@ delword: procedure = .string
      if wdel>=wcount then return string /* match it with the requested count? Then return */
   end
 return string
-
-word: procedure = .string
-  arg string1 = .string, wordnum = .int
-
-words: procedure = .int
-  arg string1 = .string
-
-wordindex: procedure = .int
-  arg string1 = .string, wordnum = .int
-  /* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-    arg string1 = .string
-
-  /* Substr() Procedure */
-substr: procedure = .string
-     arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

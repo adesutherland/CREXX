@@ -1,5 +1,7 @@
 /* C2X */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 /* EBCDIC
@@ -36,24 +38,3 @@ if c2x( 'ffffffff'x )\= 'FFFFFFFF' then do
 end
 
 return errors<>0
-
-x2d: procedure = .int
-  arg expose hex = .string, slen = -1
-
-x2c: procedure = .string
-  arg expose hex = .string
-
-x2b: procedure = .string
-  arg expose hex = .string, slen = -1
-
-d2b: procedure = .string
-  arg expose int1 = .int, slen = -1
-
-d2x: procedure = .string
-  arg expose int1 = .int, slen = -1
-
-d2c: procedure = .string
-  arg expose int1 = .int, slen = -1
-
-c2x: procedure = .string
-  arg expose string = .string

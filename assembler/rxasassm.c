@@ -16,13 +16,13 @@ struct backpatching_references;
 struct backpatching {
     int defined;
     size_t index;
-//    Token *def_token;
+//    Assembler_Token *def_token;
     struct backpatching_references *refs;
 };
 
 struct backpatching_references {
     size_t index;
-    Token *token;
+    Assembler_Token *token;
     struct backpatching_references *link;
 };
 
@@ -49,7 +49,7 @@ static void backpatch_procedures(Assembler_Context *context) {
         if (patch->defined == 0) {
             ref = patch->refs;
             while(ref) {
-                err_at(context, ref->token, "unknown procedure");
+                rxaserat(context, ref->token, "unknown procedure");
                 ref = ref->link;
             }
         }
@@ -131,7 +131,7 @@ static void backpatch_labels(Assembler_Context *context) {
         if (patch->defined == 0) {
             ref = patch->refs;
             while(ref) {
-                err_at(context, ref->token, "unknown label");
+                rxaserat(context, ref->token, "unknown label");
                 ref = ref->link;
             }
         }
@@ -278,7 +278,7 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
 /*
  * Add an external index to the external tree
  */
-static void add_extern_index(Assembler_Context *context, Token *token) {
+static void add_extern_index(Assembler_Context *context, Assembler_Token *token) {
 
     size_t dummy;
 
@@ -287,7 +287,7 @@ static void add_extern_index(Assembler_Context *context, Token *token) {
                  (char*)token->token_value.string,
                  &dummy)) {
         /* Yes - duplicate */
-        err_at(context, token, "duplicate exposed index");
+        rxaserat(context, token, "duplicate exposed index");
     }
     else {
         /* Create entry in the tree */
@@ -298,13 +298,13 @@ static void add_extern_index(Assembler_Context *context, Token *token) {
 }
 
 /* Set the number of globals */
-void rxassetg(Assembler_Context *context, Token *globalsToken) {
+void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken) {
 
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
 
     if (context->binary.globals)
-        err_at(context, globalsToken, "duplicate .globals directive (ignored)");
+        rxaserat(context, globalsToken, "duplicate .globals directive (ignored)");
     else {
         context->binary.globals = (int) globalsToken->token_value.integer;
         context->extern_regs = calloc(context->binary.globals, sizeof(char));
@@ -312,8 +312,8 @@ void rxassetg(Assembler_Context *context, Token *globalsToken) {
 }
 
 /* Expose a global register */
-void rxasexre(Assembler_Context *context, Token *registerToken,
-              Token *exposeToken) {
+void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
+              Assembler_Token *exposeToken) {
     size_t entry_size, entry_index;
     expose_reg_constant *centry;
 
@@ -321,14 +321,14 @@ void rxasexre(Assembler_Context *context, Token *registerToken,
     flushopt(context);
 
     if (registerToken->token_value.integer >= context->binary.globals)
-        err_at(context, registerToken, "global register number bigger than the number of globals");
+        rxaserat(context, registerToken, "global register number bigger than the number of globals");
 
     /* Duplicate extern index check */
     add_extern_index(context, exposeToken);
 
     /* Duplicate register check */
     if (context->extern_regs[(int)registerToken->token_value.integer]) {
-        err_at(context, registerToken, "duplicate exposed register");
+        rxaserat(context, registerToken, "duplicate exposed register");
     }
     else context->extern_regs[(int)registerToken->token_value.integer] = 1;
 
@@ -390,7 +390,7 @@ static size_t add_string_to_pool(Assembler_Context *context, char* string) {
     return entry_index;
 }
 
-static size_t add_func_to_pool(Assembler_Context *context, Token* token) {
+static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* token) {
     size_t entry_index;
     size_t entry_size;
     struct backpatching *ref_header;
@@ -443,17 +443,17 @@ static size_t add_func_to_pool(Assembler_Context *context, Token* token) {
     return ref_header->index;
 }
 
-static size_t get_reg_number(Assembler_Context *context, Token* token) {
+static size_t get_reg_number(Assembler_Context *context, Assembler_Token* token) {
     switch(token->token_type) {
         case RREG:
             if (token->token_value.integer >= context->current_locals)
-                err_at(context, token, "register number bigger than the number of locals");
+                rxaserat(context, token, "register number bigger than the number of locals");
 
             return token->token_value.integer;
 
         case GREG:
             if (token->token_value.integer >= context->binary.globals)
-                err_at(context, token, "global register number bigger than the number of globals");
+                rxaserat(context, token, "global register number bigger than the number of globals");
 
             return token->token_value.integer + context->current_locals;
 
@@ -463,7 +463,7 @@ static size_t get_reg_number(Assembler_Context *context, Token* token) {
     return 0; /* Should never happen */
 }
 
-static void gen_operand(Assembler_Context *context, Token *operandToken) {
+static void gen_operand(Assembler_Context *context, Assembler_Token *operandToken) {
     size_t s_index;
     /* Extend the buffer if we need to */
     size_t new_size;
@@ -561,7 +561,7 @@ static OperandType token_to_operand_type(int token_type) {
     }
 }
 
-static Instruction *validate_instruction(Assembler_Context* context, Token *instrToken,
+static Instruction *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
                                          OperandType type1,
                                          OperandType type2,
                                          OperandType type3 ) {
@@ -574,7 +574,7 @@ static Instruction *validate_instruction(Assembler_Context* context, Token *inst
 
     /* Make a useful error message */
     possible_inst = fst_inst((char*)instrToken->token_value.string);
-    if (!possible_inst) err_at(context, instrToken, "invalid instruction mnemonic");
+    if (!possible_inst) rxaserat(context, instrToken, "invalid instruction mnemonic");
     else {
         strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
         i = strlen(errorBuffer);
@@ -588,13 +588,13 @@ static Instruction *validate_instruction(Assembler_Context* context, Token *inst
             exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
             possible_inst = next_possible_inst;
         }
-        err_aftr(context, instrToken, errorBuffer);
+        rxaseaft(context, instrToken, errorBuffer);
     }
     return 0;
 }
 
 /** Generate code for an instruction with no operands */
-void rxasgen0(Assembler_Context *context, Token *instrToken) {
+void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            0,
@@ -606,7 +606,7 @@ void rxasgen0(Assembler_Context *context, Token *instrToken) {
 }
 
 /** Generate code for an instruction with one operand */
-void rxasgen1(Assembler_Context *context, Token *instrToken, Token *operand1Token) {
+void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -619,8 +619,8 @@ void rxasgen1(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 }
 
 /** Generate code for an instruction with two operand */
-void rxasgen2(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-              Token *operand2Token) {
+void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+              Assembler_Token *operand2Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -634,8 +634,8 @@ void rxasgen2(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 }
 
 /** Generate code for an instruction with three operands */
-void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-              Token *operand2Token, Token *operand3Token) {
+void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            token_to_operand_type(operand1Token->token_type),
@@ -651,8 +651,8 @@ void rxasgen3(Assembler_Context *context, Token *instrToken, Token *operand1Toke
 
 /** Generate code for an instruction with up to three operands
  *  NULLS in the operandToken's are used to detect the number of operands */
-void rxasgen(Assembler_Context *context, Token *instrToken, Token *operand1Token,
-              Token *operand2Token, Token *operand3Token) {
+void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
+             Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
     Instruction *inst=validate_instruction(context, instrToken,
                                            operand1Token?token_to_operand_type(operand1Token->token_type):0,
@@ -666,7 +666,7 @@ void rxasgen(Assembler_Context *context, Token *instrToken, Token *operand1Token
     }
 }
 
-static size_t define_proc(Assembler_Context *context, Token *funcToken) {
+static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken) {
     proc_constant *centry;
     size_t entry_index;
     size_t entry_size;
@@ -679,7 +679,7 @@ static size_t define_proc(Assembler_Context *context, Token *funcToken) {
         /* Yes - check duplicate definition */
         ref_header = (struct backpatching *)entry_index;
         if (ref_header->defined) {
-            err_at(context, funcToken, "duplicate procedure definition");
+            rxaserat(context, funcToken, "duplicate procedure definition");
             /* TODO - Message, proc defined at ref_header->def_token */
         }
         centry = (proc_constant*)(context->binary.const_pool + ref_header->index);
@@ -718,7 +718,7 @@ static size_t define_proc(Assembler_Context *context, Token *funcToken) {
 }
 
 /* Procedures Definition */
-void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) {
+void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken) {
 
     proc_constant *centry;
     size_t entry_index;
@@ -750,7 +750,7 @@ void rxasproc(Assembler_Context *context, Token *funcToken, Token *localsToken) 
 }
 
 /* Label Definition */
-void rxaslabl(Assembler_Context *context, Token *labelToken) {
+void rxaslabl(Assembler_Context *context, Assembler_Token *labelToken) {
     struct backpatching *ref_header;
     size_t tree_index;
 
@@ -761,7 +761,7 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
         /* Yes - check duplicate definition */
         ref_header = (struct backpatching *)tree_index;
         if (ref_header->defined) {
-            err_at(context, labelToken, "duplicate label definition");
+            rxaserat(context, labelToken, "duplicate label definition");
             /* TODO - Message, label defined at ref_header->def_token */
             return;
         }
@@ -783,8 +783,8 @@ void rxaslabl(Assembler_Context *context, Token *labelToken) {
 }
 
 /* Define an exposed procedure */
-void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
-              Token *exposeToken) {
+void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken,
+              Assembler_Token *exposeToken) {
 
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
@@ -852,8 +852,8 @@ void rxasexpc(Assembler_Context *context, Token *funcToken, Token *localsToken,
 }
 
 /* Declare a required / imported procedure */
-void rxasdecl(Assembler_Context *context, Token *funcToken,
-              Token *exposeToken) {
+void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken,
+              Assembler_Token *exposeToken) {
 
     proc_constant *pentry;
     size_t entry_size, entry_index, pentry_index;
@@ -902,6 +902,7 @@ void rxasdecl(Assembler_Context *context, Token *funcToken,
     }
 
     /* Proc Entry has a pointer to the external entry */
+    pentry = (proc_constant*)(context->binary.const_pool + pentry_index); /* It might have moved */
     pentry->exposed = entry_index;
 }
 
@@ -935,7 +936,7 @@ static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum
 }
 
 /* Source filename */
-void rxasmefl(Assembler_Context *context, Token *file) {
+void rxasmefl(Assembler_Context *context, Assembler_Token *file) {
     size_t entry = add_meta_entry(context,sizeof(meta_file_constant),META_FILE);
     size_t sentry = add_string_to_pool(context, (char*)file->token_value.string);
 
@@ -944,7 +945,7 @@ void rxasmefl(Assembler_Context *context, Token *file) {
 }
 
 /* Source Line */
-void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *source) {
+void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
     size_t entry = add_meta_entry(context,sizeof(meta_src_constant),META_SRC);
     size_t sentry;
 
@@ -956,7 +957,7 @@ void rxasmesr(Assembler_Context *context, Token *line, Token *column, Token *sou
 }
 
 /* Function Metadata */
-void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *func, Token *args, Token *inliner) {
+void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args, Assembler_Token *inliner) {
     size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
     size_t sentry;
 
@@ -982,7 +983,7 @@ void rxasmefu(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Register Metadata */
-void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *reg) {
+void rxasmere(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg) {
     size_t entry = add_meta_entry(context,sizeof(meta_reg_constant),META_REG);
     size_t sentry;
 
@@ -997,7 +998,7 @@ void rxasmere(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Constant Symbol Metadata */
-void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *type, Token *constant){
+void rxasmect(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *constant){
     size_t entry = add_meta_entry(context,sizeof(meta_const_constant),META_CONST);
     size_t sentry;
 
@@ -1013,7 +1014,7 @@ void rxasmect(Assembler_Context *context, Token *symbol, Token *option, Token *t
 }
 
 /* Clear Symbol Metadata */
-void rxasmecl(Assembler_Context *context, Token *symbol) {
+void rxasmecl(Assembler_Context *context, Assembler_Token *symbol) {
     size_t entry = add_meta_entry(context,sizeof(meta_clear_constant),META_CLEAR);
     size_t sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
 

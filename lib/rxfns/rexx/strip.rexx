@@ -1,6 +1,8 @@
   /* rexx */
   options levelb
 
+  namespace rxfnsb
+
 strip: procedure = .string
        arg instr = .string, option = "B", schar= " "
    retstr=""
@@ -38,11 +40,3 @@ strip: procedure = .string
       end
    end
 return retstr
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '

@@ -1,8 +1,10 @@
 /*
  * rexx built-in function Datatype
  */
-
 options levelb
+
+namespace rxfnsb
+
 /* call CheckArgs  'rANY oABLMNSUWX' */
 /* As well as returning the type, the value for a 'NUM' is set in
    !DatatypeResult.  This is a convenience when DATATYPE is used
@@ -221,28 +223,3 @@ do while Residue \= ''
 end
 say 'Outcome of digitrun' Outcome
 return Outcome
-
-
-/* called function prototypes */
-verify: procedure = .int
-       arg instring = .string, intab = .string, match='N', spos=1
-
-substr: procedure = .string
-  arg string1 = .string, start = .int, len = length(string1) + 1 - start, pad = ' '
-
-length: procedure = .int
-  arg string1 = .string
-
-right: procedure = .string
-       arg string = .string, length1 = .int, pad = '0'
-
-left: procedure = .string
-       arg string = .string, length1 = .int, pad = '0'
-
-pos: procedure = .int
-  arg expose needle = .string, haystack = .string, start = 1
-
-strip: procedure = .string
-       arg instr = .string, option = "B", schar= " "
-
-

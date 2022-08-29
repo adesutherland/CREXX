@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 /* TODO RXVM ts_time time trunc right left _elapsed copies length substr */
 say "test Time"
 say "Option 'E' "time('E')
@@ -33,8 +35,3 @@ say "Option ZN  "time("zN")   /* time zone name ; summer time zone name (if any)
 say "Option UTC "time("uTc")  /* UTC time */
 
 return 0
-
-/* Prototype functions */
-time: Procedure = .string
-   arg option = ""
-

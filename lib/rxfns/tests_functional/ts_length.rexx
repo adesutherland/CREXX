@@ -1,5 +1,7 @@
 /* LENGTH */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 
@@ -41,10 +43,3 @@ if length(René) \= 4 then do
 end
 
 return errors<>0
-  
-/* function prototype */
-length: procedure = .int
-arg string1 = .string
-
-
-

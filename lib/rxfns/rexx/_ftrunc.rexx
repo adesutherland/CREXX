@@ -1,5 +1,7 @@
 /* rexx */
-  options levelb
+options levelb
+
+namespace _rxsysb
 
 _ftrunc: procedure = .string
        arg innum = .float

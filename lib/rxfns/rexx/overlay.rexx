@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* overlay(insstr,string,position,length,pad) overlays string into existing string at certain position and length */
 overlay: procedure = .string
   arg insstr = .string, string = .string, position = .int, len = 0, pad = ""
@@ -33,11 +36,3 @@ overlay: procedure = .string
      else str2=substr(string,position+ilen) /*    else create str2                     */
 
  return str1||insstr||str2                   /* return newly constructed string         */
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''

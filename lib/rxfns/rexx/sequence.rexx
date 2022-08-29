@@ -1,5 +1,9 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+import _rxsysb
+
 /* Built-in function Sequence is a modern day equivalent of XRANGE,
  * that can deal with Unicode. First turned up in NetRexx.
  * (XRANGE is limited to single byte characters 00-FF and wraps around) 
@@ -32,12 +36,3 @@ end
 
 return resultString
 
-/* function prototypes */
-c2d: procedure = .string
-  arg expose string = .string
-
-x2c: procedure = .string
-  arg expose string = .string
-
-reradix: procedure = .string
-arg Subject = .string, FromRadix = .int, ToRadix = .int

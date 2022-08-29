@@ -1,71 +1,74 @@
 cmake_minimum_required(VERSION 3.18)
 
-set(REXXBINS
-		_datei.rxbin
-		_dateo.rxbin
-		_ftrunc.rxbin
-		_itrunc.rxbin
-		_jdn.rxbin
-		abbrev.rxbin
-		abs.rxbin
-		c2x.rxbin
-		c2d.rxbin
-		center.rxbin
-		centre.rxbin
-		changestr.rxbin
-		compare.rxbin
-		countstr.rxbin
-		d2b.rxbin
-		d2c.rxbin
-		d2x.rxbin
-		date.rxbin
-		delstr.rxbin
-		delword.rxbin
-		format.rxbin
-		global.rxbin
-		insert.rxbin
-		length.rxbin
-		linesize.rxbin
-		lower.rxbin
-		max.rxbin
-		min.rxbin
-		overlay.rxbin
-		raise.rxbin
-		sign.rxbin
-		space.rxbin
-		strip.rxbin
-		substr.rxbin
-		time.rxbin
-		translate.rxbin
-		trunc.rxbin
-		upper.rxbin
-		value.rxbin
-		verify.rxbin
-		wordlength.rxbin
-		wordpos.rxbin
-		x2b.rxbin
-		x2c.rxbin
-		x2d.rxbin
-		reradix.rxbin
-		sequence.rxbin
-		find.rxbin
-		index.rxbin
-		xrange.rxbin
-		# datatype.rxbin
+set(BIFS
+		_datei
+		_dateo
+		_ftrunc
+		_itrunc
+		_jdn
+		abbrev
+		abs
+		c2x
+		c2d
+		center
+		centre
+		changestr
+		compare
+		countstr
+		d2b
+		d2c
+		d2x
+		date
+		delstr
+		delword
+		format
+#		global
+		insert
+		length
+		linesize
+		lower
+		max
+		min
+		overlay
+		raise
+		sign
+		space
+		strip
+		substr
+		time
+		translate
+		trunc
+		upper
+		value
+		verify
+		wordlength
+		wordpos
+		x2b
+		x2c
+		x2d
+		reradix
+		sequence
+		find
+		index
+		xrange
+		# datatype
 )
+
+foreach (BIF ${BIFS})
+	set(REXXBINS ${REXXBINS} ${BIF}.rxbin)
+	set(REXXSRC ${REXXSRC} ${BIF}.rexx)
+endforeach ()
 
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
-	set(_member "libmember_${_basename}")
 	add_custom_command(
-		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-		  DEPENDS rxas rxc ${_basename}.rexx
+		  DEPENDS rxas rxc ../rxas/library-rxas.rxbin ${REXXSRC}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."
 	)
-	add_custom_target(${_member} ALL DEPENDS ${_binfile})
 endforeach()
 
 add_custom_command(

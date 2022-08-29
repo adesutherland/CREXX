@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 if upper("The quick brown fox jumps over the lazy dog") \= 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG' then do
@@ -14,11 +16,3 @@ if lower('THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG') \=  "the quick brown fox
 end
 
 return errors<>0
-
-/* lower()  */
-lower: procedure = .string
-  arg expose string1 = .string
-
-/* upper()  */
-upper: procedure = .string
-  arg expose string1 = .string

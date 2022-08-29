@@ -6,6 +6,7 @@
 
 #define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
+#define   YYLIMIT     s->buff_end
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
@@ -14,6 +15,7 @@ int opt_scan(Context* s) {
 
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:eof = 0;
 */
     regular:
 
@@ -22,6 +24,7 @@ int opt_scan(Context* s) {
 
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:eof = 0;
 
     eol2 = "\r\n";
     eol1 = [\r] | [\n];
@@ -44,13 +47,30 @@ int opt_scan(Context* s) {
     'LEVELD' { return(TK_LEVELD); }
     'LEVELG' { return(TK_LEVELG); }
     'LEVELL' { return(TK_LEVELL); }
+    'HASHCOMMENTS' { return(TK_HASHCOMMENTS); }
+    'DASHCOMMENTS' { return(TK_DASHCOMMENTS); }
+    'SLASHCOMMENTS' { return(TK_SLASHCOMMENTS); }
+    'NOHASHCOMMENTS' { return(TK_NOHASHCOMMENTS); }
+    'NODASHCOMMENTS' { return(TK_NODASHCOMMENTS); }
+    'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     whitespace {
         s->top = s->cursor;
         goto regular;
     }
     ";" { return(TK_EOC); }
+    // Accept all line comment formats
+    [#] .* {
+        goto regular;
+    }
+    "//" .* {
+        goto regular;
+    }
+    "--" .* {
+        goto regular;
+    }
     eol2 {
         s->line++;
         s->linestart = s->cursor+2;
@@ -88,6 +108,7 @@ int opt_scan(Context* s) {
         goto comment;
     }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     any { goto comment; }
 */
 }

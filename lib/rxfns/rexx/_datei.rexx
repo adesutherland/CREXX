@@ -1,7 +1,10 @@
 /* rexx */
 options levelb
 
-_datei: Procedure = .string
+namespace _rxsysb
+import rxfnsb
+
+_datei: Procedure = .int
  arg idate = .string, format = .string, isep=""
 /* ----------------------------------------------------------
  *  Converts given Date in Julian Day Number
@@ -10,11 +13,11 @@ _datei: Procedure = .string
   if format='' then format='NORMAL'
   if fabbreV('DAYS',format,1) then do
       call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
-      return "SYNTAX"
+      return -1
   end
   if fabbreV('CENTURY',format,1) then do
     call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
-    return "SYNTAX"
+    return -1
   end
   if fabbreV('EPOCH',format,3) then do
      idate=idate%86400+_jdn(1,1,1970)
@@ -83,7 +86,7 @@ _datei: Procedure = .string
   if fabbreV('BASE',format,1) then return idate+1721426          /* calulate JDN   */
   if fabbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
   call raise "SYNTAX","Error 40.28: invalid DATE argument 3",format
-return 'SYNTAX'
+return -1
 
 fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1
@@ -110,39 +113,3 @@ split: Procedure = .string
   end
   if words(retstr)<3 then say "invalid input date "retstr
 return retstr
-
-
-/* Prototypes */
-
-_jdn: Procedure = .int
-  arg day = .int, month = .int, year = .int
-
-abbrev: procedure = .string
-  arg string = .string, astr = .string, len = 0
-
-right:  procedure = .string
-  arg string = .string, len =  .int, pad = " "
-
-word: procedure = .string
-  arg string1 = .string, string2 = .int
-
-words: procedure = .int
-  arg string1 = .string
-
-wordpos: procedure = .int
-  arg string1 = .string, string2 = .string, offset = 0
-
-
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
-
-/* Raise() Internal Function to Raise a runtime error */
-raise: procedure = .int
-  arg type = .string, code = .string, parm1 = .string
-
-
-

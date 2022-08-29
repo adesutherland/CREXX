@@ -1,5 +1,7 @@
 /* X2B */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 if x2b('C3') \= '11000011' then do
@@ -56,10 +58,3 @@ if x2b("") \= "" then do
   say 'X2B failed in test 13 '
 end
 return errors<>0
-
-x2b: procedure = .string
-  arg expose hex = .string, slen = -1
-d2x: procedure = .string
-  arg expose int1 = .int, slen = -1
-c2x: procedure = .string
-  arg expose string = .string

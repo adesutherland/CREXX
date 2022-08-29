@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 
 if countstr('bc','abcabcabc') \= 3 then do
@@ -72,9 +74,3 @@ end
 /* 12345678901234567890123456789012  */
 
 return errors<>0
-
-/* function prototype */
-countstr: procedure = .int
-arg string1 = .string, string2 = .string
-
-

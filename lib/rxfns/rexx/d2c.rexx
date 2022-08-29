@@ -1,6 +1,8 @@
 /* rexx center text  */
 options levelb
 
+namespace rxfnsb
+
 d2c: procedure = .string
   arg from = .int, slen=-1
   xlen=0
@@ -17,17 +19,3 @@ d2c: procedure = .string
      xlen=slen-xlen
   end
 return xstr
-
-x2c: procedure = .string
-  arg hex = .string
-
-c2x: procedure = .string
-  arg hex = .string
-
-
-d2x: procedure = .string
-  arg xint = .int, slen=-1
-
-d2b: procedure = .string
-  arg xint = .int
-

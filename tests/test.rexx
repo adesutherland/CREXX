@@ -1,19 +1,16 @@
 /* Tests for latest show and tells */
 options levelb
-
+namespace scratch
+import rxfnsb
+# comment
 say "Début"
 
-x = 4
+a  = 0
+do i = 1 to 10
 
-a = x + 1
-
-if x = 4 | a = 5 then say true
-
-f1 = 1.0
-f2 = 1.1
-if f1=1 then say "1.0 = 1"
-
-s1 = "left"
-if s1 <> "right" then say "left is not right"
+  a = a + i
+  say right(i,5,"0")
+end
+say "a =" a
 
 return 0

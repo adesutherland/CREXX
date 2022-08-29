@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 /* x='the quick brown fox jumps over the lazy dog' */
 /* say "test Space bif" */
@@ -76,11 +78,3 @@ if space(" f o o   b a r ",0)    \= "foobar"             then do
 end
 
 return errors<>0
-  
-
-
-/* function prototype */
-space: procedure = .string
-arg string1 = .string, int2 = 2, string3 = " "
-
-

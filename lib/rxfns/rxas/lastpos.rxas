@@ -1,6 +1,10 @@
-/* lastpos */
+/* lastpos
+lastpos: procedure = .int
+arg needle = .string, haystack = .string, start = 1
+*/
           .globals=0
-lastpos() .locals=13 .expose=lastpos.lastpos
+lastpos() .locals=13 .expose=rxfnsb.lastpos
+   .meta "rxfnsb.lastpos"="b" ".int" lastpos() "needle = .string, haystack = .string, start = 1" ""
     brtpandt havestart,a3,1
     load a3,0
     isub a0,a0,1

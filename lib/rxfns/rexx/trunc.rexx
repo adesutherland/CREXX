@@ -1,6 +1,8 @@
 /* rexx */
   options levelb
 
+namespace rxfnsb
+
 trunc: procedure = .string
        arg innum = .string, fraction = 0
    retnum=""
@@ -43,6 +45,3 @@ trunc: procedure = .string
    end
 
 return retnum
-
-left: procedure = .string
-  arg string1 = .string, len = .int, pad = '0'

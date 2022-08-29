@@ -9,18 +9,18 @@
 
 /* Compares the position (line / column) of a and b
  * return <0 if a<b, >0 if a>=b */
-static int compare_error(Error *a, Error *b) {
+static int compare_error(Assembler_Error *a, Assembler_Error *b) {
     if (a->line != b->line) return a->line - b->line;
     if (a->column != b->column) return a->column - b->column;
     return 1;
 }
 
 /* Error Factory */
-Error* error_f(Assembler_Context* context, int line, int column,
-               int severity, char *message) {
+Assembler_Error* rxaserrf(Assembler_Context* context, int line, int column,
+                          int severity, char *message) {
 
-    Error *error = malloc(sizeof(Error));
-    Error *i, *j;
+    Assembler_Error *error = malloc(sizeof(Assembler_Error));
+    Assembler_Error *i, *j;
 
     /* Set data */
     error->line = line;
@@ -28,7 +28,7 @@ Error* error_f(Assembler_Context* context, int line, int column,
     error->severity = severity;
     strncpy(error->message, message, MAX_ERROR_LENGTH);
     error->message[MAX_ERROR_LENGTH-1] = 0;
-    error->next_error = 0; /* prnt_err() sets and uses this */
+    error->next_error = 0; /* rxasperr() sets and uses this */
     if (severity > context->severity) context->severity = severity;
 
     /* Link it up */
@@ -56,10 +56,10 @@ Error* error_f(Assembler_Context* context, int line, int column,
     return error;
 }
 
-void prnt_err(Assembler_Context* context) {
+void rxasperr(Assembler_Context* context) {
     /* Find first Error and set next_error pointers */
-    Error *e = context->error_tail;
-    Error *p;
+    Assembler_Error *e = context->error_tail;
+    Assembler_Error *p;
     while (e) {
         p = e->prev_error;
         if (p) {
@@ -79,9 +79,9 @@ void prnt_err(Assembler_Context* context) {
     }
 }
 
-void free_err(Assembler_Context* context) {
-    Error *e = context->error_tail;
-    Error *p;
+void rxasfrer(Assembler_Context* context) {
+    Assembler_Error *e = context->error_tail;
+    Assembler_Error *p;
     while (e) {
         p = e->prev_error;
         free(e);
@@ -89,32 +89,32 @@ void free_err(Assembler_Context* context) {
     }
 }
 
-void err_aftr(Assembler_Context* context, Token* after_token, char* message) {
+void rxaseaft(Assembler_Context* context, Assembler_Token* after_token, char* message) {
     char buffer[MAX_ERROR_LENGTH];
     if (after_token->optimised) {
         snprintf(buffer, MAX_ERROR_LENGTH, "INTERNAL ERROR after \"%.*s\" optimised to \"%s\", %s",
                  (int) after_token->length, after_token->token_source, after_token->token_value.string, message);
-        error_f(context, (int)after_token->line, (int)after_token->column, 2, buffer);
+        rxaserrf(context, (int) after_token->line, (int) after_token->column, 2, buffer);
     }
     else {
 
         snprintf(buffer, MAX_ERROR_LENGTH, "Error after \"%.*s\", %s",
                  (int) after_token->length, after_token->token_source, message);
-        error_f(context, (int)after_token->line,
-                (int) (after_token->column + after_token->length), 1, buffer);
+        rxaserrf(context, (int) after_token->line,
+                 (int) (after_token->column + after_token->length), 1, buffer);
     }
 }
 
-void err_at(Assembler_Context* context, Token* token, char* message) {
+void rxaserat(Assembler_Context* context, Assembler_Token* after_token, char* message) {
     char buffer[MAX_ERROR_LENGTH];
-    if (token->optimised) {
+    if (after_token->optimised) {
         snprintf(buffer, MAX_ERROR_LENGTH, "INTERNAL ERROR at \"%.*s\" optimised to \"%s\", %s",
-                 (int) token->length, token->token_source, token->token_value.string, message);
-        error_f(context, (int)token->line, (int)token->column, 2, buffer);
+                 (int) after_token->length, after_token->token_source, after_token->token_value.string, message);
+        rxaserrf(context, (int) after_token->line, (int) after_token->column, 2, buffer);
     }
     else {
         snprintf(buffer, MAX_ERROR_LENGTH, "Error at \"%.*s\", %s",
-                 (int) token->length, token->token_source, message);
-        error_f(context, (int)token->line, (int)token->column, 1, buffer);
+                 (int) after_token->length, after_token->token_source, message);
+        rxaserrf(context, (int) after_token->line, (int) after_token->column, 1, buffer);
     }
 }

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 /* SUBSTR */
@@ -95,13 +97,3 @@ if substr("12345678",5,6,"é") \= '5678éé' then
 /* say substr("12345678",10,6,"é") */
 /* if substr("12345678",10,6,"éé") \= 'éééééé' then do errors=errors+1;  say 'need exceptions for this'; end */
 return errors<>0
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-  arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ' '
-
-

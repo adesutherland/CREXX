@@ -1,5 +1,7 @@
 /* rexx test WORDPOS bif */
 options levelb
+import rxfnsb
+
 /* /\* 1234567890123456789012345678901234567890123 *\/ */
 /* x='the quick brown fox jumps over the lazy dog' */
 /* say wordpos('jum',x) */
@@ -159,8 +161,3 @@ if wordpos(' a ','a') \= 1 then do
   say 'WORDPOS failed in test 37 '
 end
 return errors<>0
-
-  /* function prototype */
-  wordpos: procedure = .int
-  arg string1 = .string, string2 = .string, int3 = 1
-  

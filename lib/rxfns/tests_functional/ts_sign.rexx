@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 if sign(3.14) \= 1 then do
@@ -135,7 +137,3 @@ if sign(- -"12345678912345678912345678912345678912345678912345678912345678912345
 end
 
 return errors<>0
-
-sign: procedure = .int
-  arg expose number = .float
-

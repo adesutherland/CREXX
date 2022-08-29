@@ -1,5 +1,7 @@
 /* WORD */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 if word('Now is the time',3) \= 'the' then do
@@ -56,6 +58,3 @@ if word('test ',2) \= '' then do
   say 'WORD failed in test 13 '
 end
 return errors<>0
-/* function prototype */
-word: procedure = .string
-arg string1 = .string, number = .int

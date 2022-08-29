@@ -1,5 +1,7 @@
 /* POS */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 if pos('day','Saturday') \= 6 then do
@@ -72,8 +74,3 @@ if pos('foo','foo foo b') \= 1 then do
   say 'POS failed in test 17 '
 end
 return errors<>0
-
-/* function prototype */
-pos: procedure = .int
-arg string1 = .string, string2 = .string, start = 1
-

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* say "Hex to char" */
 /* say x2c('616263') 'abc' */
 /* say x2c('343536') '456' */
@@ -454,17 +456,3 @@ if d2x(X2D('12345')) \= '12345' then do
   say 'failed in test 84 '
 end
 return errors<>0
-x2d: procedure = .int
-arg expose hex = .string, slen = -1
-x2c: procedure = .string
-arg expose hex = .string
-x2b: procedure = .string
-arg expose hex = .string, slen = -1
-d2b: procedure = .string
-arg expose int1 = .int, slen = -1
-d2x: procedure = .string
-arg expose int1 = .int, slen = -1
-d2c: procedure = .string
-arg expose int1 = .int, slen = -1
-c2x: procedure = .string
-arg expose string = .string

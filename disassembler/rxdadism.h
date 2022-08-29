@@ -4,7 +4,7 @@
 #include "rxas.h"
 #include "rxbin.h"
 
-#define rxversion "cREXX F0042"
+#define rxversion "cREXX F0043"
 
 /* Disassembler */
 void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_all_constant_pool);

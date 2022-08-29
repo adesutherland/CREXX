@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 /* These from TRL */
@@ -70,8 +72,3 @@ if right("abcdefghijklmnopqrstuvwxyz",6) \=  "uvwxyz"                    then do
   say 'RIGHT failed in test         14 '
 end
 return errors<>0
-
-/* function prototype */
-right: procedure = .string
-arg string1 = .string, length = .int, pad = ' '
-

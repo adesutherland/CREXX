@@ -1,6 +1,10 @@
-/* word */
+/* word
+ * word: procedure = .string
+ * arg string1 = .string, wordnum = .int
+*/
          .globals=0
-word()   .locals=13 .expose=word.word
+word()   .locals=13 .expose=rxfnsb.word
+   .meta "rxfnsb.word"="b" ".string" word() "string1 = .string, wordnum = .int" ""
     copy  r1,a1         /* full string                         */
     copy  r2,a2         /* word number                         */
     load  r3,0          /* offset in string                    */

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* translate  */
 errors=0
 /* TRANSLATE */
@@ -99,7 +101,7 @@ end
 
 if translate('abcdef','123456','aaabbbcc','.') \= '14.def' then do
   errors=errors+1
-  say 'TRANSLATE failed in test 21: translate('abcdef','123456','aaabbbcc','.') ' translate('abcdef','123456','aaabbbcc','.') 'but must be 14.def'
+  say 'TRANSLATE failed in test 21: translate(''abcdef'',''123456'',''aaabbbcc'',''.'')' translate('abcdef','123456','aaabbbcc','.') 'but must be 14.def'
 end
 
 if translate('abcdef ',,,'$') \= '$$$$$$$' then do
@@ -175,10 +177,3 @@ end
 /* end */
   
 return errors<>0
-
-translate: procedure = .string
-arg source = .string, tochar = "?????", fromchar = "?????", pad=" "
-
-/* copies function prototype */
-copies: procedure = .string
-arg string1 = .string, times= .int

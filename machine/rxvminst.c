@@ -20,6 +20,8 @@ static int no_instructions = 0;
 
 // Load and initialise Instruction Database
 void init_ops() {
+    if (instructions) return; /* Stops double initialising */
+    /* STARTINSTRUCTION */
     instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
     instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
 
@@ -247,7 +249,7 @@ void init_ops() {
     instr_f("say", "Say op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("sayx", "Say op1 without line feed", OP_REG, OP_NONE, OP_NONE);
     instr_f("sayx", "Say op1 (as string) without line feed", OP_STRING, OP_NONE, OP_NONE);
- //   instr_f("ssay", "String Say op1 (Deprecated use 'say reg')", OP_REG, OP_NONE, OP_NONE);
+
     instr_f("say", "Say op1", OP_INT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_FLOAT, OP_NONE, OP_NONE);
     instr_f("say", "Say op1", OP_STRING, OP_NONE, OP_NONE);
@@ -330,6 +332,7 @@ void init_ops() {
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
 
+    /* ENDINSTRUCTIONS */
 
     /* Space for the instructions plus instructions[0] and null termination */
     struct instruction_wrapper *i = 0;
@@ -505,7 +508,7 @@ void free_ops() {
     no_instructions = 0;
 }
 
-/* Free Instruction Database */
+/* Print Instruction Database */
 void prt_ops() {
     struct instruction_wrapper *i;
     char buffer[100];
@@ -531,7 +534,9 @@ char* opd_name(OperandType type) {
         case OP_FLOAT: return "FLOAT";
         case OP_CHAR: return "CHAR";
         case OP_STRING: return "STRING";
-        case OP_NONE: return "NONE";
+        case OP_NONE:
+        default:
+            return "NONE";
     }
 }
 

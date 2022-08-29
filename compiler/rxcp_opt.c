@@ -282,7 +282,7 @@ static walker_result opt1_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) payload->current_scope = node->scope;
+        payload->current_scope = node->scope;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -609,7 +609,7 @@ static walker_result opt1_walker(walker_direction direction,
                 }
         }
 
-        if (node->scope) payload->current_scope = payload->current_scope->parent;
+        payload->current_scope = node->scope;
     }
 
     return result_normal;
@@ -624,7 +624,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     ASTNode* value_node;
     size_t i;
 
-    if (symbol->is_constant) return; /* already done */
+    if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
 
     n = sym_trnd(symbol, 0)->node;
     if (n->parent->node_type == ASSIGN  && n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {
@@ -638,7 +638,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     else return;
 
     /* Set all the AST nodes to constants - copied from the value_node */
-    symbol->is_constant = 1;
+    symbol->symbol_type = CONSTANT_SYMBOL;
     payload->changed = 1;
     for (i=1; i<sym_nond(symbol); i++) {
         n = sym_trnd(symbol, i)->node;
@@ -688,7 +688,7 @@ static walker_result opt2_walker(walker_direction direction,
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) payload->current_scope = node->scope;
+        payload->current_scope = node->scope;
 
         if (node->node_type == ARG) {
             if (!node->is_ref_arg) { /* Only if it is pass by reference */

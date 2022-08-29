@@ -1,6 +1,8 @@
 /* rexx center text  */
-
 options levelb
+
+namespace rxfnsb
+
 c2x: procedure = .string
   arg from = .string
   stx=""

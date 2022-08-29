@@ -1,7 +1,11 @@
 /*
- * rexx reverse bif in rxas.  */
-          .globals=0
-reverse()  .locals=5 .expose=reverse.reverse
+ * rexx reverse bif in rxas.
+ * reverse: procedure = .string
+ *       arg string = .string
+ */
+   .globals=0
+reverse()  .locals=5 .expose=rxfnsb.reverse
+   .meta "rxfnsb.reverse"="b" ".string" reverse() "string = .string" ""
    load r1,""            /* target string      */
    copy r2,a1            /* original string    */
    strlen r3,r2          /* length of string   */

@@ -10,11 +10,6 @@
 #include "rxcpbgmr.h"
 #include "rxvminst.h"
 
-typedef struct walker_payload {
-    Scope *current_scope;
-    Context *context;
-} walker_payload;
-
 /* Get the assembler operandtype from the astnode type for the ASSEMBLER instruction */
 static OperandType nodetype_to_operandtype(NodeType ntype) {
     switch (ntype) {
@@ -30,7 +25,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
  * - Sets the token and source start / finish position for each node
  * - Fixes SCONCAT to CONCAT
  * - Removes excess NOPs
- * - Process and Prune OPTIONS
+ * - Process OPTIONS
  * - Validate REPEAT BY/FOR/DO
  * - Validate ASSEMBLER instructions
  */
@@ -53,9 +48,6 @@ static walker_result step1_walker(walker_direction direction,
     if (direction == in) {
 
         if (node->node_type == PROGRAM_FILE) {
-            /* File name */
-            node->node_string = context->file_name;
-            node->node_string_length = strlen(context->file_name);
 
             /* Fix up the top of the tree */
 
@@ -273,13 +265,26 @@ static walker_result step1_walker(walker_direction direction,
         }
 
         if (node->node_type == PROGRAM_FILE) {
-            /* prune REXX_OPTIONS */
-            if (node->child->node_type == REXX_OPTIONS) {
-                node->child = node->child->sibling;
+            /* Set namespace if not already set */
+            if (!context->namespace) {
+                node->node_string = context->file_name;
+                node->node_string_length = strlen(context->file_name);
+            }
+            else {
+                node->node_string = context->namespace->node_string;
+                node->node_string_length = context->namespace->node_string_length;
             }
         }
         else if (node->node_type == REXX_OPTIONS) {
-            /* TODO Process any REXX options */
+            /* TODO Process any REXX options specific for levelb */
+        }
+        else if (node->node_type == NAMESPACE) {
+            if (!context->namespace) {
+                context->namespace = node->child;
+            }
+            else {
+                mknd_err(node, "MULTIPLE_NAMESPACE");
+            }
         }
         else if (node->node_type == REPEAT) {
             /* Validate Sub-commands - Error 27.1 */
@@ -408,21 +413,35 @@ static walker_result step2a_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *payload) {
 
-    Scope **current_scope = (Scope**)payload;
+    Context *context = (Context*)payload;
     Symbol *symbol;
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->node_type == PROGRAM_FILE) {
-            *current_scope = scp_f(*current_scope, node);
+        if (node->node_type == REXX_UNIVERSE) {
+            /* This top level scope will contain the project file scope & imported file scopes */
+            context->current_scope = scp_f(context->current_scope, node, 0);
         }
+
+        else if (node->node_type == PROGRAM_FILE) {
+            /* Now create the namespace symbol and scope */
+            /* Make the new symbol */
+            symbol = sym_f(context->current_scope, node);
+            symbol->symbol_type = NAMESPACE_SYMBOL;
+            sym_adnd(symbol, node, 1, 1);
+            if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
+
+            /* Move down to the project file scope */
+            context->current_scope = scp_f(context->current_scope, node, symbol);
+        }
+
         else if (node->node_type == PROCEDURE) {
             node->node_string_length--; /* Remove the ':' */
 
             /* Check for duplicated */
-            symbol = sym_rslv(*current_scope, node);
+            symbol = sym_rslv(context->current_scope, node);
             if (symbol) {
-                if (symbol->scope == *current_scope) {
+                if (symbol->scope == context->current_scope) {
                     /* Error */
                     mknd_err(node, "DUPLICATE_SYMBOL");
                 }
@@ -431,47 +450,78 @@ static walker_result step2a_walker(walker_direction direction,
 
             /* Make a new symbol */
             if (!symbol) { /* If there is a symbol we are in an error condition but are pressing on */
-                symbol = sym_f(*current_scope, node);
-                symbol->is_function = 1;
+                symbol = sym_f(context->current_scope, node);
+                symbol->symbol_type = FUNCTION_SYMBOL;
             }
 
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the procedure scope */
-            *current_scope = scp_f(*current_scope, node);
+            context->current_scope = scp_f(context->current_scope, node, symbol);
+        }
 
-            /* Set the scope name to be the procedure symbol name */
-            (*current_scope)->name = symbol->name;
+        else if (node->node_type == IMPORT) {
+            /* Get the toplevel scope that contains all the namespaces */
+            Scope* namespaces = context->ast->scope;
+            Scope* imported_namespace;
+
+            /* Now create the imported namespace symbol and scope */
+            /* Make the new symbol */
+            symbol = sym_f(namespaces, node->child);
+            if (symbol) {
+                symbol->symbol_type = NAMESPACE_SYMBOL;
+                sym_adnd(symbol, node->child, 0, 1);
+
+                /* New scope scope */
+                imported_namespace = scp_f(namespaces, node->child, symbol);
+            }
+            else {
+                mknd_err(node->child, "DUPLICATE_NAMESPACE");
+            }
         }
 
         else if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
+            node->scope = context->current_scope;
             /* Find the symbol */
             if (node->parent->node_type == ARG) /* Only search current scope */
-                symbol = sym_lrsv(*current_scope, node);
+                symbol = sym_lrsv(context->current_scope, node);
             else /* Search parent scopes */
-                symbol = sym_rslv(*current_scope, node);
+                symbol = sym_rslv(context->current_scope, node);
 
             /* Make a new symbol if it does not exist */
             if (!symbol) {
-                symbol = sym_f(*current_scope, node);
+                symbol = sym_f(context->current_scope, node);
             }
-            else if (symbol->is_function) {
+            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
                 mknd_err(node, "IS_A_FUNCTION");
+            }
+            else if (symbol->symbol_type == CLASS_SYMBOL) {
+                mknd_err(node, "IS_A_CLASS");
+            }
+            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                mknd_err(node, "IS_A_NAMESPACE");
             }
 
             sym_adnd(symbol, node, 0, 1);
         }
 
         else if (node->node_type == VAR_SYMBOL) {
+            node->scope = context->current_scope;
             /* Find the symbol */
-            symbol = sym_rslv(*current_scope, node);
+            symbol = sym_rslv(context->current_scope, node);
 
             /* Make a new symbol if it does not exist */
             if (!symbol) {
-                symbol = sym_f(*current_scope, node);
+                symbol = sym_f(context->current_scope, node);
             }
-            else if (symbol->is_function) {
+            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
                 mknd_err(node, "IS_A_FUNCTION");
+            }
+            else if (symbol->symbol_type == CLASS_SYMBOL) {
+                mknd_err(node, "IS_A_CLASS");
+            }
+            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                mknd_err(node, "IS_A_NAMESPACE");
             }
 
             if (node->parent->node_type == ASSEMBLER) {
@@ -483,6 +533,7 @@ static walker_result step2a_walker(walker_direction direction,
         }
 
         else if (node->node_type == TO) {
+            node->scope = context->current_scope;
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
              * first child (VAR_TARGET)'s symbol
              * Note: If the REPEAT has a TO it has an assign */
@@ -491,15 +542,22 @@ static walker_result step2a_walker(walker_direction direction,
         }
 
         else if (node->node_type == BY) {
+            node->scope = context->current_scope;
             /* Find the symbol, the parents (REPEAT)'s first child (ASSIGN)'s
              * first child (VAR_TARGET)'s symbol
              * Note: If the REPEAT has a BY it has an assign*/
             symbol = node->parent->child->child->symbolNode->symbol;
             sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
+
+        else {
+            node->scope = context->current_scope;
+        }
     }
+
     else {
-        if (node->scope) *current_scope = (*current_scope)->parent;
+        if (node->parent) context->current_scope = node->parent->scope;
+        else context->current_scope = 0;
     }
 
     return result_normal;
@@ -512,29 +570,34 @@ static walker_result step2b_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *payload) {
 
-    Scope **current_scope = (Scope**)payload;
+    Context *context = (Context*)payload;
     Symbol *symbol;
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) {
-            *current_scope = node->scope;
-        }
     }
     else {
         if (node->node_type == FUNCTION) {
             /* Find the symbol */
-            symbol = sym_rslv(*current_scope, node);
+            symbol = sym_rvfc(context->ast, node);
 
-            /* If there is not a symbol or it's not a function  */
-            if (!symbol || !symbol->is_function) {
+            /* If there is a symbol and it's a function - found  */
+            if (symbol && symbol->symbol_type == FUNCTION_SYMBOL ) {
+                sym_adnd(symbol, node, 1, 0);
+            }
+
+            /* If there is a symbol (and it's not a function) - error */
+            else if (symbol) {
                 mknd_err(node, "NOT_A_FUNCTION");
             }
 
-            else sym_adnd(symbol, node, 1, 0);
+            /* We have to try and import the function  */
+            else {
+                if (!context->dont_import) symbol = sym_imfn(context, node);
+                if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
+                else sym_adnd(symbol, node, 1, 0);
+            }
         }
-
-        if (node->scope) *current_scope = (*current_scope)->parent;
     }
 
     return result_normal;
@@ -553,7 +616,7 @@ static int is_node_string(ASTNode* node, const char* value) {
     if (strlen(value) != node->node_string_length) return 0;
 
     for (i=0; i < node->node_string_length; i++) {
-        if (toupper(node->node_string[i]) != value[i]) return 0;
+        if (tolower(node->node_string[i]) != value[i]) return 0;
     }
     return 1;
 }
@@ -570,10 +633,10 @@ static ValueType node_to_type(ASTNode* node) {
         case VOID:
             return TP_VOID;
         case CLASS:
-            if (is_node_string(node, ".INT")) return TP_INTEGER;
-            if (is_node_string(node, ".FLOAT")) return TP_FLOAT;
-            if (is_node_string(node, ".STRING")) return TP_STRING;
-            if (is_node_string(node, ".BOOLEAN")) return TP_BOOLEAN;
+            if (is_node_string(node, ".int")) return TP_INTEGER;
+            if (is_node_string(node, ".float")) return TP_FLOAT;
+            if (is_node_string(node, ".string")) return TP_STRING;
+            if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
             return TP_OBJECT;
         default:
             return TP_UNKNOWN;
@@ -599,11 +662,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         n->node->target_type = symbol->type;
         n->node->parent->target_type = symbol->type;
     }
-    else {
+    else if (symbol->symbol_type != NAMESPACE_SYMBOL) {
         /* Used without definition/declaration - Taken Constant */
         /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
         symbol->type = TP_STRING;
-        symbol->is_constant = 1;
+        symbol->symbol_type = CONSTANT_SYMBOL;
         /* Update all the attached AST Nodes to be constants */
         for (i=0; i<sym_nond(symbol); i++) {
             n = sym_trnd(symbol, i);
@@ -653,15 +716,13 @@ static walker_result step4_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *payload) {
 
-    walker_payload* walker_pl = (walker_payload*)payload;
+    Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
     ValueType max_type = TP_UNKNOWN;
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) {
-            walker_pl->current_scope = node->scope;
-        }
+        context->current_scope = node->scope;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -849,7 +910,7 @@ static walker_result step4_walker(walker_direction direction,
 
             case RETURN:
                 /* Type is the scope > procedure > type */
-                node->value_type = walker_pl->current_scope->defining_node->value_type;
+                node->value_type = context->current_scope->defining_node->value_type;
                 node->target_type = node->value_type;
                 if (node->value_type == TP_VOID) {
                     if (child1) mknd_err(child1, "EXTRANEOUS_RETVAL");
@@ -937,7 +998,7 @@ static walker_result step4_walker(walker_direction direction,
             default:;
         }
 
-        if (node->scope) walker_pl->current_scope = walker_pl->current_scope->parent;
+        context->current_scope = node->scope;
     }
 
     return result_normal;
@@ -949,16 +1010,14 @@ static walker_result step5_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *payload) {
 
-    walker_payload* walker_pl = (walker_payload*)payload;
+    Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
     ValueType max_type = TP_UNKNOWN;
     int arg_num;
 
     if (direction == in) {
         /* IN - TOP DOWN */
-        if (node->scope) {
-            walker_pl->current_scope = node->scope;
-        }
+        context->current_scope = node->scope;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -1021,7 +1080,7 @@ static walker_result step5_walker(walker_direction direction,
                 }
                 while (n2) {
                     arg_num++;
-                    n1 = ast_ft(walker_pl->context, NOVAL);
+                    n1 = ast_ft(context, NOVAL);
                     n1->target_type = n2->value_type;
                     n1->value_type = n1->target_type;
                     n1->is_opt_arg = n2->is_opt_arg;
@@ -1036,19 +1095,15 @@ static walker_result step5_walker(walker_direction direction,
             default:;
         }
 
-        if (node->scope) walker_pl->current_scope = walker_pl->current_scope->parent;
+        context->current_scope = node->scope;
     }
 
     return result_normal;
 }
 
 /* Validate AST */
-void validate(Context *context) {
-    Scope *current_scope;
+void rxcp_val(Context *context) {
     int ordinal_counter = 0;
-
-    /* We need the assembler db for ASSEMBLE */
-    if (context->level == LEVELB) init_ops();
 
     /* Step 1
      * - Sets the source start / finish for eac node
@@ -1064,12 +1119,12 @@ void validate(Context *context) {
      * - Builds the Symbol Table
      */
     /* Mainly build symbols - procedures, members */
-    current_scope = 0;
-    ast_wlkr(context->ast, step2a_walker, (void *) &current_scope);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step2a_walker, (void *) context);
 
     /* Mainly resolve symbols - function uses */
-    current_scope = 0;
-    ast_wlkr(context->ast, step2b_walker, (void *) &current_scope);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step2b_walker, (void *) context);
 
     /* Step 3
      * - Validate Symbols
@@ -1079,17 +1134,35 @@ void validate(Context *context) {
     /* Step 4
      * - Type Safety
      */
-    walker_payload payload;
-    payload.context = context;
-    payload.current_scope = 0;
-    ast_wlkr(context->ast, step4_walker, (void *) &payload);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step4_walker, (void *)context);
 
     /* Step 5
      * - Type Safety for function arguments
      */
-    payload.current_scope = 0;
-    ast_wlkr(context->ast, step5_walker, (void *) &payload);
-
-    // Free Instruction Database
-    if (context->level == LEVELB) free_ops();
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step5_walker, (void *)context);
  }
+
+/* Basic validation for a AST (typically the AST will be attached to a main AST as part of
+ * function import) */
+void rxcp_bvl(Context *context) {
+    int ordinal_counter = 0;
+
+    /* Step 1
+     * - Sets the source start / finish for eac node
+     * - Fixes SCONCAT to CONCAT
+     * - Other AST fixups (TBC)
+     */
+    ast_wlkr(context->ast, step1_walker, (void *) context);
+
+    /* 1b - set node ordinal values */
+    ast_wlkr(context->ast, step1b_walker, (void *)&ordinal_counter);
+
+    /* Step 2
+     * - Builds the Symbol Table
+     */
+    /* Mainly build symbols - procedures, members */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step2a_walker, (void *) context);
+}

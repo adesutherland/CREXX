@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 /* say "test abbrev" */
 /* say '---1---' */
@@ -72,7 +74,3 @@ if compare("foobar", "foobag") \= 6 then do
 end
 
 return errors<>0
-
-/* function prototype */
-compare: procedure = .string
-  arg string1 = .string, string2 = .string, pad = " "

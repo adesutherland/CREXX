@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 /* X2C */
 errors=0
 /* These from the Rexx book. */
@@ -50,25 +52,3 @@ str2=c2x(str)  /* 2 half bytes translated into 2 bytes */
 assembler strlen slen,str2
 if slen//2=1 then str2='0'str2
 return str2
-
-
-x2d: procedure = .int
-arg expose hex = .string, slen = -1
-x2c: procedure = .string
-arg expose hex = .string
-
-x2b: procedure = .string
-arg expose hex = .string, slen = -1
-
-d2b: procedure = .string
-arg expose int1 = .int, slen = -1
-
-d2x: procedure = .string
-arg expose int1 = .int, slen = -1
-
-d2c: procedure = .string
-arg expose int1 = .int, slen = -1
-
-c2x: procedure = .string
-arg expose string = .string
-

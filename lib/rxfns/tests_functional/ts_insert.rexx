@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 errors=0
 
 x='CREXX is faster than BREXX'
@@ -11,7 +13,7 @@ end
 
 if insert('much ',x,10) \= 'CREXX is fmuch aster than BREXX' then do
   errors=errors+1
-  say 'INSERT failed in test 2' insert('much ',x,10) 
+  say 'INSERT failed in test 2' insert('much ',x,10)
 end
 
 if insert('The new ',x,1) \= 'CThe new REXX is faster than BREXX' then do
@@ -50,7 +52,7 @@ if insert('123','abc') \= '123abc'                then do
     errors=errors+1
   say 'INSERT failed in test 9'
 end
-  
+
 if insert('123','abc',,5,'-') \= '123--abc'       then do
       errors=errors+1
   say 'INSERT failed in test 10'
@@ -98,10 +100,3 @@ if insert("abc","def",2,1) \=  "deaf"     then do
 end
 
 return errors<>0
-
-/* function prototype */
-insert: procedure = .string
-  arg expose insstr = .string, expose string = .string, position = 0, len = 0, pad = ' '
-
-
-

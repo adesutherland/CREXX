@@ -1,5 +1,7 @@
 /* D2C */
 options levelb
+import rxfnsb
+
 errors=0
 say "Look for D2C OK"
 /* These from the Rexx book. */
@@ -133,28 +135,3 @@ td2c: procedure = .string
   if slen//2=1 then str2='0'str2
   say "d2c result '"str2"'"
 return str2
-
-
-
-x2d: procedure = .int
-  arg hex = .string, slen = -1
-
-x2c: procedure = .string
-  arg hex = .string
-
-x2b: procedure = .string
-  arg hex = .string, slen = -1
-
-d2b: procedure = .string
-  arg int1 = .int, slen = -1
-
-d2x: procedure = .string
-  arg int1 = .int, slen = -1
-
-d2c: procedure = .string
-  arg int1 = .int, slen = -1
-
-c2x: procedure = .string
-  arg string = .string
-
-

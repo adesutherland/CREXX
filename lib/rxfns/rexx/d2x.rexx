@@ -2,6 +2,8 @@
 options levelb
 /* d2x(hex-string)  returns hex string of integer  */
 
+namespace rxfnsb
+
 d2x: procedure = .string
   arg xint = .int, slen=-1
   if slen=0 then return ""
@@ -51,7 +53,3 @@ d2x: procedure = .string
      end
   end
 return ""
-
-/* Right() Procedure */
-   right: procedure = .string
-          arg string = .string, length1 = .int, pad = '0'

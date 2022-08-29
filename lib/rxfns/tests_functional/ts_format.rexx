@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 /* RXVM ts_format format right left _itrunc _ftrunc copies pos substr length */
 /* TODO */
 errors=0
@@ -21,6 +23,3 @@ say 'format(-3.14,4,3) "'format('-3.14',4,3)'"'
 say 'format(-3.14,1,4) "'format('-3.14',1,4)'"'
 
 return 0
-
-format: procedure = .string
-   arg innum = .string, before = 0, after = 0, expp = 0, expt=-1

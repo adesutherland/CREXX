@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 a = 10
@@ -62,7 +64,3 @@ g = f + 1
 g = g + 1
 
 return errors<>0
-
-/* value()  */
-value: procedure = .string
-  arg input = .string

@@ -1,6 +1,8 @@
 /* rexx */
 options levelb
-/* abbrev(string,abbrebiated-string,min-char-match) */
+
+namespace rxfnsb
+
 compare: procedure = .string
   arg string = .string, astr = .string, pad = " "
   slen=0
@@ -26,12 +28,3 @@ compare: procedure = .string
   end
 
 return 0
-
-/* Length() Procedure - needed for the substr declaration */
-length: procedure = .int
-  arg string1 = .string
-
-/* Substr() Procedure */
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
-

@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import _rxsysb
+
 /* These from TRL */
 errors=0
 
@@ -53,10 +55,4 @@ if reradix('baba',16,10) \= 47802  then do
   say 'RERADIX failed in test 10 reradix('baba',16,10)' reradix('baba',16,10)
 end
 
-
-
 return errors<>0
-
-reradix: procedure = .string
-arg Subject = .string, FromRadix = .int, ToRadix = .int
-

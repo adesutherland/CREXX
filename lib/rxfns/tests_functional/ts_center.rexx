@@ -1,5 +1,7 @@
 /* rexx test center bif */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from TRL */
 
@@ -85,11 +87,3 @@ say "'"centre(x,50,"!")"'"
 say "'"centre(x,9)"'"
 
 return 0
-
-/* function prototype */
-center: procedure = .string
-arg string1 = .string, int2 = .int, char = " "
-
-centre: procedure = .string
-arg string1 = .string, int2 = .int, char = " "
-

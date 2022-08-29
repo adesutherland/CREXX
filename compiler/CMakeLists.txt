@@ -36,14 +36,15 @@ add_executable(rxc
         rxcpmain.c rxcpast.c rxcpmain.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
+        ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcpbval.c rxcpsymb.c
         rxcpdary.h rxcpemit.c rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h)
+        ../utf8/utf.h rxcpfunc.c)
 
-add_dependencies(rxc re2c lemon machine avl_tree platform)
+add_dependencies(rxc re2c lemon machine avl_tree platform rxaslib)
 
-target_link_libraries(rxc machine avl_tree platform m)
+target_link_libraries(rxc machine avl_tree platform rxaslib m)
 
 target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-        ../avl_tree ../machine ../platform ../utf8)
+        ${CMAKE_SOURCE_DIR}/assembler ../avl_tree ../machine ../platform ../utf8)

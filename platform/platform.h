@@ -51,7 +51,7 @@ typedef long long rxinteger;
  * This function malloc()s the buffer to the right size therefore it needs
  * to be free()d by the caller
  */
-char* file2buf(FILE *file);
+char* file2buf(FILE *file, size_t *bytes);
 
 /*
  * Function opens and returns a file handle
@@ -59,5 +59,29 @@ char* file2buf(FILE *file);
  * mode - is the fopen() file mode
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode);
+
+/*
+ * Get the first file from a directory (or null if there isn't one)
+ * (pass the & of void *dir_ptr to hold an opaque directory context)
+ * if dir is null then the "current" (platform specific) dir is searched
+ */
+char *dirfstfl(const char *dir, char *type, void **dir_ptr);
+
+/*
+ * Get the next file from a directory (or null if there isn't one)
+ * (pass the & of void *dir_ptr to hold an opaque directory context)
+ */
+char *dirnxtfl(void **dir_ptr);
+
+/*
+ * Close the opaque directory context
+ */
+void dirclose(void **dir_ptr);
+
+/* Returns the executable directory path in a malloced buffer */
+char* exepath();
+
+/* Returns the executable fully qualified name in a malloced buffer */
+char* exefqname();
 
 #endif //CREXX_PLATFORM_H

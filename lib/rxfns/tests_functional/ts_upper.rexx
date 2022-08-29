@@ -1,5 +1,7 @@
 /* rexx */
 options levelb
+import rxfnsb
+
 errors=0
 
 if upper("The quick brown fox jumps over the lazy dog") \= 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG' then do
@@ -13,7 +15,3 @@ if upper("é") \= 'É' then do
 end
 
 return errors<>0
-
-/* upper()  */
-upper: procedure = .string
-  arg expose string1 = .string

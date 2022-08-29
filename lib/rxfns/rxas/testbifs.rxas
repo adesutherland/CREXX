@@ -1,37 +1,37 @@
-    
-    
+
+
 .globals=2
 g0 .expose=tests.success
 g1 .expose=tests.failure
 logo()         .locals=2
     say "cREXX Assembler Test Suite - Common - Version cREXX-Phase-0c"
-    
+
     * Zero result count
     load g0,0
     load g1,0
     ret
 expect_true()  .locals=0
     brt expect_true_ok,a1
-    iadd g1,g1,1  
+    iadd g1,g1,1
     say " FAILED"
     ret
-    
+
 expect_true_ok:
-    iadd g0,g0,1  
+    iadd g0,g0,1
     say " ok"
     ret
-    
+
 expect_false() .locals=0
     brf expect_false_ok,a1
-    iadd g1,g1,1  
+    iadd g1,g1,1
     say " FAILED"
     ret
-    
+
 expect_false_ok:
-    iadd g0,g0,1 
+    iadd g0,g0,1
     say " ok"
     ret
-    
+
 print_results() .locals=3
     iadd r0, g0, g1
     itos r0
@@ -39,12 +39,12 @@ print_results() .locals=3
     sconcat r1,r0,r1
     say r1
     brt failures, g1
-        
-    
+
+
     say "Success        "
-    ret 0       
-    
-failures:      
+    ret 0
+
+failures:
     itos g1
     load r0,"***"
     sconcat r1,r0,g1
@@ -52,20 +52,21 @@ failures:
     sconcat r1,r1,r0
     say r1
     ret 1
+
     
-    
-    length()    .expose=length.length
-    substr()    .expose=substr.substr
-    copies()    .expose=copies.copies
-    reverse()   .expose=reverse.reverse
-    word()      .expose=word.word
-    words()     .expose=words.words
-    wordindex() .expose=wordindex.wordindex
-    subword()   .expose=subword.subword
-    pos()       .expose=pos.pos
-    lastpos()   .expose=lastpos.lastpos   
-    right()     .expose=right.right
-    left()      .expose=left.left
+    length()   .expose=rxfnsb.length
+    substr()   .expose=rxfnsb.substr
+    copies()   .expose=rxfnsb.copies
+    reverse()  .expose=rxfnsb.reverse
+    word()     .expose=rxfnsb.word
+    words()    .expose=rxfnsb.words
+    wordindex() .expose=rxfnsb.wordindex
+    subword()  .expose=rxfnsb.subword
+    pos()      .expose=rxfnsb.pos
+    lastpos()  .expose=rxfnsb.lastpos
+    right()    .expose=rxfnsb.right
+    left()     .expose=rxfnsb.left
+
 main() .locals=8
     call logo()
      /* the length function */
@@ -341,7 +342,7 @@ main() .locals=8
     /* ieq r4,r1,41 */
     /* call r0,expect_true(),r3 */
 
-   
+
     call print_results()
     
     exit

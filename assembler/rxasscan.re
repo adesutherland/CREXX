@@ -10,7 +10,7 @@
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
-int scan(Assembler_Context* s, char *buff_end) {
+int rx_scan(Assembler_Context* s, char *buff_end) {
     int depth;
 
 /*!re2c
@@ -111,7 +111,7 @@ int scan(Assembler_Context* s, char *buff_end) {
     goto comment;
   }
   eof {
-    error_f(s, s->line+1, 0, 1, "Error EOS before comment end");
+    rxaserrf(s, s->line+1, 0, 1, "Error EOS before comment end");
     return(EOS);
   }
   * { goto comment; }

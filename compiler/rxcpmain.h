@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0042"
+#define rxversion "cREXX F0043"
 
 #include <stdio.h>
 #include "platform.h"
@@ -18,13 +18,13 @@ typedef struct OutputFragment OutputFragment;
 
 /* functions to interface the lemon parser */
 /* OPTIONS Parser */
-void *Opts_Alloc();
+void *Opts_Alloc(void *(*mallocProc)(size_t));
 void Opts_();
 void Opts_Free();
 void Opts_Trace(FILE *stream, char *zPrefix);
 
 /* Level B Parser */
-void *RexxBAlloc();
+void *RexxBAlloc(void *(*mallocProc)(size_t));
 void RexxB();
 void RexxBFree();
 void RexxBTrace(FILE *stream, char *zPrefix);
@@ -37,38 +37,72 @@ typedef enum ValueType {
     TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
 } ValueType;
 
+/*  Importable Functions */
+typedef struct importable_file importable_file;
+
 /* Compiler Context Object */
 typedef struct Context {
+    int debug_mode;
+    int dont_import; /* Don't import files looking for procedures */
+    char* location;
     char* file_name;
+    char** import_locations;
+    importable_file **importable_file_list;
+    FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;
     char *buff_end;
-    char *top, *cursor, *marker, *ctxmarker, *linestart;
+    char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
     int line;
     int token_counter;
     Token* token_head;
     Token* token_tail;
     ASTNode* ast;
     ASTNode* free_list;
+    ASTNode* namespace;
+    Scope *current_scope;
+    void* importable_function_array;
+    /* Source Options */
+    char processedComments;
     RexxLevel level;
+    char hashcomments;
+    char dashcomments;
+    char slashcomments;
+    /* Optimiser Options */
     int optimise;
 } Context;
+
+/* Context Factory */
+Context *cntx_f();
+/* Set Context Buffer */
+void cntx_buf(Context *context, char* buff_start, size_t bytes);
+/* Free Context */
+void fre_cntx(Context *context);
 
 int rexbscan(Context* s);
 int rexbpars(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
+/* Returns the type of a node as a malloced buffer */
+char* nodetype(ASTNode *node);
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *clnnode(ASTNode *node);
+/* Encodes a string into a malloced buffer */
+char* encdstrg(const char* string, size_t length);
+
+/* Try and import an external function - return its symbol if successful */
+Symbol *sym_imfn(Context *master_context, ASTNode *node);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, CONST_SYMBOL,
-    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
+    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
+    FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
-    RETURN, REXX_OPTIONS, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
+    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
     VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WHILE, UNTIL
 } NodeType;
 
@@ -85,6 +119,8 @@ struct Token {
 typedef struct SymbolNode SymbolNode;
 
 struct ASTNode {
+    Context *context;
+    int node_number;
     NodeType node_type;
     ValueType value_type;
     ValueType target_type;
@@ -97,7 +133,6 @@ struct ASTNode {
     char is_ref_arg;
     char is_opt_arg;
     ASTNode *free_list;
-    int node_number;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
     Token *token;
@@ -133,6 +168,10 @@ void prt_unex(FILE* output, const char *ptr, int len);
 
 /* Token Functions */
 Token* token_f(Context* context, int type);
+/* Split a token - returns the first token (token->token_next) points to the next twin; */
+/* the first token has len characters, the second twin as the remaining characters.       */
+/* The caller can then change the tokens' types as needed.                              */
+Token *tok_splt(Context *context, Token *token, int len);
 /* Remove the last (tail) token */
 void token_r(Context *context);
 void free_tok(Context* context);
@@ -161,7 +200,7 @@ ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns yo
 /* Turn a node to an ERROR */
 void mknd_err(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
-void pdot_tree(ASTNode *tree, char* output_file);
+void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
  * then managed by the AST Library (the caller must not free it) */
 void ast_sstr(ASTNode *node, char* string, size_t length);
@@ -174,6 +213,8 @@ void ast_str(ASTNode* node, char *string);
 void ast_rpl(ASTNode* replaced_node, ASTNode* new_node);
 /* Delete / Remove node (i.e. the whole subtree) from the tree */
 void ast_del(ASTNode* node);
+/* Returns the fully resolved node name in a malloced buffer */
+char* ast_frnm(ASTNode* node);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -200,7 +241,8 @@ typedef walker_result (*walker_handler)(walker_direction direction,
 walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload);
 
 /* Validator AST Tree */
-void validate(Context *context);
+void rxcp_val(Context *context);
+void rxcp_bvl(Context *context);
 
 /* Optimise AST Tree */
 void optimise(Context *context);
@@ -212,37 +254,57 @@ int prnterrs(Context *context);
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
-    char *name;
+    char *name; /* Note that the name is free()'d by the destructor */
     void *child_array;
     void *symbols_tree;
     size_t num_registers;
     void *free_registers_array;
+    size_t temp_flag;
 };
 
+/* Returns string name of a Value type */
 char* type_nm(ValueType type);
+
+typedef enum SymbolType {
+    CONSTANT_SYMBOL, VARIABLE_SYMBOL, FUNCTION_SYMBOL, CLASS_SYMBOL, NAMESPACE_SYMBOL
+} SymbolType;
+
+/* Returns string name of a SymbolValue type */
+char* stype_nm(SymbolType type);
 
 struct Symbol {
     char *name;
     void *ast_node_array;
     Scope *scope;
+    Scope *defines_scope;
     ValueType type;
+    SymbolType symbol_type;
     int register_num;
     char register_type;
-    char is_constant;
-    char is_function;
     char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node);
+Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol);
 
 /* Calls the handler for each symbol in scope */
 typedef void (*symbol_worker)(Symbol *symbol, void *payload);
 void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 
-/* To get sub-scopes */
+/* Returns all the symbols in a scope as a null terminated malloced array (must be freed) */
+Symbol **scp_syms(Scope *scope);
+
+/* Get the index sub-scope */
 Scope* scp_chd(Scope *scope, size_t index);
+
+/* Get the number of sub-scopes */
 size_t scp_noch(Scope *scope);
+
+/* Returns the fully resolved scope name in a malloced buffer */
+char* scp_frnm(Scope *scope);
+
+/* Removes a Symbol from a scope - does not free symbol, see free_sym() */
+void scp_rmsy(Scope *scope, Symbol *symbol);
 
 /* Get a free register from scope */
 int get_reg(Scope *scope);
@@ -258,17 +320,33 @@ int get_regs(Scope *scope, size_t number);
  * reg, reg+1, ... reg+number */
 void ret_regs(Scope *scope, int reg, size_t number);
 
+/* Set the temp_flag for the scope and all its sub-scopes */
+void scp_stmp(Scope *scope, size_t temp_flag);
+
 /* Frees scope and all its symbols */
 void scp_free(Scope *scope);
 
 /* Symbol Factory - define a symbol */
+/* Returns NULL if the symbol is a duplicate */
 Symbol *sym_f(Scope *scope, ASTNode *node);
+
+/* Symbol Factory - define a symbol with a name */
+/* Returns NULL if the symbol is a duplicate */
+Symbol *sym_fn(Scope *scope, char* name, size_t name_length);
+
+/* Frees a symbol - does not remove symbol from scope see scp_rmsy() which probably should be used as well */
+void free_sym(Symbol *symbol);
 
 /* Resolve a Symbol - including parent scopes */
 Symbol *sym_rslv(Scope *scope, ASTNode *node);
 
 /* Local Resolve a Symbol - current scope only */
 Symbol *sym_lrsv(Scope *scope, ASTNode *node);
+
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfc(ASTNode *root, ASTNode *node);
 
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);
@@ -296,5 +374,47 @@ struct OutputFragment {
     char *output;
 };
 void f_output(OutputFragment *output);
+
+/* printf - but returns a malloced buffer with the result */
+char* mprintf(const char* format, ...);
+
+/*  Importable Functions */
+typedef struct imported_func {
+    char *namespace;
+    char *file_name;
+    char *fqname;
+    char *name;
+    char *options;
+    char *type;
+    char *args;
+    char *implementation;
+    Context *context;
+    char already_loaded;
+} imported_func;
+
+/* imported_func factory - returns null if the function is not in an applicable namespace */
+imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation);
+
+/* Free an imported_func */
+void freimpfc(imported_func *func);
+
+/* Imported file types */
+typedef enum file_type {
+    REXX_FILE, RXBIN_FILE, RXAS_FILE
+} file_type;
+
+/*  Importable Functions */
+struct importable_file {
+    char *name;
+    file_type type;
+    char *location;
+    char imported;
+};
+
+/* Get the list of importable files as a null terminated malloced array */
+importable_file **rxfl_lst(Context *context);
+
+/* free the list of importable files */
+void rxfl_fre(importable_file **file_list);
 
 #endif //CREXX_RXCPMAIN_H

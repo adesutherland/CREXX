@@ -1,5 +1,7 @@
 /* rexx test abs bif */
 options levelb
+import rxfnsb
+
 /* RXVM ts_date date _jdn _dateo _datei abbrev right word words wordindex wordpos pos substr length copies upper */
 /* TODO */
 say "test Date"
@@ -51,8 +53,3 @@ say "Default Format "_dateo(iNorm,"")
 say "Month "_dateo(iNorm,"MONTH")
 return /*_dateo(iNorm,oFormat) */
 */
-
-/* Prototype functions */
-date: Procedure = .string
-   arg iFormat = "", idate = "", oFormat = "", osep="", isep=""
-

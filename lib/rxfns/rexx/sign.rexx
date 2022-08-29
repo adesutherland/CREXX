@@ -2,6 +2,8 @@
 options levelb
 /* returns sign of number  */
 
+namespace rxfnsb
+
 sign: procedure = .int
   arg number = .float
   if number>0 then return 1

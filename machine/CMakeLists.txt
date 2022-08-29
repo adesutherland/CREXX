@@ -25,6 +25,9 @@ else()
     )
 endif()
 
+add_custom_target(instrset ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/instrset.h)
+
 add_library(machine STATIC rxvminst.h rxvminst.c ${CMAKE_CURRENT_BINARY_DIR}/instrset.h
         ${CMAKE_CURRENT_BINARY_DIR}/instrmiss.h ../platform/platform.h rxbin.h)
 target_include_directories(machine PUBLIC . ../platform ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(machine instrset)

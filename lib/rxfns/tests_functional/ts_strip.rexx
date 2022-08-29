@@ -1,5 +1,6 @@
 /* rexx */
 options levelb
+import rxfnsb
 
 /* say "'"strip("   The quick brown fox jumps over the lazy dog  ")"'" */
 /* say "'"strip("   The quick brown fox jumps over the lazy dog  ",'L')"'" */
@@ -59,8 +60,3 @@ if strip(" foo bar",,'r') \= " foo ba" then do
 end
 
 return errors<>0
-
-/* strip()  */
-strip: procedure = .string
-  arg string1 = .string, option='B', tchar=" "
-

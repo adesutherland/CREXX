@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* X2d(hex-string)  returns decimal number of hex string */
 
 x2c: procedure = .string

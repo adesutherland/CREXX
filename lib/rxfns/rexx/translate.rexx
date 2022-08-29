@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* translate  */
 
 translate: procedure = .string
@@ -37,13 +40,3 @@ translate: procedure = .string
   end
 
 return result
-
-/* Prototypes */
-   left: procedure = .string
-         arg string = .string, length1 = .int, pad = ' '
-   upper: procedure = .string
-         arg expose string1 = .string
-   copies: procedure = .string
-     arg string1 = .string, count = .int
-
-

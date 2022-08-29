@@ -1,6 +1,8 @@
 /* rexx */
 /* These from TRL */
 options levelb
+import rxfnsb
+
 errors=0
 if copies('abc',3) \= 'abcabcabc' then do
   errors=errors+1
@@ -32,7 +34,3 @@ if copies("foobar",0 ) \= "" then do
   say 'COPIES failed in test 7 '
 end
 return errors<>0
-
-/* function prototype */
-copies: procedure = .string
-arg string1 = .string, times= .int

@@ -1,5 +1,14 @@
 CREXX History / Change Log
 
+F0043 - cREXX Level B Language enhancements
+        Dash '--' line comments. Options dashcomments  / nodashcomments (default)
+        Slash '//' line comments. Options slashcomments  / noslashcomments (default)
+        Hash '#' line comments. Options hashcomments (default) / nohashcomments
+        Fix Parsing - stopping some syntax errors causing the parser to abort
+        Fix Parsing - Parser stack made dynamic
+        Fix parsing - bug related to invalid symbol formats being accepted
+        Change some internal representation from UPPERCASE to lowercase for reasons of modern aesthetics
+        Read external REXX, RXAS and RXBIN files for function definitions
 F0042 - cREXX Build and Packaging enhancements
         rxcpack - converts rxbin files to c linkable source (aka a C array)
         rxvme / rxvbme - interpreter linked with the cREXX stdlib
@@ -7,7 +16,6 @@ F0042 - cREXX Build and Packaging enhancements
         rxdb (degugger, currently PoC status) - now provided as a standalone native exe
         Note: The generated exe's are quite big (not too bad) however the use of the upx exe compressor mitigates this
         CMAKE scripts updated to remove writing to source directories
-
 F0041 - REXX Enhancements:
         Procedures with no arguments
         Procedures with no return value

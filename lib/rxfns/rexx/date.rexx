@@ -1,6 +1,9 @@
 /* rexx */
 options levelb
 
+namespace rxfnsb
+import _rxsysb
+
 date: Procedure = .string
  arg oFormat = "", idate = "", iFormat = "", osep="", isep=""
   if iformat="" then iformat="NORMAL"
@@ -39,35 +42,3 @@ fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1
   if substr(p0,1,flen)=substr(p1,1,flen) then return 1
 return 0
-
-/* Prototype functions */
-_jdn: Procedure = .int
-  arg day = .int, month = .int, year = .int
-
-_datei: Procedure = .string
-  arg jdn = .string, format="", isep=""
-
-_dateo: Procedure = .string
-  arg jdn = .int, format = .string, osep=""
-
-abbrev: procedure = .string
-  arg string = .string, astr = .string, len = 0
-
-right:  procedure = .string
-  arg string = .string, len =  .int, pad = " "
-
-word: procedure = .string
-  arg string1 = .string, string2 = .int
-
-length: procedure = .int
-  arg string1 = .string
-
-substr: procedure = .string
-   arg string1 = .string, start = .int, length1 = length(string1) + 1 - start, pad = ''
-
-upper: procedure = .string
-   arg string1 = .string
-
-
-
-

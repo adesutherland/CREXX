@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace _rxsysb
+
 /* Translate date dd mm yy into Julian Day Number */
 _jdn: Procedure = .int
   arg day = .int, month = .int, year = .int

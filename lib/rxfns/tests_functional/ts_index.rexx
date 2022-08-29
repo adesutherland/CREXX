@@ -1,5 +1,7 @@
 /* index (=pos with switched needle, haystack) */
 options levelb
+import rxfnsb
+
 errors=0
 /* These from the Rexx book. */
 if index('Saturday','day') \= 6 then do
@@ -7,8 +9,3 @@ if index('Saturday','day') \= 6 then do
   say 'INDEX failed in test 1 '
 end
 return errors<>0
-
-/* function prototype */
-index: procedure = .int
-arg string1 = .string, string2 = .string, start = 1
-

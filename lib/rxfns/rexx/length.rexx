@@ -1,5 +1,8 @@
 /* rexx */
 options levelb
+
+namespace rxfnsb
+
 /* Length() Procedure */
 length: procedure = .int
   arg expose string1 = .string /* Pass by reference - as a cludge we can mark it pass by value in the declaration */

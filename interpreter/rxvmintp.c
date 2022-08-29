@@ -138,7 +138,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *procedure;
     proc_constant *step_handler = 0;
     int rc = 0;
-    int initSeed=INT32_MIN;   // keep last seed for Random function within REXX run
+    unsigned int initSeed=0;   // keep last seed for Random function within REXX run
+    char hasSeed = 0; // no seed set
     bin_code *pc, *next_pc;
     int mod_index;
     value *interrupt_arg;
@@ -544,7 +545,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     switch ( ((meta_entry *)(pool+i))->base.type ) {
                         case META_SRC:
                             /* TODO we are using the string to hold the object type - final approach tbc */
-                            set_null_string(op1R->attributes[j],".META_SRC");
+                            set_null_string(op1R->attributes[j],".meta_src");
                             set_num_attributes(op1R->attributes[j],3);
                             op1R->attributes[j]->attributes[0]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->line;
                             op1R->attributes[j]->attributes[1]->int_value = (rxinteger)((meta_src_constant *)(pool+i))->column;
@@ -552,13 +553,13 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[2], (string_constant *)(pool + x));
                             break;
                         case META_FILE:
-                            set_null_string(op1R->attributes[j],".META_FILE");
+                            set_null_string(op1R->attributes[j],".meta_file");
                             set_num_attributes(op1R->attributes[j],1);
                             x = (rxinteger)((meta_file_constant *)(pool+i))->file;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
                             break;
                         case META_FUNC:
-                            set_null_string(op1R->attributes[j],".META_FUNC");
+                            set_null_string(op1R->attributes[j],".meta_func");
                             set_num_attributes(op1R->attributes[j],6);
                             x = (rxinteger)((meta_func_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -573,7 +574,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[5], (string_constant *)(pool + x));
                             break;
                         case META_REG:
-                            set_null_string(op1R->attributes[j],".META_REG");
+                            set_null_string(op1R->attributes[j],".meta_reg");
                             set_num_attributes(op1R->attributes[j],4);
                             x = (rxinteger)((meta_reg_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -584,7 +585,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             op1R->attributes[j]->attributes[3]->int_value = (rxinteger)((meta_reg_constant *)(pool+i))->reg;
                             break;
                         case META_CONST:
-                            set_null_string(op1R->attributes[j],".META_CONST");
+                            set_null_string(op1R->attributes[j],".meta_const");
                             set_num_attributes(op1R->attributes[j],4);
                             x = (rxinteger)((meta_const_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -596,7 +597,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                             set_const_string(op1R->attributes[j]->attributes[3], (string_constant *)(pool + x));
                             break;
                         case META_CLEAR:
-                            set_null_string(op1R->attributes[j],".META_CLEAR");
+                            set_null_string(op1R->attributes[j],".meta_clear");
                             set_num_attributes(op1R->attributes[j],1);
                             x = (rxinteger)((meta_clear_constant *)(pool+i))->symbol;
                             set_const_string(op1R->attributes[j]->attributes[0], (string_constant *)(pool + x));
@@ -604,7 +605,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                         case STRING_CONST:
                         case PROC_CONST:
                         case EXPOSE_REG_CONST:
-                        case EXPOSE_PROC_CONST: ;
+                        case EXPOSE_PROC_CONST:;
 
                     }
                 }
@@ -3102,15 +3103,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
 
             if (op2R->int_value<0) {                 // no seed set
-                if (initSeed == INTMAX_MIN)  {       // seed still initial, set time based seed
+                if (!hasSeed)  {       // seed still initial, set time based seed
                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
                    srand((unsigned) initSeed);
+                   hasSeed = 1;
                 }
             } else {                                 // seed set re-init with new seed
                 initSeed=op2R->int_value;
                 srand((unsigned) initSeed);
+                hasSeed = 1;
             }
-            set_int(op1R, (long)rand());   // receive new random value
+            set_int(op1R, rand());   // receive new random value
         DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
@@ -3118,17 +3121,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2);
-             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), op2I);
+             DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)op2I);
              if (op2I<0) {                                // no seed set
-                if (initSeed == INTMAX_MIN)  {            // seed still initial, set time based seed
+                if (!hasSeed)  {            // seed still initial, set time based seed
                     initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
-                    srand((unsigned) initSeed);
+                    srand(initSeed);
+                    hasSeed = 1;
                 }
              } else {                                     // seed set and NE old seed, set it new
                 initSeed=op2I;
-                srand((unsigned) initSeed);
+                srand( initSeed);
+                hasSeed = 1;
             }
-            set_int(op1R, (long)rand());   // receive new random value
+            set_int(op1R, rand());   // receive new random value
         DISPATCH;
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
@@ -3159,7 +3164,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
          intProc = (intSubproc) GetProcAddress(hDLL, op3R->string_value);
         printf("Module ADDR %d\n",intProc);
         if (intProc==0 ) i1=-12 ;
-        else i1=intProc;
+        else i1 = (rxinteger)intProc;
       }
     FreeLibrary(hDLL);
     REG_RETURN_INT(i1);
@@ -3180,7 +3185,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
     else {
       func = dlsym( dl_handle, op3R->string_value );
       if (func==0 ) i1=-12 ;
-      else i1= func;
+      else i1= (rxinteger)func;
       }
     error = dlerror();
     if (error != NULL) {
@@ -3198,7 +3203,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
         DEBUG("TRACE - DLLPARMS R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
        /* Arguments - complex lets never have to change this code! */
         printf("Register containing number of Arguments %d\n",(int) REG_IDX(3));
-        printf("                    number of Arguments %d\n",op3RI);
+        printf("                    number of Arguments %d\n",(int)op3RI);
    //     current_frame->locals[(pc + (3))->index];
 
         size_t j =
@@ -3206,11 +3211,11 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
                 current_frame->procedure->locals + 1; /* Callee register index */
         size_t k = (pc + 3)->index + 1; /* Caller register index */
         size_t i;
-        printf("                    first data register %d\n",k);
+        printf("                    first data register %d\n",(int)k);
         for ( i = 0;
               i < op3RI;
               i++, j++,k++) {
-              printf("                         Data register %d\n",k);
+              printf("                         Data register %d\n",(int)k);
          //   printf("              Register contentLocal Variables %d\n",current_frame->procedure->locals->???);
         }
     REG_RETURN_INT(i);
@@ -3225,21 +3230,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
 
         START_INSTRUCTION(IUNKNOWN)
         START_INSTRUCTION(INULL)
-            printf("ERROR - Unknown instruction - aborting\n");
-            goto interprt_finished;
-        convlength:
-            DEBUG("maximum string length exceeded\n");
-            goto SIGNAL;
-        converror:
-            DEBUG("Conversion error occurred\n");
-            goto SIGNAL;
-        notreg:
-            DEBUG("Register not initialised\n");
-            goto SIGNAL;
-        NOFUNCTION:
-            DEBUG("Function not found\n");
-            fprintf(stderr,"\nProcedure not found, externals not supported yet - aborting\n");
-            goto SIGNAL;
+            goto UNKNOWN_INSTRUCTION;
 
         START_INSTRUCTION(EXIT)
             DEBUG("TRACE - EXIT");
@@ -3247,6 +3238,27 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
             goto interprt_finished;
 
     END_OF_INSTRUCTIONS
+
+    convlength:
+        DEBUG("maximum string length exceeded\n");
+        goto SIGNAL;
+
+    converror:
+        DEBUG("Conversion error occurred\n");
+        goto SIGNAL;
+
+    notreg:
+        DEBUG("Register not initialised\n");
+        goto SIGNAL;
+
+    UNKNOWN_INSTRUCTION:
+        printf("ERROR - Unknown instruction - aborting\n");
+        goto SIGNAL;
+
+    NOFUNCTION:
+        DEBUG("Function not found\n");
+        fprintf(stderr,"\nProcedure not found, externals not supported yet - aborting\n");
+        goto SIGNAL;
 
     SIGNAL:
         fprintf(stderr,"\nSignal Received - aborting\n");
