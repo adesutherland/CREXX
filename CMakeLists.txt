@@ -26,3 +26,4 @@ add_subdirectory(interpreter)
 add_subdirectory(lib)
 add_subdirectory(debugger)
 add_subdirectory(tests)
+

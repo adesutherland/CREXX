@@ -66,7 +66,10 @@ _dateo: Procedure = .string
   if fabbreV('XGERMAN',format,2)    then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,4,'0')
 
   if fabbreV('STANDARD',format,2)   then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
-  if fabbreV('SORTED',format,1)     then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
+
+  if osep="" then tsep=""
+     else tsep=osep
+   if fabbreV('SORTED',format,1)     then return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
   if osep="" then tsep="-"
      else tsep=osep
   if fabbreV('DEC',format,3)        then  return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(yy,2,'0')

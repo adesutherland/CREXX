@@ -11,15 +11,12 @@ _datei: Procedure = .int
  * ----------------------------------------------------------
  */
   if format='' then format='NORMAL'
-
   if fabbreV('DAYS',format,1) then do
-    say '_idate: DAYS not allowed as input format'
-    /* TODO Throw signal */
-    return -1;
+      call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
+      return -1
   end
   if fabbreV('CENTURY',format,1) then do
-    say '_idate: CENTURY not allowed as input format'
-    /* TODO Throw signal */
+    call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
     return -1
   end
   if fabbreV('EPOCH',format,3) then do
@@ -88,8 +85,8 @@ _datei: Procedure = .int
   if fabbreV('JDN',format,3) then return idate                   /* is already JDN */
   if fabbreV('BASE',format,1) then return idate+1721426          /* calulate JDN   */
   if fabbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
-
-return format' invalid input format'
+  call raise "SYNTAX","Error 40.28: invalid DATE argument 3",format
+return -1
 
 fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1

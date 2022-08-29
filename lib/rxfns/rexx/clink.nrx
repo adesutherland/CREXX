@@ -1,0 +1,72 @@
+-- package .Users.rvj-- ansen.apps.crexx-f0038.lib.rxfns.rexx
+/**
+ * Class clink implements some mechanics for creating crexx libraries 
+ * <BR>
+ * Created on: Mon, 28, Feb 2022 14:17:29 +0100
+ */
+class clink
+  
+  /**
+   * Default constructor
+   */
+  method clink()
+    return
+    
+  method main(args=String[]) static
+    c=clink()
+    c.makeLibrary()
+    
+  /**
+   * Method makeLibrary takes the .rexx files in a directory and concatenates them
+   * to be able to have one binary rxbin 'library';
+   * For this purpose we need to:
+   * 1) get all the .rexx files and concatenate them
+   * 2) dedup the 'options levelb' statements
+   * 3) dedup the function prototypes
+   * 4) fixup the package the functions are in; in the case of rxfns, 'function.function'
+   */
+  method makeLibrary()
+    outstem=''
+    
+    address system with output stem outstem
+    'cat *.rexx'
+    say date() 'clink read' outstem[0] 'lines'
+    removeLevelB(outstem)
+    removePrototypes(outstem)
+
+    do
+      -- output the lines
+      RexxIO.setOutputStream(FileOutputStream('rxfns.rexx'))
+      say 'options levelb'
+      loop i=1 to outstem[0]
+	if outstem[i]='' then iterate
+	say outstem[i]
+      end
+    catch FileNotFoundException
+      say 'I/O exception.'
+    end
+    
+
+  method removeLevelB(stem)
+    loop i=1 to stem[0]
+      if stem[i].pos('options levelb') >0 then stem[i]=''
+    end
+    
+  method removePrototypes(stem)
+    p=0; dupTree=TreeMap()
+    loop i=1 to stem[0]
+      p=stem[i].pos(': procedure')
+      if p>0 then do
+	there = dupTree.put(stem[i].left(p).strip(), integer(i))
+	if there<>null then do
+	  stem[i]=''    -- the procedure line
+	  stem[i+1]=''  -- the args that follows it
+	end
+	iterate
+      end
+    end
+    
+  method skipArgs(outstem,i)
+    i=i+1
+    if outstem[i].wordpos('arg') = 1 then skipArgs(outstem,i)
+    return i

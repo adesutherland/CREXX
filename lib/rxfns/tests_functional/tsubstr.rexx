@@ -5,9 +5,14 @@ import rxfnsb
 errors=0
 
 /* SUBSTR */
-/* do 1000000 */
 /* These from the Rexx book. */
-/* say '|'substr('abc',2)'|' */
+
+if substr('1',2) \= ''            then
+  do
+    errors=errors+1
+    say 'SUBSTR failed in test 0 '
+  end
+
 if substr('abc',2) \= 'bc'            then
   do
     errors=errors+1
@@ -77,6 +82,10 @@ if substr("René Vincent Jansen",1,4,".") \= 'René' then
     errors=errors+1
     say 'SUBSTR failed in test 15 '
   end
+/* if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then */
+/*   do errors=errors+1 */
+/*     say 'SUBSTR failed in test 16 ' */
+/*   end */ /* this is actually a case of Error 40.23:  SUBSTR argument 4 must be a single character; found "". */ 
 if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then
   do errors=errors+1
     say 'SUBSTR failed in test 16 '
@@ -87,5 +96,4 @@ if substr("12345678",5,6,"é") \= '5678éé' then
   end
 /* say substr("12345678",10,6,"é") */
 /* if substr("12345678",10,6,"éé") \= 'éééééé' then do errors=errors+1;  say 'need exceptions for this'; end */
-/* end */
 return errors<>0

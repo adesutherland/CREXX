@@ -7,6 +7,7 @@ set(BIFS
 		_itrunc
 		_jdn
 		abbrev
+		abs
 		c2x
 		c2d
 		center
@@ -21,6 +22,7 @@ set(BIFS
 		delstr
 		delword
 		format
+#		global
 		insert
 		length
 		linesize

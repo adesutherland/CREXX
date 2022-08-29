@@ -10,8 +10,10 @@ namespace rxfnsb
    !DatatypeResult.  This is a convenience when DATATYPE is used
    by CHECKARGS. */
 datatype: procedure = .string 
-  arg expose string_in = .string, Type = .string
+  arg expose string_in = .string, Type = ""
 
+say 'start of datatype'
+say 'arguments are:' string_in Type
 /* TODO: inherit this from some central place */
 AllBlanks = ' '
 Limit_ExponentDigits = 99
@@ -19,8 +21,10 @@ FormLevel = 'ENGINEERING' /* we don't know this yet */
 
 /* If no second argument, DATATYPE checks whether the first is a number. */
 argc=0
-/* assembler iadd argc,argc,a0 */
+if Type = "" then argc=1
+else argc=2
 
+say 'argc =' argc
 if argc = 1 then return DtypeOne(string_in)
  
  /* Null strings are a special case. */
@@ -51,7 +55,7 @@ if argc = 1 then return DtypeOne(string_in)
      if verify(c,"01") \= 0  then return 0
      BinaryDigits = BinaryDigits + 1
    end
-   end j
+   end
    return 1
  end /* B */
  if Type = "L" then return(verify(string_in,azl)=0)
@@ -86,12 +90,13 @@ if argc = 1 then return DtypeOne(string_in)
    /* It won't be "Whole" if there is a non-zero after the decimal point. */
    /* This test has to be against the original string, not !DataTypeResult
       which has had zero added. */
+      ExpWas = 0 /* TODO: some global var */
       string_in = Before||After
       j = length(Before)+ExpWas
       if j<0 then j = 0
       if verify(substr(string_in,j+1),'0') > 0 then return 0
       /* All tests for Whole passed. */
-      !/* DatatypeResult = !DatatypeResult % 1 */
+      /* !DatatypeResult = !DatatypeResult % 1 */
       return 1
  end /* W */
  /* Type will be "X" */
@@ -118,32 +123,41 @@ if argc = 1 then return DtypeOne(string_in)
  /* numeric form value !Form.!Level */
  /* return 0+arg(1) */
  
- DtypeOne: procedure = .string
+DtypeOne: procedure = .string
  arg string_in = .string
+ say 'in DtypeOne'
+ say 'arg is' string_in
  /* See section 7 for the syntax of a number. */
  /* !DatatypeResult = 'S' /\* If not syntactically a number *\/ */
  Residue = strip(string_in) /* Blanks are allowed at both ends. */
+ say 'Residue is' Residue
  if Residue = '' then return "CHAR"
  Sign = ''
+ say 'first if'
  if left(Residue,1) = '+' | left(Residue,1) = '-' then do
    Sign = left(Residue, 1)
    Residue = strip(substr(Residue,2),'L') /* Blanks after sign */
  end
+ say 'second if'
  if Residue = '' then return "CHAR"
  /* Now testing Number, section 6.2.2.35 */
+ say 'third if'
  if left(Residue,1) = '.' then do
    Residue = substr(Residue, 2)
    Before = ''
-   After = DigitRun()
+   After = DigitRun(Residue)
    if After = '' then return "CHAR"
  end
  else do
+   say 'in else'
    After='' /* BLM Nov 98. Needed as byproduct */
-   Before = DigitRun()
+   Before = DigitRun(Residue)
    if Before = '' then return "CHAR"
+   say 'before left in else'
    if left(Residue,1) = '.' then do
      Residue = substr(Residue, 2)
-     After = DigitRun()
+     After = DigitRun(Residue)
+     say 'after left in else'
    end
  end
  Exponent = 0
@@ -158,7 +172,7 @@ if argc = 1 then return DtypeOne(string_in)
    Residue = substr(Residue, 2)
    if Residue = '' then return "CHAR"
  end
- Exponent = DigitRun()
+ Exponent = DigitRun(Residue)
  if Exponent = '' then return "CHAR"
  Exponent = Esign || Exponent
  end
@@ -193,10 +207,19 @@ if argc = 1 then return DtypeOne(string_in)
     return "NUM"
     
 DigitRun: procedure = .string
+arg Residue = .string
+say 'in DigitRun'
+say 'Residue is' Residue
 Outcome = ''
 do while Residue \= ''
+  say 'in do while digitrun'
   if pos(left(Residue, 1), '0123456789') = 0 then leave
+  say 'after pos in digitrun'
   Outcome = Outcome || left(Residue, 1)
-  Residue = substr(Residue, 2)
+  say 'after outcome in digitrun'
+  say 'Residue after outcome in digitrun' Residue
+  Residue = substr(Residue,2)
+  say 'Residue in digitrun is' Residue
 end
+say 'Outcome of digitrun' Outcome
 return Outcome
