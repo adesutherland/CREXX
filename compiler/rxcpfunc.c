@@ -256,6 +256,7 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name,
                 read_constant_pool_for_functions(master_context, full_file_name, file_module_section->constant,
                                                  file_module_section->header.constant_size);
                 free(full_file_name);
+                free_module(file_module_section);
                 modules_processed++;
                 break;
 
