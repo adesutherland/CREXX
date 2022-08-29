@@ -8,6 +8,7 @@ F0043 - cREXX Level B Language enhancements
         Fix Parsing - Parser stack made dynamic
         Fix parsing - bug related to invalid symbol formats being accepted
         Change some internal representation from UPPERCASE to lowercase for reasons of modern aesthetics
+        Read external REXX, RXAS and RXBIN files for function definitions
 F0042 - cREXX Build and Packaging enhancements
         rxcpack - converts rxbin files to c linkable source (aka a C array)
         rxvme / rxvbme - interpreter linked with the cREXX stdlib

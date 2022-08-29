@@ -91,7 +91,7 @@ struct stack_frame {
 #ifdef NTHREADED
 
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
-#define END_OF_INSTRUCTIONS }
+#define END_OF_INSTRUCTIONS default: goto UNKNOWN_INSTRUCTION; }
 #define START_INSTRUCTION(inst) case INST_ ## inst:
 #define START_BREAKPOINT BREAKPOINT:
 #define END_BREAKPOINT goto CASE_START;

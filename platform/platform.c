@@ -148,8 +148,7 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
         return dirnxtfl(dir_ptr); /* Return the next valid file */
     }
 
-    sprintf(win_data->sPath, "%s\\%s", win_data->dir, win_data->fdFile.cFileName);
-    return win_data->sPath;
+    return win_data->fdFile.cFileName;
 
 #else
 
@@ -185,8 +184,7 @@ char *dirnxtfl(void **dir_ptr) {
 
         if (win_data->fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
 
-        sprintf(win_data->sPath, "%s\\%s", win_data->dir, win_data->fdFile.cFileName);
-        return win_data->sPath;
+        return win_data->fdFile.cFileName;
     }
     return 0;
 

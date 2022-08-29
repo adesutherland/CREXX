@@ -534,7 +534,9 @@ char* opd_name(OperandType type) {
         case OP_FLOAT: return "FLOAT";
         case OP_CHAR: return "CHAR";
         case OP_STRING: return "STRING";
-        case OP_NONE: return "NONE";
+        case OP_NONE:
+        default:
+            return "NONE";
     }
 }
 
