@@ -1,6 +1,8 @@
 CREXX History / Change Log
 
-F0043 - cREXX Level B Language enhancements
+F0044 - cREXX Level B Language enhancements (Part 2)
+
+F0043 - cREXX Level B Language enhancements (Part 1)
         Dash '--' line comments. Options dashcomments  / nodashcomments (default)
         Slash '//' line comments. Options slashcomments  / noslashcomments (default)
         Hash '#' line comments. Options hashcomments (default) / nohashcomments
