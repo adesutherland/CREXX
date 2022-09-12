@@ -552,6 +552,8 @@ const char *ast_ndtp(NodeType type) {
             return "ENVIRONMENT";
         case ERROR:
             return "ERROR";
+        case EXPOSED:
+            return "EXPOSED";
         case FOR:
             return "FOR";
        case WHILE:
@@ -1074,6 +1076,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case REXX_OPTIONS:
             case IMPORT:
             case NAMESPACE:
+            case EXPOSED:
             case TO:
                 attributes = "color=blue";
                 only_type = 1;

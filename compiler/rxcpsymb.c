@@ -373,6 +373,7 @@ Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
+    symbol->exposed = 0;
 
     /* Uppercase symbol name */
 #ifdef NUTF8
@@ -401,10 +402,29 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
 /* Resolve a Function Symbol
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
  */
-Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
+Symbol *sym_rvfn(ASTNode *root, char* name) {
     Symbol *result;
     size_t i;
     Scope *s;
+
+    /* Process top layer - files */
+    for (i = 0; i < scp_noch(root->scope); i++) {
+        s = scp_chd(root->scope, i);
+
+        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
+        if (result) {
+            return result;
+        }
+        /* Process second level - Classes (todo) */
+    }
+    return 0;
+}
+
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
+    Symbol *result;
 
     /* Make a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
@@ -418,19 +438,9 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    /* Process top layer - files */
-    for (i = 0; i < scp_noch(root->scope); i++) {
-        s = scp_chd(root->scope, i);
-
-        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
-        if (result) {
-            free(name);
-            return result;
-        }
-        /* Process second level - Classes (todo) */
-    }
+    result = sym_rvfn(root, name);
     free(name);
-    return 0;
+    return result;
 }
 
 /* Resolve a Symbol - including parent scope */
@@ -516,6 +526,17 @@ int sym_lord(Symbol *symbol) {
     }
 
     return ord;
+}
+
+/* Returns the PROCEDURE ASTNode of a Symbol */
+ASTNode* sym_proc(Symbol *symbol) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node->node_type == PROCEDURE) return sn->node;
+    }
+    return 0;
 }
 
 /* Connect a ASTNode to a Symbol */

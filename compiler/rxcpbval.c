@@ -603,6 +603,60 @@ static walker_result step2b_walker(walker_direction direction,
     return result_normal;
 }
 
+/* Step 2c
+ * - Resolve Exposed Namespace Symbols
+ */
+static walker_result step2c_walker(walker_direction direction,
+                                   ASTNode* node,
+                                   void *payload) {
+
+    Context *context = (Context*)payload;
+    Symbol *symbol;
+    Symbol *main_symbol;
+    ASTNode *temp_node;
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        if (node->node_type == EXPOSED) {
+            if (node->parent->node_type == NAMESPACE) {
+                /* We are exposing functions / variables globally to user functions */
+                ASTNode* n = node->child;
+                while (n) {
+                    symbol = sym_rvfc(context->ast, n);
+                    if (!symbol) {
+                        main_symbol = sym_rvfn(context->ast, "main");
+                        if (main_symbol) {
+                            symbol = sym_lrsv(main_symbol->defines_scope, n);
+                            if (!symbol) mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                            else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
+                                sym_adnd(symbol, n, 1, 1);
+                                symbol->exposed = 1;
+                            }
+                            else mknd_err(n, "NOT_VARIABLE");
+                        }
+                        else mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                    }
+                    else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
+                        temp_node = sym_proc(symbol); /* Procedure */
+                        temp_node = temp_node->child->sibling->sibling; /* Instructions */
+                        if (temp_node && temp_node->node_type == INSTRUCTIONS) {
+                            sym_adnd(symbol, n, 1, 1);
+                            symbol->exposed = 1;
+                        }
+                        else mknd_err(n, "IMPORTED_FUNCTION");
+                    }
+                    else mknd_err(n, "INVALID_SYMBOL_TYPE");
+                    n = n->sibling;
+                }
+            }
+        }
+    }
+    else {
+    }
+
+    return result_normal;
+}
+
 /*
  * Step 3 - Validate Symbols
  */
@@ -1125,6 +1179,10 @@ void rxcp_val(Context *context) {
     /* Mainly resolve symbols - function uses */
     context->current_scope = 0;
     ast_wlkr(context->ast, step2b_walker, (void *) context);
+
+    /* Resolve exposed symbols */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, step2c_walker, (void *) context);
 
     /* Step 3
      * - Validate Symbols

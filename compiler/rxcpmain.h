@@ -95,7 +95,7 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
-    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
+    DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
@@ -281,6 +281,7 @@ struct Symbol {
     SymbolType symbol_type;
     int register_num;
     char register_type;
+    char exposed;      /* Is the symbol exposed */
     char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
@@ -348,8 +349,16 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node);
  */
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node);
 
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfn(ASTNode *root, char* name);
+
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);
+
+/* Returns the PROCEDURE ASTNode of a Symbol */
+ASTNode* sym_proc(Symbol *symbol);
 
 /* Add an ASTNode using the symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,

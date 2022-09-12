@@ -513,6 +513,7 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
                     dump_error_ast(func->context);
                 }
                 else {
+                    func_node->scope = namespace;
                     func_symbol = func_node->symbolNode->symbol;
 
                     /* Make a duplicate symbol in the master_context */

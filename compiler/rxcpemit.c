@@ -374,6 +374,7 @@ static void print_output(FILE* file, OutputFragment* existing) {
 
 typedef struct walker_payload {
     Context *context;
+    int globals;
     FILE *file;
 } walker_payload;
 
@@ -405,12 +406,12 @@ static walker_result register_walker(walker_direction direction,
                 while (c) {
                     c->register_num = a;
                     c->register_type ='a';
-                    if (c->is_ref_arg) {
-                        /* Pass by reference - no copy so just use the 'a' register */
+                    if ( c->is_ref_arg && !(c->child->symbolNode->symbol->exposed) ) {
+                        /* Pass by reference and not exposed - no copy so just use the 'a' register */
                         c->child->symbolNode->symbol->register_num = a;
                         c->child->symbolNode->symbol->register_type = 'a';
                     }
-                    /* Otherwise, a normal register will be assigned to the symbol later */
+                    /* Otherwise, a register will be assigned to the symbol later */
 
                     a++;
                     c = c->sibling;
@@ -468,7 +469,7 @@ static walker_result register_walker(walker_direction direction,
                         /* NOTE This does nothing as the symbols have always
                          * already been assigned :-( TODO to solve this */
 
-                        if (c->symbolNode->symbol->register_num == UNSET_REGISTER)
+                        if (c->symbolNode->symbol->register_num == UNSET_REGISTER && !(c->symbolNode->symbol->exposed))
                             c->symbolNode->symbol->register_num = i;
                     }
 
@@ -647,8 +648,13 @@ static walker_result register_walker(walker_direction direction,
             case VAR_TARGET:
             case VAR_REFERENCE:
                 /* Set the symbols register */
-                if (node->symbolNode->symbol->register_num == UNSET_REGISTER)
-                    node->symbolNode->symbol->register_num = get_reg(node->scope);
+                if (node->symbolNode->symbol->register_num == UNSET_REGISTER) {
+                    if (node->symbolNode->symbol->exposed) {
+                        node->symbolNode->symbol->register_num = payload->globals++;
+                        node->symbolNode->symbol->register_type = 'g';
+                    }
+                    else node->symbolNode->symbol->register_num = get_reg(node->scope);
+                }
                 /* The node uses the symbol register number */
                 node->register_num = node->symbolNode->symbol->register_num;
                 node->register_type = node->symbolNode->symbol->register_type;
@@ -1388,8 +1394,9 @@ static walker_result emit_walker(walker_direction direction,
             case PROGRAM_FILE:
             {
                 char *buf = mprintf(".srcfile=\"%s\"\n"
-                                    ".globals=0\n",
-                                    payload->context->file_name);
+                                    ".globals=%d\n",
+                                    payload->context->file_name,
+                                    payload->globals);
 
                 node->output = output_fs(buf);
                 free(buf);
@@ -1425,15 +1432,28 @@ static walker_result emit_walker(walker_direction direction,
                     char* source = clnnode(child2);
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = mprintf("\n%.*s() .expose=%s\n"
-                                        "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
-                                        (int) node->node_string_length, node->node_string,
-                                        proc_symbol, /* FQ Symbol Name */
-                                        proc_symbol, /* FQ Symbol Name */
-                                        type, /* Type */
-                                        (int) node->node_string_length, node->node_string, /* Func Name */
-                                        coded /* Args */
-                    );
+                    char* buf;
+                    if (node->symbolNode->symbol->exposed) {
+                        buf = mprintf("\n%.*s() .expose=%s\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
+                                      (int) node->node_string_length, node->node_string,
+                                      proc_symbol, /* FQ Symbol Name */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Type */
+                                      (int) node->node_string_length, node->node_string, /* Func Name */
+                                      coded /* Args */
+                        );
+                    }
+                    else {
+                        buf = mprintf("\n%.*s()\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
+                                      (int) node->node_string_length, node->node_string,
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Type */
+                                      (int) node->node_string_length, node->node_string, /* Func Name */
+                                      coded /* Args */
+                        );
+                    }
                     node->output = output_fs(buf);
                     free(type);
                     free(source);
@@ -1447,15 +1467,28 @@ static walker_result emit_walker(walker_direction direction,
                     char* source = clnnode(child2);
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = mprintf("\n%.*s() .locals=%d .expose=%s\n"
-                                        "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
-                                        (int) node->node_string_length, node->node_string, /* Function name */
-                                        (int) node->scope->num_registers, /* Locals */
-                                        proc_symbol, /* FQ Symbol name */
-                                        proc_symbol, /* FQ Symbol Name */
-                                        type, /* Return Type */
-                                        (int) node->node_string_length, node->node_string, /* Function name */
-                                        coded /* Args */);
+                    char* buf;
+                    if (node->symbolNode->symbol->exposed) {
+                        buf = mprintf("\n%.*s() .locals=%d .expose=%s\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      (int) node->scope->num_registers, /* Locals */
+                                      proc_symbol, /* FQ Symbol name */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Return Type */
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      coded /* Args */);
+                    }
+                    else {
+                        buf = mprintf("\n%.*s() .locals=%d\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      (int) node->scope->num_registers, /* Locals */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Return Type */
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      coded /* Args */);
+                    }
                     node->output = output_fs(buf);
                     free(type);
                     free(source);
@@ -2804,9 +2837,10 @@ void emit(Context *context, FILE *output) {
     walker_payload payload;
 
     payload.context = context;
+    payload.file = output;
+    payload.globals = 0;
 
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
-    payload.file = output;
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
 }

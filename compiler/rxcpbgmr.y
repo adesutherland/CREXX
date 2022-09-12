@@ -143,19 +143,20 @@ option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, LITERAL, S); }
 
 /* Namespace Instructions */
+literal(L)               ::= TK_SYMBOL_COMPOUND(N).
+                         { L = ast_f(context, LITERAL, N); }
+literal(L)               ::= TK_VAR_SYMBOL(N).
+                         { L = ast_f(context, LITERAL, N); }
 namespace_list(I)        ::= namespace_instruction(L).
-//                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
                          { I = L; }
 namespace_list(I)        ::= namespace_list(I1) namespace_instruction(L).
                          { I = I1; add_sbtr(I,L); }
-namespace_instruction(I) ::= TK_NAMESPACE(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_NAMESPACE(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_IMPORT(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_IMPORT(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, N); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) expose(E) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I,N); add_ast(I,E); add_ast(I,J); }
+namespace_instruction(I) ::= TK_IMPORT(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, IMPORT, K); add_ast(I,N); add_ast(I,J); }
 namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC.
                          { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
 namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC.
@@ -164,6 +165,12 @@ namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC.
                          { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
 namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC.
                          { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+expose(I)                ::= TK_EXPOSE(K) expose_list(L).
+                         { I = ast_f(context, EXPOSED, K); add_ast(I,L); }
+expose_list(I)           ::= literal(L).
+                         { I = L; }
+expose_list(I)           ::= expose_list(I1) literal(L).
+                         { I = I1; add_sbtr(I,L); }
 
 /* Program file body */
 instruction_list(I)  ::= labeled_instruction(L).
