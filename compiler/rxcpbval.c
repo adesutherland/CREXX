@@ -33,7 +33,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
 static walker_result step1_walker(walker_direction direction,
                                   ASTNode* node, __attribute__((unused)) void *payload) {
 
-    ASTNode *child, *next_child, *new_child, *next, *last;
+    ASTNode *child, *next_child, *new_child, *next, *last, *n;
     int has_to;
     int has_for;
     int has_by;
@@ -69,7 +69,40 @@ static walker_result step1_walker(walker_direction direction,
                 node->child->sibling = child;
 
                 /* Add function return type */
-                add_ast(child,ast_ftt(context, CLASS, ".int"));
+                /* To work out the return type we walk the tree from here until we find the first return or a procedure */
+                n = child->sibling;
+                while (1) {
+                    if (!n) {
+                        /* No return statement so must be returning null */
+                        add_ast(child,ast_ft(context, VOID));
+                        break;
+                    }
+                    if (n->node_type == PROCEDURE) {
+                        /* No return statement so must be returning null */
+                        add_ast(child,ast_ft(context, VOID));
+                        break;
+                    }
+                    if (n->node_type == RETURN) {
+                        if (n->child) add_ast(child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
+                        else add_ast(child,ast_ft(context, VOID)); /* No return value - returning void */
+                        break;
+                    }
+
+                    /* Find the next node to look at */
+                    if (n->child) n = n->child;
+                    else if (n->sibling) n = n->sibling;
+                    else {
+                        n = n->parent;
+                        while (n) {
+                            if (n == child->sibling->parent) n = 0; /* end of sub-tree */
+                            else if (n->sibling) {
+                                n = n->sibling;
+                                break;
+                            }
+                            else n = n->parent;
+                        }
+                    }
+                }
             }
         }
         else if (node->node_type == PROCEDURE) {
@@ -223,7 +256,6 @@ static walker_result step1_walker(walker_direction direction,
         } else {
             /* This is a leaf without a token - so need to estimate a position */
             ASTNode *older = 0;
-            ASTNode *n;
 
             /* In case we fail to estimate */
             node->source_start = 0;
@@ -611,9 +643,9 @@ static walker_result step2c_walker(walker_direction direction,
                                    void *payload) {
 
     Context *context = (Context*)payload;
-    Symbol *symbol;
-    Symbol *main_symbol;
-    ASTNode *temp_node;
+    Symbol *symbol, *merged_symbol;
+    ASTNode *temp_node, *proc_node;
+    int found;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -622,19 +654,28 @@ static walker_result step2c_walker(walker_direction direction,
                 /* We are exposing functions / variables globally to user functions */
                 ASTNode* n = node->child;
                 while (n) {
-                    symbol = sym_rvfc(context->ast, n);
+                    symbol = sym_rvfc(context->ast, n); /* Is this is procedure? */
                     if (!symbol) {
-                        main_symbol = sym_rvfn(context->ast, "main");
-                        if (main_symbol) {
-                            symbol = sym_lrsv(main_symbol->defines_scope, n);
-                            if (!symbol) mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
-                            else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
-                                sym_adnd(symbol, n, 1, 1);
-                                symbol->exposed = 1;
+                        /* Procedure Symbol not found so it "must" be a variable we need to expose from our procedures */
+                        found = 0;
+                        /* We need to loop through all the procedures in the program_file in order */
+                        for (proc_node = context->ast->child->child; proc_node; proc_node = proc_node->sibling) {
+                            if (proc_node->node_type != PROCEDURE) continue;
+
+                            /* We might be exposing one of the procedure's variables */
+                            symbol = sym_lrsv(proc_node->scope, n); /* find it */
+                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                                /* We found a variable to expose - so expose it by moving its scope */
+                                merged_symbol = sym_merg(symbol->scope->parent, symbol);
+                                /* Link to the exposed node */
+                                sym_adnd(merged_symbol, n, 1, 1);
+                                /* Link to the Procedure's INSTRUCTION node */
+                                sym_adnd(merged_symbol, proc_node->child->sibling->sibling, 0, 0);
+                                merged_symbol->exposed = 1;
+                                found = 1;
                             }
-                            else mknd_err(n, "NOT_VARIABLE");
                         }
-                        else mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                        if (!found) mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
                         temp_node = sym_proc(symbol); /* Procedure */
@@ -663,7 +704,7 @@ static walker_result step2c_walker(walker_direction direction,
 /* Helper function to compare node string value with a string
  * Used for builtin class names (int, float etc) - so don't need to worry
  * about utf
- * NOTE value MUST be in upper case! */
+ * NOTE value MUST be in lower case! */
 static int is_node_string(ASTNode* node, const char* value) {
     int i;
     /* If it is a different length it can't be the same! */
@@ -696,47 +737,100 @@ static ValueType node_to_type(ASTNode* node) {
             return TP_UNKNOWN;
     }
 }
+
+/* This is called for every symbol */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
-    /* For REXX Level B the variable type is defined by its first use */
-    SymbolNode *n = sym_trnd(symbol, 0);
-    ASTNode* expr;
+    Scope* scope = (Scope*)payload;
+    SymbolNode *defining_node_link;
+    ASTNode *expr, *proc, *p;
     char *buffer;
     size_t length;
-    size_t i;
+    size_t i, nix;
 
-    if (n->node->node_type == PROCEDURE) {
-        symbol->type = node_to_type(n->node->child);
-        n->node->value_type = symbol->type;
-        n->node->target_type = symbol->type;
-    }
-    else if (n->node->node_type == VAR_TARGET || n->node->node_type == VAR_REFERENCE) {
-        symbol->type = node_to_type(n->node->sibling);
-        n->node->value_type = symbol->type;
-        n->node->parent->value_type = symbol->type;
-        n->node->target_type = symbol->type;
-        n->node->parent->target_type = symbol->type;
-    }
-    else if (symbol->symbol_type != NAMESPACE_SYMBOL) {
-        /* Used without definition/declaration - Taken Constant */
-        /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
-        symbol->type = TP_STRING;
-        symbol->symbol_type = CONSTANT_SYMBOL;
-        /* Update all the attached AST Nodes to be constants */
-        for (i=0; i<sym_nond(symbol); i++) {
-            n = sym_trnd(symbol, i);
-            if (n->writeUsage) {
-                /* This means we are trying to write to a TAKEN CONSTANT
-                 * which is illegal in Levels B/G/L */
-                mknd_err(n->node, "UPDATING_TAKEN_CONSTANT");
+    /* This sees if we are looking at exposed (global) variables by looking at the scope defining node type */
+    if ( scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
+
+        proc = 0;
+        /* An Exposed Symbol needs special processing */
+
+        /* Looking at every node using this symbol */
+        for (nix = 0; nix < sym_nond(symbol); nix++) {
+
+            /* We want to find the first usage of the symbol in each procedure it is used in */
+            defining_node_link = sym_trnd(symbol, nix);
+
+            p = ast_proc(defining_node_link->node);
+            if (p == proc) continue; /* We have already looked at this proc so skip */
+            proc = p;
+
+            /* Ok we are the first usage in this proc */
+            if (defining_node_link->node->node_type == PROCEDURE) {
+                symbol->type = node_to_type(defining_node_link->node->child);
+                defining_node_link->node->value_type = symbol->type;
+                defining_node_link->node->target_type = symbol->type;
+                return;
             }
-            else {
-                n->node->node_type = STRING;
-                length = strlen(symbol->name);
-                buffer = malloc(length);
-                memcpy(buffer, symbol->name, length);
-                ast_sstr(n->node, buffer, length);
+
+            if (defining_node_link->node->node_type == VAR_TARGET ||
+                defining_node_link->node->node_type == VAR_REFERENCE) {
+                symbol->type = node_to_type(defining_node_link->node->sibling);
+                defining_node_link->node->value_type = symbol->type;
+                defining_node_link->node->parent->value_type = symbol->type;
+                defining_node_link->node->target_type = symbol->type;
+                defining_node_link->node->parent->target_type = symbol->type;
+                return;
             }
+
+            /* Thats it - a global/exposed symbol can't be a taken constant so the symbol type is defined in
+             * a following procedure */
         }
+        /* Todo - need to search other modules */
+
+    }
+    else {
+
+        /* For REXX Level B the variable type is defined by its first use */
+        defining_node_link = sym_trnd(symbol, 0);
+        if (defining_node_link->node->node_type == PROCEDURE) {
+            symbol->type = node_to_type(defining_node_link->node->child);
+            defining_node_link->node->value_type = symbol->type;
+            defining_node_link->node->target_type = symbol->type;
+            return;
+        }
+
+        if (defining_node_link->node->node_type == VAR_TARGET ||
+                   defining_node_link->node->node_type == VAR_REFERENCE) {
+            symbol->type = node_to_type(defining_node_link->node->sibling);
+            defining_node_link->node->value_type = symbol->type;
+            defining_node_link->node->parent->value_type = symbol->type;
+            defining_node_link->node->target_type = symbol->type;
+            defining_node_link->node->parent->target_type = symbol->type;
+            return;
+        }
+
+        if (symbol->symbol_type != NAMESPACE_SYMBOL) {
+            /* Used without definition/declaration - Taken Constant */
+            /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
+            symbol->type = TP_STRING;
+            symbol->symbol_type = CONSTANT_SYMBOL;
+            /* Update all the attached AST Nodes to be constants */
+            for (i = 0; i < sym_nond(symbol); i++) {
+                defining_node_link = sym_trnd(symbol, i);
+                if (defining_node_link->writeUsage) {
+                    /* This means we are trying to write to a TAKEN CONSTANT
+                     * which is illegal in Levels B/G/L */
+                    mknd_err(defining_node_link->node, "UPDATING_TAKEN_CONSTANT");
+                } else {
+                    defining_node_link->node->node_type = STRING;
+                    length = strlen(symbol->name);
+                    buffer = malloc(length);
+                    memcpy(buffer, symbol->name, length);
+                    ast_sstr(defining_node_link->node, buffer, length);
+                }
+            }
+            return;
+        }
+
     }
 }
 
@@ -744,7 +838,7 @@ static void validate_symbols(Scope* scope) {
     int i;
     if (!scope) return;
 
-    scp_4all(scope, validate_symbol_in_scope, NULL);
+    scp_4all(scope, validate_symbol_in_scope, scope);
     for (i=0; i < scp_noch(scope); i++) {
         validate_symbols(scp_chd(scope, i));
     }
@@ -865,13 +959,17 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case FUNCTION:
-                node->value_type = node->symbolNode->symbol->type;
-                node->target_type = node->value_type;
+                if (node->symbolNode) { /* Otherwise an error node will have been added */
+                    node->value_type = node->symbolNode->symbol->type;
+                    node->target_type = node->value_type;
+                }
                 break;
 
             case VAR_SYMBOL:
-                if (node->symbolNode->symbol->type == TP_UNKNOWN)
+                if (node->symbolNode->symbol->type == TP_UNKNOWN) {
                     node->symbolNode->symbol->type = TP_STRING;
+                    mknd_war(node, "SET_IMPLICIT_STRING_TYPE");
+                }
                 node->value_type = node->symbolNode->symbol->type;
                 node->target_type = node->value_type;
                 break;
@@ -1098,10 +1196,12 @@ static walker_result step5_walker(walker_direction direction,
             case FUNCTION:
                 /* Process all the arguments */
                 n1 = node->child;
-                n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
-                /* n2 is PROCEDURE. Go to the first arg */
-                n2 = n2->child->sibling->child;
-
+                if  (node->symbolNode) {
+                    n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
+                    /* n2 is PROCEDURE. Go to the first arg */
+                    n2 = n2->child->sibling->child;
+                }
+                else n2 = 0;
                 /* Check each argument */
                 arg_num = 0;
                 while (n1) {

@@ -463,19 +463,20 @@ ASTNode *ast_err(Context* context, char *error_string, Token *token) {
     return errorAST;
 }
 
-/* Turn a node to an ERROR */
+/* Add warning node to parent node */
+ASTNode *ast_war(ASTNode* parent, char *warning_string) {
+    ASTNode *warningAST = ast_ftt(parent->context, WARNING, warning_string);
+    add_ast(parent, warningAST);
+    return warningAST;
+}
+
+/* Add an ERROR node to a node */
 void mknd_err(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
+    ASTNode *errNode;
     char *buffer = malloc(buffer_size);
-
-    /* Reset Node */
-    node->node_type = ERROR;
-    if (node->free_node_string) {
-        free(node->node_string);
-        node->free_node_string = 0;
-    }
 
     /* Write to buffer as sized */
     va_start(argptr, error_string);
@@ -501,9 +502,55 @@ void mknd_err(ASTNode* node, char *error_string, ...) {
         }
     }
 
-    node->node_string = buffer;
-    node->node_string_length = needed - 1;
-    node->free_node_string = 1;
+    /* Child node */
+    errNode = ast_ftt(node->context, ERROR, buffer);
+    add_ast(node,  errNode);
+    errNode->free_node_string = 1;
+    errNode->source_start = node->source_start;
+    errNode->source_end = node->source_end;
+    errNode->line = node->line;
+    errNode->column = node->column;
+}
+
+/* Add a warning child node  */
+void mknd_war(ASTNode* node, char *error_string, ...) {
+    va_list argptr;
+    size_t buffer_size = 200;
+    size_t needed;
+    ASTNode *warNode;
+    char *buffer = malloc(buffer_size);
+
+    /* Write to buffer as sized */
+    va_start(argptr, error_string);
+    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
+    va_end(argptr);
+    if (needed < 0) {
+        /* Error - bail */
+        fprintf(stderr,"Internal Error: First vsnprintf() failed in mknd_err()\n");
+        exit(1);
+    }
+    needed++; /* Null terminator */
+    buffer = realloc(buffer,needed); /* Trim or grow */
+
+    if (needed > buffer_size) {
+        /* If grow redo vsnprintf */
+        va_start(argptr, error_string);
+        needed = vsnprintf(buffer, needed, error_string, argptr);
+        va_end(argptr);
+        if (needed < 0) {
+            /* Error - bail */
+            fprintf(stderr,"Internal Error: Second vsnprintf() failed in mknd_err()\n");
+            exit(1);
+        }
+    }
+
+    /* Child node */
+    warNode = ast_war(node, buffer);
+    warNode->free_node_string = 1;
+    warNode->source_start = node->source_start;
+    warNode->source_end = node->source_end;
+    warNode->line = node->line;
+    warNode->column = node->column;
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for
@@ -522,6 +569,15 @@ ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
     return errorAST;
+}
+
+/* Returns the PROCEDURE ASTNode procedure of an AST node */
+ASTNode* ast_proc(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PROCEDURE) return node;
+        node = node->parent;
+    }
+    return 0;
 }
 
 const char *ast_ndtp(NodeType type) {
@@ -556,7 +612,9 @@ const char *ast_ndtp(NodeType type) {
             return "EXPOSED";
         case FOR:
             return "FOR";
-       case WHILE:
+        case WARNING:
+            return "WARNING";
+        case WHILE:
             return "WHILE";
         case UNTIL:
             return "UNTIL";
@@ -716,8 +774,6 @@ walker_result prnt_walker_handler(walker_direction direction,
     return result_normal;
 }
 
-
-
 static walker_result print_error_walker(walker_direction direction,
                                   ASTNode* node,
                                   __attribute__((unused)) void *payload) {
@@ -749,9 +805,63 @@ static walker_result print_error_walker(walker_direction direction,
                     break;
                 }
             }
-            fprintf(stderr,"Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line+1, node->column+1, node->node_string);
-            prt_unex(stderr, node->source_start, len);
-            fprintf(stderr,"\"\n");
+            if (len) {
+                fprintf(stderr, "Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+                prt_unex(stderr, node->source_start, len);
+                fprintf(stderr, "\"\n");
+            }
+            else {
+                fprintf(stderr, "Error in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+            }
+            (*errors)++;
+        }
+    }
+    return result_normal;
+}
+
+static walker_result print_warning_walker(walker_direction direction,
+                                        ASTNode* node,
+                                        __attribute__((unused)) void *payload) {
+
+    int *errors = (int*)payload;
+
+    if (direction == in) {
+        if (node->node_type == WARNING) {
+            /* Try and set error position if not already set */
+            if (node->token) {
+                if (node->line == -1) node->line = node->token->line;
+                if (node->column == -1) node->column = node->token->column;
+                if (!node->source_start) node->source_start = node->token->token_string;
+                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+            }
+            if (node->child && node->child->token) {
+                if (node->line == -1) node->line = node->child->token->line;
+                if (node->column == -1) node->column = node->child->token->column;
+                if (!node->source_start) node->source_start = node->child->token->token_string;
+                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+            }
+
+            /* Print error - truncate source to one line */
+            int len = (int) (node->source_end - node->source_start + 1);
+            int i;
+            for (i=0; i<len; i++) {
+                if (!node->source_start || node->source_start[i] == '\n') {
+                    len = i;
+                    break;
+                }
+            }
+            if (len) {
+                fprintf(stderr, "Warning in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+                prt_unex(stderr, node->source_start, len);
+                fprintf(stderr, "\"\n");
+            }
+            else {
+                fprintf(stderr, "Warning in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+            }
             (*errors)++;
         }
     }
@@ -762,6 +872,13 @@ static walker_result print_error_walker(walker_direction direction,
 int prnterrs(Context *context) {
     int errors = 0;
     ast_wlkr(context->ast, print_error_walker, &errors);
+    return errors;
+}
+
+/* Prints errors and returns the number of errors in the AST Tree */
+int prntwars(Context *context) {
+    int errors = 0;
+    ast_wlkr(context->ast, print_warning_walker, &errors);
     return errors;
 }
 

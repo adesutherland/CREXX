@@ -1,6 +1,6 @@
 # CREXX
 
-_Release Documentation - 16 Jan 2021_
+_Release Documentation - cREXX F0044 - Sept 2022_
 
 ## REXX Language Implementation Architecture
 

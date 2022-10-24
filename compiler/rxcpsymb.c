@@ -123,7 +123,7 @@ Symbol **scp_syms(Scope *scope) {
     }
 
     /* malloc the array */
-    symbols = malloc(sizeof(Symbol*) * num);
+    symbols = malloc(sizeof(Symbol*) * (num + 1));
     symbols[num] = 0;
 
     /* Populate the array */
@@ -375,7 +375,7 @@ Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
     symbol->meta_emitted = 0;
     symbol->exposed = 0;
 
-    /* Uppercase symbol name */
+    /* Lowercase symbol name */
 #ifdef NUTF8
     for (c = symbol->name ; *c; ++c) *c = (char)tolower(*c);
 #else
@@ -399,7 +399,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     return sym_fn(scope, node->node_string, node->node_string_length);
 }
 
-/* Resolve a Function Symbol
+/* Resolve a Function Symbol via Name
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
  */
 Symbol *sym_rvfn(ASTNode *root, char* name) {
@@ -415,7 +415,7 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
         if (result) {
             return result;
         }
-        /* Process second level - Classes (todo) */
+        /* TODO Process second level - Classes */
     }
     return 0;
 }
@@ -493,6 +493,33 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
     return result;
 }
 
+/* Move (via a merge) a Symbol into a new Scope - returns the target symbol */
+Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
+    size_t i;
+    SymbolNode *connector;
+
+    /* Find or create symbol in new_scope */
+    Symbol *new_symbol = src_symbol((struct avl_tree_node *)(new_scope->symbols_tree), symbol->name);
+    if (!new_symbol) new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
+
+    /* Move all the node/symbol connectors */
+    for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
+        connector = (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[i];
+        connector->symbol = new_symbol;
+        dpa_add((dpa*)(new_symbol->ast_node_array),  connector);
+    }
+
+    /* Remove the old symbol from the old scope */
+    scp_rmsy(symbol->scope, symbol);
+
+    /* Delete the old symbol */
+    free(symbol->name);
+    free_dpa(symbol->ast_node_array);
+    free(symbol);
+
+    return new_symbol;
+}
+
 /* Frees a symbol */
 void free_sym(Symbol *symbol) {
     size_t i;
@@ -535,6 +562,17 @@ ASTNode* sym_proc(Symbol *symbol) {
     for (i=0; i < sym_nond(symbol); i++) {
         sn = sym_trnd(symbol, i);
         if (sn->node->node_type == PROCEDURE) return sn->node;
+    }
+    return 0;
+}
+
+/* Returns 1 if node is linked to symbol, or 0 */
+int symislnk(ASTNode *node, Symbol *symbol) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node == node) return 1;
     }
     return 0;
 }

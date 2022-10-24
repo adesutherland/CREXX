@@ -16,6 +16,80 @@
 #include "utf.h"
 #endif
 
+#include <string.h>
+#include <stdlib.h>
+#include "avl_tree.h"
+
+/* Internal Tree node structure for functions */
+struct tree_wrapper {
+    char* index;
+    imported_func *func;
+    struct avl_tree_node index_node;
+};
+
+#define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->index
+
+#define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
+
+static int compare_node_node(const struct avl_tree_node *node1,
+                             const struct avl_tree_node *node2)
+{
+    char* n1 = GET_INDEX(node1);
+    char* n2 = GET_INDEX(node2);
+    return strcmp(n1,n2);
+}
+
+static int compare_node_value(const void *value,
+                              const struct avl_tree_node *nodeptr) {
+    char* node = GET_INDEX(nodeptr);
+    return strcmp((char*)value,node);
+}
+
+/* Adds a func */
+/* Returns 0 on success, 1 on duplicate */
+static int add_func(Context *context, imported_func *func) {
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->importable_function_tree);
+
+    struct tree_wrapper *i = malloc(sizeof(struct tree_wrapper));
+    i->index = func->name;
+    i->func = func;
+    if (avl_tree_insert(root, &i->index_node, compare_node_node)) {
+        /* Duplicate */
+        free(i);
+        return 1;
+    }
+    return 0;
+}
+
+// Search for a function / variable
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_func(Context *context, char* index, imported_func **func) {
+    struct avl_tree_node *result;
+    struct avl_tree_node *root = context->importable_function_tree;
+
+    result = avl_tree_lookup(root, index, compare_node_value);
+
+    if (result) {
+        *func = GET_VALUE(result);
+        return 1;
+    }
+    else return 0;
+}
+
+/* Free Func Tree and functions */
+void fre_ftre(Context *context) {
+    struct tree_wrapper *i;
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->importable_function_tree);
+
+    /* This walks the tree in post order which allows each node be freed */
+    avl_tree_for_each_in_postorder(i, *root, struct tree_wrapper, index_node) {
+        freimpfc(i->func);
+        free(i);
+    }
+    *root = 0;
+}
+
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
     if (context->debug_mode) {
@@ -24,14 +98,14 @@ static void dump_error_ast(Context *context) {
 #endif
 }
 
-/* TODO Move to Platform - need to make the output mallocked */
+/* TODO Move to Platform - need to make the output malloced */
 static const char *get_filename_ext(const char *filename) {
     const char *dot = strrchr(filename, '.');
     if(!dot || dot == filename) return "";
     return dot + 1;
 }
 
-/* TODO Move to Platform - need to make the output mallocked */
+/* TODO Move to Platform - need to make the output malloced */
 static const char *get_filename(const char *path)
 {
     size_t len = strlen(path);
@@ -106,17 +180,20 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
         if (node->node_type == PROCEDURE) {
             if (child3->node_type != NOP) {
-                if  (error_in_node(child1)) result_normal; /* If there is an error we must ignore this entry */
-                if  (error_in_node(child2)) result_normal; /* If there is an error we must ignore this entry */
+                if  (error_in_node(child1)) return result_normal; /* If there is an error we must ignore this entry */
+                if  (error_in_node(child2)) return result_normal; /* If there is an error we must ignore this entry */
 
                 char *type = nodetype(child1);
                 char *source = clnnode(child2);
                 char *args = source;
                 char *fqname = sym_frnm(node->symbolNode->symbol);
 
-                func = rximpfc_f(master_context, node->context->file_name, fqname, "b", type, args, 0);
+                func = rximpf_f(master_context, node->context->file_name, fqname, "b", type, args, 0, 0);
 
-                if (func) dpa_add(master_context->importable_function_array, func);
+                if (func) {
+                    add_func(master_context, func);
+                    // TODO Remove dpa_add(master_context->importable_function_tree, func);
+                }
 
                 free(type);
                 free(source);
@@ -140,8 +217,10 @@ static char* get_const_string(void* constpool, size_t ix) {
     sz = ((string_constant *)(constpool + ix))->string_len;
 
     result = malloc(sz + 1);
-    memcpy(result, c, sz);
-    result[sz] = 0;
+    if (result) {
+        memcpy(result, c, sz);
+        result[sz] = 0;
+    }
     return result;
 }
 
@@ -152,10 +231,10 @@ static void read_constant_pool_for_functions(Context *master_context, char *full
     size_t exposed_ix;
     expose_proc_constant *exposed;
     char* fqname;
-    char* option;
-    char* type;
-    char* args;
-    char* inliner;
+    char* option = 0;
+    char* type = 0;
+    char* args = 0;
+    char* inliner = 0;
 
     i = 0;
     while (i < constant_size) {
@@ -176,14 +255,29 @@ static void read_constant_pool_for_functions(Context *master_context, char *full
                     args = get_const_string(constant, mentry->args);
                     inliner = get_const_string(constant, mentry->inliner);
 
-                    func = rximpfc_f(master_context, full_file_name, fqname, option, type, args, inliner);
+                    func = rximpf_f(master_context, full_file_name, fqname, option, type, args, inliner, 0);
 
-                    if (func) dpa_add(master_context->importable_function_array, func);
+                    if (func) {
+                        add_func(master_context, func);
+                        // TODO Remove dpa_add(master_context->importable_function_tree, func);
+                    }
 
-                    if (option) free(option);
-                    if (type) free(type);
-                    if (args) free(args);
-                    if (inliner) free(inliner);
+                    if (option) {
+                        free(option);
+                        option = 0;
+                    }
+                    if (type) {
+                        free(type);
+                        type = 0;
+                    }
+                    if (args) {
+                        free(args);
+                        args = 0;
+                    }
+                    if (inliner) {
+                        free(inliner);
+                        inliner = 0;
+                    }
                 }
             }
         }
@@ -215,7 +309,7 @@ static void parseRxasFileForFunctions(Context *master_context, char* file_name, 
 
     if (master_context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
 
-    /* Opening and Assemble file */
+    /* Opening an Assembler file */
     if (rxasinfl(&scanner, 1)) {
         rxasclrc(&scanner);
         return;
@@ -416,12 +510,12 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *master_context, ASTNode *node) {
     size_t i, f;
-    dpa *func_array = master_context->importable_function_array;
     Symbol *symbol;
     ASTNode *func_node;
     Symbol *func_symbol;
     Symbol *found_symbol = 0;
     Scope *namespace;
+    imported_func *func;
 
     char *name = (char*)malloc(node->node_string_length + 1);
     memcpy(name, node->node_string, node->node_string_length);
@@ -471,81 +565,73 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
         }
 
         /* Check the added functions in the function list */
-        for ( ; i < func_array->size; i++) {
-            found_symbol = 0;
-            imported_func *func = (imported_func *) func_array->pointers[i];
 
-            if (strcmp(name, func->name) == 0) {
-                /* Found it! */
+        if (src_func(master_context, name, &func) && !func->is_variable) {
+            /* Found it! */
+            if (func->already_loaded) {
+                fprintf(stderr, "INTERNAL ERROR: Attempted to load function %s twice\n", func->name);
+                return 0;
+            }
+            func->already_loaded = 1;
 
-                if (func->already_loaded) {
-                    fprintf(stderr, "INTERNAL ERROR: Attempted to load funtion %s twice\n", func->name);
-                    return 0;
-                }
-                func->already_loaded = 1;
+            if (master_context->debug_mode) printf("Importing Procedures - Found Procedure %s\n", func->fqname);
 
-                if (master_context->debug_mode) printf("Importing Procedures - Found Procedure %s\n", func->fqname);
+            /* Splice the ASTs together */
+            add_ast(master_context->ast, func->context->ast->child);
 
-                /* Splice the ASTs together */
-                add_ast(master_context->ast, func->context->ast->child);
+            /* Splice in namespace symbol */
+            symbol = sym_rslv(master_context->ast->scope, func->context->ast->child);
+            if (!symbol) {
+                symbol = sym_f(master_context->ast->scope, func->context->ast->child);
+                symbol->symbol_type = NAMESPACE_SYMBOL;
+                namespace = scp_f(master_context->ast->scope, node, symbol);
+            } else {
+                namespace = symbol->defines_scope;
+            }
+            sym_adnd(symbol, func->context->ast->child, 1, 1);
+            if (func->context->namespace) sym_adnd(symbol, func->context->namespace, 0, 1);
 
-                /* Splice in namespace symbol */
-                symbol = sym_rslv(master_context->ast->scope, func->context->ast->child);
-                if (!symbol) {
-                    symbol = sym_f(master_context->ast->scope, func->context->ast->child);
-                    symbol->symbol_type = NAMESPACE_SYMBOL;
-                    namespace = scp_f(master_context->ast->scope, node, symbol);
-                }
-                else {
-                    namespace = symbol->defines_scope;
-                }
-                sym_adnd(symbol, func->context->ast->child, 1, 1);
-                if (func->context->namespace) sym_adnd(symbol, func->context->namespace, 0, 1);
+            /* Splice new procedure symbol */
+            /* Find the current procedure symbol */
+            func_node = func->context->ast->child->child;
+            if (func_node->node_type != PROCEDURE) func_node = func_node->sibling;
 
-                /* Splice new procedure symbol */
-                /* Find the current procedure symbol */
-                func_node = func->context->ast->child->child;
-                if (func_node->node_type != PROCEDURE) func_node = func_node->sibling;
+            if (func_node->node_type != PROCEDURE) {
+                fprintf(stderr,
+                        "INTERNAL ERROR: Importing Procedures - Could not find imported procedure in AST\n");
+                dump_error_ast(func->context);
+            } else {
+                func_node->scope = namespace;
+                func_symbol = func_node->symbolNode->symbol;
 
-                if (func_node->node_type != PROCEDURE) {
+                /* Make a duplicate symbol in the master_context */
+                found_symbol = sym_fn(namespace, func_symbol->name,
+                                      strlen(func_symbol->name));
+                if (!found_symbol) {
                     fprintf(stderr,
-                            "INTERNAL ERROR: Importing Procedures - Could not find imported procedure in AST\n");
+                            "INTERNAL ERROR: Importing Procedures - Could not duplicate imported procedure symbol\n");
                     dump_error_ast(func->context);
+                } else {
+                    /* Set symbol type */
+                    found_symbol->symbol_type = func_symbol->symbol_type;
+
+                    /* Splice by linking the new symbol to the function node */
+                    sym_adnd(found_symbol, func_node, 0, 1);
+
+                    /* remove old symbol */
+                    scp_rmsy(func_symbol->scope, func_symbol); /* Remove from scope */
+                    free_sym(func_symbol); /* Free symbol  */
                 }
-                else {
-                    func_node->scope = namespace;
-                    func_symbol = func_node->symbolNode->symbol;
-
-                    /* Make a duplicate symbol in the master_context */
-                    found_symbol = sym_fn(namespace, func_symbol->name,
-                                          strlen(func_symbol->name));
-                    if (!found_symbol) {
-                        fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Could not duplicate imported procedure symbol\n");
-                        dump_error_ast(func->context);
-                    } else {
-                        /* Set symbol type */
-                        found_symbol->symbol_type = func_symbol->symbol_type;
-
-                        /* Splice by linking the new symbol to the function node */
-                        sym_adnd(found_symbol, func_node, 0, 1);
-
-                        /* remove old symbol */
-                        scp_rmsy(func_symbol->scope, func_symbol); /* Remove from scope */
-                        free_sym(func_symbol); /* Free symbol  */
-                    }
-                }
-
-                break;
             }
         }
     }
-
     free(name);
     return found_symbol;
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
-imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation)  {
+imported_func *rximpf_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args,
+                        char *implementation, char is_variable)  {
     imported_func *func;
     char *buffer;
     size_t i;
@@ -579,6 +665,7 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     func = malloc(sizeof(imported_func));
     func->context = 0;
     func->already_loaded = 0;
+    func->is_variable = is_variable; /* Is a function or a Variable */
 
     /* Store the namespace */
     func->namespace = malloc(len + 1);
@@ -624,30 +711,38 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     }
     else func->implementation = 0;
 
-    /* Generate Function Declaration AST */
-    // TODO This only does Level B
-    buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name, func->type, func->args);
-    if (master_context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
-    func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
+    if (func->is_variable == 0) {
+        /* Generate Function Declaration AST - only if we are a function not a variable */
+        // TODO This only does Level B
+        buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
+                         func->type, func->args);
+        if (master_context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
+        func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer,
+                                  strlen(buffer));
 
-    if (!func->context || error_in_node(func->context->ast)) {
-        fprintf(stderr, "Importing Procedures - ERROR: Error parsing imported procedure arguments for %s, skipping\n", func->fqname);
-        fprintf(stderr, "buffer is %s\n", buffer);
-        dump_error_ast(func->context);
-        freimpfc(func);
-        return 0;
+        if (!func->context || error_in_node(func->context->ast)) {
+            fprintf(stderr,
+                    "Importing Procedures - ERROR: Error parsing imported procedure arguments for %s, skipping\n",
+                    func->fqname);
+            fprintf(stderr, "buffer is %s\n", buffer);
+            dump_error_ast(func->context);
+            freimpfc(func);
+            return 0;
+        }
+
+        /* Make sure the AST seems sane */
+        if (func->context->ast->child->node_type != PROGRAM_FILE) {
+            fprintf(stderr,
+                    "Importing Procedures - ERROR: Unexpected syntax error parsing imported procedure arguments for %s, skipping\n",
+                    func->fqname);
+            dump_error_ast(func->context);
+            freimpfc(func);
+            return 0;
+        }
+
+        /* Fixup the node type */
+        func->context->ast->child->node_type = IMPORTED_FILE;
     }
-
-    /* Make sure the AST seems sane */
-    if (func->context->ast->child->node_type != PROGRAM_FILE) {
-        fprintf(stderr, "Importing Procedures - ERROR: Unexpected syntax error parsing imported procedure arguments for %s, skipping\n", func->fqname);
-        dump_error_ast(func->context);
-        freimpfc(func);
-        return 0;
-    }
-
-    /* Fixup the node type */
-    func->context->ast->child->node_type = IMPORTED_FILE;
 
     return func;
 }

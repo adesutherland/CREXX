@@ -1149,7 +1149,7 @@ static char* type_to_prefix(ValueType value_type) {
 }
 
 /* Adds Symbol metadata */
-void meta_set_symbol(Symbol *symbol, void *payload) {
+static void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
@@ -1215,12 +1215,97 @@ static void add_variable_metadata(ASTNode* node) {
         scope = n->scope;
     }
 
-    /* Clears the Procedure's Symbols from metadata */
+    /* Sets the Procedure's Symbols from metadata */
     scp_4all(scope, meta_set_symbol, node);
 }
 
+/* Adds and exposed Global Variable Symbol */
+static void add_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL && symbol->exposed) {
+
+        symbol_fqn = sym_frnm(symbol);
+        buffer = mprintf("%c%d .expose=%s\n",
+                         symbol->register_type, symbol->register_num,
+                         symbol_fqn
+        );
+        free(symbol_fqn);
+
+        /* Add the metadata to the output fragment */
+        output_append_text(output,buffer);
+        free(buffer);
+    }
+}
+
+/* Add exposed Global Variables - node is the PROGRAM_FILE node */
+static void add_exposed_global_variable(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (file / namespace scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Sets the Procedure's Global Symbols from metadata */
+    scp_4all(scope, add_global_symbol, node);
+}
+
+/* Adds Global Variable Symbol metadata */
+static void meta_set_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload; /* The PROCEDURE node */
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL) {
+        /* Is the global used in the procedure */
+        if ( symislnk(node->child->sibling->sibling, symbol) ) {
+            symbol_fqn = sym_frnm(symbol);
+            buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
+                             symbol_fqn,
+                             type_nm(symbol->type),
+                             symbol->register_type, symbol->register_num
+            );
+            free(symbol_fqn);
+
+            /* Add the metadata to the output fragment */
+            output_append_text(output, buffer);
+            free(buffer);
+        }
+    }
+}
+
+/* Add Global Variable Metadata
+ * node is the PROCEDURE node*/
+static void add_global_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (procedure scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* namespace scope */
+    scope = scope->parent;
+
+    /* Sets the Procedure's Global Symbols from metadata */
+    scp_4all(scope, meta_set_global_symbol, node);
+}
+
 /* Clears Symbol metadata */
-void meta_clear_symbol(Symbol *symbol, void *payload) {
+static void meta_clear_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
@@ -1264,6 +1349,48 @@ static void clear_variable_metadata(ASTNode *node) {
 
     /* Clears the Procedure's Symbols from metadata */
     scp_4all(scope, meta_clear_symbol, node);
+}
+
+/* Clear Global Variable Symbol metadata */
+static void meta_clear_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload; /* The PROCEDURE node */
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL) {
+        /* Is the global used in the procedure */
+        if ( symislnk(node->child->sibling->sibling, symbol) ) {
+            symbol_fqn = sym_frnm(symbol);
+            buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
+            free(symbol_fqn);
+
+            /* Add the metadata to the output fragment */
+            output_append_text(output, buffer);
+            free(buffer);
+        }
+    }
+}
+
+/* Clear Global Variable Metadata
+ * node is the PROCEDURE node*/
+static void clear_global_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (procedure scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* namespace scope */
+    scope = scope->parent;
+
+    /* Clears the Procedure's Global Symbols from metadata */
+    scp_4all(scope, meta_clear_global_symbol, node);
 }
 
 /* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
@@ -1401,6 +1528,9 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_fs(buf);
                 free(buf);
 
+                /* Add exposed global variables */
+                add_exposed_global_variable(node);
+
                 n = child1;
                 while (n) {
                     if (n->output) output_concat(node->output, n->output);
@@ -1503,6 +1633,9 @@ static walker_result emit_walker(walker_direction direction,
                         free(comment_meta);
                     }
 
+                    /* Add Global Variables */
+                    add_global_variable_metadata(node);
+
                     n = child2;
                     while (n) {
                         if (n->output) output_concat(node->output, n->output);
@@ -1511,6 +1644,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Clear all variable metadata */
                     clear_variable_metadata(node);
+                    clear_global_variable_metadata(node);
                 }
                 break;
 

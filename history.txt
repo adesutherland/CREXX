@@ -1,6 +1,7 @@
 CREXX History / Change Log
 
 F0044 - cREXX Level B Language enhancements (Part 2)
+      - Return type of implicitly defined main() automatically set to int or void
 
       - Debugger Fixes
 F0043 - cREXX Level B Language enhancements (Part 1)

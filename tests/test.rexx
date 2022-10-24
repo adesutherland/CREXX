@@ -1,1 +1,1 @@
-/* Tests for latest show and tells */options levelb dashcomments slashcommentsnamespace scratchimport rxfnsb# commentsay "Début for The 33rd Annual Rexx Symposium - Native"b = 3a  = b + 1do i = 1 to 10  a = a + i  say right(i,5,"0")endsay "a =" areturn 0
+/* Tests for latest show and tells */options levelbnamespace scratch expose lib a bimport rxfnsbsay "Start"y = 3z = y + 1say zsay left("hello there", 5)say "pre a =" acall libsay "post a =" alib: procedure  b = 10 # a = 5  say "a in lib is" a  say "b in lib is" b  return

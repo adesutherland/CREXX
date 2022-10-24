@@ -134,15 +134,10 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
     context->line = 0;
     context->namespace = 0;
     context->current_scope = 0;
-    if (context->importable_function_array) {
-        /* Deallocate importable_function_array */
-        for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
-            freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
-        }
-        free_dpa(context->importable_function_array);
-        context->importable_function_array  = 0;
+    if (context->importable_function_tree) {
+        fre_ftre(context);
+        context->importable_function_tree  = 0;
     }
-    context->importable_function_array = dpa_f();
 
     /* Reset importable_file_list */
     if (context->importable_file_list) {
@@ -164,12 +159,9 @@ void fre_cntx(Context *context)  {
     /* Deallocate AST */
     free_ast(context);
 
-    /* Deallocate importable_function_array */
-    for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
-        freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
-    }
-    free_dpa(context->importable_function_array);
-    context->importable_function_array  = 0;
+    /* Deallocate importable_function_tree */
+    fre_ftre(context);
+    context->importable_function_tree  = 0;
 
     /* Deallocate importable_file_list */
     if (context->importable_file_list) {
@@ -193,7 +185,7 @@ int main(int argc, char *argv[]) {
     size_t bytes;
     char* buff_start;
     Context *context;
-    int errors = 0;
+    int errors = 0, warnings = 0;
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
@@ -448,6 +440,11 @@ int main(int argc, char *argv[]) {
 
     finish:
 
+    warnings = prntwars(context);
+    if (warnings) {
+        fprintf(stderr,"%d warning(s) in source file\n", warnings);
+    }
+
     /* Close outfile */
     if (outFile) fclose(outFile);
 
@@ -458,6 +455,7 @@ int main(int argc, char *argv[]) {
 
     if (file_directory) free(file_directory);
 
-    if (errors) return(1);
-    else return(0);
+    if (errors) return(2);
+    if (warnings) return(1);
+    return(0);
 }
