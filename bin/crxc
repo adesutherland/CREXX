@@ -9,6 +9,3 @@ gcc -o $1 \
     -L$crexx_home/avl_tree \
     -L$crexx_home/platform \
     $1.c
-
-
-
