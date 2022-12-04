@@ -10,7 +10,10 @@ if extension<>'' then say 'filename extension ignored.'
 'rxc  -i' crexx_home'/lib/rxfns' execName
 'rxas' execName 
 'rxcpack' execName crexx_home'/lib/rxfns/library'
-'gcc -o' execName '-lrxvml -lmachine -lavl_tree -lplatform -lm -L'crexx_home'/interpreter -L'crexx_home'/machine -L'crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
+'gcc -o' execName,
+'-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
+crexx_home'/interpreter -L'crexx_home'/machine -L',
+crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
 
 
 
