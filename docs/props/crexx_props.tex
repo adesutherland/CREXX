@@ -438,16 +438,16 @@ breaklinks=true,pdfborder={0 0 0},backref=false,colorlinks=true]
 % +-------------+-------------+-------------+-------------+
 % \end{verbatim}
 %   \else
-  \begin{tikzpicture}[x=1.3ex,y=3em]
-    \path [bitchart box] (0, -1) rectangle (32, 1);
-    \bitchartfields 0 8/\textrm{msb}/, 16/~/, 24/~/, 32/~/;
-    \bitchartbytes{0}{0,...,3}
-    \bitchartsep
-    \begin{scope}[shift={(0,-1)}]
-      \bitchartfields 32 40/~/, 48/~/, 56/~/, 64/\textrm{lsb}/;
-      \bitchartbytes{4}{4,...,7}
-    \end{scope}
-  \end{tikzpicture}
+  % \begin{tikzpicture}[x=1.3ex,y=3em]
+  %   \path [bitchart box] (0, -1) rectangle (32, 1);
+  %   \bitchartfields 0 8/\textrm{msb}/, 16/~/, 24/~/, 32/~/;
+  %   \bitchartbytes{0}{0,...,3}
+  %   \bitchartsep
+  %   \begin{scope}[shift={(0,-1)}]
+  %     \bitchartfields 32 40/~/, 48/~/, 56/~/, 64/\textrm{lsb}/;
+  %     \bitchartbytes{4}{4,...,7}
+  %   \end{scope}
+  % \end{tikzpicture}
 %   % \fi
 %   \caption{Bit and byte numbering in doublewords}
 %   \label{fig:doublewords}
