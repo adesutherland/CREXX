@@ -1158,6 +1158,17 @@ static int get_child_index(ASTNode *node) {
     return i;
 }
 
+/* Get the child node of a certain type1 or type2 (or null) */
+ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
+    ASTNode *n = parent->child;
+    while (n) {
+        if (n->node_type == type1) return n;
+        if (type2 && n->node_type == type2) return n;
+        n = n->sibling;
+    }
+    return 0;
+}
+
 walker_result pdot_walker_handler(walker_direction direction,
                                   ASTNode* node, void *payload) {
     FILE* output = (FILE*)payload;

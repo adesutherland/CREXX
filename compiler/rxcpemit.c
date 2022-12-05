@@ -1267,7 +1267,7 @@ static void meta_set_global_symbol(Symbol *symbol, void *payload) {
 
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
         /* Is the global used in the procedure */
-        if ( symislnk(node->child->sibling->sibling, symbol) ) {
+        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
             symbol_fqn = sym_frnm(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
                              symbol_fqn,
@@ -1360,7 +1360,7 @@ static void meta_clear_global_symbol(Symbol *symbol, void *payload) {
 
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
         /* Is the global used in the procedure */
-        if ( symislnk(node->child->sibling->sibling, symbol) ) {
+        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
             symbol_fqn = sym_frnm(symbol);
             buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
             free(symbol_fqn);
@@ -1419,7 +1419,7 @@ char *clnnode(ASTNode *node) {
     b = buffer = malloc(buffer_len);
     for  (t = node->token_start; t; t = t->token_next) {
         if (t->token_type != TK_STRING)  {
-            /* Upper case it - because we are REXX */
+            /* Lower case it */
             for (i = 0; i < t->length; i++) {
                 *(b++) = (char)tolower(t->token_string[i]);
             }
@@ -1454,7 +1454,8 @@ char* nodetype(ASTNode *node) {
         case TP_FLOAT:   strcpy(buffer, ".float"); break;
         case TP_STRING:  strcpy(buffer, ".string"); break;
         case TP_OBJECT:  strcpy(buffer, ".object"); break;
-        default:         strcpy(buffer, ".void");
+        case TP_VOID:    strcpy(buffer, ".void"); break;
+        default:         strcpy(buffer, ".unknown");
     }
     return buffer;
 }
@@ -1558,8 +1559,8 @@ static walker_result emit_walker(walker_direction direction,
             case PROCEDURE:
                 if (!child3 || child3->node_type == NOP) {
                     /* A declaration - external */
-                    char* type = nodetype(child1);
-                    char* source = clnnode(child2);
+                    char* type = nodetype(ast_chld(node, CLASS, VOID));
+                    char* source = clnnode(ast_chld(node, ARGS, 0));
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
                     char* buf;
@@ -1593,8 +1594,8 @@ static walker_result emit_walker(walker_direction direction,
                 }
                 else {
                     /* Definition */
-                    char* type = nodetype(child1);
-                    char* source = clnnode(child2);
+                    char* type = nodetype(ast_chld(node, CLASS, VOID));
+                    char* source = clnnode(ast_chld(node, ARGS, 0));
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
                     char* buf;

@@ -9,8 +9,8 @@
 %start_symbol program
 
 %include {
-/* cREXX Phase 0 (PoC 2) Compiler */
-/* (c) Adrian Sutherland 2021   */
+/* cREXX Compiler */
+/* (c) Adrian Sutherland 2021-2022 */
 /* Grammar                      */
 
 #include <assert.h>
@@ -363,8 +363,16 @@ procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); add_ast(P,E);}
+
 arg(P)            ::= TK_ARG arg_list(A).
                       { P = A;}
+
 /* Classes */
 class(C)          ::= TK_CLASS(T).
                       { C = ast_f(context, CLASS, T); }
@@ -381,6 +389,12 @@ argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
                       { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
 argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
                       { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
+argument(E)         ::= error.
+                      { E = ast_errh(context, "SYNTAX_ERROR"); }
+argument(E)         ::= TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
 
 /* Instructions */
 

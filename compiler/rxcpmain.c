@@ -306,9 +306,11 @@ int main(int argc, char *argv[]) {
     if (filename_extension[0] == 0)
       {
         context->file_pointer = openfile(file_name,"rexx", location, "r");
+        context->file_name = mprintf("%s.rexx", get_filename(file_name));
       }
     else {
         context->file_pointer = openfile(file_name,"", location, "r");
+        context->file_name = mprintf("%s", get_filename(file_name));
     }
     if (context->file_pointer == NULL) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
@@ -342,7 +344,6 @@ int main(int argc, char *argv[]) {
     context->optimise = do_optimise;
     if (file_directory) context->location = file_directory;
     else context->location = location;
-    context->file_name = (char*)get_filename(file_name);
 
     /* Create Options parser to work out required language level */
     opt_pars(context);
@@ -451,6 +452,7 @@ int main(int argc, char *argv[]) {
     if (context->level == LEVELB) free_ops(); // Free Instruction Database
 
     /* Free context */
+    free(context->file_name);
     fre_cntx(context);
 
     if (file_directory) free(file_directory);

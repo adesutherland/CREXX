@@ -333,7 +333,8 @@ char* type_nm(ValueType type) {
         case TP_FLOAT: return ".float";
         case TP_STRING: return ".string";
         case TP_OBJECT: return ".object";
-        default: return ".void";
+        case TP_VOID: return ".void";
+        default: return ".unknown";
     }
 }
 
@@ -500,7 +501,10 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
 
     /* Find or create symbol in new_scope */
     Symbol *new_symbol = src_symbol((struct avl_tree_node *)(new_scope->symbols_tree), symbol->name);
-    if (!new_symbol) new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
+    if (!new_symbol) {
+        new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
+        new_symbol->symbol_type = symbol->symbol_type;
+    }
 
     /* Move all the node/symbol connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {

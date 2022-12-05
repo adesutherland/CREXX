@@ -20,6 +20,45 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
     }
 }
 
+/* Helper function to compare node string value with a string
+ * Used for builtin class names (int, float etc) - so don't need to worry
+ * about utf
+ * NOTE value MUST be in lower case! */
+static int is_node_string(ASTNode* node, const char* value) {
+    int i;
+    /* If it is a different length it can't be the same! */
+    if (strlen(value) != node->node_string_length) return 0;
+
+    for (i=0; i < node->node_string_length; i++) {
+        if (tolower(node->node_string[i]) != value[i]) return 0;
+    }
+    return 1;
+}
+
+/* Helper function to check for built-in classes */
+static ValueType node_to_type(ASTNode* node) {
+    if (!node) return TP_VOID;
+    switch (node->node_type) {
+        case FLOAT:
+            return TP_FLOAT;
+        case INTEGER:
+            return TP_INTEGER;
+        case STRING:
+            return TP_STRING;
+        case VOID:
+            return TP_VOID;
+        case CLASS:
+            if (is_node_string(node, ".void")) return TP_VOID;
+            if (is_node_string(node, ".int")) return TP_INTEGER;
+            if (is_node_string(node, ".float")) return TP_FLOAT;
+            if (is_node_string(node, ".string")) return TP_STRING;
+            if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
+            return TP_OBJECT;
+        default:
+            return TP_UNKNOWN;
+    }
+}
+
 /* Step 1
  * - Fixes up procedure / class tree structures
  * - Sets the token and source start / finish position for each node
@@ -470,6 +509,9 @@ static walker_result step2a_walker(walker_direction direction,
         else if (node->node_type == PROCEDURE) {
             node->node_string_length--; /* Remove the ':' */
 
+            /* Set the return value node value_type */
+            node->child->value_type = node->child->target_type = node_to_type(ast_chld(node, CLASS, VOID));
+
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
             if (symbol) {
@@ -670,7 +712,7 @@ static walker_result step2c_walker(walker_direction direction,
                                 /* Link to the exposed node */
                                 sym_adnd(merged_symbol, n, 1, 1);
                                 /* Link to the Procedure's INSTRUCTION node */
-                                sym_adnd(merged_symbol, proc_node->child->sibling->sibling, 0, 0);
+                                sym_adnd(merged_symbol, ast_chld(proc_node, INSTRUCTIONS, NOP), 0, 0);
                                 merged_symbol->exposed = 1;
                                 found = 1;
                             }
@@ -679,7 +721,7 @@ static walker_result step2c_walker(walker_direction direction,
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
                         temp_node = sym_proc(symbol); /* Procedure */
-                        temp_node = temp_node->child->sibling->sibling; /* Instructions */
+                        temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
                         if (temp_node && temp_node->node_type == INSTRUCTIONS) {
                             sym_adnd(symbol, n, 1, 1);
                             symbol->exposed = 1;
@@ -701,42 +743,7 @@ static walker_result step2c_walker(walker_direction direction,
 /*
  * Step 3 - Validate Symbols
  */
-/* Helper function to compare node string value with a string
- * Used for builtin class names (int, float etc) - so don't need to worry
- * about utf
- * NOTE value MUST be in lower case! */
-static int is_node_string(ASTNode* node, const char* value) {
-    int i;
-    /* If it is a different length it can't be the same! */
-    if (strlen(value) != node->node_string_length) return 0;
 
-    for (i=0; i < node->node_string_length; i++) {
-        if (tolower(node->node_string[i]) != value[i]) return 0;
-    }
-    return 1;
-}
-
-/* Helper function to check for built-in classes */
-static ValueType node_to_type(ASTNode* node) {
-    switch (node->node_type) {
-        case FLOAT:
-            return TP_FLOAT;
-        case INTEGER:
-            return TP_INTEGER;
-        case STRING:
-            return TP_STRING;
-        case VOID:
-            return TP_VOID;
-        case CLASS:
-            if (is_node_string(node, ".int")) return TP_INTEGER;
-            if (is_node_string(node, ".float")) return TP_FLOAT;
-            if (is_node_string(node, ".string")) return TP_STRING;
-            if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
-            return TP_OBJECT;
-        default:
-            return TP_UNKNOWN;
-    }
-}
 
 /* This is called for every symbol */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
@@ -765,10 +772,10 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
             /* Ok we are the first usage in this proc */
             if (defining_node_link->node->node_type == PROCEDURE) {
-                symbol->type = node_to_type(defining_node_link->node->child);
+                symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID));
                 defining_node_link->node->value_type = symbol->type;
                 defining_node_link->node->target_type = symbol->type;
-                return;
+                break;
             }
 
             if (defining_node_link->node->node_type == VAR_TARGET ||
@@ -778,21 +785,21 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 defining_node_link->node->parent->value_type = symbol->type;
                 defining_node_link->node->target_type = symbol->type;
                 defining_node_link->node->parent->target_type = symbol->type;
-                return;
+                break;
             }
 
-            /* Thats it - a global/exposed symbol can't be a taken constant so the symbol type is defined in
+            /* That's it - a global/exposed symbol can't be a taken constant so the symbol type is defined in
              * a following procedure */
         }
-        /* Todo - need to search other modules */
-
+        /* Search other modules */
+        sym_imva(scope->defining_node->context, symbol);
     }
     else {
 
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
         if (defining_node_link->node->node_type == PROCEDURE) {
-            symbol->type = node_to_type(defining_node_link->node->child);
+            symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID));
             defining_node_link->node->value_type = symbol->type;
             defining_node_link->node->target_type = symbol->type;
             return;
@@ -966,7 +973,9 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->symbolNode->symbol->type == TP_UNKNOWN) {
+                /* Promotes any unknown types to strings unless we are a dont_importTYPE_MISMATCH which means we are just being run
+                 * to get variables types as imported files (in this case the promotion just confuses the logic) */
+                if (!(context->dont_import) && node->symbolNode->symbol->type == TP_UNKNOWN) {
                     node->symbolNode->symbol->type = TP_STRING;
                     mknd_war(node, "SET_IMPLICIT_STRING_TYPE");
                 }
@@ -1199,7 +1208,8 @@ static walker_result step5_walker(walker_direction direction,
                 if  (node->symbolNode) {
                     n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
                     /* n2 is PROCEDURE. Go to the first arg */
-                    n2 = n2->child->sibling->child;
+                    n2 = ast_chld(n2, ARGS, 0);
+                    n2 = n2->child;
                 }
                 else n2 = 0;
                 /* Check each argument */

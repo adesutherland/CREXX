@@ -60,6 +60,7 @@ typedef struct Context {
     ASTNode* ast;
     ASTNode* free_list;
     ASTNode* namespace;
+    ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
     /* Source Options */
@@ -92,6 +93,9 @@ char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *master_context, ASTNode *node);
+
+/* Set the type of a symbol from imported modules */
+void sym_imva(Context *master_context, Symbol *symbol);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
@@ -221,6 +225,8 @@ void ast_del(ASTNode* node);
 char* ast_frnm(ASTNode* node);
 /* Returns the PROCEDURE ASTNode procedure of an AST node */
 ASTNode* ast_proc(ASTNode *node);
+/* Get the child node of a certain type1 or type2 (or null) */
+ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -415,9 +421,10 @@ typedef struct imported_func {
     Context *context;
     char already_loaded;
     char is_variable; /* 0=function, 1=global variable */
+    struct imported_func *duplicate;
 } imported_func;
 
-/* imported_func factory - returns null if the function is not in an applicable namespace */
+/* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
 imported_func *rximpf_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args,
                         char *implementation, char is_variable);
 
