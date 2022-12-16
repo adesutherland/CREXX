@@ -912,7 +912,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) > current_frame->procedure->locals)
+                    if (REG_IDX(1) >= current_frame->procedure->locals)
                         copy_value(current_frame->return_reg,
                                    op1R); /* Must do a copy from an argument or global because ... */
                     else

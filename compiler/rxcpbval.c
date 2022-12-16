@@ -728,13 +728,66 @@ static walker_result step2c_walker(walker_direction direction,
                         }
                         else mknd_err(n, "IMPORTED_FUNCTION");
                     }
+                    else if (symbol->symbol_type ==  VARIABLE_SYMBOL) mknd_war(n, "DUPLICATE_SYMBOL");
                     else mknd_err(n, "INVALID_SYMBOL_TYPE");
                     n = n->sibling;
                 }
             }
+
+            else if (node->parent->node_type == PROCEDURE) {
+                /* We are exposing variables in a procedure */
+                ASTNode* n = node->child;
+                while (n) {
+                    symbol = sym_rvfc(context->ast, n); /* Is this is procedure/function? */
+                    if (!symbol) {
+                        /* Procedure Symbol not found so it "must" be a variable we need to expose */
+
+                        /* We should be exposing one of the procedure's variables */
+                        symbol = sym_lrsv(node->parent->scope, n); /* find it */
+                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                            /* We found a variable to expose - so expose it by moving its scope */
+                            merged_symbol = sym_merg(symbol->scope->parent, symbol);
+                            /* Link to the exposed node */
+                            sym_adnd(merged_symbol, n, 1, 1);
+                            /* Link to the Procedure's INSTRUCTION node */
+                            sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                            merged_symbol->exposed = 1;
+                        }
+                        else mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                    }
+
+                    else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
+                        /* Does the symbol exist in the procedure? */
+                        Symbol *proc_symbol = sym_lrsv(node->parent->scope, n);
+                        if (proc_symbol) {
+                            /* We need to promote this symbol to the parent scope */
+                            merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
+                            /* Link to the exposed node */
+                            sym_adnd(merged_symbol, n, 1, 1);
+                            /* Link to the Procedure's INSTRUCTION node */
+                            sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                            merged_symbol->exposed = 1;
+                        }
+                        else {
+                            /* Either we have already processed this symbol (duplicate) or it is not used in the proc at all */
+
+                            if (symislnk(ast_chld(node->parent, INSTRUCTIONS, NOP), symbol)) {
+                                /* It's linked to the procedure's instructions - therefore a duplicate */
+                                mknd_war(n, "DUPLICATE_SYMBOL");
+                            }
+                            else {
+                                /* Must be unused */
+                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                            }
+                        }
+                    }
+
+                    else mknd_err(n, "INVALID_SYMBOL_TYPE");
+
+                    n = n->sibling;
+                }
+            }
         }
-    }
-    else {
     }
 
     return result_normal;
@@ -1217,7 +1270,7 @@ static walker_result step5_walker(walker_direction direction,
                 while (n1) {
                     arg_num++;
                     if (!n2) {
-                        mknd_err(n1, "UNEXPECTED_ARGUMENT %d", arg_num);
+                        mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         break;
                     }
                     n1->target_type = n2->value_type;
@@ -1225,7 +1278,7 @@ static walker_result step5_walker(walker_direction direction,
                     if (n1->node_type == NOVAL) {
                         n1->value_type = n1->target_type;
                         if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbolNode->symbol->name);
+                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
                         }
                     }
                     if (n2->child->node_type == VAR_REFERENCE) {
@@ -1233,7 +1286,7 @@ static walker_result step5_walker(walker_direction direction,
                         if (n1->symbolNode) {
                             if (n1->target_type != n1->value_type) {
                                 /* Cannot change type of pass by reference symbol */
-                                mknd_err(n1, "REFERENCE_TYPE_MISMATCH %d %s", arg_num, n2->child->symbolNode->symbol->name);
+                                mknd_err(n1, "REFERENCE_TYPE_MISMATCH, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
                             }
                             /* Mark as write access for the optimiser */
                             n1->symbolNode->writeUsage = 1;
@@ -1250,7 +1303,7 @@ static walker_result step5_walker(walker_direction direction,
                     n1->is_opt_arg = n2->is_opt_arg;
                     add_ast(node, n1);
                     if (!n1->is_opt_arg) {
-                        mknd_err(n1, "ARGUMENT_REQUIRED %d %s", arg_num, n2->child->symbolNode->symbol->name);
+                        mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
                     }
                     n2 = n2->sibling;
                 }
