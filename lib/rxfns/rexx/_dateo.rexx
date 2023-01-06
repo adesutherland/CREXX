@@ -48,7 +48,7 @@ _dateo: Procedure = .string
      return (jdn-_jdn(1,1,1970))*86400
     end
 
-  if fabbreV('NORMAL',format,1) then return right(dd,2,'0')' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
+  if fabbreV('NORMAL',format,1) then return dd' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
   if fabbreV('XNORMAL',format,2) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
 
   if fabbreV('MONTH',format,1) then return word(mlist,mm)
