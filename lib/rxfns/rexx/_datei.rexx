@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace _rxsysb
+namespace _rxsysb expose _datei
 import rxfnsb
 
 _datei: Procedure = .int

@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose x2b
 
 /* X2b(hex-string)  returns bit combination of hex string */
 

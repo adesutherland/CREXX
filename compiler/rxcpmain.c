@@ -274,6 +274,9 @@ int main(int argc, char *argv[]) {
     /* Context Structure */
     context = cntx_f();
 
+    /* I am the main context */
+    context->master_context = context;
+
     /* Derive the location from the file name */
     if (!location) {
         file_directory = get_filename_directory(file_name);

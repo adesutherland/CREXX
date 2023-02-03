@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose overlay
 
 /* overlay(insstr,string,position,length,pad) overlays string into existing string at certain position and length */
 overlay: procedure = .string

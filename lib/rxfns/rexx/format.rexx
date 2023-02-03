@@ -1,7 +1,7 @@
  /* rexx */
   options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose format
 import _rxsysb
 
 format: procedure = .string

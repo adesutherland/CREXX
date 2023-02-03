@@ -6,7 +6,7 @@
  */ 
 options levelb
 
-namespace _rxsysb
+namespace _rxsysb expose reradix
 import rxfnsb
 
 reradix: procedure = .string

@@ -42,8 +42,8 @@ typedef struct importable_file importable_file;
 
 /* Compiler Context Object */
 typedef struct Context {
+    struct Context *master_context; /* This points to the context of the file being compilkes (rather than imported files* */
     int debug_mode;
-    int dont_import; /* Don't import files looking for procedures / exposed variables */
     char* location;
     char* file_name;
     char** import_locations;
@@ -92,10 +92,10 @@ char *clnnode(ASTNode *node);
 char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *master_context, ASTNode *node);
+Symbol *sym_imfn(Context *context, ASTNode *node);
 
 /* Set the type of a symbol from imported modules */
-void sym_imva(Context *master_context, Symbol *symbol);
+void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
@@ -192,12 +192,29 @@ ASTNode *ast_ft(Context* context, NodeType type);
 ASTNode *ast_ftt(Context* context, NodeType type, char *string);
 /* ASTNode Factory - With node type and string value copied from another node */
 ASTNode *ast_fstk(Context* context, ASTNode *source_node);
+/* Factory to create a duplicated AST node into a new context
+ * - context is the target context
+ * - node is the node to be duplicated
+ *
+ * A number of aspects are NOT copied
+ * - Symbols
+ * - Scope
+ * - Associated Nodes
+ * - Tree position (child, sibling, parent)
+ * - Emitter output fragments
+ * - Ordinals
+ */
+ASTNode *ast_dup(Context* new_context, ASTNode *node);
 /* Add warning node to parent node */;
 ASTNode *ast_war(ASTNode* parent, char *warning_string);
 /* ASTNode Factory - Error Node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
+/* Add a duplicate of the tree headed by the source node as a child to dest
+ * This handles the nodes, scopes and symbols, and associated nodes
+ * Note that symbols and associated nodes out of the scope of the original child tree are removed */
+ASTNode *add_dast(ASTNode *dest, ASTNode *source);
 const char *ast_ndtp(NodeType type);
 void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
@@ -348,7 +365,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, char* name, size_t name_length);
+Symbol *sym_fn(Scope *scope, const char* name, size_t name_length);
 
 /* Frees a symbol - does not remove symbol from scope see scp_rmsy() which probably should be used as well */
 void free_sym(Symbol *symbol);
@@ -391,6 +408,21 @@ size_t sym_nond(Symbol *symbol);
 /* Returns the lowest ASTNode ordinal associated with the symbol */
 int sym_lord(Symbol *symbol);
 
+/*
+ * Resolve a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ */
+Symbol *sym_rfqn(ASTNode *root, const char* fqname);
+
+/*
+ * Resolve or add a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ * Note: Symbols / Scopes are not linked to nodes
+ * Returns the existing or new symbol with the fqname
+ *         or 0 if there is an error (a namespace in the path corresponds to a non-namespace symbol)
+ */
+Symbol *sym_afqn(ASTNode *root, const char* fqname);
+
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
 
@@ -421,11 +453,12 @@ typedef struct imported_func {
     Context *context;
     char already_loaded;
     char is_variable; /* 0=function, 1=global variable */
+    char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
     struct imported_func *duplicate;
 } imported_func;
 
-/* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
-imported_func *rximpf_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args,
+/* imported_func factory - returns null if the function is not in an applicable namespace */
+imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *options, char *type, char *args,
                         char *implementation, char is_variable);
 
 /* Free Func Tree and functions */

@@ -667,7 +667,7 @@ static walker_result step2b_walker(walker_direction direction,
 
             /* We have to try and import the function  */
             else {
-                if (!context->dont_import) symbol = sym_imfn(context, node);
+                symbol = sym_imfn(context, node);
                 if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
                 else sym_adnd(symbol, node, 1, 0);
             }
@@ -1026,12 +1026,6 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                /* Promotes any unknown types to strings unless we are a dont_importTYPE_MISMATCH which means we are just being run
-                 * to get variables types as imported files (in this case the promotion just confuses the logic) */
-                if (!(context->dont_import) && node->symbolNode->symbol->type == TP_UNKNOWN) {
-                    node->symbolNode->symbol->type = TP_STRING;
-                    mknd_war(node, "SET_IMPLICIT_STRING_TYPE");
-                }
                 node->value_type = node->symbolNode->symbol->type;
                 node->target_type = node->value_type;
                 break;

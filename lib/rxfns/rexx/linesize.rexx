@@ -1,7 +1,7 @@
 /* rexx linesize bif */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose linesize
 
 /*
  * here mainly because it needs a native implementation on z/VM

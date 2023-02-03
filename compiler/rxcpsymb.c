@@ -57,7 +57,7 @@ static int add_symbol_to_tree(struct avl_tree_node **root, Symbol *value) {
 
 // Search for a symbol
 // Returns Symbol if found or null
-static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
+static Symbol* src_symbol(struct avl_tree_node *root, const char* index) {
     struct avl_tree_node *result;
 
     result = avl_tree_lookup(root, index, compare_node_value);
@@ -79,7 +79,7 @@ Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
         symbol->defines_scope = scope;
     }
     else scope->name = 0;
-    node->scope = scope;
+    if (node) node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
@@ -360,7 +360,7 @@ size_t scp_noch(Scope *scope) {
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
+Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
@@ -418,6 +418,100 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
         }
         /* TODO Process second level - Classes */
     }
+    return 0;
+}
+
+/*
+ * Resolve a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ */
+Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
+   const char *name = fqname;
+   const char *c;
+   Symbol *result = 0;
+   Scope *scope = root->scope;
+   char* search_name;
+   size_t len;
+
+   while (*name) {
+       for (c = name; 1; c++) {
+           if (*c == '.') {
+               /* Search namespace */
+               len = c - name;
+               search_name = malloc(len + 1);
+               memcpy(search_name, name, len);
+               search_name[len + 1] = 0;
+               result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
+               free(search_name);
+               if (!result) return 0;
+               if (!result->defines_scope) return 0;
+               scope = result->defines_scope;
+               name = c + 1;
+               break;
+           }
+           else if (!*c) {
+               /* Search for final symbol */
+               return src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+           }
+       }
+   }
+
+   /* Empty parameter */
+   return 0;
+}
+
+/*
+ * Resolve or add a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ * Note: Symbols / Scopes are not linked to nodes
+ * Returns the existing or new symbol with the fqname
+ *         or 0 if there is an error (a namespace in the path corresponds to a non-namespace symbol)
+ */
+Symbol *sym_afqn(ASTNode *root, const char* fqname) {
+    const char *name = fqname;
+    const char *c;
+    Symbol *result = 0;
+    Scope *scope = root->scope;
+    char* search_name;
+    size_t len;
+
+    while (*name) {
+        for (c = name; 1; c++) {
+            if (*c == '.') {
+                /* Search or add namespace */
+                len = c - name;
+                search_name = malloc(len + 1);
+                memcpy(search_name, name, len);
+                search_name[len + 1] = 0;
+                result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
+                if (!result) {
+                    /* Create scope */
+                    result = sym_fn(scope, search_name, len);
+                    scope = scp_f(scope, 0, result);
+                    result->symbol_type = NAMESPACE_SYMBOL;
+                    result->defines_scope = scope;
+                    free(search_name);
+                }
+                else if (!result->defines_scope) {
+                    free(search_name);
+                    return 0;
+                }
+                scope = result->defines_scope;
+                name = c + 1;
+                break;
+            }
+            else if (!*c) {
+                /* Search for final symbol */
+                result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+                if (!result) {
+                    result = sym_fn(scope, name, strlen(name));
+                }
+                return result;
+            }
+        }
+    }
+
+    /* Empty parameter */
     return 0;
 }
 
@@ -694,4 +788,3 @@ char* ast_frnm(ASTNode *node) {
     }
     return result;
 }
-

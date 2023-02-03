@@ -185,6 +185,180 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     return node;
 }
 
+/* Factory to create a duplicated AST node into a new context
+ * - context is the target context
+ * - node is the node to be duplicated
+ *
+ * A number of aspects are NOT copied
+ * - Symbols
+ * - Scope
+ * - Associated Nodes
+ * - Tree position (child, sibling, parent)
+ * - Emitter output fragments
+ * - Ordinals
+ */
+ASTNode *ast_dup(Context* new_context, ASTNode *node) {
+    ASTNode *new_node = malloc(sizeof(ASTNode));
+    new_node->context = new_context;
+    new_node->token = node->token;
+    new_node->node_type = node->node_type;
+    new_node->value_type = node->value_type;
+    new_node->target_type = node->target_type;
+    new_node->int_value = node->int_value;
+    new_node->bool_value = node->bool_value;
+    new_node->float_value = node->float_value;
+    new_node->register_num = node->register_num;
+    new_node->register_type = node->register_type;
+    new_node->additional_registers = node->additional_registers;
+    new_node->num_additional_registers = node->num_additional_registers;
+    new_node->is_ref_arg = node->is_ref_arg;
+    new_node->is_opt_arg = node->is_opt_arg;
+    new_node->token_start = node->token_start;
+    new_node->token_end = node->token_end;
+    new_node->source_start = node->source_start;
+    new_node->source_end = node->source_end;
+    new_node->line = node->line;
+    new_node->column = node->column;
+
+    /* Node String - need to malloc or just point to existing buffer */
+    new_node->free_node_string = node->free_node_string;
+    new_node->node_string_length = node->node_string_length;
+    if (node->free_node_string) {
+        new_node->node_string = malloc(new_node->node_string_length);
+        memcpy(new_node->node_string, node->node_string, new_node->node_string_length);
+    }
+    else {
+        new_node->node_string = node->node_string;
+    }
+
+    /* Scope / Symbol not copied */
+    new_node->scope = 0;
+    new_node->symbolNode = 0;
+
+    /* Association not copied */
+    new_node->association = 0;
+
+    /* Position in new tree not defined / copied */
+    new_node->parent = 0;
+    new_node->child = 0;
+    new_node->sibling = 0;
+
+    /* These are only set when emitting - not copied */
+    new_node->output = 0;
+    new_node->loopstartchecks = 0;
+    new_node->loopinc = 0;
+    new_node->loopendchecks = 0;
+
+    /*  Note that ordinal is only set just before optimisation - new nodes have value -1 */
+    new_node->high_ordinal = -1;
+    new_node->low_ordinal = -1;
+
+    /* Add new node to context free list */
+    new_node->free_list = new_context->free_list;
+    if (new_node->free_list) new_node->node_number = new_node->free_list->node_number + 1;
+    else new_node->node_number = 1;
+    new_context->free_list = new_node;
+
+    return new_node;
+}
+
+/* Structure for add_dast() walker handler context */
+struct add_dast_context {
+    ASTNode *source;
+    ASTNode *dest;
+    ASTNode *insert_point;
+};
+
+walker_result add_dast_walker_handler1(walker_direction direction,
+                                  ASTNode* node,
+                                  void *payload) {
+    ASTNode* new_node;
+    struct add_dast_context *context = (struct add_dast_context *)payload;
+    char *fqname;
+    Symbol *new_symbol;
+    Symbol *symbol;
+
+    if (direction == in) {
+        /* Top Down */
+        new_node = ast_dup(context->dest->context, node);
+        if (node == context->source) {
+            /* Top node */
+            add_ast(context->dest, new_node);
+            context->insert_point = new_node;
+        }
+        else {
+            add_ast(context->insert_point, new_node);
+            context->insert_point = new_node;
+        }
+
+        /* Duplicate Scope */
+        if (node->scope) {
+            fqname = scp_frnm(node->scope);
+            new_symbol = sym_rfqn(context->dest, fqname);
+            if (new_symbol) {
+                if (!new_symbol->defines_scope) {
+                    fprintf(stderr, "INTERNAL ERROR: Duplicating AST - Found Symbol is a not a Scope\n");
+                    exit(100);
+                }
+                new_node->scope = new_symbol->defines_scope;
+            }
+            else {
+                /* Need to make a new symbol */
+                new_symbol = sym_afqn(context->dest, fqname);
+                new_node->scope = scp_f(new_node->scope, new_node, new_symbol);
+                new_symbol->symbol_type = NAMESPACE_SYMBOL;
+                new_symbol->defines_scope = new_node->scope;
+                //new_symbol->scope->defining_node
+            }
+            free(fqname);
+        }
+
+        /* Duplicate Linked Symbol */
+        if (node->symbolNode) {
+            symbol = node->symbolNode->symbol;
+            fqname = sym_frnm(symbol);
+
+            new_symbol = sym_rfqn(context->dest, fqname);
+            if (new_symbol) {
+                /* TODO need to check consistent */
+            }
+            else {
+                new_symbol = sym_afqn(context->dest, fqname);
+            }
+            new_symbol->symbol_type = symbol->symbol_type;
+            new_symbol->type = symbol->type;
+            new_symbol->exposed = symbol->exposed;
+
+            sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+            free(fqname);
+        }
+    }
+    else {
+        /* Bottom Up */
+        context->insert_point = context->insert_point->parent;
+    }
+
+    return result_normal;
+}
+
+/* Add a duplicate of the tree headed by the source node as a child to dest
+ * This handles the nodes, scopes and symbols, and associated nodes
+ * Note that symbols and associated nodes out of the scope of the original child tree are removed */
+ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
+    struct add_dast_context context;
+    ASTNode *node;
+
+    context.dest = dest;
+    context.source = source;
+
+    ast_wlkr(source, add_dast_walker_handler1, &context);
+
+    /* Return the added child (the last sibling) */
+    node = context.dest;
+    while (node->child) node = node->child;
+    return node;
+}
+
 /* Convert one hex digit to an int (-1 = error)*/
 static int hexchar2int(char hexbyte) {
     int val = -1;
@@ -947,20 +1121,29 @@ static void fix_ast_line_number(ASTNode *node) {
     }
 }
 
-/* Add Child - Returns child for chaining */
+/* Add Child - Returns child for chaining
+ * Note - This assumes the child has only got younger siblings and moved them as well
+ *        older siblings are left hanging ... */
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     if (child == 0) return child;
+
+    /* Adds as the youngest sibling */
     ASTNode *s = parent->child;
     if (s) {
         while (s->sibling) s = s->sibling;
         s->sibling = child;
     } else parent->child = child;
+
+    /* Sets the parent of the child and any younger siblings of the child */
     s = child;
     while (s) {
         s->parent = parent;
         s = s->sibling;
     }
+
+    /* Fix line numbers */
     fix_ast_line_number(child);
+
     return child;
 }
 
@@ -1152,6 +1335,7 @@ static int get_child_index(ASTNode *node) {
     if (!n) return 0;
     n = n->child;
     while (n != node) {
+        if (!n) return 0;
         n = n->sibling;
         i++;
     }

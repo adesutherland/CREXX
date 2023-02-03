@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose sequence
 import _rxsysb
 
 /* Built-in function Sequence is a modern day equivalent of XRANGE,

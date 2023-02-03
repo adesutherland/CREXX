@@ -2,7 +2,7 @@
 options levelb
 /* returns sign of number  */
 
-namespace rxfnsb
+namespace rxfnsb expose sign
 
 sign: procedure = .int
   arg number = .float

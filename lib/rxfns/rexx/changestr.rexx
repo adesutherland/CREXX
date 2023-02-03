@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose changestr
 
 /* changestr(needle,haystack,new-needle) returns string with replaced string */
 changestr: procedure = .string
