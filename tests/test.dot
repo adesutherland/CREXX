@@ -1,0 +1,53 @@
+digraph REXXAST { pad=0.25
+subgraph scope_10 {
+n10[ordering="out" label="PROGRAM_FILE" color=blue]
+n10 -> "s10_project" [color=cyan dir="both"]
+subgraph scope_2 {
+n2[ordering="out" label="REXX_OPTIONS" color=blue]
+n10 -> n2 [xlabel="1"]
+subgraph scope_1 {
+n1[ordering="out" label="LITERAL\nlevelb" color=cyan3 shape=cds]
+n2 -> n1 [xlabel="1"]
+"s10_external"[style=filled fillcolor=pink shape=box label="project.external\n(.int)\n"]
+}
+}
+subgraph scope_4 {
+n4[ordering="out" label="PROCEDURE\nexternal
+(.int)" color=pink]
+n10 -> n4 [xlabel="2"]
+n4 -> "s10_external" [color=cyan dir="forward"]
+subgraph scope_3 {
+n3[ordering="out" label="CLASS\n.int
+(.int)" color=green]
+n4 -> n3 [xlabel="1"]
+"s4_n"[style=filled fillcolor=cyan shape=box label="project.external.n\n(.int)\n"]
+}
+subgraph scope_9 {
+n9[ordering="out" label="ARGS\n" color=green]
+n4 -> n9 [xlabel="2"]
+subgraph scope_8 {
+n8[ordering="out" label="ARG\n
+(.int)" color=green]
+n9 -> n8 [xlabel="1"]
+subgraph scope_6 {
+n6[ordering="out" label="VAR_TARGET\nn
+(.int)" color=cyan3 shape=cds]
+n8 -> n6 [xlabel="1"]
+n6 -> "s4_n" [color=cyan dir="forward"]
+}
+subgraph scope_7 {
+n7[ordering="out" label="CLASS\n.int
+(.int)" color=green]
+n8 -> n7 [xlabel="2"]
+}
+}
+}
+subgraph scope_11 {
+n11[ordering="out" label="NOP" color=green4]
+n4 -> n11 [xlabel="3"]
+}
+}
+"s10_project"[style=filled fillcolor=green shape=box label="project"]
+}
+
+}

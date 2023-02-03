@@ -1,0 +1,1 @@
+/* Tests for latest show and tells */options levelbnamespace rxfnsb expose lib2lib2: procedure  a = 5  say "a in lib is" a  say "b in lib is" b  return

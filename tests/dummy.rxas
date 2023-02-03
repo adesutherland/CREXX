@@ -1,0 +1,18 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0043
+ * SOURCE                 : dummy
+ * BUILT                  : 2022-08-06 11:45:39
+ */
+
+.srcfile="dummy"
+.globals=0
+
+external() .locals=2 .expose=test1.external
+   .meta "test1.external"="b" ".int" external() "n = .int" ""
+   .src 6:1="external: procedure = .int"
+   .src 7:7="n = .int"
+   .meta "test1.external.n"="b" ".int" a1
+   .src 8:3="return n * n"
+   imult r1,a1,a1
+   ret r1
+   .meta "test1.external.n"

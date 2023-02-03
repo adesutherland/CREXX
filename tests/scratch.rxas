@@ -1,0 +1,47 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : scratch
+ * BUILT                  : 2022-10-08 21:11:33
+ */
+
+.srcfile="scratch"
+.globals=0
+
+main() .locals=4
+   .meta "scratch.main"="b" ".void" main() "" ""
+   .src 6:1="call message \"Welcome\""
+   .meta "scratch.main.hello"="b" ".int" "3"
+   load r1,1
+   load r2,"Welcome"
+   settp r2,2
+   call r3,message(),r1
+   .src 8:1="say \"hello crexx!\""
+   say "hello crexx!"
+   .src 9:1="say 'hello crexx'"
+   say "hello crexx"
+   .src 10:1="say hello crexx"
+   .meta "scratch.main.crexx"="b" ".string" "crexx"
+   say "3 crexx"
+   .src 13:1="say 1 + 1"
+   say "2"
+   .src 14:1="say 0.2 - 0.1"
+   say "0.1"
+   .src 15:1="say 800/81"
+   say "9.87654320987654"
+   .src 17:1="say 'hello '||'Crexx'"
+   say "hello Crexx"
+   .src 18:1="return"
+   ret
+   .meta "scratch.main.crexx"
+   .meta "scratch.main.hello"
+
+message() .locals=1
+   .meta "scratch.message"="b" ".int" message() "message = .string" ""
+   .src 20:1="message: procedure = .int"
+   .src 21:7="message = .string"
+   .meta "scratch.message.message"="b" ".string" a1
+   .src 22:3="say message"
+   say a1
+   .src 23:3="return 0"
+   ret 0
+   .meta "scratch.message.message"

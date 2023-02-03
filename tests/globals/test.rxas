@@ -1,0 +1,64 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : test.rexx
+ * BUILT                  : 2023-02-03 21:48:47
+ */
+
+.srcfile="test.rexx"
+.globals=0
+
+main() .locals=10
+   .meta "gtest.main"="b" ".void" main() "" ""
+   .src 6:1="say \"Start\""
+   say "Start"
+   .src 8:1="call reset_count"
+   load r1,0
+   call r2,reset_count(),r1
+   .src 10:1="call count"
+   load r1,0
+   call r3,count(),r1
+   .src 11:1="say get_count"
+   load r1,0
+   call r4,get_count(),r1
+   itos r4
+   say r4
+   .src 13:1="call count"
+   load r4,0
+   call r1,count(),r4
+   .src 14:1="say get_count"
+   load r4,0
+   call r5,get_count(),r4
+   itos r5
+   say r5
+   .src 16:1="say substr(\"abc\",1,2)"
+   load r4,4
+   load r5,"abc"
+   settp r5,2
+   load r6,1
+   load r7,2
+   settp r7,1
+   settp r8,2
+   call r9,substr(),r4
+   say r9
+   .src 18:1="return"
+   ret
+
+/* Imported Declaration from file: test.rexx */
+reset_count() .expose=gtest.reset_count
+   .meta "gtest.reset_count"="b" ".void" reset_count() ""
+
+/* Imported Declaration from file: test.rexx */
+count() .expose=gtest.count
+   .meta "gtest.count"="b" ".int" count() ""
+
+/* Imported Declaration from file: test.rexx */
+get_count() .expose=gtest.get_count
+   .meta "gtest.get_count"="b" ".int" get_count() ""
+
+/* Imported Declaration from file: test.rexx */
+substr() .expose=rxfnsb.substr
+   .meta "rxfnsb.substr"="b" ".string" substr() "string1 = .string , start = .int , len = length ( string1 ) + 1 - start , pad = \' \'"
+
+/* Imported Declaration from file: test.rexx */
+length() .expose=rxfnsb.length
+   .meta "rxfnsb.length"="b" ".int" length() "expose string1 = .string"

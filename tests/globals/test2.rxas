@@ -1,0 +1,37 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : test2.rexx
+ * BUILT                  : 2023-02-03 21:48:47
+ */
+
+.srcfile="test2.rexx"
+.globals=1
+g0 .expose=gtest.counter
+
+reset_count() .locals=1 .expose=gtest.reset_count
+   .meta "gtest.reset_count"="b" ".void" reset_count() "" ""
+   .src 5:1="reset_count: procedure expose counter"
+   .meta "gtest.counter"="b" ".int" g0
+   .src 6:3="counter = 0"
+   load g0,0
+   .src 7:3="return"
+   ret
+   .meta "gtest.counter"
+
+count() .locals=1 .expose=gtest.count
+   .meta "gtest.count"="b" ".int" count() "" ""
+   .src 9:1="count: procedure = .int expose counter"
+   .meta "gtest.counter"="b" ".int" g0
+   .src 10:3="counter = counter + 1"
+   iadd g0,g0,1
+   .src 11:3="return counter"
+   ret g0
+   .meta "gtest.counter"
+
+get_count() .locals=1 .expose=gtest.get_count
+   .meta "gtest.get_count"="b" ".int" get_count() "" ""
+   .src 13:1="get_count: procedure = .int expose counter"
+   .meta "gtest.counter"="b" ".int" g0
+   .src 14:3="return counter"
+   ret g0
+   .meta "gtest.counter"
