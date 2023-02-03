@@ -194,54 +194,6 @@ static void dump_error_ast(Context *context) {
 #endif
 }
 
-/* TODO Move to Platform - need to make the output malloced */
-static const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
-/* TODO Move to Platform - need to make the output malloced */
-static const char *get_filename(const char *path)
-{
-    size_t len = strlen(path);
-    size_t i;
-    if (!len) return "";
-
-    for (i = len - 1; i; i--)
-    {
-        if ( path[i] == '\\' || path[i] == '/' )
-        {
-            path = path + i + 1;
-            break;
-        }
-    }
-    return path;
-}
-
-/* TODO Move to Platform */
-/* Gets the directory of a filename in a malloced buffer */
-/* returns null if there is no directory part */
-static char *get_filename_directory(const char *path)
-{
-    size_t len = strlen(path);
-    if (!len) return 0;
-    char* result;
-
-    for (len--; len; len--)
-    {
-        if ( path[len] == '\\' || path[len] == '/' )
-        {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, path, len);
-            return result;
-        }
-    }
-
-    return 0;
-}
-
 static char error_in_node(ASTNode* node) {  // NOLINT
     if (node->node_type == ERROR) return 1;
     node = node->child;
@@ -562,7 +514,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     cntx_buf(context, buff_start, bytes);
     context->debug_mode = parent_context->debug_mode;
     context->location = parent_context->location;
-    context->file_name = (char*)get_filename(file_name);
+    context->file_name = (char*) filename(file_name);
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
 
@@ -766,19 +718,17 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     /* Process all the unread files - but we just are interested in the first found variable - duplicates done next */
     do {
         /* Check if the function has been loaded */
-        if (!found_func) {
-            if (src_fqfu(context, 0, name, &func)) {
-                if (context->debug_mode) printf("Importing Procedures - Found Procedure %s in file %s\n", func->fqname, func->file_name);
-                found_func = func;
-                break; // TODO remove?
-            }
+        if (src_fqfu(context, 0, name, &func)) {
+            if (context->debug_mode)
+                printf("Importing Procedures - Found Procedure %s in file %s\n", func->fqname, func->file_name);
+            found_func = func;
+            break;
         }
     } while (load_another_file(context));
 
     if (context->debug_mode) printf("Finished Importing files needed for file %s when Looking for Procedure %s\n", defining_file, name);
 
     if (found_func) {
-        found_func->already_loaded = 1; // todo remove already_loaded
         /* Compare found variable with the type defined in the master file being compiled */
         tp = type_from_string(found_func->type);
         if (found_func->is_variable) {
@@ -924,7 +874,6 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
     /* OK - Create func */
     func = malloc(sizeof(imported_func));
     func->context = 0;
-    func->already_loaded = 0;
     func->is_variable = is_variable; /* Is a function or a Variable */
     func->duplicate = 0;
     func->error_state = 0;

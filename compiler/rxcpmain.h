@@ -451,7 +451,6 @@ typedef struct imported_func {
     char *args;
     char *implementation;
     Context *context;
-    char already_loaded;
     char is_variable; /* 0=function, 1=global variable */
     char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
     struct imported_func *duplicate;

@@ -319,10 +319,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             fqname = sym_frnm(symbol);
 
             new_symbol = sym_rfqn(context->dest, fqname);
-            if (new_symbol) {
-                /* TODO need to check consistent */
-            }
-            else {
+            if (!new_symbol) {
                 new_symbol = sym_afqn(context->dest, fqname);
             }
             new_symbol->symbol_type = symbol->symbol_type;
@@ -344,6 +341,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
 /* Add a duplicate of the tree headed by the source node as a child to dest
  * This handles the nodes, scopes and symbols, and associated nodes
  * Note that symbols and associated nodes out of the scope of the original child tree are removed */
+/* TODO Associated nodes */
 ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     struct add_dast_context context;
     ASTNode *node;

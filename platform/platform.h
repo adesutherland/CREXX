@@ -84,4 +84,14 @@ char* exepath();
 /* Returns the executable fully qualified name in a malloced buffer */
 char* exefqname();
 
+/* Gets the file extention of a path */
+const char *filenext(const char *filename);
+
+/* Gets the filename of a path */
+const char *filename(const char *path);
+
+/* Gets the directory of a filename in a malloced buffer */
+/* returns null if there is no directory part */
+char *file_dir(const char *path);
+
 #endif //CREXX_PLATFORM_H

@@ -65,12 +65,6 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
-static const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
 static const char *get_filename(const char *path)
 {
     size_t len = strlen(path);
@@ -279,7 +273,7 @@ int main(int argc, char *argv[]) {
 
     /* Derive the location from the file name */
     if (!location) {
-        file_directory = get_filename_directory(file_name);
+        file_directory = file_dir(file_name);
     }
 
     if (debug_mode) printf("Input file is %s\n", file_name);
@@ -305,15 +299,15 @@ int main(int argc, char *argv[]) {
     }
 
     /* Open input file */
-    const char* filename_extension = get_filename_ext(file_name);
+    const char* filename_extension = filenext(file_name);
     if (filename_extension[0] == 0)
       {
         context->file_pointer = openfile(file_name,"rexx", location, "r");
-        context->file_name = mprintf("%s.rexx", get_filename(file_name));
+        context->file_name = mprintf("%s.rexx", filename(file_name));
       }
     else {
         context->file_pointer = openfile(file_name,"", location, "r");
-        context->file_name = mprintf("%s", get_filename(file_name));
+        context->file_name = mprintf("%s", filename(file_name));
     }
     if (context->file_pointer == NULL) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
@@ -323,7 +317,7 @@ int main(int argc, char *argv[]) {
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
-        context->traceFile = openfile((char*)get_filename(file_name), "trace", location, "w");
+        context->traceFile = openfile((char*) filename(file_name), "trace", location, "w");
         if (context->traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
             exit(-1);
