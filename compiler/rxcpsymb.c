@@ -440,7 +440,7 @@ Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
                len = c - name;
                search_name = malloc(len + 1);
                memcpy(search_name, name, len);
-               search_name[len + 1] = 0;
+               search_name[len] = 0;
                result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
                free(search_name);
                if (!result) return 0;
@@ -482,7 +482,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                 len = c - name;
                 search_name = malloc(len + 1);
                 memcpy(search_name, name, len);
-                search_name[len + 1] = 0;
+                search_name[len] = 0;
                 result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
                 if (!result) {
                     /* Create scope */
@@ -498,6 +498,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                 }
                 scope = result->defines_scope;
                 name = c + 1;
+                free(search_name);
                 break;
             }
             else if (!*c) {

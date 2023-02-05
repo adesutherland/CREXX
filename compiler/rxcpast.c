@@ -305,7 +305,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             else {
                 /* Need to make a new symbol */
                 new_symbol = sym_afqn(context->dest, fqname);
-                new_node->scope = scp_f(new_node->scope, new_node, new_symbol);
+                new_node->scope = scp_f(new_node->parent->scope, new_node, new_symbol);
                 new_symbol->symbol_type = NAMESPACE_SYMBOL;
                 new_symbol->defines_scope = new_node->scope;
                 //new_symbol->scope->defining_node
