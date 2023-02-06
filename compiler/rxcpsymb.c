@@ -57,7 +57,7 @@ static int add_symbol_to_tree(struct avl_tree_node **root, Symbol *value) {
 
 // Search for a symbol
 // Returns Symbol if found or null
-static Symbol* src_symbol(struct avl_tree_node *root, char* index) {
+static Symbol* src_symbol(struct avl_tree_node *root, const char* index) {
     struct avl_tree_node *result;
 
     result = avl_tree_lookup(root, index, compare_node_value);
@@ -79,7 +79,7 @@ Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
         symbol->defines_scope = scope;
     }
     else scope->name = 0;
-    node->scope = scope;
+    if (node) node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
@@ -123,7 +123,7 @@ Symbol **scp_syms(Scope *scope) {
     }
 
     /* malloc the array */
-    symbols = malloc(sizeof(Symbol*) * num);
+    symbols = malloc(sizeof(Symbol*) * (num + 1));
     symbols[num] = 0;
 
     /* Populate the array */
@@ -333,7 +333,8 @@ char* type_nm(ValueType type) {
         case TP_FLOAT: return ".float";
         case TP_STRING: return ".string";
         case TP_OBJECT: return ".object";
-        default: return ".void";
+        case TP_VOID: return ".void";
+        default: return ".unknown";
     }
 }
 
@@ -359,7 +360,7 @@ size_t scp_noch(Scope *scope) {
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
+Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     char *c;
     Symbol *symbol = (Symbol*)malloc(sizeof(Symbol));
 
@@ -373,8 +374,9 @@ Symbol *sym_fn(Scope *scope, char* name, size_t name_length) {
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
+    symbol->exposed = 0;
 
-    /* Uppercase symbol name */
+    /* Lowercase symbol name */
 #ifdef NUTF8
     for (c = symbol->name ; *c; ++c) *c = (char)tolower(*c);
 #else
@@ -398,13 +400,127 @@ Symbol *sym_f(Scope *scope, ASTNode *node) {
     return sym_fn(scope, node->node_string, node->node_string_length);
 }
 
+/* Resolve a Function Symbol via Name
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfn(ASTNode *root, char* name) {
+    Symbol *result;
+    size_t i;
+    Scope *s;
+
+    /* Process top layer - files */
+    for (i = 0; i < scp_noch(root->scope); i++) {
+        s = scp_chd(root->scope, i);
+
+        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
+        if (result) {
+            return result;
+        }
+        /* TODO Process second level - Classes */
+    }
+    return 0;
+}
+
+/*
+ * Resolve a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ */
+Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
+   const char *name = fqname;
+   const char *c;
+   Symbol *result = 0;
+   Scope *scope = root->scope;
+   char* search_name;
+   size_t len;
+
+   while (*name) {
+       for (c = name; 1; c++) {
+           if (*c == '.') {
+               /* Search namespace */
+               len = c - name;
+               search_name = malloc(len + 1);
+               memcpy(search_name, name, len);
+               search_name[len] = 0;
+               result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
+               free(search_name);
+               if (!result) return 0;
+               if (!result->defines_scope) return 0;
+               scope = result->defines_scope;
+               name = c + 1;
+               break;
+           }
+           else if (!*c) {
+               /* Search for final symbol */
+               return src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+           }
+       }
+   }
+
+   /* Empty parameter */
+   return 0;
+}
+
+/*
+ * Resolve or add a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ * Note: Symbols / Scopes are not linked to nodes
+ * Returns the existing or new symbol with the fqname
+ *         or 0 if there is an error (a namespace in the path corresponds to a non-namespace symbol)
+ */
+Symbol *sym_afqn(ASTNode *root, const char* fqname) {
+    const char *name = fqname;
+    const char *c;
+    Symbol *result = 0;
+    Scope *scope = root->scope;
+    char* search_name;
+    size_t len;
+
+    while (*name) {
+        for (c = name; 1; c++) {
+            if (*c == '.') {
+                /* Search or add namespace */
+                len = c - name;
+                search_name = malloc(len + 1);
+                memcpy(search_name, name, len);
+                search_name[len] = 0;
+                result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), search_name);
+                if (!result) {
+                    /* Create scope */
+                    result = sym_fn(scope, search_name, len);
+                    scope = scp_f(scope, 0, result);
+                    result->symbol_type = NAMESPACE_SYMBOL;
+                    result->defines_scope = scope;
+                    free(search_name);
+                }
+                else if (!result->defines_scope) {
+                    free(search_name);
+                    return 0;
+                }
+                scope = result->defines_scope;
+                name = c + 1;
+                free(search_name);
+                break;
+            }
+            else if (!*c) {
+                /* Search for final symbol */
+                result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
+                if (!result) {
+                    result = sym_fn(scope, name, strlen(name));
+                }
+                return result;
+            }
+        }
+    }
+
+    /* Empty parameter */
+    return 0;
+}
+
 /* Resolve a Function Symbol
  * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
  */
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     Symbol *result;
-    size_t i;
-    Scope *s;
 
     /* Make a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
@@ -418,19 +534,9 @@ Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    /* Process top layer - files */
-    for (i = 0; i < scp_noch(root->scope); i++) {
-        s = scp_chd(root->scope, i);
-
-        result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
-        if (result) {
-            free(name);
-            return result;
-        }
-        /* Process second level - Classes (todo) */
-    }
+    result = sym_rvfn(root, name);
     free(name);
-    return 0;
+    return result;
 }
 
 /* Resolve a Symbol - including parent scope */
@@ -483,6 +589,36 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
     return result;
 }
 
+/* Move (via a merge) a Symbol into a new Scope - returns the target symbol */
+Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
+    size_t i;
+    SymbolNode *connector;
+
+    /* Find or create symbol in new_scope */
+    Symbol *new_symbol = src_symbol((struct avl_tree_node *)(new_scope->symbols_tree), symbol->name);
+    if (!new_symbol) {
+        new_symbol = sym_fn(new_scope, symbol->name, strlen(symbol->name));
+        new_symbol->symbol_type = symbol->symbol_type;
+    }
+
+    /* Move all the node/symbol connectors */
+    for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
+        connector = (SymbolNode*)((dpa*)(symbol->ast_node_array))->pointers[i];
+        connector->symbol = new_symbol;
+        dpa_add((dpa*)(new_symbol->ast_node_array),  connector);
+    }
+
+    /* Remove the old symbol from the old scope */
+    scp_rmsy(symbol->scope, symbol);
+
+    /* Delete the old symbol */
+    free(symbol->name);
+    free_dpa(symbol->ast_node_array);
+    free(symbol);
+
+    return new_symbol;
+}
+
 /* Frees a symbol */
 void free_sym(Symbol *symbol) {
     size_t i;
@@ -516,6 +652,28 @@ int sym_lord(Symbol *symbol) {
     }
 
     return ord;
+}
+
+/* Returns the PROCEDURE ASTNode of a Symbol */
+ASTNode* sym_proc(Symbol *symbol) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node->node_type == PROCEDURE) return sn->node;
+    }
+    return 0;
+}
+
+/* Returns 1 if node is linked to symbol, or 0 */
+int symislnk(ASTNode *node, Symbol *symbol) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node == node) return 1;
+    }
+    return 0;
 }
 
 /* Connect a ASTNode to a Symbol */
@@ -631,4 +789,3 @@ char* ast_frnm(ASTNode *node) {
     }
     return result;
 }
-

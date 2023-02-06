@@ -3,7 +3,7 @@
  */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose datatype
 
 /* call CheckArgs  'rANY oABLMNSUWX' */
 /* As well as returning the type, the value for a 'NUM' is set in

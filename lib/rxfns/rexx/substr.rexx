@@ -2,7 +2,7 @@
 
 options levelb /* Written in REXX Level B */
 
-namespace rxfnsb
+namespace rxfnsb expose substr
 import _rxsysb
 
 /* Substr() Procedure */

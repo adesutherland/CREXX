@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose compare
 
 compare: procedure = .string
   arg string = .string, astr = .string, pad = " "

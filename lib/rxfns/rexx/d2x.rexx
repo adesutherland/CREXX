@@ -2,7 +2,7 @@
 options levelb
 /* d2x(hex-string)  returns hex string of integer  */
 
-namespace rxfnsb
+namespace rxfnsb expose d2x
 
 d2x: procedure = .string
   arg xint = .int, slen=-1

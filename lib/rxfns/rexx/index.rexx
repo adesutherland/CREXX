@@ -5,7 +5,7 @@
 
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose index
 
 index: procedure = .int
   arg expose haystack = .string, needle = .string, start = 1

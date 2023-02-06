@@ -185,6 +185,178 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     return node;
 }
 
+/* Factory to create a duplicated AST node into a new context
+ * - context is the target context
+ * - node is the node to be duplicated
+ *
+ * A number of aspects are NOT copied
+ * - Symbols
+ * - Scope
+ * - Associated Nodes
+ * - Tree position (child, sibling, parent)
+ * - Emitter output fragments
+ * - Ordinals
+ */
+ASTNode *ast_dup(Context* new_context, ASTNode *node) {
+    ASTNode *new_node = malloc(sizeof(ASTNode));
+    new_node->context = new_context;
+    new_node->token = node->token;
+    new_node->node_type = node->node_type;
+    new_node->value_type = node->value_type;
+    new_node->target_type = node->target_type;
+    new_node->int_value = node->int_value;
+    new_node->bool_value = node->bool_value;
+    new_node->float_value = node->float_value;
+    new_node->register_num = node->register_num;
+    new_node->register_type = node->register_type;
+    new_node->additional_registers = node->additional_registers;
+    new_node->num_additional_registers = node->num_additional_registers;
+    new_node->is_ref_arg = node->is_ref_arg;
+    new_node->is_opt_arg = node->is_opt_arg;
+    new_node->token_start = node->token_start;
+    new_node->token_end = node->token_end;
+    new_node->source_start = node->source_start;
+    new_node->source_end = node->source_end;
+    new_node->line = node->line;
+    new_node->column = node->column;
+
+    /* Node String - need to malloc or just point to existing buffer */
+    new_node->free_node_string = node->free_node_string;
+    new_node->node_string_length = node->node_string_length;
+    if (node->free_node_string) {
+        new_node->node_string = malloc(new_node->node_string_length);
+        memcpy(new_node->node_string, node->node_string, new_node->node_string_length);
+    }
+    else {
+        new_node->node_string = node->node_string;
+    }
+
+    /* Scope / Symbol not copied */
+    new_node->scope = 0;
+    new_node->symbolNode = 0;
+
+    /* Association not copied */
+    new_node->association = 0;
+
+    /* Position in new tree not defined / copied */
+    new_node->parent = 0;
+    new_node->child = 0;
+    new_node->sibling = 0;
+
+    /* These are only set when emitting - not copied */
+    new_node->output = 0;
+    new_node->loopstartchecks = 0;
+    new_node->loopinc = 0;
+    new_node->loopendchecks = 0;
+
+    /*  Note that ordinal is only set just before optimisation - new nodes have value -1 */
+    new_node->high_ordinal = -1;
+    new_node->low_ordinal = -1;
+
+    /* Add new node to context free list */
+    new_node->free_list = new_context->free_list;
+    if (new_node->free_list) new_node->node_number = new_node->free_list->node_number + 1;
+    else new_node->node_number = 1;
+    new_context->free_list = new_node;
+
+    return new_node;
+}
+
+/* Structure for add_dast() walker handler context */
+struct add_dast_context {
+    ASTNode *source;
+    ASTNode *dest;
+    ASTNode *insert_point;
+};
+
+walker_result add_dast_walker_handler1(walker_direction direction,
+                                  ASTNode* node,
+                                  void *payload) {
+    ASTNode* new_node;
+    struct add_dast_context *context = (struct add_dast_context *)payload;
+    char *fqname;
+    Symbol *new_symbol;
+    Symbol *symbol;
+
+    if (direction == in) {
+        /* Top Down */
+        new_node = ast_dup(context->dest->context, node);
+        if (node == context->source) {
+            /* Top node */
+            add_ast(context->dest, new_node);
+            context->insert_point = new_node;
+        }
+        else {
+            add_ast(context->insert_point, new_node);
+            context->insert_point = new_node;
+        }
+
+        /* Duplicate Scope */
+        if (node->scope) {
+            fqname = scp_frnm(node->scope);
+            new_symbol = sym_rfqn(context->dest, fqname);
+            if (new_symbol) {
+                if (!new_symbol->defines_scope) {
+                    fprintf(stderr, "INTERNAL ERROR: Duplicating AST - Found Symbol is a not a Scope\n");
+                    exit(100);
+                }
+                new_node->scope = new_symbol->defines_scope;
+            }
+            else {
+                /* Need to make a new symbol */
+                new_symbol = sym_afqn(context->dest, fqname);
+                new_node->scope = scp_f(new_node->parent->scope, new_node, new_symbol);
+                new_symbol->symbol_type = NAMESPACE_SYMBOL;
+                new_symbol->defines_scope = new_node->scope;
+                //new_symbol->scope->defining_node
+            }
+            free(fqname);
+        }
+
+        /* Duplicate Linked Symbol */
+        if (node->symbolNode) {
+            symbol = node->symbolNode->symbol;
+            fqname = sym_frnm(symbol);
+
+            new_symbol = sym_rfqn(context->dest, fqname);
+            if (!new_symbol) {
+                new_symbol = sym_afqn(context->dest, fqname);
+            }
+            new_symbol->symbol_type = symbol->symbol_type;
+            new_symbol->type = symbol->type;
+            new_symbol->exposed = symbol->exposed;
+
+            sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+            free(fqname);
+        }
+    }
+    else {
+        /* Bottom Up */
+        context->insert_point = context->insert_point->parent;
+    }
+
+    return result_normal;
+}
+
+/* Add a duplicate of the tree headed by the source node as a child to dest
+ * This handles the nodes, scopes and symbols, and associated nodes
+ * Note that symbols and associated nodes out of the scope of the original child tree are removed */
+/* TODO Associated nodes */
+ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
+    struct add_dast_context context;
+    ASTNode *node;
+
+    context.dest = dest;
+    context.source = source;
+
+    ast_wlkr(source, add_dast_walker_handler1, &context);
+
+    /* Return the added child (the last sibling) */
+    node = context.dest;
+    while (node->child) node = node->child;
+    return node;
+}
+
 /* Convert one hex digit to an int (-1 = error)*/
 static int hexchar2int(char hexbyte) {
     int val = -1;
@@ -463,19 +635,20 @@ ASTNode *ast_err(Context* context, char *error_string, Token *token) {
     return errorAST;
 }
 
-/* Turn a node to an ERROR */
+/* Add warning node to parent node */
+ASTNode *ast_war(ASTNode* parent, char *warning_string) {
+    ASTNode *warningAST = ast_ftt(parent->context, WARNING, warning_string);
+    add_ast(parent, warningAST);
+    return warningAST;
+}
+
+/* Add an ERROR node to a node */
 void mknd_err(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
+    ASTNode *errNode;
     char *buffer = malloc(buffer_size);
-
-    /* Reset Node */
-    node->node_type = ERROR;
-    if (node->free_node_string) {
-        free(node->node_string);
-        node->free_node_string = 0;
-    }
 
     /* Write to buffer as sized */
     va_start(argptr, error_string);
@@ -501,9 +674,55 @@ void mknd_err(ASTNode* node, char *error_string, ...) {
         }
     }
 
-    node->node_string = buffer;
-    node->node_string_length = needed - 1;
-    node->free_node_string = 1;
+    /* Child node */
+    errNode = ast_ftt(node->context, ERROR, buffer);
+    add_ast(node,  errNode);
+    errNode->free_node_string = 1;
+    errNode->source_start = node->source_start;
+    errNode->source_end = node->source_end;
+    errNode->line = node->line;
+    errNode->column = node->column;
+}
+
+/* Add a warning child node  */
+void mknd_war(ASTNode* node, char *error_string, ...) {
+    va_list argptr;
+    size_t buffer_size = 200;
+    size_t needed;
+    ASTNode *warNode;
+    char *buffer = malloc(buffer_size);
+
+    /* Write to buffer as sized */
+    va_start(argptr, error_string);
+    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
+    va_end(argptr);
+    if (needed < 0) {
+        /* Error - bail */
+        fprintf(stderr,"Internal Error: First vsnprintf() failed in mknd_err()\n");
+        exit(1);
+    }
+    needed++; /* Null terminator */
+    buffer = realloc(buffer,needed); /* Trim or grow */
+
+    if (needed > buffer_size) {
+        /* If grow redo vsnprintf */
+        va_start(argptr, error_string);
+        needed = vsnprintf(buffer, needed, error_string, argptr);
+        va_end(argptr);
+        if (needed < 0) {
+            /* Error - bail */
+            fprintf(stderr,"Internal Error: Second vsnprintf() failed in mknd_err()\n");
+            exit(1);
+        }
+    }
+
+    /* Child node */
+    warNode = ast_war(node, buffer);
+    warNode->free_node_string = 1;
+    warNode->source_start = node->source_start;
+    warNode->source_end = node->source_end;
+    warNode->line = node->line;
+    warNode->column = node->column;
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for
@@ -522,6 +741,15 @@ ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
     return errorAST;
+}
+
+/* Returns the PROCEDURE ASTNode procedure of an AST node */
+ASTNode* ast_proc(ASTNode *node) {
+    while (node) {
+        if (node->node_type == PROCEDURE) return node;
+        node = node->parent;
+    }
+    return 0;
 }
 
 const char *ast_ndtp(NodeType type) {
@@ -552,9 +780,13 @@ const char *ast_ndtp(NodeType type) {
             return "ENVIRONMENT";
         case ERROR:
             return "ERROR";
+        case EXPOSED:
+            return "EXPOSED";
         case FOR:
             return "FOR";
-       case WHILE:
+        case WARNING:
+            return "WARNING";
+        case WHILE:
             return "WHILE";
         case UNTIL:
             return "UNTIL";
@@ -714,8 +946,6 @@ walker_result prnt_walker_handler(walker_direction direction,
     return result_normal;
 }
 
-
-
 static walker_result print_error_walker(walker_direction direction,
                                   ASTNode* node,
                                   __attribute__((unused)) void *payload) {
@@ -747,9 +977,63 @@ static walker_result print_error_walker(walker_direction direction,
                     break;
                 }
             }
-            fprintf(stderr,"Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line+1, node->column+1, node->node_string);
-            prt_unex(stderr, node->source_start, len);
-            fprintf(stderr,"\"\n");
+            if (len) {
+                fprintf(stderr, "Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+                prt_unex(stderr, node->source_start, len);
+                fprintf(stderr, "\"\n");
+            }
+            else {
+                fprintf(stderr, "Error in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+            }
+            (*errors)++;
+        }
+    }
+    return result_normal;
+}
+
+static walker_result print_warning_walker(walker_direction direction,
+                                        ASTNode* node,
+                                        __attribute__((unused)) void *payload) {
+
+    int *errors = (int*)payload;
+
+    if (direction == in) {
+        if (node->node_type == WARNING) {
+            /* Try and set error position if not already set */
+            if (node->token) {
+                if (node->line == -1) node->line = node->token->line;
+                if (node->column == -1) node->column = node->token->column;
+                if (!node->source_start) node->source_start = node->token->token_string;
+                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+            }
+            if (node->child && node->child->token) {
+                if (node->line == -1) node->line = node->child->token->line;
+                if (node->column == -1) node->column = node->child->token->column;
+                if (!node->source_start) node->source_start = node->child->token->token_string;
+                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+            }
+
+            /* Print error - truncate source to one line */
+            int len = (int) (node->source_end - node->source_start + 1);
+            int i;
+            for (i=0; i<len; i++) {
+                if (!node->source_start || node->source_start[i] == '\n') {
+                    len = i;
+                    break;
+                }
+            }
+            if (len) {
+                fprintf(stderr, "Warning in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+                prt_unex(stderr, node->source_start, len);
+                fprintf(stderr, "\"\n");
+            }
+            else {
+                fprintf(stderr, "Warning in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
+                        node->column + 1, node->node_string);
+            }
             (*errors)++;
         }
     }
@@ -760,6 +1044,13 @@ static walker_result print_error_walker(walker_direction direction,
 int prnterrs(Context *context) {
     int errors = 0;
     ast_wlkr(context->ast, print_error_walker, &errors);
+    return errors;
+}
+
+/* Prints errors and returns the number of errors in the AST Tree */
+int prntwars(Context *context) {
+    int errors = 0;
+    ast_wlkr(context->ast, print_warning_walker, &errors);
     return errors;
 }
 
@@ -828,20 +1119,29 @@ static void fix_ast_line_number(ASTNode *node) {
     }
 }
 
-/* Add Child - Returns child for chaining */
+/* Add Child - Returns child for chaining
+ * Note - This assumes the child has only got younger siblings and moved them as well
+ *        older siblings are left hanging ... */
 ASTNode *add_ast(ASTNode *parent, ASTNode *child) {
     if (child == 0) return child;
+
+    /* Adds as the youngest sibling */
     ASTNode *s = parent->child;
     if (s) {
         while (s->sibling) s = s->sibling;
         s->sibling = child;
     } else parent->child = child;
+
+    /* Sets the parent of the child and any younger siblings of the child */
     s = child;
     while (s) {
         s->parent = parent;
         s = s->sibling;
     }
+
+    /* Fix line numbers */
     fix_ast_line_number(child);
+
     return child;
 }
 
@@ -1033,10 +1333,22 @@ static int get_child_index(ASTNode *node) {
     if (!n) return 0;
     n = n->child;
     while (n != node) {
+        if (!n) return 0;
         n = n->sibling;
         i++;
     }
     return i;
+}
+
+/* Get the child node of a certain type1 or type2 (or null) */
+ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
+    ASTNode *n = parent->child;
+    while (n) {
+        if (n->node_type == type1) return n;
+        if (type2 && n->node_type == type2) return n;
+        n = n->sibling;
+    }
+    return 0;
 }
 
 walker_result pdot_walker_handler(walker_direction direction,
@@ -1074,6 +1386,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case REXX_OPTIONS:
             case IMPORT:
             case NAMESPACE:
+            case EXPOSED:
             case TO:
                 attributes = "color=blue";
                 only_type = 1;

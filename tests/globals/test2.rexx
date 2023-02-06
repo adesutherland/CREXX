@@ -1,0 +1,1 @@
+/* Tests for latest show and tells */options levelbnamespace gtest expose reset_count count get_countreset_count: procedure expose counter  counter = 0  returncount: procedure = .int expose counter  counter = counter + 1  return counterget_count: procedure = .int expose counter  return counter

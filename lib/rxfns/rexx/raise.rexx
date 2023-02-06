@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace _rxsysb
+namespace _rxsysb expose raise
 
 /* Raise() Internal Function to Raise a runtime error */
 raise: procedure = .int

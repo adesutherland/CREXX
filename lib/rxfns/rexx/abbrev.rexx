@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose abbrev
 
 /* abbrev(string,abbrebiated-string,min-char-match) */
 abbrev: procedure = .string

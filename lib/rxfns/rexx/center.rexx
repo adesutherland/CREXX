@@ -3,7 +3,7 @@
 /* TODO Fix this bit of uglyness when crexx allows ... */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose center
 
 center: procedure = .string
   arg expose string = .string, centlen = .int,  pad = " "

@@ -1,7 +1,7 @@
 /* rexx space adds n padding chars between words */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose space
 
 space: procedure = .string
   arg expose string = .string, spacenr = 1,  pad = " "

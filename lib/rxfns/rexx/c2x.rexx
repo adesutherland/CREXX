@@ -1,7 +1,7 @@
 /* rexx center text  */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose c2x
 
 c2x: procedure = .string
   arg from = .string

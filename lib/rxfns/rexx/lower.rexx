@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose lower
 
 /* upper(string) translate to upper cases */
 lower: procedure = .string

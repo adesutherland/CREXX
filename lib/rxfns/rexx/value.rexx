@@ -1,7 +1,7 @@
 /* REXX Levelb VALUE Implementation */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose value
 
 /* Only does a read (and value is always returned as a string) for the initial release */
 

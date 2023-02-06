@@ -16,60 +16,182 @@
 #include "utf.h"
 #endif
 
+#include <string.h>
+#include <stdlib.h>
+#include "avl_tree.h"
+
+/* Internal Tree node structure for functions */
+struct tree_wrapper {
+    imported_func *func;
+    struct avl_tree_node index_node;
+};
+
+#define GET_INDEX(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func->fqname
+
+#define GET_VALUE(i) avl_tree_entry((i), struct tree_wrapper, index_node)->func
+
+static int compare_node_node(const struct avl_tree_node *node1,
+                             const struct avl_tree_node *node2)
+{
+    char* n1 = GET_INDEX(node1);
+    char* n2 = GET_INDEX(node2);
+    return strcmp(n1,n2);
+}
+
+static int compare_node_value(const void *value,
+                              const struct avl_tree_node *nodeptr) {
+    char* node = GET_INDEX(nodeptr);
+    return strcmp((char*)value,node);
+}
+
+// Search for a function / variable from fqname in the master context
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_func(Context *context, char* fqname, imported_func **func) {
+    struct avl_tree_node *result;
+    struct avl_tree_node *root = context->master_context->importable_function_tree;
+
+    result = avl_tree_lookup(root, fqname, compare_node_value);
+
+    if (result) {
+        *func = GET_VALUE(result);
+        return 1;
+    }
+    else return 0;
+}
+
+// Search for a function / variable from namespace and name in the master context
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_nsfu(Context *context, char* namespace, char* name, imported_func **func) {
+    struct avl_tree_node *result;
+    struct avl_tree_node *root = context->master_context->importable_function_tree;
+    char *fqname;
+    fqname = malloc(strlen(namespace) + strlen(name) + 2);
+    strcpy(fqname,namespace);
+    strcat(fqname, ".");
+    strcat(fqname, name);
+
+    result = avl_tree_lookup(root, fqname, compare_node_value);
+
+    if (result) {
+        *func = GET_VALUE(result);
+        free(fqname);
+        return 1;
+    }
+
+    free(fqname);
+    return 0;
+}
+
+// Search for a function / variable from name (checking for imported namespaces in the context)
+// if only_namespace is set then the search only covers the file namespace not imported ones
+// (this is for global variables)
+// Returns 1 if found and sets value
+// Returns 0 if not found
+static int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func) {
+    char *namespace;
+    size_t i;
+
+    /* Check the module namespace */
+    namespace = scp_chd(context->ast->scope, 0)->name;
+    if (src_nsfu(context, namespace, name, func)) return 1;
+
+    /* Check imported namespaces */
+    if (!only_namespace) {
+        for (i = 1; i < scp_noch(context->ast->scope); i++) {
+            namespace = scp_chd(context->ast->scope, i)->name;
+            if (src_nsfu(context, namespace, name, func)) return 1;
+        }
+    }
+
+    return 0;
+}
+
+/* Add a [inconsistent] duplicate symbol to the end of the symbols duplicate list */
+static void add_inconsistent_duplicate(imported_func *first, imported_func *duplicate) {
+    /* Loop to the end of the list */
+    while (first->duplicate) first=first->duplicate;
+
+    /* Add the duplicate */
+    first->duplicate = duplicate;
+}
+
+/* strcmp() that handles nulls */
+static int safe_strcmp(const char *s1, const char* s2) {
+    if (s1==0 && s2==0) return 0;
+    if (s1==0) return -1;
+    if (s2==0) return 1;
+    return strcmp(s1,s2);
+}
+
+/* Adds a func / variable to the master context*/
+/* Returns 0 on success, 1 on duplicate
+ * If it is a duplicate this function either calls freimpfc(func) or stashes it in the duplicate list
+ * (the caller does not need to worry (should not worry) about freeing it if it is a duplicate) */
+static int add_func(Context *context, imported_func *func) {
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_function_tree);
+    imported_func *existing_func;
+    /* Does the function already exist? */
+    if ( src_func(context, func->fqname, &existing_func) ) {
+        /* Yes a duplicate - so check it is consistent */
+
+        /* Both should be a variable or a function */
+        if (func->is_variable != existing_func->is_variable) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
+        /* Both should have the same type */
+        if (safe_strcmp(func->type, existing_func->type) != 0) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
+        /* If a function both should have the same arguments */
+        if (func->is_variable!=0 && safe_strcmp(func->args, existing_func->args) != 0) {
+            add_inconsistent_duplicate(existing_func, func);
+            return 1;
+        }
+
+        /* Otherwise, it is just a consistent duplicate - not an error */
+        /* We are responsible for freeing it */
+        freimpfc(func);
+        return 1;
+    }
+
+    struct tree_wrapper *i = malloc(sizeof(struct tree_wrapper));
+    i->func = func;
+    if (avl_tree_insert(root, &i->index_node, compare_node_node)) {
+        /* Duplicate */
+        fprintf(stderr, "Internal Error: Unexpected duplicate symbol\n");
+        free(i);
+        /* We are responsible for freeing it */
+        freimpfc(func);
+        return 1;
+    }
+    return 0;
+}
+
+/* Free Func Tree and functions */
+void fre_ftre(Context *context) {
+    struct tree_wrapper *i;
+    struct avl_tree_node **root = (struct avl_tree_node **)&(context->importable_function_tree);
+
+    /* This walks the tree in post order which allows each node be freed */
+    avl_tree_for_each_in_postorder(i, *root, struct tree_wrapper, index_node) {
+        freimpfc(i->func);
+        free(i);
+    }
+    *root = 0;
+}
+
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
     if (context->debug_mode) {
         pdot_tree(context->ast, "error", context->file_name);
     }
 #endif
-}
-
-/* TODO Move to Platform - need to make the output mallocked */
-static const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
-/* TODO Move to Platform - need to make the output mallocked */
-static const char *get_filename(const char *path)
-{
-    size_t len = strlen(path);
-    size_t i;
-    if (!len) return "";
-
-    for (i = len - 1; i; i--)
-    {
-        if ( path[i] == '\\' || path[i] == '/' )
-        {
-            path = path + i + 1;
-            break;
-        }
-    }
-    return path;
-}
-
-/* TODO Move to Platform */
-/* Gets the directory of a filename in a malloced buffer */
-/* returns null if there is no directory part */
-static char *get_filename_directory(const char *path)
-{
-    size_t len = strlen(path);
-    if (!len) return 0;
-    char* result;
-
-    for (len--; len; len--)
-    {
-        if ( path[len] == '\\' || path[len] == '/' )
-        {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, path, len);
-            return result;
-        }
-    }
-
-    return 0;
 }
 
 static char error_in_node(ASTNode* node) {  // NOLINT
@@ -88,41 +210,53 @@ static walker_result procedure_signature_walker(walker_direction direction,
                                                 ASTNode* node,
                                                 void *pl) {
 
-    ASTNode *child1, *child2, *child3;
-
-    Context *master_context = pl;
+    Context *context = pl;
+    ASTNode *type_node;
+    ASTNode *args_node;
+    ASTNode *impl_node;
     imported_func *func;
+    char *type;
+    char *args;
+//    char *impl;
+    char *fqname;
 
     if (direction == out) {
         /* OUT - BOTTOM UP */
-        child1 = node->child;
-        if (!child1) return result_normal;
-
-        child2 = child1->sibling;
-        if (!child2) return result_normal;
-
-        child3 = child2->sibling;
-        if (!child3) return result_normal;
-
         if (node->node_type == PROCEDURE) {
-            if (child3->node_type != NOP) {
-                if  (error_in_node(child1)) result_normal; /* If there is an error we must ignore this entry */
-                if  (error_in_node(child2)) result_normal; /* If there is an error we must ignore this entry */
+            type_node = ast_chld(node, CLASS, VOID);
+            args_node = ast_chld(node, ARGS, 0);
+            impl_node = ast_chld(node, INSTRUCTIONS, NOP);
+            fqname = sym_frnm(node->symbolNode->symbol);
 
-                char *type = nodetype(child1);
-                char *source = clnnode(child2);
-                char *args = source;
-                char *fqname = sym_frnm(node->symbolNode->symbol);
+            if (impl_node && impl_node->node_type != NOP && node->symbolNode->symbol->exposed) {
 
-                func = rximpfc_f(master_context, node->context->file_name, fqname, "b", type, args, 0);
+                if ( !type_node || !args_node || error_in_node(type_node) || error_in_node(args_node) ) {
+                    /* Error in the syntax of the important function */
+                    func = rximpf_f(context, node->context->file_name, fqname, "b", 0, 0, 0, 0);
+                    if (func) func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
+                }
 
-                if (func) dpa_add(master_context->importable_function_array, func);
+                else {
+                    /* Add the function to the "database" of functions */
+                    type = nodetype(type_node);
+                    args = clnnode(args_node);
+//                    impl = clnnode(impl_node);
 
-                free(type);
-                free(source);
-                free(fqname);
+                    func = rximpf_f(context, node->context->file_name, fqname, "b", type, args, 0, 0);
+
+                    /* Check Type <> unknown */
+                    if ( !type || strcmp(type, ".unknown") == 0 ) {
+                        if (func) func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
+                    }
+
+                    free(type);
+                    free(args);
+//                    free(impl);
+                }
             }
+            free(fqname);
         }
+
     }
     return result_normal;
 }
@@ -140,26 +274,61 @@ static char* get_const_string(void* constpool, size_t ix) {
     sz = ((string_constant *)(constpool + ix))->string_len;
 
     result = malloc(sz + 1);
-    memcpy(result, c, sz);
-    result[sz] = 0;
+    if (result) {
+        memcpy(result, c, sz);
+        result[sz] = 0;
+    }
     return result;
 }
 
-static void read_constant_pool_for_functions(Context *master_context, char *full_file_name, void* constant, size_t constant_size) {
+/* Get the global variable type by reading metadata */
+/* name is null terminated fqname of the variable */
+/* returns found meta_reg_constant entry - or 0 if not found */
+static meta_reg_constant* get_variable_type(char* name, void* constant, int meta_head) {
+    meta_entry *entry;
+    meta_reg_constant *mentry;
+    size_t i;
+    char* fqname;
+
+    i = meta_head;
+    while (i != -1) {
+        entry = (meta_entry *) (constant + i);
+
+        if (entry->base.type == META_REG) {
+            mentry = (meta_reg_constant *) entry;
+            fqname = get_const_string(constant, mentry->symbol);
+            if (fqname) {
+                if (strcmp(fqname, name) == 0) {
+                    free(fqname);
+                    return mentry;
+                }
+                free(fqname);
+                fqname = 0;
+            }
+        }
+
+        i = entry->next;
+    }
+    return 0;
+}
+
+static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
     chameleon_constant *entry;
     size_t i;
-    imported_func *func;
     size_t exposed_ix;
     expose_proc_constant *exposed;
     char* fqname;
-    char* option;
-    char* type;
-    char* args;
-    char* inliner;
+    char* option = 0;
+    char* type = 0;
+    char* args = 0;
+    char* inliner = 0;
 
+    /* Loop through all the constant entries */
     i = 0;
     while (i < constant_size) {
         entry = (chameleon_constant *) (constant + i);
+
+        /* A function definition */
         if (entry->type == META_FUNC) {
             meta_func_constant *mentry = (meta_func_constant *) entry;
 
@@ -176,14 +345,45 @@ static void read_constant_pool_for_functions(Context *master_context, char *full
                     args = get_const_string(constant, mentry->args);
                     inliner = get_const_string(constant, mentry->inliner);
 
-                    func = rximpfc_f(master_context, full_file_name, fqname, option, type, args, inliner);
+                    rximpf_f(context, full_file_name, fqname, option, type, args, inliner, 0);
 
-                    if (func) dpa_add(master_context->importable_function_array, func);
+                    if (option) {
+                        free(option);
+                        option = 0;
+                    }
+                    if (type) {
+                        free(type);
+                        type = 0;
+                    }
+                    if (args) {
+                        free(args);
+                        args = 0;
+                    }
+                    if (inliner) {
+                        free(inliner);
+                        inliner = 0;
+                    }
+                }
+            }
+        }
 
-                    if (option) free(option);
-                    if (type) free(type);
-                    if (args) free(args);
-                    if (inliner) free(inliner);
+        /* A exposed global variable */
+        else if (entry->type == EXPOSE_REG_CONST) {
+            fqname = ((expose_reg_constant *)entry)->index;
+            meta_reg_constant *mentry = get_variable_type(fqname, constant, meta_head);
+            if (mentry) {
+                option = get_const_string(constant, mentry->option);
+                type = get_const_string(constant, mentry->type);
+
+                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1);
+
+                if (option) {
+                    free(option);
+                    option = 0;
+                }
+                if (type) {
+                    free(type);
+                    type = 0;
                 }
             }
         }
@@ -192,7 +392,7 @@ static void read_constant_pool_for_functions(Context *master_context, char *full
     }
 }
 
-static void parseRxasFileForFunctions(Context *master_context, char* file_name, char* location) {
+static void parseRxasFileForFunctions(Context *context, char* file_name, char* location) {
     FILE *outFile;
     int token_type;
     Assembler_Token *token;
@@ -206,16 +406,16 @@ static void parseRxasFileForFunctions(Context *master_context, char* file_name, 
     memset(&scanner, 0, sizeof(Assembler_Context));
 
     /* scanner context parameter */
-    scanner.debug_mode = master_context->debug_mode;
+    scanner.debug_mode = context->debug_mode;
     scanner.traceFile = 0;
     scanner.optimise = 0;
     scanner.file_name = file_name;
     scanner.output_file_name = 0;
     scanner.location = location;
 
-    if (master_context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
 
-    /* Opening and Assemble file */
+    /* Opening an Assembler file */
     if (rxasinfl(&scanner, 1)) {
         rxasclrc(&scanner);
         return;
@@ -223,25 +423,24 @@ static void parseRxasFileForFunctions(Context *master_context, char* file_name, 
 
     /* Parse & Process */
     rxaspars(&scanner);
-
-    read_constant_pool_for_functions(master_context, file_name, scanner.binary.const_pool,
-                                     scanner.binary.const_size);
+    read_constant_pool_for_functions(context, file_name, scanner.binary.const_pool,
+                                     scanner.binary.const_size, scanner.meta_head);
 
     rxasclrc(&scanner);
 }
 
-static void parseRxbinFileForFunctions(Context *master_context, char* file_name, char* location) {
+static void parseRxbinFileForFunctions(Context *context, char* file_name, char* location) {
     FILE *fp;
     module_file *file_module_section;
     size_t modules_processed = 0;
     int loaded_rc;
     char *full_file_name;
 
-    if (master_context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
 
     fp = openfile(file_name, "", location, "rb");
     if (!fp) {
-        if (master_context->debug_mode) printf("Importing Procedures - Could not open file\n");
+        if (context->debug_mode) printf("Importing Procedures - Could not open file\n");
         return;
     }
 
@@ -253,8 +452,8 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name,
 
                 full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
 
-                read_constant_pool_for_functions(master_context, full_file_name, file_module_section->constant,
-                                                 file_module_section->header.constant_size);
+                read_constant_pool_for_functions(context, full_file_name, file_module_section->constant,
+                                                 file_module_section->header.constant_size, file_module_section->header.meta_head);
                 free(full_file_name);
                 free_module(file_module_section);
                 modules_processed++;
@@ -263,14 +462,14 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name,
             case 1: /* eof */
                 if (file_module_section) free_module(file_module_section);
                 if (!modules_processed) {
-                    if (master_context->debug_mode) printf("Importing Procedures - Empty file\n");
+                    if (context->debug_mode) printf("Importing Procedures - Empty file\n");
                     return;
                 }
                 break;
 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
-                if (master_context->debug_mode) printf("Importing Procedures - Error reading file\n");
+                if (context->debug_mode) printf("Importing Procedures - Error reading file\n");
                 return;
         }
     }
@@ -278,12 +477,13 @@ static void parseRxbinFileForFunctions(Context *master_context, char* file_name,
     fclose(fp);
 }
 
-static void parseRexxFileForFunctions(Context *master_context, char* file_name, char* location) {
+static void parseRexxFileForFunctions(Context *parent_context, char* file_name, char* location) {
     size_t bytes;
     Context *context;
     char *buff_start;
+    imported_func *global;
 
-    if (master_context->debug_mode) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
+    if (parent_context->debug_mode) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
     /* Context for parsing */
     context = cntx_f();
@@ -291,13 +491,13 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name, 
     /* Open input file */
     context->file_pointer = openfile(file_name, "", location, "r");
     if (context->file_pointer == NULL) {
-        fprintf(stderr, "Importing Procedures - Can't open input file: %s\n", file_name);
+        fprintf(stderr, "Panic Importing Procedures - Can't open input file: %s\n", file_name);
         exit(-1);
     }
 
     /* Propagate trace file */
 #ifndef NDEBUG
-    context->traceFile = master_context->traceFile;
+    context->traceFile = parent_context->traceFile;
 #endif
 
     buff_start = file2buf(context->file_pointer, &bytes);
@@ -312,9 +512,11 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name, 
 
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);
-    context->debug_mode = master_context->debug_mode;
-    context->location = master_context->location;
-    context->file_name = (char*)get_filename(file_name);
+    context->debug_mode = parent_context->debug_mode;
+    context->location = parent_context->location;
+    context->file_name = (char*) filename(file_name);
+    /* Propagate the master_context */
+    context->master_context = parent_context->master_context;
 
     /* Create Options parser to work out required language level */
     opt_pars(context);
@@ -323,8 +525,6 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name, 
     free_ast(context);
     free_tok(context);
     cntx_buf(context, buff_start, bytes);
-
-    context->dont_import = 1; /* Don't try an import files to resolve procedures */
 
     /* Parse program for real */
     switch (context->level){
@@ -351,7 +551,28 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name, 
 
     /* Extract Function Definitions  */
     rxcp_val(context); /* Full validation to ensure procedure types are handled */
-    ast_wlkr(context->ast, procedure_signature_walker, master_context);
+
+#ifndef __CMS__
+    if (parent_context->debug_mode) {
+        pdot_tree(context->ast, "astimport", context->file_name);
+    }
+#endif
+
+    ast_wlkr(context->ast, procedure_signature_walker, context);
+
+    /* Extract Global Variables */
+    /* Returns all the symbols in the scope of the PROGRAM_FILE node */
+    Symbol **symbols = scp_syms(context->ast->child->scope);
+    int i;
+    for (i=0; symbols[i]; i++) {
+        if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
+            /* import symbol */
+            char* fqname = sym_frnm(symbols[i]);
+            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1);
+            free(fqname);
+        }
+    }
+    free(symbols);
 
     finish:
 
@@ -363,7 +584,7 @@ static void parseRexxFileForFunctions(Context *master_context, char* file_name, 
 }
 
 /* Parse and rxcp_val a rexx program in a string and return the context */
-Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
+static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
 
     switch (level){
@@ -384,7 +605,7 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
             context->file_name = file_name;
             context->level = level;
             context->debug_mode = debug_mode;
-            context->dont_import = 1;
+            context->master_context = parent_context->master_context;
 
             rexbpars(context);
             break;
@@ -413,39 +634,20 @@ Context *parseRexx(char *location, char* file_name, RexxLevel level, int debug_m
     return context;
 }
 
-/* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *master_context, ASTNode *node) {
-    size_t i, f;
-    dpa *func_array = master_context->importable_function_array;
-    Symbol *symbol;
-    ASTNode *func_node;
-    Symbol *func_symbol;
-    Symbol *found_symbol = 0;
-    Scope *namespace;
-
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
-
-    /* Lowercase symbol name */
-#ifdef NUTF8
-    for (c = name ; *c; ++c) *c = (char)tolower(*c);
-#else
-    utf8lwr(name);
-#endif
-
-    if (master_context->debug_mode) printf("Importing Procedures - Looking for Procedure %s\n", name);
+/* Load the next importable file */
+/* return 1 if a file was loaded, or 0 if no more files are available */
+static int load_another_file(Context *context) {
+    size_t f;
+    Context *master_context = context->master_context;
 
     /* Load files from the importable_file_list */
     if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);
     if (!master_context->importable_file_list) {
         /* No files to import */
-        free(name);
         return 0;
     }
 
-    i = 0;
-    for (f = 0; master_context->importable_file_list[f] && !found_symbol; f++) {
+    for (f = 0; master_context->importable_file_list[f]; f++) {
         /* Already imported? */
         if (!master_context->importable_file_list[f]->imported) {
             master_context->importable_file_list[f]->imported = 1;
@@ -453,89 +655,134 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
             /* Import File */
             switch (master_context->importable_file_list[f]->type) {
                 case REXX_FILE:
-                    parseRexxFileForFunctions(master_context,
+                    parseRexxFileForFunctions(context,
                                               master_context->importable_file_list[f]->name,
                                               master_context->importable_file_list[f]->location);
                     break;
                 case RXBIN_FILE:
-                    parseRxbinFileForFunctions(master_context,
+                    parseRxbinFileForFunctions(context,
                                                master_context->importable_file_list[f]->name,
                                                master_context->importable_file_list[f]->location);
                     break;
                 case RXAS_FILE:;
-                    parseRxasFileForFunctions(master_context,
+                    parseRxasFileForFunctions(context,
                                               master_context->importable_file_list[f]->name,
                                               master_context->importable_file_list[f]->location);
                     break;
             }
+            return 1; /* File loaded - job done */
+        }
+    }
+    return 0; /* No file was loaded */
+}
+
+static ValueType type_from_string(char* type) {
+    if (!type) return TP_UNKNOWN;
+    if (strcmp(type, ".int") == 0) return TP_INTEGER;
+    if (strcmp(type, ".float") == 0) return TP_FLOAT;
+    if (strcmp(type, ".string") == 0) return TP_STRING;
+    if (strcmp(type, ".boolean") == 0) return TP_BOOLEAN;
+    if (strcmp(type, ".void") == 0) return TP_VOID;
+    if (strcmp(type, ".unknown") == 0) return TP_UNKNOWN;
+    return TP_OBJECT;
+}
+
+/* Try and import an external function - return its symbol if successful */
+Symbol *sym_imfn(Context *context, ASTNode *node) {
+    Symbol *symbol;
+    ASTNode *func_node;
+    Symbol *func_symbol;
+    Symbol *found_symbol = 0;
+    Scope *namespace;
+    imported_func *func;
+    imported_func *found_func = 0;
+    imported_func *inconsistent_func;
+    ValueType tp;
+    char error = 0;
+    char* defining_file = context->file_name;
+
+    char *name = (char*)malloc(node->node_string_length + 1);
+    memcpy(name, node->node_string, node->node_string_length);
+    name[node->node_string_length] = 0;
+
+    /* Lowercase symbol name */
+#ifdef NUTF8
+    char *c;
+    for (c = name; *c; ++c) *c = (char)tolower(*c);
+#else
+    utf8lwr(name);
+#endif
+
+    if (context->debug_mode) printf("Importing Procedures for file %s Looking for Procedure %s\n", defining_file, name);
+
+    /* Process all the unread files - but we just are interested in the first found variable - duplicates done next */
+    do {
+        /* Check if the function has been loaded */
+        if (src_fqfu(context, 0, name, &func)) {
+            if (context->debug_mode)
+                printf("Importing Procedures - Found Procedure %s in file %s\n", func->fqname, func->file_name);
+            found_func = func;
+            break;
+        }
+    } while (load_another_file(context));
+
+    if (context->debug_mode) printf("Finished Importing files needed for file %s when Looking for Procedure %s\n", defining_file, name);
+
+    if (found_func) {
+        /* Compare found variable with the type defined in the master file being compiled */
+        tp = type_from_string(found_func->type);
+        if (found_func->is_variable) {
+            mknd_err(node,
+                     "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
+                     name,found_func->file_name, defining_file);
+            error = 1;
         }
 
-        /* Check the added functions in the function list */
-        for ( ; i < func_array->size; i++) {
-            found_symbol = 0;
-            imported_func *func = (imported_func *) func_array->pointers[i];
+        /* Has the func got an error_state? */
+        if (found_func->error_state) {
+            mknd_err(node,
+                     "%s, \"%s\", \"%s\"",
+                     found_func->error_state, name, found_func->file_name);
+            error = 1;
+        }
 
-            if (strcmp(name, func->name) == 0) {
-                /* Found it! */
-
-                if (func->already_loaded) {
-                    fprintf(stderr, "INTERNAL ERROR: Attempted to load funtion %s twice\n", func->name);
-                    return 0;
-                }
-                func->already_loaded = 1;
-
-                if (master_context->debug_mode) printf("Importing Procedures - Found Procedure %s\n", func->fqname);
-
-                /* Splice the ASTs together */
-                add_ast(master_context->ast, func->context->ast->child);
-
-                /* Splice in namespace symbol */
-                symbol = sym_rslv(master_context->ast->scope, func->context->ast->child);
-                if (!symbol) {
-                    symbol = sym_f(master_context->ast->scope, func->context->ast->child);
-                    symbol->symbol_type = NAMESPACE_SYMBOL;
-                    namespace = scp_f(master_context->ast->scope, node, symbol);
-                }
-                else {
-                    namespace = symbol->defines_scope;
-                }
-                sym_adnd(symbol, func->context->ast->child, 1, 1);
-                if (func->context->namespace) sym_adnd(symbol, func->context->namespace, 0, 1);
-
-                /* Splice new procedure symbol */
-                /* Find the current procedure symbol */
-                func_node = func->context->ast->child->child;
-                if (func_node->node_type != PROCEDURE) func_node = func_node->sibling;
-
-                if (func_node->node_type != PROCEDURE) {
-                    fprintf(stderr,
-                            "INTERNAL ERROR: Importing Procedures - Could not find imported procedure in AST\n");
-                    dump_error_ast(func->context);
-                }
-                else {
-                    func_symbol = func_node->symbolNode->symbol;
-
-                    /* Make a duplicate symbol in the master_context */
-                    found_symbol = sym_fn(namespace, func_symbol->name,
-                                          strlen(func_symbol->name));
-                    if (!found_symbol) {
-                        fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Could not duplicate imported procedure symbol\n");
-                        dump_error_ast(func->context);
-                    } else {
-                        /* Set symbol type */
-                        found_symbol->symbol_type = func_symbol->symbol_type;
-
-                        /* Splice by linking the new symbol to the function node */
-                        sym_adnd(found_symbol, func_node, 0, 1);
-
-                        /* remove old symbol */
-                        scp_rmsy(func_symbol->scope, func_symbol); /* Remove from scope */
-                        free_sym(func_symbol); /* Free symbol  */
-                    }
-                }
-
-                break;
+        /* Produce Errors for all import inconsistencies */
+        inconsistent_func = found_func->duplicate;
+        while (inconsistent_func) {
+            if (inconsistent_func->is_variable) {
+                mknd_err(node,
+                         "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
+                         name,inconsistent_func->file_name, defining_file);
+                error = 1;
             }
+
+            if (safe_strcmp(found_func->type, inconsistent_func->type)) {
+                mknd_err(node,
+                         "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+                         name,found_func->type, found_func->file_name, inconsistent_func->type,
+                         inconsistent_func->file_name);
+                error = 1;
+            }
+
+            if (safe_strcmp(found_func->args, inconsistent_func->args)) {
+                mknd_err(node,
+                         "ARGS_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+                         name,found_func->args, found_func->file_name, inconsistent_func->args,
+                         inconsistent_func->file_name);
+                error = 1;
+            }
+
+            inconsistent_func = inconsistent_func->duplicate;
+        }
+        if (!error) {
+
+            if (context->debug_mode)
+                printf("Importing Procedures - Found Procedure %s\n", found_func->fqname);
+
+            /* Splice the ASTs together */
+            add_dast(context->ast, func->context->ast->child);
+            found_symbol = sym_rfqn(context->ast, found_func->fqname);
+            found_symbol->exposed = 1; /* Exposed by definition! */
         }
     }
 
@@ -543,12 +790,74 @@ Symbol *sym_imfn(Context *master_context, ASTNode *node) {
     return found_symbol;
 }
 
-/* imported_func factory - returns null if the function is not in an applicable namespace */
-imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation)  {
+/* Set the type of a symbol from imported modules */
+void sym_imva(Context *context, Symbol *symbol) {
+    imported_func *var;
+    imported_func *found_var = 0;
+    imported_func *inconsistent_var;
+    ValueType tp;
+    char error = 0;
+    char* defining_file = 0;
+
+    if (context->debug_mode) printf("Importing Globals - Looking for Global %s\n", symbol->name);
+
+    defining_file = context->file_name;
+
+    /* Process all the unread files - but we just are interested in the first found variable - duplicated done next */
+    do {
+        if (!found_var) {
+            /* Check if the function has been loaded */
+            if (src_fqfu(context, 1, symbol->name, &var)) {
+                if (context->debug_mode) printf("Importing Globals - Found Global Symbol %s\n", var->fqname);
+                found_var = var;
+            }
+        }
+    } while (load_another_file(context));
+
+    if (found_var) {
+        /* Compare found variable with the type defined in the master file being compiled */
+        tp = type_from_string(found_var->type);
+        if (!found_var->is_variable) {
+            mknd_err(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
+                     symbol->name, defining_file, found_var->file_name);
+            error = 1;
+        }
+        else if (symbol->type != TP_UNKNOWN) {
+            if ((tp != TP_UNKNOWN) && (tp != symbol->type)) {
+                mknd_err(sym_trnd(symbol, 0)->node, "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+                         symbol->name,type_nm(symbol->type), defining_file, found_var->type, found_var->file_name);
+                error = 1;
+            }
+        }
+
+        /* Produce Errors for all import inconsistencies */
+        inconsistent_var = found_var->duplicate;
+        while (inconsistent_var) {
+            if (!inconsistent_var->is_variable) {
+                mknd_err(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
+                         inconsistent_var->name, defining_file, inconsistent_var->file_name);
+                error = 1;
+            }
+
+            if (safe_strcmp(found_var->type, inconsistent_var->type)) {
+                mknd_err(sym_trnd(symbol, 0)->node,
+                         "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
+                         found_var->name, found_var->type, found_var->file_name, inconsistent_var->type, inconsistent_var->file_name);
+                error = 1;
+            }
+            inconsistent_var = inconsistent_var->duplicate;
+        }
+        if (!error) {
+            symbol->type = tp;
+        }
+    }
+}
+
+/* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */
+imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *options, char *type, char *args,
+                        char *implementation, char is_variable)  {
     imported_func *func;
     char *buffer;
-    size_t i;
-    char found;
     char *name;
 
     if (!fqname) return 0;
@@ -559,25 +868,15 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
         len--;
         if (fqname[len] == '.') break;
     }
-    if (len) {
-        /* Check the namespace has been imported */
-        found = 0;
-        for (i = 0; i < scp_noch(master_context->ast->scope); i++) {
-            if ( strncmp(fqname, scp_chd(master_context->ast->scope, i)->name, len) == 0) {
-                found = 1;
-                break;
-            }
-        }
-        if (!found) return 0;
-    }
-    else return 0; /* No namespace */
 
     name = fqname + len + 1;
 
     /* OK - Create func */
     func = malloc(sizeof(imported_func));
     func->context = 0;
-    func->already_loaded = 0;
+    func->is_variable = is_variable; /* Is a function or a Variable */
+    func->duplicate = 0;
+    func->error_state = 0;
 
     /* Store the namespace */
     func->namespace = malloc(len + 1);
@@ -623,30 +922,32 @@ imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname
     }
     else func->implementation = 0;
 
-    /* Generate Function Declaration AST */
-    // TODO This only does Level B
-    buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name, func->type, func->args);
-    if (master_context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
-    func->context = parseRexx(master_context->location, func->file_name, LEVELB, master_context->debug_mode, buffer, strlen(buffer));
+    if (func->is_variable == 0) {
+        /* Generate Function Declaration AST - only if we are a function not a variable */
+        // TODO This only does Level B
+        buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
+                         func->type, func->args);
+        if (context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
+        func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
+                                  strlen(buffer));
 
-    if (!func->context || error_in_node(func->context->ast)) {
-        fprintf(stderr, "Importing Procedures - ERROR: Error parsing imported procedure arguments for %s, skipping\n", func->fqname);
-        fprintf(stderr, "buffer is %s\n", buffer);
-        dump_error_ast(func->context);
-        freimpfc(func);
-        return 0;
+        if (!func->context || error_in_node(func->context->ast)) {
+            func->error_state = "INTERNAL_ERROR_PARSING_IMPORT_AST";
+        }
+
+        /* Make sure the AST seems sane */
+        else if (func->context->ast->child->node_type != PROGRAM_FILE) {
+            func->error_state = "INTERNAL_ERROR_PARSING_IMPORT_AST";
+        }
+
+        /* Fixup the node type */
+        func->context->ast->child->node_type = IMPORTED_FILE;
     }
 
-    /* Make sure the AST seems sane */
-    if (func->context->ast->child->node_type != PROGRAM_FILE) {
-        fprintf(stderr, "Importing Procedures - ERROR: Unexpected syntax error parsing imported procedure arguments for %s, skipping\n", func->fqname);
-        dump_error_ast(func->context);
-        freimpfc(func);
-        return 0;
+    if (add_func(context, func)) {
+        /* Duplicate */
+        func = 0;
     }
-
-    /* Fixup the node type */
-    func->context->ast->child->node_type = IMPORTED_FILE;
 
     return func;
 }
@@ -662,7 +963,7 @@ void freimpfc(imported_func *func) {
     if (func->args) free(func->args);
     if (func->implementation) free(func->implementation);
     if (func->context) fre_cntx(func->context);
-
+    if (func->duplicate) freimpfc(func->duplicate);
     free(func);
 }
 
@@ -745,18 +1046,15 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
 importable_file **rxfl_lst(Context *context) {
     size_t number = 0;
     importable_file **list = 0;
-    char* full_name;
     char* exe_dir;
     size_t d;
 
     list = malloc( sizeof(importable_file*) );
     list[0] = 0;
-
-    full_name = mprintf("%s.rexx", context->file_name);
     exe_dir = exepath();
 
     /* Read REXX files in the current directory */
-    list_files_in_dir(context->location, REXX_FILE, full_name, &list, &number);
+    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number);
 
     /* Read RXAS files in the current directory */
     list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number);
@@ -791,8 +1089,5 @@ importable_file **rxfl_lst(Context *context) {
         free(exe_dir);
     }
 
-    free(full_name);
-
     return list;
 }
-

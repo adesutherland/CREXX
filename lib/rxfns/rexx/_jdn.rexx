@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace _rxsysb
+namespace _rxsysb expose _jdn
 
 /* Translate date dd mm yy into Julian Day Number */
 _jdn: Procedure = .int

@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose insert
 
 /* insert(insstr,string,position,length,pad) inserts string into existing string at certain position and length */
 insert: procedure = .string

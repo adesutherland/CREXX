@@ -1,0 +1,41 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0043
+ * SOURCE                 : hello
+ * BUILT                  : 2022-08-13 11:48:13
+ */
+
+.srcfile="hello"
+.globals=0
+
+main() .locals=5 .expose=hello.main
+   .meta "hello.main"="b" ".int" main() "" ""
+   .src 4:1="do"
+   .src 4:4="i=1"
+   .meta "hello.main.i"="b" ".int" r1
+   load r1,1
+   .src 4:8="to 5"
+   load r2,5
+l3dostart:
+   .src 4:8="to 5"
+   igt r0,r1,r2
+   brt l3doend,r0
+   .src 5:3="call hello"
+   load r3,0
+   call r4,hello(),r3
+l3doinc:
+   .src 4:4="i"
+   inc r1
+   .src 6:1="end"
+   br l3dostart
+l3doend:
+   .src 8:1="return 0"
+   ret 0
+   .meta "hello.main.i"
+
+hello() .locals=1 .expose=hello.hello
+   .meta "hello.hello"="b" ".void" hello() "" ""
+   .src 10:1="hello: procedure"
+   .src 11:1="say \"Hello World\""
+   say "Hello World"
+   .src 12:1="return"
+   ret

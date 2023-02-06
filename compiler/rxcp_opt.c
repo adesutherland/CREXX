@@ -694,8 +694,9 @@ static walker_result opt2_walker(walker_direction direction,
             if (!node->is_ref_arg) { /* Only if it is pass by reference */
 
                 /* Check if we are in a definition (external procedure) */
-                /*  ARG > ARGS  > PROC-INSTRUCTIONS */
-                if (node->parent->sibling->node_type == NOP) return result_normal;
+
+                /*  ARG > ARGS > PROC --- And then see in there is an INSTRUCTIONS Nod, null means there isn't */
+                if (ast_chld(node->parent->parent, INSTRUCTIONS, 0) == 0) return result_normal;
 
                 /* Internal Procedure - do constant check */
                 is_constant = 1;

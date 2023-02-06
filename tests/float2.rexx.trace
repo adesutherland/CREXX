@@ -1,0 +1,979 @@
+Options parser >> Input 'TK_OPTIONS' in state 0
+Options parser >> Shift 'TK_OPTIONS', go to state 1
+Options parser >> Return. Stack=[TK_OPTIONS]
+Options parser >> Input 'TK_LEVELB' in state 1
+Options parser >> Shift 'TK_LEVELB', go to state 16
+Options parser >> Return. Stack=[TK_OPTIONS TK_LEVELB]
+Options parser >> Input 'TK_EOC' in state 16
+Options parser >> Reduce 4 [option ::= TK_LEVELB], pop back to state 1.
+Options parser >> ... then shift 'option', go to state 4
+Options parser >> Reduce 18 [option_list ::= option] without external action, pop back to state 1.
+Options parser >> ... then shift 'option_list', go to state 2
+Options parser >> Shift 'TK_EOC', go to state 23
+Options parser >> Return. Stack=[TK_OPTIONS option_list TK_EOC]
+Options parser >> Input 'TK_SYMBOL' in state 23
+Options parser >> WILDCARD TK_SYMBOL => ANYTHING
+Options parser >> Reduce 2 [rexx_options ::= TK_OPTIONS option_list TK_EOC], pop back to state 0.
+Options parser >> ... then shift 'rexx_options', go to state 3
+Options parser >> WILDCARD TK_SYMBOL => ANYTHING
+Options parser >> Shift 'TK_SYMBOL', go to state 20
+Options parser >> Return. Stack=[rexx_options TK_SYMBOL]
+Options parser >> Popping TK_SYMBOL
+Options parser >> Popping rexx_options
+Parser(B) >> Input 'TK_OPTIONS' in state 0
+Parser(B) >> Shift 'TK_OPTIONS', go to state 81
+Parser(B) >> Return. Stack=[TK_OPTIONS]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 81
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 297
+Parser(B) >> Return. Stack=[TK_OPTIONS TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 297
+Parser(B) >> Reduce 18 [option ::= TK_VAR_SYMBOL], pop back to state 81.
+Parser(B) >> ... then shift 'option', go to state 296
+Parser(B) >> Reduce 16 [option_list ::= option], pop back to state 81.
+Parser(B) >> ... then shift 'option_list', go to state 89
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 129
+Parser(B) >> Shift 'TK_EOC', go to state 194
+Parser(B) >> Return. Stack=[TK_OPTIONS option_list junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 194
+Parser(B) >> Reduce 15 [rexx_options ::= TK_OPTIONS option_list junk TK_EOC], pop back to state 0.
+Parser(B) >> ... then shift 'rexx_options', go to state 1
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 1.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_FLOAT' in state 33
+Parser(B) >> Shift 'TK_FLOAT', go to state 231
+Parser(B) >> Return. Stack=[rexx_options var_symbol TK_EQUAL TK_FLOAT]
+Parser(B) >> Input 'TK_EOC' in state 231
+Parser(B) >> Reduce 173 [term ::= TK_FLOAT], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 1.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 1.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 1.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 183
+Parser(B) >> Reduce 29 [instruction_list ::= labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 8.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_INTEGER' in state 33
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL TK_INTEGER]
+Parser(B) >> Input 'TK_POWER' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Shift 'TK_POWER', go to state 75
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL power_expression TK_POWER]
+Parser(B) >> Input 'TK_INTEGER' in state 75
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL power_expression TK_POWER TK_INTEGER]
+Parser(B) >> Input 'TK_MINUS' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 75.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 75.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 75.
+Parser(B) >> ... then shift 'prefix_expression', go to state 221
+Parser(B) >> Reduce 183 [power_expression ::= power_expression TK_POWER prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Shift 'TK_MINUS', go to state 63
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL addition TK_MINUS]
+Parser(B) >> Input 'TK_INTEGER' in state 63
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL addition TK_MINUS TK_INTEGER]
+Parser(B) >> Input 'TK_EOC' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 63.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 63.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 63.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 63.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 63.
+Parser(B) >> ... then shift 'multiplication', go to state 239
+Parser(B) >> Reduce 191 [addition ::= addition TK_MINUS multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 8.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 8.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_INTEGER' in state 33
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL TK_INTEGER]
+Parser(B) >> Input 'TK_EOC' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 8.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 8.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_INTEGER' in state 33
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL TK_INTEGER]
+Parser(B) >> Input 'TK_EOC' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 8.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 8.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_INTEGER' in state 33
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL TK_INTEGER]
+Parser(B) >> Input 'TK_EOC' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 8.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 8.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_STRING' in state 33
+Parser(B) >> Shift 'TK_STRING', go to state 109
+Parser(B) >> Return. Stack=[rexx_options instruction_list var_symbol TK_EQUAL TK_STRING]
+Parser(B) >> Input 'TK_EOC' in state 109
+Parser(B) >> Reduce 175 [term ::= TK_STRING], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 8.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_SAY' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_SAY', go to state 22
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_SAY]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 22
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_SAY TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 22.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 22.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 22.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 22.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 22.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 22.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 22.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 22.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 22.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 22.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 22.
+Parser(B) >> ... then shift 'expression', go to state 327
+Parser(B) >> Reduce 156 [say ::= TK_SAY expression], pop back to state 8.
+Parser(B) >> ... then shift 'say', go to state 361
+Parser(B) >> Reduce 56 [keyword_instruction ::= say], pop back to state 8.
+Parser(B) >> ... then shift 'keyword_instruction', go to state 371
+Parser(B) >> Reduce 43 [single_instruction ::= keyword_instruction], pop back to state 8.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_DO' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_DO', go to state 111
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_DO]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 111
+Parser(B) >> Reduce 76 [tk_doloop ::= TK_DO], pop back to state 8.
+Parser(B) >> ... then shift 'tk_doloop', go to state 17
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 17.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_INTEGER' in state 33
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop var_symbol TK_EQUAL TK_INTEGER]
+Parser(B) >> Input 'TK_TO' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 17.
+Parser(B) >> ... then shift 'assignment', go to state 85
+Parser(B) >> Shift 'TK_TO', go to state 27
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop assignment TK_TO]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 27
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop assignment TK_TO TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 27.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 27.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 27.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 27.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 27.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 27.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 27.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 27.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 27.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 27.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 27.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 27.
+Parser(B) >> ... then shift 'expression', go to state 286
+Parser(B) >> Reduce 97 [dorep_item ::= TK_TO expression], pop back to state 85.
+Parser(B) >> ... then shift 'dorep_item', go to state 283
+Parser(B) >> Reduce 95 [dorep_list ::= dorep_item], pop back to state 85.
+Parser(B) >> ... then shift 'dorep_list', go to state 112
+Parser(B) >> Reduce 94 [dorep ::= assignment dorep_list], pop back to state 17.
+Parser(B) >> ... then shift 'dorep', go to state 93
+Parser(B) >> Shift 'TK_EOC', go to state 3
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 3
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 3.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 33
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC var_symbol TK_EQUAL TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_PLUS' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 33.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Shift 'TK_PLUS', go to state 64
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC var_symbol TK_EQUAL addition TK_PLUS]
+Parser(B) >> Input 'TK_INTEGER' in state 64
+Parser(B) >> Shift 'TK_INTEGER', go to state 230
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC var_symbol TK_EQUAL addition TK_PLUS TK_INTEGER]
+Parser(B) >> Input 'TK_EOC' in state 230
+Parser(B) >> Reduce 174 [term ::= TK_INTEGER], pop back to state 64.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 64.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 64.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 64.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 64.
+Parser(B) >> ... then shift 'multiplication', go to state 240
+Parser(B) >> Reduce 190 [addition ::= addition TK_PLUS multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 3.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 3.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 3.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 183
+Parser(B) >> Reduce 29 [instruction_list ::= labeled_instruction], pop back to state 3.
+Parser(B) >> ... then shift 'instruction_list', go to state 9
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 9.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 33
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_DIV' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 33.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Shift 'TK_DIV', go to state 69
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL multiplication TK_DIV]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 69
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL multiplication TK_DIV TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 69.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 69.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 69.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 69.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 69.
+Parser(B) >> ... then shift 'power_expression', go to state 219
+Parser(B) >> Reduce 186 [multiplication ::= multiplication TK_DIV power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 9.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 9.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_SAY' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 9.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 3.
+Parser(B) >> ... then shift 'instruction_list', go to state 9
+Parser(B) >> Shift 'TK_SAY', go to state 22
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 22
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 22.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 22.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 22.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 22.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 22.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 22.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 22.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_MINUS' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 61.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 61.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 61.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 61.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 61.
+Parser(B) >> ... then shift 'multiplication_c', go to state 238
+Parser(B) >> Reduce 201 [addition_c ::= multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Shift 'TK_MINUS', go to state 65
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation addition_c TK_MINUS]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 65
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_SAY concatenation addition_c TK_MINUS TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 65.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 65.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 65.
+Parser(B) >> ... then shift 'bracket', go to state 216
+Parser(B) >> Reduce 192 [prefix_expression_c ::= bracket], pop back to state 65.
+Parser(B) >> ... then shift 'prefix_expression_c', go to state 214
+Parser(B) >> Reduce 194 [power_expression_c ::= prefix_expression_c], pop back to state 65.
+Parser(B) >> ... then shift 'power_expression_c', go to state 213
+Parser(B) >> Reduce 196 [multiplication_c ::= power_expression_c], pop back to state 65.
+Parser(B) >> ... then shift 'multiplication_c', go to state 236
+Parser(B) >> Reduce 203 [addition_c ::= addition_c TK_MINUS multiplication_c], pop back to state 61.
+Parser(B) >> ... then shift 'addition_c', go to state 244
+Parser(B) >> Reduce 206 [concatenation ::= concatenation addition_c], pop back to state 22.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 22.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 22.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 22.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 22.
+Parser(B) >> ... then shift 'expression', go to state 327
+Parser(B) >> Reduce 156 [say ::= TK_SAY expression], pop back to state 9.
+Parser(B) >> ... then shift 'say', go to state 361
+Parser(B) >> Reduce 56 [keyword_instruction ::= say], pop back to state 9.
+Parser(B) >> ... then shift 'keyword_instruction', go to state 371
+Parser(B) >> Reduce 43 [single_instruction ::= keyword_instruction], pop back to state 9.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 9.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 3.
+Parser(B) >> ... then shift 'instruction_list', go to state 9
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 9.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 33
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_PLUS' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 33.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Shift 'TK_PLUS', go to state 64
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL addition TK_PLUS]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 64
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL addition TK_PLUS TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 64.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 64.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 64.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 64.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 64.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 64.
+Parser(B) >> ... then shift 'multiplication', go to state 240
+Parser(B) >> Reduce 190 [addition ::= addition TK_PLUS multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 9.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 9.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 9.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 3.
+Parser(B) >> ... then shift 'instruction_list', go to state 9
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EQUAL' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 9.
+Parser(B) >> ... then shift 'var_symbol', go to state 251
+Parser(B) >> Shift 'TK_EQUAL', go to state 33
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 33
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_MINUS' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 33.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 33.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 33.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 33.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 33.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 33.
+Parser(B) >> ... then shift 'multiplication', go to state 241
+Parser(B) >> Reduce 189 [addition ::= multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Shift 'TK_MINUS', go to state 63
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL addition TK_MINUS]
+Parser(B) >> Input 'TK_VAR_SYMBOL' in state 63
+Parser(B) >> Shift 'TK_VAR_SYMBOL', go to state 110
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list var_symbol TK_EQUAL addition TK_MINUS TK_VAR_SYMBOL]
+Parser(B) >> Input 'TK_EOC' in state 110
+Parser(B) >> Reduce 12 [var_symbol ::= TK_VAR_SYMBOL], pop back to state 63.
+Parser(B) >> ... then shift 'var_symbol', go to state 232
+Parser(B) >> Reduce 172 [term ::= var_symbol], pop back to state 63.
+Parser(B) >> ... then shift 'term', go to state 229
+Parser(B) >> Reduce 176 [bracket ::= term], pop back to state 63.
+Parser(B) >> ... then shift 'bracket', go to state 227
+Parser(B) >> Reduce 178 [prefix_expression ::= bracket], pop back to state 63.
+Parser(B) >> ... then shift 'prefix_expression', go to state 223
+Parser(B) >> Reduce 182 [power_expression ::= prefix_expression], pop back to state 63.
+Parser(B) >> ... then shift 'power_expression', go to state 222
+Parser(B) >> Reduce 184 [multiplication ::= power_expression], pop back to state 63.
+Parser(B) >> ... then shift 'multiplication', go to state 239
+Parser(B) >> Reduce 191 [addition ::= addition TK_MINUS multiplication], pop back to state 33.
+Parser(B) >> ... then shift 'addition', go to state 245
+Parser(B) >> Reduce 204 [concatenation ::= addition], pop back to state 33.
+Parser(B) >> ... then shift 'concatenation', go to state 61
+Parser(B) >> Reduce 207 [comparison ::= concatenation], pop back to state 33.
+Parser(B) >> ... then shift 'comparison', go to state 253
+Parser(B) >> Reduce 220 [or_expression ::= comparison], pop back to state 33.
+Parser(B) >> ... then shift 'or_expression', go to state 255
+Parser(B) >> Reduce 222 [and_expression ::= or_expression], pop back to state 33.
+Parser(B) >> ... then shift 'and_expression', go to state 277
+Parser(B) >> Reduce 245 [expression ::= and_expression], pop back to state 33.
+Parser(B) >> ... then shift 'expression', go to state 282
+Parser(B) >> Reduce 44 [assignment ::= var_symbol TK_EQUAL expression], pop back to state 9.
+Parser(B) >> ... then shift 'assignment', go to state 373
+Parser(B) >> Reduce 41 [single_instruction ::= assignment], pop back to state 9.
+Parser(B) >> ... then shift 'single_instruction', go to state 102
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 404
+Parser(B) >> Shift 'TK_EOC', go to state 191
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list single_instruction junk TK_EOC]
+Parser(B) >> Input 'TK_END' in state 191
+Parser(B) >> Reduce 32 [labeled_instruction ::= single_instruction junk TK_EOC], pop back to state 9.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 3.
+Parser(B) >> ... then shift 'instruction_list', go to state 9
+Parser(B) >> Shift 'TK_END', go to state 127
+Parser(B) >> Return. Stack=[rexx_options instruction_list tk_doloop dorep TK_EOC instruction_list TK_END]
+Parser(B) >> Input 'TK_EOC' in state 127
+Parser(B) >> Reduce 78 [do ::= tk_doloop dorep TK_EOC instruction_list TK_END], pop back to state 8.
+Parser(B) >> ... then shift 'do', go to state 100
+Parser(B) >> Reduce 8 [junk ::=].
+Parser(B) >> ... then shift 'junk', go to state 402
+Parser(B) >> Shift 'TK_EOC', go to state 185
+Parser(B) >> Return. Stack=[rexx_options instruction_list do junk TK_EOC]
+Parser(B) >> Input 'TK_EOS' in state 185
+Parser(B) >> Reduce 67 [group ::= do junk TK_EOC], pop back to state 8.
+Parser(B) >> ... then shift 'group', go to state 192
+Parser(B) >> Reduce 31 [labeled_instruction ::= group], pop back to state 8.
+Parser(B) >> ... then shift 'labeled_instruction', go to state 193
+Parser(B) >> Reduce 30 [instruction_list ::= instruction_list labeled_instruction], pop back to state 1.
+Parser(B) >> ... then shift 'instruction_list', go to state 8
+Parser(B) >> Shift 'TK_EOS', go to state 384
+Parser(B) >> Return. Stack=[rexx_options instruction_list TK_EOS]
+Parser(B) >> Input '$' in state 384
+Parser(B) >> Reduce 1 [program ::= rexx_options instruction_list TK_EOS], pop back to state 0.
+Parser(B) >> ... then shift 'program', pending reduce -2
+Parser(B) >> Accept!
