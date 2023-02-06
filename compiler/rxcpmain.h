@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0044"
+#define rxversion "cREXX F0045"
 
 #include <stdio.h>
 #include "platform.h"
