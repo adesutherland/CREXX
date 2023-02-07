@@ -1,7 +1,7 @@
   /* rexx */
   options levelb
 
-  namespace rxfnsb
+  namespace rxfnsb expose strip
 
 strip: procedure = .string
        arg instr = .string, option = "B", schar= " "

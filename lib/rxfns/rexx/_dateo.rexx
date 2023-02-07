@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace _rxsysb
+namespace _rxsysb expose _dateo
 import rxfnsb
 
 _dateo: Procedure = .string

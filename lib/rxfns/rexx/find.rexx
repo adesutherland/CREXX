@@ -4,7 +4,7 @@
  */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose find
 
 find: procedure = .int
   arg expose needle = .string, haystack = .string, start = 1

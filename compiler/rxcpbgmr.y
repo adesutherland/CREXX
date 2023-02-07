@@ -9,8 +9,8 @@
 %start_symbol program
 
 %include {
-/* cREXX Phase 0 (PoC 2) Compiler */
-/* (c) Adrian Sutherland 2021   */
+/* cREXX Compiler */
+/* (c) Adrian Sutherland 2021-2022 */
 /* Grammar                      */
 
 #include <assert.h>
@@ -143,19 +143,20 @@ option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, LITERAL, S); }
 
 /* Namespace Instructions */
+literal(L)               ::= TK_SYMBOL_COMPOUND(N).
+                         { L = ast_f(context, LITERAL, N); }
+literal(L)               ::= TK_VAR_SYMBOL(N).
+                         { L = ast_f(context, LITERAL, N); }
 namespace_list(I)        ::= namespace_instruction(L).
-//                         { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
                          { I = L; }
 namespace_list(I)        ::= namespace_list(I1) namespace_instruction(L).
                          { I = I1; add_sbtr(I,L); }
-namespace_instruction(I) ::= TK_NAMESPACE(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_NAMESPACE(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, NAMESPACE, K); add_ast(I, ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_IMPORT(K) TK_SYMBOL_COMPOUND(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
-namespace_instruction(I) ::= TK_IMPORT(K) TK_VAR_SYMBOL(N) junk(J) TK_EOC.
-                         { I = ast_f(context, IMPORT, K); add_ast(I,ast_f(context, LITERAL, N)); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, N); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) expose(E) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I,N); add_ast(I,E); add_ast(I,J); }
+namespace_instruction(I) ::= TK_IMPORT(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, IMPORT, K); add_ast(I,N); add_ast(I,J); }
 namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC.
                          { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
 namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC.
@@ -164,6 +165,12 @@ namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC.
                          { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
 namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC.
                          { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+expose(I)                ::= TK_EXPOSE(K) expose_list(L).
+                         { I = ast_f(context, EXPOSED, K); add_ast(I,L); }
+expose_list(I)           ::= literal(L).
+                         { I = L; }
+expose_list(I)           ::= expose_list(I1) literal(L).
+                         { I = I1; add_sbtr(I,L); }
 
 /* Program file body */
 instruction_list(I)  ::= labeled_instruction(L).
@@ -356,8 +363,16 @@ procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); add_ast(P,E);}
+
 arg(P)            ::= TK_ARG arg_list(A).
                       { P = A;}
+
 /* Classes */
 class(C)          ::= TK_CLASS(T).
                       { C = ast_f(context, CLASS, T); }
@@ -374,6 +389,12 @@ argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
                       { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
 argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
                       { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
+argument(E)         ::= error.
+                      { E = ast_errh(context, "SYNTAX_ERROR"); }
+argument(E)         ::= TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
 
 /* Instructions */
 

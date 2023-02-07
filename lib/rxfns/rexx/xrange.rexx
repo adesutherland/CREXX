@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose xrange
 
 /*
  * XRANGE: deprecated

@@ -1,7 +1,7 @@
 /* rexx center text  */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose d2c
 
 d2c: procedure = .string
   arg from = .int, slen=-1

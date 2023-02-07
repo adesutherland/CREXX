@@ -1,7 +1,7 @@
 /* rexx wordpos searches for string and returns word position */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose wordpos
 
 wordpos: procedure = .int
   arg expose search = .string, string = .string, start = 1

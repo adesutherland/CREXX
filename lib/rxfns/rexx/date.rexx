@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose date
 import _rxsysb
 
 date: Procedure = .string

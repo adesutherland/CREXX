@@ -65,12 +65,6 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
-static const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
 static const char *get_filename(const char *path)
 {
     size_t len = strlen(path);
@@ -134,15 +128,10 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
     context->line = 0;
     context->namespace = 0;
     context->current_scope = 0;
-    if (context->importable_function_array) {
-        /* Deallocate importable_function_array */
-        for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
-            freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
-        }
-        free_dpa(context->importable_function_array);
-        context->importable_function_array  = 0;
+    if (context->importable_function_tree) {
+        fre_ftre(context);
+        context->importable_function_tree  = 0;
     }
-    context->importable_function_array = dpa_f();
 
     /* Reset importable_file_list */
     if (context->importable_file_list) {
@@ -164,12 +153,9 @@ void fre_cntx(Context *context)  {
     /* Deallocate AST */
     free_ast(context);
 
-    /* Deallocate importable_function_array */
-    for (i = 0; i < ((dpa*)(context->importable_function_array))->size; i++ ) {
-        freimpfc(((dpa *) (context->importable_function_array))->pointers[i]);
-    }
-    free_dpa(context->importable_function_array);
-    context->importable_function_array  = 0;
+    /* Deallocate importable_function_tree */
+    fre_ftre(context);
+    context->importable_function_tree  = 0;
 
     /* Deallocate importable_file_list */
     if (context->importable_file_list) {
@@ -193,7 +179,7 @@ int main(int argc, char *argv[]) {
     size_t bytes;
     char* buff_start;
     Context *context;
-    int errors = 0;
+    int errors = 0, warnings = 0;
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
@@ -282,9 +268,12 @@ int main(int argc, char *argv[]) {
     /* Context Structure */
     context = cntx_f();
 
+    /* I am the main context */
+    context->master_context = context;
+
     /* Derive the location from the file name */
     if (!location) {
-        file_directory = get_filename_directory(file_name);
+        file_directory = file_dir(file_name);
     }
 
     if (debug_mode) printf("Input file is %s\n", file_name);
@@ -310,13 +299,15 @@ int main(int argc, char *argv[]) {
     }
 
     /* Open input file */
-    const char* filename_extension = get_filename_ext(file_name);
+    const char* filename_extension = filenext(file_name);
     if (filename_extension[0] == 0)
       {
         context->file_pointer = openfile(file_name,"rexx", location, "r");
+        context->file_name = mprintf("%s.rexx", filename(file_name));
       }
     else {
         context->file_pointer = openfile(file_name,"", location, "r");
+        context->file_name = mprintf("%s", filename(file_name));
     }
     if (context->file_pointer == NULL) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
@@ -326,7 +317,7 @@ int main(int argc, char *argv[]) {
     /* Open trace file */
 #ifndef NDEBUG
     if (debug_mode) {
-        context->traceFile = openfile((char*)get_filename(file_name), "trace", location, "w");
+        context->traceFile = openfile((char*) filename(file_name), "trace", location, "w");
         if (context->traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
             exit(-1);
@@ -350,7 +341,6 @@ int main(int argc, char *argv[]) {
     context->optimise = do_optimise;
     if (file_directory) context->location = file_directory;
     else context->location = location;
-    context->file_name = (char*)get_filename(file_name);
 
     /* Create Options parser to work out required language level */
     opt_pars(context);
@@ -448,16 +438,23 @@ int main(int argc, char *argv[]) {
 
     finish:
 
+    warnings = prntwars(context);
+    if (warnings) {
+        fprintf(stderr,"%d warning(s) in source file\n", warnings);
+    }
+
     /* Close outfile */
     if (outFile) fclose(outFile);
 
     if (context->level == LEVELB) free_ops(); // Free Instruction Database
 
     /* Free context */
+    free(context->file_name);
     fre_cntx(context);
 
     if (file_directory) free(file_directory);
 
-    if (errors) return(1);
-    else return(0);
+    if (errors) return(2);
+    if (warnings) return(1);
+    return(0);
 }

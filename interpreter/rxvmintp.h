@@ -4,7 +4,7 @@
 #include "rxas.h"
 #include "rxbin.h"
 
-#define rxversion "cREXX F0043"
+#define rxversion "cREXX F0044"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 

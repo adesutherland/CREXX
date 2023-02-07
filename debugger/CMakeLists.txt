@@ -5,7 +5,7 @@ project(Debugger C)
 set(CMAKE_C_STANDARD 90)
 
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o rxdb ${CMAKE_CURRENT_SOURCE_DIR}/rxdb
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfns -o rxdb ${CMAKE_CURRENT_SOURCE_DIR}/rxdb
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxdb
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o globals ${CMAKE_CURRENT_SOURCE_DIR}/globals
         COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack rxdb globals ${CMAKE_BINARY_DIR}/lib/rxfns/library

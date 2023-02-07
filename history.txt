@@ -1,7 +1,17 @@
 CREXX History / Change Log
 
+
 F0046 - cREXX Level B bif completion branch, and 'escape from crexx' so-dll work
-F0043 - cREXX Level B Language enhancements
+F0044 - cREXX Level B Language enhancements (Part 2)
+      - Return type of implicitly defined main() automatically set to int or void
+      - Exposed Procedures
+      - Exposed Global Variables
+      - Module namespaces and Import namespaces
+      - Compiler reads procedure definitions from rexx, rxas and rxbin files in search paths for module and
+        imported namespaces
+      - Compiler determines global variable types from rexx, rxas and rxbin files in search paths for module namespace
+      - Debugger Fixes
+F0043 - cREXX Level B Language enhancements (Part 1)
         Dash '--' line comments. Options dashcomments  / nodashcomments (default)
         Slash '//' line comments. Options slashcomments  / noslashcomments (default)
         Hash '#' line comments. Options hashcomments (default) / nohashcomments
@@ -31,7 +41,7 @@ F0041 - REXX Enhancements:
         Debugger PoC Version handles REXX Clauses
         Fix of register assigment logic
         Increased parser stack (100->2000) for more "if" depth. Trapped stack overflow errors
-        Fix argument constant check for external procedures */
+        Fix argument constant check for external procedures
 F0040 - RXAS Debugging Support
         Fix String Compare
         Fix Assembler Keyhole Optimiser confusing register types (r,a,g)

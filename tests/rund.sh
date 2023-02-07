@@ -10,7 +10,7 @@ rm astgraph2.dot astgraph2.png
 rm astgraph3.dot astgraph3.png
 
 echo "rxc -d $1"
-../cmake-build-debug/compiler/rxc -d $1
+../cmake-build-debug/compiler/rxc -i ../cmake-build-debug/lib/rxfns -d $1
 
 echo "rxas -d $1"
 ../cmake-build-debug/assembler/rxas -d $1

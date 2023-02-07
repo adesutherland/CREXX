@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose x2c
 
 /* X2d(hex-string)  returns decimal number of hex string */
 

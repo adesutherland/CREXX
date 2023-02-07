@@ -1,7 +1,7 @@
 /* rexx */
   options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose trunc
 
 trunc: procedure = .string
        arg innum = .string, fraction = 0

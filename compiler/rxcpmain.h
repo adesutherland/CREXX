@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0043"
+#define rxversion "cREXX F0044"
 
 #include <stdio.h>
 #include "platform.h"
@@ -42,8 +42,8 @@ typedef struct importable_file importable_file;
 
 /* Compiler Context Object */
 typedef struct Context {
+    struct Context *master_context; /* This points to the context of the file being compilkes (rather than imported files* */
     int debug_mode;
-    int dont_import; /* Don't import files looking for procedures */
     char* location;
     char* file_name;
     char** import_locations;
@@ -60,8 +60,9 @@ typedef struct Context {
     ASTNode* ast;
     ASTNode* free_list;
     ASTNode* namespace;
+    ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
-    void* importable_function_array;
+    void* importable_function_tree;
     /* Source Options */
     char processedComments;
     RexxLevel level;
@@ -91,11 +92,14 @@ char *clnnode(ASTNode *node);
 char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
-Symbol *sym_imfn(Context *master_context, ASTNode *node);
+Symbol *sym_imfn(Context *context, ASTNode *node);
+
+/* Set the type of a symbol from imported modules */
+void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
-    DO, ENVIRONMENT, ERROR, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
+    DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
@@ -103,7 +107,7 @@ typedef enum NodeType {
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
     RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WHILE, UNTIL
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WARNING, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -188,17 +192,38 @@ ASTNode *ast_ft(Context* context, NodeType type);
 ASTNode *ast_ftt(Context* context, NodeType type, char *string);
 /* ASTNode Factory - With node type and string value copied from another node */
 ASTNode *ast_fstk(Context* context, ASTNode *source_node);
+/* Factory to create a duplicated AST node into a new context
+ * - context is the target context
+ * - node is the node to be duplicated
+ *
+ * A number of aspects are NOT copied
+ * - Symbols
+ * - Scope
+ * - Associated Nodes
+ * - Tree position (child, sibling, parent)
+ * - Emitter output fragments
+ * - Ordinals
+ */
+ASTNode *ast_dup(Context* new_context, ASTNode *node);
+/* Add warning node to parent node */;
+ASTNode *ast_war(ASTNode* parent, char *warning_string);
 /* ASTNode Factory - Error Node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
+/* Add a duplicate of the tree headed by the source node as a child to dest
+ * This handles the nodes, scopes and symbols, and associated nodes
+ * Note that symbols and associated nodes out of the scope of the original child tree are removed */
+ASTNode *add_dast(ASTNode *dest, ASTNode *source);
 const char *ast_ndtp(NodeType type);
 void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
-/* Turn a node to an ERROR */
+/* Add an error child node  */
 void mknd_err(ASTNode* node, char *error_string, ...);
+/* Add a warning child node  */
+void mknd_war(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
@@ -215,6 +240,10 @@ void ast_rpl(ASTNode* replaced_node, ASTNode* new_node);
 void ast_del(ASTNode* node);
 /* Returns the fully resolved node name in a malloced buffer */
 char* ast_frnm(ASTNode* node);
+/* Returns the PROCEDURE ASTNode procedure of an AST node */
+ASTNode* ast_proc(ASTNode *node);
+/* Get the child node of a certain type1 or type2 (or null) */
+ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -250,6 +279,9 @@ void optimise(Context *context);
 /* Prints errors and returns the number of errors in the AST Tree */
 int prnterrs(Context *context);
 
+/* Prints warnings and returns the number of warnings in the AST Tree */
+int prntwars(Context *context);
+
 /* Scope and Symbols */
 struct Scope {
     ASTNode *defining_node;
@@ -281,6 +313,7 @@ struct Symbol {
     SymbolType symbol_type;
     int register_num;
     char register_type;
+    char exposed;      /* Is the symbol exposed */
     char meta_emitted; /* Has the emitter output the symbols metadata yet */
 };
 
@@ -332,7 +365,7 @@ Symbol *sym_f(Scope *scope, ASTNode *node);
 
 /* Symbol Factory - define a symbol with a name */
 /* Returns NULL if the symbol is a duplicate */
-Symbol *sym_fn(Scope *scope, char* name, size_t name_length);
+Symbol *sym_fn(Scope *scope, const char* name, size_t name_length);
 
 /* Frees a symbol - does not remove symbol from scope see scp_rmsy() which probably should be used as well */
 void free_sym(Symbol *symbol);
@@ -348,8 +381,22 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node);
  */
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node);
 
+/* Resolve a Function Symbol
+ * the root parameter should the AST root - the function checks the root of all the PROGRAM_FILE and IMPORTED_FILE
+ */
+Symbol *sym_rvfn(ASTNode *root, char* name);
+
+/* Move (via a merge) a Symbol into a new Scope - returns the target symbol */
+Symbol *sym_merg(Scope *new_scope, Symbol *symbol);
+
 /* Returns the index'th SymbolNode connector attached to a symbol */
 SymbolNode* sym_trnd(Symbol *symbol, size_t index);
+
+/* Returns the PROCEDURE ASTNode of a Symbol */
+ASTNode* sym_proc(Symbol *symbol);
+
+/* Returns 1 if node is linked to symbol, or 0 */
+int symislnk(ASTNode *node, Symbol *symbol);
 
 /* Add an ASTNode using the symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
@@ -360,6 +407,21 @@ size_t sym_nond(Symbol *symbol);
 
 /* Returns the lowest ASTNode ordinal associated with the symbol */
 int sym_lord(Symbol *symbol);
+
+/*
+ * Resolve a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ */
+Symbol *sym_rfqn(ASTNode *root, const char* fqname);
+
+/*
+ * Resolve or add a Symbol via a fully qualified Name
+ * the root parameter should the AST root
+ * Note: Symbols / Scopes are not linked to nodes
+ * Returns the existing or new symbol with the fqname
+ *         or 0 if there is an error (a namespace in the path corresponds to a non-namespace symbol)
+ */
+Symbol *sym_afqn(ASTNode *root, const char* fqname);
 
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
@@ -378,7 +440,7 @@ void f_output(OutputFragment *output);
 /* printf - but returns a malloced buffer with the result */
 char* mprintf(const char* format, ...);
 
-/*  Importable Functions */
+/*  Importable Functions and Variables */
 typedef struct imported_func {
     char *namespace;
     char *file_name;
@@ -389,11 +451,17 @@ typedef struct imported_func {
     char *args;
     char *implementation;
     Context *context;
-    char already_loaded;
+    char is_variable; /* 0=function, 1=global variable */
+    char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
+    struct imported_func *duplicate;
 } imported_func;
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
-imported_func *rximpfc_f(Context*  master_context, char* file_name, char *fqname, char *options, char *type, char *args, char *implementation);
+imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *options, char *type, char *args,
+                        char *implementation, char is_variable);
+
+/* Free Func Tree and functions */
+void fre_ftre(Context *context);
 
 /* Free an imported_func */
 void freimpfc(imported_func *func);

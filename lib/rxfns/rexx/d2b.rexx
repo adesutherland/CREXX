@@ -1,7 +1,7 @@
 options levelb
 /* d2b( decimal to bit string)  returns bit combination of decimal string */
 
-namespace rxfnsb
+namespace rxfnsb expose d2b
 
 d2b: procedure = .string
    arg dec = .int

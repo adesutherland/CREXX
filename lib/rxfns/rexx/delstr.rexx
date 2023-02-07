@@ -1,6 +1,6 @@
 /* rexx */
 options levelb
-namespace rxfnsb
+namespace rxfnsb expose delstr
 import _rxsysb
 
 /* delstr(string,position,length) delete string from certain position and length and returns it */

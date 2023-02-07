@@ -1,6 +1,6 @@
 /* rexx center text  */
 options levelb
-namespace rxfnsb
+namespace rxfnsb expose c2d
 
 c2d: procedure = .int
   arg from = .string

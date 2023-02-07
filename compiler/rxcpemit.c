@@ -374,6 +374,7 @@ static void print_output(FILE* file, OutputFragment* existing) {
 
 typedef struct walker_payload {
     Context *context;
+    int globals;
     FILE *file;
 } walker_payload;
 
@@ -405,12 +406,12 @@ static walker_result register_walker(walker_direction direction,
                 while (c) {
                     c->register_num = a;
                     c->register_type ='a';
-                    if (c->is_ref_arg) {
-                        /* Pass by reference - no copy so just use the 'a' register */
+                    if ( c->is_ref_arg && !(c->child->symbolNode->symbol->exposed) ) {
+                        /* Pass by reference and not exposed - no copy so just use the 'a' register */
                         c->child->symbolNode->symbol->register_num = a;
                         c->child->symbolNode->symbol->register_type = 'a';
                     }
-                    /* Otherwise, a normal register will be assigned to the symbol later */
+                    /* Otherwise, a register will be assigned to the symbol later */
 
                     a++;
                     c = c->sibling;
@@ -468,7 +469,7 @@ static walker_result register_walker(walker_direction direction,
                         /* NOTE This does nothing as the symbols have always
                          * already been assigned :-( TODO to solve this */
 
-                        if (c->symbolNode->symbol->register_num == UNSET_REGISTER)
+                        if (c->symbolNode->symbol->register_num == UNSET_REGISTER && !(c->symbolNode->symbol->exposed))
                             c->symbolNode->symbol->register_num = i;
                     }
 
@@ -647,8 +648,13 @@ static walker_result register_walker(walker_direction direction,
             case VAR_TARGET:
             case VAR_REFERENCE:
                 /* Set the symbols register */
-                if (node->symbolNode->symbol->register_num == UNSET_REGISTER)
-                    node->symbolNode->symbol->register_num = get_reg(node->scope);
+                if (node->symbolNode->symbol->register_num == UNSET_REGISTER) {
+                    if (node->symbolNode->symbol->exposed) {
+                        node->symbolNode->symbol->register_num = payload->globals++;
+                        node->symbolNode->symbol->register_type = 'g';
+                    }
+                    else node->symbolNode->symbol->register_num = get_reg(node->scope);
+                }
                 /* The node uses the symbol register number */
                 node->register_num = node->symbolNode->symbol->register_num;
                 node->register_type = node->symbolNode->symbol->register_type;
@@ -1143,7 +1149,7 @@ static char* type_to_prefix(ValueType value_type) {
 }
 
 /* Adds Symbol metadata */
-void meta_set_symbol(Symbol *symbol, void *payload) {
+static void meta_set_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
@@ -1209,12 +1215,97 @@ static void add_variable_metadata(ASTNode* node) {
         scope = n->scope;
     }
 
-    /* Clears the Procedure's Symbols from metadata */
+    /* Sets the Procedure's Symbols from metadata */
     scp_4all(scope, meta_set_symbol, node);
 }
 
+/* Adds and exposed Global Variable Symbol */
+static void add_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL && symbol->exposed) {
+
+        symbol_fqn = sym_frnm(symbol);
+        buffer = mprintf("%c%d .expose=%s\n",
+                         symbol->register_type, symbol->register_num,
+                         symbol_fqn
+        );
+        free(symbol_fqn);
+
+        /* Add the metadata to the output fragment */
+        output_append_text(output,buffer);
+        free(buffer);
+    }
+}
+
+/* Add exposed Global Variables - node is the PROGRAM_FILE node */
+static void add_exposed_global_variable(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (file / namespace scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Sets the Procedure's Global Symbols from metadata */
+    scp_4all(scope, add_global_symbol, node);
+}
+
+/* Adds Global Variable Symbol metadata */
+static void meta_set_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload; /* The PROCEDURE node */
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL) {
+        /* Is the global used in the procedure */
+        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
+            symbol_fqn = sym_frnm(symbol);
+            buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
+                             symbol_fqn,
+                             type_nm(symbol->type),
+                             symbol->register_type, symbol->register_num
+            );
+            free(symbol_fqn);
+
+            /* Add the metadata to the output fragment */
+            output_append_text(output, buffer);
+            free(buffer);
+        }
+    }
+}
+
+/* Add Global Variable Metadata
+ * node is the PROCEDURE node*/
+static void add_global_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (procedure scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* namespace scope */
+    scope = scope->parent;
+
+    /* Sets the Procedure's Global Symbols from metadata */
+    scp_4all(scope, meta_set_global_symbol, node);
+}
+
 /* Clears Symbol metadata */
-void meta_clear_symbol(Symbol *symbol, void *payload) {
+static void meta_clear_symbol(Symbol *symbol, void *payload) {
     ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
@@ -1260,6 +1351,48 @@ static void clear_variable_metadata(ASTNode *node) {
     scp_4all(scope, meta_clear_symbol, node);
 }
 
+/* Clear Global Variable Symbol metadata */
+static void meta_clear_global_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload; /* The PROCEDURE node */
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == VARIABLE_SYMBOL) {
+        /* Is the global used in the procedure */
+        if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
+            symbol_fqn = sym_frnm(symbol);
+            buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
+            free(symbol_fqn);
+
+            /* Add the metadata to the output fragment */
+            output_append_text(output, buffer);
+            free(buffer);
+        }
+    }
+}
+
+/* Clear Global Variable Metadata
+ * node is the PROCEDURE node*/
+static void clear_global_variable_metadata(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    /*  Find the node (procedure scope) */
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* namespace scope */
+    scope = scope->parent;
+
+    /* Clears the Procedure's Global Symbols from metadata */
+    scp_4all(scope, meta_clear_global_symbol, node);
+}
+
 /* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
 char *clnnode(ASTNode *node) {
     ASTNode *n;
@@ -1286,7 +1419,7 @@ char *clnnode(ASTNode *node) {
     b = buffer = malloc(buffer_len);
     for  (t = node->token_start; t; t = t->token_next) {
         if (t->token_type != TK_STRING)  {
-            /* Upper case it - because we are REXX */
+            /* Lower case it */
             for (i = 0; i < t->length; i++) {
                 *(b++) = (char)tolower(t->token_string[i]);
             }
@@ -1321,7 +1454,8 @@ char* nodetype(ASTNode *node) {
         case TP_FLOAT:   strcpy(buffer, ".float"); break;
         case TP_STRING:  strcpy(buffer, ".string"); break;
         case TP_OBJECT:  strcpy(buffer, ".object"); break;
-        default:         strcpy(buffer, ".void");
+        case TP_VOID:    strcpy(buffer, ".void"); break;
+        default:         strcpy(buffer, ".unknown");
     }
     return buffer;
 }
@@ -1388,11 +1522,15 @@ static walker_result emit_walker(walker_direction direction,
             case PROGRAM_FILE:
             {
                 char *buf = mprintf(".srcfile=\"%s\"\n"
-                                    ".globals=0\n",
-                                    payload->context->file_name);
+                                    ".globals=%d\n",
+                                    payload->context->file_name,
+                                    payload->globals);
 
                 node->output = output_fs(buf);
                 free(buf);
+
+                /* Add exposed global variables */
+                add_exposed_global_variable(node);
 
                 n = child1;
                 while (n) {
@@ -1421,19 +1559,32 @@ static walker_result emit_walker(walker_direction direction,
             case PROCEDURE:
                 if (!child3 || child3->node_type == NOP) {
                     /* A declaration - external */
-                    char* type = nodetype(child1);
-                    char* source = clnnode(child2);
+                    char* type = nodetype(ast_chld(node, CLASS, VOID));
+                    char* source = clnnode(ast_chld(node, ARGS, 0));
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = mprintf("\n%.*s() .expose=%s\n"
-                                        "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
-                                        (int) node->node_string_length, node->node_string,
-                                        proc_symbol, /* FQ Symbol Name */
-                                        proc_symbol, /* FQ Symbol Name */
-                                        type, /* Type */
-                                        (int) node->node_string_length, node->node_string, /* Func Name */
-                                        coded /* Args */
-                    );
+                    char* buf;
+                    if (node->symbolNode->symbol->exposed) {
+                        buf = mprintf("\n%.*s() .expose=%s\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
+                                      (int) node->node_string_length, node->node_string,
+                                      proc_symbol, /* FQ Symbol Name */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Type */
+                                      (int) node->node_string_length, node->node_string, /* Func Name */
+                                      coded /* Args */
+                        );
+                    }
+                    else {
+                        buf = mprintf("\n%.*s()\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
+                                      (int) node->node_string_length, node->node_string,
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Type */
+                                      (int) node->node_string_length, node->node_string, /* Func Name */
+                                      coded /* Args */
+                        );
+                    }
                     node->output = output_fs(buf);
                     free(type);
                     free(source);
@@ -1443,19 +1594,32 @@ static walker_result emit_walker(walker_direction direction,
                 }
                 else {
                     /* Definition */
-                    char* type = nodetype(child1);
-                    char* source = clnnode(child2);
+                    char* type = nodetype(ast_chld(node, CLASS, VOID));
+                    char* source = clnnode(ast_chld(node, ARGS, 0));
                     char* coded = encdstrg(source, strlen(source));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
-                    char* buf = mprintf("\n%.*s() .locals=%d .expose=%s\n"
-                                        "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
-                                        (int) node->node_string_length, node->node_string, /* Function name */
-                                        (int) node->scope->num_registers, /* Locals */
-                                        proc_symbol, /* FQ Symbol name */
-                                        proc_symbol, /* FQ Symbol Name */
-                                        type, /* Return Type */
-                                        (int) node->node_string_length, node->node_string, /* Function name */
-                                        coded /* Args */);
+                    char* buf;
+                    if (node->symbolNode->symbol->exposed) {
+                        buf = mprintf("\n%.*s() .locals=%d .expose=%s\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      (int) node->scope->num_registers, /* Locals */
+                                      proc_symbol, /* FQ Symbol name */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Return Type */
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      coded /* Args */);
+                    }
+                    else {
+                        buf = mprintf("\n%.*s() .locals=%d\n"
+                                      "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      (int) node->scope->num_registers, /* Locals */
+                                      proc_symbol, /* FQ Symbol Name */
+                                      type, /* Return Type */
+                                      (int) node->node_string_length, node->node_string, /* Function name */
+                                      coded /* Args */);
+                    }
                     node->output = output_fs(buf);
                     free(type);
                     free(source);
@@ -1470,6 +1634,9 @@ static walker_result emit_walker(walker_direction direction,
                         free(comment_meta);
                     }
 
+                    /* Add Global Variables */
+                    add_global_variable_metadata(node);
+
                     n = child2;
                     while (n) {
                         if (n->output) output_concat(node->output, n->output);
@@ -1478,6 +1645,7 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Clear all variable metadata */
                     clear_variable_metadata(node);
+                    clear_global_variable_metadata(node);
                 }
                 break;
 
@@ -2804,9 +2972,10 @@ void emit(Context *context, FILE *output) {
     walker_payload payload;
 
     payload.context = context;
+    payload.file = output;
+    payload.globals = 0;
 
     ast_wlkr(context->ast, register_walker, (void *) &payload);
 
-    payload.file = output;
     ast_wlkr(context->ast, emit_walker, (void *) &payload);
 }

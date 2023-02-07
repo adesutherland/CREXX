@@ -1,0 +1,1 @@
+/* Tests for latest show and tells */options levelbnamespace gtest expose lib2 counterlib2: procedure  a = 5  say "a in lib is" a  say "b in lib is" b  say "counter" is counter  return

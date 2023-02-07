@@ -93,12 +93,6 @@ struct fl_dir {
 };
 #endif
 
-static const char *get_filename_ext(const char *filename) {
-    const char *dot = strrchr(filename, '.');
-    if(!dot || dot == filename) return "";
-    return dot + 1;
-}
-
 #ifdef _WIN32
 struct WIN_FILE_DATA {
     HANDLE hFind;
@@ -171,7 +165,7 @@ char *dirnxtfl(void **dir_ptr) {
     do {
         dirent = readdir(ptr->d);
         if (!dirent) return 0;
-        ext = get_filename_ext(dirent->d_name);
+        ext = filenext(dirent->d_name);
         if ( strcmp(ext,ptr->type) == 0 ) return dirent->d_name;
     } while (1);
 
@@ -285,4 +279,51 @@ char* exefqname()
 #endif
 
     return exePath;
+}
+
+/* Gets the file extention of a path */
+const char *filenext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
+/* Gets the filename of a path */
+const char *filename(const char *path)
+{
+    size_t len = strlen(path);
+    size_t i;
+    if (!len) return "";
+
+    for (i = len - 1; i; i--)
+    {
+        if ( path[i] == '\\' || path[i] == '/' )
+        {
+            path = path + i + 1;
+            break;
+        }
+    }
+    return path;
+}
+
+/* Gets the directory of a filename in a malloced buffer */
+/* returns null if there is no directory part */
+char *file_dir(const char *path)
+{
+    size_t len = strlen(path);
+    if (!len) return 0;
+    char* result;
+
+    for (len--; len; len--)
+    {
+        if ( path[len] == '\\' || path[len] == '/' )
+        {
+            result = malloc(len + 1);
+            result[len] = 0;
+            memcpy(result, path, len);
+            return result;
+        }
+    }
+
+    return 0;
 }

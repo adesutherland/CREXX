@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb
+namespace rxfnsb expose delword
 
 /* delword(string,wordnumber-to-delete,length) delete one word, or the remaining words in string */
 delword: procedure = .string
