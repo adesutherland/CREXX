@@ -1,0 +1,27 @@
+\chapter{Typographical conventions}
+In general, the following conventions have  been observed in the NetRexx publications:
+\begin{itemize}
+\item Body text is in this font
+\item Examples of language statements are in a \keyword{keyword} or \textbf{bold} type
+\item Variables or strings as mentioned in source code, or things that appear on the console, are in a \texttt{typewriter} type
+\item Items that are introduced, or emphasized, are in an \emph{italic} type
+\item Included program fragments are listed in this fashion:
+\begin{lstlisting}[label=example,caption=Example Listing]
+-- salute the reader
+say 'hello reader'
+\end{lstlisting}
+\item Syntax diagrams take the form of so-called \emph{Railroad
+    Diagrams} to convey structure, mandatory and optional items
+  \end{itemize}
+ \begin{figure}
+ \begin{shaded}
+\begin{rail}
+Properties : 'properties'   visibility? modifier? 'deprecated'? 'unused'?
+               ;
+\end{rail}
+\end{shaded}
+\end{figure}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

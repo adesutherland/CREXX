@@ -1,0 +1,109 @@
+\subsubsection{If instruction}
+\index{IF instruction,}
+\index{Instructions,IF}
+\index{THEN,following IF clause}
+\index{,}
+\index{Flow control,with IF construct}
+\begin{shaded}
+\begin{alltt}
+\textbf{if} \emph{expression}[;]
+     \textbf{then}[;] \emph{instruction}
+    [\textbf{else}[;] \emph{instruction}]
+\end{alltt}
+\end{shaded}
+ The \keyword{if} construct is used to conditionally execute an
+instruction or group of instructions.
+It can also be used to select between two alternatives.
+ The expression is evaluated and must result in either 0 or 1.
+If the result was 1 (true) then the instruction after the
+\keyword{then} is executed.
+If the result was 0 (false) and an \keyword{else} was given
+then the instruction after the \keyword{else} is executed.
+ \textbf{Example:}
+\begin{lstlisting}
+if answer='Yes' then say 'OK!'
+                else say 'Why not?'
+\end{lstlisting}
+ Remember that if the \keyword{else} clause is on the same line as the
+last clause of the \keyword{then} part, then you need a semicolon to
+terminate that clause.
+ \textbf{Example:}
+\begin{lstlisting}
+if answer='Yes' then say 'OK!';  else say 'Why not?'
+\end{lstlisting}
+ The \keyword{else} binds to the nearest \keyword{then} at the same level.
+This means that any \keyword{if} that is used as the instruction
+following the \keyword{then} in an \keyword{if} construct that has an
+\keyword{else} clause, must itself have an \keyword{else} clause (which
+may be followed by the dummy instruction, \keyword{nop}).
+ \textbf{Example:}
+\begin{lstlisting}
+if answer='Yes' then if name='Fred' then say 'OK, Fred.'
+                                    else say 'OK.'
+                else say 'Why not?'
+\end{lstlisting}
+ 
+To include more than one instruction following \keyword{then} or
+\keyword{else}, use a grouping instruction (\keyword{do}, \keyword{loop},
+or \keyword{select}).
+ \textbf{Example:}
+\begin{lstlisting}
+if answer='Yes' then do
+  say 'Line one of two'
+  say 'Line two of two'
+  end
+\end{lstlisting}
+In this instance, both \keyword{say} instructions are executed when
+the result of the \keyword{if} expression is 1.
+ 
+Multiple expressions, separated by commas, can be given on the
+\keyword{if} clause, which then has the syntax:
+\begin{shaded}
+\begin{alltt}
+\textbf{if} \emph{expression}[, \emph{expression}]... [;]
+\end{alltt}
+\end{shaded}
+In this case, the expressions are evaluated in turn from left to
+right, and if the result of any evaluation is 1 then the test has
+succeeded and the instruction following the associated \keyword{then}
+clause is executed.
+If all the expressions evaluate to 0 and an \keyword{else} was given
+then the instruction after the \keyword{else} is executed.
+ 
+Note that once an expression evaluation has resulted in 1, no further
+expressions in the clause are evaluated.  So, for example, in:
+\begin{lstlisting}
+-- assume 'name' is a string
+if name=null, name='' then say 'Empty'
+\end{lstlisting}
+then if \texttt{name} does not refer to an object it will compare equal to
+null and the \keyword{say} instruction will be executed without
+evaluating the second expression in the \keyword{if} clause.
+\begin{shaded}\noindent
+\textbf{Notes:}
+\begin{enumerate}
+\item An \emph{instruction} may be any assignment, method call, or
+keyword instruction, including any of the more complex constructions
+such as \keyword{do}, \keyword{loop}, \keyword{select}, and the \keyword{if}
+instruction itself.
+A null clause is not an instruction, however, so putting an extra
+semicolon after the \keyword{then} or \keyword{else} is not equivalent to
+putting a dummy instruction.
+The \keyword{nop} instruction is provided for this purpose.
+\item The keyword \keyword{then} is treated specially, in that it need not start a
+clause.
+This allows the expression on the \keyword{if} clause to be terminated by
+the \keyword{then}, without a "\textbf{;}" being required -
+were this not so, people used to other computer languages would
+be inconvenienced.
+Hence the symbol \keyword{then} cannot be used as a variable name within
+the expression.
+%% \footnote{
+%% Strictly speaking, \keyword{then} should only be recognized if not
+%% the name of a variable.  In this special case, however, \nr{} language
+%% processors are permitted to treat \keyword{then} as reserved in the
+%% context of an \keyword{if} clause, to provide better performance and
+%% more useful error reporting.
+%% }
+\end{enumerate}
+\end{shaded}\indent

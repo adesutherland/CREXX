@@ -1,0 +1,8 @@
+*.aux
+*.exitCode
+*.idx
+*.log
+*.lot
+*.stderr
+*.stdout
+*.toc
