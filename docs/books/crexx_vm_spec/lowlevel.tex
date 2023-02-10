@@ -8,7 +8,7 @@ machine instructions produced by the \emph{rxc} \crexx{}
 compiler, or written by hand, assembled into an .rxbin binary file by
 the \emph{rxas} assembler.
 
-\input{../Logical-REXX-VM.tex}
+\input{Logical-REXX-VM.tex}
 
 \section{RXVM machine instructions}
 
@@ -37,23 +37,6 @@ hardware.  A software implementation of the architecture conforms to
 the ABI; likewise, the architecture could be implemented in hardware,
 e.g. an FPGA.
 
-% this is just a test
-%% \directlua{ 
-%% function runcommand(cmd) 
-%% local fout = assert(io.popen(cmd, 'r')) 
-%% local str = assert(fout:read('*a')) 
-%% fout:close() 
-%% return str 
-%% end 
-
-%% local sout=runcommand("rxas -i") 
-%% local marg = assert(io.open("command.txt","w")) 
-%% marg:write(sout) 
-%% marg:flush() 
-%% marg:close() 
-%% } 
-%% \verbatiminput{command.txt} 
-
 \subsection{The Register}
 \index{register}
 RXVM is a Register based virtual machine, as opposed to a Stack based
@@ -64,7 +47,7 @@ implied by the address size that the host OS can handle. For hardware
 the size is undefined and can follow the hardware address generation
 capacity.
 
-\begin{lstlisting}[style=embed,label=crexxregister,caption={The
+\begin{lstlisting}[label=crexxregister,caption={The
 \crexx{} Register implementation in C}]
 struct value {
     /* bit field to store value status - these are explicitly set */
@@ -97,7 +80,7 @@ value in field \code{int_value}, but it needs to be printed with the rxas
 \keyword{itos} takes care of the conversion and the population of the
 memory area the \code{*string_value} points to. 
 
-\begin{lstlisting}[style=embed,label=crexxregister,caption={Values of
+\begin{lstlisting}[label=crexxregister,caption={Values of
 the Status field}]
 typedef union {
     struct {
@@ -112,41 +95,41 @@ typedef union {
 \end{lstlisting}
 
 \subsubsection{Layout of a Register}
-  \begin{tikzpicture}
-    \matrix [memory layout, inner sep=0pt, nodes={inner sep=1ex},
-    description/.style={text width=12em, text badly centered},
-    cells={anchor=center}] (m) {
-      \node [description] {status};
-      \\
-      \coordinate (A);\\
-      \node [description] {int value};
-      \\
-      \coordinate (B);\\
-      \node [description] {float value};
-      \\
-      \coordinate (C);\\
-      \node [description] {*decimal value};
-      \\
-      \coordinate (D);\\
-      \node [description] {*string value};
-      \\
-      \coordinate (E);\\
-      \node [description] {string length};
-      \\
-      \coordinate (F);\\
-      \node [description] {string buffer length};
-      \\
-      \coordinate (G);\\
-      \node [description] {string pos};
-      \\
-      \coordinate (H);\\
-      \node [description] {*object value};
-      \\
-    };
-    \foreach \Node in {A, B, C, D, E, F, G, H} {
-      \draw (\Node -| m.west) -- (\Node -| m.east);
-    };
-  \end{tikzpicture}
+  % \begin{tikzpicture}
+  %   \matrix [memory layout, inner sep=0pt, nodes={inner sep=1ex},
+  %   description/.style={text width=12em, text badly centered},
+  %   cells={anchor=center}] (m) {
+  %     \node [description] {status};
+  %     \\
+  %     \coordinate (A);\\
+  %     \node [description] {int value};
+  %     \\
+  %     \coordinate (B);\\
+  %     \node [description] {float value};
+  %     \\
+  %     \coordinate (C);\\
+  %     \node [description] {*decimal value};
+  %     \\
+  %     \coordinate (D);\\
+  %     \node [description] {*string value};
+  %     \\
+  %     \coordinate (E);\\
+  %     \node [description] {string length};
+  %     \\
+  %     \coordinate (F);\\
+  %     \node [description] {string buffer length};
+  %     \\
+  %     \coordinate (G);\\
+  %     \node [description] {string pos};
+  %     \\
+  %     \coordinate (H);\\
+  %     \node [description] {*object value};
+  %     \\
+  %   };
+  %   \foreach \Node in {A, B, C, D, E, F, G, H} {
+  %     \draw (\Node -| m.west) -- (\Node -| m.east);
+  %   };
+  % \end{tikzpicture}
 
 \subsubsection{Operand Types}
 
@@ -155,32 +138,32 @@ instructions. The operand(s), if needed, always follow the instruction
 mnemonic. A small subset of the instructions takes no operands, like
 \keyword{RET}, \keyword{INC0}, \keyword{INC1}, \keyword{INC2}.
 
-\begin{table}
-  \centering
-  \begin{DIFnomarkup}
-  \begin{threeparttable}
-    \begin{tabularx}{\textwidth}{lXl}
-      \toprule
-      Operand Type & Role &  \\
-      \midrule
-      \texttt{REG} & a register & \\
-      \texttt{STRING} & a sequence of Unicode characters & \\
-      \texttt{CHAR} & one Unicode character \\
-      \texttt{FUNC} & a global or local function & \\
-      \texttt{ID} & a label & \\
-      \texttt{INT} & a number of type integer \dagger & \\
-      \texttt{FLOAT} & a number of type float \dagger & \\
-      \bottomrule
-    \end{tabularx}
-    \medskip
-    \begin{tablenotes}
-    \item [\dagger] maximum value implied by the host hardware.
-    \end{tablenotes}
-  \end{threeparttable}
-  \end{DIFnomarkup}
-  \caption{RXAS Assembler Instruction Operands}
-  \label{tab:rxasoperands}
-\end{table}
+% \begin{table}
+%   \centering
+%   % \begin{DIFnomarkup}
+%   % \begin{threeparttable}
+%     \begin{tabularx}{\textwidth}{lXl}
+%       \toprule
+%       Operand Type & Role &  \\
+%       \midrule
+%       \texttt{REG} & a register & \\
+%       \texttt{STRING} & a sequence of Unicode characters & \\
+%       \texttt{CHAR} & one Unicode character \\
+%       \texttt{FUNC} & a global or local function & \\
+%       \texttt{ID} & a label & \\
+%       \texttt{INT} & a number of type integer \dagger & \\
+%       \texttt{FLOAT} & a number of type float \dagger & \\
+%       \bottomrule
+%     \end{tabularx}
+%   %   \medskip
+%   %   \begin{tablenotes}
+%   %   \item [\dagger] maximum value implied by the host hardware.
+%   %   \end{tablenotes}
+%   % \end{threeparttable}
+%   % \end{DIFnomarkup}
+%   \caption{RXAS Assembler Instruction Operands}
+%   \label{tab:rxasoperands}
+% \end{table}
 
 
 \subsection{RXVM Instruction Set}
@@ -200,27 +183,27 @@ mnemonic. A small subset of the instructions takes no operands, like
 The \emph{rxas} assembler language has a number of statements that are
 directives to the assembler as opposed to machine instructions.
 
-\begin{table}
-  \centering
-  \begin{DIFnomarkup}
-  \begin{threeparttable}
-    \begin{tabularx}{\textwidth}{lXl}
-      \toprule
-      Directive & Role &  \\
-      \midrule
-      \texttt{*} & comment until end of line & \\
-      \texttt{/* */} & delimited comment & \\
-      \texttt{.globals=\emph{n}} & specifies number of globals & \\
-      \texttt{.expose=\emph{package.symbol}} & expose (make globally known) & \\
-      \texttt{.locals=\emph{n}} &  specifies number of locals & \\
-      \bottomrule
-    \end{tabularx}
-    \medskip
-    % \begin{tablenotes}
-    % \item [\dagger] maximum value implied by the host hardware.
-    % \end{tablenotes}
-  \end{threeparttable}
-  \end{DIFnomarkup}
-  \caption{RXAS Assembler Directives}
-  \label{tab:rxasdirectives}
-\end{table}
+% \begin{table}
+%   \centering
+%   \begin{DIFnomarkup}
+%   \begin{threeparttable}
+%     \begin{tabularx}{\textwidth}{lXl}
+%       \toprule
+%       Directive & Role &  \\
+%       \midrule
+%       \texttt{*} & comment until end of line & \\
+%       \texttt{/* */} & delimited comment & \\
+%       \texttt{.globals=\emph{n}} & specifies number of globals & \\
+%       \texttt{.expose=\emph{package.symbol}} & expose (make globally known) & \\
+%       \texttt{.locals=\emph{n}} &  specifies number of locals & \\
+%       \bottomrule
+%     \end{tabularx}
+%     \medskip
+%     % \begin{tablenotes}
+%     % \item [\dagger] maximum value implied by the host hardware.
+%     % \end{tablenotes}
+%   \end{threeparttable}
+%   \end{DIFnomarkup}
+%   \caption{RXAS Assembler Directives}
+%   \label{tab:rxasdirectives}
+%\end{table}
