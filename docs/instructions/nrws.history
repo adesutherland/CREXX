@@ -1,2 +1,20 @@
-1674927017354:say date('b') - date('b','20 Nov 2022')
-1675193383343:exit
+1676497592600:pipe <instructions.txt |cons
+1676497604166:pipe < instructions.txt |cons
+1676497648731:pipe < instructions.txt | sort 8 | cons
+1676498094411:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES('/ 1 1-6 next /','/ next | cons
+1676498124852:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next | cons
+1676498182551:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-20 next /'',''/ next | cons
+1676498222729:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next | cons
+1676498468390:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next | cons
+1676498680398:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next | /'',''/ next 39-85 next /'','');/ next | cons
+1676498714009:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next | /'',''/ next 39-85 next /'','')/ next | cons
+1676498845705:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next | /'',''/ next 39-85 next /'',''/ next | cons
+1676498883446:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-85 next /'',''/ next | cons
+1676498914363:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next | cons
+1676499093394:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next //'',''/ next | cons
+1676499106661:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next /'',''/ next | cons
+1676499144849:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next /'');/ next | cons
+1676499172490:pipe < instructions.txt | sort 8 | specs /insert into instructions VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next /'');/ next | > insert.sql
+1676499176027:exit
+1676499499954:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next /'');/ next | > insert.sql
+1676499515899:exit

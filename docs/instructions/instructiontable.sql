@@ -14,8 +14,7 @@ insert into category VALUES(7,'Meta Instructions','Instructions that work on pro
 insert into category VALUES(8,'Breakpoint Instructions','Instructions that aid in debugging programs');
 drop table if exists instruction;
 CREATE TABLE instruction
-( instruction        integer primary key,
-  opcode             char(6),
+( opcode             char(6) primary key,
   mnemonic           varchar(50),
   operands	     varchar(50),
   description	     varchar(80),
