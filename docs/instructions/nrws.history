@@ -18,3 +18,5 @@
 1676499176027:exit
 1676499499954:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'',''/ next /'');/ next | > insert.sql
 1676499515899:exit
+1676561773593:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 next /'',''/ next 18-38 next /'',''/ next 39-100 next /'',''/ next /'');/ next | > insert.sql
+1676561786546:exit

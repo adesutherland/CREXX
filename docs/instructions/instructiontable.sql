@@ -12,14 +12,14 @@ insert into category VALUES(5,'I/O operations','Instructions that implement inpu
 insert into category VALUES(6,'Time Instructions','Instructions that work with date and time');
 insert into category VALUES(7,'Meta Instructions','Instructions that work on program structure metadata');
 insert into category VALUES(8,'Breakpoint Instructions','Instructions that aid in debugging programs');
+insert into category VALUES(9,'String Instructions','Instructions that work on Strings and Characters');
 drop table if exists instruction;
 CREATE TABLE instruction
 ( opcode             char(6) primary key,
   mnemonic           varchar(50),
   operands	     varchar(50),
   description	     varchar(80),
-  text		     varchar(1000),
-  category	     integer,
+  category	     integer not null,
   foreign key (category) references category(category)
 );
 
