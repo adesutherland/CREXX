@@ -7,8 +7,5 @@ Foo [label=<
 <tr><td> 0x007e </td><td> FLT </td><td> REG </td><td> REG </td><td> REG </td> </tr>
 <tr><td> 0x007f </td><td> FLT </td><td> REG </td><td> REG </td><td> FLOAT </td> </tr>
 <tr><td> 0x0080 </td><td> FLT </td><td> REG </td><td> FLOAT </td><td> REG </td> </tr>
-<tr><td> 0x0081 </td><td> FLT </td><td> REG </td><td> REG </td><td> REG </td> </tr>
-<tr><td> 0x0082 </td><td> FLT </td><td> REG </td><td> REG </td><td> FLOAT </td> </tr>
-<tr><td> 0x0083 </td><td> FLT </td><td> REG </td><td> FLOAT </td><td> REG </td> </tr>
 </table>>];
 }

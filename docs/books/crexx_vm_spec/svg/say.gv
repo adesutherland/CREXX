@@ -8,8 +8,6 @@ Foo [label=<
 <tr><td> 0x00c9 </td><td> SAY </td><td> INT </td> </tr>
 <tr><td> 0x00cc </td><td> SAY </td><td> CHAR </td> </tr>
 <tr><td> 0x00cb </td><td> SAY </td><td> STRING </td> </tr>
-<tr><td> 0x00c7 </td><td> SAY </td><td> REG </td> </tr>
-<tr><td> 0x00c8 </td><td> SAY </td><td> STRING </td> </tr>
 <tr><td> 0x00ca </td><td> SAY </td><td> FLOAT </td> </tr>
 </table>>];
 }

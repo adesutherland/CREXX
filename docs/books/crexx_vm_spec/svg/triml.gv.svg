@@ -19,6 +19,8 @@
 <text text-anchor="start" x="115.5" y="-48.3" font-family="Times,serif" font-size="14.00"> OP1 </text>
 <polygon fill="none" stroke="black" points="152,-41.5 152,-62.5 193,-62.5 193,-41.5 152,-41.5"/>
 <text text-anchor="start" x="156.5" y="-48.3" font-family="Times,serif" font-size="14.00"> OP2 </text>
+<polygon fill="none" stroke="black" points="193,-41.5 193,-62.5 234,-62.5 234,-41.5 193,-41.5"/>
+<text text-anchor="start" x="197.5" y="-48.3" font-family="Times,serif" font-size="14.00"> OP3 </text>
 <polygon fill="none" stroke="black" points="0,-20.5 0,-41.5 56,-41.5 56,-20.5 0,-20.5"/>
 <text text-anchor="start" x="3.5" y="-27.3" font-family="Times,serif" font-size="14.00"> 0x0056 </text>
 <polygon fill="none" stroke="black" points="56,-20.5 56,-41.5 111,-41.5 111,-20.5 56,-20.5"/>

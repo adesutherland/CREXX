@@ -40,6 +40,8 @@ Foo [label=<
     description=description.changestr('&','\\&')
     description=description.changestr('^','\\^')
     mnemonic=mnemonic.strip()
+    /* if mnemonic == 'ilte' then trace results */
+    /* else trace off */
     lineout(mnemonic'.gv','digraph{',1)
     lineout(mnemonic'.gv','graph [pad="0.5", nodesep="0.5", ranksep="2" ]')
     lineout(mnemonic'.gv','node[shape=plain]')
@@ -61,7 +63,7 @@ Foo [label=<
     qs=''
     outs=''
     qs[0]=1
-    qs[1]="select opcode, operands from instruction where mnemonic like '"mnemonic"%';"
+    qs[1]="select opcode, operands from instruction where mnemonic = '"mnemonic"';"
     address system 'sqlite3 ../../../instructions/instructionbase.sqb' with -
       input stem qs -
       output stem outs
@@ -79,7 +81,7 @@ Foo [label=<
       line=line '</tr>'
       /* to repeat when more opcodes */
       lineout(mnemonic'.gv',line)
-      j=j+1
+      --j=j+1
     end
     lineout(mnemonic'.gv','</table>>];')
     lineout(mnemonic'.gv','}')
