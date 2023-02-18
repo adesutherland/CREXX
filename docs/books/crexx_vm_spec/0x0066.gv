@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0066|ine        |   REG|REG|REG         "];
+struct1 [label="0x0066|INE        |   REG|REG|REG         "];
 }

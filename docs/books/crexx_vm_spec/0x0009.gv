@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0009|metaloadfop| perand  REG|REG|REG   "];
+struct1 [label="0x0009|METALOADFOP| perand  REG|REG|REG   "];
 }

@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0101|loadsettp  |   REG|STRING|INT      "];
+struct1 [label="0x0101|LOADSETTP  |   REG|STRING|INT      "];
 }

@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0008|metaloadiop| perand  REG|REG|REG   "];
+struct1 [label="0x0008|METALOADIOP| perand  REG|REG|REG   "];
 }

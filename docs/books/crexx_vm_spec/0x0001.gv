@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0001|bpon       |  no operand           "];
+struct1 [label="0x0001|BPON       |  no operand           "];
 }

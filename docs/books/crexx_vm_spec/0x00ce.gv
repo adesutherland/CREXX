@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x00ce|exit       |  no operand           "];
+struct1 [label="0x00ce|EXIT       |  no operand           "];
 }

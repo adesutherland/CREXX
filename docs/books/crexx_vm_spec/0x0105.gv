@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0105|opendll    |   REG|REG|REG         "];
+struct1 [label="0x0105|OPENDLL    |   REG|REG|REG         "];
 }

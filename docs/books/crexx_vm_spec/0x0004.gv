@@ -1,4 +1,4 @@
 digraph regs {
 node[shape=record]
-struct1 [label="0x0004|metaloadedm| modules  REG          "];
+struct1 [label="0x0004|METALOADEDM| modules  REG          "];
 }
