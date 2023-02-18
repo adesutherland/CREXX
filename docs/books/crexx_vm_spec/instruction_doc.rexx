@@ -37,6 +37,7 @@ do i=1 to outstem[0]
     lineout('instruction_chapter.tex','\\begin{description}')
     lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
     lineout('instruction_chapter.tex','\\includesvg{svg/'mnemonic'.gv}')
+    lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic'.operation}{\\input{examples/'mnemonic'.operation}}{}')
     lineout('instruction_chapter.tex','\\end{description}')
     lineout('instruction_chapter.tex','\\clearpage')
   end -- do j
