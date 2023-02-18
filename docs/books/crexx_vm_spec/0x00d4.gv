@@ -1,0 +1,4 @@
+digraph regs {
+node[shape=record]
+struct1 [label="0x00d4|ftoi       |   REG                 "];
+}

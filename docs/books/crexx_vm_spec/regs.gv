@@ -1,0 +1,4 @@
+digraph regs {
+	node[shape=record]
+	struct1 [label="<f0> IADD|<f1> REG|<f2> INT"];
+}
