@@ -1,4 +1,0 @@
-digraph regs {
-node[shape=record]
-struct1 [label="0x0033|FDIV       |   REG|REG|FLOAT       "];
-}

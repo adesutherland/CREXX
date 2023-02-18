@@ -34,6 +34,6 @@ do i=1 to outstem[0]
     lineout('instruction_chapter.tex','\\begin{description}')
     lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
     lineout('instruction_chapter.tex','\\end{description}')
-    lineout('instruction_chapter.tex','\\includesvg{'opcode'.gv}')
+    lineout('instruction_chapter.tex','\\includesvg{svg/'opcode'.gv}')
   end -- do j
 end -- do i

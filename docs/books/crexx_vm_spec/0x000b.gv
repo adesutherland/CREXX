@@ -1,4 +1,0 @@
-digraph regs {
-node[shape=record]
-struct1 [label="0x000b|METALOADPOP| perand  REG|REG|REG   "];
-}

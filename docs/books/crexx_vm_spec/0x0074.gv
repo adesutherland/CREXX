@@ -1,4 +1,0 @@
-digraph regs {
-node[shape=record]
-struct1 [label="0x0074|FEQ        |   REG|REG|REG         "];
-}

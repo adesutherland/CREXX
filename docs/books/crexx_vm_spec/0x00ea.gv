@@ -1,4 +1,0 @@
-digraph regs {
-node[shape=record]
-struct1 [label="0x00ea|BCTNM      |   ID|REG|REG          "];
-}
