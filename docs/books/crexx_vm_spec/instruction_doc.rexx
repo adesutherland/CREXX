@@ -3,6 +3,7 @@
  * of grouping them in the documentation.
  *
  * we select these in the sequence of the 'category'
+ * instructions are grouped by mnemonic and have a table for all opcodes (wip) 
  */
 
 lineout('instruction_chapter.tex','% instruction chapter',1)
@@ -15,6 +16,7 @@ address system 'sqlite3 ../../instructions/instructionbase.sqb' with -
   output stem outstem
 
 do i=1 to outstem[0]
+  /* for categories, we now have cat (an integer) and name (descriptor) */
   parse outstem[i] cat'|'name
 
   lineout('instruction_chapter.tex','\\section{'name'}')
@@ -22,18 +24,19 @@ do i=1 to outstem[0]
   istem=''; istem=istem
   istem[0]=1
   instructions=''
-  istem[1]='select opcode, mnemonic, operands, description from instruction where category = 'cat' order by mnemonic;'
+  istem[1]='select distinct mnemonic, operands, description from instruction where category = 'cat' order by mnemonic;'
   address system 'sqlite3 ../../instructions/instructionbase.sqb' with -
     input stem istem -
     output stem instructions
 
   do j=1 to instructions[0]
-    parse instructions[j] opcode '|' mnemonic '|' operands '|' description
+    parse instructions[j] mnemonic '|' operands '|' description
+    mnemonic=mnemonic.strip()
     description=description.changestr('&','\\&')
     description=description.changestr('^','\\^')
     lineout('instruction_chapter.tex','\\begin{description}')
     lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
+    lineout('instruction_chapter.tex','\\includesvg{svg/'mnemonic'.gv}')
     lineout('instruction_chapter.tex','\\end{description}')
-    lineout('instruction_chapter.tex','\\includesvg{svg/'opcode'.gv}')
   end -- do j
 end -- do i

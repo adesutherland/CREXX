@@ -11,8 +11,9 @@ Tool | Function
 -----|-----
 Git  | source code version management
 CMake| build tool
-Rexx | used during build process
-C compiler | gcc, clang
+Rexx | used during build process (brexx, ooRexx, Regina will all do)
+C compiler | gcc, clang (install g++ as some C++ elements are used) 
+Bison | parser generator
 
 
 and either

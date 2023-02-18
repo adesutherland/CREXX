@@ -1,4 +1,0 @@
-digraph regs {
-node[shape=record]
-struct1 [label="Opcode| Mnemonic | OP1| OP2 { 0055 |APPEND     |   REG|REG            } ];
-}

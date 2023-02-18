@@ -1,1066 +1,1066 @@
 % instruction chapter
 \section{Fixed Point Arithmetic}
 \begin{description}
-\item[\texttt{ADDI       }]  Convert and Add to Integer (op1=op2+op3) (Deprecated)\\
+\item[\texttt{ADDI}]  Convert and Add to Integer (op1=op2+op3) (Deprecated)\\
+\includesvg{svg/addi.gv}
 \end{description}
-\includesvg{svg/0x0011.gv}
 \begin{description}
-\item[\texttt{ADDI       }]  Convert and Add to Integer (op1=op2+op3) (Deprecated)\\
+\item[\texttt{ADDI}]  Convert and Add to Integer (op1=op2+op3) (Deprecated)\\
+\includesvg{svg/addi.gv}
 \end{description}
-\includesvg{svg/0x0012.gv}
 \begin{description}
-\item[\texttt{DEC        }]  Decrement Int (op1--)\\
+\item[\texttt{DEC}]  Decrement Int (op1--)\\
+\includesvg{svg/dec.gv}
 \end{description}
-\includesvg{svg/0x0039.gv}
 \begin{description}
-\item[\texttt{DEC0       }]  Decrement R0-- Int\\
+\item[\texttt{DEC0}]  Decrement R0-- Int\\
+\includesvg{svg/dec0.gv}
 \end{description}
-\includesvg{svg/0x003b.gv}
 \begin{description}
-\item[\texttt{DEC1       }]  Decrement R1-- Int\\
+\item[\texttt{DEC1}]  Decrement R1-- Int\\
+\includesvg{svg/dec1.gv}
 \end{description}
-\includesvg{svg/0x003d.gv}
 \begin{description}
-\item[\texttt{DEC2       }]  Decrement R2-- Int\\
+\item[\texttt{DEC2}]  Decrement R2-- Int\\
+\includesvg{svg/dec2.gv}
 \end{description}
-\includesvg{svg/0x003f.gv}
 \begin{description}
-\item[\texttt{DIVI       }]  Convert and Divide to Integer (op1=op2/op3) (Deprecated)\\
+\item[\texttt{DIVI}]  Convert and Divide to Integer (op1=op2/op3) (Deprecated)\\
+\includesvg{svg/divi.gv}
 \end{description}
-\includesvg{svg/0x001f.gv}
 \begin{description}
-\item[\texttt{DIVI       }]  Convert and Divide to Integer (op1=op2/op3) (Deprecated)\\
+\item[\texttt{DIVI}]  Convert and Divide to Integer (op1=op2/op3) (Deprecated)\\
+\includesvg{svg/divi.gv}
 \end{description}
-\includesvg{svg/0x0020.gv}
 \begin{description}
-\item[\texttt{IADD       }]  Integer Add (op1=op2+op3)\\
+\item[\texttt{IADD}]  Integer Add (op1=op2+op3)\\
+\includesvg{svg/iadd.gv}
 \end{description}
-\includesvg{svg/0x000f.gv}
 \begin{description}
-\item[\texttt{IADD       }]  Integer Add (op1=op2+op3)\\
+\item[\texttt{IADD}]  Integer Add (op1=op2+op3)\\
+\includesvg{svg/iadd.gv}
 \end{description}
-\includesvg{svg/0x0010.gv}
 \begin{description}
-\item[\texttt{IAND       }]  bit wise and of 2 integers (op1=op2\&op3)\\
+\item[\texttt{IAND}]  bit wise and of 2 integers (op1=op2\&op3)\\
+\includesvg{svg/iand.gv}
 \end{description}
-\includesvg{svg/0x0040.gv}
 \begin{description}
-\item[\texttt{ICOPY      }]  Copy Integer op2 to op1\\
+\item[\texttt{ICOPY}]  Copy Integer op2 to op1\\
+\includesvg{svg/icopy.gv}
 \end{description}
-\includesvg{svg/0x00ba.gv}
 \begin{description}
-\item[\texttt{IDIV       }]  Integer Divide (op1=op2/op3)\\
+\item[\texttt{IDIV}]  Integer Divide (op1=op2/op3)\\
+\includesvg{svg/idiv.gv}
 \end{description}
-\includesvg{svg/0x001c.gv}
 \begin{description}
-\item[\texttt{IDIV       }]  Integer Divide (op1=op2/op3)\\
+\item[\texttt{IDIV}]  Integer Divide (op1=op2/op3)\\
+\includesvg{svg/idiv.gv}
 \end{description}
-\includesvg{svg/0x001d.gv}
 \begin{description}
-\item[\texttt{IDIV       }]  Integer Divide (op1=op2/op3)\\
+\item[\texttt{IDIV}]  Integer Divide (op1=op2/op3)\\
+\includesvg{svg/idiv.gv}
 \end{description}
-\includesvg{svg/0x001e.gv}
 \begin{description}
-\item[\texttt{IEQ        }]  Int Equals op1=(op2==op3)\\
+\item[\texttt{IEQ}]  Int Equals op1=(op2==op3)\\
+\includesvg{svg/ieq.gv}
 \end{description}
-\includesvg{svg/0x0064.gv}
 \begin{description}
-\item[\texttt{IEQ        }]  Int Equals op1=(op2==op3)\\
+\item[\texttt{IEQ}]  Int Equals op1=(op2==op3)\\
+\includesvg{svg/ieq.gv}
 \end{description}
-\includesvg{svg/0x0065.gv}
 \begin{description}
-\item[\texttt{IGT        }]  Int Greater than op1=(op2>op3)\\
+\item[\texttt{IGT}]  Int Greater than op1=(op2>op3)\\
+\includesvg{svg/igt.gv}
 \end{description}
-\includesvg{svg/0x0068.gv}
 \begin{description}
-\item[\texttt{IGT        }]  Int Greater than op1=(op2>op3)\\
+\item[\texttt{IGT}]  Int Greater than op1=(op2>op3)\\
+\includesvg{svg/igt.gv}
 \end{description}
-\includesvg{svg/0x0069.gv}
 \begin{description}
-\item[\texttt{IGT        }]  Int Greater than op1=(op2>op3)\\
+\item[\texttt{IGT}]  Int Greater than op1=(op2>op3)\\
+\includesvg{svg/igt.gv}
 \end{description}
-\includesvg{svg/0x006a.gv}
 \begin{description}
-\item[\texttt{IGTE       }]  Int Greater than equals op1=(op2>=op3)\\
+\item[\texttt{IGTE}]  Int Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/igte.gv}
 \end{description}
-\includesvg{svg/0x006b.gv}
 \begin{description}
-\item[\texttt{IGTE       }]  Int Greater than equals op1=(op2>=op3)\\
+\item[\texttt{IGTE}]  Int Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/igte.gv}
 \end{description}
-\includesvg{svg/0x006c.gv}
 \begin{description}
-\item[\texttt{IGTE       }]  Int Greater than equals op1=(op2>=op3)\\
+\item[\texttt{IGTE}]  Int Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/igte.gv}
 \end{description}
-\includesvg{svg/0x006d.gv}
 \begin{description}
-\item[\texttt{ILT        }]  Int Less than op1=(op2<op3)\\
+\item[\texttt{ILT}]  Int Less than op1=(op2<op3)\\
+\includesvg{svg/ilt.gv}
 \end{description}
-\includesvg{svg/0x006e.gv}
 \begin{description}
-\item[\texttt{ILT        }]  Int Less than op1=(op2<op3)\\
+\item[\texttt{ILT}]  Int Less than op1=(op2<op3)\\
+\includesvg{svg/ilt.gv}
 \end{description}
-\includesvg{svg/0x006f.gv}
 \begin{description}
-\item[\texttt{ILT        }]  Int Less than op1=(op2<op3)\\
+\item[\texttt{ILT}]  Int Less than op1=(op2<op3)\\
+\includesvg{svg/ilt.gv}
 \end{description}
-\includesvg{svg/0x0070.gv}
 \begin{description}
-\item[\texttt{ILTE       }]  Int Less than equals op1=(op2<=op3)\\
+\item[\texttt{ILTE}]  Int Less than equals op1=(op2<=op3)\\
+\includesvg{svg/ilte.gv}
 \end{description}
-\includesvg{svg/0x0071.gv}
 \begin{description}
-\item[\texttt{ILTE       }]  Int Less than equals op1=(op2<=op3)\\
+\item[\texttt{ILTE}]  Int Less than equals op1=(op2<=op3)\\
+\includesvg{svg/ilte.gv}
 \end{description}
-\includesvg{svg/0x0072.gv}
 \begin{description}
-\item[\texttt{ILTE       }]  Int Less than equals op1=(op2<=op3)\\
+\item[\texttt{ILTE}]  Int Less than equals op1=(op2<=op3)\\
+\includesvg{svg/ilte.gv}
 \end{description}
-\includesvg{svg/0x0073.gv}
 \begin{description}
-\item[\texttt{IMOD       }]  Integer Modulo (op1=op2%op3)\\
+\item[\texttt{IMOD}]  Integer Modulo (op1=op2%op3)\\
+\includesvg{svg/imod.gv}
 \end{description}
-\includesvg{svg/0x0021.gv}
 \begin{description}
-\item[\texttt{IMOD       }]  Integer Modulo (op1=op2%op3)\\
+\item[\texttt{IMOD}]  Integer Modulo (op1=op2%op3)\\
+\includesvg{svg/imod.gv}
 \end{description}
-\includesvg{svg/0x0022.gv}
 \begin{description}
-\item[\texttt{IMOD       }]  Integer Modulo (op1=op2\&op3)\\
+\item[\texttt{IMOD}]  Integer Modulo (op1=op2\&op3)\\
+\includesvg{svg/imod.gv}
 \end{description}
-\includesvg{svg/0x0023.gv}
 \begin{description}
-\item[\texttt{IMULT      }]  Integer Multiply (op1=op2*op3)\\
+\item[\texttt{IMULT}]  Integer Multiply (op1=op2*op3)\\
+\includesvg{svg/imult.gv}
 \end{description}
-\includesvg{svg/0x0018.gv}
 \begin{description}
-\item[\texttt{IMULT      }]  Integer Multiply (op1=op2*op3)\\
+\item[\texttt{IMULT}]  Integer Multiply (op1=op2*op3)\\
+\includesvg{svg/imult.gv}
 \end{description}
-\includesvg{svg/0x0019.gv}
 \begin{description}
-\item[\texttt{INC        }]  Increment Int (op1++)\\
+\item[\texttt{INC}]  Increment Int (op1++)\\
+\includesvg{svg/inc.gv}
 \end{description}
-\includesvg{svg/0x0038.gv}
 \begin{description}
-\item[\texttt{INC0       }]  Increment R0++ Int\\
+\item[\texttt{INC0}]  Increment R0++ Int\\
+\includesvg{svg/inc0.gv}
 \end{description}
-\includesvg{svg/0x003a.gv}
 \begin{description}
-\item[\texttt{INC1       }]  Increment R1++ Int\\
+\item[\texttt{INC1}]  Increment R1++ Int\\
+\includesvg{svg/inc1.gv}
 \end{description}
-\includesvg{svg/0x003c.gv}
 \begin{description}
-\item[\texttt{INC2       }]  Increment R2++ Int\\
+\item[\texttt{INC2}]  Increment R2++ Int\\
+\includesvg{svg/inc2.gv}
 \end{description}
-\includesvg{svg/0x003e.gv}
 \begin{description}
-\item[\texttt{INE        }]  Int Not equals op1=(op2!=op3)\\
+\item[\texttt{INE}]  Int Not equals op1=(op2!=op3)\\
+\includesvg{svg/ine.gv}
 \end{description}
-\includesvg{svg/0x0066.gv}
 \begin{description}
-\item[\texttt{INE        }]  Int Not equals op1=(op2!=op3)\\
+\item[\texttt{INE}]  Int Not equals op1=(op2!=op3)\\
+\includesvg{svg/ine.gv}
 \end{description}
-\includesvg{svg/0x0067.gv}
 \begin{description}
-\item[\texttt{IPOW       }]  op1=op2**op3\\
+\item[\texttt{IPOW}]  op1=op2**op3\\
+\includesvg{svg/ipow.gv}
 \end{description}
-\includesvg{svg/0x00e2.gv}
 \begin{description}
-\item[\texttt{IPOW       }]  op1=op2**op3\\
+\item[\texttt{IPOW}]  op1=op2**op3\\
+\includesvg{svg/ipow.gv}
 \end{description}
-\includesvg{svg/0x00e3.gv}
 \begin{description}
-\item[\texttt{IPOW       }]  op1=op2**op3\\
+\item[\texttt{IPOW}]  op1=op2**op3\\
+\includesvg{svg/ipow.gv}
 \end{description}
-\includesvg{svg/0x00e4.gv}
 \begin{description}
-\item[\texttt{ISEX       }]  dec op1 = -op1 (sign change)\\
+\item[\texttt{ISEX}]  dec op1 = -op1 (sign change)\\
+\includesvg{svg/isex.gv}
 \end{description}
-\includesvg{svg/0x00fb.gv}
 \begin{description}
-\item[\texttt{ISHL       }]  bit wise shift logical left of integer (op1=op2<<op3)\\
+\item[\texttt{ISHL}]  bit wise shift logical left of integer (op1=op2<<op3)\\
+\includesvg{svg/ishl.gv}
 \end{description}
-\includesvg{svg/0x0046.gv}
 \begin{description}
-\item[\texttt{ISHL       }]  bit wise shift logical left of integer (op1=op2<<op3)\\
+\item[\texttt{ISHL}]  bit wise shift logical left of integer (op1=op2<<op3)\\
+\includesvg{svg/ishl.gv}
 \end{description}
-\includesvg{svg/0x0047.gv}
 \begin{description}
-\item[\texttt{ISHR       }]  bit wise shift logical right of integer (op1=op2>>op3)\\
+\item[\texttt{ISHR}]  bit wise shift logical right of integer (op1=op2>>op3)\\
+\includesvg{svg/ishr.gv}
 \end{description}
-\includesvg{svg/0x0048.gv}
 \begin{description}
-\item[\texttt{ISHR       }]  bit wise shift logical right of integer (op1=op2>>op3)\\
+\item[\texttt{ISHR}]  bit wise shift logical right of integer (op1=op2>>op3)\\
+\includesvg{svg/ishr.gv}
 \end{description}
-\includesvg{svg/0x0049.gv}
 \begin{description}
-\item[\texttt{ISUB       }]  Integer Subtract (op1=op2-op3)\\
+\item[\texttt{ISUB}]  Integer Subtract (op1=op2-op3)\\
+\includesvg{svg/isub.gv}
 \end{description}
-\includesvg{svg/0x0013.gv}
 \begin{description}
-\item[\texttt{ISUB       }]  Integer Subtract (op1=op2-op3)\\
+\item[\texttt{ISUB}]  Integer Subtract (op1=op2-op3)\\
+\includesvg{svg/isub.gv}
 \end{description}
-\includesvg{svg/0x0014.gv}
 \begin{description}
-\item[\texttt{ISUB       }]  Integer Subtract (op1=op2-op3)\\
+\item[\texttt{ISUB}]  Integer Subtract (op1=op2-op3)\\
+\includesvg{svg/isub.gv}
 \end{description}
-\includesvg{svg/0x0015.gv}
 \begin{description}
-\item[\texttt{ITOF       }]  Set register float value from its int value\\
+\item[\texttt{ITOF}]  Set register float value from its int value\\
+\includesvg{svg/itof.gv}
 \end{description}
-\includesvg{svg/0x00d3.gv}
 \begin{description}
-\item[\texttt{LOAD       }]  Load op1 with op2\\
+\item[\texttt{LOAD}]  Load op1 with op2\\
+\includesvg{svg/load.gv}
 \end{description}
-\includesvg{svg/0x00c2.gv}
 \begin{description}
-\item[\texttt{LOADSETTP  }]  load register and sets the register type flag load op1=op2 (o\\
+\item[\texttt{LOADSETTP}]  load register and sets the register type flag load op1=op2 (o\\
+\includesvg{svg/loadsettp.gv}
 \end{description}
-\includesvg{svg/0x00ff.gv}
 \begin{description}
-\item[\texttt{MULTI      }]  Convert and Multiply to Integer (op1=op2*op3) (Deprecated)\\
+\item[\texttt{MULTI}]  Convert and Multiply to Integer (op1=op2*op3) (Deprecated)\\
+\includesvg{svg/multi.gv}
 \end{description}
-\includesvg{svg/0x001b.gv}
 \section{Floating Point Arithmetic}
 \begin{description}
-\item[\texttt{ADDF       }]  Convert and Add to Float (op1=op2+op3) (Deprecated)\\
+\item[\texttt{ADDF}]  Convert and Add to Float (op1=op2+op3) (Deprecated)\\
+\includesvg{svg/addf.gv}
 \end{description}
-\includesvg{svg/0x0027.gv}
 \begin{description}
-\item[\texttt{ADDF       }]  Convert and Add to Float (op1=op2+op3) (Deprecated)\\
+\item[\texttt{ADDF}]  Convert and Add to Float (op1=op2+op3) (Deprecated)\\
+\includesvg{svg/addf.gv}
 \end{description}
-\includesvg{svg/0x0026.gv}
 \begin{description}
-\item[\texttt{DIVF       }]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\item[\texttt{DIVF}]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\includesvg{svg/divf.gv}
 \end{description}
-\includesvg{svg/0x0037.gv}
 \begin{description}
-\item[\texttt{DIVF       }]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\item[\texttt{DIVF}]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\includesvg{svg/divf.gv}
 \end{description}
-\includesvg{svg/0x0035.gv}
 \begin{description}
-\item[\texttt{DIVF       }]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\item[\texttt{DIVF}]  Convert and Divide to Float (op1=op2/op3) (Deprecated)\\
+\includesvg{svg/divf.gv}
 \end{description}
-\includesvg{svg/0x0036.gv}
 \begin{description}
-\item[\texttt{FADD       }]  Float Add (op1=op2+op3)\\
+\item[\texttt{FADD}]  Float Add (op1=op2+op3)\\
+\includesvg{svg/fadd.gv}
 \end{description}
-\includesvg{svg/0x0024.gv}
 \begin{description}
-\item[\texttt{FADD       }]  Float Add (op1=op2+op3)\\
+\item[\texttt{FADD}]  Float Add (op1=op2+op3)\\
+\includesvg{svg/fadd.gv}
 \end{description}
-\includesvg{svg/0x0025.gv}
 \begin{description}
-\item[\texttt{FCOPY      }]  Copy Float op2 to op1\\
+\item[\texttt{FCOPY}]  Copy Float op2 to op1\\
+\includesvg{svg/fcopy.gv}
 \end{description}
-\includesvg{svg/0x00bb.gv}
 \begin{description}
-\item[\texttt{FDIV       }]  Float Divide (op1=op2/op3)\\
+\item[\texttt{FDIV}]  Float Divide (op1=op2/op3)\\
+\includesvg{svg/fdiv.gv}
 \end{description}
-\includesvg{svg/0x0032.gv}
 \begin{description}
-\item[\texttt{FDIV       }]  Float Divide (op1=op2/op3)\\
+\item[\texttt{FDIV}]  Float Divide (op1=op2/op3)\\
+\includesvg{svg/fdiv.gv}
 \end{description}
-\includesvg{svg/0x0033.gv}
 \begin{description}
-\item[\texttt{FDIV       }]  Float Divide (op1=op2/op3)\\
+\item[\texttt{FDIV}]  Float Divide (op1=op2/op3)\\
+\includesvg{svg/fdiv.gv}
 \end{description}
-\includesvg{svg/0x0034.gv}
 \begin{description}
-\item[\texttt{FEQ        }]  Float Equals op1=(op2==op3)\\
+\item[\texttt{FEQ}]  Float Equals op1=(op2==op3)\\
+\includesvg{svg/feq.gv}
 \end{description}
-\includesvg{svg/0x0075.gv}
 \begin{description}
-\item[\texttt{FEQ        }]  Float Equals op1=(op2==op3)\\
+\item[\texttt{FEQ}]  Float Equals op1=(op2==op3)\\
+\includesvg{svg/feq.gv}
 \end{description}
-\includesvg{svg/0x0074.gv}
 \begin{description}
-\item[\texttt{FFORMAT    }]  Set string value from float value using a format string\\
+\item[\texttt{FFORMAT}]  Set string value from float value using a format string\\
+\includesvg{svg/fformat.gv}
 \end{description}
-\includesvg{svg/0x00d8.gv}
 \begin{description}
-\item[\texttt{FGT        }]  Float Greater than op1=(op2>op3)\\
+\item[\texttt{FGT}]  Float Greater than op1=(op2>op3)\\
+\includesvg{svg/fgt.gv}
 \end{description}
-\includesvg{svg/0x0078.gv}
 \begin{description}
-\item[\texttt{FGT        }]  Float Greater than op1=(op2>op3)\\
+\item[\texttt{FGT}]  Float Greater than op1=(op2>op3)\\
+\includesvg{svg/fgt.gv}
 \end{description}
-\includesvg{svg/0x0079.gv}
 \begin{description}
-\item[\texttt{FGT        }]  Float Greater than op1=(op2>op3)\\
+\item[\texttt{FGT}]  Float Greater than op1=(op2>op3)\\
+\includesvg{svg/fgt.gv}
 \end{description}
-\includesvg{svg/0x007a.gv}
 \begin{description}
-\item[\texttt{FGTE       }]  Float Greater than equals op1=(op2>=op3)\\
+\item[\texttt{FGTE}]  Float Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/fgte.gv}
 \end{description}
-\includesvg{svg/0x007b.gv}
 \begin{description}
-\item[\texttt{FGTE       }]  Float Greater than equals op1=(op2>=op3)\\
+\item[\texttt{FGTE}]  Float Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/fgte.gv}
 \end{description}
-\includesvg{svg/0x007c.gv}
 \begin{description}
-\item[\texttt{FGTE       }]  Float Greater than equals op1=(op2>=op3)\\
+\item[\texttt{FGTE}]  Float Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/fgte.gv}
 \end{description}
-\includesvg{svg/0x007d.gv}
 \begin{description}
-\item[\texttt{FLT        }]  Float Less than op1=(op2<op3)\\
+\item[\texttt{FLT}]  Float Less than op1=(op2<op3)\\
+\includesvg{svg/flt.gv}
 \end{description}
-\includesvg{svg/0x007e.gv}
 \begin{description}
-\item[\texttt{FLT        }]  Float Less than op1=(op2<op3)\\
+\item[\texttt{FLT}]  Float Less than op1=(op2<op3)\\
+\includesvg{svg/flt.gv}
 \end{description}
-\includesvg{svg/0x007f.gv}
 \begin{description}
-\item[\texttt{FLT        }]  Float Less than op1=(op2<op3)\\
+\item[\texttt{FLT}]  Float Less than op1=(op2<op3)\\
+\includesvg{svg/flt.gv}
 \end{description}
-\includesvg{svg/0x0080.gv}
 \begin{description}
-\item[\texttt{FLTE       }]  Float Less than equals op1=(op2<=op3)\\
+\item[\texttt{FLTE}]  Float Less than equals op1=(op2<=op3)\\
+\includesvg{svg/flte.gv}
 \end{description}
-\includesvg{svg/0x0081.gv}
 \begin{description}
-\item[\texttt{FLTE       }]  Float Less than equals op1=(op2<=op3)\\
+\item[\texttt{FLTE}]  Float Less than equals op1=(op2<=op3)\\
+\includesvg{svg/flte.gv}
 \end{description}
-\includesvg{svg/0x0082.gv}
 \begin{description}
-\item[\texttt{FLTE       }]  Float Less than equals op1=(op2<=op3)\\
+\item[\texttt{FLTE}]  Float Less than equals op1=(op2<=op3)\\
+\includesvg{svg/flte.gv}
 \end{description}
-\includesvg{svg/0x0083.gv}
 \begin{description}
-\item[\texttt{FMULT      }]  Float Multiply (op1=op2*op3)\\
+\item[\texttt{FMULT}]  Float Multiply (op1=op2*op3)\\
+\includesvg{svg/fmult.gv}
 \end{description}
-\includesvg{svg/0x002e.gv}
 \begin{description}
-\item[\texttt{FMULT      }]  Float Multiply (op1=op2*op3)\\
+\item[\texttt{FMULT}]  Float Multiply (op1=op2*op3)\\
+\includesvg{svg/fmult.gv}
 \end{description}
-\includesvg{svg/0x002f.gv}
 \begin{description}
-\item[\texttt{FNE        }]  Float Not equals op1=(op2!=op3)\\
+\item[\texttt{FNE}]  Float Not equals op1=(op2!=op3)\\
+\includesvg{svg/fne.gv}
 \end{description}
-\includesvg{svg/0x0076.gv}
 \begin{description}
-\item[\texttt{FNE        }]  Float Not equals op1=(op2!=op3)\\
+\item[\texttt{FNE}]  Float Not equals op1=(op2!=op3)\\
+\includesvg{svg/fne.gv}
 \end{description}
-\includesvg{svg/0x0077.gv}
 \begin{description}
-\item[\texttt{FPOW       }]  op1=op2**op3\\
+\item[\texttt{FPOW}]  op1=op2**op3\\
+\includesvg{svg/fpow.gv}
 \end{description}
-\includesvg{svg/0x00e5.gv}
 \begin{description}
-\item[\texttt{FPOW       }]  op1=op2**op3\\
+\item[\texttt{FPOW}]  op1=op2**op3\\
+\includesvg{svg/fpow.gv}
 \end{description}
-\includesvg{svg/0x00e6.gv}
 \begin{description}
-\item[\texttt{FSEX       }]  float op1 = -op1 (sign change)\\
+\item[\texttt{FSEX}]  float op1 = -op1 (sign change)\\
+\includesvg{svg/fsex.gv}
 \end{description}
-\includesvg{svg/0x00fc.gv}
 \begin{description}
-\item[\texttt{FSUB       }]  Float Subtract (op1=op2-op3)\\
+\item[\texttt{FSUB}]  Float Subtract (op1=op2-op3)\\
+\includesvg{svg/fsub.gv}
 \end{description}
-\includesvg{svg/0x0028.gv}
 \begin{description}
-\item[\texttt{FSUB       }]  Float Subtract (op1=op2-op3)\\
+\item[\texttt{FSUB}]  Float Subtract (op1=op2-op3)\\
+\includesvg{svg/fsub.gv}
 \end{description}
-\includesvg{svg/0x0029.gv}
 \begin{description}
-\item[\texttt{FSUB       }]  Float Subtract (op1=op2-op3)\\
+\item[\texttt{FSUB}]  Float Subtract (op1=op2-op3)\\
+\includesvg{svg/fsub.gv}
 \end{description}
-\includesvg{svg/0x002a.gv}
 \begin{description}
-\item[\texttt{FTOB       }]  Set register boolean (int 1 or 0) value from its float value\\
+\item[\texttt{FTOB}]  Set register boolean (int 1 or 0) value from its float value\\
+\includesvg{svg/ftob.gv}
 \end{description}
-\includesvg{svg/0x00d5.gv}
 \begin{description}
-\item[\texttt{FTOI       }]  Set register int value from its float value\\
+\item[\texttt{FTOI}]  Set register int value from its float value\\
+\includesvg{svg/ftoi.gv}
 \end{description}
-\includesvg{svg/0x00d4.gv}
 \begin{description}
-\item[\texttt{FTOS       }]  Set register string value from its float value\\
+\item[\texttt{FTOS}]  Set register string value from its float value\\
+\includesvg{svg/ftos.gv}
 \end{description}
-\includesvg{svg/0x00d2.gv}
 \begin{description}
-\item[\texttt{LOAD       }]  Load op1 with op2\\
+\item[\texttt{LOAD}]  Load op1 with op2\\
+\includesvg{svg/load.gv}
 \end{description}
-\includesvg{svg/0x00c3.gv}
 \begin{description}
-\item[\texttt{MULTF      }]  Convert and Multiply to Float (op1=op2*op3) (Deprecated)\\
+\item[\texttt{MULTF}]  Convert and Multiply to Float (op1=op2*op3) (Deprecated)\\
+\includesvg{svg/multf.gv}
 \end{description}
-\includesvg{svg/0x0030.gv}
 \begin{description}
-\item[\texttt{MULTF      }]  Convert and Multiply to Float (op1=op2*op3) (Deprecated)\\
+\item[\texttt{MULTF}]  Convert and Multiply to Float (op1=op2*op3) (Deprecated)\\
+\includesvg{svg/multf.gv}
 \end{description}
-\includesvg{svg/0x0031.gv}
 \begin{description}
-\item[\texttt{MULTI      }]  Convert and Multiply to Integer (op1=op2*op3) (Deprecated)\\
+\item[\texttt{MULTI}]  Convert and Multiply to Integer (op1=op2*op3) (Deprecated)\\
+\includesvg{svg/multi.gv}
 \end{description}
-\includesvg{svg/0x001a.gv}
 \begin{description}
-\item[\texttt{SUBF       }]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\item[\texttt{SUBF}]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\includesvg{svg/subf.gv}
 \end{description}
-\includesvg{svg/0x002b.gv}
 \begin{description}
-\item[\texttt{SUBF       }]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\item[\texttt{SUBF}]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\includesvg{svg/subf.gv}
 \end{description}
-\includesvg{svg/0x002c.gv}
 \begin{description}
-\item[\texttt{SUBF       }]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\item[\texttt{SUBF}]  Convert and Subtract to Float (op1=op2-op3) (Deprecated)\\
+\includesvg{svg/subf.gv}
 \end{description}
-\includesvg{svg/0x002d.gv}
 \begin{description}
-\item[\texttt{SUBI       }]  Convert and Subtract to Integer (op1=op2-op3) (Deprecated)\\
+\item[\texttt{SUBI}]  Convert and Subtract to Integer (op1=op2-op3) (Deprecated)\\
+\includesvg{svg/subi.gv}
 \end{description}
-\includesvg{svg/0x0016.gv}
 \begin{description}
-\item[\texttt{SUBI       }]  Convert and Subtract to Integer (op1=op2-op3) (Deprecated)\\
+\item[\texttt{SUBI}]  Convert and Subtract to Integer (op1=op2-op3) (Deprecated)\\
+\includesvg{svg/subi.gv}
 \end{description}
-\includesvg{svg/0x0017.gv}
 \section{Logical Operations}
 \begin{description}
-\item[\texttt{AND        }]  Logical (int) and op1=(op2 \&\& op3)\\
+\item[\texttt{AND}]  Logical (int) and op1=(op2 \&\& op3)\\
+\includesvg{svg/and.gv}
 \end{description}
-\includesvg{svg/0x0096.gv}
 \begin{description}
-\item[\texttt{COPY       }]  Copy op2 to op1\\
+\item[\texttt{COPY}]  Copy op2 to op1\\
+\includesvg{svg/copy.gv}
 \end{description}
-\includesvg{svg/0x00b9.gv}
 \begin{description}
-\item[\texttt{DCALL      }]  Dynamic call procedure (op1=op2(op3...) )\\
+\item[\texttt{DCALL}]  Dynamic call procedure (op1=op2(op3...) )\\
+\includesvg{svg/dcall.gv}
 \end{description}
-\includesvg{svg/0x00ac.gv}
 \begin{description}
-\item[\texttt{DLLPARMS   }]  fetches parms for DLL call \\
+\item[\texttt{DLLPARMS}]  fetches parms for DLL call \\
+\includesvg{svg/dllparms.gv}
 \end{description}
-\includesvg{svg/0x0106.gv}
 \begin{description}
-\item[\texttt{EXIT       }]  Exit\\
+\item[\texttt{EXIT}]  Exit\\
+\includesvg{svg/exit.gv}
 \end{description}
-\includesvg{svg/0x00ce.gv}
 \begin{description}
-\item[\texttt{EXIT       }]  Exit op1\\
+\item[\texttt{EXIT}]  Exit op1\\
+\includesvg{svg/exit.gv}
 \end{description}
-\includesvg{svg/0x00cf.gv}
 \begin{description}
-\item[\texttt{EXIT       }]  Exit op1\\
+\item[\texttt{EXIT}]  Exit op1\\
+\includesvg{svg/exit.gv}
 \end{description}
-\includesvg{svg/0x00d0.gv}
 \begin{description}
-\item[\texttt{IAND       }]  bit wise and of 2 integers (op1=op2\&op3)\\
+\item[\texttt{IAND}]  bit wise and of 2 integers (op1=op2\&op3)\\
+\includesvg{svg/iand.gv}
 \end{description}
-\includesvg{svg/0x0041.gv}
 \begin{description}
-\item[\texttt{INOT       }]  inverts all bits of an integer (op1=~op2)\\
+\item[\texttt{INOT}]  inverts all bits of an integer (op1=~op2)\\
+\includesvg{svg/inot.gv}
 \end{description}
-\includesvg{svg/0x004a.gv}
 \begin{description}
-\item[\texttt{INOT       }]  inverts all bits of an integer (op1=~op2)\\
+\item[\texttt{INOT}]  inverts all bits of an integer (op1=~op2)\\
+\includesvg{svg/inot.gv}
 \end{description}
-\includesvg{svg/0x004b.gv}
 \begin{description}
-\item[\texttt{IOR        }]  bit wise or of 2 integers (op1=op2|op3)\\
+\item[\texttt{IOR}]  bit wise or of 2 integers (op1=op2|op3)\\
+\includesvg{svg/ior.gv}
 \end{description}
-\includesvg{svg/0x0042.gv}
 \begin{description}
-\item[\texttt{IOR        }]  bit wise or of 2 integers (op1=op2|op3)\\
+\item[\texttt{IOR}]  bit wise or of 2 integers (op1=op2|op3)\\
+\includesvg{svg/ior.gv}
 \end{description}
-\includesvg{svg/0x0043.gv}
 \begin{description}
-\item[\texttt{IRAND      }]  random number random, op1=irand(op2)\\
+\item[\texttt{IRAND}]  random number random, op1=irand(op2)\\
+\includesvg{svg/irand.gv}
 \end{description}
-\includesvg{svg/0x0107.gv}
 \begin{description}
-\item[\texttt{IRAND      }]  random number random, op1=irand(op2)\\
+\item[\texttt{IRAND}]  random number random, op1=irand(op2)\\
+\includesvg{svg/irand.gv}
 \end{description}
-\includesvg{svg/0x0108.gv}
 \begin{description}
-\item[\texttt{IXOR       }]  bit wise exclusive OR of 2 integers (op1=op2\^op3)\\
+\item[\texttt{IXOR}]  bit wise exclusive OR of 2 integers (op1=op2\^op3)\\
+\includesvg{svg/ixor.gv}
 \end{description}
-\includesvg{svg/0x0044.gv}
 \begin{description}
-\item[\texttt{IXOR       }]  bit wise exclusive OR of 2 integers (op1=op2\^op3)\\
+\item[\texttt{IXOR}]  bit wise exclusive OR of 2 integers (op1=op2\^op3)\\
+\includesvg{svg/ixor.gv}
 \end{description}
-\includesvg{svg/0x0045.gv}
 \begin{description}
-\item[\texttt{LOADSETTP  }]  load register and sets the register type flag load op1=op2 (o\\
+\item[\texttt{LOADSETTP}]  load register and sets the register type flag load op1=op2 (o\\
+\includesvg{svg/loadsettp.gv}
 \end{description}
-\includesvg{svg/0x0100.gv}
 \begin{description}
-\item[\texttt{LOADSETTP  }]  load register and sets the register type flag load op1=op2 (o\\
+\item[\texttt{LOADSETTP}]  load register and sets the register type flag load op1=op2 (o\\
+\includesvg{svg/loadsettp.gv}
 \end{description}
-\includesvg{svg/0x0101.gv}
 \begin{description}
-\item[\texttt{NOT        }]  Logical (int) not op1=!op2\\
+\item[\texttt{NOT}]  Logical (int) not op1=!op2\\
+\includesvg{svg/not.gv}
 \end{description}
-\includesvg{svg/0x0098.gv}
 \begin{description}
-\item[\texttt{OR         }]  Logical (int) or op1=(op2 || op3)\\
+\item[\texttt{OR}]  Logical (int) or op1=(op2 || op3)\\
+\includesvg{svg/or.gv}
 \end{description}
-\includesvg{svg/0x0097.gv}
 \begin{description}
-\item[\texttt{SETORTP    }]  or the register type flag (op1.typeflag = op1.typeflag || op2\\
+\item[\texttt{SETORTP}]  or the register type flag (op1.typeflag = op1.typeflag || op2\\
+\includesvg{svg/setortp.gv}
 \end{description}
-\includesvg{svg/0x0102.gv}
 \begin{description}
-\item[\texttt{SWAP       }]  Swap op1 and op2\\
+\item[\texttt{SWAP}]  Swap op1 and op2\\
+\includesvg{svg/swap.gv}
 \end{description}
-\includesvg{svg/0x00b8.gv}
 \section{Branching}
 \begin{description}
-\item[\texttt{BCF        }]  if op2=0 goto op1(if false) else dec op2\\
+\item[\texttt{BCF}]  if op2=0 goto op1(if false) else dec op2\\
+\includesvg{svg/bcf.gv}
 \end{description}
-\includesvg{svg/0x00eb.gv}
 \begin{description}
-\item[\texttt{BCF        }]  if op2=0 goto op1(if false) else dec op2 and inc op3\\
+\item[\texttt{BCF}]  if op2=0 goto op1(if false) else dec op2 and inc op3\\
+\includesvg{svg/bcf.gv}
 \end{description}
-\includesvg{svg/0x00ec.gv}
 \begin{description}
-\item[\texttt{BCT        }]  dec op2; if op2>0; goto op1(if true)\\
+\item[\texttt{BCT}]  dec op2; if op2>0; goto op1(if true)\\
+\includesvg{svg/bct.gv}
 \end{description}
-\includesvg{svg/0x00e7.gv}
 \begin{description}
-\item[\texttt{BCT        }]  dec op2; inc op3, if op2>0; goto op1(if true)\\
+\item[\texttt{BCT}]  dec op2; inc op3, if op2>0; goto op1(if true)\\
+\includesvg{svg/bct.gv}
 \end{description}
-\includesvg{svg/0x00e8.gv}
 \begin{description}
-\item[\texttt{BCTNM      }]  dec op2; if op2>=0; goto op1(if true)\\
+\item[\texttt{BCTNM}]  dec op2; if op2>=0; goto op1(if true)\\
+\includesvg{svg/bctnm.gv}
 \end{description}
-\includesvg{svg/0x00e9.gv}
 \begin{description}
-\item[\texttt{BCTNM      }]  dec op2; inc op3, if op2>=0; goto op1(if true)\\
+\item[\texttt{BCTNM}]  dec op2; inc op3, if op2>=0; goto op1(if true)\\
+\includesvg{svg/bctnm.gv}
 \end{description}
-\includesvg{svg/0x00ea.gv}
 \begin{description}
-\item[\texttt{BEQ        }]  if op2==op3 then goto op1\\
+\item[\texttt{BEQ}]  if op2==op3 then goto op1\\
+\includesvg{svg/beq.gv}
 \end{description}
-\includesvg{svg/0x00f7.gv}
 \begin{description}
-\item[\texttt{BEQ        }]  if op2==op3 then goto op1\\
+\item[\texttt{BEQ}]  if op2==op3 then goto op1\\
+\includesvg{svg/beq.gv}
 \end{description}
-\includesvg{svg/0x00f8.gv}
 \begin{description}
-\item[\texttt{BGE        }]  if op2>=op3 then goto op1\\
+\item[\texttt{BGE}]  if op2>=op3 then goto op1\\
+\includesvg{svg/bge.gv}
 \end{description}
-\includesvg{svg/0x00ef.gv}
 \begin{description}
-\item[\texttt{BGE        }]  if op2>=op3 then goto op1\\
+\item[\texttt{BGE}]  if op2>=op3 then goto op1\\
+\includesvg{svg/bge.gv}
 \end{description}
-\includesvg{svg/0x00f0.gv}
 \begin{description}
-\item[\texttt{BGT        }]  if op2>op3 then goto op1\\
+\item[\texttt{BGT}]  if op2>op3 then goto op1\\
+\includesvg{svg/bgt.gv}
 \end{description}
-\includesvg{svg/0x00ed.gv}
 \begin{description}
-\item[\texttt{BGT        }]  if op2>op3 then goto op1\\
+\item[\texttt{BGT}]  if op2>op3 then goto op1\\
+\includesvg{svg/bgt.gv}
 \end{description}
-\includesvg{svg/0x00ee.gv}
 \begin{description}
-\item[\texttt{BLE        }]  if op2<=op3 then goto op1\\
+\item[\texttt{BLE}]  if op2<=op3 then goto op1\\
+\includesvg{svg/ble.gv}
 \end{description}
-\includesvg{svg/0x00f3.gv}
 \begin{description}
-\item[\texttt{BLE        }]  if op2<=op3 then goto op1\\
+\item[\texttt{BLE}]  if op2<=op3 then goto op1\\
+\includesvg{svg/ble.gv}
 \end{description}
-\includesvg{svg/0x00f4.gv}
 \begin{description}
-\item[\texttt{BLT        }]  if op2<op3 then goto op1\\
+\item[\texttt{BLT}]  if op2<op3 then goto op1\\
+\includesvg{svg/blt.gv}
 \end{description}
-\includesvg{svg/0x00f1.gv}
 \begin{description}
-\item[\texttt{BLT        }]  if op2<op3 then goto op1\\
+\item[\texttt{BLT}]  if op2<op3 then goto op1\\
+\includesvg{svg/blt.gv}
 \end{description}
-\includesvg{svg/0x00f2.gv}
 \begin{description}
-\item[\texttt{BNE        }]  if op2!=op3 then goto op1\\
+\item[\texttt{BNE}]  if op2!=op3 then goto op1\\
+\includesvg{svg/bne.gv}
 \end{description}
-\includesvg{svg/0x00f5.gv}
 \begin{description}
-\item[\texttt{BNE        }]  if op2!=op3 then goto op1\\
+\item[\texttt{BNE}]  if op2!=op3 then goto op1\\
+\includesvg{svg/bne.gv}
 \end{description}
-\includesvg{svg/0x00f6.gv}
 \begin{description}
-\item[\texttt{BR         }]  Branch to op1\\
+\item[\texttt{BR}]  Branch to op1\\
+\includesvg{svg/br.gv}
 \end{description}
-\includesvg{svg/0x00b3.gv}
 \begin{description}
-\item[\texttt{BRF        }]  Branch to op1 if op2 false\\
+\item[\texttt{BRF}]  Branch to op1 if op2 false\\
+\includesvg{svg/brf.gv}
 \end{description}
-\includesvg{svg/0x00b5.gv}
 \begin{description}
-\item[\texttt{BRT        }]  Branch to op1 if op2 true\\
+\item[\texttt{BRT}]  Branch to op1 if op2 true\\
+\includesvg{svg/brt.gv}
 \end{description}
-\includesvg{svg/0x00b4.gv}
 \begin{description}
-\item[\texttt{BRTF       }]  Branch to op1 if op3 true, otherwise branch to op2\\
+\item[\texttt{BRTF}]  Branch to op1 if op3 true, otherwise branch to op2\\
+\includesvg{svg/brtf.gv}
 \end{description}
-\includesvg{svg/0x00b6.gv}
 \begin{description}
-\item[\texttt{BRTPANDT   }]  if op2.typeflag \&\& op3 true then goto op1\\
+\item[\texttt{BRTPANDT}]  if op2.typeflag \&\& op3 true then goto op1\\
+\includesvg{svg/brtpandt.gv}
 \end{description}
-\includesvg{svg/0x0104.gv}
 \begin{description}
-\item[\texttt{BRTPT      }]  if op2.typeflag true then goto op1\\
+\item[\texttt{BRTPT}]  if op2.typeflag true then goto op1\\
+\includesvg{svg/brtpt.gv}
 \end{description}
-\includesvg{svg/0x0103.gv}
 \begin{description}
-\item[\texttt{CALL       }]  Call procedure (op1=op2(op3...) )\\
+\item[\texttt{CALL}]  Call procedure (op1=op2(op3...) )\\
+\includesvg{svg/call.gv}
 \end{description}
-\includesvg{svg/0x00ab.gv}
 \begin{description}
-\item[\texttt{CALL       }]  Call procedure (op1())\\
+\item[\texttt{CALL}]  Call procedure (op1())\\
+\includesvg{svg/call.gv}
 \end{description}
-\includesvg{svg/0x00a9.gv}
 \begin{description}
-\item[\texttt{CALL       }]  Call procedure (op1=op2())\\
+\item[\texttt{CALL}]  Call procedure (op1=op2())\\
+\includesvg{svg/call.gv}
 \end{description}
-\includesvg{svg/0x00aa.gv}
 \begin{description}
-\item[\texttt{CNOP       }]  no operation\\
+\item[\texttt{CNOP}]  no operation\\
+\includesvg{svg/cnop.gv}
 \end{description}
-\includesvg{svg/0x00e1.gv}
 \begin{description}
-\item[\texttt{LINK       }]  Link op2 to op1\\
+\item[\texttt{LINK}]  Link op2 to op1\\
+\includesvg{svg/link.gv}
 \end{description}
-\includesvg{svg/0x00bf.gv}
 \begin{description}
-\item[\texttt{NULL       }]  Null op1\\
+\item[\texttt{NULL}]  Null op1\\
+\includesvg{svg/null.gv}
 \end{description}
-\includesvg{svg/0x00c1.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return op1\\
+\item[\texttt{RET}]  Return op1\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00b0.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return VOID\\
+\item[\texttt{RET}]  Return VOID\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00ad.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return op1\\
+\item[\texttt{RET}]  Return op1\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00ae.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return op1\\
+\item[\texttt{RET}]  Return op1\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00af.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return op1\\
+\item[\texttt{RET}]  Return op1\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00b1.gv}
 \begin{description}
-\item[\texttt{RET        }]  Return op1\\
+\item[\texttt{RET}]  Return op1\\
+\includesvg{svg/ret.gv}
 \end{description}
-\includesvg{svg/0x00b2.gv}
 \section{I/O operations}
 \begin{description}
-\item[\texttt{OPENDLL    }]  open DLL\\
+\item[\texttt{OPENDLL}]  open DLL\\
+\includesvg{svg/opendll.gv}
 \end{description}
-\includesvg{svg/0x0105.gv}
 \begin{description}
-\item[\texttt{READLINE   }]  Read Line to op1\\
+\item[\texttt{READLINE}]  Read Line to op1\\
+\includesvg{svg/readline.gv}
 \end{description}
-\includesvg{svg/0x00cd.gv}
 \begin{description}
-\item[\texttt{SAY        }]  Say op1\\
+\item[\texttt{SAY}]  Say op1\\
+\includesvg{svg/say.gv}
 \end{description}
-\includesvg{svg/0x00c6.gv}
 \begin{description}
-\item[\texttt{SAY        }]  Say op1\\
+\item[\texttt{SAY}]  Say op1\\
+\includesvg{svg/say.gv}
 \end{description}
-\includesvg{svg/0x00c9.gv}
 \begin{description}
-\item[\texttt{SAY        }]  Say op1\\
+\item[\texttt{SAY}]  Say op1\\
+\includesvg{svg/say.gv}
 \end{description}
-\includesvg{svg/0x00cc.gv}
 \begin{description}
-\item[\texttt{SAY        }]  Say op1\\
+\item[\texttt{SAY}]  Say op1\\
+\includesvg{svg/say.gv}
 \end{description}
-\includesvg{svg/0x00cb.gv}
 \begin{description}
-\item[\texttt{SAY        }]  Say op1\\
+\item[\texttt{SAY}]  Say op1\\
+\includesvg{svg/say.gv}
 \end{description}
-\includesvg{svg/0x00ca.gv}
 \begin{description}
-\item[\texttt{SAYX       }]  Say op1 without line feed\\
+\item[\texttt{SAYX}]  Say op1 without line feed\\
+\includesvg{svg/sayx.gv}
 \end{description}
-\includesvg{svg/0x00c7.gv}
 \begin{description}
-\item[\texttt{SAYX       }]  Say op1 (as string) without line feed\\
+\item[\texttt{SAYX}]  Say op1 (as string) without line feed\\
+\includesvg{svg/sayx.gv}
 \end{description}
-\includesvg{svg/0x00c8.gv}
 \section{Time Instructions}
 \begin{description}
-\item[\texttt{MTIME      }]  Put time in microseconds into op1\\
+\item[\texttt{MTIME}]  Put time in microseconds into op1\\
+\includesvg{svg/mtime.gv}
 \end{description}
-\includesvg{svg/0x009a.gv}
 \begin{description}
-\item[\texttt{TIME       }]  Put time into op1\\
+\item[\texttt{TIME}]  Put time into op1\\
+\includesvg{svg/time.gv}
 \end{description}
-\includesvg{svg/0x0099.gv}
 \begin{description}
-\item[\texttt{XTIME      }]  put special time properties into op1\\
+\item[\texttt{XTIME}]  put special time properties into op1\\
+\includesvg{svg/xtime.gv}
 \end{description}
-\includesvg{svg/0x009b.gv}
 \section{Meta Instructions}
 \begin{description}
-\item[\texttt{AMAP       }]  Map op1 to arg register index in op2\\
+\item[\texttt{AMAP}]  Map op1 to arg register index in op2\\
+\includesvg{svg/amap.gv}
 \end{description}
-\includesvg{svg/0x009e.gv}
 \begin{description}
-\item[\texttt{AMAP       }]  Map op1 to arg register index  op2\\
+\item[\texttt{AMAP}]  Map op1 to arg register index  op2\\
+\includesvg{svg/amap.gv}
 \end{description}
-\includesvg{svg/0x009f.gv}
 \begin{description}
-\item[\texttt{GETTP      }]  gets the register type flag (op1 = op2.typeflag)\\
+\item[\texttt{GETTP}]  gets the register type flag (op1 = op2.typeflag)\\
+\includesvg{svg/gettp.gv}
 \end{description}
-\includesvg{svg/0x00fd.gv}
 \begin{description}
-\item[\texttt{GMAP       }]  Map op1 to global var name op2\\
+\item[\texttt{GMAP}]  Map op1 to global var name op2\\
+\includesvg{svg/gmap.gv}
 \end{description}
-\includesvg{svg/0x00a3.gv}
 \begin{description}
-\item[\texttt{LINKATTR   }]  Link attribute op3 of op2 to op1\\
+\item[\texttt{LINKATTR}]  Link attribute op3 of op2 to op1\\
+\includesvg{svg/linkattr.gv}
 \end{description}
-\includesvg{svg/0x00bd.gv}
 \begin{description}
-\item[\texttt{LINKATTR   }]  Link attribute op3 of op2 to op1\\
+\item[\texttt{LINKATTR}]  Link attribute op3 of op2 to op1\\
+\includesvg{svg/linkattr.gv}
 \end{description}
-\includesvg{svg/0x00be.gv}
 \begin{description}
-\item[\texttt{MAP        }]  Map op1 to var name op2\\
+\item[\texttt{MAP}]  Map op1 to var name op2\\
+\includesvg{svg/map.gv}
 \end{description}
-\includesvg{svg/0x009d.gv}
 \begin{description}
-\item[\texttt{MAP        }]  Map op1 to var name in op2\\
+\item[\texttt{MAP}]  Map op1 to var name in op2\\
+\includesvg{svg/map.gv}
 \end{description}
-\includesvg{svg/0x009c.gv}
 \begin{description}
 \item[\texttt{METADECODEI}]      Decode opcode (op1 decoded op2)\\
+\includesvg{svg/metadecodei.gv}
 \end{description}
-\includesvg{svg/0x0007.gv}
 \begin{description}
 \item[\texttt{METALINKPRE}]    Link parent-frame-register[op2] to op1\\
+\includesvg{svg/metalinkpre.gv}
 \end{description}
-\includesvg{svg/0x000d.gv}
 \begin{description}
 \item[\texttt{METALOADCAL}]          Load caller address object to op1\\
+\includesvg{svg/metaloadcal.gv}
 \end{description}
-\includesvg{svg/0x000e.gv}
 \begin{description}
 \item[\texttt{METALOADDAT}]    Load Metadata (op1 = (metadata)op2[op3])\\
+\includesvg{svg/metaloaddat.gv}
 \end{description}
-\includesvg{svg/0x000c.gv}
 \begin{description}
 \item[\texttt{METALOADEDM}]         Loaded Modules (op1 = array loaded modules)\\
+\includesvg{svg/metaloadedm.gv}
 \end{description}
-\includesvg{svg/0x0004.gv}
 \begin{description}
 \item[\texttt{METALOADEDP}]       Loaded Procedures (op1 = array procedures in module op2)\\
+\includesvg{svg/metaloadedp.gv}
 \end{description}
-\includesvg{svg/0x0005.gv}
 \begin{description}
 \item[\texttt{METALOADFOP}]        Load Float Operand (op1 = (float)op2[op3])\\
+\includesvg{svg/metaloadfop.gv}
 \end{description}
-\includesvg{svg/0x0009.gv}
 \begin{description}
 \item[\texttt{METALOADINS}]    Load Instruction Code (op1 = (inst)op2[op3])\\
+\includesvg{svg/metaloadins.gv}
 \end{description}
-\includesvg{svg/0x0006.gv}
 \begin{description}
 \item[\texttt{METALOADIOP}]        Load Integer/Index Operand (op1 = (int)op2[op3])\\
+\includesvg{svg/metaloadiop.gv}
 \end{description}
-\includesvg{svg/0x0008.gv}
 \begin{description}
 \item[\texttt{METALOADMOD}]      Load Module (op1 = module num of last loaded module in rx\\
+\includesvg{svg/metaloadmod.gv}
 \end{description}
-\includesvg{svg/0x0003.gv}
 \begin{description}
 \item[\texttt{METALOADPOP}]        Load Procedure Operand (op1 = (proc)op2[op3])\\
+\includesvg{svg/metaloadpop.gv}
 \end{description}
-\includesvg{svg/0x000b.gv}
 \begin{description}
 \item[\texttt{METALOADSOP}]        Load String Operand (op1 = (string)op2[op3])\\
+\includesvg{svg/metaloadsop.gv}
 \end{description}
-\includesvg{svg/0x000a.gv}
 \begin{description}
-\item[\texttt{MOVE       }]  Move op2 to op1 (Deprecated use swap)\\
+\item[\texttt{MOVE}]  Move op2 to op1 (Deprecated use swap)\\
+\includesvg{svg/move.gv}
 \end{description}
-\includesvg{svg/0x00b7.gv}
 \begin{description}
-\item[\texttt{NSMAP      }]  Map op1 to namespace in op2 var name in op3\\
+\item[\texttt{NSMAP}]  Map op1 to namespace in op2 var name in op3\\
+\includesvg{svg/nsmap.gv}
 \end{description}
-\includesvg{svg/0x00a4.gv}
 \begin{description}
-\item[\texttt{NSMAP      }]  Map op1 to namespace op2 var name in op3\\
+\item[\texttt{NSMAP}]  Map op1 to namespace op2 var name in op3\\
+\includesvg{svg/nsmap.gv}
 \end{description}
-\includesvg{svg/0x00a7.gv}
 \begin{description}
-\item[\texttt{NSMAP      }]  Map op1 to namespace in op2 var name op3\\
+\item[\texttt{NSMAP}]  Map op1 to namespace in op2 var name op3\\
+\includesvg{svg/nsmap.gv}
 \end{description}
-\includesvg{svg/0x00a5.gv}
 \begin{description}
-\item[\texttt{NSMAP      }]  Map op1 to namespace op2 var name op3\\
+\item[\texttt{NSMAP}]  Map op1 to namespace op2 var name op3\\
+\includesvg{svg/nsmap.gv}
 \end{description}
-\includesvg{svg/0x00a6.gv}
 \begin{description}
-\item[\texttt{PMAP       }]  Map op1 to parent var name in op2\\
+\item[\texttt{PMAP}]  Map op1 to parent var name in op2\\
+\includesvg{svg/pmap.gv}
 \end{description}
-\includesvg{svg/0x00a0.gv}
 \begin{description}
-\item[\texttt{PMAP       }]  Map op1 to parent var name op2\\
+\item[\texttt{PMAP}]  Map op1 to parent var name op2\\
+\includesvg{svg/pmap.gv}
 \end{description}
-\includesvg{svg/0x00a1.gv}
 \begin{description}
-\item[\texttt{SETTP      }]  sets the register type flag (op1.typeflag = op2)\\
+\item[\texttt{SETTP}]  sets the register type flag (op1.typeflag = op2)\\
+\includesvg{svg/settp.gv}
 \end{description}
-\includesvg{svg/0x00fe.gv}
 \begin{description}
-\item[\texttt{UNLINK     }]  Unlink op1\\
+\item[\texttt{UNLINK}]  Unlink op1\\
+\includesvg{svg/unlink.gv}
 \end{description}
-\includesvg{svg/0x00c0.gv}
 \begin{description}
-\item[\texttt{UNMAP      }]  Unmap op1\\
+\item[\texttt{UNMAP}]  Unmap op1\\
+\includesvg{svg/unmap.gv}
 \end{description}
-\includesvg{svg/0x00a8.gv}
 \section{Breakpoint Instructions}
 \begin{description}
-\item[\texttt{BPOFF      }]  Disable Breakpoints\\
+\item[\texttt{BPOFF}]  Disable Breakpoints\\
+\includesvg{svg/bpoff.gv}
 \end{description}
-\includesvg{svg/0x0002.gv}
 \begin{description}
-\item[\texttt{BPON       }]  Enable Breakpoints\\
+\item[\texttt{BPON}]  Enable Breakpoints\\
+\includesvg{svg/bpon.gv}
 \end{description}
-\includesvg{svg/0x0001.gv}
 \section{String Instructions}
 \begin{description}
-\item[\texttt{APPEND     }]  String Append (op1=op1||op2)\\
+\item[\texttt{APPEND}]  String Append (op1=op1||op2)\\
+\includesvg{svg/append.gv}
 \end{description}
-\includesvg{svg/0x0055.gv}
 \begin{description}
-\item[\texttt{APPENDCHAR }]  Append Concat Char op2 (as int) on op1\\
+\item[\texttt{APPENDCHAR}]  Append Concat Char op2 (as int) on op1\\
+\includesvg{svg/appendchar.gv}
 \end{description}
-\includesvg{svg/0x0052.gv}
 \begin{description}
-\item[\texttt{CONCAT     }]  String Concat (op1=op2||op3)\\
+\item[\texttt{CONCAT}]  String Concat (op1=op2||op3)\\
+\includesvg{svg/concat.gv}
 \end{description}
-\includesvg{svg/0x004f.gv}
 \begin{description}
-\item[\texttt{CONCAT     }]  String Concat (op1=op2||op3)\\
+\item[\texttt{CONCAT}]  String Concat (op1=op2||op3)\\
+\includesvg{svg/concat.gv}
 \end{description}
-\includesvg{svg/0x0050.gv}
 \begin{description}
-\item[\texttt{CONCAT     }]  String Concat (op1=op2||op3)\\
+\item[\texttt{CONCAT}]  String Concat (op1=op2||op3)\\
+\includesvg{svg/concat.gv}
 \end{description}
-\includesvg{svg/0x0051.gv}
 \begin{description}
-\item[\texttt{CONCCHAR   }]  Concat Char op1 from op2 position op3\\
+\item[\texttt{CONCCHAR}]  Concat Char op1 from op2 position op3\\
+\includesvg{svg/concchar.gv}
 \end{description}
-\includesvg{svg/0x0053.gv}
 \begin{description}
-\item[\texttt{DROPCHAR   }]  set op1 from op2 after dropping all chars from op3\\
+\item[\texttt{DROPCHAR}]  set op1 from op2 after dropping all chars from op3\\
+\includesvg{svg/dropchar.gv}
 \end{description}
-\includesvg{svg/0x00dc.gv}
 \begin{description}
-\item[\texttt{FNDBLNK    }]  op1 = find next blank in op2[op3] and behind\\
+\item[\texttt{FNDBLNK}]  op1 = find next blank in op2[op3] and behind\\
+\includesvg{svg/fndblnk.gv}
 \end{description}
-\includesvg{svg/0x00f9.gv}
 \begin{description}
-\item[\texttt{FNDNBLNK   }]  op1 = find next next non blank in op2[op3] and behind\\
+\item[\texttt{FNDNBLNK}]  op1 = find next next non blank in op2[op3] and behind\\
+\includesvg{svg/fndnblnk.gv}
 \end{description}
-\includesvg{svg/0x00fa.gv}
 \begin{description}
-\item[\texttt{GETBYTE    }]  get byte  (op1=op2(op3)\\
+\item[\texttt{GETBYTE}]  get byte  (op1=op2(op3)\\
+\includesvg{svg/getbyte.gv}
 \end{description}
-\includesvg{svg/0x00e0.gv}
 \begin{description}
-\item[\texttt{GETSTRPOS  }]  Get String (op2) charpos into op1\\
+\item[\texttt{GETSTRPOS}]  Get String (op2) charpos into op1\\
+\includesvg{svg/getstrpos.gv}
 \end{description}
-\includesvg{svg/0x0062.gv}
 \begin{description}
-\item[\texttt{GMAP       }]  Map op1 to global var name in op2\\
+\item[\texttt{GMAP}]  Map op1 to global var name in op2\\
+\includesvg{svg/gmap.gv}
 \end{description}
-\includesvg{svg/0x00a2.gv}
 \begin{description}
-\item[\texttt{HEXCHAR    }]  op1 (as hex) = op2[op3]\\
+\item[\texttt{HEXCHAR}]  op1 (as hex) = op2[op3]\\
+\includesvg{svg/hexchar.gv}
 \end{description}
-\includesvg{svg/0x005f.gv}
 \begin{description}
-\item[\texttt{ITOS       }]  Set register string value from its int value\\
+\item[\texttt{ITOS}]  Set register string value from its int value\\
+\includesvg{svg/itos.gv}
 \end{description}
-\includesvg{svg/0x00d1.gv}
 \begin{description}
-\item[\texttt{LOAD       }]  Load op1 with op2\\
+\item[\texttt{LOAD}]  Load op1 with op2\\
+\includesvg{svg/load.gv}
 \end{description}
-\includesvg{svg/0x00c5.gv}
 \begin{description}
-\item[\texttt{LOAD       }]  Load op1 with op2\\
+\item[\texttt{LOAD}]  Load op1 with op2\\
+\includesvg{svg/load.gv}
 \end{description}
-\includesvg{svg/0x00c4.gv}
 \begin{description}
-\item[\texttt{PADSTR     }]  set op1=op2[repeated op3 times]\\
+\item[\texttt{PADSTR}]  set op1=op2[repeated op3 times]\\
+\includesvg{svg/padstr.gv}
 \end{description}
-\includesvg{svg/0x00df.gv}
 \begin{description}
-\item[\texttt{POSCHAR    }]  op1 = position of op3 in op2\\
+\item[\texttt{POSCHAR}]  op1 = position of op3 in op2\\
+\includesvg{svg/poschar.gv}
 \end{description}
-\includesvg{svg/0x0060.gv}
 \begin{description}
-\item[\texttt{RSEQ       }]  non strict String Equals op1=(op2=op3)\\
+\item[\texttt{RSEQ}]  non strict String Equals op1=(op2=op3)\\
+\includesvg{svg/rseq.gv}
 \end{description}
-\includesvg{svg/0x0086.gv}
 \begin{description}
-\item[\texttt{RSEQ       }]  non strict String Equals op1=(op2=op3)\\
+\item[\texttt{RSEQ}]  non strict String Equals op1=(op2=op3)\\
+\includesvg{svg/rseq.gv}
 \end{description}
-\includesvg{svg/0x0087.gv}
 \begin{description}
-\item[\texttt{SAPPEND    }]  String Append with space (op1=op1||op2)\\
+\item[\texttt{SAPPEND}]  String Append with space (op1=op1||op2)\\
+\includesvg{svg/sappend.gv}
 \end{description}
-\includesvg{svg/0x0054.gv}
 \begin{description}
-\item[\texttt{SCONCAT    }]  String Concat with space (op1=op2||op3)\\
+\item[\texttt{SCONCAT}]  String Concat with space (op1=op2||op3)\\
+\includesvg{svg/sconcat.gv}
 \end{description}
-\includesvg{svg/0x004c.gv}
 \begin{description}
-\item[\texttt{SCONCAT    }]  String Concat with space (op1=op2||op3)\\
+\item[\texttt{SCONCAT}]  String Concat with space (op1=op2||op3)\\
+\includesvg{svg/sconcat.gv}
 \end{description}
-\includesvg{svg/0x004d.gv}
 \begin{description}
-\item[\texttt{SCONCAT    }]  String Concat with space (op1=op2||op3)\\
+\item[\texttt{SCONCAT}]  String Concat with space (op1=op2||op3)\\
+\includesvg{svg/sconcat.gv}
 \end{description}
-\includesvg{svg/0x004e.gv}
 \begin{description}
-\item[\texttt{SCOPY      }]  Copy String op2 to op1\\
+\item[\texttt{SCOPY}]  Copy String op2 to op1\\
+\includesvg{svg/scopy.gv}
 \end{description}
-\includesvg{svg/0x00bc.gv}
 \begin{description}
-\item[\texttt{SEQ        }]  String Equals op1=(op2==op3)\\
+\item[\texttt{SEQ}]  String Equals op1=(op2==op3)\\
+\includesvg{svg/seq.gv}
 \end{description}
-\includesvg{svg/0x0084.gv}
 \begin{description}
-\item[\texttt{SEQ        }]  String Equals op1=(op2==op3)\\
+\item[\texttt{SEQ}]  String Equals op1=(op2==op3)\\
+\includesvg{svg/seq.gv}
 \end{description}
-\includesvg{svg/0x0085.gv}
 \begin{description}
-\item[\texttt{SETSTRPOS  }]  Set String (op1) charpos set to op2\\
+\item[\texttt{SETSTRPOS}]  Set String (op1) charpos set to op2\\
+\includesvg{svg/setstrpos.gv}
 \end{description}
-\includesvg{svg/0x0061.gv}
 \begin{description}
-\item[\texttt{SGT        }]  String Greater than op1=(op2>op3)\\
+\item[\texttt{SGT}]  String Greater than op1=(op2>op3)\\
+\includesvg{svg/sgt.gv}
 \end{description}
-\includesvg{svg/0x008a.gv}
 \begin{description}
-\item[\texttt{SGT        }]  String Greater than op1=(op2>op3)\\
+\item[\texttt{SGT}]  String Greater than op1=(op2>op3)\\
+\includesvg{svg/sgt.gv}
 \end{description}
-\includesvg{svg/0x008b.gv}
 \begin{description}
-\item[\texttt{SGT        }]  String Greater than op1=(op2>op3)\\
+\item[\texttt{SGT}]  String Greater than op1=(op2>op3)\\
+\includesvg{svg/sgt.gv}
 \end{description}
-\includesvg{svg/0x008c.gv}
 \begin{description}
-\item[\texttt{SGTE       }]  String Greater than equals op1=(op2>=op3)\\
+\item[\texttt{SGTE}]  String Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/sgte.gv}
 \end{description}
-\includesvg{svg/0x008d.gv}
 \begin{description}
-\item[\texttt{SGTE       }]  String Greater than equals op1=(op2>=op3)\\
+\item[\texttt{SGTE}]  String Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/sgte.gv}
 \end{description}
-\includesvg{svg/0x008e.gv}
 \begin{description}
-\item[\texttt{SGTE       }]  String Greater than equals op1=(op2>=op3)\\
+\item[\texttt{SGTE}]  String Greater than equals op1=(op2>=op3)\\
+\includesvg{svg/sgte.gv}
 \end{description}
-\includesvg{svg/0x008f.gv}
 \begin{description}
-\item[\texttt{SLT        }]  String Less than op1=(op2<op3)\\
+\item[\texttt{SLT}]  String Less than op1=(op2<op3)\\
+\includesvg{svg/slt.gv}
 \end{description}
-\includesvg{svg/0x0090.gv}
 \begin{description}
-\item[\texttt{SLT        }]  String Less than op1=(op2<op3)\\
+\item[\texttt{SLT}]  String Less than op1=(op2<op3)\\
+\includesvg{svg/slt.gv}
 \end{description}
-\includesvg{svg/0x0091.gv}
 \begin{description}
-\item[\texttt{SLT        }]  String Less than op1=(op2<op3)\\
+\item[\texttt{SLT}]  String Less than op1=(op2<op3)\\
+\includesvg{svg/slt.gv}
 \end{description}
-\includesvg{svg/0x0092.gv}
 \begin{description}
-\item[\texttt{SLTE       }]  String Less than equals op1=(op2<=op3)\\
+\item[\texttt{SLTE}]  String Less than equals op1=(op2<=op3)\\
+\includesvg{svg/slte.gv}
 \end{description}
-\includesvg{svg/0x0093.gv}
 \begin{description}
-\item[\texttt{SLTE       }]  String Less than equals op1=(op2<=op3)\\
+\item[\texttt{SLTE}]  String Less than equals op1=(op2<=op3)\\
+\includesvg{svg/slte.gv}
 \end{description}
-\includesvg{svg/0x0094.gv}
 \begin{description}
-\item[\texttt{SLTE       }]  String Less than equals op1=(op2<=op3)\\
+\item[\texttt{SLTE}]  String Less than equals op1=(op2<=op3)\\
+\includesvg{svg/slte.gv}
 \end{description}
-\includesvg{svg/0x0095.gv}
 \begin{description}
-\item[\texttt{SNE        }]  String Not equals op1=(op2!=op3)\\
+\item[\texttt{SNE}]  String Not equals op1=(op2!=op3)\\
+\includesvg{svg/sne.gv}
 \end{description}
-\includesvg{svg/0x0088.gv}
 \begin{description}
-\item[\texttt{SNE        }]  String Not equals op1=(op2!=op3)\\
+\item[\texttt{SNE}]  String Not equals op1=(op2!=op3)\\
+\includesvg{svg/sne.gv}
 \end{description}
-\includesvg{svg/0x0089.gv}
 \begin{description}
-\item[\texttt{STOF       }]  Set register float value from its string value\\
+\item[\texttt{STOF}]  Set register float value from its string value\\
+\includesvg{svg/stof.gv}
 \end{description}
-\includesvg{svg/0x00d6.gv}
 \begin{description}
-\item[\texttt{STOI       }]  Set register int value from its string value\\
+\item[\texttt{STOI}]  Set register int value from its string value\\
+\includesvg{svg/stoi.gv}
 \end{description}
-\includesvg{svg/0x00d7.gv}
 \begin{description}
-\item[\texttt{STRCHAR    }]  op1 (as int) = op2[charpos]\\
+\item[\texttt{STRCHAR}]  op1 (as int) = op2[charpos]\\
+\includesvg{svg/strchar.gv}
 \end{description}
-\includesvg{svg/0x005e.gv}
 \begin{description}
-\item[\texttt{STRCHAR    }]  op1 (as int) = op2[op3]\\
+\item[\texttt{STRCHAR}]  op1 (as int) = op2[op3]\\
+\includesvg{svg/strchar.gv}
 \end{description}
-\includesvg{svg/0x005d.gv}
 \begin{description}
-\item[\texttt{STRLEN     }]  String Length op1 = length(op2)\\
+\item[\texttt{STRLEN}]  String Length op1 = length(op2)\\
+\includesvg{svg/strlen.gv}
 \end{description}
-\includesvg{svg/0x005c.gv}
 \begin{description}
-\item[\texttt{STRLOWER   }]  Set string to lower case value\\
+\item[\texttt{STRLOWER}]  Set string to lower case value\\
+\includesvg{svg/strlower.gv}
 \end{description}
-\includesvg{svg/0x00d9.gv}
 \begin{description}
-\item[\texttt{STRUPPER   }]  Set string to upper case value\\
+\item[\texttt{STRUPPER}]  Set string to upper case value\\
+\includesvg{svg/strupper.gv}
 \end{description}
-\includesvg{svg/0x00da.gv}
 \begin{description}
-\item[\texttt{SUBSTCUT   }]  set op1=substr(op1,,op2) cuts off op1 after position op3\\
+\item[\texttt{SUBSTCUT}]  set op1=substr(op1,,op2) cuts off op1 after position op3\\
+\includesvg{svg/substcut.gv}
 \end{description}
-\includesvg{svg/0x00de.gv}
 \begin{description}
-\item[\texttt{SUBSTR     }]  op1 = op2[charpos]...op2[charpos+op3-1]\\
+\item[\texttt{SUBSTR}]  op1 = op2[charpos]...op2[charpos+op3-1]\\
+\includesvg{svg/substr.gv}
 \end{description}
-\includesvg{svg/0x0063.gv}
 \begin{description}
-\item[\texttt{SUBSTRING  }]  set op1=substr(op2,op3) remaining string\\
+\item[\texttt{SUBSTRING}]  set op1=substr(op2,op3) remaining string\\
+\includesvg{svg/substring.gv}
 \end{description}
-\includesvg{svg/0x00dd.gv}
 \begin{description}
-\item[\texttt{TRANSCHAR  }]  replace op1 if it is in op3-list by char in op2-list\\
+\item[\texttt{TRANSCHAR}]  replace op1 if it is in op3-list by char in op2-list\\
+\includesvg{svg/transchar.gv}
 \end{description}
-\includesvg{svg/0x00db.gv}
 \begin{description}
-\item[\texttt{TRIML      }]  Trim String (op1) from Left by (op2) Chars\\
+\item[\texttt{TRIML}]  Trim String (op1) from Left by (op2) Chars\\
+\includesvg{svg/triml.gv}
 \end{description}
-\includesvg{svg/0x0056.gv}
 \begin{description}
-\item[\texttt{TRIML      }]  Trim String (op2) from Left by (op3) Chars into op1\\
+\item[\texttt{TRIML}]  Trim String (op2) from Left by (op3) Chars into op1\\
+\includesvg{svg/triml.gv}
 \end{description}
-\includesvg{svg/0x0059.gv}
 \begin{description}
-\item[\texttt{TRIMR      }]  Trim String (op1) from Right by (op2) Chars\\
+\item[\texttt{TRIMR}]  Trim String (op1) from Right by (op2) Chars\\
+\includesvg{svg/trimr.gv}
 \end{description}
-\includesvg{svg/0x0057.gv}
 \begin{description}
-\item[\texttt{TRIMR      }]  Trim String (op2) from Right by (op3) Chars into op1\\
+\item[\texttt{TRIMR}]  Trim String (op2) from Right by (op3) Chars into op1\\
+\includesvg{svg/trimr.gv}
 \end{description}
-\includesvg{svg/0x005a.gv}
 \begin{description}
-\item[\texttt{TRUNC      }]  Trunc String (op1) to (op2) Chars\\
+\item[\texttt{TRUNC}]  Trunc String (op1) to (op2) Chars\\
+\includesvg{svg/trunc.gv}
 \end{description}
-\includesvg{svg/0x0058.gv}
 \begin{description}
-\item[\texttt{TRUNC      }]  Trunc String (op2) to (op3) Chars into op1\\
+\item[\texttt{TRUNC}]  Trunc String (op2) to (op3) Chars into op1\\
+\includesvg{svg/trunc.gv}
 \end{description}
-\includesvg{svg/0x005b.gv}
