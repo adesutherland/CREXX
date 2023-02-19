@@ -1,0 +1,1 @@
+Sign EXchange, this instructions inverts the sign of the integer in the register in OP1.\footnote{Named in honour of the instruction that was nearly sneaked past the IBM 360 naming committee in the 1960's, but was stopped at the last moment.}

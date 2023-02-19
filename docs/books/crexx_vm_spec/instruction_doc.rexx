@@ -66,6 +66,7 @@ do i=1 to outstem[0]
       lineout('instruction_chapter.tex','\\item[\\texttt{'opcode'}]\\fontspec{IBM Plex Sans Condensed}'descriptor oper'\\\\')
       lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
       lineout('instruction_chapter.tex','\\IfFileExists{examples/'opcode'.def}{\\input{examples/'opcode'.def}}{}')
+      lineout('instruction_chapter.tex','\\IfFileExists{examples/'opcode'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{examples/'opcode'.rxas} \\splice{rxas examples/'opcode'} \\obeylines \\splice{rxvm examples/'opcode'}}{}')
     end
     lineout('instruction_chapter.tex','\\end{description}')
     lineout('instruction_chapter.tex','\\clearpage')
