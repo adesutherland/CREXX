@@ -1,13 +1,13 @@
 digraph{
 graph [pad="0.5", nodesep="0.5", ranksep="2" ]
-node[shape=plain]
+node [shape=plain]
 Foo [label=<
 <table border="0" cellborder="1" cellspacing="0">
-<tr><td> Opcode </td> <td> Name </td> <td> OP1 </td> </tr>
-<tr><td> 0x00c6 </td><td> SAY </td><td> REG </td> </tr>
-<tr><td> 0x00c9 </td><td> SAY </td><td> INT </td> </tr>
-<tr><td> 0x00cc </td><td> SAY </td><td> CHAR </td> </tr>
-<tr><td> 0x00cb </td><td> SAY </td><td> STRING </td> </tr>
-<tr><td> 0x00ca </td><td> SAY </td><td> FLOAT </td> </tr>
+<tr><td> Name </td> <td> OP1 </td> </tr>
+<tr><td> SAY </td><td> REG </td> </tr>
+<tr><td> SAY </td><td> INT </td> </tr>
+<tr><td> SAY </td><td> CHAR </td> </tr>
+<tr><td> SAY </td><td> STRING </td> </tr>
+<tr><td> SAY </td><td> FLOAT </td> </tr>
 </table>>];
 }

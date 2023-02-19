@@ -1,0 +1,3 @@
+The \code{dec0} instruction decrements the R0 register, and is a shortcut that allows a performance increase in the microcode implementation.
+
+

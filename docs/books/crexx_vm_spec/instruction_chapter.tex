@@ -2,975 +2,2623 @@
 \section{Fixed Point Arithmetic}
 \begin{description}
 \item[\texttt{ADDI}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/addi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/addi.operation}{\input{examples/addi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0011}]\fontspec{IBM Plex Sans Condensed} Convert and Add to Integer (op1=op2+op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0011.def}{\input{examples/0x0011.def}}{}
+\item[\texttt{0x0012}]\fontspec{IBM Plex Sans Condensed} Convert and Add to Integer (op1=op2+op3) (Deprecated)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0012.def}{\input{examples/0x0012.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DEC}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dec.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dec.operation}{\input{examples/dec.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0039}]\fontspec{IBM Plex Sans Condensed} Decrement Int (op1--)  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0039.def}{\input{examples/0x0039.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DEC0}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dec0.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dec0.operation}{\input{examples/dec0.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003b}]\fontspec{IBM Plex Sans Condensed} Decrement R0-- Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003b.def}{\input{examples/0x003b.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DEC1}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dec1.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dec1.operation}{\input{examples/dec1.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003d}]\fontspec{IBM Plex Sans Condensed} Decrement R1-- Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003d.def}{\input{examples/0x003d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DEC2}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dec2.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dec2.operation}{\input{examples/dec2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003f}]\fontspec{IBM Plex Sans Condensed} Decrement R2-- Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003f.def}{\input{examples/0x003f.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DIVI}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/divi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/divi.operation}{\input{examples/divi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x001f}]\fontspec{IBM Plex Sans Condensed} Convert and Divide to Integer (op1=op2/op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001f.def}{\input{examples/0x001f.def}}{}
+\item[\texttt{0x0020}]\fontspec{IBM Plex Sans Condensed} Convert and Divide to Integer (op1=op2/op3) (Deprecated)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0020.def}{\input{examples/0x0020.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IADD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/iadd.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/iadd.operation}{\input{examples/iadd.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000f}]\fontspec{IBM Plex Sans Condensed} Integer Add (op1=op2+op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000f.def}{\input{examples/0x000f.def}}{}
+\item[\texttt{0x0010}]\fontspec{IBM Plex Sans Condensed} Integer Add (op1=op2+op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0010.def}{\input{examples/0x0010.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IAND}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/iand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/iand.operation}{\input{examples/iand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0040}]\fontspec{IBM Plex Sans Condensed} bit wise and of 2 integers (op1=op2\&op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0040.def}{\input{examples/0x0040.def}}{}
+\item[\texttt{0x0041}]\fontspec{IBM Plex Sans Condensed} bit wise and of 2 integers (op1=op2\&op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0041.def}{\input{examples/0x0041.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ICOPY}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/icopy.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/icopy.operation}{\input{examples/icopy.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ba}]\fontspec{IBM Plex Sans Condensed} Copy Integer op2 to op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ba.def}{\input{examples/0x00ba.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IDIV}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/idiv.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/idiv.operation}{\input{examples/idiv.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x001c}]\fontspec{IBM Plex Sans Condensed} Integer Divide (op1=op2/op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001c.def}{\input{examples/0x001c.def}}{}
+\item[\texttt{0x001d}]\fontspec{IBM Plex Sans Condensed} Integer Divide (op1=op2/op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001d.def}{\input{examples/0x001d.def}}{}
+\item[\texttt{0x001e}]\fontspec{IBM Plex Sans Condensed} Integer Divide (op1=op2/op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001e.def}{\input{examples/0x001e.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IEQ}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ieq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ieq.operation}{\input{examples/ieq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0064}]\fontspec{IBM Plex Sans Condensed} Int Equals op1=(op2==op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0064.def}{\input{examples/0x0064.def}}{}
+\item[\texttt{0x0065}]\fontspec{IBM Plex Sans Condensed} Int Equals op1=(op2==op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0065.def}{\input{examples/0x0065.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IGT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/igt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/igt.operation}{\input{examples/igt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0068}]\fontspec{IBM Plex Sans Condensed} Int Greater than op1=(op2>op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0068.def}{\input{examples/0x0068.def}}{}
+\item[\texttt{0x0069}]\fontspec{IBM Plex Sans Condensed} Int Greater than op1=(op2>op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0069.def}{\input{examples/0x0069.def}}{}
+\item[\texttt{0x006a}]\fontspec{IBM Plex Sans Condensed} Int Greater than op1=(op2>op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006a.def}{\input{examples/0x006a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IGTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/igte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/igte.operation}{\input{examples/igte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x006b}]\fontspec{IBM Plex Sans Condensed} Int Greater than equals op1=(op2>=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006b.def}{\input{examples/0x006b.def}}{}
+\item[\texttt{0x006c}]\fontspec{IBM Plex Sans Condensed} Int Greater than equals op1=(op2>=op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006c.def}{\input{examples/0x006c.def}}{}
+\item[\texttt{0x006d}]\fontspec{IBM Plex Sans Condensed} Int Greater than equals op1=(op2>=op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006d.def}{\input{examples/0x006d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ILT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ilt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ilt.operation}{\input{examples/ilt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x006e}]\fontspec{IBM Plex Sans Condensed} Int Less than op1=(op2<op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006e.def}{\input{examples/0x006e.def}}{}
+\item[\texttt{0x006f}]\fontspec{IBM Plex Sans Condensed} Int Less than op1=(op2<op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x006f.def}{\input{examples/0x006f.def}}{}
+\item[\texttt{0x0070}]\fontspec{IBM Plex Sans Condensed} Int Less than op1=(op2<op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0070.def}{\input{examples/0x0070.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ILTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ilte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ilte.operation}{\input{examples/ilte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0071}]\fontspec{IBM Plex Sans Condensed} Int Less than equals op1=(op2<=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0071.def}{\input{examples/0x0071.def}}{}
+\item[\texttt{0x0072}]\fontspec{IBM Plex Sans Condensed} Int Less than equals op1=(op2<=op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0072.def}{\input{examples/0x0072.def}}{}
+\item[\texttt{0x0073}]\fontspec{IBM Plex Sans Condensed} Int Less than equals op1=(op2<=op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0073.def}{\input{examples/0x0073.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IMOD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/imod.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/imod.operation}{\input{examples/imod.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0021}]\fontspec{IBM Plex Sans Condensed} Integer Modulo (op1=op2%op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0021.def}{\input{examples/0x0021.def}}{}
+\item[\texttt{0x0022}]\fontspec{IBM Plex Sans Condensed} Integer Modulo (op1=op2%op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0022.def}{\input{examples/0x0022.def}}{}
+\item[\texttt{0x0023}]\fontspec{IBM Plex Sans Condensed} Integer Modulo (op1=op2\&op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0023.def}{\input{examples/0x0023.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IMULT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/imult.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/imult.operation}{\input{examples/imult.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0018}]\fontspec{IBM Plex Sans Condensed} Integer Multiply (op1=op2*op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0018.def}{\input{examples/0x0018.def}}{}
+\item[\texttt{0x0019}]\fontspec{IBM Plex Sans Condensed} Integer Multiply (op1=op2*op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0019.def}{\input{examples/0x0019.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INC}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/inc.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/inc.operation}{\input{examples/inc.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0038}]\fontspec{IBM Plex Sans Condensed} Increment Int (op1++)  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0038.def}{\input{examples/0x0038.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INC0}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/inc0.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/inc0.operation}{\input{examples/inc0.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003a}]\fontspec{IBM Plex Sans Condensed} Increment R0++ Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003a.def}{\input{examples/0x003a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INC1}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/inc1.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/inc1.operation}{\input{examples/inc1.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003c}]\fontspec{IBM Plex Sans Condensed} Increment R1++ Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003c.def}{\input{examples/0x003c.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INC2}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/inc2.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/inc2.operation}{\input{examples/inc2.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x003e}]\fontspec{IBM Plex Sans Condensed} Increment R2++ Int  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x003e.def}{\input{examples/0x003e.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ine.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ine.operation}{\input{examples/ine.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0066}]\fontspec{IBM Plex Sans Condensed} Int Not equals op1=(op2!=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0066.def}{\input{examples/0x0066.def}}{}
+\item[\texttt{0x0067}]\fontspec{IBM Plex Sans Condensed} Int Not equals op1=(op2!=op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0067.def}{\input{examples/0x0067.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IPOW}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ipow.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ipow.operation}{\input{examples/ipow.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e2}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e2.def}{\input{examples/0x00e2.def}}{}
+\item[\texttt{0x00e3}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e3.def}{\input{examples/0x00e3.def}}{}
+\item[\texttt{0x00e4}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e4.def}{\input{examples/0x00e4.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ISEX}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/isex.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/isex.operation}{\input{examples/isex.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00fb}]\fontspec{IBM Plex Sans Condensed} dec op1 = -op1 (sign change)  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00fb.def}{\input{examples/0x00fb.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ISHL}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ishl.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ishl.operation}{\input{examples/ishl.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0046}]\fontspec{IBM Plex Sans Condensed} bit wise shift logical left of integer (op1=op2<<op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0046.def}{\input{examples/0x0046.def}}{}
+\item[\texttt{0x0047}]\fontspec{IBM Plex Sans Condensed} bit wise shift logical left of integer (op1=op2<<op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0047.def}{\input{examples/0x0047.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ISHR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ishr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ishr.operation}{\input{examples/ishr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0048}]\fontspec{IBM Plex Sans Condensed} bit wise shift logical right of integer (op1=op2>>op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0048.def}{\input{examples/0x0048.def}}{}
+\item[\texttt{0x0049}]\fontspec{IBM Plex Sans Condensed} bit wise shift logical right of integer (op1=op2>>op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0049.def}{\input{examples/0x0049.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ISUB}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/isub.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/isub.operation}{\input{examples/isub.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0013}]\fontspec{IBM Plex Sans Condensed} Integer Subtract (op1=op2-op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0013.def}{\input{examples/0x0013.def}}{}
+\item[\texttt{0x0014}]\fontspec{IBM Plex Sans Condensed} Integer Subtract (op1=op2-op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0014.def}{\input{examples/0x0014.def}}{}
+\item[\texttt{0x0015}]\fontspec{IBM Plex Sans Condensed} Integer Subtract (op1=op2-op3)  {REG,INT,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0015.def}{\input{examples/0x0015.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ITOF}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/itof.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/itof.operation}{\input{examples/itof.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d3}]\fontspec{IBM Plex Sans Condensed} Set register float value from its int value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d3.def}{\input{examples/0x00d3.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LOAD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/load.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/load.operation}{\input{examples/load.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c2}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c2.def}{\input{examples/0x00c2.def}}{}
+\item[\texttt{0x00c3}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,FLOAT}         \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c3.def}{\input{examples/0x00c3.def}}{}
+\item[\texttt{0x00c4}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c4.def}{\input{examples/0x00c4.def}}{}
+\item[\texttt{0x00c5}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,CHAR}          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c5.def}{\input{examples/0x00c5.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LOADSETTP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/loadsettp.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/loadsettp.operation}{\input{examples/loadsettp.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ff}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,INT,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ff.def}{\input{examples/0x00ff.def}}{}
+\item[\texttt{0x0100}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,FLOAT,INT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0100.def}{\input{examples/0x0100.def}}{}
+\item[\texttt{0x0101}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,STRING,INT}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0101.def}{\input{examples/0x0101.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{MULTI}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/multi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/multi.operation}{\input{examples/multi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x001a}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Integer (op1=op2*op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001a.def}{\input{examples/0x001a.def}}{}
+\item[\texttt{0x001b}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Integer (op1=op2*op3) (Deprecated)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001b.def}{\input{examples/0x001b.def}}{}
 \end{description}
 \clearpage
 \section{Floating Point Arithmetic}
 \begin{description}
 \item[\texttt{ADDF}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/addf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/addf.operation}{\input{examples/addf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0026}]\fontspec{IBM Plex Sans Condensed} Convert and Add to Float (op1=op2+op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0026.def}{\input{examples/0x0026.def}}{}
+\item[\texttt{0x0027}]\fontspec{IBM Plex Sans Condensed} Convert and Add to Float (op1=op2+op3) (Deprecated)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0027.def}{\input{examples/0x0027.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DIVF}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/divf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/divf.operation}{\input{examples/divf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0035}]\fontspec{IBM Plex Sans Condensed} Convert and Divide to Float (op1=op2/op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0035.def}{\input{examples/0x0035.def}}{}
+\item[\texttt{0x0036}]\fontspec{IBM Plex Sans Condensed} Convert and Divide to Float (op1=op2/op3) (Deprecated)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0036.def}{\input{examples/0x0036.def}}{}
+\item[\texttt{0x0037}]\fontspec{IBM Plex Sans Condensed} Convert and Divide to Float (op1=op2/op3) (Deprecated)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0037.def}{\input{examples/0x0037.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FADD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fadd.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fadd.operation}{\input{examples/fadd.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0024}]\fontspec{IBM Plex Sans Condensed} Float Add (op1=op2+op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0024.def}{\input{examples/0x0024.def}}{}
+\item[\texttt{0x0025}]\fontspec{IBM Plex Sans Condensed} Float Add (op1=op2+op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0025.def}{\input{examples/0x0025.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FCOPY}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fcopy.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fcopy.operation}{\input{examples/fcopy.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00bb}]\fontspec{IBM Plex Sans Condensed} Copy Float op2 to op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00bb.def}{\input{examples/0x00bb.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FDIV}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fdiv.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fdiv.operation}{\input{examples/fdiv.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0032}]\fontspec{IBM Plex Sans Condensed} Float Divide (op1=op2/op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0032.def}{\input{examples/0x0032.def}}{}
+\item[\texttt{0x0033}]\fontspec{IBM Plex Sans Condensed} Float Divide (op1=op2/op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0033.def}{\input{examples/0x0033.def}}{}
+\item[\texttt{0x0034}]\fontspec{IBM Plex Sans Condensed} Float Divide (op1=op2/op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0034.def}{\input{examples/0x0034.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FEQ}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/feq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/feq.operation}{\input{examples/feq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0074}]\fontspec{IBM Plex Sans Condensed} Float Equals op1=(op2==op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0074.def}{\input{examples/0x0074.def}}{}
+\item[\texttt{0x0075}]\fontspec{IBM Plex Sans Condensed} Float Equals op1=(op2==op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0075.def}{\input{examples/0x0075.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FFORMAT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fformat.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fformat.operation}{\input{examples/fformat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d8}]\fontspec{IBM Plex Sans Condensed} Set string value from float value using a format string  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d8.def}{\input{examples/0x00d8.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FGT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fgt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fgt.operation}{\input{examples/fgt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0078}]\fontspec{IBM Plex Sans Condensed} Float Greater than op1=(op2>op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0078.def}{\input{examples/0x0078.def}}{}
+\item[\texttt{0x0079}]\fontspec{IBM Plex Sans Condensed} Float Greater than op1=(op2>op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0079.def}{\input{examples/0x0079.def}}{}
+\item[\texttt{0x007a}]\fontspec{IBM Plex Sans Condensed} Float Greater than op1=(op2>op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007a.def}{\input{examples/0x007a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FGTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fgte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fgte.operation}{\input{examples/fgte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x007b}]\fontspec{IBM Plex Sans Condensed} Float Greater than equals op1=(op2>=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007b.def}{\input{examples/0x007b.def}}{}
+\item[\texttt{0x007c}]\fontspec{IBM Plex Sans Condensed} Float Greater than equals op1=(op2>=op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007c.def}{\input{examples/0x007c.def}}{}
+\item[\texttt{0x007d}]\fontspec{IBM Plex Sans Condensed} Float Greater than equals op1=(op2>=op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007d.def}{\input{examples/0x007d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FLT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/flt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/flt.operation}{\input{examples/flt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x007e}]\fontspec{IBM Plex Sans Condensed} Float Less than op1=(op2<op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007e.def}{\input{examples/0x007e.def}}{}
+\item[\texttt{0x007f}]\fontspec{IBM Plex Sans Condensed} Float Less than op1=(op2<op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x007f.def}{\input{examples/0x007f.def}}{}
+\item[\texttt{0x0080}]\fontspec{IBM Plex Sans Condensed} Float Less than op1=(op2<op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0080.def}{\input{examples/0x0080.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FLTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/flte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/flte.operation}{\input{examples/flte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0081}]\fontspec{IBM Plex Sans Condensed} Float Less than equals op1=(op2<=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0081.def}{\input{examples/0x0081.def}}{}
+\item[\texttt{0x0082}]\fontspec{IBM Plex Sans Condensed} Float Less than equals op1=(op2<=op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0082.def}{\input{examples/0x0082.def}}{}
+\item[\texttt{0x0083}]\fontspec{IBM Plex Sans Condensed} Float Less than equals op1=(op2<=op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0083.def}{\input{examples/0x0083.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FMULT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fmult.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fmult.operation}{\input{examples/fmult.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x002e}]\fontspec{IBM Plex Sans Condensed} Float Multiply (op1=op2*op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002e.def}{\input{examples/0x002e.def}}{}
+\item[\texttt{0x002f}]\fontspec{IBM Plex Sans Condensed} Float Multiply (op1=op2*op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002f.def}{\input{examples/0x002f.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FNE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fne.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fne.operation}{\input{examples/fne.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0076}]\fontspec{IBM Plex Sans Condensed} Float Not equals op1=(op2!=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0076.def}{\input{examples/0x0076.def}}{}
+\item[\texttt{0x0077}]\fontspec{IBM Plex Sans Condensed} Float Not equals op1=(op2!=op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0077.def}{\input{examples/0x0077.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FPOW}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fpow.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fpow.operation}{\input{examples/fpow.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e5}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e5.def}{\input{examples/0x00e5.def}}{}
+\item[\texttt{0x00e6}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e6.def}{\input{examples/0x00e6.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FSEX}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fsex.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fsex.operation}{\input{examples/fsex.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00fc}]\fontspec{IBM Plex Sans Condensed} float op1 = -op1 (sign change)  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00fc.def}{\input{examples/0x00fc.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FSUB}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fsub.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fsub.operation}{\input{examples/fsub.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0028}]\fontspec{IBM Plex Sans Condensed} Float Subtract (op1=op2-op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0028.def}{\input{examples/0x0028.def}}{}
+\item[\texttt{0x0029}]\fontspec{IBM Plex Sans Condensed} Float Subtract (op1=op2-op3)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0029.def}{\input{examples/0x0029.def}}{}
+\item[\texttt{0x002a}]\fontspec{IBM Plex Sans Condensed} Float Subtract (op1=op2-op3)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002a.def}{\input{examples/0x002a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FTOB}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ftob.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ftob.operation}{\input{examples/ftob.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d5}]\fontspec{IBM Plex Sans Condensed} Set register boolean (int 1 or 0) value from its float value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d5.def}{\input{examples/0x00d5.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FTOI}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ftoi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ftoi.operation}{\input{examples/ftoi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d4}]\fontspec{IBM Plex Sans Condensed} Set register int value from its float value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d4.def}{\input{examples/0x00d4.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FTOS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ftos.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ftos.operation}{\input{examples/ftos.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d2}]\fontspec{IBM Plex Sans Condensed} Set register string value from its float value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d2.def}{\input{examples/0x00d2.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LOAD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/load.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/load.operation}{\input{examples/load.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c2}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c2.def}{\input{examples/0x00c2.def}}{}
+\item[\texttt{0x00c3}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,FLOAT}         \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c3.def}{\input{examples/0x00c3.def}}{}
+\item[\texttt{0x00c4}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c4.def}{\input{examples/0x00c4.def}}{}
+\item[\texttt{0x00c5}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,CHAR}          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c5.def}{\input{examples/0x00c5.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{MULTF}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/multf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/multf.operation}{\input{examples/multf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0030}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Float (op1=op2*op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0030.def}{\input{examples/0x0030.def}}{}
+\item[\texttt{0x0031}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Float (op1=op2*op3) (Deprecated)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0031.def}{\input{examples/0x0031.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{MULTI}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/multi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/multi.operation}{\input{examples/multi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x001a}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Integer (op1=op2*op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001a.def}{\input{examples/0x001a.def}}{}
+\item[\texttt{0x001b}]\fontspec{IBM Plex Sans Condensed} Convert and Multiply to Integer (op1=op2*op3) (Deprecated)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x001b.def}{\input{examples/0x001b.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SUBF}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/subf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/subf.operation}{\input{examples/subf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x002b}]\fontspec{IBM Plex Sans Condensed} Convert and Subtract to Float (op1=op2-op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002b.def}{\input{examples/0x002b.def}}{}
+\item[\texttt{0x002c}]\fontspec{IBM Plex Sans Condensed} Convert and Subtract to Float (op1=op2-op3) (Deprecated)  {REG,REG,FLOAT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002c.def}{\input{examples/0x002c.def}}{}
+\item[\texttt{0x002d}]\fontspec{IBM Plex Sans Condensed} Convert and Subtract to Float (op1=op2-op3) (Deprecated)  {REG,FLOAT,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x002d.def}{\input{examples/0x002d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SUBI}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/subi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/subi.operation}{\input{examples/subi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0016}]\fontspec{IBM Plex Sans Condensed} Convert and Subtract to Integer (op1=op2-op3) (Deprecated)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0016.def}{\input{examples/0x0016.def}}{}
+\item[\texttt{0x0017}]\fontspec{IBM Plex Sans Condensed} Convert and Subtract to Integer (op1=op2-op3) (Deprecated)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0017.def}{\input{examples/0x0017.def}}{}
 \end{description}
 \clearpage
 \section{Logical Operations}
 \begin{description}
 \item[\texttt{AND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/and.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/and.operation}{\input{examples/and.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0096}]\fontspec{IBM Plex Sans Condensed} Logical (int) and op1=(op2 \&\& op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0096.def}{\input{examples/0x0096.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{COPY}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/copy.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/copy.operation}{\input{examples/copy.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b9}]\fontspec{IBM Plex Sans Condensed} Copy op2 to op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b9.def}{\input{examples/0x00b9.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DCALL}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dcall.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dcall.operation}{\input{examples/dcall.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ac}]\fontspec{IBM Plex Sans Condensed} Dynamic call procedure (op1=op2(op3...) )  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ac.def}{\input{examples/0x00ac.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DLLPARMS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dllparms.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dllparms.operation}{\input{examples/dllparms.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0106}]\fontspec{IBM Plex Sans Condensed} fetches parms for DLL call   {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0106.def}{\input{examples/0x0106.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{EXIT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/exit.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/exit.operation}{\input{examples/exit.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ce}]\fontspec{IBM Plex Sans Condensed} Exit  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ce.def}{\input{examples/0x00ce.def}}{}
+\item[\texttt{0x00cf}]\fontspec{IBM Plex Sans Condensed} Exit op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00cf.def}{\input{examples/0x00cf.def}}{}
+\item[\texttt{0x00d0}]\fontspec{IBM Plex Sans Condensed} Exit op1  {INT}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d0.def}{\input{examples/0x00d0.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IAND}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/iand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/iand.operation}{\input{examples/iand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0040}]\fontspec{IBM Plex Sans Condensed} bit wise and of 2 integers (op1=op2\&op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0040.def}{\input{examples/0x0040.def}}{}
+\item[\texttt{0x0041}]\fontspec{IBM Plex Sans Condensed} bit wise and of 2 integers (op1=op2\&op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0041.def}{\input{examples/0x0041.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{INOT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/inot.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/inot.operation}{\input{examples/inot.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x004a}]\fontspec{IBM Plex Sans Condensed} inverts all bits of an integer (op1=~op2)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004a.def}{\input{examples/0x004a.def}}{}
+\item[\texttt{0x004b}]\fontspec{IBM Plex Sans Condensed} inverts all bits of an integer (op1=~op2)  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004b.def}{\input{examples/0x004b.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IOR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ior.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ior.operation}{\input{examples/ior.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0042}]\fontspec{IBM Plex Sans Condensed} bit wise or of 2 integers (op1=op2|op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0042.def}{\input{examples/0x0042.def}}{}
+\item[\texttt{0x0043}]\fontspec{IBM Plex Sans Condensed} bit wise or of 2 integers (op1=op2|op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0043.def}{\input{examples/0x0043.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IRAND}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/irand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/irand.operation}{\input{examples/irand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0107}]\fontspec{IBM Plex Sans Condensed} random number random, op1=irand(op2)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0107.def}{\input{examples/0x0107.def}}{}
+\item[\texttt{0x0108}]\fontspec{IBM Plex Sans Condensed} random number random, op1=irand(op2)  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0108.def}{\input{examples/0x0108.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{IXOR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ixor.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ixor.operation}{\input{examples/ixor.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0044}]\fontspec{IBM Plex Sans Condensed} bit wise exclusive OR of 2 integers (op1=op2\^op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0044.def}{\input{examples/0x0044.def}}{}
+\item[\texttt{0x0045}]\fontspec{IBM Plex Sans Condensed} bit wise exclusive OR of 2 integers (op1=op2\^op3)  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0045.def}{\input{examples/0x0045.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LOADSETTP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/loadsettp.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/loadsettp.operation}{\input{examples/loadsettp.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ff}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,INT,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ff.def}{\input{examples/0x00ff.def}}{}
+\item[\texttt{0x0100}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,FLOAT,INT}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0100.def}{\input{examples/0x0100.def}}{}
+\item[\texttt{0x0101}]\fontspec{IBM Plex Sans Condensed} load register and sets the register type flag load op1=op2 (o  {REG,STRING,INT}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0101.def}{\input{examples/0x0101.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{NOT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/not.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/not.operation}{\input{examples/not.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0098}]\fontspec{IBM Plex Sans Condensed} Logical (int) not op1=!op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0098.def}{\input{examples/0x0098.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{OR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/or.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/or.operation}{\input{examples/or.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0097}]\fontspec{IBM Plex Sans Condensed} Logical (int) or op1=(op2 || op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0097.def}{\input{examples/0x0097.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SETORTP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/setortp.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/setortp.operation}{\input{examples/setortp.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0102}]\fontspec{IBM Plex Sans Condensed} or the register type flag (op1.typeflag = op1.typeflag || op2  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0102.def}{\input{examples/0x0102.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SWAP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/swap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/swap.operation}{\input{examples/swap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b8}]\fontspec{IBM Plex Sans Condensed} Swap op1 and op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b8.def}{\input{examples/0x00b8.def}}{}
 \end{description}
 \clearpage
 \section{Branching}
 \begin{description}
 \item[\texttt{BCF}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bcf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bcf.operation}{\input{examples/bcf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00eb}]\fontspec{IBM Plex Sans Condensed} if op2=0 goto op1(if false) else dec op2  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00eb.def}{\input{examples/0x00eb.def}}{}
+\item[\texttt{0x00ec}]\fontspec{IBM Plex Sans Condensed} if op2=0 goto op1(if false) else dec op2 and inc op3  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ec.def}{\input{examples/0x00ec.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BCT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bct.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bct.operation}{\input{examples/bct.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e7}]\fontspec{IBM Plex Sans Condensed} dec op2; if op2>0; goto op1(if true)  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e7.def}{\input{examples/0x00e7.def}}{}
+\item[\texttt{0x00e8}]\fontspec{IBM Plex Sans Condensed} dec op2; inc op3, if op2>0; goto op1(if true)  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e8.def}{\input{examples/0x00e8.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BCTNM}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bctnm.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bctnm.operation}{\input{examples/bctnm.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e9}]\fontspec{IBM Plex Sans Condensed} dec op2; if op2>=0; goto op1(if true)  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e9.def}{\input{examples/0x00e9.def}}{}
+\item[\texttt{0x00ea}]\fontspec{IBM Plex Sans Condensed} dec op2; inc op3, if op2>=0; goto op1(if true)  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ea.def}{\input{examples/0x00ea.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BEQ}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/beq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/beq.operation}{\input{examples/beq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00f7}]\fontspec{IBM Plex Sans Condensed} if op2==op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f7.def}{\input{examples/0x00f7.def}}{}
+\item[\texttt{0x00f8}]\fontspec{IBM Plex Sans Condensed} if op2==op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f8.def}{\input{examples/0x00f8.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BGE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bge.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bge.operation}{\input{examples/bge.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ef}]\fontspec{IBM Plex Sans Condensed} if op2>=op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ef.def}{\input{examples/0x00ef.def}}{}
+\item[\texttt{0x00f0}]\fontspec{IBM Plex Sans Condensed} if op2>=op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f0.def}{\input{examples/0x00f0.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BGT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bgt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bgt.operation}{\input{examples/bgt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ed}]\fontspec{IBM Plex Sans Condensed} if op2>op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ed.def}{\input{examples/0x00ed.def}}{}
+\item[\texttt{0x00ee}]\fontspec{IBM Plex Sans Condensed} if op2>op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ee.def}{\input{examples/0x00ee.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BLE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ble.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ble.operation}{\input{examples/ble.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00f3}]\fontspec{IBM Plex Sans Condensed} if op2<=op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f3.def}{\input{examples/0x00f3.def}}{}
+\item[\texttt{0x00f4}]\fontspec{IBM Plex Sans Condensed} if op2<=op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f4.def}{\input{examples/0x00f4.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BLT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/blt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/blt.operation}{\input{examples/blt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00f1}]\fontspec{IBM Plex Sans Condensed} if op2<op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f1.def}{\input{examples/0x00f1.def}}{}
+\item[\texttt{0x00f2}]\fontspec{IBM Plex Sans Condensed} if op2<op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f2.def}{\input{examples/0x00f2.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BNE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bne.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bne.operation}{\input{examples/bne.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00f5}]\fontspec{IBM Plex Sans Condensed} if op2!=op3 then goto op1  {ID,REG,REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f5.def}{\input{examples/0x00f5.def}}{}
+\item[\texttt{0x00f6}]\fontspec{IBM Plex Sans Condensed} if op2!=op3 then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f6.def}{\input{examples/0x00f6.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/br.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/br.operation}{\input{examples/br.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b3}]\fontspec{IBM Plex Sans Condensed} Branch to op1  {ID}                \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b3.def}{\input{examples/0x00b3.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BRF}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/brf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/brf.operation}{\input{examples/brf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b5}]\fontspec{IBM Plex Sans Condensed} Branch to op1 if op2 false  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b5.def}{\input{examples/0x00b5.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BRT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/brt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/brt.operation}{\input{examples/brt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b4}]\fontspec{IBM Plex Sans Condensed} Branch to op1 if op2 true  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b4.def}{\input{examples/0x00b4.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BRTF}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/brtf.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/brtf.operation}{\input{examples/brtf.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b6}]\fontspec{IBM Plex Sans Condensed} Branch to op1 if op3 true, otherwise branch to op2  {ID,ID,REG}         \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b6.def}{\input{examples/0x00b6.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BRTPANDT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/brtpandt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/brtpandt.operation}{\input{examples/brtpandt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0104}]\fontspec{IBM Plex Sans Condensed} if op2.typeflag \&\& op3 true then goto op1  {ID,REG,INT}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0104.def}{\input{examples/0x0104.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BRTPT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/brtpt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/brtpt.operation}{\input{examples/brtpt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0103}]\fontspec{IBM Plex Sans Condensed} if op2.typeflag true then goto op1  {ID,REG}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0103.def}{\input{examples/0x0103.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{CALL}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/call.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/call.operation}{\input{examples/call.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a9}]\fontspec{IBM Plex Sans Condensed} Call procedure (op1())  {FUNC}              \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a9.def}{\input{examples/0x00a9.def}}{}
+\item[\texttt{0x00aa}]\fontspec{IBM Plex Sans Condensed} Call procedure (op1=op2())  {REG,FUNC}          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00aa.def}{\input{examples/0x00aa.def}}{}
+\item[\texttt{0x00ab}]\fontspec{IBM Plex Sans Condensed} Call procedure (op1=op2(op3...) )  {REG,FUNC,REG}      \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ab.def}{\input{examples/0x00ab.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{CNOP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/cnop.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/cnop.operation}{\input{examples/cnop.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e1}]\fontspec{IBM Plex Sans Condensed} no operation  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e1.def}{\input{examples/0x00e1.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LINK}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/link.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/link.operation}{\input{examples/link.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00bf}]\fontspec{IBM Plex Sans Condensed} Link op2 to op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00bf.def}{\input{examples/0x00bf.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{NULL}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/null.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/null.operation}{\input{examples/null.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c1}]\fontspec{IBM Plex Sans Condensed} Null op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c1.def}{\input{examples/0x00c1.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{RET}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/ret.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/ret.operation}{\input{examples/ret.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00ad}]\fontspec{IBM Plex Sans Condensed} Return VOID  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ad.def}{\input{examples/0x00ad.def}}{}
+\item[\texttt{0x00ae}]\fontspec{IBM Plex Sans Condensed} Return op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ae.def}{\input{examples/0x00ae.def}}{}
+\item[\texttt{0x00af}]\fontspec{IBM Plex Sans Condensed} Return op1  {INT}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00af.def}{\input{examples/0x00af.def}}{}
+\item[\texttt{0x00b0}]\fontspec{IBM Plex Sans Condensed} Return op1  {FLOAT}             \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b0.def}{\input{examples/0x00b0.def}}{}
+\item[\texttt{0x00b1}]\fontspec{IBM Plex Sans Condensed} Return op1  {CHAR}              \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b1.def}{\input{examples/0x00b1.def}}{}
+\item[\texttt{0x00b2}]\fontspec{IBM Plex Sans Condensed} Return op1  {STRING}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b2.def}{\input{examples/0x00b2.def}}{}
 \end{description}
 \clearpage
 \section{I/O operations}
 \begin{description}
 \item[\texttt{OPENDLL}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/opendll.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/opendll.operation}{\input{examples/opendll.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0105}]\fontspec{IBM Plex Sans Condensed} open DLL  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0105.def}{\input{examples/0x0105.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{READLINE}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/readline.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/readline.operation}{\input{examples/readline.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00cd}]\fontspec{IBM Plex Sans Condensed} Read Line to op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00cd.def}{\input{examples/0x00cd.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SAY}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/say.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/say.operation}{\input{examples/say.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c6}]\fontspec{IBM Plex Sans Condensed} Say op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c6.def}{\input{examples/0x00c6.def}}{}
+\item[\texttt{0x00c9}]\fontspec{IBM Plex Sans Condensed} Say op1  {INT}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c9.def}{\input{examples/0x00c9.def}}{}
+\item[\texttt{0x00ca}]\fontspec{IBM Plex Sans Condensed} Say op1  {FLOAT}             \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00ca.def}{\input{examples/0x00ca.def}}{}
+\item[\texttt{0x00cb}]\fontspec{IBM Plex Sans Condensed} Say op1  {STRING}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00cb.def}{\input{examples/0x00cb.def}}{}
+\item[\texttt{0x00cc}]\fontspec{IBM Plex Sans Condensed} Say op1  {CHAR}              \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00cc.def}{\input{examples/0x00cc.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SAYX}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sayx.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sayx.operation}{\input{examples/sayx.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c7}]\fontspec{IBM Plex Sans Condensed} Say op1 without line feed  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c7.def}{\input{examples/0x00c7.def}}{}
+\item[\texttt{0x00c8}]\fontspec{IBM Plex Sans Condensed} Say op1 (as string) without line feed  {STRING}            \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c8.def}{\input{examples/0x00c8.def}}{}
 \end{description}
 \clearpage
 \section{Time Instructions}
 \begin{description}
 \item[\texttt{MTIME}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/mtime.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/mtime.operation}{\input{examples/mtime.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x009a}]\fontspec{IBM Plex Sans Condensed} Put time in microseconds into op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009a.def}{\input{examples/0x009a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{TIME}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/time.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/time.operation}{\input{examples/time.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0099}]\fontspec{IBM Plex Sans Condensed} Put time into op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0099.def}{\input{examples/0x0099.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{XTIME}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/xtime.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/xtime.operation}{\input{examples/xtime.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x009b}]\fontspec{IBM Plex Sans Condensed} put special time properties into op1  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009b.def}{\input{examples/0x009b.def}}{}
 \end{description}
 \clearpage
 \section{Meta Instructions}
 \begin{description}
 \item[\texttt{AMAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/amap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/amap.operation}{\input{examples/amap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x009e}]\fontspec{IBM Plex Sans Condensed} Map op1 to arg register index in op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009e.def}{\input{examples/0x009e.def}}{}
+\item[\texttt{0x009f}]\fontspec{IBM Plex Sans Condensed} Map op1 to arg register index  op2  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009f.def}{\input{examples/0x009f.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{GETTP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/gettp.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/gettp.operation}{\input{examples/gettp.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00fd}]\fontspec{IBM Plex Sans Condensed} gets the register type flag (op1 = op2.typeflag)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00fd.def}{\input{examples/0x00fd.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{GMAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/gmap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/gmap.operation}{\input{examples/gmap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a2}]\fontspec{IBM Plex Sans Condensed} Map op1 to global var name in op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a2.def}{\input{examples/0x00a2.def}}{}
+\item[\texttt{0x00a3}]\fontspec{IBM Plex Sans Condensed} Map op1 to global var name op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a3.def}{\input{examples/0x00a3.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LINKATTR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/linkattr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/linkattr.operation}{\input{examples/linkattr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00bd}]\fontspec{IBM Plex Sans Condensed} Link attribute op3 of op2 to op1  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00bd.def}{\input{examples/0x00bd.def}}{}
+\item[\texttt{0x00be}]\fontspec{IBM Plex Sans Condensed} Link attribute op3 of op2 to op1  {REG,REG,INT}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00be.def}{\input{examples/0x00be.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{MAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/map.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/map.operation}{\input{examples/map.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x009c}]\fontspec{IBM Plex Sans Condensed} Map op1 to var name in op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009c.def}{\input{examples/0x009c.def}}{}
+\item[\texttt{0x009d}]\fontspec{IBM Plex Sans Condensed} Map op1 to var name op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x009d.def}{\input{examples/0x009d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METADECODEINST}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metadecodeinst.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metadecodeinst.operation}{\input{examples/metadecodeinst.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0007}]\fontspec{IBM Plex Sans Condensed}     Decode opcode (op1 decoded op2)  {REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0007.def}{\input{examples/0x0007.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALINKPREG}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metalinkpreg.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metalinkpreg.operation}{\input{examples/metalinkpreg.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000d}]\fontspec{IBM Plex Sans Condensed}   Link parent-frame-register[op2] to op1  {REG,REG}         \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000d.def}{\input{examples/0x000d.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADCALLERADDR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadcalleraddr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadcalleraddr.operation}{\input{examples/metaloadcalleraddr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000e}]\fontspec{IBM Plex Sans Condensed}         Load caller address object to op1  {REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000e.def}{\input{examples/0x000e.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADDATA}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloaddata.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloaddata.operation}{\input{examples/metaloaddata.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000c}]\fontspec{IBM Plex Sans Condensed}   Load Metadata (op1 = (metadata)op2[op3])  {REG,REG,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000c.def}{\input{examples/0x000c.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADEDMODULES}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadedmodules.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadedmodules.operation}{\input{examples/metaloadedmodules.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0004}]\fontspec{IBM Plex Sans Condensed}        Loaded Modules (op1 = array loaded modules)  {REG}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0004.def}{\input{examples/0x0004.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADEDPROCS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadedprocs.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadedprocs.operation}{\input{examples/metaloadedprocs.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0005}]\fontspec{IBM Plex Sans Condensed}      Loaded Procedures (op1 = array procedures in module op2)  {REG,REG}      \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0005.def}{\input{examples/0x0005.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADFOPERAND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadfoperand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadfoperand.operation}{\input{examples/metaloadfoperand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0009}]\fontspec{IBM Plex Sans Condensed}       Load Float Operand (op1 = (float)op2[op3])  {REG,REG,REG} \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0009.def}{\input{examples/0x0009.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADINST}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadinst.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadinst.operation}{\input{examples/metaloadinst.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0006}]\fontspec{IBM Plex Sans Condensed}   Load Instruction Code (op1 = (inst)op2[op3])  {REG,REG,REG}     \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0006.def}{\input{examples/0x0006.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADIOPERAND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadioperand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadioperand.operation}{\input{examples/metaloadioperand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0008}]\fontspec{IBM Plex Sans Condensed}       Load Integer/Index Operand (op1 = (int)op2[op3])  {REG,REG,REG} \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0008.def}{\input{examples/0x0008.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADMODULE}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadmodule.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadmodule.operation}{\input{examples/metaloadmodule.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0003}]\fontspec{IBM Plex Sans Condensed}     Load Module (op1 = module num of last loaded module in rx  {REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0003.def}{\input{examples/0x0003.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADPOPERAND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadpoperand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadpoperand.operation}{\input{examples/metaloadpoperand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000b}]\fontspec{IBM Plex Sans Condensed}       Load Procedure Operand (op1 = (proc)op2[op3])  {REG,REG,REG} \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000b.def}{\input{examples/0x000b.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{METALOADSOPERAND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/metaloadsoperand.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/metaloadsoperand.operation}{\input{examples/metaloadsoperand.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x000a}]\fontspec{IBM Plex Sans Condensed}       Load String Operand (op1 = (string)op2[op3])  {REG,REG,REG} \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x000a.def}{\input{examples/0x000a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{MOVE}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/move.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/move.operation}{\input{examples/move.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00b7}]\fontspec{IBM Plex Sans Condensed} Move op2 to op1 (Deprecated use swap)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00b7.def}{\input{examples/0x00b7.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{NSMAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/nsmap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/nsmap.operation}{\input{examples/nsmap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a4}]\fontspec{IBM Plex Sans Condensed} Map op1 to namespace in op2 var name in op3  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a4.def}{\input{examples/0x00a4.def}}{}
+\item[\texttt{0x00a5}]\fontspec{IBM Plex Sans Condensed} Map op1 to namespace in op2 var name op3  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a5.def}{\input{examples/0x00a5.def}}{}
+\item[\texttt{0x00a6}]\fontspec{IBM Plex Sans Condensed} Map op1 to namespace op2 var name op3  {REG,STRING,STRING} \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a6.def}{\input{examples/0x00a6.def}}{}
+\item[\texttt{0x00a7}]\fontspec{IBM Plex Sans Condensed} Map op1 to namespace op2 var name in op3  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a7.def}{\input{examples/0x00a7.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{PMAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/pmap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/pmap.operation}{\input{examples/pmap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a0}]\fontspec{IBM Plex Sans Condensed} Map op1 to parent var name in op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a0.def}{\input{examples/0x00a0.def}}{}
+\item[\texttt{0x00a1}]\fontspec{IBM Plex Sans Condensed} Map op1 to parent var name op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a1.def}{\input{examples/0x00a1.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SETTP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/settp.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/settp.operation}{\input{examples/settp.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00fe}]\fontspec{IBM Plex Sans Condensed} sets the register type flag (op1.typeflag = op2)  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00fe.def}{\input{examples/0x00fe.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{UNLINK}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/unlink.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/unlink.operation}{\input{examples/unlink.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c0}]\fontspec{IBM Plex Sans Condensed} Unlink op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c0.def}{\input{examples/0x00c0.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{UNMAP}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/unmap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/unmap.operation}{\input{examples/unmap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a8}]\fontspec{IBM Plex Sans Condensed} Unmap op1  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a8.def}{\input{examples/0x00a8.def}}{}
 \end{description}
 \clearpage
 \section{Breakpoint Instructions}
 \begin{description}
 \item[\texttt{BPOFF}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bpoff.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bpoff.operation}{\input{examples/bpoff.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0002}]\fontspec{IBM Plex Sans Condensed} Disable Breakpoints  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0002.def}{\input{examples/0x0002.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{BPON}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/bpon.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/bpon.operation}{\input{examples/bpon.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0001}]\fontspec{IBM Plex Sans Condensed} Enable Breakpoints  no operand          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0001.def}{\input{examples/0x0001.def}}{}
 \end{description}
 \clearpage
 \section{String Instructions}
 \begin{description}
 \item[\texttt{APPEND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/append.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/append.operation}{\input{examples/append.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0055}]\fontspec{IBM Plex Sans Condensed} String Append (op1=op1||op2)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0055.def}{\input{examples/0x0055.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{APPENDCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/appendchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/appendchar.operation}{\input{examples/appendchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0052}]\fontspec{IBM Plex Sans Condensed} Append Concat Char op2 (as int) on op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0052.def}{\input{examples/0x0052.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{CONCAT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/concat.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/concat.operation}{\input{examples/concat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x004f}]\fontspec{IBM Plex Sans Condensed} String Concat (op1=op2||op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004f.def}{\input{examples/0x004f.def}}{}
+\item[\texttt{0x0050}]\fontspec{IBM Plex Sans Condensed} String Concat (op1=op2||op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0050.def}{\input{examples/0x0050.def}}{}
+\item[\texttt{0x0051}]\fontspec{IBM Plex Sans Condensed} String Concat (op1=op2||op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0051.def}{\input{examples/0x0051.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{CONCCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/concchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/concchar.operation}{\input{examples/concchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0053}]\fontspec{IBM Plex Sans Condensed} Concat Char op1 from op2 position op3  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0053.def}{\input{examples/0x0053.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{DROPCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/dropchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/dropchar.operation}{\input{examples/dropchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00dc}]\fontspec{IBM Plex Sans Condensed} set op1 from op2 after dropping all chars from op3  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00dc.def}{\input{examples/0x00dc.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FNDBLNK}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fndblnk.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fndblnk.operation}{\input{examples/fndblnk.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00f9}]\fontspec{IBM Plex Sans Condensed} op1 = find next blank in op2[op3] and behind  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00f9.def}{\input{examples/0x00f9.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{FNDNBLNK}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/fndnblnk.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/fndnblnk.operation}{\input{examples/fndnblnk.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00fa}]\fontspec{IBM Plex Sans Condensed} op1 = find next next non blank in op2[op3] and behind  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00fa.def}{\input{examples/0x00fa.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{GETBYTE}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/getbyte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/getbyte.operation}{\input{examples/getbyte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00e0}]\fontspec{IBM Plex Sans Condensed} get byte  (op1=op2(op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00e0.def}{\input{examples/0x00e0.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{GETSTRPOS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/getstrpos.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/getstrpos.operation}{\input{examples/getstrpos.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0062}]\fontspec{IBM Plex Sans Condensed} Get String (op2) charpos into op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0062.def}{\input{examples/0x0062.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{GMAP}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/gmap.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/gmap.operation}{\input{examples/gmap.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00a2}]\fontspec{IBM Plex Sans Condensed} Map op1 to global var name in op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a2.def}{\input{examples/0x00a2.def}}{}
+\item[\texttt{0x00a3}]\fontspec{IBM Plex Sans Condensed} Map op1 to global var name op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00a3.def}{\input{examples/0x00a3.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{HEXCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/hexchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/hexchar.operation}{\input{examples/hexchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x005f}]\fontspec{IBM Plex Sans Condensed} op1 (as hex) = op2[op3]  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005f.def}{\input{examples/0x005f.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{ITOS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/itos.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/itos.operation}{\input{examples/itos.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d1}]\fontspec{IBM Plex Sans Condensed} Set register string value from its int value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d1.def}{\input{examples/0x00d1.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{LOAD}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/load.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/load.operation}{\input{examples/load.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00c2}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,INT}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c2.def}{\input{examples/0x00c2.def}}{}
+\item[\texttt{0x00c3}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,FLOAT}         \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c3.def}{\input{examples/0x00c3.def}}{}
+\item[\texttt{0x00c4}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,STRING}        \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c4.def}{\input{examples/0x00c4.def}}{}
+\item[\texttt{0x00c5}]\fontspec{IBM Plex Sans Condensed} Load op1 with op2  {REG,CHAR}          \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00c5.def}{\input{examples/0x00c5.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{PADSTR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/padstr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/padstr.operation}{\input{examples/padstr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00df}]\fontspec{IBM Plex Sans Condensed} set op1=op2[repeated op3 times]  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00df.def}{\input{examples/0x00df.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{POSCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/poschar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/poschar.operation}{\input{examples/poschar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0060}]\fontspec{IBM Plex Sans Condensed} op1 = position of op3 in op2  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0060.def}{\input{examples/0x0060.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{RSEQ}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/rseq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/rseq.operation}{\input{examples/rseq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0086}]\fontspec{IBM Plex Sans Condensed} non strict String Equals op1=(op2=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0086.def}{\input{examples/0x0086.def}}{}
+\item[\texttt{0x0087}]\fontspec{IBM Plex Sans Condensed} non strict String Equals op1=(op2=op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0087.def}{\input{examples/0x0087.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SAPPEND}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sappend.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sappend.operation}{\input{examples/sappend.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0054}]\fontspec{IBM Plex Sans Condensed} String Append with space (op1=op1||op2)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0054.def}{\input{examples/0x0054.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SCONCAT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sconcat.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sconcat.operation}{\input{examples/sconcat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x004c}]\fontspec{IBM Plex Sans Condensed} String Concat with space (op1=op2||op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004c.def}{\input{examples/0x004c.def}}{}
+\item[\texttt{0x004d}]\fontspec{IBM Plex Sans Condensed} String Concat with space (op1=op2||op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004d.def}{\input{examples/0x004d.def}}{}
+\item[\texttt{0x004e}]\fontspec{IBM Plex Sans Condensed} String Concat with space (op1=op2||op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x004e.def}{\input{examples/0x004e.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SCOPY}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/scopy.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/scopy.operation}{\input{examples/scopy.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00bc}]\fontspec{IBM Plex Sans Condensed} Copy String op2 to op1  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00bc.def}{\input{examples/0x00bc.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SEQ}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/seq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/seq.operation}{\input{examples/seq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0084}]\fontspec{IBM Plex Sans Condensed} String Equals op1=(op2==op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0084.def}{\input{examples/0x0084.def}}{}
+\item[\texttt{0x0085}]\fontspec{IBM Plex Sans Condensed} String Equals op1=(op2==op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0085.def}{\input{examples/0x0085.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SETSTRPOS}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/setstrpos.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/setstrpos.operation}{\input{examples/setstrpos.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0061}]\fontspec{IBM Plex Sans Condensed} Set String (op1) charpos set to op2  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0061.def}{\input{examples/0x0061.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SGT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sgt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sgt.operation}{\input{examples/sgt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x008a}]\fontspec{IBM Plex Sans Condensed} String Greater than op1=(op2>op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008a.def}{\input{examples/0x008a.def}}{}
+\item[\texttt{0x008b}]\fontspec{IBM Plex Sans Condensed} String Greater than op1=(op2>op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008b.def}{\input{examples/0x008b.def}}{}
+\item[\texttt{0x008c}]\fontspec{IBM Plex Sans Condensed} String Greater than op1=(op2>op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008c.def}{\input{examples/0x008c.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SGTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sgte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sgte.operation}{\input{examples/sgte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x008d}]\fontspec{IBM Plex Sans Condensed} String Greater than equals op1=(op2>=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008d.def}{\input{examples/0x008d.def}}{}
+\item[\texttt{0x008e}]\fontspec{IBM Plex Sans Condensed} String Greater than equals op1=(op2>=op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008e.def}{\input{examples/0x008e.def}}{}
+\item[\texttt{0x008f}]\fontspec{IBM Plex Sans Condensed} String Greater than equals op1=(op2>=op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x008f.def}{\input{examples/0x008f.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SLT}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/slt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/slt.operation}{\input{examples/slt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0090}]\fontspec{IBM Plex Sans Condensed} String Less than op1=(op2<op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0090.def}{\input{examples/0x0090.def}}{}
+\item[\texttt{0x0091}]\fontspec{IBM Plex Sans Condensed} String Less than op1=(op2<op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0091.def}{\input{examples/0x0091.def}}{}
+\item[\texttt{0x0092}]\fontspec{IBM Plex Sans Condensed} String Less than op1=(op2<op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0092.def}{\input{examples/0x0092.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SLTE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/slte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/slte.operation}{\input{examples/slte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0093}]\fontspec{IBM Plex Sans Condensed} String Less than equals op1=(op2<=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0093.def}{\input{examples/0x0093.def}}{}
+\item[\texttt{0x0094}]\fontspec{IBM Plex Sans Condensed} String Less than equals op1=(op2<=op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0094.def}{\input{examples/0x0094.def}}{}
+\item[\texttt{0x0095}]\fontspec{IBM Plex Sans Condensed} String Less than equals op1=(op2<=op3)  {REG,STRING,REG}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0095.def}{\input{examples/0x0095.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SNE}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/sne.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/sne.operation}{\input{examples/sne.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0088}]\fontspec{IBM Plex Sans Condensed} String Not equals op1=(op2!=op3)  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0088.def}{\input{examples/0x0088.def}}{}
+\item[\texttt{0x0089}]\fontspec{IBM Plex Sans Condensed} String Not equals op1=(op2!=op3)  {REG,REG,STRING}    \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0089.def}{\input{examples/0x0089.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STOF}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/stof.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/stof.operation}{\input{examples/stof.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d6}]\fontspec{IBM Plex Sans Condensed} Set register float value from its string value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d6.def}{\input{examples/0x00d6.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STOI}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/stoi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/stoi.operation}{\input{examples/stoi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d7}]\fontspec{IBM Plex Sans Condensed} Set register int value from its string value  {REG}               \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d7.def}{\input{examples/0x00d7.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STRCHAR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/strchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/strchar.operation}{\input{examples/strchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x005d}]\fontspec{IBM Plex Sans Condensed} op1 (as int) = op2[op3]  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005d.def}{\input{examples/0x005d.def}}{}
+\item[\texttt{0x005e}]\fontspec{IBM Plex Sans Condensed} op1 (as int) = op2[charpos]  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005e.def}{\input{examples/0x005e.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STRLEN}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/strlen.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/strlen.operation}{\input{examples/strlen.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x005c}]\fontspec{IBM Plex Sans Condensed} String Length op1 = length(op2)  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005c.def}{\input{examples/0x005c.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STRLOWER}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/strlower.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/strlower.operation}{\input{examples/strlower.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00d9}]\fontspec{IBM Plex Sans Condensed} Set string to lower case value  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00d9.def}{\input{examples/0x00d9.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{STRUPPER}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/strupper.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/strupper.operation}{\input{examples/strupper.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00da}]\fontspec{IBM Plex Sans Condensed} Set string to upper case value  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00da.def}{\input{examples/0x00da.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SUBSTCUT}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/substcut.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/substcut.operation}{\input{examples/substcut.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00de}]\fontspec{IBM Plex Sans Condensed} set op1=substr(op1,,op2) cuts off op1 after position op3  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00de.def}{\input{examples/0x00de.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SUBSTR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/substr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/substr.operation}{\input{examples/substr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0063}]\fontspec{IBM Plex Sans Condensed} op1 = op2[charpos]...op2[charpos+op3-1]  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0063.def}{\input{examples/0x0063.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{SUBSTRING}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/substring.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/substring.operation}{\input{examples/substring.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00dd}]\fontspec{IBM Plex Sans Condensed} set op1=substr(op2,op3) remaining string  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00dd.def}{\input{examples/0x00dd.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{TRANSCHAR}] instruction\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/transchar.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/transchar.operation}{\input{examples/transchar.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x00db}]\fontspec{IBM Plex Sans Condensed} replace op1 if it is in op3-list by char in op2-list  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x00db.def}{\input{examples/0x00db.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{TRIML}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/triml.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/triml.operation}{\input{examples/triml.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0056}]\fontspec{IBM Plex Sans Condensed} Trim String (op1) from Left by (op2) Chars  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0056.def}{\input{examples/0x0056.def}}{}
+\item[\texttt{0x0059}]\fontspec{IBM Plex Sans Condensed} Trim String (op2) from Left by (op3) Chars into op1  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0059.def}{\input{examples/0x0059.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{TRIMR}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/trimr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/trimr.operation}{\input{examples/trimr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0057}]\fontspec{IBM Plex Sans Condensed} Trim String (op1) from Right by (op2) Chars  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0057.def}{\input{examples/0x0057.def}}{}
+\item[\texttt{0x005a}]\fontspec{IBM Plex Sans Condensed} Trim String (op2) from Right by (op3) Chars into op1  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005a.def}{\input{examples/0x005a.def}}{}
 \end{description}
 \clearpage
 \begin{description}
 \item[\texttt{TRUNC}] instruction\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
 \includesvg{svg/trunc.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
 \IfFileExists{examples/trunc.operation}{\input{examples/trunc.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0058}]\fontspec{IBM Plex Sans Condensed} Trunc String (op1) to (op2) Chars  {REG,REG}           \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x0058.def}{\input{examples/0x0058.def}}{}
+\item[\texttt{0x005b}]\fontspec{IBM Plex Sans Condensed} Trunc String (op2) to (op3) Chars into op1  {REG,REG,REG}       \\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{examples/0x005b.def}{\input{examples/0x005b.def}}{}
 \end{description}
 \clearpage

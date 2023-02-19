@@ -44,10 +44,10 @@ Foo [label=<
     /* else trace off */
     lineout(mnemonic'.gv','digraph{',1)
     lineout(mnemonic'.gv','graph [pad="0.5", nodesep="0.5", ranksep="2" ]')
-    lineout(mnemonic'.gv','node[shape=plain]')
+    lineout(mnemonic'.gv','node [shape=plain]')
     lineout(mnemonic'.gv','Foo [label=<')
     lineout(mnemonic'.gv','<table border="0" cellborder="1" cellspacing="0">')
-    line='<tr><td> Opcode </td> <td> Name </td> '
+    line='<tr><td> Name </td> '
     /* here the opc1 opc2 etc labels */
     placeholder=operands --make a copy
     opclb=0
@@ -71,7 +71,7 @@ Foo [label=<
       parse outs[k] opcode '|' operands
       operands=operands.translate('  ','{}')
       line="<tr>"
-      line=line'<td>' opcode.strip() '</td>'
+--      line=line'<td>' opcode.strip() '</td>'
       line=line'<td>' mnemonic.upper().strip() '</td>'
       do until operands=''
 	opclb=opclb+1

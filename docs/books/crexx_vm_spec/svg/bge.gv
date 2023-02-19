@@ -1,10 +1,10 @@
 digraph{
 graph [pad="0.5", nodesep="0.5", ranksep="2" ]
-node[shape=plain]
+node [shape=plain]
 Foo [label=<
 <table border="0" cellborder="1" cellspacing="0">
-<tr><td> Opcode </td> <td> Name </td> <td> OP1 </td><td> OP2 </td><td> OP3 </td> </tr>
-<tr><td> 0x00ef </td><td> BGE </td><td> ID </td><td> REG </td><td> REG </td> </tr>
-<tr><td> 0x00f0 </td><td> BGE </td><td> ID </td><td> REG </td><td> INT </td> </tr>
+<tr><td> Name </td> <td> OP1 </td><td> OP2 </td><td> OP3 </td> </tr>
+<tr><td> BGE </td><td> ID </td><td> REG </td><td> REG </td> </tr>
+<tr><td> BGE </td><td> ID </td><td> REG </td><td> INT </td> </tr>
 </table>>];
 }
