@@ -35,8 +35,6 @@ do i=1 to outstem[0]
   do j=1 to instructions[0]
     parse instructions[j] mnemonic 
     description = 'instruction'
-    lineout('instruction_chapter.tex','\\begin{description}')
-    lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
     /* get the opcodes for this instruction mnemonic */
     jstem=''; jstem=jstem
     jstem[0]=1
@@ -45,6 +43,11 @@ do i=1 to outstem[0]
     address system 'sqlite3 ../../instructions/instructionbase.sqb' with -
       input stem jstem -
       output stem ops
+    if pos('eprecated',ops[1]) >0 then iterate -- we do not include deprecated instructions
+
+    lineout('instruction_chapter.tex','\\begin{description}')
+    lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
+
     if ops[0]==1 then
       do
 	lineout('instruction_chapter.tex','\\item[\\texttt{Syntax}] - form \\\\')
@@ -57,7 +60,7 @@ do i=1 to outstem[0]
     lineout('instruction_chapter.tex','\\includesvg{svg/'mnemonic'.gv}')
     lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
     lineout('instruction_chapter.tex','\\item[\\texttt{Operation}]')
-    lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic'.operation}{\\input{examples/'mnemonic'.operation}}{}')
+    lineout('instruction_chapter.tex','\\IfFileExists{operation/'mnemonic'.operation}{\\input{operation/'mnemonic'.operation}}{}')
     lineout('instruction_chapter.tex','\\item[\\texttt{}]')
     do o=1 to ops[0]
       parse ops[o] opcode '|' mn '|' oper '|' descriptor

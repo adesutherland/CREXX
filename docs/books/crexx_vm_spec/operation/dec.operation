@@ -1,0 +1,3 @@
+The \code{dec} instruction decrements the register speficied in Operand 1. Assume R1 holds the value 43, after the execution of the instruction R1 holds the number 42.
+
+
