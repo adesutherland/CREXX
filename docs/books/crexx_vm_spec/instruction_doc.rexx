@@ -8,7 +8,23 @@
 
 lineout('instruction_chapter.tex','% instruction chapter',1)
 /*
- * first select the categories
+ * select the full names for the instructions
+ */
+instructionNames=''
+ststem=''; ststem=ststem
+ststem[0]=1
+stemout=''
+ststem[1]='select mnemonic, description from inst_name;'
+address system 'sqlite3 ../../instructions/instructionbase.sqb' with -
+  input stem ststem -
+  output stem stemout
+do o=1 to stemout[0]
+  parse stemout[o] mnem '|' name
+  instructionNames[mnem]=name
+end
+
+/*
+ * select the categories
  */  
 istem=''; istem=istem
 istem[0]=1
@@ -34,7 +50,9 @@ do i=1 to outstem[0]
 
   do j=1 to instructions[0]
     parse instructions[j] mnemonic 
-    description = 'instruction'
+    description = ' -' instructionNames[mnemonic]
+    if description = '' then description='instruction'
+
     /* get the opcodes for this instruction mnemonic */
     jstem=''; jstem=jstem
     jstem[0]=1
