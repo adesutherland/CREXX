@@ -22,4 +22,10 @@ CREATE TABLE instruction
   category	     integer not null,
   foreign key (category) references category(category)
 );
+drop table if exists inst_name;
+CREATE TABLE inst_name
+( mnemonic           varchar(50),
+  description	     varchar(80),
+  foreign key (mnemonic) references instruction(mnemonic)
+);
 

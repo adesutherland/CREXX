@@ -262,5 +262,3 @@ insert into instruction VALUES('0x005b' ,'trunc' ,' {REG,REG,REG}       ',' Trun
 insert into instruction VALUES('0x00c0' ,'unlink' ,' {REG}               ',' Unlink op1','7');
 insert into instruction VALUES('0x00a8' ,'unmap' ,' {REG}               ',' Unmap op1','7');
 insert into instruction VALUES('0x009b' ,'xtime' ,' {REG,STRING}        ',' put special time properties into op1','6');
-
-
