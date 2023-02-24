@@ -4,7 +4,7 @@
 \setcounter{tocdepth}{1}
 \title{\fontspec{TeX Gyre
     Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW
-    Light}\\Programmer's Guide}
+    Light}\\Application Programming Guide}
 
 \author{The \crexx{} team}
 %\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
@@ -27,8 +27,13 @@
 
 \mainmatter
 \input{about}
-\chapter{Building \crexx{}}
-\input{Building_cRexx.tex}
+\part{Guide}
+\chapter{Running cRexx on Linux and macOS}
+Linux and other Unix-like operating systems like Apple macOS behave in
+an identical way when compiling, linking and running a \crexx{}
+program.
+\input{Running_cRexx}
+\part{Reference}
 \backmatter
 \listoftables
 %\listoffigures

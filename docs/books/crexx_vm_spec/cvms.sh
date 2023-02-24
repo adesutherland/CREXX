@@ -1,1 +1,1 @@
-rxvm examples/0x00fc
+rxvm examples/fsex{REG}
