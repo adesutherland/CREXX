@@ -18,14 +18,18 @@ CREATE TABLE instruction
 ( opcode             char(6) primary key,
   mnemonic           varchar(50),
   operands	     varchar(50),
-  description	     varchar(80),
-  category	     integer not null,
-  foreign key (category) references category(category)
+  description	     varchar(80)
 );
 drop table if exists inst_name;
 CREATE TABLE inst_name
 ( mnemonic           varchar(50),
   description	     varchar(80),
   foreign key (mnemonic) references instruction(mnemonic)
+);
+drop table if exists inst_cat;
+CREATE TABLE inst_cat
+( mnemonic           varchar(50),
+  category	     char(2),
+  foreign key (category) references category(category)
 );
 

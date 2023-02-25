@@ -43,7 +43,7 @@ do i=1 to outstem[0]
   istem=''; istem=istem
   istem[0]=1
   instructions=''
-  istem[1]='select distinct mnemonic from instruction where category = 'cat' order by mnemonic;'
+  istem[1]='select distinct mnemonic from inst_cat where category = 'cat' order by mnemonic;'
   address system 'sqlite3 ../../instructions/instructionbase.sqb' with -
     input stem istem -
     output stem instructions

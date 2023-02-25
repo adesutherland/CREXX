@@ -18,11 +18,22 @@ the motivation for RXAS capabilities and approach for implementing REXX
 features. Details of the REXX Features themselves are documented in the
 REXX specifications, and more details of the RXAS capabilities follow.
 
-\begin{longtable}[]{@{}llll@{}}
-\toprule
-REXX~Features & RXAS~Capabilities & Implementation~Approach &
-Available \\
-\midrule
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2308}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3718}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2308}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+REXX~Features
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+RXAS~Capabilities
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Implementation~Approach
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Available
+\end{minipage} \\
+\midrule()
 \endhead
 Program Flow & Branches & Generate loops in RX & Yes \\
 Simple Variables & Local Registers & & Yes \\
@@ -57,7 +68,7 @@ Error Reporting & Annotation and debug pool & \footnote{Source line
   information stored in a ``debug'' pool to allow source line error
   reporting. Run time error conditions (signals) call REXX Exit
   functions} & No \\
-\bottomrule
+\bottomrule()
 \end{longtable}
 
 \hypertarget{rxas-source-syntax-and-structure}{%
@@ -113,10 +124,16 @@ each argument can be a
 
 RXAS supports the following directives.
 
-\begin{longtable}[]{@{}ll@{}}
-\toprule
-Directive & Description \\
-\midrule
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.1233}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.8767}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Directive
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} \\
+\midrule()
 \endhead
 .globals = \{INT\} & Defines the number of globals defined for the
 file \\
@@ -124,7 +141,7 @@ file \\
 procedure \\
 .expose = \{ID\} & Defines the exposed index of a global register
 \footnote{or Procedure. These are used for linking between files/modules} \\
-\bottomrule
+\bottomrule()
 \end{longtable}
 
 \hypertarget{file-scope-global-registers}{%
