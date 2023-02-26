@@ -1,3 +1,3 @@
-The \code{dec2} instruction decrements the R2 register, and is a shortcut that allows a performance increase in the microcode implementation.
+The \code{dec2} instruction decrements the \code{r2} register, and is a shortcut that allows a performance increase in the microcode implementation.
 
 

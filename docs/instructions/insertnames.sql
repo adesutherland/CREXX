@@ -3,7 +3,7 @@ insert into inst_name VALUES('amap','Map to Arg');
 insert into inst_name VALUES('and','Logical AND');
 insert into inst_name VALUES('append','Append to String');
 insert into inst_name VALUES('bcf','Branch on Count if False');
-insert into inst_name VALUES('bct','Branch on Count of True');
+insert into inst_name VALUES('bct','Branch on Count if True');
 insert into inst_name VALUES('bctnm','Branch on Count to Name');
 insert into inst_name VALUES('beq','Branch on Equal');
 insert into inst_name VALUES('bge','Branch on Greater Than or Equal');

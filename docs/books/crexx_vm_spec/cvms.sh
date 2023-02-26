@@ -1,1 +1,1 @@
-rxvm examples/bge{ID,REG,INT}
+rxvm examples/bltIDREGINT

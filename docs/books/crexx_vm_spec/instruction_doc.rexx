@@ -85,11 +85,14 @@ do i=1 to outstem[0]
       descriptor=descriptor.changestr('&','\\&')
       descriptor=descriptor.changestr('^','\\^')
       parse oper oper .
-      say mnemonic||oper.strip()
+      oper=oper.translate('',',')
+      oper=oper.translate('','}')
+      oper=oper.translate('','{')
+      oper=oper.strip().space(0)
       lineout('instruction_chapter.tex','\\item[\\texttt{'opcode'}]\\fontspec{IBM Plex Sans Condensed}'descriptor oper'\\\\')
       lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
-      lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic||oper.strip()'.def}{\\input{examples/'mnemonic||oper.strip()'.def}}{}')
-      lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic||oper.strip()'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{examples/'mnemonic||oper.strip()'.rxas} \\splice{rxas examples/'mnemonic||oper.strip()'} \\obeylines \\splice{rxvm examples/'mnemonic||oper.strip()'}}{}')
+      lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic||oper'.def}{\\input{examples/'mnemonic||oper'.def}}{}')
+      lineout('instruction_chapter.tex','\\IfFileExists{examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{examples/'mnemonic||oper'.rxas} \\splice{rxas examples/'mnemonic||oper'} \\obeylines \\splice{rxvm examples/'mnemonic||oper'}}{}')
     end
     lineout('instruction_chapter.tex','\\end{description}')
     lineout('instruction_chapter.tex','\\clearpage')
