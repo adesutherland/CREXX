@@ -2,7 +2,9 @@
 \begin{document}
 \renewcommand{\isbn}{978-90-819090-1-3}
 \setcounter{tocdepth}{1}
-\title{\fontspec{TeX Gyre Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW Light}\\VM Specification}
+\title{\fontspec{TeX Gyre
+    Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW
+    Light}\\Language Reference}
 
 \author{The \crexx{} team}
 %\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
@@ -25,29 +27,9 @@
 
 \mainmatter
 \input{about}
-\input{lowlevel}
-\input{REXX-Assembler.tex}
 
 %% \input{options}
 \appendix
-\chapter{Platform Considerations}
-
-\chapter{Notices}
-
-\chapter{Instructions by Mnemonic}
-\begin{longtable}{lll}
-  \toprule
-  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
-  \input{../crexx_reference_cards/mnemonic.tex}
-\end{longtable}
-
-
-\chapter{Instructions by Opcode}
-\begin{longtable}{lll}
-  \toprule
-  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
-  \input{../crexx_reference_cards/opcodes.tex}
-\end{longtable}
 
 \backmatter
 \listoftables

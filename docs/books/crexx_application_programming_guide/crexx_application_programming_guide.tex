@@ -48,8 +48,8 @@ program.
 \fontspec{TeX Gyre Pagella}
 \chapter{\crexx{} Assembler}
 \section{Overview}
-The purpose of the \crexx{} assembler is to translate a textfile with
-\emph{rxvm} assembler instructions to a binary file containing these
+The purpose of the \crexx{} assembler is to translate a text file with
+\emph{rxvm} assembler instructions to a file with binary contents containing these
 instructions in their binary, executable form. Its main use is to
 translate an \emph{.rxas} file produced by the \crexx{} compiler
 \emph{rxc} to a binary \emph{.rxbin} file.
@@ -70,10 +70,11 @@ When the command line argument -h is specified the options are shown:\\
   \obeylines \splice{rxas -h | sed "s/&/\and/g"}
  \end{shaded}
 \fontspec{TeX Gyre Pagella}
-\section{Assembler Instructions}
+\section{Assembler Directives}
 For machine instructions, see the \emph{\crexx{} VM
   Specification}. This section discusses instructions to the
-assembler. These are necessary to pass information into the compiled
+assembler, which are called \emph{directives} to clearly distinguish
+them from virtual machine instruction. These are necessary to pass information into the compiled
 \emph{.rxbin} binary file, to enable execution by the \emph{rxvm}
 virtual machine.
 
@@ -82,10 +83,37 @@ virtual machine.
 : Provide several examples of how to use the assembler program to
 create assembly code, assemble it, and link it into executable code.
 
-\subsection{In-line assembly}
-The \crexx{} compiler \emph{rxc} enables\footnote{In \crexx{} level B} inline assembly through the
-\texttt{address assembler} construct. In this case a separate
-execution of the \emph{rxas} assembler program is not needed.
+\section{In-line assembly}
+The \crexx{} compiler \emph{rxc} enables\footnote{In \crexx{} level b} inline assembly through the
+\textbf{assembler} statement. When used in this way, a lot of
+the complications of the assembly language can be handled by the
+\crexx{} compiler, like assigning registers to variables, and the
+conversion of datatypes like \emph{integer} for display as \emph{string}.
+
+\lstinputlisting[language=rexx,label=ipow_example,caption=ipow
+example.]{examples/pow.rexx}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+\splice{rxc examples/pow} \obeylines
+\splice{rxas examples/pow} \obeylines \splice{rxvm examples/pow}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+This is a simple and straightforward way to complement the low level
+assembler instructions with the power of the \textsc{Rexx}
+language. The following example intends to explain how this is
+implemented; it can be skipped without consequences.
+
+In this example, the compiler generates the following assembler source:
+\lstinputlisting[language=rxas,label=ipow_rxas_example,caption=ipow
+rxas example.]{examples/pow.rxas}
+
+The \code{.src} directives indicate where the work is done. The
+variables are assigned, as integers, to the registers \code{r1} and
+\code{r2}. The line \code{ipow, number, power} becomes \code{ipow
+  r3,r1,r2}, and the display on the terminal is handled by the
+  \code{itos},\code{sconcat} and \code{say} instructions.
 
 \section{Troubleshooting}
 

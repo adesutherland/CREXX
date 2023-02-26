@@ -1,4 +1,18 @@
 % this is not genereated from Markdown so the edits can be here
+\section{Register based Virtual Machine}
+\crexx{} uses a register based virtual machine.
+A register-based virtual machine uses registers, which are small, fast, on-chip memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. This approach can provide faster performance because accessing registers is typically faster than accessing memory. In the \emph{rxvm} virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
+
+In contrast, a stack-based virtual machine uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack. However, the stack-based approach can be slower than the register-based approach because accessing memory is typically slower than accessing registers.
+
+Some other differences between a register-based virtual machine and a stack-based virtual machine include:
+\begin{itemize}
+\item Register-based virtual machines typically use more memory for the registers than stack-based virtual machines use for the stack.
+\item Register-based virtual machines may require more complex instruction encoding and decoding logic than stack-based virtual machines, which can impact the size and complexity of the virtual machine implementation.
+\item Stack-based virtual machines can be easier to implement and optimize for certain types of operations, such as function calls and loops, where the data can be easily pushed onto and popped off the stack.
+\item Register-based virtual machines can provide more flexibility in terms of register allocation and optimization, which can be particularly important for high-performance applications.
+\end{itemize}
+
 The execution environment of a \crexx{} program is a
 threaded\footnote{an alternative, non-threaded executable is available
   under the \emph{rxbvm} name} virtual

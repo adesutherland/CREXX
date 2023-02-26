@@ -1,1 +1,1 @@
-rxvm examples/fsex{REG}
+rxvm examples/bge{ID,REG,INT}
