@@ -38,11 +38,82 @@ program.
 \chapter{Running cRexx on VM/370CE}
 \chapter{Interlanguage operability}
 \part{Reference}
-\chapter{\crexx{} Assembler}
-\chapter{\crexx{} Assembler}
 \chapter{\crexx{} Compiler}
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxc -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+\chapter{\crexx{} Assembler}
+\section{Overview}
+The purpose of the \crexx{} assembler is to translate a textfile with
+\emph{rxvm} assembler instructions to a binary file containing these
+instructions in their binary, executable form. Its main use is to
+translate an \emph{.rxas} file produced by the \crexx{} compiler
+\emph{rxc} to a binary \emph{.rxbin} file.
+
+\section{Program Structure}
+
+ Describe the structure of the program, including the main components, how they interact, and any key algorithms or data structures used.
+
+\section{Input/Output}
+
+: Specify the format and structure of any input and output files used by the program, and provide examples of how to use them.
+
+\section{Command Line Arguments}
+When the command line argument -h is specified the options are shown:\\
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxas -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+\section{Assembler Instructions}
+For machine instructions, see the \emph{\crexx{} VM
+  Specification}. This section discusses instructions to the
+assembler. These are necessary to pass information into the compiled
+\emph{.rxbin} binary file, to enable execution by the \emph{rxvm}
+virtual machine.
+
+\section{Examples}
+
+: Provide several examples of how to use the assembler program to
+create assembly code, assemble it, and link it into executable code.
+
+\subsection{In-line assembly}
+The \crexx{} compiler \emph{rxc} enables\footnote{In \crexx{} level B} inline assembly through the
+\texttt{address assembler} construct. In this case a separate
+execution of the \emph{rxas} assembler program is not needed.
+
+\section{Troubleshooting}
+
+: Include a section on troubleshooting common issues with the assembler program, along with tips for resolving them.
+
+\section{References}
+
+: Provide a list of references used in creating the documentation, such as manuals or online resources for the assembler program, and any other relevant sources.
+
+\chapter{\crexx{} Disassembler}
+A disassembler reverses the actions of an assembler; in this case it
+delivers a disassembly which in itself can be re-assembled - and still works.
+
 \chapter{\crexx{} Debugger}
 \chapter{\crexx{} C Packer}
+The C Packer program converts the \emph{.rxbin} files into a C
+language structure which links together all needed modules, and a
+large part of the Virtual Machine infrastructure, which file then can
+be compiled and link edited by the C compiler. GCC and Clang are the
+targeted compiler toolchains for Linux, macOS and Windows.
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxcpack -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+
 \backmatter
 \listoftables
 %\listoffigures
