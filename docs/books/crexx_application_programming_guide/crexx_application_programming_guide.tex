@@ -107,7 +107,10 @@ When the command line argument -h is specified the options are shown:\\
   \small
   \obeylines \splice{rxas -h | sed "s/&/\and/g"}
  \end{shaded}
-\fontspec{TeX Gyre Pagella}
+ \fontspec{TeX Gyre Pagella}
+
+ \section{Optimizer}
+ 
 \section{Assembler Directives}
 For machine instructions, see the \emph{\crexx{} VM
   Specification}. This section discusses instructions to the
@@ -147,11 +150,13 @@ In this example, the compiler generates the following assembler source:
 \lstinputlisting[language=rxas,label=ipow_rxas_example,caption=ipow
 rxas example.]{examples/pow.rxas}
 
-The \code{.src} directives indicate where the work is done. The
+The \code{.src} directives (intended for trace and sourceline) indicate where the work is done. The
 variables are assigned, as integers, to the registers \code{r1} and
 \code{r2}. The line \code{ipow, number, power} becomes \code{ipow
   r3,r1,r2}, and the display on the terminal is handled by the
-  \code{itos},\code{sconcat} and \code{say} instructions.
+\code{itos},\code{sconcat} and \code{say} instructions.
+
+\section{Optimizer}
 
 \section{Troubleshooting}
 
