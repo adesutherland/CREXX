@@ -29,14 +29,52 @@
 \mainmatter
 \input{about}
 \part{Guide}
-\chapter{Running cRexx on Linux and macOS}
+\chapter{Overview of the toolchain}
+In the binary distribution of \crexx{} for your platform, the main
+toolchain and a number of utilities are included; all programs are statically linked into
+their own executable, and no shared object libraries or dll's are needed.\newline
+\begin{wrapfigure}{l}{0.4\textwidth}
+\includegraphics[scale=0.6]{charts/buildflow.pdf}
+\end{wrapfigure}
+\fussy
+Source can be edited with any text editor\footnote{Vi, Emacs, Xedit,
+  VS Code, Eclipse, etc.} of your liking. The sourcefile needs to have an
+file extension of \code{.rexx} and contains (Unicode, UTF-8) text. The \code{rxc} \crexx{} compiler
+produces a text file which will have a file extension of
+\code{.rxas}. The next file in this sequence is produced by the
+\code{rxas} assembler and is a binary \code{.rxbin} file. This file is
+executable by the \crexx{} \code{rxvme} virtual machine.\newline\newline
+\fussy
+If you choose to compile a series of \code{*.rxbin} files to a native
+executable, the \code{rxcpack} program produces a \code{.c} file,
+which can be compiled by any C compiler toolchain.\newline\newline
+\fussy
+In the following chapters the detailed workflow for the supported platforms is documented.\newline
+
+\chapter{Running \crexx{} on Linux and macOS}
 Linux and other Unix-like operating systems like Apple macOS behave in
 an identical way when compiling, linking and running a \crexx{}
 program.
 \input{Running_cRexx}
-\chapter{Running cRexx on Windows operating systems}
-\chapter{Running cRexx on VM/370CE}
-\chapter{Interlanguage operability}
+\chapter{Running \crexx{} on Windows operating systems}
+\chapter{Running \crexx{} on VM/370CE}
+\chapter{Interlanguage calls}
+A \crexx{} program is able to call programs written in the \textsc{Rexx}
+language, but also programs native to the platform, using a number of
+calling conventions: \[todo: checkrelease\]
+\begin{description}
+  \item[Address] the \code{address} statement can use the shell and
+    I/O indirection to start native executables and provide input, and
+    retrieve the output.
+    \item[RexxSaa] the traditional RexxSAA calling convention can be
+      used for direct interfaces to executables that are designed to
+      function as a Rexx library. In its most simple form, these can
+      return \textsc{Rexx} strings to the calling program.
+      \item[Generic Call Interface] In this RexxSAA extension, the
+      type and length of the parameters can be specified by the
+      caller\footnote{Which is considered unsafe but sometimes the
+        only possibility for programs not designed to be called by \crexx{}}.
+\end{description}
 \part{Reference}
 \chapter{\crexx{} Compiler}
 \section{Command Line Options}
