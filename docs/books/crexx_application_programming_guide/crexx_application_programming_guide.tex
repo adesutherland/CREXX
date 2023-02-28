@@ -74,7 +74,9 @@ calling conventions: \[todo: checkrelease\]
       type and length of the parameters can be specified by the
       caller\footnote{Which is considered unsafe but sometimes the
         only possibility for programs not designed to be called by \crexx{}}.
-\end{description}
+    \end{description}
+    \chapter{Tracing and Debugging}
+    \section{An example debugging session}
 \part{Reference}
 \chapter{\crexx{} Compiler}
 \section{Command Line Options}
@@ -283,6 +285,15 @@ delivers a disassembly which in itself can be re-assembled - and still
 works. 
 
 \chapter{\crexx{} Debugger}\label{debugger}
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxdb -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+
 \chapter{\crexx{} C Packer}
 The C Packer program converts the \emph{.rxbin} files into a C
 language structure which links together all needed modules, and a
@@ -296,6 +307,7 @@ targeted compiler toolchains for Linux, macOS and Windows.
   \obeylines \splice{rxcpack -h | sed "s/&/\and/g"}
  \end{shaded}
 \fontspec{TeX Gyre Pagella}
+
 
 \backmatter
 \listoftables
