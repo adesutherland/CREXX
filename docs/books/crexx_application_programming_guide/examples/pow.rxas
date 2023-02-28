@@ -1,0 +1,33 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : pow.rexx
+ * BUILT                  : 2023-02-28 18:38:56
+ */
+
+.srcfile="pow.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "pow.rexx.main"="b" ".void" main() "" ""
+   .src 4:1="number = 10"
+   .meta "pow.rexx.main.number"="b" ".int" r1
+   load r1,10
+   .src 5:1="power = 2"
+   .meta "pow.rexx.main.power"="b" ".int" r2
+   load r2,2
+   .src 6:1="result = 0"
+   .meta "pow.rexx.main.result"="b" ".int" r3
+   load r3,0
+   .src 8:1="say 'test IPOW'"
+   say "test IPOW"
+   .src 10:4="ipow result,number,power"
+   ipow  r3,r1,r2
+   .src 12:1="say \"result =\" result"
+   itos r3
+   sconcat r4,"result =",r3
+   say r4
+   .src 12:22=""
+   ret
+   .meta "pow.rexx.main.number"
+   .meta "pow.rexx.main.power"
+   .meta "pow.rexx.main.result"
