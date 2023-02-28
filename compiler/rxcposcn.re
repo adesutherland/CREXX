@@ -31,7 +31,7 @@ int opt_scan(Context* s) {
     eof = [\000] ;
     any = [^] \ eof ;
     digit = [0-9];
-    symchr = letter|digit|[.!?_];
+    symchr = letter|digit|[._];
     symbol = symchr*;
 */
 

@@ -35,9 +35,28 @@ static int is_node_string(ASTNode* node, const char* value) {
     return 1;
 }
 
-/* Helper function to check for built-in classes */
-static ValueType node_to_type(ASTNode* node) {
+/*
+ * Helper function to return the type of a node
+ * Sets dims to the number of dimensions (or 0 if not an array)
+ *      class_name is set to either zero of to a class name (if not an in built class)
+ *                 So if it is not zero it needs to be free()d
+ */
+static ValueType node_to_type(ASTNode* node, size_t *dims, char** class_name) {
+    *dims = 0;
+    if (*class_name) free(*class_name);
+    *class_name = 0;
+
     if (!node) return TP_VOID;
+
+    if (node->value_type != TP_UNKNOWN) {
+        *dims = node->value_dims;
+        if (node->value_class) {
+            *class_name = malloc(strlen(node->value_class) + 1);
+            strcpy(*class_name, node->value_class);
+        }
+        return node->value_type;
+    }
+
     switch (node->node_type) {
         case FLOAT:
             return TP_FLOAT;
@@ -48,15 +67,35 @@ static ValueType node_to_type(ASTNode* node) {
         case VOID:
             return TP_VOID;
         case CLASS:
+            *dims = ast_nchd(node);
             if (is_node_string(node, ".void")) return TP_VOID;
             if (is_node_string(node, ".int")) return TP_INTEGER;
             if (is_node_string(node, ".float")) return TP_FLOAT;
             if (is_node_string(node, ".string")) return TP_STRING;
             if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
+            *class_name = malloc(node->node_string_length + 1);
+            memcpy(*class_name, node->node_string, node->node_string_length);
+            (*class_name)[node->node_string_length] = 0;
             return TP_OBJECT;
         default:
             return TP_UNKNOWN;
     }
+}
+
+/* Validates a node promotion is correct adding error nodes if not */
+static void validate_node_promotion(ASTNode* node) {
+    if (node->target_type == TP_UNKNOWN) mknd_err(node, "ARITHMETIC_ERROR");
+    else if (node->value_dims != node->target_dims) {
+        if (!node->value_dims) mknd_err(node, "EXPECTING_ARRAY");
+        else if (!node->target_dims) mknd_err(node, "UNEXPECTED_ARRAY");
+        else mknd_err(node, "ARRAY_DIMS_MISMATCH");
+    }
+    else if (node->value_dims && node->value_type != node->target_type) mknd_err(node, "ARRAY_ELEMENT_TYPE_MISMATCH");
+    else if (node->value_type == TP_VOID && node->target_type != TP_VOID) mknd_err(node, "MISSING_VALUE");
+    else if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
+
+    /* TODO Class / Object Support */
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) mknd_err(node, "CLASSES_NOT_SUPPORTED");
 }
 
 /* Step 1
@@ -510,7 +549,13 @@ static walker_result step2a_walker(walker_direction direction,
             node->node_string_length--; /* Remove the ':' */
 
             /* Set the return value node value_type */
-            node->child->value_type = node->child->target_type = node_to_type(ast_chld(node, CLASS, VOID));
+            node->child->value_type = node_to_type(
+                    ast_chld(node, CLASS, VOID),
+                    &(node->child->value_dims), &(node->child->value_class));
+
+            node->child->target_type = node->child->value_type;
+            node->child->target_dims = node->child->value_dims;
+            node->child->target_class = 0; /* Zero as it is assumed to be the same as the value_class to avoid a malloc() */
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
@@ -537,7 +582,6 @@ static walker_result step2a_walker(walker_direction direction,
         else if (node->node_type == IMPORT) {
             /* Get the toplevel scope that contains all the namespaces */
             Scope* namespaces = context->ast->scope;
-            Scope* imported_namespace;
 
             /* Now create the imported namespace symbol and scope */
             /* Make the new symbol */
@@ -547,7 +591,7 @@ static walker_result step2a_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                imported_namespace = scp_f(namespaces, node->child, symbol);
+                scp_f(namespaces, node->child, symbol);
             }
             else {
                 mknd_err(node->child, "DUPLICATE_NAMESPACE");
@@ -696,7 +740,7 @@ static walker_result step2c_walker(walker_direction direction,
                 /* We are exposing functions / variables globally to user functions */
                 ASTNode* n = node->child;
                 while (n) {
-                    symbol = sym_rvfc(context->ast, n); /* Is this is procedure? */
+                    symbol = sym_rvfc(context->ast, n); /* Is this a procedure? */
                     if (!symbol) {
                         /* Procedure Symbol not found so it "must" be a variable we need to expose from our procedures */
                         found = 0;
@@ -802,7 +846,7 @@ static walker_result step2c_walker(walker_direction direction,
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     Scope* scope = (Scope*)payload;
     SymbolNode *defining_node_link;
-    ASTNode *expr, *proc, *p;
+    ASTNode *proc, *p;
     char *buffer;
     size_t length;
     size_t i, nix;
@@ -825,19 +869,22 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
             /* Ok we are the first usage in this proc */
             if (defining_node_link->node->node_type == PROCEDURE) {
-                symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID));
-                defining_node_link->node->value_type = symbol->type;
-                defining_node_link->node->target_type = symbol->type;
+                symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID),
+                                            &(symbol->value_dims), &(symbol->value_class));
+
+                ast_svtp(defining_node_link->node, symbol);
+                ast_sttp(defining_node_link->node, symbol);
                 break;
             }
 
             if (defining_node_link->node->node_type == VAR_TARGET ||
                 defining_node_link->node->node_type == VAR_REFERENCE) {
-                symbol->type = node_to_type(defining_node_link->node->sibling);
-                defining_node_link->node->value_type = symbol->type;
-                defining_node_link->node->parent->value_type = symbol->type;
-                defining_node_link->node->target_type = symbol->type;
-                defining_node_link->node->parent->target_type = symbol->type;
+                symbol->type = node_to_type(defining_node_link->node->sibling,
+                                            &(symbol->value_dims), &(symbol->value_class));
+                ast_svtp(defining_node_link->node, symbol);
+                ast_sttp(defining_node_link->node, symbol);
+                ast_svtp(defining_node_link->node->parent, symbol);
+                ast_sttp(defining_node_link->node->parent, symbol);
                 break;
             }
 
@@ -852,19 +899,23 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
         if (defining_node_link->node->node_type == PROCEDURE) {
-            symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID));
-            defining_node_link->node->value_type = symbol->type;
-            defining_node_link->node->target_type = symbol->type;
-            return;
-        }
+            /* This sets the procedure symbol type */
+            symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID),
+                                        &(symbol->value_dims), &(symbol->value_class));
 
+            ast_svtp(defining_node_link->node, symbol);
+            ast_sttp(defining_node_link->node, symbol);
+           return;
+        }
         if (defining_node_link->node->node_type == VAR_TARGET ||
                    defining_node_link->node->node_type == VAR_REFERENCE) {
-            symbol->type = node_to_type(defining_node_link->node->sibling);
-            defining_node_link->node->value_type = symbol->type;
-            defining_node_link->node->parent->value_type = symbol->type;
-            defining_node_link->node->target_type = symbol->type;
-            defining_node_link->node->parent->target_type = symbol->type;
+            /* This set the variable type */
+            symbol->type = node_to_type(defining_node_link->node->sibling,
+                                        &(symbol->value_dims), &(symbol->value_class));
+            ast_svtp(defining_node_link->node, symbol);
+            ast_sttp(defining_node_link->node, symbol);
+            ast_svtp(defining_node_link->node->parent, symbol);
+            ast_sttp(defining_node_link->node->parent, symbol);
             return;
         }
 
@@ -910,15 +961,65 @@ static void validate_symbols(Scope* scope) {
 
 /* Type promotion matrix for numeric operators */
 const ValueType promotion[7][7] = {
-/*                TP_UNKNOWN, TP_VOID,  TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_OBJECT */
-/* TP_UNKNOWN */ {TP_UNKNOWN, TP_VOID,  TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_FLOAT},
-/* TP_VOID */    {TP_VOID,    TP_VOID,  TP_VOID,    TP_VOID,    TP_VOID,    TP_VOID,    TP_VOID},
-/* TP_BOOLEAN */ {TP_BOOLEAN, TP_VOID,  TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_BOOLEAN, TP_BOOLEAN},
-/* TP_INTEGER */ {TP_INTEGER, TP_VOID,  TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_INTEGER, TP_INTEGER},
-/* TP_FLOAT */   {TP_FLOAT,   TP_VOID,  TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT},
-/* TP_STRING */  {TP_FLOAT,   TP_VOID,  TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_FLOAT},
-/* TP_OBJECT */  {TP_FLOAT,   TP_VOID,  TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_FLOAT}
+///*                TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_OBJECT */
+
+///* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN},
+///* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
+///* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_BOOLEAN, TP_OBJECT},
+///* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_INTEGER, TP_OBJECT},
+///* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
+///* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
+///* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT},
 };
+
+/* Returns the value_type of a node - arrays changes to TP_OBJECT */
+static ValueType node_type(ASTNode* node) {
+    if (node->value_dims) return TP_OBJECT;
+    return node->value_type;
+}
+
+/* Returns the highest value_type of the node's children nodes */
+static ValueType max_type(ASTNode* node) {
+    ASTNode *child;
+    ValueType max_type = TP_UNKNOWN;
+
+    child = node->child;
+    while (child) {
+        if (child->value_type > max_type) max_type = node_type(child);
+        child = child->sibling;
+    }
+
+    return max_type;
+}
+
+/* Set the node value and target type to a simple type (not an array or class name) */
+static void set_node_type(ASTNode* node, ValueType type) {
+    node->value_type = type;
+    node->value_dims = 0;
+    if (node->value_class) {
+        free(node->value_class);
+        node->value_class = 0;
+    }
+    node->target_type = type;
+    node->target_dims = 0;
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+}
+
+/* Set the target value to a simple target_type (not an array or class name)
+ * and validates that it is convertable from the nodes value target_type */
+static void set_node_target_type(ASTNode* node, ValueType target_type) {
+    node->target_type = target_type;
+    node->target_dims = 0;
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+
+    validate_node_promotion(node);
+}
 
 static walker_result step4_walker(walker_direction direction,
                                   ASTNode* node,
@@ -926,7 +1027,6 @@ static walker_result step4_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
-    ValueType max_type = TP_UNKNOWN;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -934,31 +1034,17 @@ static walker_result step4_walker(walker_direction direction,
     }
     else {
         /* OUT - BOTTOM UP */
-
         child1 = node->child;
-        if (child1) {
-            child2 = child1->sibling;
-            if (child2) {
-                if (child1->value_type > child2->value_type)
-                    max_type = child1->value_type;
-                else
-                    max_type = child2->value_type;
-            }
-            else {
-                max_type = child1->value_type;
-            }
-        }
-        else {
-            child2 = NULL;
-        }
+        if (child1) child2 = child1->sibling;
+        else child2 = NULL;
 
         switch (node->node_type) {
 
             case OP_AND:
             case OP_OR:
-                node->value_type = TP_BOOLEAN;
-                child1->target_type = TP_BOOLEAN;
-                child2->target_type = TP_BOOLEAN;
+                set_node_type(node, TP_BOOLEAN);
+                set_node_target_type(child1, TP_BOOLEAN);
+                set_node_target_type(child2, TP_BOOLEAN);
                 break;
 
             case OP_COMPARE_EQUAL:
@@ -973,86 +1059,121 @@ static walker_result step4_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-                node->value_type = TP_BOOLEAN;
-                child1->target_type = max_type;
-                child2->target_type = max_type;
+                set_node_type(node, TP_BOOLEAN);
+                set_node_target_type(child1, max_type(node));
+                set_node_target_type(child2, max_type(node));
                 break;
 
             case OP_CONCAT:
             case OP_SCONCAT:
-                node->value_type = TP_STRING;
-                child1->target_type = TP_STRING;
-                child2->target_type = TP_STRING;
+                set_node_type(node, TP_STRING);
+                set_node_target_type(child1, node->value_type);
+                set_node_target_type(child2, node->value_type);
                 break;
 
             case OP_ADD:
             case OP_MINUS:
             case OP_MULT:
             case OP_POWER:
-                node->value_type = promotion[child1->value_type][child2->value_type];
-                child1->target_type = promotion[child1->value_type][child2->value_type];
-                child2->target_type = promotion[child1->value_type][child2->value_type];
+                set_node_type(node, promotion[child1->value_type][child2->value_type]);
+                set_node_target_type(child1, node->value_type);
+                set_node_target_type(child2, node->value_type);
                 break;
 
             case OP_DIV:
-                node->value_type = TP_FLOAT;
-                child1->target_type = TP_FLOAT;
-                child2->target_type = TP_FLOAT;
+                set_node_type(node, TP_FLOAT);
+                set_node_target_type(child1, node->value_type);
+                set_node_target_type(child2, node->value_type);
                 break;
 
             case OP_IDIV:
             case OP_MOD:
-                node->value_type = TP_INTEGER;
-                child1->target_type = TP_INTEGER;
-                child2->target_type = TP_INTEGER;
+                set_node_type(node, TP_INTEGER);
+                set_node_target_type(child1, node->value_type);
+                set_node_target_type(child2, node->value_type);
                 break;
 
             case OP_NOT:
-                node->value_type = TP_BOOLEAN;
-                child1->target_type = TP_BOOLEAN;
+                set_node_type(node, TP_BOOLEAN);
+                set_node_target_type(child1, node->value_type);
                 break;
 
             case OP_PLUS:
             case OP_NEG:
-                node->value_type = promotion[child1->value_type][TP_UNKNOWN];
-                child1->target_type = promotion[child1->value_type][TP_UNKNOWN];
+                set_node_type(node, promotion[child1->value_type][TP_VOID]);
+                set_node_target_type(child1, node->value_type);
                 break;
 
             case FUNCTION:
-                if (node->symbolNode) { /* Otherwise an error node will have been added */
-                    node->value_type = node->symbolNode->symbol->type;
-                    node->target_type = node->value_type;
+                if (node->symbolNode) { /* Otherwise, an error node will have been added */
+                    ast_svtp(node, node->symbolNode->symbol);
                 }
                 break;
 
             case VAR_SYMBOL:
-                node->value_type = node->symbolNode->symbol->type;
-                node->target_type = node->value_type;
+                ast_svtp(node, node->symbolNode->symbol);
+                if (child1) {
+                    /* We have array parameters */
+                    /* Set array parameter type to integer */
+                    n1 = child1;
+                    while (n1) {
+                        set_node_target_type(n1, TP_INTEGER);
+                        n1 = n1->sibling;
+                    }
+
+                    if (!node->value_dims) mknd_err(node, "NOT_AN_ARRAY");
+                    else if (node->value_dims != ast_nchd(node)) mknd_err(node, "ARRAY_DIMS_MISMATCH");
+
+                    node->value_dims = 0; /* We are 'returning' a single value */
+                }
+
                 break;
 
             case CONST_SYMBOL:
-                node->value_type = TP_STRING;
-                node->target_type = node->value_type;
+                set_node_type(node, TP_STRING);
                 break;
 
             case FLOAT:
-                node->value_type = TP_FLOAT;
-                node->target_type = node->value_type;
+                set_node_type(node, TP_FLOAT);
                 break;
 
             case INTEGER:
-                node->value_type = TP_INTEGER;
-                node->target_type = node->value_type;
+                set_node_type(node, TP_INTEGER);
                 break;
 
             case STRING:
-                node->value_type = TP_STRING;
-                node->target_type = node->value_type;
+                set_node_type(node, TP_STRING);
+                break;
+
+            case NOVAL:
+                set_node_type(node, TP_VOID);
                 break;
 
             case CLASS:
-                node->value_type = node_to_type(node);
+                node->value_type = node_to_type(node, &(node->value_dims), &(node->value_class));
                 node->target_type = node->value_type;
+                node->target_dims = node->value_dims;
+                node->target_class = 0; /* Avoids a second malloc - assume the sane as value_class */
+                if (node->value_dims) {
+                    /* We are an array */
+                    if (node->parent->node_type == PROCEDURE) {
+                        /* In a procedure definition the array params should be null */
+                        n1 = child1;
+                        while (n1) {
+                            set_node_target_type(n1, TP_VOID);
+                            n1 = n1->sibling;
+                        }
+                    } else {
+                        /* Each array param should be null or an integer */
+                        n1 = child1;
+                        while (n1) {
+                            if (n1->value_type != TP_VOID) set_node_target_type(n1, TP_INTEGER);
+                            n1 = n1->sibling;
+                        }
+                    }
+                }
+                // else we are a class TODO
+
                 break;
 
             case ASSIGN:
@@ -1061,32 +1182,26 @@ static walker_result step4_walker(walker_direction direction,
                 }
                 else {
                     if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet */
+                        /* If the symbol does not have a known type yet - then determine it */
                         if (node->parent->node_type == REPEAT) {
                             /* Special logic for LOOP Assignment - type must be numeric */
-                            child1->value_type =
-                                    promotion[child2->value_type][TP_INTEGER];
+                            child1->symbolNode->symbol->value_dims = 0;
+                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                            child1->symbolNode->symbol->value_class = 0;
+                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
                         } else {
-                            child1->value_type = child2->value_type;
+                            child1->symbolNode->symbol->type = node_to_type(child2,&(child1->symbolNode->symbol->value_dims),&(child1->symbolNode->symbol->value_class) );
                         }
-                        child1->target_type = child1->value_type;
-                        child2->target_type = child1->value_type;
-                        node->value_type = child1->value_type;
-                        node->target_type = child1->value_type;
-                        child1->symbolNode->symbol->type = child1->value_type;
-                    } else {
-                        /* The Target Symbol has a type */
-                        child1->value_type = child1->symbolNode->symbol->type;
-                        child1->target_type = child1->symbolNode->symbol->type;
-                        child2->target_type = child1->symbolNode->symbol->type;
-                        node->value_type = child1->symbolNode->symbol->type;
-                        node->target_type = child1->symbolNode->symbol->type;
-                        child1->symbolNode->symbol->type = child1->value_type;
                     }
+                    ast_svtp(child1, child1->symbolNode->symbol);
+                    ast_sttp(child2, child1->symbolNode->symbol);
+                    validate_node_promotion(child2);
+                    ast_svtp(node, child1->symbolNode->symbol);
                 }
                 break;
 
             case ARG:
+                /* todo */
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet */
                     child1->value_type = child2->value_type;
@@ -1113,45 +1228,45 @@ static walker_result step4_walker(walker_direction direction,
 
             case ADDRESS:
             case SAY:
-                if (child1) child1->target_type = TP_STRING;
+                if (child1) set_node_target_type(child1, TP_STRING);
                 break;
 
             case RETURN:
                 /* Type is the scope > procedure > type */
-                node->value_type = context->current_scope->defining_node->value_type;
-                node->target_type = node->value_type;
+                ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
                 if (node->value_type == TP_VOID) {
                     if (child1) mknd_err(child1, "EXTRANEOUS_RETVAL");
                 }
                 else {
-                    if (child1) child1->target_type = node->value_type;
+                    if (child1) {
+                        ast_sttn(child1, node);
+                        validate_node_promotion(child1);
+                    }
                     else mknd_err(node, "RETVAL_MISSING");
                 }
                 break;
 
             case IF:
-                if (child1) child1->target_type = TP_BOOLEAN;
+                if (child1) set_node_target_type(child1, TP_BOOLEAN);
                 break;
 
                 /* Loops */
             case TO:
             case BY:
                 /* The TO/BY value type needs to be the same as the assigment type */
-                if (child1) child1->target_type = node->parent->child->value_type;
-                node->value_type = node->parent->child->value_type;
-                node->target_type = node->parent->child->value_type;
+                if (child1) set_node_target_type(child1, node->parent->child->value_type);
+                set_node_type(node, node->parent->child->value_type);
                 break;
 
             case FOR:
-                /* The TO/BY value type needs to be the same as the assigment type */
-                child1->target_type = TP_INTEGER;
-                node->value_type = child1->target_type;
-                node->target_type = child1->target_type;
+                set_node_target_type(child1, TP_INTEGER);
+                set_node_type(node, TP_INTEGER);
                 break;
 
             case UNTIL:
             case WHILE:
-                if (child1) child1->target_type = TP_BOOLEAN;
+                if (child1) set_node_target_type(child1, TP_BOOLEAN);
+                set_node_type(node, TP_BOOLEAN);
                 break;
 
             case LEAVE:
@@ -1183,7 +1298,7 @@ static walker_result step4_walker(walker_direction direction,
                             }
                         }
                         n1 = n1->parent;
-                    };
+                    }
                     found:;
                 }
                 else {
@@ -1199,7 +1314,7 @@ static walker_result step4_walker(walker_direction direction,
                             break;
                         }
                         n1 = n1->parent;
-                    };
+                    }
                 }
                 break;
 
@@ -1219,8 +1334,7 @@ static walker_result step5_walker(walker_direction direction,
                                   void *payload) {
 
     Context *context = (Context*)payload;
-    ASTNode *child1, *child2, *n1, *n2;
-    ValueType max_type = TP_UNKNOWN;
+    ASTNode *n1, *n2;
     int arg_num;
 
     if (direction == in) {
@@ -1229,24 +1343,6 @@ static walker_result step5_walker(walker_direction direction,
     }
     else {
         /* OUT - BOTTOM UP */
-
-        child1 = node->child;
-        if (child1) {
-            child2 = child1->sibling;
-            if (child2) {
-                if (child1->value_type > child2->value_type)
-                    max_type = child1->value_type;
-                else
-                    max_type = child2->value_type;
-            }
-            else {
-                max_type = child1->value_type;
-            }
-        }
-        else {
-            child2 = NULL;
-        }
-
         switch (node->node_type) {
 
             case FUNCTION:
@@ -1264,7 +1360,8 @@ static walker_result step5_walker(walker_direction direction,
                 while (n1) {
                     arg_num++;
                     if (!n2) {
-                        mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
+                        /* Its not an error for the first NOVAL argument */
+                        if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         break;
                     }
                     n1->target_type = n2->value_type;

@@ -140,7 +140,11 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->loopendchecks = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
+    node->value_dims = 0;
+    node->value_class = 0;
     node->target_type = TP_UNKNOWN;
+    node->target_dims = 0;
+    node->target_class = 0;
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
@@ -203,7 +207,17 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->token = node->token;
     new_node->node_type = node->node_type;
     new_node->value_type = node->value_type;
+    new_node->value_dims = node->value_dims;
+    if (node->value_class) {
+        new_node->value_class = malloc(strlen(node->value_class) + 1);
+        strcpy(new_node->value_class,node->value_class);
+    } else new_node->value_class = 0;
     new_node->target_type = node->target_type;
+    new_node->target_dims = node->target_dims;
+    if (node->target_class) {
+        new_node->target_class = malloc(strlen(node->target_class) + 1);
+        strcpy(new_node->target_class,node->target_class);
+    } else new_node->target_class = 0;
     new_node->int_value = node->int_value;
     new_node->bool_value = node->bool_value;
     new_node->float_value = node->float_value;
@@ -743,6 +757,22 @@ ASTNode *ast_errh(Context* context, char *error_string) {
     return errorAST;
 }
 
+/* Returns the number of children of a node */
+size_t ast_nchd(ASTNode* node) {
+    size_t n = 0;
+    ASTNode* c;
+
+    if (!node) return 0;
+
+    c = node->child;
+    while (c) {
+        n++;
+        c = c->sibling;
+    }
+
+    return n;
+}
+
 /* Returns the PROCEDURE ASTNode procedure of an AST node */
 ASTNode* ast_proc(ASTNode *node) {
     while (node) {
@@ -1214,6 +1244,8 @@ void free_ast(Context *context) {
     while (t) {
         n = t->free_list;
         if (t->free_node_string) free(t->node_string);
+        if (t->value_class) free(t->value_class);
+        if (t->target_class) free(t->target_class);
         if (t->output) f_output(t->output);
         if (t->loopstartchecks) f_output(t->loopstartchecks);
         if (t->loopinc) f_output(t->loopinc);
@@ -1282,7 +1314,9 @@ void prt_unex(FILE* output, const char *ptr, int len) {
 /* Prints to dot file one symbol */
 void pdot_scope(Symbol *symbol, void *payload) {
     char reg[20];
+    char arr[10];
     char *name;
+    char *clas;
 
     if (symbol->register_num >= 0)
         sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
@@ -1290,6 +1324,16 @@ void pdot_scope(Symbol *symbol, void *payload) {
         reg[0] = 0;
 
     name = sym_frnm(symbol);
+
+    if (symbol->value_dims)
+        sprintf(arr,"[%d]",(int)symbol->value_dims);
+    else
+        arr[0] = 0;
+
+    if (symbol->value_class)
+        clas = symbol->value_class;
+    else
+        clas = type_nm(symbol->type);
 
     switch (symbol->symbol_type) {
         case CLASS_SYMBOL:
@@ -1304,22 +1348,22 @@ void pdot_scope(Symbol *symbol, void *payload) {
 
         case FUNCTION_SYMBOL:
             fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
                     (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
-                    type_nm(symbol->type),
+                    clas, arr,
                     reg);
             break;
         default:
             fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
                     (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
-                    type_nm(symbol->type),
+                    clas, arr,
                     reg);
     }
 
@@ -1361,6 +1405,10 @@ walker_result pdot_walker_handler(walker_direction direction,
     int child_index;
     ASTNode *first_node;
     char value_type_buffer[40];
+    char varr[10];
+    char *vclas;
+    char tarr[10];
+    char *tclas;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -1508,6 +1556,18 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
+        if (node->value_dims) sprintf(varr,"[%d]",(int)node->value_dims);
+        else varr[0] = 0;
+        if (node->target_dims) sprintf(tarr,"[%d]",(int)node->target_dims);
+        else tarr[0] = 0;
+
+        if (node->value_class) vclas = node->value_class;
+        else vclas = type_nm(node->value_type);
+
+        if (node->target_class) tclas = node->target_class;
+        else if (node->target_type == TP_OBJECT && node->value_class) tclas = node->value_class;
+        else tclas = type_nm(node->target_type);
+
         if (node->register_num >= 0) {
             if (node->num_additional_registers)
                 sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
@@ -1520,17 +1580,21 @@ walker_result pdot_walker_handler(walker_direction direction,
         else
             value_type_buffer[0] = 0;
 
-        if (node->value_type != TP_UNKNOWN ||
-            node->target_type != TP_UNKNOWN) {
-            if (node->value_type == node->target_type) {
+        if (node->value_type != TP_UNKNOWN || node->value_dims ||
+            node->target_type != TP_UNKNOWN || node->target_dims) {
+            if (node->value_type == node->target_type && strcmp(vclas,tclas) == 0 &&
+                node->value_dims == node->target_dims) {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_nm(node->value_type));
+                strcat(value_type_buffer, vclas);
+                strcat(value_type_buffer, varr);
                 strcat(value_type_buffer, ")");
             } else {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_nm(node->value_type));
+                strcat(value_type_buffer, vclas);
+                strcat(value_type_buffer, varr);
                 strcat(value_type_buffer, "->");
-                strcat(value_type_buffer, type_nm(node->target_type));
+                strcat(value_type_buffer, tclas);
+                strcat(value_type_buffer, tarr);
                 strcat(value_type_buffer, ")");
             }
         }
@@ -1661,3 +1725,44 @@ walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
 
     return result_normal;
 };
+
+/* Set Node Value Type from Symbol */
+void ast_svtp(ASTNode* node, Symbol* symbol) {
+    node->value_type = symbol->type;
+    node->value_dims = symbol->value_dims;
+    node->target_type = symbol->type;
+    node->target_dims = symbol->value_dims;
+    if (node->value_class) free(node->value_class);
+    if (symbol->value_class) {
+        node->value_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->value_class, symbol->value_class);
+    } else node->value_class = 0;
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+}
+
+/* Set Node Target Value Type from Symbol */
+/* Note: Does not validate promotion */
+void ast_sttp(ASTNode* node, Symbol* symbol) {
+    node->target_type = symbol->type;
+    node->target_dims = symbol->value_dims;
+    if (node->target_class) free(node->target_class);
+    if (symbol->value_class) {
+        node->target_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->target_class, symbol->value_class);
+    } else node->target_class = 0;
+}
+
+/* Set Node Target Value Type from Value Type of from_node */
+/* Note: Does not validate promotion */
+void ast_sttn(ASTNode* node, ASTNode* from_node) {
+    node->target_type = from_node->value_type;
+    node->target_dims = from_node->value_dims;
+    if (node->target_class) free(node->target_class);
+    if (from_node->value_class) {
+        node->target_class = malloc(strlen(from_node->value_class) + 1);
+        strcpy(node->target_class, from_node->value_class);
+    } else node->target_class = 0;
+}

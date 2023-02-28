@@ -53,6 +53,7 @@ typedef struct Context {
     char *buff_start;
     char *buff_end;
     char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
+    char lexer_stem_mode; /* 1 if lexing a stem */
     int line;
     int token_counter;
     Token* token_head;
@@ -126,8 +127,12 @@ struct ASTNode {
     Context *context;
     int node_number;
     NodeType node_type;
-    ValueType value_type;
-    ValueType target_type;
+    ValueType value_type;  /* Value type */
+    size_t value_dims;     /* Value dimensions */
+    char* value_class;     /* Value class name - malloced or zero */
+    ValueType target_type; /* Target type */
+    size_t target_dims;    /* Target dimensions */
+    char* target_class;    /* Target class name - malloced or zero */
     int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
     int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
@@ -244,6 +249,8 @@ char* ast_frnm(ASTNode* node);
 ASTNode* ast_proc(ASTNode *node);
 /* Get the child node of a certain type1 or type2 (or null) */
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
+/* Returns the number of children of a node */
+size_t ast_nchd(ASTNode* node);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -309,7 +316,9 @@ struct Symbol {
     void *ast_node_array;
     Scope *scope;
     Scope *defines_scope;
-    ValueType type;
+    ValueType type;       /* Value Type */
+    size_t value_dims;    /* Value dimensions */
+    char* value_class;    /* Value class name - malloced or zero */
     SymbolType symbol_type;
     int register_num;
     char register_type;
@@ -425,6 +434,15 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname);
 
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
+
+/* Set Node Value Type from Symbol */
+void ast_svtp(ASTNode* node, Symbol* symbol);
+
+/* Set Node Target Value Type from Symbol */
+void ast_sttp(ASTNode* node, Symbol* symbol);
+
+/* Set Node Target Value Type from Value Type of from_node */
+void ast_sttn(ASTNode* node, ASTNode* from_node);
 
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);

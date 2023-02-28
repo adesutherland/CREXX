@@ -9,9 +9,9 @@
 %start_symbol program
 
 %include {
-/* cREXX Compiler */
-/* (c) Adrian Sutherland 2021-2022 */
-/* Grammar                      */
+/* cREXX Compiler                  */
+/* (c) Adrian Sutherland 2021-2023 */
+/* Grammar                         */
 
 #include <assert.h>
 #include <stdio.h>
@@ -126,9 +126,49 @@ junk(J)          ::= TK_BADCOMMENT(C).
 junk(J)          ::= error.
                      { J = ast_errh(context, "SYNTAX_ERROR"); }
 
-/* Variables / Labels */
-var_symbol(A)    ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
-label(A)         ::= TK_LABEL(S). { A = ast_f(context, LABEL, S); }
+/* Classes / Variables */
+class(C)               ::= TK_CLASS(T).
+                           { C = ast_f(context, CLASS, T); }
+var_symbol(A)          ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
+var_symbol(A)          ::= class(S). { A = S; } [TK_VAR_SYMBOL]
+var_symbol(A)          ::= TK_VAR_SYMBOL(S) array_parameters(P).
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= class(S) array_parameters(P). [TK_VAR_SYMBOL]
+                           { A = S; if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_CLASS_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
+array_parameters(P)    ::= TK_OPEN_SBRACKET expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
+                           { P = E; }
+stemparts(L)           ::= stempart(S).
+                           { L = S; }
+stemparts(L)           ::= stemparts(L1) stempart(E).
+                           { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L,E);}
+stempart(A)            ::= TK_STEMVAR(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, VAR_SYMBOL, S);
+                           }
+stempart(A)            ::= TK_STEMINT(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, INTEGER, S);
+                           }
+stempart(A)            ::= TK_STEMSTRING(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, STRING, S);
+                           }
+stempart(A)            ::= TK_STEMNOVAL(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, NOVAL, S);
+                           }
+
+/* Labels */
+label(A)               ::= TK_LABEL(S).
+                           { A = ast_f(context, LABEL, S); }
 
 /* Language Options */
 rexx_options(I)    ::= TK_OPTIONS(T) junk(J) TK_EOC.
@@ -143,8 +183,6 @@ option(C)          ::= TK_VAR_SYMBOL(S).
                    { C = ast_f(context, LITERAL, S); }
 
 /* Namespace Instructions */
-literal(L)               ::= TK_SYMBOL_COMPOUND(N).
-                         { L = ast_f(context, LITERAL, N); }
 literal(L)               ::= TK_VAR_SYMBOL(N).
                          { L = ast_f(context, LITERAL, N); }
 namespace_list(I)        ::= namespace_instruction(L).
@@ -357,13 +395,19 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
             { T = ast_err(context, "10.6", E); }
 
 /* Procedure / Args */
-procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C).
+proc_class(A)     ::= class(S).
+                      { A = S; }
+proc_class(A)     ::= class(S) array_parameters(P).
+                      { A = S; if (P) add_ast(A,P); }
+proc_class(A)     ::= TK_CLASS_STEM(S) stemparts(P).
+                      { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL proc_class(C).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
-procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL class(C) expose(E).
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL proc_class(C) expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,E);}
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
@@ -373,18 +417,10 @@ procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE expose(E).
 arg(P)            ::= TK_ARG arg_list(A).
                       { P = A;}
 
-/* Classes */
-class(C)          ::= TK_CLASS(T).
-                      { C = ast_f(context, CLASS, T); }
-
 /* Argument Templates */
 arg_list(L)       ::= . { L = ast_ft(context, ARGS); }
 arg_list(L)       ::= argument(T). { L = ast_ft(context, ARGS); add_ast(L,T); }
 arg_list(L)       ::= arg_list(L1) TK_COMMA argument(T). { L = L1; add_ast(L,T); }
-argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL class(C).
-                      { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
-argument(T)       ::= var_symbol(V) TK_EQUAL class(C).
-                      { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,C); }
 argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
                       { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
 argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
@@ -394,6 +430,18 @@ argument(E)         ::= error.
 argument(E)         ::= TK_VAR_SYMBOL(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_CLASS(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_CLASS(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_CLASS_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_CLASS_STEM(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 
 /* Instructions */
@@ -544,13 +592,11 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL TK_SYMBOL_COMPOUND.
+%left TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
 function_name(N)       ::= TK_VAR_SYMBOL(S).
-                           { N = ast_f(context, FUNCTION, S); }
-function_name(N)       ::= TK_SYMBOL_COMPOUND(S).
                            { N = ast_f(context, FUNCTION, S); }
 function_name(N)       ::= TK_STRING(S).
                            { N = ast_f(context, FUNCTION, S); }
@@ -561,7 +607,7 @@ call(I) ::= TK_CALL(T) ANYTHING(E).
 
 /* Expression Lists */
 expression_list(L)     ::= .
-                         { L = 0; }
+                         { L = ast_ft(context, NOVAL); }
 expression_list(L)     ::= expression_in_list(E).
                          { L = E; }
 expression_list(L)     ::= expression_list(L1) TK_COMMA expression_in_list(E).
@@ -569,8 +615,6 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA expression_in_list(E).
 expression_list(L)     ::= expression_list(L1) TK_COMMA.
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
-                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
-term(F)                ::= TK_SYMBOL_COMPOUND(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
@@ -740,7 +784,6 @@ expression_list1(L)    ::= expression_list1(L1) TK_COMMA expression(E). { L = L1
 // VARIABLE & SYMBOLS
 var_symbol(T)          ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
 var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S);
-var_symbol(T)          ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
 var_symbol_list1(L)    ::= var_symbol(V). { L = ast_ft(TK_LIST); add_ast(L,V); }
 var_symbol_list1(L)    ::= var_symbol_list1(L1) var_symbol(V). { L = L1; add_ast(L,V); }
 
@@ -754,7 +797,6 @@ variable_list(L)       ::= variable_list(L1) variable(V). { L = L1; add_ast(L,V)
 function(F)            ::= taken_constant(T) function_parameters(P).
                            { F = ast_ft(TK_FUNCTION); add_ast(F,T); add_ast(F,P); }
 taken_constant(T)      ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
-taken_constant(T)      ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
 taken_constant(T)      ::= TK_STRING(S). { T = ast_f(S); }
 function_parameters(P) ::= TK_BOPEN expression_list(E) TK_BCLOSE. { P = E; }
 
@@ -921,8 +963,6 @@ keyword_instruction(I) ::= upper(K). { I = K; }
 
 assignment(I)          ::= var_symbol(V) TK_EQUAL(T) expression(E). [TK_EQUAL]
                            { I = ast_f(T); add_ast(I,V); add_ast(I,E); }
-assignment(I)          ::= TK_SYMBOL_COMPOUND(V) TK_EQUAL(T) expression(E). [TK_EQUAL]
-                           { I = ast_f(T); add_ast(I,ast_f(V)); add_ast(I,E); }
 
 instruction(I)         ::= do(K). { I = K; }
 instruction(I)         ::= if(K). { I = K; }

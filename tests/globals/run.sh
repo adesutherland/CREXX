@@ -32,6 +32,6 @@ echo "rxdas test2"
 echo "rxdas test3"
 ../../cmake-build-debug/disassembler/rxdas test3
 
-
 echo "rxvm test"
 ../../cmake-build-debug/interpreter/rxvm test test2 test3 ../../cmake-build-debug/lib/rxfns/library
+echo Return Code is $?

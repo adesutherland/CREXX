@@ -367,6 +367,8 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->scope = scope;
     symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
+    symbol->value_dims = 0;
+    symbol->value_class = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
     memcpy(symbol->name, name, name_length);
@@ -623,6 +625,7 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
 void free_sym(Symbol *symbol) {
     size_t i;
     free(symbol->name);
+    if (symbol->value_class) free(symbol->value_class);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
