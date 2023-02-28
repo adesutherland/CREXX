@@ -19,3 +19,19 @@ Overall, Unicode plays a critical role in facilitating communication
 and information sharing across different cultures and languages, and
 is essential for creating a more connected and inclusive digital
 world.
+
+\section{Unicode in \crexx{}}
+Consider the following program:
+ \setmainfont{Courier New}
+ \newfontfamily\myregularfont{Courier New}
+\newfontfamily\mychinesefont{Lantinghei TC}
+\setTransitionsForCJK{\mychinesefont}{\myregularfont}
+
+\fontspec{Courier New}
+\lstinputlisting[language=rexx,label=itf1,caption=utf example.]{examples/utf1.rexx}
+\begin{shaded}
+  \small
+  \splice{rxc examples/utf1} \splice{rxas examples/utf1} \obeylines \splice{rxvm examples/utf1}
+\end{shaded}
+\fontspec{TeX Gyre Pagella}
+ \setmainfont{TeX Gyre Pagella}

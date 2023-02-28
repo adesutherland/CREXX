@@ -29,14 +29,54 @@
 \mainmatter
 \input{about}
 \part{Guide}
-\chapter{Running cRexx on Linux and macOS}
+\chapter{Overview of the toolchain}
+In the binary distribution of \crexx{} for your platform, the main
+toolchain and a number of utilities are included; all programs are statically linked into
+their own executable, and no shared object libraries or dll's are needed.\newline
+\begin{wrapfigure}{l}{0.4\textwidth}
+\includegraphics[scale=0.6]{charts/buildflow.pdf}
+\end{wrapfigure}
+\fussy
+Source can be edited with any text editor\footnote{Vi, Emacs, Xedit,
+  VS Code, CLion, Eclipse, etc.} of your liking. The sourcefile needs to have an
+file extension of \code{.rexx} and contains (Unicode, UTF-8) text. The \code{rxc} \crexx{} compiler
+produces a text file which will have a file extension of
+\code{.rxas}. The next file in this sequence is produced by the
+\code{rxas} assembler and is a binary \code{.rxbin} file. This file is
+executable by the \crexx{} \code{rxvme} virtual machine.\newline\newline
+\fussy
+If you choose to compile a series of \code{*.rxbin} files to a native
+executable, the \code{rxcpack} program produces a \code{.c} file,
+which can be compiled by any C compiler toolchain.\newline\newline
+\fussy
+In the following chapters the detailed workflow for the supported platforms is documented.\newline
+
+\chapter{Running \crexx{} on Linux and macOS}
 Linux and other Unix-like operating systems like Apple macOS behave in
 an identical way when compiling, linking and running a \crexx{}
 program.
 \input{Running_cRexx}
-\chapter{Running cRexx on Windows operating systems}
-\chapter{Running cRexx on VM/370CE}
-\chapter{Interlanguage operability}
+\chapter{Running \crexx{} on Windows operating systems}
+\chapter{Running \crexx{} on VM/370CE}
+\chapter{Interlanguage calls}
+A \crexx{} program is able to call programs written in the \textsc{Rexx}
+language, but also programs native to the platform, using a number of
+calling conventions: \[todo: checkrelease\]
+\begin{description}
+  \item[Address] the \code{address} statement can use the shell and
+    I/O indirection to start native executables and provide input, and
+    retrieve the output.
+    \item[RexxSaa] the traditional RexxSAA calling convention can be
+      used for direct interfaces to executables that are designed to
+      function as a Rexx library. In its most simple form, these can
+      return \textsc{Rexx} strings to the calling program.
+      \item[Generic Call Interface] In this RexxSAA extension, the
+      type and length of the parameters can be specified by the
+      caller\footnote{Which is considered unsafe but sometimes the
+        only possibility for programs not designed to be called by \crexx{}}.
+    \end{description}
+    \chapter{Tracing and Debugging}
+    \section{An example debugging session}
 \part{Reference}
 \chapter{\crexx{} Compiler}
 \section{Command Line Options}
@@ -45,22 +85,64 @@ program.
   \small
   \obeylines \splice{rxc -h | sed "s/&/\and/g"}
  \end{shaded}
+ \fontspec{TeX Gyre Pagella}
+ \section{Inline Assembler}
+ On page \pageref{inlineAssembly} the inline assembler function of
+ the \crexx{} compiler is discussed. This enables the incorporation
+ of \code{rxas} assembler instructions into a \textsc{Rexx} source
+ file.
+
+\section{Optimizer}\label{fpowexample}
+ The compiler can do a number of optimizations that can make the
+ execution of a program much faster; the next example shows how an
+ operation can be done at compile time, to obviate the execution at
+ runtime:
+\lstinputlisting[language=rexx,label=fpow_example]{examples/fpowtest.rexx}
+\fontspec{IBM Plex Mono}
+\splice{rxc examples/fpowtest}
+\splice{rxas examples/fpowtest}
+\begin{shaded}
+  \small
+\obeylines \splice{rxvm examples/fpowtest}
+\end{shaded}
+\lstinputlisting[language=rxas,label=fpow_example_rxas,caption=optimization]{examples/fpowtest.rxas}
 \fontspec{TeX Gyre Pagella}
+ 
 \chapter{\crexx{} Assembler}
 \section{Overview}
-The purpose of the \crexx{} assembler is to translate a text file with
+The purpose of the \crexx{} assembler \code{rxas} is to translate a text file with
 \emph{rxvm} assembler instructions to a file with binary contents containing these
 instructions in their binary, executable form. Its main use is to
 translate an \emph{.rxas} file produced by the \crexx{} compiler
-\emph{rxc} to a binary \emph{.rxbin} file.
+\emph{rxc} to a binary \emph{.rxbin} object module.
 
 \section{Program Structure}
+\includegraphics[width=\textwidth]{charts/asmstructure.pdf}
 
- Describe the structure of the program, including the main components, how they interact, and any key algorithms or data structures used.
+% \end{wrapfigure}
+The assembler processing goes through a number of steps in a single
+pass: first, the Lexer / Scanner tokenises the RXAS code. After that,
+the Parser parses the structure into a series of instructions. The
+binary writer generates the binary code and constant pool for the
+program at hand. The backpatcher runs last and handles forward references.
 
 \section{Input/Output}
 
-: Specify the format and structure of any input and output files used by the program, and provide examples of how to use them.
+The \code{rxas} assembler has a \code{.rxas} file as input and
+produces an \code{rxbin} file as output, which can be considered an
+\emph{object module}, as it has unresolved adresses, which can be
+resolved by the linkage editor component of the \code{rxvm} virtual
+machine interpreter. It also produces a report to stdout (in case of
+errors only) and can produce a trace file in Debug/verbose mode
+(option \code{-d}).
+
+\section{Character sets}
+The input file is assumed to be valid UTF8.
+The assembler, like the compiler, operates using two character
+sets. The first is for symbols in the assembler language
+statements. These are all composed of the ASCII subset of Unicode. The
+second character set is used for data; the contents of
+variables. Here the whole of Unicode can be used.
 
 \section{Command Line Arguments}
 When the command line argument -h is specified the options are shown:\\
@@ -69,29 +151,79 @@ When the command line argument -h is specified the options are shown:\\
   \small
   \obeylines \splice{rxas -h | sed "s/&/\and/g"}
  \end{shaded}
-\fontspec{TeX Gyre Pagella}
+ \fontspec{TeX Gyre Pagella}
+
+\section{Optimizer}
+The assembler contains an optimizer; this is different from the
+optimizer which is part of the compiler. This phase of the assembler
+is running always, except when switched off by the \code{-n}
+options. When there is any doubt whether any encountered problem is
+caused by the optimizer, switching it off can help diagnosing the problem.
+
 \section{Assembler Directives}
 For machine instructions, see the \emph{\crexx{} VM
   Specification}. This section discusses instructions to the
 assembler, which are called \emph{directives} to clearly distinguish
-them from virtual machine instruction. These are necessary to pass information into the compiled
+them from virtual machine instructions. These are necessary to pass information into the compiled
 \emph{.rxbin} binary file, to enable execution by the \emph{rxvm}
-virtual machine.
+virtual machine. In the following itemized list, \emph{italic}
+descriptors are categories, while items in roman type are literal directives.
+\begin{description}
+\item[\emph{comments}] A block comment can be made by
+  surrounding the text block with \code{/*} and \code{*/}
+  indicators. The \code{*} (asterisk) can be used as a line
+  comment. The remainder of the line after a line comment is ignored.
+\item[\emph{labels}] A label (a string ending with a colon, indicated in the machine
+  instructions documentation as an \code{ID}, is a target for
+  branching-type instructions.
+  Example:
+  \begin{lstlisting}[language=rxas]
+loop:
+    fndnblnk r3,r1,r3   /* find first/next non blank offset    */
+    ilt r5,r3,0         /* if <0, nothing found, end search    */
+    brt break,r5
+    inc r6              /* else increase word count            */
+                        /* offset of word is in R3             */
+    copy r8,r3          /* save offset of word                 */
+    fndblnk r3,r1,r3    /* from offset find next blank offset  */
+    ieq r7,r6,r2        /* is this the word we are looking for?*/
+    brt wordf,r7        /* go and fetch it                     */
+    ilt r5,r3,0         /* if <0, nothing found, end search    */
+    brt break,r5        /* word not found                      */
+    bct loop,r4,r3      /* continue to look for next non blank char */
+  \end{lstlisting}
+\item[\emph{registers}] \code{r0 ...\emph{n}} are names of registers, indicated
+  in the machine instructions documentation as \code{REG}.
+\item[.globals=\{INT\}]Defines \emph{int} global variable \code{g0 ... g\emph{n}}. These can be used within any procedure in the file.
+\item[.locals=\{INT\}] The number of local registers (local to the
+  source program). This number needs to be 1 greater than the highest
+  used register number.
+\item[.expose=\{ID\}]Any global register marked as exposed is available to any file which also has the corresponding exposed index/name.
+\item[.src] Used to document source lines. This is an optional
+  directive that is added for every source line processed by the
+  \code{rxc} compiler. It is used for TRACE and SOURCELINE.
+\item[.proc] A procedure is a scope delimiting mechanism for the access of
+  registers. The registers of a procedure are independent of the
+  caller's registers. The VM maps its registers to the registers in
+  the caller. Each time a procedure/function is called a new \emph{stack frame} is provided. This means that the called function has its own set of registers.
+The function header defines how many registers (called locals) the
+function can access - for practical purposes one can consider that any
+number of registers can be assigned to a function. In addition, each file defines a number of global registers that can be shared between procedures.
 
+\end{description}
 \section{Examples}
+Here are several examples of how to use \code{rxas} to
+assemble a program into an object module.
 
-: Provide several examples of how to use the assembler program to
-create assembly code, assemble it, and link it into executable code.
-
-\section{In-line assembly}
-The \crexx{} compiler \emph{rxc} enables\footnote{In \crexx{} level b} inline assembly through the
+\section{In-line assembly}\label{inlineAssembly}
+The \crexx{} compiler \emph{rxc} enables\footnote{When used with
+  \code{options level b}} inline assembly through the
 \textbf{assembler} statement. When used in this way, a lot of
-the complications of the assembly language can be handled by the
+the complications of an assembly language program can be handled by the
 \crexx{} compiler, like assigning registers to variables, and the
 conversion of datatypes like \emph{integer} for display as \emph{string}.
 
-\lstinputlisting[language=rexx,label=ipow_example,caption=ipow
-example.]{examples/pow.rexx}
+\lstinputlisting[language=rexx,label=iexample,caption=ipowexample]{examples/pow.rexx}
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small
@@ -109,25 +241,59 @@ In this example, the compiler generates the following assembler source:
 \lstinputlisting[language=rxas,label=ipow_rxas_example,caption=ipow
 rxas example.]{examples/pow.rxas}
 
-The \code{.src} directives indicate where the work is done. The
+The \code{.src} directives (intended for trace and sourceline) indicate where the work is done. The
 variables are assigned, as integers, to the registers \code{r1} and
 \code{r2}. The line \code{ipow, number, power} becomes \code{ipow
   r3,r1,r2}, and the display on the terminal is handled by the
-  \code{itos},\code{sconcat} and \code{say} instructions.
+\code{itos},\code{sconcat} and \code{say} instructions.
+
+This is an example, with the remark that in this case, the microcode
+for \code{ipow} is always executed, the example in \textsc{crexx} on
+page \pageref{fpowexample} shows that the \crexx{} optimizer of the
+compiler can eliminate this code entirely.
+
+The use of Assembler Directives is not allowed in inline assembly, so
+(as an example) is it not possible to define procedures in an inline
+assembler block.
 
 \section{Troubleshooting}
+The assembler will give messages when there are problems in a source
+file. These are hopefully of enough clarity to resolve the immediate
+problem with syntactic issues or typos. When a program assembles
+correctly but its behaviour is unexpected, or its output is incorrect,
+a number of different strategies can be followed.
 
-: Include a section on troubleshooting common issues with the assembler program, along with tips for resolving them.
+\subsection{Adding say statements}
+It is easy to add \code{say} statements to your program. Unlike
+\textsc{Rexx}, there is no trace statement for assembler programs. It
+is possible to disassemble (see page \pageref{disassembler} an \code{.rxbin} module, and reassemble it
+with added statements.
+
+\subsection{Using the debugger}
+The \code{rxdb} debugger has a mode for assembler. This can be used to
+set breakpoints and/or step through the code; here the registers can
+be traced so variables in your program can be followed and the
+comparisons and branches can be checd. For more information about the
+debugger, see page \pageref{debugger}.
+
 
 \section{References}
 
-: Provide a list of references used in creating the documentation, such as manuals or online resources for the assembler program, and any other relevant sources.
-
-\chapter{\crexx{} Disassembler}
+\chapter{\crexx{} Disassembler}\label{disassembler}
 A disassembler reverses the actions of an assembler; in this case it
-delivers a disassembly which in itself can be re-assembled - and still works.
+delivers a disassembly which in itself can be re-assembled - and still
+works. 
 
-\chapter{\crexx{} Debugger}
+\chapter{\crexx{} Debugger}\label{debugger}
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxdb -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+
 \chapter{\crexx{} C Packer}
 The C Packer program converts the \emph{.rxbin} files into a C
 language structure which links together all needed modules, and a
@@ -141,6 +307,7 @@ targeted compiler toolchains for Linux, macOS and Windows.
   \obeylines \splice{rxcpack -h | sed "s/&/\and/g"}
  \end{shaded}
 \fontspec{TeX Gyre Pagella}
+
 
 \backmatter
 \listoftables
