@@ -1,9 +1,9 @@
 % this is not genereated from Markdown so the edits can be here
 \section{Register based Virtual Machine}
 \crexx{} uses a register based virtual machine.
-A register-based virtual machine uses registers, which are small, fast, on-chip memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. This approach can provide faster performance because accessing registers is typically faster than accessing memory. In the \emph{rxvm} virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
+A \index{register-based virtual machine} uses registers, which are small, fast, on-chip memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. This approach can provide faster performance because accessing registers is typically faster than accessing memory. In the \emph{rxvm} virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
 
-In contrast, a stack-based virtual machine uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack. However, the stack-based approach can be slower than the register-based approach because accessing memory is typically slower than accessing registers.
+In contrast, a \index{stack-based virtual machine} uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack. However, the stack-based approach can be slower than the register-based approach because accessing memory is typically slower than accessing registers.
 
 Some other differences between a register-based virtual machine and a stack-based virtual machine include:
 \begin{itemize}
@@ -15,7 +15,7 @@ Some other differences between a register-based virtual machine and a stack-base
 
 The execution environment of a \crexx{} program is a
 threaded\footnote{an alternative, non-threaded executable is available
-  under the \emph{rxbvm} name} virtual
+  under the \emph{\index{rxbvm}} name} virtual
 machine that is designed for optimal performance. This virtual
 machine, implemented in the \emph{rxvm} executable, executes
 machine instructions produced by the \emph{rxc} \crexx{}
@@ -24,11 +24,11 @@ the \emph{rxas} assembler.
 
 \input{Logical-REXX-VM.tex}
 
-\section{RXVM machine instructions}
+\section{\crexx{} Virtual Machine instructions}
 
 % \section{Machine Interface}
 This section describes the processor-specific information for
-RXVM processors. The instruction set can be seen as the ISA
+\index{RXVM processors}. The instruction set can be seen as the ISA
 (instruction set architecture) for
 an RXVM processor, of which the microcode is implemented in the C99 language.
 
@@ -91,7 +91,7 @@ which field is the field to act upon. Conversions are possible but
 never implicit. So for example, when the register contains an int
 value in field \code{int_value}, but it needs to be printed with the rxas
 \keyword{say} instruction, the
-\keyword{itos} takes care of the conversion and the population of the
+\keyword{0\index{itos}} instruction takes care of the conversion and the population of the
 memory area the \code{*string_value} points to. 
 
 \begin{lstlisting}[label=crexxregister,caption={Values of
