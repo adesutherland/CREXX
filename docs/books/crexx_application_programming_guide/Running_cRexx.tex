@@ -18,11 +18,15 @@ Let's say you have a Rexx exec you would like to run. To not have any
 surprises, it is of the \emph{hello world} kind. We have a file called
 hello.rexx, containing:
 
-\begin{verbatim}
-/* rexx */
-options levelb
-say 'hello cRexx world!'
-\end{verbatim}
+\lstinputlisting[language=rexx,label=hello_example]{examples/hello.rexx}
+\fontspec{IBM Plex Mono}
+\splice{rxc examples/hello}
+\splice{rxas examples/hello}
+\begin{shaded}
+  \small
+\obeylines \splice{rxvm examples/hello}
+\end{shaded}
+\fontspec{TeX Gyre Pagella}
 
 When cRexx level `C' (for `Classic') is available, the `options levelb'
 (on line 2) statement can be left out; for the moment, level B is all we
@@ -36,31 +40,18 @@ rxas hello
 rxvm hello
 \end{verbatim}
 
-to see `hello cRexx world!' on the console.
+to see `hello cRexx world!' on the console, as include above this, run
+from the included program. Like all the programs in the \crexx{}
+documentation, these programs are compiled and run from the included
+source by the process that builds the document.
 
 It might be a good idea to make a shell script to execute these three
 programs in succession, and perhaps call it `crexx'. But take into
 account that this really is a very simple case, in which no built-in
-functions are called. You can look into the generated rexx assembler
+functions are called. We can have a look at the generated rexx assembler
 (hello.rxas) file:
 
-\begin{verbatim}
-/*
- * cREXX COMPILER VERSION : cREXX F0043
- * SOURCE                 : hello
- * BUILT                  : 2022-12-03 22:27:52
- */
-
-.srcfile="hello"
-.globals=0
-
-main() .locals=1 .expose=hello.main
-   .meta "hello.main"="b" ".int" main() "" ""
-   .src 3:1="say 'hello cRexx world!'"
-   say "hello cRexx world!"
-   .src 4:1="return 0"
-   ret 0
-\end{verbatim}
+\lstinputlisting[language=rxas,label=hellorxas_example]{examples/hello.rxas}
 
 and you can see here that the compiler actually has generated a `say'
 assembler instruction for the Rexx `say' instruction. (Assembler became
@@ -76,18 +67,12 @@ somewhere, we must tell it to import those from the library where we put
 them earlier during the build process. Let's say we want to add a
 display of the current weekday to our hello program. This will now be:
 
-\begin{verbatim}
-/* rexx */
-options levelb
-import rxfnsb
-say 'hello cRexx world!'
-say 'today is a' date('w')
-return 0
-\end{verbatim}
+\lstinputlisting[language=rexx,label=hellodateexample]{examples/hellodate.rexx}
 
 Never mind the import statement, which you will not need when cRexx
 `Classic' level C is available. But in level B, we need this, because we
-need the flexibility it affords our plans for the future.
+need the flexibility it affords our plans for the future. See more
+about \code{import} on page \pageref{intraImport}.
 
 We must tell the compiler where to find the signature of the date()
 function, so it can check if we call it in the correct way, with the
@@ -96,30 +81,37 @@ directory containing the library - which is called `library', by the
 way.
 
 \begin{verbatim}
-rxc -i ~/crexx-build/lib/rxfns hello
+rxc -i ~/crexx-build/lib/rxfns hellodate
 \end{verbatim}
+
+[todo]
+% \splice{rxc -i /Users/apps/crexx_release/lib/rxfns examples/hellodate}
+% \splice{rxas examples/hellodate}
+
 
 The assembler runs unchanged, because it trusts the compiler to have
 checked if the called function really sits in that library, and has the
 right parameters - the right code to call it has been generated.
 
 \begin{verbatim}
-rxas hello
+rxas hellodate
 \end{verbatim}
 
 To run it, we can employ the \texttt{rxvme} executable - this one is
 extended with linked-in versions of all the functions in the library:
 
 \begin{verbatim}
-rxvme hello
+rxvme hellodate
 \end{verbatim}
 
 which yields:
 
-\begin{verbatim}
-hello cRexx world!
-today is a Saturday
-\end{verbatim}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+\obeylines \splice{rxvme examples/hellodate}
+\end{shaded}
+\fontspec{TeX Gyre Pagella}
 
 \hypertarget{building-a-standalone-executable}{%
 \section{Building a standalone

@@ -1,0 +1,30 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : hellodate.rexx
+ * BUILT                  : 2023-03-05 00:29:57
+ */
+
+.srcfile="hellodate.rexx"
+.globals=0
+
+main() .locals=8
+   .meta "hellodate.rexx.main"="b" ".int" main() "" ""
+   .src 4:1="say 'hello cRexx world!'"
+   say "hello cRexx world!"
+   .src 5:1="say 'today is a' date('w')"
+   load r1,5
+   load r2,"w"
+   settp r2,3
+   settp r3,2
+   settp r4,2
+   settp r5,2
+   settp r6,2
+   call r7,date(),r1
+   sconcat r7,"today is a",r7
+   say r7
+   .src 6:1="return 0"
+   ret 0
+
+/* Imported Declaration from file: hellodate.rexx */
+date() .expose=rxfnsb.date
+   .meta "rxfnsb.date"="b" ".string" date() "oformat = \"\" , idate = \"\" , iformat = \"\" , osep = \"\" , isep = \"\""

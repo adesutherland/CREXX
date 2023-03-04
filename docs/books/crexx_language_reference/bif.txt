@@ -1,0 +1,58 @@
+  method RexxRexx()
+  method abbrev(a=Rexx, b=Rexx, length='') static
+  method abs(a) static returns Rexx signals NumberFormatException
+  method b2d(a=Rexx,dil=Rexx -1) static returns Rexx
+  method b2x(a=Rexx) static returns Rexx
+  method centre(a=Rexx, wid=Rexx, pad=Rexx ' ') static returns Rexx
+  method center(a=Rexx,wid=Rexx, pad=Rexx ' ') static returns Rexx
+  method changestr(a=Rexx,old=Rexx,new=Rexx) static returns Rexx
+  method compareTo(a=Rexx,i2=Object) static returns int Signals ClassCastException
+  method compare(a=Rexx,target=Rexx, pad=Rexx ' ') static returns Rexx
+  method copies(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException
+  method copyindexed(a=Rexx,r=Rexx) static protect returns Rexx
+  method countstr(a=Rexx,b=Rexx) static returns Rexx
+  method c2d(a=Rexx) static returns Rexx;
+  method c2x(a=Rexx) static returns Rexx
+  method datatype(a=Rexx,opt=Rexx) static returns Rexx signals BadArgumentException
+  method delstr(a=Rexx,n=Rexx, length=Rexx '') static -
+  method delword(a=Rexx,n=Rexx, length=Rexx '')  static -
+  method d2b(a=Rexx,dil=Rexx "zip") static returns Rexx
+  method d2c(a=Rexx) static returns Rexx
+  method d2x(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException, NumberFormatException
+  method d2x(a=Rexx) static returns Rexx signals BadArgumentException, NumberFormatException
+  method exists(a=Rexx,key=Rexx) static  returns Rexx
+  method format(a=Rexx,before=Rexx null, after=Rexx null,-
+  method insert(new=Rexx,a=Rexx, n=Rexx 0, length=0, pad=Rexx ' ')-
+  method lastpos(needle=Rexx,a=Rexx) static signals BadArgumentException returns Rexx
+  method lastpos(needle=Rexx,a=Rexx, start=Rexx) static returns Rexx -
+  method left(a=Rexx,length=Rexx, pad=Rexx ' ') static returns Rexx
+  method length(a=Rexx) static returns Rexx
+  method lower(a=Rexx,n=Rexx 1, length='') -
+  method max(a=Rexx,rhs=Rexx) static returns Rexx signals NumberFormatException
+  method max(i1=Rexx,i2=Rexx,i3=Rexx) static returns Rexx signals NumberFormatException
+  method min(a=Rexx,rhs=Rexx) static returns Rexx signals NumberFormatException
+  method min(i1=Rexx,i2=Rexx,i3=Rexx) static returns Rexx signals NumberFormatException
+  method overlay(a=Rexx,new=Rexx, n=Rexx 1, length='', pad=Rexx ' ')-
+  method pos(needle=Rexx,a=Rexx, start=Rexx 1)  static returns Rexx -
+  method reverse(a=Rexx) static returns Rexx
+  method right(a=Rexx,length=Rexx, pad=Rexx ' ')  static returns Rexx -
+  method sequence(a=Rexx,final=Rexx) static returns Rexx-
+  method sign(a=Rexx) static returns Rexx signals NumberFormatException
+  method soundex(a=Rexx) static returns Rexx
+  method space(a=Rexx,n=Rexx 1, pad=Rexx ' ') static returns Rexx
+  method strip(a=Rexx,opt=Rexx 'B', pad=Rexx ' ')  static returns Rexx -
+  method substr(a=Rexx,n=Rexx,-
+  method subword(a=Rexx,n=Rexx, length='')  static returns Rexx
+  method translate(a=Rexx,tableo=Rexx '', tablei=Rexx '', pad=Rexx ' ')-
+  method trunc(a=Rexx,n=Rexx 0)  static returns Rexx-	       
+  method upper(a=Rexx,n=Rexx 1, length=0) -
+  method verify(a=Rexx,list=Rexx, opt=Rexx 'N', start=Rexx 1)  static returns Rexx
+  method word(a=Rexx,n=Rexx) static returns Rexx
+  method wordindex(a=Rexx,n=Rexx) static returns Rexx
+  method wordlength(a=Rexx,n=Rexx) static returns Rexx
+  method wordpos(a=Rexx,needle=Rexx, num=Rexx 1) static returns Rexx
+  method words(a=Rexx) static returns Rexx
+  method x2b(a=Rexx) static returns Rexx
+  method x2c(a=Rexx) static returns Rexx
+  method x2d(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException
+  method x2d(a=Rexx) static returns Rexx signals BadArgumentException
