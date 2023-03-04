@@ -1,30 +1,30 @@
-\chapter{Built-in methods for \crexx{} strings}\label{refbmeth}
-\index{R\textsc{exx},class/methods of}
- This section describes the set of methods defined for the \crexx{}
-string class, \keyword{R\textsc{exx}}.  These are called \emph{built-in
-methods}, and include character manipulation, word manipulation,
-conversion, and arithmetic methods.
+\chapter{Built-in functions for \crexx{} strings}\label{refbmeth}
+\index{R\textsc{exx},class/functions of}
+ This section describes the set of functions defined for \crexx{}
+strings These are called \emph{built-in
+functions}, and include character manipulation, word manipulation,
+conversion, and arithmetic functions.
  
-Implementations will also provide other methods for the \keyword{R\textsc{exx}}
+Implementations will also provide other functions for the \keyword{R\textsc{exx}}
 class (for example, to implement the \crexx{} operators or to provide
 constructors with primitive arguments), but these are not part of the
 \crexx{} language.
 
-Methods of the \keyword{RexxStream}, \keyword{RexxTime} and
+Functions of the \keyword{RexxStream}, \keyword{RexxTime} and
 \keyword{RexxDate} classes are, while not strictly part of the
 \keyword{Rexx} string class, listed here, followed by a suitable
 referral to the proper class documentation.
 \footnote{
-\emph{Details of the methods provided in the reference implementation are
+\emph{Details of the functions provided in the reference implementation are
 included in  Appendix C %% (see page \pageref{refappc}
 ) .}
 }
 
-\textbf{General notes on the built-in methods:}
+\textbf{General notes on the built-in functions:}
 \begin{enumerate}
-\item All methods work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
+\item All functions work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
 is referred to by the name \emph{string} in the descriptions of the
-methods.  For example, if the \textbf{word} method were invoked using
+functions.  For example, if the \textbf{word} method were invoked using
 the term:
 \begin{lstlisting}
 "Three word phrase".word(2)
@@ -33,7 +33,7 @@ then in the description of \textbf{word} the name
 \emph{string} refers to the string "\textbf{Three word
 phrase}", and the name \emph{n} refers to the string
 "\textbf{2}".
-\item All method arguments are of type \keyword{R\textsc{exx}} and all methods
+\item All method arguments are of type \keyword{R\textsc{exx}} and all functions
 return a string of type \keyword{R\textsc{exx}}; if a number is returned, it
 will be formatted as though 0 had been added with no rounding.
 \item 
@@ -60,8 +60,8 @@ is dependent on the machine representation (encoding) of characters
 and hence will return appropriately different results for Unicode,
 ASCII, EBCDIC, and other implementations.
 \end{enumerate}
-%\section{The built-in methods}\label{builtinmethods}
-\label{builtinmethods}
+%\section{The built-in functions}\label{builtinfunctions}
+\label{builtinfunctions}
 %\begin{description}
 \section{abbrev(info [,length{]})}\label{refabbrev}
 \index{ABBREV method,}
@@ -288,43 +288,43 @@ returns \emph{n} directly concatenated copies of
 'abc'.copies(0) == ''
 ''.copies(2)    == ''
 \end{lstlisting}
-\section{copyindexed(sub)}\label{refcopyind}
-\index{COPYINDEXED method,}
-\index{Method, built-in,COPYINDEXED}
-\index{Indexed strings,merging}
-\index{Indexed strings,copying}
-\index{Copying indexed variables,}
-\index{Merging indexed variables,}
-copies the collection of indexed  sub-values%%  (see page \pageref{refinstr})
+% \section{copyindexed(sub)}\label{refcopyind}
+% \index{COPYINDEXED method,}
+% \index{Method, built-in,COPYINDEXED}
+% \index{Indexed strings,merging}
+% \index{Indexed strings,copying}
+% \index{Copying indexed variables,}
+% \index{Merging indexed variables,}
+% copies the collection of indexed  sub-values%%  (see page \pageref{refinstr})
 
-of \emph{sub} into the collection associated with
-\emph{string}, and returns the modified \emph{string}.  The
-resulting collection is the union of the two collections (that is,
-it contains the indexes and their values from both collections).
-If a given index exists in both collections then the sub-value of
-\emph{string} for that index is replaced by the sub-value from
-\emph{sub}.
+% of \emph{sub} into the collection associated with
+% \emph{string}, and returns the modified \emph{string}.  The
+% resulting collection is the union of the two collections (that is,
+% it contains the indexes and their values from both collections).
+% If a given index exists in both collections then the sub-value of
+% \emph{string} for that index is replaced by the sub-value from
+% \emph{sub}.
  
-The non-indexed value of \emph{string} is not affected.
+% The non-indexed value of \emph{string} is not affected.
  
-\textbf{Example:}
- Following the instructions:
-\begin{lstlisting}
-foo='def'
-foo['a']=1
-foo['b']=2
-bar='ghi'
-bar['b']='B'
-bar['c']='C'
-merged=foo.copyIndexed(bar)
-\end{lstlisting}
-then:
-\begin{lstlisting}
-merged['a'] == '1'
-merged['b'] == 'B'
-merged['c'] == 'C'
-merged['d'] == 'def'
-\end{lstlisting}
+% \textbf{Example:}
+%  Following the instructions:
+% \begin{lstlisting}
+% foo='def'
+% foo['a']=1
+% foo['b']=2
+% bar='ghi'
+% bar['b']='B'
+% bar['c']='C'
+% merged=foo.copyIndexed(bar)
+% \end{lstlisting}
+% then:
+% \begin{lstlisting}
+% merged['a'] == '1'
+% merged['b'] == 'B'
+% merged['c'] == 'C'
+% merged['d'] == 'def'
+% \end{lstlisting}
 
 
 \index{COUNTSTR method,}

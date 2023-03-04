@@ -53,13 +53,19 @@ e.g. an FPGA.
 
 \subsection{The Register}
 \index{register}
-RXVM is a Register based virtual machine, as opposed to a Stack based
+\begin{wrapfigure}{l}{0.4\textwidth}
+\includegraphics[scale=0.6]{charts/register.pdf}
+\end{wrapfigure}
+
+
+\crexx{} \code{rxvm} is a Register based virtual machine, as opposed to a Stack based
 VM. The number of registers is only limited by memory and, for
 practical purposes, can be considered unlimited. The address size of
 the fields in a register is, for the virtual machine implementations,
 implied by the address size that the host OS can handle. For hardware
 the size is undefined and can follow the hardware address generation
 capacity.
+
 
 \begin{lstlisting}[label=crexxregister,caption={The
 \crexx{} Register implementation in C}]

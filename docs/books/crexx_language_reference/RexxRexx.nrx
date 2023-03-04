@@ -1,0 +1,235 @@
+package netrexx.lang
+options binary decimal strictargs strictcase noformat
+/**
+ * With this one weird trick ... Rexx is back in 1984
+ * Class RexxRexx provides static versions of the Rexx BIFs
+ * to be called without oo notation.
+ * Created on: Fri, 01, Apr 2022 13:04:19 +0200
+ */
+class RexxRexx
+
+  method RexxRexx()
+    
+  method abbrev(a=Rexx, b=Rexx, length='') static
+    if length='' then len=b.length()
+    else len=length
+    return a.abbrev(b,len)
+
+  method abs(a) static returns Rexx signals NumberFormatException
+    return a.abs()
+
+  method b2d(a=Rexx,dil=Rexx -1) static returns Rexx
+    return b2d(a,dil)
+
+  method b2x(a=Rexx) static returns Rexx
+    return a.b2x()
+
+  method centre(a=Rexx, wid=Rexx, pad=Rexx ' ') static returns Rexx
+    return a.centre(wid,pad)
+    
+  method center(a=Rexx,wid=Rexx, pad=Rexx ' ') static returns Rexx
+    return a.center(wid,pad)
+    
+  method changestr(a=Rexx,old=Rexx,new=Rexx) static returns Rexx
+    return old.changestr(a,new)
+
+  method compareTo(a=Rexx,i2=Object) static returns int Signals ClassCastException
+    return a.compareTo(i2)
+
+  method compare(a=Rexx,target=Rexx, pad=Rexx ' ') static returns Rexx
+    return a.compare(target,pad)
+    
+  method copies(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException
+    return a.copies(n)
+    
+  method copyindexed(a=Rexx,r=Rexx) static protect returns Rexx
+    return a.copyindexed(r)
+
+  method countstr(a=Rexx,b=Rexx) static returns Rexx
+    return b.countstr(a)
+
+  method c2d(a=Rexx) static returns Rexx;
+    return a.c2d()
+    
+  method c2x(a=Rexx) static returns Rexx
+    return a.c2x()
+    
+  method datatype(a=Rexx,opt=Rexx) static returns Rexx signals BadArgumentException
+    return a.datatype(opt)
+    
+  method delstr(a=Rexx,n=Rexx, length=Rexx '') static -
+		signals BadArgumentException -
+		returns Rexx
+    if length = '' then len = a.length()
+    else len=length
+    return a.delstr(n,len)
+
+  method delword(a=Rexx,n=Rexx, length=Rexx '')  static -
+		 signals BadArgumentException -
+		 returns Rexx
+    if length='' then wlen= a.words()
+    else wlen=length
+    return a.delword(n,wlen)
+    
+  method d2b(a=Rexx,dil=Rexx "zip") static returns Rexx
+    return a.d2b(dil)
+
+  method d2c(a=Rexx) static returns Rexx
+    return a.d2c()
+
+  method d2x(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException, NumberFormatException
+    return a.d2x(n)
+
+  method d2x(a=Rexx) static returns Rexx signals BadArgumentException, NumberFormatException
+    return a.d2x()
+
+  method exists(a=Rexx,key=Rexx) static  returns Rexx
+    return a.exists(key)
+
+  method format(a=Rexx,before=Rexx null, after=Rexx null,-
+                explaces=Rexx null, exdigits=Rexx null,-
+                exform=Rexx null) static returns Rexx-
+		signals BadArgumentException, NumberFormatException
+    return a.format(before,after,explaces,exdigits,exform)
+
+  method insert(new=Rexx,a=Rexx, n=Rexx 0, length=0, pad=Rexx ' ')-
+		signals BadArgumentException -
+		static returns Rexx
+    if length=0 then len=new.length()
+    else len=length
+    return a.insert(new,n,len,pad)
+
+  method lastpos(needle=Rexx,a=Rexx) static signals BadArgumentException returns Rexx
+    return a.lastpos(needle)
+
+  method lastpos(needle=Rexx,a=Rexx, start=Rexx) static returns Rexx -
+		 signals BadArgumentException
+    return a.lastpos(needle,start)
+
+  method left(a=Rexx,length=Rexx, pad=Rexx ' ') static returns Rexx
+    return a.left(length,pad)
+
+  method length(a=Rexx) static returns Rexx
+    return a.length()
+
+  method lower(a=Rexx,n=Rexx 1, length='') -
+	       static signals BadArgumentException returns Rexx
+    if length='' then len=a.length()
+    else len=length
+    return a.lower(n,len)
+
+    /* min and max need more work (a loop). In Classic Rexx a list of up to 20 numbers
+     * (implementation dependent)  can be specified for both functions,
+     * in NetRexx that is a do-it yourself */
+  method max(a=Rexx,rhs=Rexx) static returns Rexx signals NumberFormatException
+    return a.max(rhs)
+
+  method max(i1=Rexx,i2=Rexx,i3=Rexx) static returns Rexx signals NumberFormatException
+    if i2>i1 then maxv=i2
+    else maxv=i1
+    if i3>maxv then return i3
+    else return maxv
+
+  method min(a=Rexx,rhs=Rexx) static returns Rexx signals NumberFormatException
+    return a.min(rhs)
+
+  method min(i1=Rexx,i2=Rexx,i3=Rexx) static returns Rexx signals NumberFormatException
+    if i2<i1 then minv=i2
+    else minv=i1
+    if i3<minv then return i3
+    else return minv
+
+  method overlay(a=Rexx,new=Rexx, n=Rexx 1, length='', pad=Rexx ' ')-
+		 signals BadArgumentException -
+		 static returns Rexx
+    if length='' then len=a.length()
+    else len=length
+    return new.overlay(a, n, len, pad)
+    
+  method pos(needle=Rexx,a=Rexx, start=Rexx 1)  static returns Rexx -
+	     signals BadArgumentException
+    return a.pos(needle,start)
+
+  method reverse(a=Rexx) static returns Rexx
+    return a.reverse()
+
+  method right(a=Rexx,length=Rexx, pad=Rexx ' ')  static returns Rexx -
+	       signals NotCharacterException, BadArgumentException
+    return a.right(length,pad)
+
+  method sequence(a=Rexx,final=Rexx) static returns Rexx-
+		  signals BadArgumentException, NotCharacterException
+    return a.sequence(final)
+
+  method sign(a=Rexx) static returns Rexx signals NumberFormatException
+    return a.sign()
+
+  method soundex(a=Rexx) static returns Rexx
+    return a.soundex()
+
+  method space(a=Rexx,n=Rexx 1, pad=Rexx ' ') static returns Rexx
+    return a.space(n,pad)
+
+  method strip(a=Rexx,opt=Rexx 'B', pad=Rexx ' ')  static returns Rexx -
+	       signals BadArgumentException
+    return a.strip(opt,pad)
+
+  method substr(a=Rexx,n=Rexx,-
+                length='',pad=Rexx ' ')-
+	signals NotCharacterException, BadArgumentException -
+		static returns Rexx
+    if length='' then len=Rexx(a.length()+1-n.toint()).max(0)
+    else len=length
+    return a.substr(n,len,pad)
+    
+  method subword(a=Rexx,n=Rexx, length='')  static returns Rexx
+    if length='' then len=a.length()
+    else len=length
+    return a.subword(n,len)
+
+  method translate(a=Rexx,tableo=Rexx '', tablei=Rexx '', pad=Rexx ' ')-
+		   signals BadArgumentException -
+		   static returns Rexx
+    if tableo=='' then if tablei=='' then if pad==' ' then return a.upper()
+    if pad == ' ' then return a.translate(tableo,tablei)
+    return a.translate(tableo,tablei,pad)
+
+  method trunc(a=Rexx,n=Rexx 0)  static returns Rexx-	       
+               signals BadArgumentException, NumberFormatException
+    return a.trunc(n)
+
+  method upper(a=Rexx,n=Rexx 1, length=0) -
+	       static signals BadArgumentException returns Rexx
+    if length=0 then len=a.length()
+    else len=length
+    return a.upper(n,len)
+
+  method verify(a=Rexx,list=Rexx, opt=Rexx 'N', start=Rexx 1)  static returns Rexx
+    return a.verify(list,opt,start)
+
+  method word(a=Rexx,n=Rexx) static returns Rexx
+    return a.word(n)
+
+  method wordindex(a=Rexx,n=Rexx) static returns Rexx
+    return a.wordindex(n)
+
+  method wordlength(a=Rexx,n=Rexx) static returns Rexx
+    return a.wordlength(n)
+
+  method wordpos(a=Rexx,needle=Rexx, num=Rexx 1) static returns Rexx
+    return needle.wordpos(a,num)
+
+  method words(a=Rexx) static returns Rexx
+    return a.words()
+
+  method x2b(a=Rexx) static returns Rexx
+    return a.x2b()
+
+  method x2c(a=Rexx) static returns Rexx
+    return a.x2c()
+
+  method x2d(a=Rexx,n=Rexx) static returns Rexx signals BadArgumentException
+    return a.x2d(n)
+
+  method x2d(a=Rexx) static returns Rexx signals BadArgumentException
+    return a.x2d()

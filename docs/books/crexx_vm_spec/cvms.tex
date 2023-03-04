@@ -45,6 +45,19 @@
 \chapter{Low-Level System Information}
 \input{lowlevel}
 \chapter{\crexx{} Virtual Machine Instruction Set}
+Most \crexx{} Virtual machine instructions share the following
+characteristics:
+\begin{itemize}
+\item Logical data flow is from right to left
+  \item There is no separate CC (Condition Code) or status register; a
+    register specified in the instruction is used for these results;
+    for example all comparisons leave their result in a register, that
+    subsequently can be used for a conditional branch
+    \item The assembler does not have any data definition directives;
+      data is entered directly into registers, which then are used by
+      the instructions. In \code{.rxbin} modules this data is
+      represented in the Constant Pool. 
+\end{itemize}
 \input{instruction_chapter}
 \chapter{\crexx{} Assembler}
 \input{REXX-Assembler.tex}
