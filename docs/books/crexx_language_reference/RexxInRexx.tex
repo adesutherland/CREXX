@@ -5,7 +5,7 @@ An aim of the project is to implement as much of the \crexx{} architecture as po
 \begin{itemize}
 \item Stage 1 - \rexx{} built-in functions will be implemented in \crexx{} level B
 \item Stage 2 - \rexx{} Languages (Interpreters / Compilers) will be re-implemented in \crexx{} level B
-\item Stage 2 - native code compilers based on LLVM IR and other technologies will be made available
+\item Stage 3 - native code compilers based on LLVM IR and other technologies will be made available
 \end{itemize}
 
 An important difference from earlier implementations of the language tools is the emphasis on a clear separation of architectural levels. Where more (and indeed the very first implementations on VM/SP) versions contain a virtual machine layer, this implementation opens up these layers with clear boundaries between the compiler, the assembler and different backends. In this MVP, the execution engine is a threaded\footnote{} virtual machine, which optionally is delivered along with the application in a single native executable.

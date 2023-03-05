@@ -1,10 +1,11 @@
 \chapter{Introduction}
-\crexx{} is a general-purpose programming language. It is designed for
-people, not computers. In this respect it follows R\textsc{exx} closely, with
+\crexx{} is a general-purpose programming language. \textbf{It is
+  still designed for
+people, not computers}. In this respect it follows R\textsc{exx} closely, with
 many of the concepts and most of the syntax taken directly from R\textsc{exx}
 or its object-oriented variants, Object R\textsc{exx} and \nr{}.
 
-It will be delivered in different levels. Level B is the first and
+\crexx{} will be delivered in different levels. Level B is the first and
 contained in this MVP release. Level C will be mostly compatible with
 ISO standard Classic \textsc{Rexx}. 
 In addition to the mentioned \textsc{Rexx} variants, \crexx{} level B contains 
@@ -15,8 +16,80 @@ handling and a library of classes. The resulting language not only provides the 
 capabilities and decimal arithmetic of R\textsc{exx}, but also seamlessly
 extends to large application development with fast binary arithmetic.
 
+The \crexx{} team is trying to provide a new, up-to-date
+implementation of \rexx{}, and to incorporate many of the improvements
+oo\rexx{} and \nr{} added to the language. In some cases, choices
+need to be made. These choices are made in dialogue with the \rexx ARB
+(Architecture Review Board). While, in this day and age of open source
+development every language implementation team is autonomous, and in
+fact everyone can fork a repository and strike out on their own, the
+\crexx{} team seeks cooperation and efficient deployment of work.
+
+The terms 'new' and 'up-to-date' refer to several different
+developments in our technical and social reality. The developments of
+CPU and GPU technology mean that, while we might have hit a wall with
+Moore's law, parallellism and pipelining have become more important,
+as are cache sizes, RISC and vectorising of instructions, like done in
+different SIMD implementations. As address ranges have become large
+and segmentation is something of the past, we are de-emphasising
+memory management and emphasising instruction pipelining in the
+\crexx{} VM Kernel. Also, we are testing our hypothesis that \rexx{}
+can be a high-performance language, so apart from that VM Kernel,
+everything is written in that language.
+
+We are convinced that the working of interpreters and compilers needs
+to be understandable to its users; with a more complete mental imagery
+of those workings, it is possible to write much better programs. We
+strive to have a completely transparent architecture for the language
+tools. For this reason we have tried to open up the bytecode compiler
+and interpreter layers to the user of the language, instead of hiding
+these. This also enables the team (or others) to start working on
+native, true compilers that generate executable machine instructions
+for hardware instruction set architectures or future virtual machines.
+
+Also from a software point of view the world has changed. Apart from
+fads and silver bullets, some developments have stuck and are
+sometimes missed in \rexx{}, which at this point in time is more than
+40 years old. The introduction of Object Orientation in the 1990's was
+a long and arduous process, that might have taken too much time than
+was time-to-market and user expectations allowed. What did not exactly
+helped was putting this Orexx version into the hands of a different
+language architect, the product intentions published early and the
+product delivery taking a very long time - as a 'user switchable'
+implementation on a moribund operating
+system\footnote{IBM's OS/2.} Further announcements and retractions
+of its owner regarding its open sourcing status did not help it in any way.
+Another variant, for the Java Virtual Machine, has shown the
+divergence in ideas between \rexx{}'s original architect, Mike
+Cowlishaw, and the Object Rexx implementation of the same ideas.
+
+We would like to try to avoid this by opening up architecture, source
+and discussion in the user community. While \rexx{} variants may have
+diverged on small points, an effort could be set up to standardize as
+much as possible on new developments. What are these new developments
+in programming language technology?\footnote{some might be quite old}
+
+A discussion on various mailing fora brought about the following list
+of what different variants of \rexx{} need:
+\begin{itemize}
+\item Short circuit evaluation
+\item Functions as first class objects
+\item Multi-threading
+\item Dynamically typed, preferably with type hints
+\item Co-routintes
+\item Support for object oriented programming
+\item Regular expressions
+\item Libraries for web programming, jpegs, JSON/YAML parsing etc
+\item Language tools
+\item Logic programming
+\end{itemize}
+
+Note that this list is just a statement of intention and some things
+do exist in existing implementations while others might not be a
+good idea or would be done better by tools external to the language.
+  
 \section{Level B Minimally Viable Product Snapshot}
-It is important to know that Level B implementation is not complete
+It is important to know that the Level B implementation is not complete
 yet. What still is missing from this snapshot with
 regard to the first \crexx{} Level B release, is the following
 \begin{itemize}
@@ -24,6 +97,14 @@ regard to the first \crexx{} Level B release, is the following
 \item stream I/O
 \item structured variables
 \end{itemize}
+
+The team deems it important to release the working parts at this time,
+so people can play with it, be amazed by the speed of code implemented
+with \rexx{}, use Unicode and see how it works, and possibly,
+hopefully participate in its development. This means that \crexx{} has
+entered the phase in which things are stable enough for working on
+specific tasks by a larger team. Everybody is welcome! Lots of things
+can be done in \rexx{}!
 
 % Appendices include a sample \crexx{} program, a description of an experimental feature, and some
 % details of the contents of the \texttt{netrexx.lang} package.
