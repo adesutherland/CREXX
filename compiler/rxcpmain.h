@@ -435,14 +435,18 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname);
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
 
-/* Set Node Value Type from Symbol */
+/* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol);
 
 /* Set Node Target Value Type from Symbol */
 void ast_sttp(ASTNode* node, Symbol* symbol);
 
-/* Set Node Target Value Type from Value Type of from_node */
+/* Set Node Target Value Type from Target Type of from_node */
+/* Note: Does not validate promotion */
 void ast_sttn(ASTNode* node, ASTNode* from_node);
+
+/* Set Node Value (and Target) Type from the from_node target type */
+void ast_svtn(ASTNode* node, ASTNode* from_node);
 
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);

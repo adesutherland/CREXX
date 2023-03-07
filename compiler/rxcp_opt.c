@@ -605,6 +605,19 @@ static walker_result opt1_walker(walker_direction direction,
                         payload->changed = 1;
                         break;
 
+                    case CONSTANT:
+                        if ( node->parent &&
+                             ( node->parent->node_type == VAR_REFERENCE ||
+                               node->parent->node_type == VAR_TARGET ||
+                               node->parent->node_type == CLASS ||
+                               node->parent->node_type == VAR_SYMBOL ) ) {
+                            /* If the parent is a Variable then the node is an array subscript, and so it must be >=0 */
+                            if (node->target_type == TP_INTEGER) { /* This 'must' be true */
+                                if (node->int_value < 0) mknd_err(node, "NEGATIVE_SUBSCRIPT");
+                            }
+                        }
+                        break;
+
                     default:;
                 }
         }
@@ -625,6 +638,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     size_t i;
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
+    if (symbol->value_dims) return; /* Arrays are never constants */
 
     n = sym_trnd(symbol, 0)->node;
     if (n->parent->node_type == ASSIGN  && n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {

@@ -1726,7 +1726,7 @@ walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
     return result_normal;
 };
 
-/* Set Node Value Type from Symbol */
+/* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol) {
     node->value_type = symbol->type;
     node->value_dims = symbol->value_dims;
@@ -1755,14 +1755,31 @@ void ast_sttp(ASTNode* node, Symbol* symbol) {
     } else node->target_class = 0;
 }
 
-/* Set Node Target Value Type from Value Type of from_node */
+/* Set Node Target Value Type from Target Type of from_node */
 /* Note: Does not validate promotion */
 void ast_sttn(ASTNode* node, ASTNode* from_node) {
-    node->target_type = from_node->value_type;
-    node->target_dims = from_node->value_dims;
+    node->target_type = from_node->target_type;
+    node->target_dims = from_node->target_dims;
     if (node->target_class) free(node->target_class);
-    if (from_node->value_class) {
-        node->target_class = malloc(strlen(from_node->value_class) + 1);
-        strcpy(node->target_class, from_node->value_class);
+    if (from_node->target_class) {
+        node->target_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->target_class, from_node->target_class);
     } else node->target_class = 0;
+}
+
+/* Set Node Value (and Target) Type from the from_node target type */
+void ast_svtn(ASTNode* node, ASTNode* from_node) {
+    node->value_type = from_node->target_type;
+    node->value_dims = from_node->target_dims;
+    node->target_type = from_node->target_type;
+    node->target_dims = from_node->target_dims;
+    if (node->value_class) free(node->value_class);
+    if (from_node->target_class) {
+        node->value_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->value_class, from_node->target_class);
+    } else node->value_class = 0;
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
 }
