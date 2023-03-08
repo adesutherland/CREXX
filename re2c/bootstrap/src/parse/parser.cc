@@ -102,11 +102,7 @@
 
 
 /* Copy the first part of user declarations.  */
-<<<<<<< HEAD
 #line 1 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 1 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
 
 
 // disable certain GCC and/or Clang warnings,  as we have no control over
@@ -154,11 +150,7 @@ void yyerror(context_t &context, const char*) RE2C_ATTR((noreturn));
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-<<<<<<< HEAD
 #line 33 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 33 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
 {
     const re2c::AST *regexp;
     re2c::SemAct    *semact;
@@ -1431,11 +1423,7 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-<<<<<<< HEAD
 #line 68 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 68 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     use_block(context, *(yyvsp[(2) - (2)].str));
     delete (yyvsp[(2) - (2)].str);
@@ -1443,22 +1431,14 @@ yyreduce:
     break;
 
   case 4:
-<<<<<<< HEAD
 #line 72 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 72 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     context.input.lex_conf(context.opts);
 ;}
     break;
 
   case 8:
-<<<<<<< HEAD
 #line 81 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 81 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     if (!context.symtab.insert(std::make_pair(*(yyvsp[(1) - (3)].str), (yyvsp[(2) - (3)].regexp))).second) {
         context.input.msg.error(context.input.tok_loc()
@@ -1470,11 +1450,7 @@ yyreduce:
     break;
 
   case 9:
-<<<<<<< HEAD
 #line 90 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 90 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     context.input.msg.error(context.input.tok_loc()
         , "trailing contexts are not allowed in named definitions");
@@ -1483,53 +1459,33 @@ yyreduce:
     break;
 
   case 10:
-<<<<<<< HEAD
 #line 97 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 97 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.str) = (yyvsp[(1) - (2)].str); ;}
     break;
 
   case 14:
-<<<<<<< HEAD
 #line 104 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 104 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     find_or_add_spec(context.specs, "").rules.push_back(ASTRule((yyvsp[(1) - (2)].regexp), (yyvsp[(2) - (2)].semact)));
 ;}
     break;
 
   case 15:
-<<<<<<< HEAD
 #line 107 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 107 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     find_or_add_spec(context.specs, "").defs.push_back((yyvsp[(2) - (2)].semact));
 ;}
     break;
 
   case 16:
-<<<<<<< HEAD
 #line 110 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 110 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     find_or_add_spec(context.specs, "").eofs.push_back((yyvsp[(2) - (2)].semact));
 ;}
     break;
 
   case 17:
-<<<<<<< HEAD
 #line 113 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 113 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     for(CondList::const_iterator i = (yyvsp[(1) - (3)].clist)->begin(); i != (yyvsp[(1) - (3)].clist)->end(); ++i) {
         find_or_add_spec(context.specs, *i).rules.push_back(ASTRule((yyvsp[(2) - (3)].regexp), (yyvsp[(3) - (3)].semact)));
@@ -1539,11 +1495,7 @@ yyreduce:
     break;
 
   case 18:
-<<<<<<< HEAD
 #line 119 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 119 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     for(CondList::const_iterator i = (yyvsp[(1) - (3)].clist)->begin(); i != (yyvsp[(1) - (3)].clist)->end(); ++i) {
         find_or_add_spec(context.specs, *i).defs.push_back((yyvsp[(3) - (3)].semact));
@@ -1553,11 +1505,7 @@ yyreduce:
     break;
 
   case 19:
-<<<<<<< HEAD
 #line 125 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 125 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     for(CondList::const_iterator i = (yyvsp[(1) - (3)].clist)->begin(); i != (yyvsp[(1) - (3)].clist)->end(); ++i) {
         find_or_add_spec(context.specs, *i).eofs.push_back((yyvsp[(3) - (3)].semact));
@@ -1567,11 +1515,7 @@ yyreduce:
     break;
 
   case 20:
-<<<<<<< HEAD
 #line 131 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 131 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     for (CondList::const_iterator i = (yyvsp[(1) - (2)].clist)->begin(); i != (yyvsp[(1) - (2)].clist)->end(); ++i) {
         find_or_add_spec(context.specs, *i).setup.push_back((yyvsp[(2) - (2)].semact));
@@ -1581,11 +1525,7 @@ yyreduce:
     break;
 
   case 21:
-<<<<<<< HEAD
 #line 137 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 137 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     const AST *r = ast_nil(context.input.tok_loc());
     find_or_add_spec(context.specs, "0").rules.push_back(ASTRule(r, (yyvsp[(2) - (2)].semact)));
@@ -1594,11 +1534,7 @@ yyreduce:
     break;
 
   case 23:
-<<<<<<< HEAD
 #line 145 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 145 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     (yyval.semact) = (yyvsp[(2) - (2)].semact);
     (yyval.semact)->cond = *(yyvsp[(1) - (2)].str);
@@ -1607,11 +1543,7 @@ yyreduce:
     break;
 
   case 24:
-<<<<<<< HEAD
 #line 150 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 150 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     (yyval.semact) = new SemAct(context.input.tok_loc());
     (yyval.semact)->cond = *(yyvsp[(1) - (1)].str);
@@ -1620,20 +1552,12 @@ yyreduce:
     break;
 
   case 25:
-<<<<<<< HEAD
 #line 157 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 157 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.regexp) = ast_cap((yyvsp[(1) - (1)].regexp)); ;}
     break;
 
   case 26:
-<<<<<<< HEAD
 #line 158 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 158 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     (yyval.regexp) = ast_cat(ast_cap((yyvsp[(1) - (3)].regexp)),
         ast_cat(ast_tag(context.input.tok_loc(), NULL, false), (yyvsp[(3) - (3)].regexp)));
@@ -1641,38 +1565,22 @@ yyreduce:
     break;
 
   case 28:
-<<<<<<< HEAD
 #line 165 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 165 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.regexp) = ast_alt((yyvsp[(1) - (3)].regexp), (yyvsp[(3) - (3)].regexp)); ;}
     break;
 
   case 30:
-<<<<<<< HEAD
 #line 170 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 170 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.regexp) = ast_diff((yyvsp[(1) - (3)].regexp), (yyvsp[(3) - (3)].regexp)); ;}
     break;
 
   case 32:
-<<<<<<< HEAD
 #line 176 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 176 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.regexp) = ast_cat((yyvsp[(1) - (2)].regexp), (yyvsp[(2) - (2)].regexp)); ;}
     break;
 
   case 34:
-<<<<<<< HEAD
 #line 181 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 181 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     switch((yyvsp[(2) - (2)].op)) {
         case '*': (yyval.regexp) = ast_iter((yyvsp[(1) - (2)].regexp), 0, AST::MANY); break;
@@ -1683,58 +1591,34 @@ yyreduce:
     break;
 
   case 35:
-<<<<<<< HEAD
 #line 188 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 188 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     (yyval.regexp) = ast_iter((yyvsp[(1) - (2)].regexp), (yyvsp[(2) - (2)].bounds).min, (yyvsp[(2) - (2)].bounds).max);
 ;}
     break;
 
   case 37:
-<<<<<<< HEAD
 #line 195 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 195 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.op) = ((yyvsp[(1) - (2)].op) == (yyvsp[(2) - (2)].op)) ? (yyvsp[(1) - (2)].op) : '*'; ;}
     break;
 
   case 38:
-<<<<<<< HEAD
 #line 199 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 199 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.op) = '*'; ;}
     break;
 
   case 39:
-<<<<<<< HEAD
 #line 200 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 200 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.op) = '+'; ;}
     break;
 
   case 40:
-<<<<<<< HEAD
 #line 201 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 201 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.op) = '?'; ;}
     break;
 
   case 42:
-<<<<<<< HEAD
 #line 206 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 206 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     {
     symtab_t::iterator i = context.symtab.find(*(yyvsp[(1) - (1)].str));
     if (i == context.symtab.end()) {
@@ -1751,11 +1635,7 @@ yyreduce:
     break;
 
   case 43:
-<<<<<<< HEAD
 #line 219 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-=======
-#line 219 "../../re2c/src/parse/parser.ypp"
->>>>>>> develop
     { (yyval.regexp) = ast_cap((yyvsp[(2) - (3)].regexp)); ;}
     break;
 

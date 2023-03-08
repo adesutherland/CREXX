@@ -77,7 +77,6 @@
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
 #line 33 "../../crexx-f0046/re2c/src/parse/parser.ypp"
-
 {
     const re2c::AST *regexp;
     re2c::SemAct    *semact;
