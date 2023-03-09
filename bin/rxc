@@ -1,7 +1,3 @@
-# if test "$(echo $PATH | grep '/compiler')" = ""; then
-#   thisdir=$(dirname $0)
-#   export PATH="$thisdir/../compiler/:$thisdir/assembler/:$thisdir/../interpreter/:$PATH"
-# fi
 thisdir=$(dirname $0)
 $thisdir/../compiler/rxc -i $thisdir/../lib/rxfns/ $*
 

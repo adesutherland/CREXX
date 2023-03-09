@@ -1,6 +1,6 @@
-/* rexx compile a rexx exec to a native executable */
-/* Classic Rexx and NetRexx compatible             */
-crexx_home='/Users/rvjansen/apps/crexx_release'
+/* rexx compile a rexx exec to a native executable      */
+/* Classic Rexx (ooRexx, REgina) and NetRexx compatible */
+crexx_home=directory()
 if arg='' then do
   say 'exec name expected.'
   exit 99
@@ -14,6 +14,3 @@ if extension<>'' then say 'filename extension ignored.'
 '-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
 crexx_home'/interpreter -L'crexx_home'/machine -L',
 crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
-
-
-
