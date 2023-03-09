@@ -1,0 +1,3 @@
+thisdir=$(dirname $0)	
+$thisdir/../interpreter/rxvme $*
+

@@ -1,0 +1,4 @@
+thisdir=$(dirname $0)
+$thisdir/rxc $*
+$thisdir/rxas $*
+$thisdir/rxvm $*
