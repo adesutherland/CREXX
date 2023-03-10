@@ -6,24 +6,24 @@ extension="${filename##*.}"
 filename="${filename%.*}"
 
 if [ $extension = $filename ]; then
-  # If the filename has no extension, check for a file with .rexx extension
-  filename_rexx="${filename}.rexx"
-  if [ ! -f "$filename_rexx" ]; then
-    echo "Error: $filename_rexx does not exist."
+  # If the filename has no extension, check for a file with .rxbin extension
+  filename_rxbin="${filename}.rxbin"
+  if [ ! -f "$filename_rxbin" ]; then
+    echo "Error: $filename_rxbin does not exist."
     exit 1
   fi
   # Set extension to "rexx" if the file exists
-  extension="rexx"
+  extension="rxbin"
 fi
 
 case "$extension" in
-  rexx) true
+  rxbin) true
        ;;
-  *)   echo "File extension is not correct. Expected .rexx file."
+  *)   echo "File extension is not correct. Expected .rxbin file."
        exit 1
        ;;
 esac
 
-$thisdir/../cpacker/rxcpack ${filename}
+$thisdir/../cpacker/rxcpack ${filename} $thisdir/../lib/rxfns/library
 
 
