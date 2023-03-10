@@ -1,4 +1,31 @@
+#!/bin/bash
 thisdir=$(dirname $0)
-$thisdir/rxc $*
-$thisdir/rxas $*
-$thisdir/rxvm $*
+filename=$(basename "$1")
+path=$(dirname "$1")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+if [ $extension = $filename ]; then
+  # If the filename has no extension, check for a file with .rexx extension
+  filename_rexx="${filename}.rexx"
+  if [ ! -f "$filename_rexx" ]; then
+    echo "Error: $filename_rexx does not exist."
+    exit 1
+  fi
+  # Set extension to "rexx" if the file exists
+  extension="rexx"
+fi
+
+case "$extension" in
+  rexx) true
+       ;;
+  *)   echo "File extension is not correct. Expected .rexx file."
+       exit 1
+       ;;
+esac
+
+echo ${filename}
+$thisdir/rxc ${filename}
+$thisdir/rxas ${filename}
+$thisdir/rxvm ${filename}
+
