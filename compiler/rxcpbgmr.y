@@ -127,18 +127,104 @@ junk(J)          ::= error.
                      { J = ast_errh(context, "SYNTAX_ERROR"); }
 
 /* Classes / Variables */
-class(C)               ::= TK_CLASS(T).
-                           { C = ast_f(context, CLASS, T); }
+class(C)                 ::= TK_CLASS(T).
+                             { C = ast_f(context, CLASS, T); }
+type_def(A)              ::= class(S).
+                             { A = S; }
+type_def(A)              ::= class(S) array_def_parameters(P).
+                             { A = S; if (P) add_ast(A,P); }
+type_def(A)              ::= TK_CLASS_STEM(S) stem_def_parts(P).
+                             { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
+array_def_parameters(P)  ::= TK_OPEN_SBRACKET def_expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
+                             { P = E; }
+stem_def_parts(L)        ::= stem_def_part(S).
+                             { L = S; }
+stem_def_parts(L)        ::= stem_def_parts(L1) stem_def_part(E).
+                             { if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               add_sbtr(L,E);
+                             }
+stem_def_part(A)         ::= TK_STEMINT(S).
+                             {  /* Remove the leading "." */
+                                S->column++; S->length--; S->token_string++;
+                                A = ast_ft(context, RANGE);
+                                add_ast(A, ast_ft(context, NOVAL));
+                                add_ast(A, ast_f(context, INTEGER, S));
+                             }
+stem_def_part(A)         ::= TK_STEMNOVAL(S).
+                             {  /* Remove the leading "." */
+                                S->column++; S->length--; S->token_string++;
+                                A = ast_ft(context, RANGE);
+                                add_ast(A, ast_ft(context, NOVAL));
+                                add_ast(A, ast_ft(context, NOVAL));
+                             }
+stem_def_part(A)         ::= TK_STEMVAR(S).
+                             { A = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+stem_def_part(A)         ::= TK_STEMSTRING(S).
+                             { A = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_expression_list(L)   ::= .
+                             { L = ast_ft(context, RANGE);
+                               add_ast(L, ast_ft(context, NOVAL));
+                               add_ast(L, ast_ft(context, NOVAL));
+                             }
+def_expression_list(L)   ::= def_expression(E).
+                             { L = E; }
+def_expression_list(L)   ::= def_expression_list(L1) TK_COMMA def_expression(E).
+                             { ASTNode* _temp;
+                               if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               add_sbtr(L, E);
+                             }
+def_expression_list(L)   ::= def_expression_list(L1) TK_COMMA.
+                             { ASTNode* _temp;
+                               if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               _temp = ast_ft(context, RANGE);
+                               add_ast(_temp, ast_ft(context, NOVAL));
+                               add_ast(_temp, ast_ft(context, NOVAL));
+                               add_sbtr(L, _temp);
+                             }
+def_expression(D)        ::=   def_value(S).
+                             { D = ast_ft(context, RANGE);
+                               add_ast(D, ast_ft(context, NOVAL));
+                               add_ast(D, S);
+                             }
+def_expression(D)        ::=   def_value(S1) TK_TO def_value(S2).
+                             { D = ast_ft(context, RANGE);
+                               add_ast(D, S1);
+                               add_ast(D, S2);
+                             }
+def_value(D)             ::=   TK_INTEGER(S).
+                             { D = ast_f(context, INTEGER,S); }
+def_value(D)             ::=   TK_MULT(S).
+                             { D = ast_f(context, NOVAL,S); }
+def_value(D)             ::=   TK_MINUS(O) TK_INTEGER(S).
+                             { D = ast_f(context, OP_NEG, O); add_ast(D, ast_f(context, INTEGER,S)); }
+/* Common errors if a user tried to use an expression in an array definition */
+def_value(D)             ::=   TK_VAR_SYMBOL(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_value(D)             ::=   TK_FLOAT(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_value(D)             ::=   TK_STRING(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_value(D)             ::=   TK_PLUS(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_value(D)             ::=   TK_MINUS(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+def_value(D)             ::=   TK_INTEGER ANYTHING(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+
 var_symbol(A)          ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
-var_symbol(A)          ::= class(S). { A = S; } [TK_VAR_SYMBOL]
 var_symbol(A)          ::= TK_VAR_SYMBOL(S) array_parameters(P).
                            { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
-var_symbol(A)          ::= class(S) array_parameters(P). [TK_VAR_SYMBOL]
-                           { A = S; if (P) add_ast(A,P); }
 var_symbol(A)          ::= TK_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
                            { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
-var_symbol(A)          ::= TK_CLASS_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
-                           { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
 array_parameters(P)    ::= TK_OPEN_SBRACKET expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
                            { P = E; }
 stemparts(L)           ::= stempart(S).
@@ -236,6 +322,7 @@ instruction(E)         ::= error.
                            { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 single_instruction(I)  ::= assignment(B). { I = B; }
+single_instruction(I)  ::= define(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
 
@@ -250,6 +337,20 @@ assignment(I) ::=  TK_FLOAT(T) TK_EQUAL expression(E).
       add_ast(I,E); }
 
 assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
+      add_ast(I,E); }
+
+define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E).
+    {
+        I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
+        V->node_type = VAR_TARGET;
+    }
+
+assignment(I) ::=  TK_FLOAT(T) TK_EQUAL type_def(E).
+    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
+      add_ast(I,E); }
+
+assignment(I) ::=  TK_INTEGER(T) TK_EQUAL type_def(E).
     { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
       add_ast(I,E); }
 
@@ -395,19 +496,13 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
             { T = ast_err(context, "10.6", E); }
 
 /* Procedure / Args */
-proc_class(A)     ::= class(S).
-                      { A = S; }
-proc_class(A)     ::= class(S) array_parameters(P).
-                      { A = S; if (P) add_ast(A,P); }
-proc_class(A)     ::= TK_CLASS_STEM(S) stemparts(P).
-                      { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
-procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL proc_class(C).
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
-procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL proc_class(C) expose(E).
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C) expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,E);}
 procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
                       { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
@@ -759,7 +854,7 @@ expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }
 expression(E)  ::= TK_CLOSE_BRACKET(U) error. { E = ast_err(context, "BADEXPR", U); }
 
-/* expressions in a list cannot expresssion() errors above because of parsing conflicta */
+/* expressions in a list cannot expression() errors above because of parsing conflicts */
 expression_in_list(P) ::= and_expression(E). { P = E; }
 
 /* Finally set the node with the highest precedence */

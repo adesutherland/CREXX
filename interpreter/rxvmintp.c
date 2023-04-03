@@ -143,6 +143,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     bin_code *pc, *next_pc;
     int mod_index;
     value *interrupt_arg;
+    char* signal_type;
+    char signal_type_buffer[100];
 
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -521,7 +523,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     else break;
                 }
                 if (i == -1 || meta->address > op3R->int_value) {
-                    /* No metadata for the addresss */
+                    /* No metadata for the address */
                     DISPATCH
                 }
                 int start = i;
@@ -772,7 +774,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(1);
-                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
+                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                      next_inst, 0);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
@@ -792,7 +794,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
                 /* New stackframe - grabbing procedure object from the caller frame */
                 proc_constant *called_function = PROC_OP(2);
-                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
+                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
                 current_frame = frame_f(called_function, 0, current_frame, next_pc,
                                         next_inst, op1R);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
@@ -809,7 +811,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(2);
-                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
+                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
                 current_frame =
                         frame_f(called_function, (int) op3R->int_value,
                                 current_frame,
@@ -842,7 +844,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             {
                 /* Function pointer is in register 2 */
                 proc_constant *called_function = (proc_constant *)op2R->int_value;
-                if (called_function->start == SIZE_MAX) goto NOFUNCTION;
+                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
                 current_frame =
                     frame_f(called_function, (int) op3R->int_value,
                         current_frame,
@@ -1081,13 +1083,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-            op1R = op2R->attributes[op3R->int_value - 1];
+            if (op3R->int_value < 0) goto OUT_OF_RANGE;
+            if (op3R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op1R = op2R->attributes[op3R->int_value];
             DISPATCH
 
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
-            op1R = op2R->attributes[(int)op3I - 1];
+            if ((int)op3I < 0) goto OUT_OF_RANGE;
+            if ((int)op3I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op1R = op2R->attributes[(int)op3I];
             DISPATCH
 
         /* Link op2 to op1 */
@@ -1106,6 +1112,130 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         START_INSTRUCTION(UNLINK_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - UNLINK R%lu\n", REG_IDX(1));
             op1R = (current_frame->baselocals[(pc + 1)->index]);
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  GETATTRS_REG_REG Get Number Attributes op1 = op2.num_attributes
+         *  ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(GETATTRS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - GETATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
+            REG_RETURN_INT(op2R->num_attributes)
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  GETATTRS_REG_REG_INT Get Number Attributes op1 = op2.num_attributes + op3
+         *  ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(GETATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - GETATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            REG_RETURN_INT(op2R->num_attributes + op3I)
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  SETATTRS_REG_REG Set Number Attributes op1.num_attributes = op2
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(SETATTRS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
+            set_num_attributes(op1R, op2RI);
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  SETATTRS_REG_REG Set Number Attributes op1.num_attributes = op2
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(SETATTRS_REG_INT) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
+            set_num_attributes(op1R, op2I);
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  SETATTRS_REG_REG_INT Set Number Attributes op1.num_attributes = op2 + op3
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(SETATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - SETATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2), (int)op3I);
+            set_num_attributes(op1R, op2RI + op3I);
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  SETATTRS_REG_INT_INT Set Number Attributes op1.num_attributes = op2 + op3
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(SETATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - SETATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I, (int)op3I);
+            set_num_attributes(op1R, op2I + op3I);
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  MINATTRS_REG_REG Ensure min number attributes op1.num_attributes >= op2
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(MINATTRS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - MINATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
+            if (op2RI > op1R->num_attributes) {
+                /* We need to add attributes */
+                if (op2RI > op1R->max_num_attributes) {
+                    /* We need to increase the size of the buffer */
+                    /* Make the buffer double sized by setting the number of attributes */
+                    set_num_attributes(op1R, op2RI * 2);
+                }
+                /* Set the number of attributes to the requested number */
+                set_num_attributes(op1R, op2RI);
+            }
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  MINATTRS_REG_REG Ensure min number attributes op1.num_attributes >= op2
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(MINATTRS_REG_INT) CALC_DISPATCH(2)
+            DEBUG("TRACE - MINATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
+            if (op2I > op1R->num_attributes) {
+                /* We need to add attributes */
+                if (op2I > op1R->max_num_attributes) {
+                    /* We need to increase the size of the buffer */
+                    /* Make the buffer double sized by setting the number of attributes */
+                    set_num_attributes(op1R, op2I * 2);
+                }
+                /* Set the number of attributes to the requested number */
+                set_num_attributes(op1R, op2I);
+            }
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  MINATTRS_REG_REG_INT Ensure min number attributes op1.num_attributes >= op2 + op3
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(MINATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        DEBUG("TRACE - MINATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+        if (op2RI + op3I > op1R->num_attributes) {
+            /* We need to add attributes */
+            if (op2RI + op3I > op1R->max_num_attributes) {
+                /* We need to increase the size of the buffer */
+                /* Make the buffer double sized by setting the number of attributes */
+                set_num_attributes(op1R, (op2RI + op3I) * 2);
+            }
+            /* Set the number of attributes to the requested number */
+            set_num_attributes(op1R, op2RI + op3I);
+        }
+        DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  MINATTRS_REG_REG_INT Ensure min number attributes op1.num_attributes >= op2 + op3
+         * ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(MINATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - MINATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (op2I + op3I > op1R->num_attributes) {
+                /* We need to add attributes */
+                if (op2I + op3I > op1R->max_num_attributes) {
+                    /* We need to increase the size of the buffer */
+                    /* Make the buffer double sized by setting the number of attributes */
+                    set_num_attributes(op1R, (op2I + op3I) * 2);
+                }
+                /* Set the number of attributes to the requested number */
+                set_num_attributes(op1R, op2I + op3I);
+            }
+            DISPATCH
+
+        /* ------------------------------------------------------------------------------------
+         *  GETABUFS_REG_REG Get attribute buffer size op1 = op2.max_attributes
+         *  ----------------------------------------------------------------------------------- */
+        START_INSTRUCTION(GETABUFS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - GETABUFS R%lu,R%lu\n", REG_IDX(1),REG_IDX(1));
+            REG_RETURN_INT(op2R->max_num_attributes)
             DISPATCH
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0)
@@ -1176,6 +1306,32 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             CALC_DISPATCH_MANUAL
             DISPATCH
 
+        /* SIGNAL_STRING Signal type op1 */
+        START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGNAL \"%*.s\"\n", (int)op1S->string_len, op1S->string);
+            snprintf(signal_type_buffer, sizeof(signal_type_buffer), "%*.s", (int)op1S->string_len, op1S->string);
+            signal_type = signal_type_buffer;
+            goto SIGNAL;
+
+        /* SIGNALT_STRING_REG Signal type op1 if op2 true */
+        START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNALT \"%*.s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
+            if (op2RI) {
+                snprintf(signal_type_buffer, sizeof(signal_type_buffer), "%*.s", (int)op1S->string_len, op1S->string);
+                signal_type = signal_type_buffer;
+                goto SIGNAL;
+            }
+            DISPATCH
+
+        /* SIGNALF_STRING_REG Signal type op1 if op2 true */
+        START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNALF \"%*.s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
+            if (!op2RI) {
+                snprintf(signal_type_buffer, sizeof(signal_type_buffer), "%*.s", (int)op1S->string_len, op1S->string);
+                signal_type = signal_type_buffer;
+                goto SIGNAL;
+            }
+            DISPATCH
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
@@ -2352,7 +2508,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - FTOI R%lu\n", REG_IDX(1));
             int_from_float(op1R);
             if (op1R->float_value != (double)op1R->int_value) {
-                goto converror;
+                goto CONVERSION_ERROR  ;
             }
             DISPATCH
 
@@ -2374,7 +2530,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - STOI R%lu\n", REG_IDX(1));
             /* Convert a string to a integer - returns 1 on error */
             if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
-                goto converror;
+                goto CONVERSION_ERROR  ;
             }
             DISPATCH
 
@@ -2385,7 +2541,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - STOF R%lu\n", REG_IDX(1));
             /* Convert a string to a float - returns 1 on error */
             if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
-                goto converror;
+                goto CONVERSION_ERROR  ;
             }
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3239,29 +3395,24 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
 
     END_OF_INSTRUCTIONS
 
-    convlength:
-        DEBUG("maximum string length exceeded\n");
-        goto SIGNAL;
-
-    converror:
-        DEBUG("Conversion error occurred\n");
-        goto SIGNAL;
-
-    notreg:
-        DEBUG("Register not initialised\n");
+    CONVERSION_ERROR  :
+        signal_type = "CONVERSION_ERROR";
         goto SIGNAL;
 
     UNKNOWN_INSTRUCTION:
-        printf("ERROR - Unknown instruction - aborting\n");
+        signal_type = "UNKNOWN_INSTRUCTION";
         goto SIGNAL;
 
-    NOFUNCTION:
-        DEBUG("Function not found\n");
-        fprintf(stderr,"\nProcedure not found, externals not supported yet - aborting\n");
+    FUNCTION_NOT_FOUND:
+        signal_type = "FUNCTION_NOT_FOUND";
+        goto SIGNAL;
+
+    OUT_OF_RANGE:
+        signal_type = "OUT_OF_RANGE";
         goto SIGNAL;
 
     SIGNAL:
-        fprintf(stderr,"\nSignal Received - aborting\n");
+        fprintf(stderr,"\nSignal %s Received - No Signal Handler so Aborting\n", signal_type);
         rc = -255;
         goto interprt_finished;
 

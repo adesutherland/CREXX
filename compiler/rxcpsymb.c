@@ -201,8 +201,8 @@ int get_reg(Scope *scope) {
     int reg;
 
     free_array = (dpa*)(scope->free_registers_array);
-
-//    printf("get a reg - free array is ");
+//    printf("get a reg");
+//    printf(" - free array is ");
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     /* Check the free list */
@@ -214,8 +214,10 @@ int get_reg(Scope *scope) {
         reg = (int)((scope->num_registers)++);
     }
 
-//    printf("  returned %d - free array is now ", reg);
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    printf("  returned %d", reg);
+//    printf(" - free array is now ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);}
+//    printf("\n");
 
     return reg;
 }
@@ -226,19 +228,24 @@ void ret_reg(Scope *scope, int reg) {
     dpa *free_array;
     free_array = (dpa*)(scope->free_registers_array);
 
+    if (reg < 0) {
+        return;
+    }
+
 //    printf("free %d", reg);
 
     for (i=0; i<free_array->size; i++) {
         if (reg == (size_t)free_array->pointers[i]) {
-            printf(" ... already freed - free array remains ");
-            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//            printf("Reg %d already freed - free array remains ", reg);
+//            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return;
         }
     }
     dpa_ado(free_array, (void*)(size_t)reg);
 
 //    printf(" - free array is now ");
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);}
+//    printf("\n");
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -368,6 +375,8 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
     symbol->value_dims = 0;
+    symbol->dim_base = 0;
+    symbol->dim_elements = 0;
     symbol->value_class = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
@@ -626,6 +635,8 @@ void free_sym(Symbol *symbol) {
     size_t i;
     free(symbol->name);
     if (symbol->value_class) free(symbol->value_class);
+    if (symbol->dim_base) free(symbol->dim_base);
+    if (symbol->dim_elements) free(symbol->dim_elements);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {

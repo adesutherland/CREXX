@@ -332,6 +332,25 @@ void init_ops() {
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
 
+    instr_f("getattrs", "get number attributes op1 = op2.num_attributes", OP_REG, OP_REG,OP_NONE);
+    instr_f("getattrs", "get number attributes op1 = op2.num_attributes + op3", OP_REG, OP_REG,OP_INT);
+
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2", OP_REG, OP_REG,OP_NONE);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2", OP_REG, OP_INT,OP_NONE);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2 + op3", OP_REG, OP_REG,OP_INT);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2 + op3", OP_REG, OP_INT,OP_INT);
+
+    instr_f("getabufs", "get attribute buffer size op1 = op2.max_attributes", OP_REG, OP_REG,OP_NONE);
+
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2", OP_REG, OP_REG,OP_NONE);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2", OP_REG, OP_INT,OP_NONE);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_REG,OP_INT);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_INT,OP_INT);
+
+    instr_f("signal", "Signal type op1", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("signalt", "Signal type op1 if op2 true", OP_STRING, OP_REG, OP_NONE);
+    instr_f("signalf", "Signal type op1 if op2 false", OP_STRING, OP_REG, OP_NONE);
+
     /* ENDINSTRUCTIONS */
 
     /* Space for the instructions plus instructions[0] and null termination */

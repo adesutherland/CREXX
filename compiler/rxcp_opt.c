@@ -279,6 +279,7 @@ static walker_result opt1_walker(walker_direction direction,
     size_t buffer_length;
     int can_do_code_folding;
     int compare;
+    int index;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -609,11 +610,18 @@ static walker_result opt1_walker(walker_direction direction,
                         if ( node->parent &&
                              ( node->parent->node_type == VAR_REFERENCE ||
                                node->parent->node_type == VAR_TARGET ||
-                               node->parent->node_type == CLASS ||
                                node->parent->node_type == VAR_SYMBOL ) ) {
                             /* If the parent is a Variable then the node is an array subscript, and so it must be >=0 */
                             if (node->target_type == TP_INTEGER) { /* This 'must' be true */
-                                if (node->int_value < 0) mknd_err(node, "NEGATIVE_SUBSCRIPT");
+                                index = ast_chdi(node);
+                                if (node->int_value < node->parent->symbolNode->symbol->dim_base[index]) mknd_err(node, "OUT_OF_RANGE");
+
+                                else if (node->parent->symbolNode->symbol->dim_elements[index]) {
+                                    /* There is a max number of elements - so check it */
+                                    if (node->int_value > node->parent->symbolNode->symbol->dim_base[index] +
+                                                          node->parent->symbolNode->symbol->dim_elements[index] - 1)
+                                        mknd_err(node, "OUT_OF_RANGE");
+                                }
                             }
                         }
                         break;

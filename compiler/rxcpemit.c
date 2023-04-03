@@ -22,7 +22,7 @@
 /* Used for "pass be value" large (strings, objects) registers ONLY
  * set (2) means that it is not a symbol so does not need copying as even if it is
  * changed the caller will not use its original value
- * Note: Small registers (int, float) are always copied as this is fatser than
+ * Note: Small registers (int, float) are always copied as this is faster than
  *       setting and checking this flag anyway */
 #define REGTP_NOTSYM 2
 
@@ -43,9 +43,12 @@ static int is_constant(ASTNode* node) {
     }
 }
 
-/* Tests if a node is a symbol */
-static int is_var_symbol(ASTNode* node) {
-    if (node->symbolNode && node->node_type != FUNCTION) return 1;
+/* Tests if a node has a symbol whose register we can use for copies etc. */
+static int use_symbol_reg(ASTNode* node) {
+    if (    node->symbolNode                 // It's a symbol
+            && node->symbolNode->symbol->symbol_type != FUNCTION_SYMBOL   // It's not a function
+            && !(node->child)           // It's not an array element
+        ) return 1;
     else return 0;
 }
 
@@ -425,7 +428,7 @@ static walker_result register_walker(walker_direction direction,
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
-                if (!is_var_symbol(child2) || is_constant(child2))
+                if (!use_symbol_reg(child2) || is_constant(child2))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -436,7 +439,7 @@ static walker_result register_walker(walker_direction direction,
                  * (DONT_ASSIGN_REGISTER) so we can assign it to the target
                  * register on the way out (bottom up) and save a copy instruction
                  */
-                if (child2->node_type != CLASS && (!is_var_symbol(child2) || is_constant(child2)))
+                if (child2->node_type != CLASS && (!use_symbol_reg(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -474,7 +477,7 @@ static walker_result register_walker(walker_direction direction,
                     }
 
                      /* 2. If it is a non-symbol expression we set the register later */
-                    else if (!is_var_symbol(c) || is_constant(c))
+                    else if (!use_symbol_reg(c) || is_constant(c))
                         c->register_num = DONT_ASSIGN_REGISTER;
 
                     c = c->sibling;
@@ -555,9 +558,16 @@ static walker_result register_walker(walker_direction direction,
                 /*  These should not have constants if the optimiser has been run and
                   * anyway the instructions cannot accept constants
                   * But we do want this node and all children to have the
-                  * same register if possible to about register copies */
-                if (!is_var_symbol(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
-                if (!is_var_symbol(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                  * same register if possible to avoid register copies */
+                if (!use_symbol_reg(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (!use_symbol_reg(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+
+            case VAR_SYMBOL:
+            case VAR_TARGET:
+                for (c=child1; c; c = c->sibling) {
+                    if (!use_symbol_reg(c) || is_constant(c))
+                        c->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                }
 
             default:
                 ;
@@ -595,16 +605,16 @@ static walker_result register_walker(walker_direction direction,
             case OP_CONCAT:
             case OP_SCONCAT:
 
-                /* If it is a temporary mark the register for reuse */
-                if (!is_var_symbol(child1) && child1->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(node->scope, child1->register_num);
-                if (!is_var_symbol(child2) && child2->register_num != DONT_ASSIGN_REGISTER)
-                    ret_reg(node->scope, child2->register_num);
-
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
                     node->register_num = get_reg(node->scope);
+
+                /* If it is a temporary mark the register for reuse */
+                if (!use_symbol_reg(child1))
+                    ret_reg(node->scope, child1->register_num);
+                if (!use_symbol_reg(child2))
+                    ret_reg(node->scope, child2->register_num);
                 break;
 
             case OP_AND:
@@ -634,14 +644,15 @@ static walker_result register_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
-                /* If it is a temporary mark the register for reuse */
-                if (!is_var_symbol(child1))
-                    ret_reg(node->scope, child1->register_num);
 
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
                     node->register_num = get_reg(node->scope);
+
+                /* If it is a temporary mark the register for reuse */
+                if (!use_symbol_reg(child1))
+                    ret_reg(node->scope, child1->register_num);
                 break;
 
             case VAR_SYMBOL:
@@ -655,9 +666,33 @@ static walker_result register_walker(walker_direction direction,
                     }
                     else node->symbolNode->symbol->register_num = get_reg(node->scope);
                 }
-                /* The node uses the symbol register number */
-                node->register_num = node->symbolNode->symbol->register_num;
-                node->register_type = node->symbolNode->symbol->register_type;
+                if (node->child) {
+                    /* If it has a child it is an array element - so we need a register for the node
+                     * Note we ignore DONT_ASSIGN_REGISTER - we always want our own so we can link/unlink it without
+                     * any weird side effects */
+                    node->register_num = get_reg(node->scope);
+
+                    c = node->child;
+                    while (c) {
+                        /* release the temporary register */
+                        if (!use_symbol_reg(c))
+                            ret_reg(node->scope, c->register_num);
+                        c = c->sibling;
+                    }
+                }
+                else {
+                    /* The node uses the symbol register number */
+                    node->register_num = node->symbolNode->symbol->register_num;
+                    node->register_type = node->symbolNode->symbol->register_type;
+                }
+                break;
+
+            case NOVAL:
+                if (node->parent->node_type == VAR_SYMBOL) {
+                    /* If parent is a variable this is a request for the array length
+                     * So we need a temporary register to hold the length */
+                    node->register_num = get_reg(node->scope);
+                }
                 break;
 
             case FLOAT:
@@ -666,7 +701,7 @@ static walker_result register_walker(walker_direction direction,
             case CONSTANT:
             case CONST_SYMBOL:
                 /* Set result temporary register */
-                if (node->register_num != DONT_ASSIGN_REGISTER)
+                if (node->parent->node_type != RANGE && node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
                     node->register_num = get_reg(node->scope);
                 break;
@@ -693,7 +728,7 @@ static walker_result register_walker(walker_direction direction,
                 c = child1;
                 while (c) {
                     /* If it is a symbol with the same register as i don't return the register */
-                    if ( !(is_var_symbol(c) &&
+                    if ( !(use_symbol_reg(c) &&
                            c->symbolNode->symbol->register_num == i &&
                            c->symbolNode->symbol->register_type == 'r') )
                         ret_reg(node->scope, i);
@@ -710,8 +745,12 @@ static walker_result register_walker(walker_direction direction,
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
                 }
+                else if (!use_symbol_reg(child2))
+                    ret_reg(node->scope, child2->register_num);
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
+                if (!use_symbol_reg(child1))
+                    ret_reg(node->scope, child1->register_num);
                 break;
 
             case ARG:
@@ -725,12 +764,9 @@ static walker_result register_walker(walker_direction direction,
             case SAY:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
-                /* If a register is needed at all ... */
-                if (node->register_num != DONT_ASSIGN_REGISTER) {
-                    /* Then if it is a temporary mark the register for reuse */
-                    if (!is_var_symbol(child1))
-                        ret_reg(node->scope, child1->register_num);
-                }
+                /* Return temporary registers */
+                if (!use_symbol_reg(child1))
+                    ret_reg(node->scope, child1->register_num);
                 break;
 
             case RETURN:
@@ -740,7 +776,7 @@ static walker_result register_walker(walker_direction direction,
                     /* If a register is needed at all ... */
                     if (node->register_num != DONT_ASSIGN_REGISTER) {
                         /* Then if it is a temporary mark the register for reuse */
-                        if (!is_var_symbol(child1))
+                        if (!use_symbol_reg(child1))
                             ret_reg(node->scope,
                                     child1->register_num);
                     }
@@ -752,7 +788,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
-                if (!is_var_symbol(child1))
+                if (!use_symbol_reg(child1))
                     ret_reg(node->scope, child1->register_num);
                 break;
 
@@ -768,7 +804,7 @@ static walker_result register_walker(walker_direction direction,
                 break;
 
             case FOR:
-                if (!is_var_symbol(node->child)) {
+                if (!use_symbol_reg(node->child)) {
                     /* Not a symbol - use the temp register */
                     node->register_num = node->child->register_num;
                     node->register_type = node->child->register_type;
@@ -806,7 +842,7 @@ static walker_result register_walker(walker_direction direction,
                     /* Don't do it for the ASSIGN node - it takes care of itself */
                     else if (c->node_type != ASSIGN && c->child) {
                         /* release the temporary register */
-                        if (!is_var_symbol(c->child))
+                        if (!use_symbol_reg(c->child))
                             ret_reg(node->scope, c->register_num);
                     }
                     c = c->sibling;
@@ -1512,6 +1548,7 @@ static walker_result emit_walker(walker_direction direction,
                 n = child1;
                 while (n) {
                     if (n->output) output_concat(node->output, n->output);
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
                 }
 
@@ -1535,6 +1572,7 @@ static walker_result emit_walker(walker_direction direction,
                 n = child1;
                 while (n) {
                     if (n->output) output_concat(node->output, n->output);
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
                 }
             }
@@ -1551,6 +1589,7 @@ static walker_result emit_walker(walker_direction direction,
                 n = child1;
                 while (n) {
                     if (n->output) output_concat(node->output, n->output);
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
                 }
             }
@@ -1640,6 +1679,7 @@ static walker_result emit_walker(walker_direction direction,
                     n = child2;
                     while (n) {
                         if (n->output) output_concat(node->output, n->output);
+                        if (n->cleanup) output_concat(node->output, n->cleanup);
                         n = n->sibling;
                     }
 
@@ -1654,10 +1694,8 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
                 n = child1;
                 while (n) {
-                    if (n->output) {
-                        /* Add Child Instrutctions */
-                        output_concat(node->output, n->output);
-                    }
+                    if (n->output) output_concat(node->output, n->output);
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
                 }
                 break;
@@ -1796,6 +1834,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* TODO - set result */
                 output_concat(node->output, child1->output);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
             case FUNCTION:
@@ -1885,6 +1924,7 @@ static walker_result emit_walker(walker_direction direction,
                 n = child1;
                 i = node->additional_registers + 1; /* First one is the number of arguments */
                 while (n) {
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     if (n->register_num != i) {
                         /* We need to swap registers */
                         /* I have reversed arguments just for readability */
@@ -1907,8 +1947,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* One or other of the operands may be a constant */
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    if (child2->output)
-                        output_concat(node->output, child2->output);
+                    if (child2->output) output_concat(node->output, child2->output);
                     /* It MUST have been converted to a STRING
                      * We don't need to worry about ".0" to show a float literal */
                     temp1 = mprintf("   %s %c%d,\"%.*s\",%c%d\n",
@@ -1918,12 +1957,14 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->node_string_length, child1->node_string,
                                     child2->register_type,
                                     child2->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
 
                 /* If the register is not set then the child is a constant */
                 else if (child2->register_num == DONT_ASSIGN_REGISTER) {
-                    if (child1->output)
-                        output_concat(node->output, child1->output);
+                    if (child1->output) output_concat(node->output, child1->output);
                     /* It MUST have been converted to a STRING
                      * We don't need to worry about ".0" to show a float literal */
                     temp1 = mprintf("   %s %c%d,%c%d,\"%.*s\"\n",
@@ -1933,6 +1974,9 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_type,
                                     child1->register_num,
                                     child2->node_string_length, child2->node_string);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 }
 
                 /* Neither are constants */
@@ -1947,10 +1991,12 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_num,
                                     child2->register_type,
                                     child2->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 }
 
-                output_append_text(node->output, temp1);
-                free(temp1);
                 type_promotion(node);
             break;
 
@@ -2001,8 +2047,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* One or other of the operands may be a constant */
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    if (child2->output)
-                        output_concat(node->output, child2->output);
+                    if (child2->output) output_concat(node->output, child2->output);
                     if (child1->target_type == TP_STRING) {
                         temp1 = mprintf("   %s%s %c%d,\"%.*s\",%c%d\n",
                                         tp_prefix,
@@ -2057,13 +2102,14 @@ static walker_result emit_walker(walker_direction direction,
                                         child2->register_type,
                                         child2->register_num);
                     }
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
 
                 /* If the register is not set then the child is a constant */
                 else if (child2->register_num == DONT_ASSIGN_REGISTER) {
-                    if (child1->output)
-                        output_concat(node->output, child1->output);
-
+                    if (child1->output) output_concat(node->output, child1->output);
                     if (child2->target_type == TP_STRING) {
                         temp1 = mprintf("   %s%s %c%d,%c%d,\"%.*s\"\n",
                                         tp_prefix,
@@ -2118,14 +2164,16 @@ static walker_result emit_walker(walker_direction direction,
                                         child1->register_num,
                                         child2->node_string_length, child2->node_string);
                     }
+
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 }
 
                 /* Neither are constants */
                 else {
-                    if (child1->output)
-                        output_concat(node->output, child1->output);
-                    if (child2->output)
-                        output_concat(node->output, child2->output);
+                    if (child1->output) output_concat(node->output, child1->output);
+                    if (child2->output) output_concat(node->output, child2->output);
                     temp1 = mprintf("   %s%s %c%d,%c%d,%c%d\n",
                                     tp_prefix,
                                     op,
@@ -2135,18 +2183,23 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_num,
                                     child2->register_type,
                                     child2->register_num);
+
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 }
 
-                output_append_text(node->output, temp1);
-                free(temp1);
                 type_promotion(node);
                 break;
 
             case OP_AND:
                 node->output = output_f();
-                output_concat(node->output, child1->output);
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
+
+                    output_concat(node->output, child1->output);
+
                     /* If child1 and result are the same registers the logic
                      * is slightly shorter
                      *
@@ -2181,8 +2234,13 @@ static walker_result emit_walker(walker_direction direction,
                             node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
                 else {
+
+                    output_concat(node->output, child1->output);
+
                     /* If child1 and result are not the same registers the logic
                      * is slightly longer
                      *
@@ -2225,15 +2283,19 @@ static walker_result emit_walker(walker_direction direction,
                             node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
                 type_promotion(node);
                 break;
 
             case OP_OR:
                 node->output = output_f();
-                output_concat(node->output, child1->output);
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
+
+                    output_concat(node->output, child1->output);
+
                     /* If child1 and result are the same registers the logic
                      * is slightly shorter
                      *
@@ -2268,8 +2330,14 @@ static walker_result emit_walker(walker_direction direction,
                             node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
+
                 }
                 else {
+
+                    output_concat(node->output, child1->output);
+
                     /* If child1 and result are not the same registers the logic
                      * is slightly longer
                      *
@@ -2312,6 +2380,8 @@ static walker_result emit_walker(walker_direction direction,
                             node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
                 type_promotion(node);
                 break;
@@ -2326,6 +2396,7 @@ static walker_result emit_walker(walker_direction direction,
                                 child1->register_num);
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 type_promotion(node);
                 break;
 
@@ -2348,6 +2419,7 @@ static walker_result emit_walker(walker_direction direction,
                 }
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 type_promotion(node);
                 break;
 
@@ -2368,15 +2440,170 @@ static walker_result emit_walker(walker_direction direction,
                 }
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 type_promotion(node);
                 break;
 
             case VAR_SYMBOL:
                 node->output = output_f();
+                if (child1) {
+                    /* We are an array */
+                    /* Process first dimension */
+                    if (child1->node_type == NOVAL) {
+                        /* Return the max array element taking into account the array base */
+                        temp1 = mprintf("   getattrs r%d,%c%d,%d\n",
+                                        node->register_num,
+                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                        node->symbolNode->symbol->dim_base[ast_chdi(child1)] - 1);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                        /* Should be no more dimensions, and no cleanup (unlink) needed */
+                        type_promotion(node);
+                        break;
+                    }
+                    else {
+                        /* Get (link) the element register for the first dimension */
+                        if (child1->output) output_concat(node->output, child1->output);
+                        /* Link Array element */
+                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                            temp2 = format_constant(child1->value_type, child1);
+                            temp1 = mprintf("   linkattr r%d,%c%d,%s\n",
+                                            node->register_num,
+                                            node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                            temp2
+                                            );
+                            free(temp2);
+                        }
+                        else {
+                             temp1 = mprintf("   linkattr r%d,%c%d,%c%d\n",
+                                            node->register_num,
+                                            node->symbolNode->symbol->register_type,
+                                            node->symbolNode->symbol->register_num,
+                                            child1->register_type, child1->register_num);
+                        }
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+
+                    child1 = child1->sibling;
+                    while (child1) {
+                        /* Processing the rest of the dimentions */
+                        if (child1->node_type == NOVAL) {
+                            /* Get Number of array elements (needs to unlink the result register first) */
+                            temp1 = mprintf("   getattrs r%d,r%d,%d\n"
+                                            "   unlink r%d\n"
+                                            "   icopy r%d,r%d\n",
+                                            child1->register_num, node->register_num,
+                                            node->symbolNode->symbol->dim_base[ast_chdi(child1)] - 1,
+                                            node->register_num,
+                                            node->register_num, child1->register_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                            /* Should be no more dimensions, and no cleanup (unlink) needed */
+                            type_promotion(node);
+                            break;
+                        }
+                        else {
+                            if (child1->output) output_concat(node->output, child1->output);
+
+                            if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                                /* Link Sub-Array element */
+                                temp2 = format_constant(child1->value_type, child1);
+                                temp1 = mprintf("   linkattr r%d,%c%d,%s\n",
+                                                node->register_num,
+                                                node->register_num,
+                                                temp2
+                                );
+                                free(temp2);
+                            }
+                            else {
+                                /* Link Sub-Array element */
+                                temp1 = mprintf("   linkattr r%d,r%d,%c%d\n",
+                                                node->register_num,
+                                                node->register_num,
+                                                child1->register_type, child1->register_num);
+                            }
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        }
+                        child1 = child1->sibling;
+                    }
+
+                    /* Set cleanup action */
+                    temp1 = mprintf("   unlink r%d\n", node->register_num);
+                    node->cleanup = output_fs(temp1);
+                    free(temp1);
+                }
                 type_promotion(node);
                 break;
 
             case VAR_TARGET:
+                if (child1) {
+                    node->output = output_f();
+                    if (child1->output) output_concat(node->output, child1->output);
+                    /* Link Array element */
+                    if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                        /* Link Sub-Array element */
+                        temp2 = format_constant(child1->value_type, child1);
+                        temp1 = mprintf("   minattrs %c%d,%s,1\n"
+                                        "   linkattr r%d,%c%d,%s\n",
+                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                        temp2,
+                                        node->register_num,
+                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                        temp2);
+                        free(temp2);
+                    }
+                    else {
+                        temp1 = mprintf("   minattrs1 %c%d,%c%d,1\n"
+                                        "   linkattr r%d,%c%d,%c%d\n",
+                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                        child1->register_type, child1->register_num,
+                                        node->register_num,
+                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
+                                        child1->register_type, child1->register_num);
+                    }
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+
+                    child1 = child1->sibling;
+                    while (child1) {
+                        if (child1->output) output_concat(node->output, child1->output);
+                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                            /* Link Sub-Array element */
+                            temp2 = format_constant(child1->value_type, child1);
+                            temp1 = mprintf("   minattrs r%d,%s,1\n"
+                                            "   linkattr r%d,r%d,%s\n",
+                                            node->register_num,
+                                            temp2,
+                                            node->register_num,
+                                            node->register_num,
+                                            temp2);
+                            free(temp2);
+                        }
+                        else {
+                            /* Link Sub-Array element */
+                            temp1 = mprintf("   minattrs r%d,%c%d,1\n"
+                                            "   linkattr r%d,r%d,%c%d\n",
+                                            node->register_num,
+                                            child1->register_type, child1->register_num,
+                                            node->register_num,
+                                            node->register_num,
+                                            child1->register_type, child1->register_num);
+                        }
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                        child1 = child1->sibling;
+                    }
+
+                    /* Set cleanup action */
+                    temp1 = mprintf("   unlink r%d\n", node->register_num);
+                    node->cleanup = output_fs(temp1);
+                    free(temp1);
+                }
+                break;
+
+            case VAR_REFERENCE:
                 break;
 
             case NOVAL:
@@ -2472,6 +2699,10 @@ static walker_result emit_walker(walker_direction direction,
                 /* Finally, append it to the output */
                 output_append_text(node->output, temp1);
 
+                if (child1 && child1->cleanup) output_concat(node->output, child1->cleanup);
+                if (child2 && child2->cleanup) output_concat(node->output, child2->cleanup);
+                if (child3 && child3->cleanup) output_concat(node->output, child3->cleanup);
+
                 /* Clean up */
                 free(temp1);
                 free(inst);
@@ -2489,7 +2720,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Add Variable Metadata */
                 add_variable_metadata(node);
-
+                output_concat(node->output, child1->output);
                 output_concat(node->output, child2->output);
                 if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
@@ -2501,6 +2732,8 @@ static walker_result emit_walker(walker_direction direction,
                     output_append_text(node->output, temp1);
                     free(temp1);
                 }
+                output_concat(node->output, child2->cleanup);
+                output_concat(node->output, child1->cleanup);
                 break;
 
             case ADDRESS:
@@ -2518,6 +2751,7 @@ static walker_result emit_walker(walker_direction direction,
                                 node->register_num);
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
             case NOP:
@@ -2549,6 +2783,8 @@ static walker_result emit_walker(walker_direction direction,
                 output_append_text(node->output, temp1);
                 free(temp1);
 
+                /* Cleanup child */
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
             case RETURN:
@@ -2575,6 +2811,7 @@ static walker_result emit_walker(walker_direction direction,
                     temp1 = mprintf("   ret %c%d\n",
                                     child1->register_type,
                                     child1->register_num);
+                    // TODO - Test array element as we have not unlinked
                 }
                 output_append_text(node->output, temp1);
                 free(temp1);
@@ -2612,12 +2849,17 @@ static walker_result emit_walker(walker_direction direction,
                                     node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                    if (child3->cleanup) output_concat(node->output, child3->cleanup);
                 }
                 else {
                     temp1 = mprintf("l%diffalse:\n",
                                     node->node_number);
                     output_append_text(node->output, temp1);
                     free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
                 }
                 break;
 
@@ -2629,6 +2871,8 @@ static walker_result emit_walker(walker_direction direction,
                  * loopstartchecks = Loop iteration beginning exit checks
                  * loopinc = Loop iteration increments
                  * loopendchecks = Loop iteration end exit checks */
+
+                /* child1 is the REPEAT node, child2 is the INSTRUCTIONS */
 
                 comment_meta = get_metaline_token_at(node);
                 node->output = output_fs(comment_meta);
@@ -2666,6 +2910,7 @@ static walker_result emit_walker(walker_direction direction,
                 temp1 = mprintf("   br l%ddostart\nl%ddoend:\n",
                                 node->node_number, node->node_number);
                 output_append_text(node->output, temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 free(temp1);
                 free(comment_meta);
                 break;
@@ -2694,6 +2939,10 @@ static walker_result emit_walker(walker_direction direction,
                             output_concat(node->loopinc, child1->loopinc);
                         if (child1->loopendchecks)
                             output_concat(node->loopendchecks, child1->loopendchecks);
+                    }
+                    if (child1->cleanup) {
+                        if (!node->cleanup) node->cleanup = output_f();
+                        output_concat(node->cleanup, child1->cleanup);
                     }
                     child1 = child1->sibling;
                 }
@@ -2724,6 +2973,10 @@ static walker_result emit_walker(walker_direction direction,
                                 node->register_type,
                                 node->register_num);
                 output_append_text(node->loopstartchecks, temp1);
+                if (child1->cleanup) {
+                    if (!node->cleanup) node->cleanup = output_f();
+                    output_concat(node->cleanup, child1->cleanup);
+                }
                 free(comment_meta);
                 free(temp1);
                 break;
@@ -2835,6 +3088,10 @@ static walker_result emit_walker(walker_direction direction,
                 output_append_text(node->loopstartchecks, temp1);
                 free(temp1);
                 free(comment_meta);
+                if (child1->cleanup) {
+                    if (!node->cleanup) node->cleanup = output_f();
+                    output_concat(node->cleanup, child1->cleanup);
+                }
                 break;
 
             case BY:
@@ -2865,11 +3122,14 @@ static walker_result emit_walker(walker_direction direction,
                     output_append_text(node->loopinc, temp1);
                     free(comment_meta);
                     free(temp1);
+                    if (child1->cleanup) {
+                        if (!node->cleanup) node->cleanup = output_f();
+                        output_concat(node->cleanup, child1->cleanup);
+                    }
                 }
                 else {
                     /* BY Added implicitly - increment by 1 */
                     /* For the source we can only reference the symbol in the loop assignment node */
-
 //                    comment_meta = get_comment_line_number_only(node->parent, "{Implicit \"BY 1\"}");
                     comment_meta = get_metaline_token_at(node->parent->child);
                     node->loopinc = output_fs(comment_meta);
@@ -2909,6 +3169,10 @@ static walker_result emit_walker(walker_direction direction,
                                 node->register_num);
                 output_append_text(node->loopstartchecks, temp1);
                 free(temp1);
+                if (child1->cleanup) {
+                    if (!node->cleanup) node->cleanup = output_f();
+                    output_concat(node->cleanup, child1->cleanup);
+                }
                 break;
 
             case UNTIL:
@@ -2927,6 +3191,10 @@ static walker_result emit_walker(walker_direction direction,
                                 node->register_num);
                 output_append_text(node->loopendchecks, temp1);
                 free(temp1);
+                if (child1->cleanup) {
+                    if (!node->cleanup) node->cleanup = output_f();
+                    output_concat(node->cleanup, child1->cleanup);
+                }
                 break;
 
             case LEAVE:

@@ -99,14 +99,14 @@ Symbol *sym_imfn(Context *context, ASTNode *node);
 void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
-    OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
+    OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, RANGE, REPEAT,
     RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
     VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WARNING, WHILE, UNTIL
 } NodeType;
@@ -127,12 +127,16 @@ struct ASTNode {
     Context *context;
     int node_number;
     NodeType node_type;
-    ValueType value_type;  /* Value type */
-    size_t value_dims;     /* Value dimensions */
-    char* value_class;     /* Value class name - malloced or zero */
-    ValueType target_type; /* Target type */
-    size_t target_dims;    /* Target dimensions */
-    char* target_class;    /* Target class name - malloced or zero */
+    ValueType value_type;    /* Value type */
+    size_t value_dims;       /* Value dimensions */
+    int *value_dim_base;     /* Array of starting element number for array dimension - malloced or zero */
+    int *value_dim_elements; /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
+    char* value_class;       /* Value class name - malloced or zero */
+    int *target_dim_base;    /* Array of starting element number for target array dimension - malloced or zero */
+    int *target_dim_elements;/* Array of max number of elements for target array dimension (0=infinite) - malloced or zero */
+    ValueType target_type;   /* Target type */
+    size_t target_dims;      /* Target dimensions */
+    char* target_class;      /* Target class name - malloced or zero */
     int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
     int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
@@ -159,6 +163,7 @@ struct ASTNode {
     SymbolNode *symbolNode;
     /* These are used by the code emitters */
     OutputFragment *output;          /* Primary node output or loop assign / init instruction */
+    OutputFragment *cleanup;         /* Clean up logic (e.g. to unlink registers */
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
@@ -251,6 +256,12 @@ ASTNode* ast_proc(ASTNode *node);
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
 /* Returns the number of children of a node */
 size_t ast_nchd(ASTNode* node);
+/* Returns the index number of a child of its parent (or -1 on error) */
+int ast_chdi(ASTNode* node);
+/* Returns the nth child of a parent (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_chdn(ASTNode* parent, size_t n);
+/* Returns the next sibling a node (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_nsib(ASTNode* node);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -318,12 +329,14 @@ struct Symbol {
     Scope *defines_scope;
     ValueType type;       /* Value Type */
     size_t value_dims;    /* Value dimensions */
+    int *dim_base;        /* Array of starting element number for array dimension - malloced or zero */
+    int *dim_elements;    /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
     char* value_class;    /* Value class name - malloced or zero */
     SymbolType symbol_type;
     int register_num;
     char register_type;
     char exposed;      /* Is the symbol exposed */
-    char meta_emitted; /* Has the emitter output the symbols metadata yet */
+    char meta_emitted; /* Has the emitter output the symbol's metadata yet */
 };
 
 /* Scope Factory */
@@ -440,6 +453,9 @@ void ast_svtp(ASTNode* node, Symbol* symbol);
 
 /* Set Node Target Value Type from Symbol */
 void ast_sttp(ASTNode* node, Symbol* symbol);
+
+/* Reset Node Target Type to be the same as the node value type */
+void ast_rttp(ASTNode* node);
 
 /* Set Node Target Value Type from Target Type of from_node */
 /* Note: Does not validate promotion */

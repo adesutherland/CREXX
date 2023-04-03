@@ -35,26 +35,182 @@ static int is_node_string(ASTNode* node, const char* value) {
     return 1;
 }
 
+/* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
+static int node_to_integer(ASTNode* node) {
+    int result;
+    char *buffer = malloc(node->node_string_length + 1);
+
+    /* Null terminated buffer - {sigh} */
+    buffer[node->node_string_length] = 0;
+    memcpy(buffer, node->node_string, node->node_string_length);
+
+    result = atoi(buffer);
+
+    free(buffer);
+
+    return result;
+}
+
 /*
- * Helper function to return the type of a node
+ * Helper function to set dimensions based on a node
+ * Sets dims to the number of dimensions (or 0 if not an array)
+ *      dim_base and dim_elements are malloced and set as appropriately
+ */
+static void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_elements) {
+    *dims = 0;
+    int i;
+    ASTNode* n;
+    ASTNode* temp;
+    ASTNode* min;
+    ASTNode* max;
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = 0;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = 0;
+
+    if (!node) return;
+
+    *dims = ast_nchd(node);
+    if (*dims) {
+        *dim_base = malloc(sizeof(int) * (*dims));
+        *dim_elements = malloc(sizeof(int) * (*dims));
+
+        /* We are an array - determine the array bounds */
+        if (node->node_type == CLASS) {
+            /* Type definition - can have specific bounds */
+            n = ast_chdn(node,0); /* n is a RANGE for that dimension */
+            for (i = 0; i < *dims; i++) {
+                /* Child 1 - n->child - is the base */
+                min = ast_chdn(n,0);
+                if (min->node_type == NOVAL) (*dim_base)[i] = 1;
+                else if (min->node_type == OP_NEG) (*dim_base)[i] = -node_to_integer(ast_chdn(min, 0));
+                else (*dim_base)[i] = node_to_integer(min);
+
+                /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
+                max = ast_chdn(n,1);
+                if (max->node_type == NOVAL) (*dim_elements)[i] = 0; /* Infinity */
+                else {
+                    if (max->node_type == OP_NEG)
+                        (*dim_elements)[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - (*dim_base)[i] + 1;
+                    else (*dim_elements)[i] = node_to_integer(max) - (*dim_base)[i] + 1;
+
+                    if ((*dim_elements)[i] < 1) {
+                        if (max->node_type == OP_NEG) {
+                            /* One child expected for the INTEGER otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
+                        } else {
+                            /* No child expected otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 0) mknd_err(max, "LESS_THAN_BASE");
+                        }
+                    }
+                }
+
+                n = ast_nsib(n);
+            }
+        } else {
+            /* Implicit definition - default bounds */
+            for (i = 0; i < *dims; i++) {
+                (*dim_base)[i] = 1;
+                (*dim_elements)[i] = 0; /* Infinity */
+            }
+        }
+    }
+}
+
+/*
+ * Helper function to set the arrays
  * Sets dims to the number of dimensions (or 0 if not an array)
  *      class_name is set to either zero of to a class name (if not an in built class)
  *                 So if it is not zero it needs to be free()d
+ *      dim_base and dim_elements are malloced and set as appropriately
  */
-static ValueType node_to_type(ASTNode* node, size_t *dims, char** class_name) {
+static ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name) {
     *dims = 0;
+    int i;
+    ASTNode *n;
+    ASTNode* min;
+    ASTNode* max;
+
     if (*class_name) free(*class_name);
     *class_name = 0;
+
+    if (*dim_base) free(*dim_base);
+    *dim_base = 0;
+
+    if (*dim_elements) free(*dim_elements);
+    *dim_elements = 0;
 
     if (!node) return TP_VOID;
 
     if (node->value_type != TP_UNKNOWN) {
+        /* The Node Type has already been determined */
         *dims = node->value_dims;
+
+        if (*dims) {
+            *dim_base = malloc(sizeof(int) * (*dims));
+            memcpy(*dim_base, node->value_dim_base, sizeof(int) * (*dims));
+
+            *dim_elements = malloc(sizeof(int) * (*dims));
+            memcpy(*dim_elements, node->value_dim_elements, sizeof(int) * (*dims));
+        }
+
         if (node->value_class) {
             *class_name = malloc(strlen(node->value_class) + 1);
             strcpy(*class_name, node->value_class);
         }
         return node->value_type;
+    }
+
+    *dims = ast_nchd(node);
+    if (*dims) {
+        *dim_base = malloc(sizeof(int) * (*dims));
+        *dim_elements = malloc(sizeof(int) * (*dims));
+
+        /* We are an array - determine the array bounds */
+        if (node->node_type == CLASS) {
+            /* Type definition - can have specific bounds */
+            /* n is a RANGE for that dimension */
+            n = ast_chdn(node,0);
+            for (i = 0; i < *dims; i++) {
+
+                /* Child 1 - n->child - is the base */
+                min = ast_chdn(n,0);
+                if (min->node_type == NOVAL) (*dim_base)[i] = 1;
+                else if (min->node_type == OP_NEG) (*dim_base)[i] = -node_to_integer(ast_chdn(min, 0));
+                else (*dim_base)[i] = node_to_integer(min);
+
+                /* Child 2 - n->child->sibling - is the max index value (which we convert to number of elements) */
+                max = ast_chdn(n,1);
+                if (max->node_type == NOVAL) (*dim_elements)[i] = 0; /* Infinity */
+                else {
+                    if (max->node_type == OP_NEG)
+                        (*dim_elements)[i] =
+                                -node_to_integer(ast_chdn(max, 0)) - (*dim_base)[i] + 1;
+                    else (*dim_elements)[i] = node_to_integer(max) - (*dim_base)[i] + 1;
+
+                    if ((*dim_elements)[i] < 1) {
+                        if (max->node_type == OP_NEG) {
+                            /* One child expected for the INTEGER otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 1) mknd_err(max, "LESS_THAN_BASE");
+                        } else {
+                            /* No child expected otherwise an error MUST have been added already */
+                            if (ast_nchd(max) == 0) mknd_err(max, "LESS_THAN_BASE");
+                        }
+                    }
+                }
+
+                n = ast_nsib(n);
+            }
+        } else {
+            /* Implicit definition - default bounds */
+            for (i = 0; i < *dims; i++) {
+                (*dim_base)[i] = 1;
+                (*dim_elements)[i] = 0; /* Infinity */
+            }
+        }
     }
 
     switch (node->node_type) {
@@ -67,7 +223,6 @@ static ValueType node_to_type(ASTNode* node, size_t *dims, char** class_name) {
         case VOID:
             return TP_VOID;
         case CLASS:
-            *dims = ast_nchd(node);
             if (is_node_string(node, ".void")) return TP_VOID;
             if (is_node_string(node, ".int")) return TP_INTEGER;
             if (is_node_string(node, ".float")) return TP_FLOAT;
@@ -82,9 +237,15 @@ static ValueType node_to_type(ASTNode* node, size_t *dims, char** class_name) {
     }
 }
 
+
 /* Validates a node promotion is correct adding error nodes if not */
 static void validate_node_promotion(ASTNode* node) {
     if (node->target_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the target is set */
+
+    /* Ignore error nodes */
+    if (node->node_type == ERROR) return;
+    if (node->node_type == WARNING) return;
+
     if (node->value_dims != node->target_dims) {
         if (!node->value_dims) mknd_err(node, "EXPECTING_ARRAY");
         else if (!node->target_dims) mknd_err(node, "UNEXPECTED_ARRAY");
@@ -93,6 +254,9 @@ static void validate_node_promotion(ASTNode* node) {
     else if (node->value_dims && node->value_type != node->target_type) mknd_err(node, "ARRAY_ELEMENT_TYPE_MISMATCH");
     else if (node->value_type == TP_VOID && node->target_type != TP_VOID) mknd_err(node, "MISSING_VALUE");
     else if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
+    else if (node->value_type == TP_UNKNOWN) {
+        mknd_err(node, "UNKNOWN_VALUE");
+    }
 
     /* TODO Class / Object Support */
     if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) mknd_err(node, "CLASSES_NOT_SUPPORTED");
@@ -525,6 +689,7 @@ static walker_result step2a_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
     Symbol *symbol;
+    ASTNode *n;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -549,13 +714,13 @@ static walker_result step2a_walker(walker_direction direction,
             node->node_string_length--; /* Remove the ':' */
 
             /* Set the return value node value_type */
-            node->child->value_type = node_to_type(
-                    ast_chld(node, CLASS, VOID),
-                    &(node->child->value_dims), &(node->child->value_class));
+            n = ast_chld(node, CLASS, VOID);
+            n->value_type = node_to_type(n,
+                                         &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
+                                         &(n->value_class));
 
-            node->child->target_type = node->child->value_type;
-            node->child->target_dims = node->child->value_dims;
-            node->child->target_class = 0; /* Zero as it is assumed to be the same as the value_class to avoid a malloc() */
+            /* Reset node Target Type to be the same as the node Value Type */
+            ast_rttp(node);
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
@@ -870,16 +1035,33 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             /* Ok we are the first usage in this proc */
             if (defining_node_link->node->node_type == PROCEDURE) {
                 symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID),
-                                            &(symbol->value_dims), &(symbol->value_class));
+                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                            &(symbol->value_class));
 
                 ast_svtp(defining_node_link->node, symbol);
                 break;
             }
 
-            if (defining_node_link->node->node_type == VAR_TARGET ||
-                defining_node_link->node->node_type == VAR_REFERENCE) {
+            if (defining_node_link->node->node_type == VAR_REFERENCE) {
                 symbol->type = node_to_type(defining_node_link->node->sibling,
-                                            &(symbol->value_dims), &(symbol->value_class));
+                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                            &(symbol->value_class));
+                ast_svtp(defining_node_link->node, symbol);
+                ast_svtn(defining_node_link->node->parent, defining_node_link->node);
+                break;
+            }
+
+            if (defining_node_link->node->node_type == VAR_TARGET) {
+                symbol->type = node_to_type(defining_node_link->node->sibling,
+                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                            &(symbol->value_class));
+
+                /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
+                /* node_to_type() above has checked the rhs - so now we look at the lhs */
+                if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
+                    node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                                 &(symbol->dim_base), &(symbol->dim_elements));
+
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtn(defining_node_link->node->parent, defining_node_link->node);
                 break;
@@ -898,16 +1080,34 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         if (defining_node_link->node->node_type == PROCEDURE) {
             /* This sets the procedure symbol type */
             symbol->type = node_to_type(ast_chld(defining_node_link->node, CLASS, VOID),
-                                        &(symbol->value_dims), &(symbol->value_class));
+                                        &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                        &(symbol->value_class));
 
             ast_svtp(defining_node_link->node, symbol);
            return;
         }
-        if (defining_node_link->node->node_type == VAR_TARGET ||
-                   defining_node_link->node->node_type == VAR_REFERENCE) {
+        if (defining_node_link->node->node_type == VAR_REFERENCE) {
             /* This set the variable type */
             symbol->type = node_to_type(defining_node_link->node->sibling,
-                                        &(symbol->value_dims), &(symbol->value_class));
+                                        &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                        &(symbol->value_class));
+            ast_svtp(defining_node_link->node, symbol);
+            ast_svtn(defining_node_link->node->parent, defining_node_link->node);
+            return;
+        }
+
+        if (defining_node_link->node->node_type == VAR_TARGET) {
+            /* This set the variable type */
+            symbol->type = node_to_type(defining_node_link->node->sibling,
+                                        &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                        &(symbol->value_class));
+
+            /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
+            /* node_to_type() above has checked the rhs - so now we look at the lhs */
+            if (symbol->value_dims == 0 && defining_node_link->node->sibling->node_type != CLASS)
+                node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                             &(symbol->dim_base), &(symbol->dim_elements));
+
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
             return;
@@ -916,21 +1116,31 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         if (symbol->symbol_type != NAMESPACE_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
-            symbol->type = TP_STRING;
-            symbol->symbol_type = CONSTANT_SYMBOL;
-            /* Update all the attached AST Nodes to be constants */
-            for (i = 0; i < sym_nond(symbol); i++) {
-                defining_node_link = sym_trnd(symbol, i);
-                if (defining_node_link->writeUsage) {
-                    /* This means we are trying to write to a TAKEN CONSTANT
-                     * which is illegal in Levels B/G/L */
-                    mknd_err(defining_node_link->node, "UPDATING_TAKEN_CONSTANT");
-                } else {
-                    defining_node_link->node->node_type = STRING;
-                    length = strlen(symbol->name);
-                    buffer = malloc(length);
-                    memcpy(buffer, symbol->name, length);
-                    ast_sstr(defining_node_link->node, buffer, length);
+            if (defining_node_link->node->child) {
+                /* This is an erray so can't be a taken constant */
+                node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                             &(symbol->dim_base), &(symbol->dim_elements));
+
+
+                mknd_err(defining_node_link->node, "UNDEFINED_ARRAY");
+            }
+            else {
+                symbol->type = TP_STRING;
+                symbol->symbol_type = CONSTANT_SYMBOL;
+                /* Update all the attached AST Nodes to be constants */
+                for (i = 0; i < sym_nond(symbol); i++) {
+                    defining_node_link = sym_trnd(symbol, i);
+                    if (defining_node_link->writeUsage) {
+                        /* This means we are trying to write to a TAKEN CONSTANT
+                         * which is illegal in Levels B/G/L */
+                        mknd_err(defining_node_link->node, "UPDATING_TAKEN_CONSTANT");
+                    } else {
+                        defining_node_link->node->node_type = STRING;
+                        length = strlen(symbol->name);
+                        buffer = malloc(length);
+                        memcpy(buffer, symbol->name, length);
+                        ast_sstr(defining_node_link->node, buffer, length);
+                    }
                 }
             }
             return;
@@ -1021,6 +1231,7 @@ static walker_result step4_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
+    int val, ix;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -1028,9 +1239,8 @@ static walker_result step4_walker(walker_direction direction,
     }
     else {
         /* OUT - BOTTOM UP */
-        child1 = node->child;
-        if (child1) child2 = child1->sibling;
-        else child2 = NULL;
+        child1 = ast_chdn(node, 0);
+        child2 = ast_chdn(node, 1);
 
         switch (node->node_type) {
 
@@ -1113,14 +1323,31 @@ static walker_result step4_walker(walker_direction direction,
                     n1 = child1;
                     while (n1) {
                         if (n1->value_type == TP_VOID) {
-                            if (!n1->sibling) {
+                            if (!ast_nsib(n1)) {
                                 /* The last parameter is VOID - this is a special case, we
                                  * are returning the number of elements as an integer */
                                 break;
                             }
                         }
                         set_node_target_type(n1, TP_INTEGER);
-                        n1 = n1->sibling;
+
+                        if (n1->node_type == INTEGER) {
+                            /* As a constant integer we can check it is in range */
+                            val = node_to_integer(n1);
+                            ix = ast_chdi(n1);
+
+                            if (val < n1->parent->symbolNode->symbol->dim_base[ix])
+                                mknd_err(n1, "OUT_OF_RANGE");
+
+                            else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
+                                /* There is a max number of elements - so check it */
+                                if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                                      n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
+                                    mknd_err(n1, "OUT_OF_RANGE");
+                            }
+                        }
+
+                        n1 = ast_nsib(n1);
                     }
 
                     if (n1 && n1->value_type == TP_VOID) {
@@ -1165,10 +1392,12 @@ static walker_result step4_walker(walker_direction direction,
                 break;
 
             case CLASS:
-                node->value_type = node_to_type(node, &(node->value_dims), &(node->value_class));
-                node->target_type = node->value_type;
-                node->target_dims = node->value_dims;
-                node->target_class = 0; /* Avoids a second malloc - assume the sane as value_class */
+                node->value_type = node_to_type(node, &(node->value_dims),
+                                                &(node->value_dim_base),&(node->value_dim_elements),
+                                                &(node->value_class));
+                /* Reset Node Target Type to be the same as the node value type */
+                ast_rttp(node);
+
                 if (node->value_dims) {
                     /* We are an array */
                     if (node->parent->node_type == PROCEDURE) {
@@ -1176,19 +1405,34 @@ static walker_result step4_walker(walker_direction direction,
                         n1 = child1;
                         while (n1) {
                             set_node_target_type(n1, TP_VOID);
-                            n1 = n1->sibling;
-                        }
-                    } else {
-                        /* Each array param should be null or an integer */
-                        n1 = child1;
-                        while (n1) {
-                            if (n1->value_type != TP_VOID) set_node_target_type(n1, TP_INTEGER);
-                            n1 = n1->sibling;
+                            n1 = ast_nsib(n1);
                         }
                     }
                 }
                 // else we are a class TODO
 
+                break;
+
+            case DEFINE:
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    child1->symbolNode->symbol->type =
+                            node_to_type(child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                }
+                ast_svtp(child1, child1->symbolNode->symbol);
+
+                if (child1->child) {
+                    /* We have unexpected array parameters */
+                    mknd_err(child1->child, "INVALID_LHS_ARRAY");
+                }
+
+                ast_sttn(child2, child1);
+                validate_node_promotion(child2);
+                ast_svtn(node, child1);
                 break;
 
             case ASSIGN:
@@ -1205,7 +1449,12 @@ static walker_result step4_walker(walker_direction direction,
                             child1->symbolNode->symbol->value_class = 0;
                             child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
                         } else {
-                            child1->symbolNode->symbol->type = node_to_type(child2,&(child1->symbolNode->symbol->value_dims),&(child1->symbolNode->symbol->value_class) );
+                            child1->symbolNode->symbol->type =
+                                    node_to_type(child2,
+                                                 &(child1->symbolNode->symbol->value_dims),
+                                                 &(child1->symbolNode->symbol->dim_base),
+                                                 &(child1->symbolNode->symbol->dim_elements),
+                                                 &(child1->symbolNode->symbol->value_class) );
                         }
                     }
                     ast_svtp(child1, child1->symbolNode->symbol);
@@ -1216,6 +1465,23 @@ static walker_result step4_walker(walker_direction direction,
                         n1 = child1->child;
                         while (n1) {
                             set_node_target_type(n1, TP_INTEGER);
+
+                            if (n1->node_type == INTEGER) {
+                                /* As a constant integer we can check it is in range */
+                                val = node_to_integer(n1);
+                                ix = ast_chdi(n1);
+
+                                if (val < n1->parent->symbolNode->symbol->dim_base[ix])
+                                    mknd_err(n1, "OUT_OF_RANGE");
+
+                                else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
+                                    /* There is a max number of elements - so check it */
+                                    if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                              n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
+                                        mknd_err(n1, "OUT_OF_RANGE");
+                                }
+                            }
+
                             n1 = n1->sibling;
                         }
 
@@ -1235,7 +1501,11 @@ static walker_result step4_walker(walker_direction direction,
             case ARG:
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet */
-                    child1->symbolNode->symbol->type = node_to_type(child2,&(child1->symbolNode->symbol->value_dims),&(child1->symbolNode->symbol->value_class) );
+                    child1->symbolNode->symbol->type = node_to_type(child2,
+                                                                    &(child1->symbolNode->symbol->value_dims),
+                                                                    &(child1->symbolNode->symbol->dim_base),
+                                                                    &(child1->symbolNode->symbol->dim_elements),
+                                                                    &(child1->symbolNode->symbol->value_class) );
                 }
                 ast_svtp(child1, child1->symbolNode->symbol);
                 ast_sttp(child2, child1->symbolNode->symbol);
