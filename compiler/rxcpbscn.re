@@ -91,6 +91,7 @@ int rexbscan(Context* s) {
     "*" { return(TK_MULT); }
     "/" { return(TK_DIV); }
     "%" { return(TK_IDIV); }
+    "?" { return(TK_OPTIONAL); }
     "/" ob "/" { return(TK_MOD); }
     "*" ob "*" { return(TK_POWER); }
 

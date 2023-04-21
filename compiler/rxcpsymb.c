@@ -345,6 +345,27 @@ char* type_nm(ValueType type) {
     }
 }
 
+
+/* Returns the type of a symbol as a text string in a malloced buffer */
+char* sym_2tp(Symbol *symbol) {
+    char *buffer = 0;
+    char *array;
+    char *result;
+
+    if (symbol->value_class) buffer = symbol->value_class;
+    else buffer = type_nm(symbol->type);
+
+    array = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
+
+    result = malloc(strlen(buffer) + strlen(array) + 1);
+    strcpy(result, buffer);
+    strcat(result, array);
+
+    free(array);
+
+    return result;
+}
+
 /* Returns string name of a SymbolValue type */
 char* stype_nm(SymbolType type) {
     switch (type) {

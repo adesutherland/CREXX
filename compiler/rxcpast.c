@@ -653,7 +653,7 @@ void ast_sstr(ASTNode *node, char* string, size_t length) {
 }
 
 /* ASTNode Factory - With node type and string value */
-ASTNode *ast_ftt(Context* context, NodeType type, char *string) {
+ASTNode * ast_ftt(Context* context, NodeType type, char *string) {
     ASTNode *node = ast_ft(context, type);
     node->node_string = string;
     node->node_string_length = strlen(string);
@@ -1347,8 +1347,8 @@ void prt_unex(FILE* output, const char *ptr, int len) {
 }
 
 /* Returns a malloced string of the array part of a symbols/type
- * (it returns a null terminatred string if there is no array part - still needs a free() */
-char *array_string(size_t dims, int* base, int* num_elements) {
+ * (it returns a null terminated string if there is no array part - still needs a free() */
+char *ast_astr(size_t dims, int* base, int* num_elements) {
     char* result;
     int i, c, x;
     if (!dims) {
@@ -1356,8 +1356,8 @@ char *array_string(size_t dims, int* base, int* num_elements) {
         result[0] = 0;
         return result;
     }
-    /* Each dim could be "xxxx to xxxx, " = 14 chars plus 3 for the [, ], and terminator */
-    result = malloc((dims * 14) + 3);
+    /* Each dim could be "xxxx..xx to xxxx..xx," (each number upto 11 chars) = 11+11+5 = 27 chars plus 3 for the [, ], and terminator */
+    result = malloc((dims * 27) + 3);
 
     result[0] = '[';
     c = 1;
@@ -1377,13 +1377,109 @@ char *array_string(size_t dims, int* base, int* num_elements) {
         }
 
         if (i + 1 != dims) {
-            result[c++] = ','; result[c++] = ' ';
+            result[c++] = ',';
         }
     }
     result[c++] = ']';
     result[c++] = 0;
 
     return result;
+}
+
+/* Returns the type of a node as a text string in a malloced buffer */
+char* ast_n2tp(ASTNode *node) {
+    char *buffer = 0;
+    char *array;
+    char *result;
+    ValueType type = node->value_type;
+
+    if (type == TP_OBJECT) {
+        buffer = ast_nsrc(node);
+        if (buffer[0] == 0) {  /* I.e. an empty line */
+            free(buffer); /* set to .OBJECT below */
+            buffer = 0;
+        }
+    }
+    if (!buffer) {
+        buffer = malloc(sizeof(".BOOLEAN") + 1); /* Make it long enough for the longest option */
+        switch (type) {
+            case TP_BOOLEAN:
+                strcpy(buffer, ".boolean");
+                break;
+            case TP_INTEGER:
+                strcpy(buffer, ".int");
+                break;
+            case TP_FLOAT:
+                strcpy(buffer, ".float");
+                break;
+            case TP_STRING:
+                strcpy(buffer, ".string");
+                break;
+            case TP_OBJECT:
+                strcpy(buffer, ".object");
+                break;
+            case TP_VOID:
+                strcpy(buffer, ".void");
+                break;
+            default:
+                strcpy(buffer, ".unknown");
+        }
+    }
+
+    array = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
+
+    result = malloc(strlen(buffer) + strlen(array) + 1);
+    strcpy(result, buffer);
+    strcat(result, array);
+    free(buffer);
+    free(array);
+
+    return result;
+}
+
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *ast_nsrc(ASTNode *node) {
+    ASTNode *n;
+    Token *t;
+    size_t buffer_len;
+    char *buffer, *b;
+    size_t i;
+
+    /* Calculate required buffer length */
+    buffer_len = 0;
+    for  (t = node->token_start; t; t = t->token_next) {
+        buffer_len += t->length + 1; /* +1 for space */
+        if (t == node->token_end) break;
+    }
+
+    /* Empty Source Line */
+    if (!buffer_len) {
+        buffer = malloc(1);
+        buffer[0] = 0;
+        return buffer;
+    }
+
+    /* Create and write to buffer */
+    b = buffer = malloc(buffer_len);
+    for  (t = node->token_start; t; t = t->token_next) {
+        if (t->token_type != TK_STRING)  {
+            /* Lower case it */
+            for (i = 0; i < t->length; i++) {
+                *(b++) = (char)tolower(t->token_string[i]);
+            }
+        }
+        else {
+            memcpy(b, t->token_string, t->length);
+            b += t->length;
+        }
+        *(b++) = ' '; /* Add Space */
+        if (t == node->token_end) break;
+    }
+
+    /* Turn the last space to a terminating null */
+    *(--b) = 0;
+
+    return buffer;
 }
 
 /* Prints to dot file one symbol */
@@ -1400,7 +1496,7 @@ void pdot_scope(Symbol *symbol, void *payload) {
 
     name = sym_frnm(symbol);
 
-    arr = array_string(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
+    arr = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
 
     if (symbol->value_class)
         clas = symbol->value_class;
@@ -1616,8 +1712,8 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
-        varr = array_string(node->value_dims, node->value_dim_base, node->value_dim_elements);
-        tarr = array_string(node->target_dims, node->target_dim_base, node->target_dim_elements);
+        varr = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
+        tarr = ast_astr(node->target_dims, node->target_dim_base, node->target_dim_elements);
 
         if (node->value_class) vclas = node->value_class;
         else vclas = type_nm(node->value_type);

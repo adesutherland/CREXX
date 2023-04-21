@@ -238,9 +238,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 else {
                     /* Add the function to the "database" of functions */
-                    type = nodetype(type_node);
-                    args = clnnode(args_node);
-//                    impl = clnnode(impl_node);
+                    type = ast_n2tp(type_node);
+                    args = meta_narg(args_node);
 
                     func = rximpf_f(context, node->context->file_name, fqname, "b", type, args, 0, 0);
 
@@ -251,7 +250,6 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                     free(type);
                     free(args);
-//                    free(impl);
                 }
             }
             free(fqname);

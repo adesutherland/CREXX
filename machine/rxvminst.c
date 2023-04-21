@@ -237,6 +237,8 @@ void init_ops() {
     instr_f("scopy", "Copy String op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_REG);
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_INT);
+    instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_REG);
+    instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_INT);
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);

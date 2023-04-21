@@ -516,10 +516,33 @@ arg(P)            ::= TK_ARG arg_list(A).
 arg_list(L)       ::= . { L = ast_ft(context, ARGS); }
 arg_list(L)       ::= argument(T). { L = ast_ft(context, ARGS); add_ast(L,T); }
 arg_list(L)       ::= arg_list(L1) TK_COMMA argument(T). { L = L1; add_ast(L,T); }
+/* Without Optional Flag (?) */
 argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
-                      { V->node_type = VAR_REFERENCE; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
 argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
-                      { V->node_type = VAR_TARGET; T = ast_ft(context, ARG); add_ast(T,V); add_ast(T,E); }
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 0;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 0;
+                        add_ast(T,V); add_ast(T,E); }
+/* With Optional (?) Flag */
+argument(T)       ::= TK_EXPOSE TK_OPTIONAL var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_OPTIONAL var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_OPTIONAL var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_EXPOSE TK_OPTIONAL var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+/* Errors */
 argument(E)         ::= error.
                       { E = ast_errh(context, "SYNTAX_ERROR"); }
 argument(E)         ::= TK_VAR_SYMBOL(S).

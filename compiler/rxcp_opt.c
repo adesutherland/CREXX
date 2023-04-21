@@ -713,11 +713,11 @@ static walker_result opt2_walker(walker_direction direction,
         payload->current_scope = node->scope;
 
         if (node->node_type == ARG) {
-            if (!node->is_ref_arg) { /* Only if it is pass by reference */
+            if (!node->is_ref_arg) { /* Only if it is pass by value */
 
                 /* Check if we are in a definition (external procedure) */
 
-                /*  ARG > ARGS > PROC --- And then see in there is an INSTRUCTIONS Nod, null means there isn't */
+                /*  ARG > ARGS > PROC --- And then see in there is an INSTRUCTIONS Node, null means there isn't */
                 if (ast_chld(node->parent->parent, INSTRUCTIONS, 0) == 0) return result_normal;
 
                 /* Internal Procedure - do constant check */

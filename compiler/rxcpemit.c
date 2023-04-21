@@ -666,12 +666,34 @@ static walker_result register_walker(walker_direction direction,
                     }
                     else node->symbolNode->symbol->register_num = get_reg(node->scope);
                 }
+
+                /* If we are a define no code is generated so no registers needed */
+                if (node->parent->node_type == DEFINE) break;
+
                 if (node->child) {
                     /* If it has a child it is an array element - so we need a register for the node
                      * Note we ignore DONT_ASSIGN_REGISTER - we always want our own so we can link/unlink it without
                      * any weird side effects */
                     node->register_num = get_reg(node->scope);
 
+                    /* Do we need a temporary register for making array parameters 1-base */
+                    char needs_extra_reg = 0;
+                    c = node->child;
+                    while (c && !needs_extra_reg) {
+                        if (node->symbolNode->symbol->dim_base[ast_chdi(c)] != 1)
+                            if (c->node_type != INTEGER &&
+                                c->node_type != CONSTANT &&
+                                c->node_type != NOVAL) needs_extra_reg = 1;
+                        c = c->sibling;
+                    }
+                    if (needs_extra_reg) {
+                        /* Yes we do */
+                        node->num_additional_registers = 1;
+                        node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                        ret_reg(node->scope, node->additional_registers);
+                    }
+
+                    /* Release child registers */
                     c = node->child;
                     while (c) {
                         /* release the temporary register */
@@ -1132,7 +1154,7 @@ static void type_promotion(ASTNode *node) {
     }
 }
 
-/* Formats a constant value returend as a malloced buffer */
+/* Formats a constant value returned as a malloced buffer */
 static char* format_constant(ValueType type, ASTNode* node) {
     char *buffer;
     int flag;
@@ -1163,6 +1185,7 @@ static char* format_constant(ValueType type, ASTNode* node) {
                              node->node_string);
     }
     else {
+        /* Integer */
         buffer = mprintf("%.*s",
                          node->node_string_length,
                          node->node_string);
@@ -1192,6 +1215,7 @@ static void meta_set_symbol(Symbol *symbol, void *payload) {
     char* buffer;
     char* symbol_fqn;
     int symbol_ordinal;
+    char *type;
 
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
@@ -1203,31 +1227,35 @@ static void meta_set_symbol(Symbol *symbol, void *payload) {
         symbol->meta_emitted = 1;
 
         if (symbol->symbol_type == CONSTANT_SYMBOL) {
+            type = sym_2tp(symbol);
             symbol_fqn = sym_frnm(symbol);
             value_node = sym_trnd(symbol, 0)->node->sibling;
             if (value_node) {
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%.*s\"\n",
                                  symbol_fqn,
-                                 type_nm(symbol->type),
+                                 type,
                                  (int) value_node->node_string_length, value_node->node_string);
             }
             else {
                 /* Taken constant so no defining node - the name is its value */
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%s\"\n",
                                  symbol_fqn,
-                                 type_nm(symbol->type),
+                                 type,
                                  symbol->name);
             }
             free(symbol_fqn);
+            free(type);
         }
 
         else if (symbol->register_num >= 0) {
             symbol_fqn = sym_frnm(symbol);
+            type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
                              symbol_fqn,
-                             type_nm(symbol->type),
+                             type,
                              symbol->register_type, symbol->register_num
             );
+            free(type);
             free(symbol_fqn);
         }
 
@@ -1429,70 +1457,73 @@ static void clear_global_variable_metadata(ASTNode* node) {
     scp_4all(scope, meta_clear_global_symbol, node);
 }
 
-/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
-char *clnnode(ASTNode *node) {
-    ASTNode *n;
-    Token *t;
-    size_t buffer_len;
-    char *buffer, *b;
+/* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
+/* Node should be an ARGS node else the program aborts */
+char *meta_narg(ASTNode *node) {
+    size_t args;
     size_t i;
+    size_t buffer_len;
+    char *buffer;
+    ASTNode *a;
+    char **type;
+    char **name;
 
-    /* Calculate required buffer length */
-    buffer_len = 0;
-    for  (t = node->token_start; t; t = t->token_next) {
-        buffer_len += t->length + 1; /* +1 for space */
-        if (t == node->token_end) break;
+    if (node->node_type != ARGS) {
+        fprintf(stderr,"INTERNAL ERROR - Not a ARG node in meta_args()\n");
+        exit(9);
     }
+    args = ast_nchd(node);
 
-    /* Empty Source Line */
-    if (!buffer_len) {
+    if (!args) {
+        /* Return an empty malloced string */
         buffer = malloc(1);
         buffer[0] = 0;
         return buffer;
     }
 
-    /* Create and write to buffer */
-    b = buffer = malloc(buffer_len);
-    for  (t = node->token_start; t; t = t->token_next) {
-        if (t->token_type != TK_STRING)  {
-            /* Lower case it */
-            for (i = 0; i < t->length; i++) {
-                *(b++) = (char)tolower(t->token_string[i]);
-            }
-        }
-        else {
-            memcpy(b, t->token_string, t->length);
-            b += t->length;
-        }
-        *(b++) = ' '; /* Add Space */
-        if (t == node->token_end) break;
+    /* Get all the args */
+    type = malloc(args * sizeof(char*));
+    name = malloc(args * sizeof(char*));
+    buffer_len = 0;
+    for (i=0; i<args; i++) {
+        a = ast_chdn(node, i);
+        type[i] = sym_2tp(a->child->symbolNode->symbol);
+        name[i] = malloc(strlen(a->child->symbolNode->symbol->name) + 1);
+        strcpy(name[i], a->child->symbolNode->symbol->name);
+
+        /* Workout length */
+        buffer_len += strlen(type[i]);
+        buffer_len += strlen(name[i]);
+        buffer_len += 1; /* "=" */
+        if (a->is_opt_arg) buffer_len += 1; /* "?" */
+        if (a->is_ref_arg) buffer_len += 7; /* "expose " */
+    }
+    /* Add space for comas between args and the null termination */
+    buffer_len += (args - 1) + 1;
+
+    /* Write the args out */
+    buffer = malloc(buffer_len);
+    buffer[0] = 0;
+    for (i=0; i<args; i++) {
+        a = ast_chdn(node, i);
+        if (a->is_ref_arg) strcat(buffer,"expose ");
+        if (a->is_opt_arg) strcat(buffer,"?");
+        strcat(buffer,name[i]);
+        strcat(buffer,"=");
+        strcat(buffer,type[i]);
+
+        /* Add the comma if not the last argument */
+        if (i < args - 1) strcat(buffer,",");
     }
 
-    /* Turn the last space to a terminating null */
-    *(--b) = 0;
-
-    return buffer;
-}
-/* Returns the type of a node as a malloced buffer */
-char* nodetype(ASTNode *node) {
-    char *buffer;
-    ValueType type = node->value_type;
-
-    if (type == TP_OBJECT) {
-        buffer = clnnode(node);
-        if (buffer[0]) return buffer;  /* I.e. not an empty line */
-        else free(buffer); /* set to .OBJECT below */
+    /* free temporary buffers */
+    for (i=0; i<args; i++) {
+        free(type[i]);
+        free(name[i]);
     }
-    buffer = malloc(sizeof(".BOOLEAN") + 1); /* Make it long enough for the longest option */
-    switch (type) {
-        case TP_BOOLEAN: strcpy(buffer, ".boolean"); break;
-        case TP_INTEGER: strcpy(buffer, ".int"); break;
-        case TP_FLOAT:   strcpy(buffer, ".float"); break;
-        case TP_STRING:  strcpy(buffer, ".string"); break;
-        case TP_OBJECT:  strcpy(buffer, ".object"); break;
-        case TP_VOID:    strcpy(buffer, ".void"); break;
-        default:         strcpy(buffer, ".unknown");
-    }
+    free(name);
+    free(type);
+
     return buffer;
 }
 
@@ -1526,7 +1557,8 @@ static walker_result emit_walker(walker_direction direction,
 
         /* Operator and type prefix */
         op = 0;
-        tp_prefix = type_to_prefix(node->value_type);
+        if (node->value_dims) tp_prefix = "";
+        else tp_prefix = type_to_prefix(node->value_type);
 
         switch (node->node_type) {
 
@@ -1596,11 +1628,10 @@ static walker_result emit_walker(walker_direction direction,
             break;
 
             case PROCEDURE:
-                if (!child3 || child3->node_type == NOP) {
+                if (ast_chld(node, INSTRUCTIONS, NOP)->node_type == NOP) {
                     /* A declaration - external */
-                    char* type = nodetype(ast_chld(node, CLASS, VOID));
-                    char* source = clnnode(ast_chld(node, ARGS, 0));
-                    char* coded = encdstrg(source, strlen(source));
+                    char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
+                    char* args = meta_narg(ast_chld(node, ARGS, 0));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
                     char* buf;
                     if (node->symbolNode->symbol->exposed) {
@@ -1611,7 +1642,7 @@ static walker_result emit_walker(walker_direction direction,
                                       proc_symbol, /* FQ Symbol Name */
                                       type, /* Type */
                                       (int) node->node_string_length, node->node_string, /* Func Name */
-                                      coded /* Args */
+                                      args /* Args */
                         );
                     }
                     else {
@@ -1621,21 +1652,19 @@ static walker_result emit_walker(walker_direction direction,
                                       proc_symbol, /* FQ Symbol Name */
                                       type, /* Type */
                                       (int) node->node_string_length, node->node_string, /* Func Name */
-                                      coded /* Args */
+                                      args /* Args */
                         );
                     }
                     node->output = output_fs(buf);
                     free(type);
-                    free(source);
-                    free(coded);
+                    free(args);
                     free(buf);
                     free(proc_symbol);
                 }
                 else {
                     /* Definition */
-                    char* type = nodetype(ast_chld(node, CLASS, VOID));
-                    char* source = clnnode(ast_chld(node, ARGS, 0));
-                    char* coded = encdstrg(source, strlen(source));
+                    char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
+                    char* args = meta_narg(ast_chld(node, ARGS, 0));
                     char* proc_symbol= sym_frnm(node->symbolNode->symbol);
                     char* buf;
                     if (node->symbolNode->symbol->exposed) {
@@ -1647,7 +1676,7 @@ static walker_result emit_walker(walker_direction direction,
                                       proc_symbol, /* FQ Symbol Name */
                                       type, /* Return Type */
                                       (int) node->node_string_length, node->node_string, /* Function name */
-                                      coded /* Args */);
+                                      args /* Args */);
                     }
                     else {
                         buf = mprintf("\n%.*s() .locals=%d\n"
@@ -1657,12 +1686,11 @@ static walker_result emit_walker(walker_direction direction,
                                       proc_symbol, /* FQ Symbol Name */
                                       type, /* Return Type */
                                       (int) node->node_string_length, node->node_string, /* Function name */
-                                      coded /* Args */);
+                                      args /* Args */);
                     }
                     node->output = output_fs(buf);
                     free(type);
-                    free(source);
-                    free(coded);
+                    free(args);
                     free(buf);
                     free(proc_symbol);
 
@@ -1745,7 +1773,7 @@ static walker_result emit_walker(walker_direction direction,
                          * to do a copy - but check if the argument needs preserving */
 
                         /* Only worry about it if it is a big register */
-                        if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
                             temp1 = mprintf(
                                     "   br l%dd\n"
                                     "l%da:\n"
@@ -1790,7 +1818,7 @@ static walker_result emit_walker(walker_direction direction,
                     /* Copy by value so may need to do a copy - but check if the argument needs preserving */
 
                     /* Only worry about it if it is a big register */
-                    if (node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                    if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
                         temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
                                         "   br l%dd\n"
@@ -1871,7 +1899,7 @@ static walker_result emit_walker(walker_direction direction,
                      * set (2) means that it is not a symbol so its value does not need
                      * preserving */
                     if (!n->is_ref_arg &&
-                        (n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
+                        (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
                         k = 1; /* This means we will settp */
                         if (!n->symbolNode) j = REGTP_NOTSYM; /* Mark it as not a symbol */
                     }
@@ -2445,162 +2473,118 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
+            case VAR_TARGET:
+                /* If we are a define no code is generated */
+                if (node->parent->node_type == DEFINE) break;
+
                 node->output = output_f();
+
                 if (child1) {
-                    /* We are an array */
-                    /* Process first dimension */
-                    if (child1->node_type == NOVAL) {
-                        /* Return the max array element taking into account the array base */
-                        temp1 = mprintf("   getattrs r%d,%c%d,%d\n",
-                                        node->register_num,
-                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                        node->symbolNode->symbol->dim_base[ast_chdi(child1)] - 1);
+                    char from_reg_type = node->symbolNode->symbol->register_type;
+                    int from_reg_num = node->symbolNode->symbol->register_num;
+                    char unlink_needed = 0;
+
+                    while (child1) {
+                        if (child1->output) output_concat(node->output, child1->output);
+                        int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
+
+                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                            /* Make temp2 the base 1 element index number */
+                            temp2 = format_constant(child1->value_type, child1);
+                            if (base != 1) {
+                                int ix = atoi(temp2) + 1 - base;
+                                free(temp2);
+                                temp2 = mprintf("%d",ix);
+                            }
+                        }
+                        else temp2 = 0;
+
+                        /* Make sure there is enough attributes */
+                        if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                            /* Fixed array set to the dimension size */
+                            temp1 = mprintf("   setattrs %c%d,%d\n",
+                                            from_reg_type, from_reg_num,
+                                            node->symbolNode->symbol->dim_elements[ast_chdi(child1)]);
+                        }
+                        else if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                            /* Variable array set min attributes which gives a growth buffer */
+                            temp1 = mprintf("   minattrs %c%d,%s\n",
+                                            from_reg_type, from_reg_num,
+                                            temp2);
+                        }
+                        else {
+                            /* Variable array set min attributes which gives a growth buffer */
+                            temp1 = mprintf("   minattrs %c%d,%c%d,%d\n",
+                                            from_reg_type, from_reg_num,
+                                            child1->register_type, child1->register_num,
+                                            1 - base);
+                        }
                         output_append_text(node->output, temp1);
                         free(temp1);
-                        /* Should be no more dimensions, and no cleanup (unlink) needed */
-                        type_promotion(node);
-                        break;
-                    }
-                    else {
-                        /* Get (link) the element register for the first dimension */
-                        if (child1->output) output_concat(node->output, child1->output);
-                        /* Link Array element */
-                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                            temp2 = format_constant(child1->value_type, child1);
-                            temp1 = mprintf("   linkattr r%d,%c%d,%s\n",
+
+                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
+                            /* Return the max array element taking into account the array base */
+                            temp1 = mprintf("   getattrs r%d,%c%d,%d\n",
                                             node->register_num,
                                             node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                            temp2
-                                            );
-                            free(temp2);
-                        }
-                        else {
-                             temp1 = mprintf("   linkattr r%d,%c%d,%c%d\n",
-                                            node->register_num,
-                                            node->symbolNode->symbol->register_type,
-                                            node->symbolNode->symbol->register_num,
-                                            child1->register_type, child1->register_num);
-                        }
-                        output_append_text(node->output, temp1);
-                        free(temp1);
-                    }
-
-                    child1 = child1->sibling;
-                    while (child1) {
-                        /* Processing the rest of the dimentions */
-                        if (child1->node_type == NOVAL) {
-                            /* Get Number of array elements (needs to unlink the result register first) */
-                            temp1 = mprintf("   getattrs r%d,r%d,%d\n"
-                                            "   unlink r%d\n"
-                                            "   icopy r%d,r%d\n",
-                                            child1->register_num, node->register_num,
-                                            node->symbolNode->symbol->dim_base[ast_chdi(child1)] - 1,
-                                            node->register_num,
-                                            node->register_num, child1->register_num);
+                                            base - 1);
                             output_append_text(node->output, temp1);
                             free(temp1);
+                            if (temp2) free(temp2);
                             /* Should be no more dimensions, and no cleanup (unlink) needed */
-                            type_promotion(node);
-                            break;
+                            goto var_symbol_end;
                         }
-                        else {
-                            if (child1->output) output_concat(node->output, child1->output);
 
-                            if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                                /* Link Sub-Array element */
-                                temp2 = format_constant(child1->value_type, child1);
-                                temp1 = mprintf("   linkattr r%d,%c%d,%s\n",
-                                                node->register_num,
-                                                node->register_num,
-                                                temp2
-                                );
-                                free(temp2);
-                            }
-                            else {
-                                /* Link Sub-Array element */
-                                temp1 = mprintf("   linkattr r%d,r%d,%c%d\n",
-                                                node->register_num,
-                                                node->register_num,
-                                                child1->register_type, child1->register_num);
-                            }
-                            output_append_text(node->output, temp1);
-                            free(temp1);
-                        }
-                        child1 = child1->sibling;
-                    }
-
-                    /* Set cleanup action */
-                    temp1 = mprintf("   unlink r%d\n", node->register_num);
-                    node->cleanup = output_fs(temp1);
-                    free(temp1);
-                }
-                type_promotion(node);
-                break;
-
-            case VAR_TARGET:
-                if (child1) {
-                    node->output = output_f();
-                    if (child1->output) output_concat(node->output, child1->output);
-                    /* Link Array element */
-                    if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                        /* Link Sub-Array element */
-                        temp2 = format_constant(child1->value_type, child1);
-                        temp1 = mprintf("   minattrs %c%d,%s,1\n"
-                                        "   linkattr r%d,%c%d,%s\n",
-                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                        temp2,
-                                        node->register_num,
-                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                        temp2);
-                        free(temp2);
-                    }
-                    else {
-                        temp1 = mprintf("   minattrs1 %c%d,%c%d,1\n"
-                                        "   linkattr r%d,%c%d,%c%d\n",
-                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                        child1->register_type, child1->register_num,
-                                        node->register_num,
-                                        node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                        child1->register_type, child1->register_num);
-                    }
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-
-                    child1 = child1->sibling;
-                    while (child1) {
-                        if (child1->output) output_concat(node->output, child1->output);
+                        /* Link Array element */
                         if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                            /* Link Sub-Array element */
-                            temp2 = format_constant(child1->value_type, child1);
-                            temp1 = mprintf("   minattrs r%d,%s,1\n"
-                                            "   linkattr r%d,r%d,%s\n",
+                            /* Constant */
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%s\n",
                                             node->register_num,
-                                            temp2,
-                                            node->register_num,
-                                            node->register_num,
+                                            from_reg_type, from_reg_num,
                                             temp2);
-                            free(temp2);
                         }
-                        else {
-                            /* Link Sub-Array element */
-                            temp1 = mprintf("   minattrs r%d,%c%d,1\n"
-                                            "   linkattr r%d,r%d,%c%d\n",
+
+                        else if (base == 1) {
+                            /* Already 1 base */
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%c%d\n",
                                             node->register_num,
-                                            child1->register_type, child1->register_num,
-                                            node->register_num,
-                                            node->register_num,
+                                            from_reg_type, from_reg_num,
                                             child1->register_type, child1->register_num);
                         }
+
+                        else {
+                            /* Need to make it 1 base */
+                            temp1 = mprintf("   iadd r%d,%c%d,%d\n"
+                                            "   linkattr1 r%d,%c%d,r%d\n",
+                                            node->additional_registers,
+                                            child1->register_type, child1->register_num,
+                                            1 - base,
+                                            node->register_num,
+                                            from_reg_type, from_reg_num,
+                                            node->additional_registers);
+                        }
+
+                        unlink_needed = 1;
                         output_append_text(node->output, temp1);
                         free(temp1);
+                        if (temp2) free(temp2);
+
+                        from_reg_type = 'r';
+                        from_reg_num = node->register_num;
                         child1 = child1->sibling;
                     }
 
+                    var_symbol_end:
+
                     /* Set cleanup action */
-                    temp1 = mprintf("   unlink r%d\n", node->register_num);
-                    node->cleanup = output_fs(temp1);
-                    free(temp1);
+                    if (unlink_needed) {
+                        temp1 = mprintf("   unlink r%d\n", node->register_num);
+                        node->cleanup = output_fs(temp1);
+                        free(temp1);
+                    }
                 }
+
+                if (node->node_type == VAR_SYMBOL) type_promotion(node);
                 break;
 
             case VAR_REFERENCE:
@@ -2724,7 +2708,8 @@ static walker_result emit_walker(walker_direction direction,
                 output_concat(node->output, child2->output);
                 if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
-                    temp1 = mprintf("   copy %c%d,%c%d\n",
+                    temp1 = mprintf("   %scopy %c%d,%c%d\n",
+                                    tp_prefix,
                                     child1->register_type,
                                     child1->register_num,
                                     child2->register_type,

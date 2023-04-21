@@ -1096,6 +1096,23 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             op1R = op2R->attributes[(int)op3I];
             DISPATCH
 
+
+        /* Link attribute op3 (1 base) of op2 to op1 */
+        START_INSTRUCTION(LINKATTR1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            if (op3R->int_value - 1 < 0) goto OUT_OF_RANGE;
+            if (op3R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op1R = op2R->attributes[op3R->int_value - 1];
+            DISPATCH
+
+        /* Link attribute op3 (1 base) of op2 to op1 */
+        START_INSTRUCTION(LINKATTR1_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKATTR1 R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
+            if ((int)op3I - 1 < 0) goto OUT_OF_RANGE;
+            if ((int)op3I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op1R = op2R->attributes[(int)op3I - 1];
+            DISPATCH
+
         /* Link op2 to op1 */
         START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - LINK R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));

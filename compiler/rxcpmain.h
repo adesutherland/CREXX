@@ -85,10 +85,6 @@ int rexbscan(Context* s);
 int rexbpars(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
-/* Returns the type of a node as a malloced buffer */
-char* nodetype(ASTNode *node);
-/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
-char *clnnode(ASTNode *node);
 /* Encodes a string into a malloced buffer */
 char* encdstrg(const char* string, size_t length);
 
@@ -262,6 +258,13 @@ int ast_chdi(ASTNode* node);
 ASTNode* ast_chdn(ASTNode* parent, size_t n);
 /* Returns the next sibling a node (or 0 on error), skipping ERROR/WARNING nodes */
 ASTNode* ast_nsib(ASTNode* node);
+/* Returns the type of a node as a text string in a malloced buffer */
+char* ast_n2tp(ASTNode *node);
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *ast_nsrc(ASTNode *node);
+/* Returns a malloced string of the array part of a symbols/type
+ * (it returns a null terminated string if there is no array part - still needs a free() */
+char *ast_astr(size_t dims, int* base, int* num_elements);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -448,6 +451,9 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname);
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
 
+/* Returns the type of a symbol as a text string in a malloced buffer */
+char* sym_2tp(Symbol *symbol);
+
 /* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol);
 
@@ -522,5 +528,9 @@ importable_file **rxfl_lst(Context *context);
 
 /* free the list of importable files */
 void rxfl_fre(importable_file **file_list);
+
+/* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
+/* Node should be an ARG node else the program aborts */
+char *meta_narg(ASTNode *node);
 
 #endif //CREXX_RXCPMAIN_H
