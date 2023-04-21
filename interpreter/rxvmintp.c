@@ -219,16 +219,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, argc, 0, 0, 0, 0);
-    /* Arguments */
+    current_frame = frame_f(procedure, 1, 0, 0, 0, 0);
+    /* Arguments (passed in an array) */
     /* a0 is already set by frame_f() */
-    /* a1... */
+    /* a1 is the array  */
     {
-        int i, j;
-        for (i = 0, j = procedure->binarySpace->globals + procedure->locals + 1; i < argc; i++, j++) {
-            current_frame->baselocals[j] = value_f(); /* note that a1... needs mallocing */
-            set_null_string(current_frame->baselocals[j], argv[i]);
-            current_frame->locals[j] = current_frame->baselocals[j];
+        int i;
+        int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+        current_frame->baselocals[a1] = value_f(); /* note that a1 needs mallocing */
+        current_frame->locals[a1] = current_frame->baselocals[a1];
+        set_num_attributes(current_frame->baselocals[a1], argc);
+
+        for (i = 0; i < argc; i++) {
+            set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
         }
     }
 
@@ -892,8 +895,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                                         temp_frame->procedure->locals + 1;
                             i < argc;
                             i++, j++) {
-                        clear_value(current_frame->baselocals[j]);
-                        free(current_frame->baselocals[j]);
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
                     goto interprt_finished;

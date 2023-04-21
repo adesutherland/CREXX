@@ -1456,6 +1456,15 @@ static walker_result type_safety_walker(walker_direction direction,
         child2 = ast_chdn(node, 1);
 
         switch (node->node_type) {
+            case PROCEDURE:
+                if (strcmp(node->symbolNode->symbol->name,"main") == 0) {
+                    /* Validate main() return values */
+                    if (node->value_type != TP_VOID && node->value_type != TP_INTEGER) {
+                        /* Must be an string array */
+                        mknd_err(ast_chld(node,CLASS,0),"MAIN_RETURNS_INTEGER");
+                    }
+                }
+                break;
 
             case OP_AND:
             case OP_OR:
@@ -1668,6 +1677,33 @@ static walker_result type_safety_walker(walker_direction direction,
                     ast_sttn(child2, child1);
                     validate_node_promotion(child2);
                     ast_svtn(node, child1);
+                }
+                break;
+
+            case ARGS:
+                if (strcmp(node->parent->symbolNode->symbol->name,"main") == 0) {
+                    /* Validate the signature of the main() functions */
+                    if (ast_nchd(node) == 0) break; /* A main() can ignore arguments */
+                    if (ast_nchd(node) != 1) {
+                        /* Should only have 1 argument */
+                        mknd_err(node,"INVALID_MAIN_ARGS");
+                        break;
+                    }
+                    if (child1->value_dims != 1) {
+                        /* Must be a 1 dimensional array */
+                        mknd_err(node,"INVALID_MAIN_ARGS");
+                        break;
+                    }
+                    if (child1->value_dim_elements[0] != 0 ) {
+                        /* Must be a dynamic array */
+                        mknd_err(node,"INVALID_MAIN_ARGS");
+                        break;
+                    }
+                    if (child1->value_type != TP_STRING ) {
+                        /* Must be an string array */
+                        mknd_err(node,"INVALID_MAIN_ARGS");
+                        break;
+                    }
                 }
                 break;
 
