@@ -1350,7 +1350,7 @@ static walker_result type_safety_pre_walker(walker_direction direction,
                         }
 
                         if (n1->node_type == INTEGER && !ast_nsib(n1) &&
-                            n1->parent->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
+                            node->symbolNode->symbol->dim_base && node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
                             node_to_integer(n1) == 0) {
                             /* Special case - last parameter and 1-base and is "0"
                              * this is a syntax candy for VOID - returning the number of elements as an integer */
@@ -1427,6 +1427,19 @@ static walker_result type_safety_pre_walker(walker_direction direction,
 
                 /* Reset Node Target Type to be the same as the node value type */
                 ast_rttp(node);
+                break;
+
+            case DEFINE:
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    child1->symbolNode->symbol->type =
+                            node_to_type(child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                    ast_svtp(child1, child1->symbolNode->symbol);
+                }
                 break;
 
             default:;
