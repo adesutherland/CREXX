@@ -6,6 +6,42 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
+static void print_error(ASTNode* node, FILE* stream, char* prefix) {
+    /* Try and set error position if not already set */
+    if (node->token) {
+        if (node->line == -1) node->line = node->token->line;
+        if (node->column == -1) node->column = node->token->column;
+        if (!node->source_start) node->source_start = node->token->token_string;
+        if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+    }
+    if (node->child && node->child->token) {
+        if (node->line == -1) node->line = node->child->token->line;
+        if (node->column == -1) node->column = node->child->token->column;
+        if (!node->source_start) node->source_start = node->child->token->token_string;
+        if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+    }
+
+    /* Print error - truncate source to one line */
+    int len = (int) (node->source_end - node->source_start + 1);
+    int i;
+    for (i=0; i<len; i++) {
+        if (!node->source_start || node->source_start[i] == '\n') {
+            len = i;
+            break;
+        }
+    }
+    if (len) {
+        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->context->file_name, node->line + 1,
+                node->column + 1, node->node_string);
+        prt_unex(stream, node->source_start, len);
+        fprintf(stream, "\"\n");
+    }
+    else {
+        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->context->file_name, node->line + 1,
+                node->column + 1, node->node_string);
+    }
+}
+
 /* Token Factory */
 Token *token_f(Context *context, int type) {
     Token *token = malloc(sizeof(Token));
@@ -672,6 +708,7 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
 ASTNode *ast_err(Context* context, char *error_string, Token *token) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, token));
+    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;
 }
 
@@ -679,6 +716,7 @@ ASTNode *ast_err(Context* context, char *error_string, Token *token) {
 ASTNode *ast_war(ASTNode* parent, char *warning_string) {
     ASTNode *warningAST = ast_ftt(parent->context, WARNING, warning_string);
     add_ast(parent, warningAST);
+    if (parent->context->debug_mode) print_error(warningAST, stdout, "DEBUG: Error in");
     return warningAST;
 }
 
@@ -722,6 +760,7 @@ void mknd_err(ASTNode* node, char *error_string, ...) {
     errNode->source_end = node->source_end;
     errNode->line = node->line;
     errNode->column = node->column;
+    if (node->context->debug_mode) print_error(errNode, stdout, "DEBUG: Error in");
 }
 
 /* Add a warning child node  */
@@ -763,6 +802,7 @@ void mknd_war(ASTNode* node, char *error_string, ...) {
     warNode->source_end = node->source_end;
     warNode->line = node->line;
     warNode->column = node->column;
+    if (node->context->debug_mode) print_error(warNode, stdout, "DEBUG: Error in");
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for
@@ -780,6 +820,8 @@ void ast_str(ASTNode* node, char *string) {
 ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
+
+    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;
 }
 
@@ -1014,39 +1056,7 @@ static walker_result print_error_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
-            /* Try and set error position if not already set */
-            if (node->token) {
-                if (node->line == -1) node->line = node->token->line;
-                if (node->column == -1) node->column = node->token->column;
-                if (!node->source_start) node->source_start = node->token->token_string;
-                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
-            }
-            if (node->child && node->child->token) {
-                if (node->line == -1) node->line = node->child->token->line;
-                if (node->column == -1) node->column = node->child->token->column;
-                if (!node->source_start) node->source_start = node->child->token->token_string;
-                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
-            }
-
-            /* Print error - truncate source to one line */
-            int len = (int) (node->source_end - node->source_start + 1);
-            int i;
-            for (i=0; i<len; i++) {
-                if (!node->source_start || node->source_start[i] == '\n') {
-                    len = i;
-                    break;
-                }
-            }
-            if (len) {
-                fprintf(stderr, "Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-                prt_unex(stderr, node->source_start, len);
-                fprintf(stderr, "\"\n");
-            }
-            else {
-                fprintf(stderr, "Error in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-            }
+            print_error(node, stderr, "Error in");
             (*errors)++;
         }
     }
@@ -1061,39 +1071,7 @@ static walker_result print_warning_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == WARNING) {
-            /* Try and set error position if not already set */
-            if (node->token) {
-                if (node->line == -1) node->line = node->token->line;
-                if (node->column == -1) node->column = node->token->column;
-                if (!node->source_start) node->source_start = node->token->token_string;
-                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
-            }
-            if (node->child && node->child->token) {
-                if (node->line == -1) node->line = node->child->token->line;
-                if (node->column == -1) node->column = node->child->token->column;
-                if (!node->source_start) node->source_start = node->child->token->token_string;
-                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
-            }
-
-            /* Print error - truncate source to one line */
-            int len = (int) (node->source_end - node->source_start + 1);
-            int i;
-            for (i=0; i<len; i++) {
-                if (!node->source_start || node->source_start[i] == '\n') {
-                    len = i;
-                    break;
-                }
-            }
-            if (len) {
-                fprintf(stderr, "Warning in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-                prt_unex(stderr, node->source_start, len);
-                fprintf(stderr, "\"\n");
-            }
-            else {
-                fprintf(stderr, "Warning in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-            }
+            print_error(node, stderr, "Warning in");
             (*errors)++;
         }
     }

@@ -18,7 +18,7 @@ value: procedure = .string
   symbol = ""
   type = ""
   module = 0
-  address = 0
+  addr = 0
   meta_array = 0
   meta_entry = ""
   v = ""
@@ -27,10 +27,10 @@ value: procedure = .string
   address_object = 0
   assembler metaloadcalleraddr address_object /* Address from where are we called */
   assembler linkattr1 module,address_object,1  /* 1 = Module number */
-  assembler linkattr1 address,address_object,2 /* 2 = Address in module */
+  assembler linkattr1 addr,address_object,2 /* 2 = Address in module */
 
   /* Read the addresses backwards */
-  do a = address to 0 by -1
+  do a = addr to 0 by -1
      /* Get the metadata for that address */
      assembler metaloaddata meta_array,module,a
      do i = 1 to meta_array

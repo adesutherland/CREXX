@@ -28,6 +28,11 @@ RX_INLINE void value_zero(value *v) {
     v->string_char_pos = 0;
 #endif
     v->num_attributes = 0;
+
+    /* Free binary */
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = 0;
+    v->binary_length = 0;
 }
 
 /* Setup a new value structure */
@@ -38,6 +43,8 @@ RX_INLINE void value_init(value *v) {
     v->attribute_buffers = 0;
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
+    v->binary_value = 0;
+    v->binary_length = 0;
     value_zero(v);
 }
 
@@ -160,7 +167,11 @@ RX_MOSTLYINLINE void clear_value(value* v) {
 
     /* Free strings */
     if (v->string_value != v->small_string_buffer) free(v->string_value);
-    return;
+
+    /* Free binary */
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = 0;
+    v->binary_length = 0;
 }
 
 /* Int Flag */
@@ -337,6 +348,16 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 #endif
     }
 
+    /* Copy Binary */
+    if (dest->binary_value) free(dest->binary_value);
+    dest->binary_value = 0;
+    dest->binary_length = 0;
+    if (source->binary_value) {
+        dest->binary_length = source->binary_length;
+        dest->binary_value = malloc(dest->binary_length);
+        memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+    }
+
     /* Copy Attributes */
     set_num_attributes(dest,source->num_attributes);
     for (i = 0; i < dest->num_attributes; i++)
@@ -388,6 +409,17 @@ RX_INLINE void move_value(value *dest, value *source) {
         dest->string_chars = 0;
         dest->string_char_pos = 0;;
 #endif
+    }
+
+    /* Move Binary */
+    if (dest->binary_value) free(dest->binary_value);
+    dest->binary_value = 0;
+    dest->binary_length = 0;
+    if (source->binary_value) {
+        dest->binary_length = source->binary_length;
+        dest->binary_value = source->binary_value;
+        source->binary_value = 0;
+        source->binary_length = 0;
     }
 
     /* Move Attributes */
@@ -454,6 +486,19 @@ RX_INLINE void string_append(value *v1, value *v2) {
 #ifndef NUTF8
     v1->string_char_pos = 0;
     v1->string_chars += v2->string_chars;
+#endif
+}
+
+RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
+    size_t start = v1->string_length;
+
+    extend_string_buffer(v1, v1->string_length + length);
+    memcpy(v1->string_value + start, value, length);
+
+    v1->string_pos = 0;
+#ifndef NUTF8
+    v1->string_char_pos = 0;
+    v1->string_chars += utf8nlen(value, length); /* SLOW! */
 #endif
 }
 
@@ -804,6 +849,17 @@ RX_INLINE void string_from_float(value *v) {
 RX_INLINE void int_from_float(value *v) {
     v->int_value = floor(v->float_value);
     if (v->float_value - (double)v->int_value > 0.5) v->int_value++;
+}
+
+/* Make a malloced null terminated string from a register - needs to be free()d */
+RX_INLINE char* reg2nullstring(value* reg) {
+    char *buffer = malloc(reg->string_length + 1);
+
+    /* Null terminated buffer */
+    buffer[reg->string_length] = 0;
+    memcpy(buffer, reg->string_value, reg->string_length);
+
+    return buffer;
 }
 
 /* Convert a string to an integer - returns 1 on error */

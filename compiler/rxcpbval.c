@@ -319,8 +319,8 @@ static void validate_node_promotion_for_ref(ASTNode* node) {
  * - Validate ASSEMBLER instructions
  */
 
-static walker_result step1_walker(walker_direction direction,
-                                  ASTNode* node, __attribute__((unused)) void *payload) {
+static walker_result initial_checks_walker(walker_direction direction,
+                                           ASTNode* node, __attribute__((unused)) void *payload) {
 
     ASTNode *child, *next_child, *new_child, *next, *last, *n;
     int has_to;
@@ -341,13 +341,16 @@ static walker_result step1_walker(walker_direction direction,
             /* Fix up the top of the tree */
 
             /* Remove the top INSTRUCTIONS node (2nd child) and promote its children */
-            child = node->child->sibling->child; /* first child of INSTRUCTIONS */
-            node->child->sibling = child; /* So REXX_OPTIONS sibling is the first instruction */
-            while (child) {
-                /* Fix the parent reference */
-                child->parent = node;
-                child = child->sibling;
+            if (node->child->sibling) {
+                child = node->child->sibling->child; /* first child of INSTRUCTIONS */
+                node->child->sibling = child; /* So REXX_OPTIONS sibling is the first instruction */
+                while (child) {
+                    /* Fix the parent reference */
+                    child->parent = node;
+                    child = child->sibling;
+                }
             }
+            else return result_normal; /* No instructions at all! */
 
             if (node->child->sibling->node_type != PROCEDURE) {
                 /* If the first instruction is not a PROCEDURE then we need to
@@ -413,23 +416,19 @@ static walker_result step1_walker(walker_direction direction,
                         if (args_node) {
                             /* Error - you can only have one arg statement */
                             mknd_err(next, "REPEATED_ARG");
-                            next = next->sibling;
-                        }
-                        else if (!first_instruction) {
+                        } else if (!first_instruction) {
                             /* Error - arg must be the first statement */
                             mknd_err(next, "ARG_NOT_FIRST_INST");
-                            next = next->sibling;
                         }
-                        else {
-                            args_node = next;
-                            /* Disconnect/remove node from the AST tree */
-                            node->sibling = next->sibling;
-                            next->sibling = 0;
-                            next->parent = 0;
-                            /* And add under the procedure */
-                            add_ast(node, next);
-                            next = node->sibling;
-                        }
+                        args_node = next;
+
+                        /* Disconnect/remove node from the AST tree */
+                        node->sibling = next->sibling;
+                        next->sibling = 0;
+                        next->parent = 0;
+                        /* And add under the procedure */
+                        add_ast(node, next);
+                        next = node->sibling;
                     }
                     else {
                         next = next->sibling;
@@ -709,12 +708,114 @@ static walker_result step1_walker(walker_direction direction,
     return result_normal;
 }
 
+/*
+ * Converts ADDRESS Instruction to Address System Function
+ */
+static walker_result rewrite_address_walker(walker_direction direction,
+                                            ASTNode* node, __attribute__((unused)) void *payload) {
+
+    Context *context = (Context*)payload;
+
+    ASTNode* command_node;
+    ASTNode* function_node;
+    ASTNode* temp_node;
+
+    if (direction == out) {
+        /* Bottom Up */
+        if (node->node_type == ADDRESS) {
+            /* Rewrite to an assignment from a function */
+
+            /* Assignment node and remember the command */
+            node->node_type = ASSIGN;
+            command_node = node->child;
+            ast_del(node->child);
+
+            /* rc is the target */
+            temp_node = ast_ft(context, VAR_TARGET);
+            ast_str(temp_node, "rc");
+            add_ast(node,temp_node);
+
+            /* Function */
+            function_node = ast_ft(context, FUNCTION);
+            ast_str(function_node, "_address");
+            add_ast(node,function_node);
+
+            /* Parameters */
+            temp_node = ast_ft(context, NOVAL);
+            add_ast(function_node,temp_node);
+
+            add_ast(function_node,command_node);
+        }
+    }
+
+    return result_normal;
+}
+
+
+/*
+ * Adds rxsysb if needed
+ */
+static walker_result add_rxsysb_walker(walker_direction direction,
+                                       ASTNode* node, __attribute__((unused)) void *payload) {
+
+    Context *context = (Context*)payload;
+
+    ASTNode* _rxsysb_import_node;
+    ASTNode* _rxsysb_node;
+
+    if (direction == out) {
+        /* Bottom Up */
+        if (node->node_type == REXX_OPTIONS) {
+            if (context->need_rxsysb && !context->has_rxsysb) {
+                /* we need to import _rxsysb */
+                _rxsysb_import_node = ast_ft(context, IMPORT);
+                add_ast(node,_rxsysb_import_node);
+
+                _rxsysb_node = ast_ft(context, LITERAL);
+                ast_str(_rxsysb_node, "_rxsysb");
+                add_ast(_rxsysb_import_node,_rxsysb_node);
+            }
+        }
+
+        else if (node->node_type == IMPORT) {
+            /* Have we imported _rxsysb already */
+            if (node->child && is_node_string(node->child, "_rxsysb")) context->has_rxsysb = 1;
+        }
+
+        else if (node->node_type == NAMESPACE) {
+            /* Have we imported _rxsysb already */
+            if (node->child && is_node_string(node->child, "_rxsysb")) context->has_rxsysb = 1;
+        }
+    }
+
+    return result_normal;
+}
+
+/*
+ * `Sees if rxsysb is needed
+ * - If ADDRESS is used
+ */
+static walker_result needs_rxsysb_walker(walker_direction direction,
+                                       ASTNode* node, __attribute__((unused)) void *payload) {
+
+    Context *context = (Context*)payload;
+
+    if (direction == out) {
+        /* Bottom Up */
+        if (node->node_type == ADDRESS) {
+            context->need_rxsysb = 1;
+        }
+    }
+
+    return result_normal;
+}
+
 /* Step 1b
  * - Set node ordinal values
  */
-static walker_result step1b_walker(walker_direction direction,
-                                   ASTNode* node,
-                                   void *payload) {
+static walker_result set_node_ordinals_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              void *payload) {
     int* ordinal_counter = (int*)payload;
 
     if (direction == out) {
@@ -730,19 +831,25 @@ static walker_result step1b_walker(walker_direction direction,
 /* Step 2a
  * - Builds the Symbol Table
  */
-static walker_result step2a_walker(walker_direction direction,
-                                  ASTNode* node,
-                                  void *payload) {
+static walker_result build_symbols_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
 
     Context *context = (Context*)payload;
     Symbol *symbol;
     ASTNode *n;
 
     if (direction == in) {
+        if (node->scope) {
+            context->current_scope = node->scope;
+            return result_normal; /* Skip if we have already processed this node */
+        }
+
         /* IN - TOP DOWN */
         if (node->node_type == REXX_UNIVERSE) {
             /* This top level scope will contain the project file scope & imported file scopes */
             context->current_scope = scp_f(context->current_scope, node, 0);
+            node->scope = context->current_scope;
         }
 
         else if (node->node_type == PROGRAM_FILE) {
@@ -755,6 +862,7 @@ static walker_result step2a_walker(walker_direction direction,
 
             /* Move down to the project file scope */
             context->current_scope = scp_f(context->current_scope, node, symbol);
+            node->scope = context->current_scope;
         }
 
         else if (node->node_type == PROCEDURE) {
@@ -789,6 +897,7 @@ static walker_result step2a_walker(walker_direction direction,
 
             /* Move down to the procedure scope */
             context->current_scope = scp_f(context->current_scope, node, symbol);
+            node->scope = context->current_scope;
         }
 
         else if (node->node_type == IMPORT) {
@@ -803,10 +912,12 @@ static walker_result step2a_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                scp_f(namespaces, node->child, symbol);
+                context->current_scope = scp_f(namespaces, node->child, symbol);
+                node->scope = context->current_scope;
             }
             else {
                 mknd_err(node->child, "DUPLICATE_NAMESPACE");
+                node->scope = namespaces;
             }
         }
 
@@ -894,11 +1005,11 @@ static walker_result step2a_walker(walker_direction direction,
 }
 
 /* Step 2b
- * - Resolve Symbols
+ * - Resolve Function Symbols
  */
-static walker_result step2b_walker(walker_direction direction,
-                                  ASTNode* node,
-                                  void *payload) {
+static walker_result resolve_functions_walker(walker_direction direction,
+                                              ASTNode* node,
+                                              void *payload) {
 
     Context *context = (Context*)payload;
     Symbol *symbol;
@@ -908,6 +1019,9 @@ static walker_result step2b_walker(walker_direction direction,
     }
     else {
         if (node->node_type == FUNCTION) {
+            if (node->symbolNode) return result_normal; /* Already Processed */
+            if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
+
             /* Find the symbol */
             symbol = sym_rvfc(context->ast, node);
 
@@ -936,9 +1050,9 @@ static walker_result step2b_walker(walker_direction direction,
 /* Step 2c
  * - Resolve Exposed Namespace Symbols
  */
-static walker_result step2c_walker(walker_direction direction,
-                                   ASTNode* node,
-                                   void *payload) {
+static walker_result exposed_symbols_walker(walker_direction direction,
+                                            ASTNode* node,
+                                            void *payload) {
 
     Context *context = (Context*)payload;
     Symbol *symbol, *merged_symbol;
@@ -963,29 +1077,50 @@ static walker_result step2c_walker(walker_direction direction,
                             /* We might be exposing one of the procedure's variables */
                             symbol = sym_lrsv(proc_node->scope, n); /* find it */
                             if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
-                                /* We found a variable to expose - so expose it by moving its scope */
-                                merged_symbol = sym_merg(symbol->scope->parent, symbol);
-                                /* Link to the exposed node */
-                                sym_adnd(merged_symbol, n, 1, 1);
-                                /* Link to the Procedure's INSTRUCTION node */
-                                sym_adnd(merged_symbol, ast_chld(proc_node, INSTRUCTIONS, NOP), 0, 0);
-                                merged_symbol->exposed = 1;
+                                if (symbol->exposed == 0) { /* Avoid double processing */
+                                    /* We found a variable to expose - so expose it by moving its scope */
+                                    merged_symbol = sym_merg(symbol->scope->parent, symbol);
+                                    /* Link to the exposed node */
+                                    sym_adnd(merged_symbol, n, 1, 1);
+                                    /* Link to the Procedure's INSTRUCTION node */
+                                    sym_adnd(merged_symbol, ast_chld(proc_node, INSTRUCTIONS, NOP), 0, 0);
+                                    merged_symbol->exposed = 1;
+                                }
                                 found = 1;
                             }
                         }
-                        if (!found) mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                        if (!found) {
+                            /* Add an error - if it has not already errored */
+                            if (ast_chld(n, ERROR, 0) == 0)
+                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                        }
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
                         temp_node = sym_proc(symbol); /* Procedure */
                         temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
                         if (temp_node && temp_node->node_type == INSTRUCTIONS) {
-                            sym_adnd(symbol, n, 1, 1);
-                            symbol->exposed = 1;
+                            if (symbol->exposed == 0) {
+                                /* Link and expose - if not already processed */
+                                sym_adnd(symbol, n, 1, 1);
+                                symbol->exposed = 1;
+                            }
                         }
-                        else mknd_err(n, "IMPORTED_FUNCTION");
+                        else {
+                            /* Add an error - if it has not already errored */
+                            if (ast_chld(n, ERROR, 0) == 0)
+                                mknd_err(n, "IMPORTED_FUNCTION");
+                        }
                     }
-                    else if (symbol->symbol_type ==  VARIABLE_SYMBOL) mknd_war(n, "DUPLICATE_SYMBOL");
-                    else mknd_err(n, "INVALID_SYMBOL_TYPE");
+                    else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
+                        /* Add a warning - if it has not already errored/warned */
+                        if (ast_chld(n, ERROR, WARNING) == 0)
+                            mknd_war(n, "DUPLICATE_SYMBOL");
+                    }
+                    else {
+                        /* Add an error - if it has not already errored */
+                        if (ast_chld(n, ERROR, 0) == 0)
+                            mknd_err(n, "INVALID_SYMBOL_TYPE");
+                    }
                     n = n->sibling;
                 }
             }
@@ -1001,44 +1136,60 @@ static walker_result step2c_walker(walker_direction direction,
                         /* We should be exposing one of the procedure's variables */
                         symbol = sym_lrsv(node->parent->scope, n); /* find it */
                         if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
-                            /* We found a variable to expose - so expose it by moving its scope */
-                            merged_symbol = sym_merg(symbol->scope->parent, symbol);
-                            /* Link to the exposed node */
-                            sym_adnd(merged_symbol, n, 1, 1);
-                            /* Link to the Procedure's INSTRUCTION node */
-                            sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
-                            merged_symbol->exposed = 1;
+                            if (symbol->exposed == 0) { /* Avoid double processing */
+                                /* We found a variable to expose - so expose it by moving its scope */
+                                merged_symbol = sym_merg(symbol->scope->parent, symbol);
+                                /* Link to the exposed node */
+                                sym_adnd(merged_symbol, n, 1, 1);
+                                /* Link to the Procedure's INSTRUCTION node */
+                                sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                merged_symbol->exposed = 1;
+                            }
                         }
-                        else mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                        else {
+                            /* Add an error - if it has not already errored */
+                            if (ast_chld(n, ERROR, 0) == 0)
+                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                        }
                     }
 
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
                         /* Does the symbol exist in the procedure? */
                         Symbol *proc_symbol = sym_lrsv(node->parent->scope, n);
                         if (proc_symbol) {
-                            /* We need to promote this symbol to the parent scope */
-                            merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
-                            /* Link to the exposed node */
-                            sym_adnd(merged_symbol, n, 1, 1);
-                            /* Link to the Procedure's INSTRUCTION node */
-                            sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
-                            merged_symbol->exposed = 1;
+                            if (proc_symbol->exposed == 0) { /* Avoid double processing */
+                                /* We need to promote this symbol to the parent scope */
+                                merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
+                                /* Link to the exposed node */
+                                sym_adnd(merged_symbol, n, 1, 1);
+                                /* Link to the Procedure's INSTRUCTION node */
+                                sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                merged_symbol->exposed = 1;
+                            }
                         }
                         else {
                             /* Either we have already processed this symbol (duplicate) or it is not used in the proc at all */
 
                             if (symislnk(ast_chld(node->parent, INSTRUCTIONS, NOP), symbol)) {
                                 /* It's linked to the procedure's instructions - therefore a duplicate */
-                                mknd_war(n, "DUPLICATE_SYMBOL");
+                                /* Add a warning - if it has not already errored/warned */
+                                if (ast_chld(n, ERROR, WARNING) == 0)
+                                    mknd_war(n, "DUPLICATE_SYMBOL");
                             }
                             else {
                                 /* Must be unused */
-                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                                /* Add an error - if it has not already errored */
+                                if (ast_chld(n, ERROR, 0) == 0)
+                                    mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
                             }
                         }
                     }
 
-                    else mknd_err(n, "INVALID_SYMBOL_TYPE");
+                    else {
+                        /* Add an error - if it has not already errored */
+                        if (ast_chld(n, ERROR, 0) == 0)
+                            mknd_err(n, "INVALID_SYMBOL_TYPE");
+                    }
 
                     n = n->sibling;
                 }
@@ -1061,6 +1212,16 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     char *buffer;
     size_t length;
     size_t i, nix;
+
+    if (symbol->type != TP_UNKNOWN) return; /* Already processed */
+
+    /* Process special symbols */
+    if (strcmp(symbol->name,"rc") == 0) {
+        symbol->type = TP_INTEGER;
+        symbol->symbol_type = VARIABLE_SYMBOL;
+        symbol->value_dims = 0;
+        return;
+    }
 
     /* This sees if we are looking at exposed (global) variables by looking at the scope defining node type */
     if ( scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
@@ -1265,9 +1426,9 @@ static void set_node_target_type(ASTNode* node, ValueType target_type) {
 
 /* This walker does the basic value types of operations
  * No errors generated - just simple "guesses" as to types */
-static walker_result type_safety_pre_walker(walker_direction direction,
-                                        ASTNode* node,
-                                        void *payload) {
+static walker_result set_node_types_walker(walker_direction direction,
+                                           ASTNode* node,
+                                           void *payload) {
 
     Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
@@ -1298,147 +1459,213 @@ static walker_result type_safety_pre_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-                set_node_type(node, TP_BOOLEAN);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_BOOLEAN);
+                }
                 break;
 
             case OP_CONCAT:
             case OP_SCONCAT:
-                set_node_type(node, TP_STRING);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_STRING);
+                }
                 break;
 
             case OP_ADD:
             case OP_MINUS:
             case OP_MULT:
             case OP_POWER:
-                set_node_type(node, promotion[child1->value_type][child2->value_type]);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, promotion[child1->value_type][child2->value_type]);
+                }
                 break;
 
             case OP_DIV:
-                set_node_type(node, TP_FLOAT);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_FLOAT);
+                }
                 break;
 
             case OP_IDIV:
             case OP_MOD:
-                set_node_type(node, TP_INTEGER);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_INTEGER);
+                }
                 break;
 
             case OP_NOT:
-                set_node_type(node, TP_BOOLEAN);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_BOOLEAN);
+                }
                 break;
 
             case OP_PLUS:
             case OP_NEG:
-                set_node_type(node, promotion[child1->value_type][TP_VOID]);
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, promotion[child1->value_type][TP_VOID]);
+                }
                 break;
 
             case FUNCTION:
                 if (node->symbolNode) { /* Otherwise, an error node will have been added */
-                    ast_svtp(node, node->symbolNode->symbol);
+                    if (node->value_type == TP_UNKNOWN) {
+                        context->changed = 1;
+                        ast_svtp(node, node->symbolNode->symbol);
+                    }
                 }
                 break;
 
             case VAR_SYMBOL:
-                ast_svtp(node, node->symbolNode->symbol);
-                if (child1) {
-                    /* We have array parameters */
-                    n1 = child1;
-                    while (n1) {
-                        if (n1->value_type == TP_VOID && !ast_nsib(n1)) {
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+
+                    ast_svtp(node, node->symbolNode->symbol);
+                    if (child1) {
+                        /* We have array parameters */
+                        n1 = child1;
+                        while (n1) {
+                            if (n1->value_type == TP_VOID && !ast_nsib(n1)) {
+                                /* The last parameter is VOID - this is a special case, we
+                                 * are returning the number of elements as an integer */
+                                break;
+                            }
+
+                            if (n1->node_type == INTEGER && !ast_nsib(n1) &&
+                                node->symbolNode->symbol->dim_base &&
+                                node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
+                                node_to_integer(n1) == 0) {
+                                /* Special case - last parameter and 1-base and is "0"
+                                 * this is a syntax candy for VOID - returning the number of elements as an integer */
+                                n1->value_type = TP_VOID;
+                                n1->node_type = NOVAL;
+                                break;
+                            }
+
+                            n1 = ast_nsib(n1);
+                        }
+
+                        if (n1 && n1->value_type == TP_VOID) {
                             /* The last parameter is VOID - this is a special case, we
                              * are returning the number of elements as an integer */
-                            break;
+                            set_node_type(node, TP_INTEGER);
+                        } else {
+                            /* We are returning the array element */
+                            node->value_dims = 0; /* We are 'returning' a single value */
+                            /* Reset Node Target Type to be the same as the node value type */
+                            ast_rttp(node);
                         }
-
-                        if (n1->node_type == INTEGER && !ast_nsib(n1) &&
-                            node->symbolNode->symbol->dim_base && node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
-                            node_to_integer(n1) == 0) {
-                            /* Special case - last parameter and 1-base and is "0"
-                             * this is a syntax candy for VOID - returning the number of elements as an integer */
-                            n1->value_type = TP_VOID;
-                            n1->node_type = NOVAL;
-                            break;
-                        }
-
-                        n1 = ast_nsib(n1);
-                    }
-
-                    if (n1 && n1->value_type == TP_VOID) {
-                        /* The last parameter is VOID - this is a special case, we
-                         * are returning the number of elements as an integer */
-                        set_node_type(node, TP_INTEGER);
-                    }
-
-                    else {
-                        /* We are returning the array element */
-                        node->value_dims = 0; /* We are 'returning' a single value */
-                        /* Reset Node Target Type to be the same as the node value type */
-                        ast_rttp(node);
                     }
                 }
                 break;
 
             case ASSIGN:
-                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                    /* If the symbol does not have a known type yet - then determine it */
-                    if (node->parent->node_type == REPEAT) {
-                        /* Special logic for LOOP Assignment - type must be numeric */
-                        child1->symbolNode->symbol->value_dims = 0;
-                        if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
-                        child1->symbolNode->symbol->value_class = 0;
-                        child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
-                    } else {
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        /* If the symbol does not have a known type yet - then determine it */
+                        if (node->parent->node_type == REPEAT) {
+                            /* Special logic for LOOP Assignment - type must be numeric */
+                            child1->symbolNode->symbol->value_dims = 0;
+                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                            child1->symbolNode->symbol->value_class = 0;
+                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
+                        } else {
+                            child1->symbolNode->symbol->type =
+                                    node_to_type(child2,
+                                                 &(child1->symbolNode->symbol->value_dims),
+                                                 &(child1->symbolNode->symbol->dim_base),
+                                                 &(child1->symbolNode->symbol->dim_elements),
+                                                 &(child1->symbolNode->symbol->value_class));
+                        }
+                    }
+                }
+                break;
+
+            case CONST_SYMBOL:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_STRING);
+                }
+                break;
+
+            case FLOAT:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_FLOAT);
+                }
+                break;
+
+            case INTEGER:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_INTEGER);
+                }
+                break;
+
+            case STRING:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_STRING);
+                }
+                break;
+
+            case NOVAL:
+            case RANGE:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_VOID);
+                }
+                break;
+
+            case CLASS:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+
+                    node->value_type = node_to_type(node, &(node->value_dims),
+                                                    &(node->value_dim_base), &(node->value_dim_elements),
+                                                    &(node->value_class));
+
+                    /* Reset Node Target Type to be the same as the node value type */
+                    ast_rttp(node);
+                }
+                break;
+
+            case DEFINE:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        /* If the symbol does not have a known type yet - then determine it */
                         child1->symbolNode->symbol->type =
                                 node_to_type(child2,
                                              &(child1->symbolNode->symbol->value_dims),
                                              &(child1->symbolNode->symbol->dim_base),
                                              &(child1->symbolNode->symbol->dim_elements),
                                              &(child1->symbolNode->symbol->value_class));
+                        ast_svtp(child1, child1->symbolNode->symbol);
                     }
                 }
                 break;
 
-            case CONST_SYMBOL:
-                set_node_type(node, TP_STRING);
-                break;
-
-            case FLOAT:
-                set_node_type(node, TP_FLOAT);
-                break;
-
-            case INTEGER:
-                set_node_type(node, TP_INTEGER);
-                break;
-
-            case STRING:
-                set_node_type(node, TP_STRING);
-                break;
-
-            case NOVAL:
-            case RANGE:
-                set_node_type(node, TP_VOID);
-                break;
-
-            case CLASS:
+            case ARG:
                 if (node->value_type == TP_UNKNOWN) {
-                    node->value_type = node_to_type(node, &(node->value_dims),
-                                                    &(node->value_dim_base), &(node->value_dim_elements),
-                                                    &(node->value_class));
-                }
-
-                /* Reset Node Target Type to be the same as the node value type */
-                ast_rttp(node);
-                break;
-
-            case DEFINE:
-                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                    /* If the symbol does not have a known type yet - then determine it */
-                    child1->symbolNode->symbol->type =
-                            node_to_type(child2,
-                                         &(child1->symbolNode->symbol->value_dims),
-                                         &(child1->symbolNode->symbol->dim_base),
-                                         &(child1->symbolNode->symbol->dim_elements),
-                                         &(child1->symbolNode->symbol->value_class));
+                    context->changed = 1;
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        /* If the symbol does not have a known type yet */
+                        child1->symbolNode->symbol->type = node_to_type(child2,
+                                                                        &(child1->symbolNode->symbol->value_dims),
+                                                                        &(child1->symbolNode->symbol->dim_base),
+                                                                        &(child1->symbolNode->symbol->dim_elements),
+                                                                        &(child1->symbolNode->symbol->value_class));
+                    }
                     ast_svtp(child1, child1->symbolNode->symbol);
+                    ast_svtn(node, child1);
                 }
                 break;
 
@@ -1511,7 +1738,6 @@ static walker_result type_safety_walker(walker_direction direction,
             case OP_MINUS:
             case OP_MULT:
             case OP_POWER:
-                set_node_type(node, promotion[child1->value_type][child2->value_type]);
                 set_node_target_type(child1, node->value_type);
                 set_node_target_type(child2, node->value_type);
                 break;
@@ -1721,21 +1947,11 @@ static walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case ARG:
-                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                    /* If the symbol does not have a known type yet */
-                    child1->symbolNode->symbol->type = node_to_type(child2,
-                                                                    &(child1->symbolNode->symbol->value_dims),
-                                                                    &(child1->symbolNode->symbol->dim_base),
-                                                                    &(child1->symbolNode->symbol->dim_elements),
-                                                                    &(child1->symbolNode->symbol->value_class) );
-                }
-                ast_svtp(child1, child1->symbolNode->symbol);
                 ast_sttp(child2, child1->symbolNode->symbol);
                 validate_node_promotion(child2);
-                ast_svtn(node, child1);
 
                 if (ast_chld(node->parent->parent, INSTRUCTIONS, NOP)->node_type == INSTRUCTIONS) {
-                    /* In a function definition - in this case the optional flag '?' is invalid for a class type as a
+                    /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
                      * definition needs to know the default value that can only be defined by the expression on the
                      * right-hand-side */
                     if (child2->node_type == CLASS && node->is_opt_arg && !node->value_dims) {
@@ -1935,49 +2151,61 @@ static walker_result func_type_safety_walker(walker_direction direction,
 
 /* Validate AST */
 void rxcp_val(Context *context) {
-    int ordinal_counter = 0;
+    int ordinal_counter;
 
-    /* Step 1
-     * - Sets the source start / finish for eac node
-     * - Fixes SCONCAT to CONCAT
-     * - Other AST fixups (TBC)
-     */
-    ast_wlkr(context->ast, step1_walker, (void *) context);
-
-    /* 1b - set node ordinal values */
-    ast_wlkr(context->ast, step1b_walker, (void *)&ordinal_counter);
-
-    /* Step 2
-     * - Builds the Symbol Table
-     */
-    /* Mainly build symbols - procedures, members */
+    /* AST fixups */
     context->current_scope = 0;
-    ast_wlkr(context->ast, step2a_walker, (void *) context);
+    ast_wlkr(context->ast, initial_checks_walker, (void *) context);
 
-    /* Mainly resolve symbols - function uses */
+    /* Address - add rxsysb library */
     context->current_scope = 0;
-    ast_wlkr(context->ast, step2b_walker, (void *) context);
+    context->need_rxsysb = 0;
+    ast_wlkr(context->ast, needs_rxsysb_walker, (void *) context);
+    if (context->need_rxsysb) {
+        context->current_scope = 0;
+        context->has_rxsysb = 0;
+        ast_wlkr(context->ast, add_rxsysb_walker, (void *) context);
+    }
+
+    /* Builds the Symbol Table */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+
+    /* Mainly resolve symbols - functions */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
 
     /* Resolve exposed symbols */
     context->current_scope = 0;
-    ast_wlkr(context->ast, step2c_walker, (void *) context);
+    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
 
-    /* Step 3
-     * - Validate Symbols
-     */
+    /* Validate Symbols */
     validate_symbols(context->ast->scope);
 
-    /* Step 4
-     * - Type Safety
-     */
+    /* Set Node Types */
     context->current_scope = 0;
-    ast_wlkr(context->ast, type_safety_pre_walker, (void *)context);
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+
+    /* Re-write ADDRESS Instructions and incremental update of symbols */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+    ordinal_counter = 0;
+    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+    validate_symbols(context->ast->scope);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+
+    /* Type Safety checks */
     context->current_scope = 0;
     ast_wlkr(context->ast, type_safety_walker, (void *)context);
 
-    /* Step 5
-     * - Type Safety for function arguments
-     */
+    /* Type Safety for function arguments */
     context->current_scope = 0;
     ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
  }
@@ -1992,15 +2220,15 @@ void rxcp_bvl(Context *context) {
      * - Fixes SCONCAT to CONCAT
      * - Other AST fixups (TBC)
      */
-    ast_wlkr(context->ast, step1_walker, (void *) context);
+    ast_wlkr(context->ast, initial_checks_walker, (void *) context);
 
     /* 1b - set node ordinal values */
-    ast_wlkr(context->ast, step1b_walker, (void *)&ordinal_counter);
+    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
 
     /* Step 2
      * - Builds the Symbol Table
      */
     /* Mainly build symbols - procedures, members */
     context->current_scope = 0;
-    ast_wlkr(context->ast, step2a_walker, (void *) context);
+    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 }

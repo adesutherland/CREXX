@@ -485,6 +485,7 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case ADDRESS:
             case SAY:
                 /*
                  * We do not need a register as we can "say" a constant directly
@@ -783,6 +784,7 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case ADDRESS:
             case SAY:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
@@ -805,7 +807,6 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
-            case ADDRESS:
             case IF:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
@@ -2721,28 +2722,11 @@ static walker_result emit_walker(walker_direction direction,
                 output_concat(node->output, child1->cleanup);
                 break;
 
-            case ADDRESS:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                output_concat(node->output, child1->output);
-                temp1 = mprintf("   address %c%d\n",
-                                node->register_type,
-                                node->register_num);
-                output_append_text(node->output, temp1);
-                free(temp1);
-                if (child1->cleanup) output_concat(node->output, child1->cleanup);
-                break;
-
             case NOP:
                 node->output = output_f();
                 break;
 
+            case ADDRESS:
             case SAY:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);

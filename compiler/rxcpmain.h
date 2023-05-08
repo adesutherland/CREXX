@@ -64,6 +64,10 @@ typedef struct Context {
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
+    char changed; /* Flag Used to see if a walker has made a change */
+    /* Do we need to import _rxsysb */
+    char need_rxsysb;
+    char has_rxsysb;
     /* Source Options */
     char processedComments;
     RexxLevel level;

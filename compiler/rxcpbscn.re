@@ -120,7 +120,7 @@ int rexbscan(Context* s) {
     "]" { return(TK_CLOSE_SBRACKET); }
     ";" { return(TK_EOC); }
 
-  //  'ADDRESS' { return(TK_ADDRESS); }
+    'ADDRESS' { return(TK_ADDRESS); }
     'ASSEMBLER' { return(TK_ASSEMBLER); }
     'ARG' { return(TK_ARG); }
     'CALL' { return(TK_CALL); }

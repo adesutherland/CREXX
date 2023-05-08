@@ -358,7 +358,7 @@ command(I)             ::= expression(E).
                        { I = ast_ft(context, ADDRESS); add_ast(I,E); }
 
 keyword_instruction(I) ::= assembler(K). { I = K; }
-//keyword_instruction(I) ::= address(K). { I = K; }
+keyword_instruction(I) ::= address(K). { I = K; }
 keyword_instruction(I) ::= arg(K). { I = K; }
 keyword_instruction(I) ::= call(K). { I = K; }
 keyword_instruction(I) ::= iterate(K). { I = K; }
@@ -564,10 +564,9 @@ argument(E)         ::= TK_EXPOSE TK_CLASS_STEM(S).
 
 /* Instructions */
 
-/*
-### ADDRESS
-    address ::= 'ADDRESS' e:taken_constant c:expression? -> (ADDRESS ENVIRONMENT[e] c);
-*/
+/* ADDRESS */
+address(A)   ::= TK_ADDRESS expression(E).
+             { A = ast_ft(context, ADDRESS); add_ast(A,E); }
 
 /* Assembler */
 assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).
@@ -623,17 +622,6 @@ assembler_arg(A)         ::= TK_INTEGER(S).
 assembler_arg(A)         ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
 
-/*
-### Arg
-    arg ::= 'ARG' t:template_list?
-        -> (PARSE (OPTIONS UPPER?) ARG t?)
-
-### Call
-    call ::= 'CALL' (f:taken_constant / ( (. -> ERROR[19.2]) resync) ) e:expression_list?
-         -> (CALL CONST_SYMBOL[f] e);
-    expression_list ::= expr (',' expr)*;
-*/
-
 /* Iterate */
 iterate(I) ::= TK_ITERATE(T) var_symbol(S).
     { I = ast_f(context, ITERATE, T); add_ast(I,S); }
@@ -658,11 +646,6 @@ leave(I) ::= TK_LEAVE(T).
 
     parse_type ::= parse_key;
     parse_key ::= 'ARG'->ARG / 'PULL'->PULL;
-
-### Procedure
-    procedure ::= LABEL 'PROCEDURE' ncl
-                 ( !(TK_EOS / procedure) i:labeled_instruction )*
-              -> (PROCEDURE LABEL (INSTRUCTIONS i));
 
 
 ### Pull

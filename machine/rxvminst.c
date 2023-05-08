@@ -353,6 +353,28 @@ void init_ops() {
     instr_f("signalt", "Signal type op1 if op2 true", OP_STRING, OP_REG, OP_NONE);
     instr_f("signalf", "Signal type op1 if op2 false", OP_STRING, OP_REG, OP_NONE);
 
+    instr_f("spawn", "Spawn Process op1 = exec op2 redirect op3", OP_REG, OP_REG, OP_REG);
+    instr_f("redir2str", "Redirect op1 -> string op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("redir2arr", "Redirect op1 -> array op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("str2redir", "Redirect op1 <- string op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("arr2redir", "Redirect op1 <- array op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("nullredir", "Redirect op1 = to/from null", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("fopen","op1 file*(int) = fopen filename op2(string) mode op3(string)", OP_REG, OP_REG, OP_REG);
+    instr_f("fclose","op1 rc(int) = fclose op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fflush","op1 rc(int) = fflush op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadb","op1(binary) = fread op2 file*(int) op3 bytes(int)", OP_REG, OP_REG, OP_REG);
+    instr_f("freadline","op1 (string) = read until newline op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadbyte","op1 (int) = read byte op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadcdpt","op1 (string and int) = read codepoint op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwrite","fwrite to op1 file*(int) from op2(string)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwriteb","fwrite to op1 file*(int) from op2(binary)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwritebyte","write byte to op1 file*(int) op2 source(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwritecdpt","write codepoint to op1 file*(int) op2 source(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fclearerr", "clearerr op1 file*(int)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("feof", "op1 rc(int) = feof op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("ferror", "op1 rc(int) = ferror op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+
     /* ENDINSTRUCTIONS */
 
     /* Space for the instructions plus instructions[0] and null termination */

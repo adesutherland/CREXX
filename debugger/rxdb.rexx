@@ -101,12 +101,12 @@ return 0
 stephandler: procedure = .int
   arg expose address_object = .int;
   cmd = ""
-  address = 0
+  addr = 0
   module = 0
   r = 0
   watch = ""
   assembler linkattr module,address_object,1  /* 1 = Module number */
-  assembler linkattr address,address_object,2 /* 2 = Address in module */
+  assembler linkattr addr,address_object,2 /* 2 = Address in module */
 
   /* Are we the last module */
   modules = 0
@@ -119,14 +119,14 @@ stephandler: procedure = .int
   if mode = "REXX" then do
     last_instruction = getrexx()
     next_instruction = ""
-    rc = next_rexx(module, address, next_instruction)
+    rc = next_rexx(module, addr, next_instruction)
     if rc = 0 then return 0 /* Not a rexx clause */
     call setrexx next_instruction
   end
   else do
     last_instruction = getasm()
     next_instruction = ""
-    call next_asm module, address, next_instruction
+    call next_asm module, addr, next_instruction
     call setasm next_instruction
   end
 
@@ -186,8 +186,8 @@ stephandler: procedure = .int
         v = ""
         r_num = 0
         /* Read the addresses backwards but from the address before the code about to be executed */
-        do a = address - 1 to 0 by -1
-          /* Get the metadata for that address */
+        do a = addr - 1 to 0 by -1
+          /* Get the metadata for that addr */
           assembler metaloaddata meta_array,module,a
           do i = 1 to meta_array
             assembler linkattr meta_entry,meta_array,i
@@ -295,7 +295,7 @@ stephandler: procedure = .int
 
 /* This gets the rexx source code - returns 0 if the address does not start a rexx clause */
 next_rexx: procedure = .int
-  arg module = .int, address = .int, expose result  = .string
+  arg module = .int, addr = .int, expose result  = .string
 
   rc = 0;
   result = ""
@@ -307,7 +307,7 @@ next_rexx: procedure = .int
   source = "";
 
   /* Get the meta data for that address */
-  assembler metaloaddata meta_array,module,address
+  assembler metaloaddata meta_array,module,addr
   do i = 1 to meta_array
     assembler linkattr meta_entry,meta_array,i
     if meta_entry = ".meta_src" then do /* Object type */
@@ -323,7 +323,7 @@ next_rexx: procedure = .int
 
 /* This disassembles the code at address */
 next_asm: procedure = .int
-  arg module = .int, address = .int, expose result  = .string
+  arg module = .int, addr = .int, expose result  = .string
   opcode = 0;               /* Holds the opcode at the address */
   instruction = ""          /* Mnemonic */
   description = ""          /* Instruction Description */
@@ -335,7 +335,7 @@ next_asm: procedure = .int
   instruction_object = 0    /* Set to 0 as the compiler doesn't understand objects yet! */
 
   /* Load the opcode from the address */
-  assembler metaloadinst opcode,module,address
+  assembler metaloadinst opcode,module,addr
 
   /* Decode the opcode populating the instruction_object */
   assembler metadecodeinst instruction_object,opcode
@@ -356,14 +356,14 @@ next_asm: procedure = .int
   assembler linkattr op3_type,instruction_object,7 /* 7 = operand 3 type */
 
   /* Job Done */
-  result = " " right(d2x(opcode),3,"0") "@" right(d2x(module),3,"0")":"right(d2x(address),4,"0") instruction,
-          opdesc(op1_type,module,address+1)","opdesc(op2_type,module,address+2)","opdesc(op3_type,module,address+3),
+  result = " " right(d2x(opcode),3,"0") "@" right(d2x(module),3,"0")":"right(d2x(addr),4,"0") instruction,
+          opdesc(op1_type,module,addr+1)","opdesc(op2_type,module,addr+2)","opdesc(op3_type,module,addr+3),
            "*" description
 
   return no_operands
 
 opdesc: procedure = .string
-  arg code = .int, module = .int, address = .int
+  arg code = .int, module = .int, addr = .int
   desc = "unknown"
   int_val = 0
   float_val = 0.0
@@ -371,31 +371,31 @@ opdesc: procedure = .string
 
   if code = 0 then desc = ""
   else if code = 1 then do
-    assembler metaloadioperand int_val,module,address
+    assembler metaloadioperand int_val,module,addr
     desc = "@" || right(d2x(int_val),4,'0')
   end
   else if code = 2 then do
-    assembler metaloadioperand int_val,module,address
+    assembler metaloadioperand int_val,module,addr
     desc = "r" || int_val
   end
   else if code = 3 then do
-    assembler metaloadpoperand string_val,module,address
+    assembler metaloadpoperand string_val,module,addr
     desc = string_val || "()"
   end
   else if code = 4 then do
-    assembler metaloadioperand int_val,module,address
+    assembler metaloadioperand int_val,module,addr
     desc = int_val
   end
   else if code = 5 then do
-    assembler metaloadfoperand float_val,module,address
+    assembler metaloadfoperand float_val,module,addr
     desc = float_val || "f"
   end
   else if code = 6 then do
-    assembler metaloadioperand int_val,module,address
+    assembler metaloadioperand int_val,module,addr
     desc = int_val || "c"
   end
   else if code = 7 then do
-    assembler metaloadsoperand string_val,module,address
+    assembler metaloadsoperand string_val,module,addr
     desc = '"' || string_val || '"'
   end
 
