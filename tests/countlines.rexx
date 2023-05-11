@@ -9,7 +9,7 @@ import rxfnsb
 arg searches = .string[]
 
 /* Add a default search if none are given */
-if searches.0 < 1 then searches.2 = ".rexx"
+if searches.0 < 1 then searches.1 = ".rexx"
 
 /* Sort the search strings - just because we can! */
 ordered_searches = .string[]
