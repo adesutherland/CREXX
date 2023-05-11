@@ -221,6 +221,7 @@ static ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int *
         if (is_node_string(node, ".int")) return TP_INTEGER;
         if (is_node_string(node, ".float")) return TP_FLOAT;
         if (is_node_string(node, ".string")) return TP_STRING;
+        if (is_node_string(node, ".binary")) return TP_BINARY;
         if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
         *class_name = malloc(node->node_string_length + 1);
         memcpy(*class_name, node->node_string, node->node_string_length);
@@ -236,6 +237,8 @@ static ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int *
             return TP_INTEGER;
         case STRING:
             return TP_STRING;
+        case BINARY:
+            return TP_BINARY;
         case VOID:
             return TP_VOID;
         default:
@@ -275,10 +278,16 @@ static void validate_node_promotion(ASTNode* node) {
 
     if (node->value_type == TP_VOID && node->target_type != TP_VOID) mknd_err(node, "MISSING_VALUE");
 
+    /* Binary cant to cast */
+    if (node->value_type != node->target_type &&
+        node->value_type == TP_BINARY &&
+        node->target_type != TP_BINARY) mknd_err(node, "CANNOT_CAST_BINARY");
+
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
 
     /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
+        mknd_err(node, "CLASSES_NOT_SUPPORTED");
 }
 
 /* Validates a node promotion is correct for a call by reference (of symbols) adding error nodes if not */
@@ -306,7 +315,8 @@ static void validate_node_promotion_for_ref(ASTNode* node) {
     if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
 
     /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
+        mknd_err(node, "CLASSES_NOT_SUPPORTED");
 }
 
 /* Step 1
@@ -637,6 +647,107 @@ static walker_result initial_checks_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == ADDRESS) {
+            /* Validate Sub-commands - Error 27.1 */
+            ASTNode* input_node = 0;
+            ASTNode* output_node = 0;
+            ASTNode* error_node = 0;
+            ASTNode* expose_node = 0;
+            ASTNode* bad_nodes = 0;
+
+            /* Collate all the redirects */
+            child = node->child->sibling->sibling; /* Child1 = environment, child2 = command */
+            while (child) {
+                ASTNode* next_child = child->sibling; /* Before we do any rewrites! */
+                ast_del(child); /* We are going to place the node back into the right place later */
+                child->parent = node; /* We need to keep the link to the parent */
+                if (child->node_type == REDIRECT_IN) {
+                    if (input_node) {
+                        /* Duplicate - mark error */
+                        mknd_err(child, "DUPLICATE");
+                        /* And chain to bad_nodes */
+                        child->sibling = bad_nodes;
+                        bad_nodes = child;
+                    }
+                    else input_node = child;
+                }
+                else if (child->node_type == REDIRECT_OUT) {
+                    if (output_node) {
+                        /* Duplicate - mark error */
+                        mknd_err(child, "DUPLICATE");
+                        /* And chain to bad_nodes */
+                        child->sibling = bad_nodes;
+                        bad_nodes = child;
+                    }
+                    else output_node = child;
+                }
+                else if (child->node_type == REDIRECT_ERROR) {
+                    if (error_node) {
+                        /* Duplicate - mark error */
+                        mknd_err(child, "DUPLICATE");
+                        /* And chain to bad_nodes */
+                        child->sibling = bad_nodes;
+                        bad_nodes = child;
+                    }
+                    else error_node = child;
+                }
+                else if (child->node_type == REDIRECT_EXPOSE) {
+                    if (expose_node) {
+                        /* Duplicate - mark error */
+                        mknd_err(child, "DUPLICATE");
+                        /* And chain to bad_nodes */
+                        child->sibling = bad_nodes;
+                        bad_nodes = child;
+                    }
+                    else expose_node = child;
+                }
+                child = next_child;
+            }
+
+            /* Now add the nodes in the right order */
+            child = node->child->sibling; /* Child1 = environment, child2 = command */
+            /* Input */
+            if (input_node) child->sibling = input_node;
+            else {
+                add_ast(
+                        add_sbtr(child,ast_ft(context, REDIRECT_IN)),
+                        ast_ft(context, NOVAL)
+                );
+            }
+            child = child->sibling;
+
+            /* Output */
+            if (output_node) child->sibling = output_node;
+            else {
+                add_ast(
+                        add_sbtr(child,ast_ft(context, REDIRECT_OUT)),
+                        ast_ft(context, NOVAL)
+                );
+            }
+            child = child->sibling;
+
+            /* Error */
+            if (error_node) child->sibling = error_node;
+            else {
+                add_ast(
+                        add_sbtr(child,ast_ft(context, REDIRECT_ERROR)),
+                        ast_ft(context, NOVAL)
+                );
+            }
+            child = child->sibling;
+
+            /* Exposed Variables */
+            // TODO WHEN WE HAVE OP_MAKE_ARRAY
+//            if (expose_node) child->sibling = expose_node;
+//            else {
+//                add_sbtr(child,ast_ft(context, REDIRECT_EXPOSE));
+//            }
+//            child = child->sibling;
+
+            /* Errors / Junk */
+            child->sibling = bad_nodes;
+        }
+
         else if (node->node_type == OP_SCONCAT) {
             /* We need to decide if there is white space between the tokens */
             if (node->child->sibling->source_start - node->child->source_end == 1)
@@ -716,41 +827,89 @@ static walker_result rewrite_address_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
 
-    ASTNode* command_node;
+    ASTNode* args_node;
     ASTNode* function_node;
     ASTNode* temp_node;
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == ADDRESS) {
-            /* Rewrite to an assignment from a function */
+        switch (node->node_type) {
 
-            /* Assignment node and remember the command */
-            node->node_type = ASSIGN;
-            command_node = node->child;
-            ast_del(node->child);
+            case ADDRESS:
+                /* Rewrite to an assignment from a function */
 
-            /* rc is the target */
-            temp_node = ast_ft(context, VAR_TARGET);
-            ast_str(temp_node, "rc");
-            add_ast(node,temp_node);
+                /* Assignment node and remember the command */
+                node->node_type = ASSIGN;
 
-            /* Function */
-            function_node = ast_ft(context, FUNCTION);
-            ast_str(function_node, "_address");
-            add_ast(node,function_node);
+                /* Function */
+                function_node = ast_ft(context, FUNCTION);
+                ast_str(function_node, "_address");
 
-            /* Parameters */
-            temp_node = ast_ft(context, NOVAL);
-            add_ast(function_node,temp_node);
+                /* Move Params */
+                args_node = node->child;
+                while (args_node) {
+                    ast_del(args_node);
+                    add_ast(function_node,args_node);
+                    args_node = node->child;
+                }
 
-            add_ast(function_node,command_node);
+                /* rc is the target */
+                temp_node = ast_ft(context, VAR_TARGET);
+                ast_str(temp_node, "rc");
+                add_ast(node,temp_node);
+
+                /* Add Function */
+                add_ast(node,function_node);
+                break;
+
+            case REDIRECT_IN:
+                if (node->child->value_type == TP_VOID) {
+                    /* Just remove the node and convert to a noredir function */
+                    ast_del(node->child);
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_noredir");
+                }
+                else if (node->child->value_dims) {
+                    /* Array Redirect */
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_array2redir");
+                }
+                else {
+                    /* String Redirect */
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_string2redir");
+                }
+                break;
+
+            case REDIRECT_OUT:
+            case REDIRECT_ERROR:
+                if (node->child->value_type == TP_VOID) {
+                    /* Just remove the node and convert to a noredir function */
+                    ast_del(node->child);
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_noredir");
+                }
+                else if (node->child->value_dims) {
+                    /* Array Redirect */
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_redir2array");
+                }
+                else {
+                    /* String Redirect */
+                    node->node_type = FUNCTION;
+                    ast_str(node, "_redir2string");
+                }
+                break;
+
+            case REDIRECT_EXPOSE:
+                /* Turn into an array - or no value */
+                node->node_type = OP_MAKE_ARRAY;
+            default:;
         }
     }
 
     return result_normal;
 }
-
 
 /*
  * Adds rxsysb if needed
@@ -1113,7 +1272,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                     }
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
                         /* Add a warning - if it has not already errored/warned */
-                        if (ast_chld(n, ERROR, WARNING) == 0)
+                        if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
                             mknd_war(n, "DUPLICATE_SYMBOL");
                     }
                     else {
@@ -1173,7 +1332,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                             if (symislnk(ast_chld(node->parent, INSTRUCTIONS, NOP), symbol)) {
                                 /* It's linked to the procedure's instructions - therefore a duplicate */
                                 /* Add a warning - if it has not already errored/warned */
-                                if (ast_chld(n, ERROR, WARNING) == 0)
+                                if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
                                     mknd_war(n, "DUPLICATE_SYMBOL");
                             }
                             else {
@@ -1363,16 +1522,17 @@ static void validate_symbols(Scope* scope) {
  */
 
 /* Type promotion matrix for numeric operators */
-const ValueType promotion[7][7] = {
-/*                TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_OBJECT */
+const ValueType promotion[8][8] = {
+/*                  TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_BINARY,   TP_OBJECT */
 
-/* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN},
-/* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
-/* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_BOOLEAN, TP_OBJECT},
-/* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_INTEGER, TP_OBJECT},
-/* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
-/* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_OBJECT},
-/* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT},
+/* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN},
+/* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_BINARY,   TP_OBJECT},
+/* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_BOOLEAN, TP_UNKNOWN,  TP_OBJECT},
+/* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_INTEGER, TP_UNKNOWN,  TP_OBJECT},
+/* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
+/* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
+/* TP_BINARY  */ {TP_UNKNOWN, TP_BINARY,  TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_OBJECT},
+/* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,   TP_OBJECT},
 };
 
 /* Returns the value_type of a node - arrays changes to TP_OBJECT */
@@ -2189,6 +2349,8 @@ void rxcp_val(Context *context) {
     /* Re-write ADDRESS Instructions and incremental update of symbols */
     context->current_scope = 0;
     ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+    context->after_rewrite = 1; /* So walkers can avoid duplicate processing */
+
     ordinal_counter = 0;
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
     context->current_scope = 0;

@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "Running $1 $2"
+echo "Running $1 $2 $3 $4"
 
 echo "cleanup"
 rm $1".rxas"
@@ -15,5 +15,5 @@ echo "rxdas $1"
 ../cmake-build-debug/disassembler/rxdas $1
 
 echo "rxvm $1"
-../cmake-build-debug/interpreter/rxvm $1 ../cmake-build-debug/lib/rxfns/library -a $2
+../cmake-build-debug/interpreter/rxvm $1 ../cmake-build-debug/lib/rxfns/library -a $2 $3 $4
 #../cmake-build-debug/interpreter/rxvm $1

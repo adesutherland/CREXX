@@ -339,6 +339,7 @@ char* type_nm(ValueType type) {
         case TP_INTEGER: return ".int";
         case TP_FLOAT: return ".float";
         case TP_STRING: return ".string";
+        case TP_BINARY: return ".binary";
         case TP_OBJECT: return ".object";
         case TP_VOID: return ".void";
         default: return ".unknown";

@@ -324,7 +324,9 @@ void init_ops() {
     instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_FLOAT,OP_INT);
     instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_STRING,OP_INT);
 
-    instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
+    instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag | op2)", OP_REG, OP_INT,OP_NONE);
+    instr_f("getandtp", "get the register type flag with mask (op1(int) = op2.typeflag & op3)", OP_REG, OP_REG,OP_INT);
+
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
 

@@ -128,11 +128,13 @@ int rexbscan(Context* s) {
     'LOOP' { return(TK_LOOP); }
   //  'DROP' { return(TK_DROP); }
     'ELSE' { return(TK_ELSE); }
+    'ERROR' { return(TK_ERROR); }
     'END' { return(TK_END); }
   //  'EXTERNAL' { return(TK_EXTERNAL); }
   //  'EXIT' { return(TK_EXIT); }
     'IF' { return(TK_IF); }
     'IMPORT' { return(TK_IMPORT); }
+    'INPUT' { return(TK_INPUT); }
   //  'INTERPRET' { return(TK_INTERPRET); }
     'ITERATE' { return(TK_ITERATE); }
     'LEAVE' { return(TK_LEAVE); }
@@ -141,6 +143,7 @@ int rexbscan(Context* s) {
   //  'NUMERIC' { return(TK_NUMERIC); }
   'OPTIONS' { return(TK_OPTIONS); }
   //  'OTHERWISE' { return(TK_OTHERWISE); }
+  'OUTPUT' { return(TK_OUTPUT); }
   //  'PARSE' { return(TK_PARSE); }
     'PROCEDURE' { return(TK_PROCEDURE); }
   //  'PULL' { return(TK_PULL); }

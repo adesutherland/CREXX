@@ -6,15 +6,15 @@ namespace rxfnsb expose value
 /* Only does a read (and value is always returned as a string) for the initial release */
 
 value: procedure = .string
-  arg input = .string
+  arg inputstring = .string
 
-  if input = "" then return "" /* ? */
+  if inputstring = "" then return "" /* ? */
 
   result = ""
   ires = 0
   fres = 0.0
   sres = ""
-  reg = lower(input)
+  reg = lower(inputstring)
   symbol = ""
   type = ""
   module = 0
@@ -82,6 +82,6 @@ value: procedure = .string
         end
      end
    end
-  if result = "" then result = upper(input)
+  if result = "" then result = upper(inputstring)
 
   return result

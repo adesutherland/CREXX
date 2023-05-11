@@ -355,7 +355,7 @@ assignment(I) ::=  TK_INTEGER(T) TK_EQUAL type_def(E).
       add_ast(I,E); }
 
 command(I)             ::= expression(E).
-                       { I = ast_ft(context, ADDRESS); add_ast(I,E); }
+                       { I = ast_ft(context, ADDRESS); add_ast(I,ast_ft(context, NOVAL)); add_ast(I,E); }
 
 keyword_instruction(I) ::= assembler(K). { I = K; }
 keyword_instruction(I) ::= address(K). { I = K; }
@@ -565,8 +565,22 @@ argument(E)         ::= TK_EXPOSE TK_CLASS_STEM(S).
 /* Instructions */
 
 /* ADDRESS */
-address(A)   ::= TK_ADDRESS expression(E).
-             { A = ast_ft(context, ADDRESS); add_ast(A,E); }
+address(A)   ::= TK_ADDRESS var_symbol(S) expression(E).
+             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); }
+address(A)   ::= TK_ADDRESS var_symbol(S) expression(E) redirect_list(R).
+             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); add_ast(A,R); }
+redirect_list(L) ::= redirect(E).
+                 { L = E; }
+redirect_list(L) ::= redirect_list(L1) redirect(L2).
+                 { L = L1; add_sbtr(L,L2); }
+redirect(C)      ::= TK_OUTPUT var_symbol(S).
+                 { C = ast_ft(context, REDIRECT_OUT); add_ast(C, S); }
+redirect(C)      ::= TK_ERROR var_symbol(S).
+                 { C = ast_ft(context, REDIRECT_ERROR); add_ast(C, S); }
+redirect(C)      ::= TK_INPUT expression(S).
+                 { C = ast_ft(context, REDIRECT_IN); add_ast(C, S); }
+redirect(C)      ::= TK_EXPOSE expose_list(S).
+                 { C = ast_ft(context, REDIRECT_EXPOSE); add_ast(C, S); }
 
 /* Assembler */
 assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).

@@ -10,7 +10,7 @@ substr: procedure = .string
   arg string1 = .string, start = .int, len = length(string1) + 1 - start, pad = ' '
 
   padchar = 0 /* Is an integer */
-  output = ''
+  outputstring = ''
   inputLength = 0;
   padLength = 0;
 
@@ -41,13 +41,13 @@ substr: procedure = .string
     if len <= inputLength then do
       /* Just copy from string1 - no padding needed */
       do i = start to start + len - 1
-        assembler concchar output,string1,i
+        assembler concchar outputstring,string1,i
       end
     end
     else do
       /* Copy all of string1 and then pad */
       do i = start to start + inputLength - 1
-        assembler concchar output,string1,i
+        assembler concchar outputstring,string1,i
       end
 
       /* Then add pads */
@@ -56,7 +56,7 @@ substr: procedure = .string
       assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
       /* Append the pads */
       do i = 1 to len - inputLength
-        assembler appendchar output,padchar
+        assembler appendchar outputstring,padchar
       end
     end
   end
@@ -68,9 +68,9 @@ substr: procedure = .string
     assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
     /* Append pads */
     do i = 1 to len
-      assembler appendchar output,padchar
+      assembler appendchar outputstring,padchar
     end
   end
 
   /* Done */
-  return output
+  return outputstring

@@ -394,6 +394,8 @@ void* InputFromStringThread(void* lpvThreadParam)
     WriteToStdin(context, context->reg->string_value, context->reg->string_length);
     WriteToStdin(context, "\n", 1);
 
+    close(context->hWrite);
+
     return NULL;
 }
 
@@ -417,6 +419,8 @@ void* InputFromArrayThread(void* lpvThreadParam)
         WriteToStdin(context, context->reg->attributes[i]->string_value, context->reg->attributes[i]->string_length);
         WriteToStdin(context, "\n", 1);
     }
+
+    close(context->hWrite);
 
     return NULL;
 }

@@ -3,7 +3,7 @@ A=3
 DAY='Monday'
 
 say '    Start #: Precedence'
-
+failed = 0
 if -3**2 <> 9 then do
   say 'test 1 failed'
   failed = failed + 1

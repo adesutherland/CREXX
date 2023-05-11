@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0045"
+#define rxversion "cREXX F0045WIP1"
 
 #include <stdio.h>
 #include "platform.h"
@@ -34,7 +34,7 @@ typedef enum RexxLevel {
 } RexxLevel;
 
 typedef enum ValueType {
-    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
+    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_BINARY, TP_OBJECT
 } ValueType;
 
 /*  Importable Functions */
@@ -64,6 +64,7 @@ typedef struct Context {
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
+    char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
     char changed; /* Flag Used to see if a walker has made a change */
     /* Do we need to import _rxsysb */
     char need_rxsysb;
@@ -101,13 +102,15 @@ void sym_imva(Context *context, Symbol *symbol);
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    FLOAT, INTEGER, OP_MAKE_ARRAY,
+    NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, RANGE, REPEAT,
-    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
+    REDIRECT_IN, REDIRECT_OUT, REDIRECT_ERROR, REDIRECT_EXPOSE,
+    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, BINARY, TARGET, TEMPLATES, TO, TOKEN, UPPER,
     VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WARNING, WHILE, UNTIL
 } NodeType;
 

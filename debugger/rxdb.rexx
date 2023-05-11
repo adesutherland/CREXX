@@ -86,7 +86,7 @@ do forever
           assembler bpon
           assembler dcall rc,call_id,no_args
           assembler bpoff
-          say green"RXDB:" c2 "returned"
+          say green"RXDB:" c2 "returned" rc
         end
       end
     end

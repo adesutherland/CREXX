@@ -1774,7 +1774,7 @@ static walker_result emit_walker(walker_direction direction,
                          * to do a copy - but check if the argument needs preserving */
 
                         /* Only worry about it if it is a big register */
-                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT || node->value_type == TP_BINARY) {
                             temp1 = mprintf(
                                     "   br l%dd\n"
                                     "l%da:\n"
@@ -1819,7 +1819,7 @@ static walker_result emit_walker(walker_direction direction,
                     /* Copy by value so may need to do a copy - but check if the argument needs preserving */
 
                     /* Only worry about it if it is a big register */
-                    if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT) {
+                    if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT || node->value_type == TP_BINARY) {
                         temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
                                         "   br l%dd\n"
@@ -1900,7 +1900,7 @@ static walker_result emit_walker(walker_direction direction,
                      * set (2) means that it is not a symbol so its value does not need
                      * preserving */
                     if (!n->is_ref_arg &&
-                        (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT)) {
+                        (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT || n->target_type == TP_BINARY)) {
                         k = 1; /* This means we will settp */
                         if (!n->symbolNode) j = REGTP_NOTSYM; /* Mark it as not a symbol */
                     }

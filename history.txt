@@ -1,6 +1,6 @@
 CREXX History / Change Log
 
-F0045 - Arrays
+F0045WIP1 - Arrays
 F0044 - cREXX Level B Language enhancements (Part 2)
       - Return type of implicitly defined main() automatically set to int or void
       - Exposed Procedures

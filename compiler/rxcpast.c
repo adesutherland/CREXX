@@ -912,6 +912,8 @@ const char *ast_ndtp(NodeType type) {
             return "FLOAT";
         case INTEGER:
             return "INTEGER";
+        case OP_MAKE_ARRAY:
+            return "OP_MAKE_ARRAY";
         case NAMESPACE:
             return "NAMESPACE";
         case NOP:
@@ -988,6 +990,14 @@ const char *ast_ndtp(NodeType type) {
             return "REL_POS";
         case REPEAT:
             return "REPEAT";
+        case REDIRECT_IN:
+            return "REDIRECT_IN";
+        case REDIRECT_OUT:
+            return "REDIRECT_OUT";
+        case REDIRECT_ERROR:
+            return "REDIRECT_ERROR";
+        case REDIRECT_EXPOSE:
+            return "REDIRECT_EXPOSE";
         case RETURN:
             return "RETURN";
         case REXX_OPTIONS:
@@ -1000,6 +1010,8 @@ const char *ast_ndtp(NodeType type) {
             return "SIGN";
         case STRING:
             return "STRING";
+        case BINARY:
+            return "BINARY";
         case TARGET:
             return "TARGET";
         case TEMPLATES:
@@ -1393,6 +1405,9 @@ char* ast_n2tp(ASTNode *node) {
             case TP_STRING:
                 strcpy(buffer, ".string");
                 break;
+            case TP_BINARY:
+                strcpy(buffer, ".binary");
+                break;
             case TP_OBJECT:
                 strcpy(buffer, ".object");
                 break;
@@ -1586,6 +1601,10 @@ walker_result pdot_walker_handler(walker_direction direction,
             case PULL:
             case RANGE:
             case REPEAT:
+            case REDIRECT_IN:
+            case REDIRECT_OUT:
+            case REDIRECT_ERROR:
+            case REDIRECT_EXPOSE:
             case RETURN:
             case SAY:
             case UPPER:
@@ -1635,6 +1654,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_MAKE_ARRAY:
             case NOVAL:
                 attributes = "color=darkcyan";
                 only_type = 1;
@@ -1663,6 +1683,7 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case STRING:
+            case BINARY:
             case INTEGER:
             case FLOAT:
             case CONSTANT:

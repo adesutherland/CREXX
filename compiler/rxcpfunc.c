@@ -529,7 +529,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         case LEVELA:
         case LEVELC:
         case LEVELD:
-            fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
             break;
 
         case LEVELB:
@@ -539,11 +539,11 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
             break;
 
         default:
-            fprintf(stderr, "Importing Procedures - INTERNAL ERROR: Failed to determine REXX Level\n");
+            if (parent_context->debug_mode) fprintf(stderr, "Importing Procedures - INTERNAL ERROR: Failed to determine REXX Level\n");
     }
 
     if (!context->ast) {
-        fprintf(stderr,"Importing Procedures - INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
+        if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
@@ -679,6 +679,7 @@ static ValueType type_from_string(char* type) {
     if (strcmp(type, ".int") == 0) return TP_INTEGER;
     if (strcmp(type, ".float") == 0) return TP_FLOAT;
     if (strcmp(type, ".string") == 0) return TP_STRING;
+    if (strcmp(type, ".binary") == 0) return TP_BINARY;
     if (strcmp(type, ".boolean") == 0) return TP_BOOLEAN;
     if (strcmp(type, ".void") == 0) return TP_VOID;
     if (strcmp(type, ".unknown") == 0) return TP_UNKNOWN;

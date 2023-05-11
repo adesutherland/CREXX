@@ -198,8 +198,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         if (step_handler) break;
     }
 
-    /* Find the program's entry point
-     * TODO The assembler should save this in the binary structure */
+    /* Find the program's entry point */
     DEBUG("Find program entry point\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
         int i = context->modules[mod_index]->proc_head;
@@ -892,12 +891,12 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
-                    for (i = 0, j =
-                                        temp_frame->procedure->binarySpace
-                                                ->globals +
-                                        temp_frame->procedure->locals + 1;
-                            i < argc;
-                            i++, j++) {
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
+                    for (i = 0, j = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                         i < num_args;
+                         i++, j++) {
                         clear_value(temp_frame->baselocals[j]);
                         free(temp_frame->baselocals[j]);
                     }
@@ -3251,6 +3250,14 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
 /*
+ * GETANDTP_REG_REG_INT get the register type flag with mask (op1(int) = op2.typeflag & op3)
+ */
+        START_INSTRUCTION(GETANDTP_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - GETANDTP R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            op1R->int_value = op2R->status.all_type_flags & op3I;
+            DISPATCH
+
+/*
  * BRTPT_ID_REG if op2.typeflag true then goto op1
  */
         START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2)
@@ -3510,7 +3517,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
     /* fclose - op1 rc(int) = fclose op2 file*(int) */
     START_INSTRUCTION(FCLOSE_REG_REG) CALC_DISPATCH(2)
         DEBUG("TRACE - FCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fclose((FILE*)op1R->int_value);
+        op1R->int_value = fclose((FILE*)op2R->int_value);
         DISPATCH;
 
     /* fflush - op1 rc(int) = fflush op2 file*(int) */
