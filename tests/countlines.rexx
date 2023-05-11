@@ -32,7 +32,7 @@ print_results: procedure
     arg name = .string[], count = .int[]
     total = 0
 
-    do i = 1 to name.0 /* name.1 is the program name argument */
+    do i = 1 to name.0
         Say "Search" name.i "has" count.i "lines"
         total = total + count.i
     end
@@ -50,7 +50,7 @@ do_search: procedure = .int
 
     /* Environments don't do anything yet ... */
     address cmd "ls" output files
-    if rc <> 0 then say "RC = "rc "when doing :" "ls" search
+    if rc <> 0 then say "RC = "rc "when doing : ls"
 
     /* Count the lines in each file */
     do i = 1 to files.0
