@@ -16,8 +16,6 @@ ordered_searches = .string[]
 address cmd "sort" input searches output ordered_searches
 if rc <> 0 then say "RC = "rc "when doing sort"
 
-result = .int[]
-
 /* Count the files */
 do i = 1 to ordered_searches.0
     result.i = do_search(ordered_searches[i])

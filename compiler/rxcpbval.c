@@ -1743,6 +1743,11 @@ static walker_result set_node_types_walker(walker_direction direction,
                                                  &(child1->symbolNode->symbol->dim_base),
                                                  &(child1->symbolNode->symbol->dim_elements),
                                                  &(child1->symbolNode->symbol->value_class));
+
+                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                                node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+
                         }
                     }
                 }
@@ -2034,6 +2039,9 @@ static walker_result type_safety_walker(walker_direction direction,
                                              &(child1->symbolNode->symbol->dim_elements),
                                              &(child1->symbolNode->symbol->value_class));
 
+                        if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                            node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
                     }
                     ast_svtp(child1, child1->symbolNode->symbol);
 
