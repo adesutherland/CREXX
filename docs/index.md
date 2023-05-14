@@ -1,6 +1,6 @@
 # CREXX
 
-_Release Documentation - cREXX F0045WIP1 - Sept 2022_
+_Release Documentation - cREXX F0045WIP2 - Sept 2022_
 
 ## REXX Language Implementation Architecture
 
@@ -40,7 +40,7 @@ The documentation is stored in the code repository/branch under the [/doc](https
 
 # Current Component User Documentation
 
-cREXX F0045WIP1
+cREXX F0045WIP2
 
 ## Running a REXX program
 

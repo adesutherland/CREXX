@@ -628,15 +628,15 @@ static walker_result initial_checks_walker(walker_direction direction,
                     has_assign = 1;
                 }
                 else if (child->node_type == BY) {
-                    if (has_by) mknd_err(child, "27.1");
+                    if (has_by) mknd_err(child, "INVALID_DO");
                     else has_by = 1;
                 }
                 else if (child->node_type == FOR) {
-                    if (has_for) mknd_err(child, "27.1");
+                    if (has_for) mknd_err(child, "INVALID_DO");
                     else has_for = 1;
                 }
                 else if (child->node_type == TO) {
-                        if (has_to) mknd_err(child, "27.1");
+                        if (has_to) mknd_err(child, "INVALID_DO");
                         else has_to = 1;
                 }
                 child = child->sibling;

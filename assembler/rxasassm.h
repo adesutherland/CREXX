@@ -4,7 +4,7 @@
 #ifndef CREXX_RXASASSM_H
 #define CREXX_RXASASSM_H
 
-#define rxversion "cREXX F0045WIP1"
+#define rxversion "cREXX F0045WIP2"
 
 #include "rxas.h"
 #include "rxasgrmr.h"

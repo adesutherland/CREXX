@@ -17,10 +17,11 @@ int opt_scan(Context* s) {
     re2c:yyfill:enable = 0;
     re2c:eof = 0;
 */
-    regular:
 
     /* Character Encoding Specifics  */
     /*!include:re2c "encoding.re" */
+
+    regular:
 
 /*!re2c
     re2c:yyfill:enable = 0;
@@ -61,16 +62,18 @@ int opt_scan(Context* s) {
         goto regular;
     }
     ";" { return(TK_EOC); }
+
     // Accept all line comment formats
-    [#] .* {
-        goto regular;
+    [#] {
+       goto skip_line_comment;
     }
-    "//" .* {
-        goto regular;
+    "//" {
+       goto skip_line_comment;
     }
-    "--" .* {
-        goto regular;
+    "--" {
+       goto skip_line_comment;
     }
+
     eol2 {
         s->line++;
         s->linestart = s->cursor+2;
@@ -110,5 +113,28 @@ int opt_scan(Context* s) {
     eof { return(TK_EOS); }
     $ { return(TK_EOS); }
     any { goto comment; }
+*/
+
+skip_line_comment:
+/*!re2c
+  eol1 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor+1;
+    s->top = s->cursor - 1;
+    return(TK_EOC);
+  }
+  eol2 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor+2;
+    s->top = s->cursor - 1;
+    return(TK_EOC);
+  }
+  eof { return(TK_EOS); }
+  $ { return(TK_EOS); }
+  any {
+    goto skip_line_comment;
+  }
 */
 }

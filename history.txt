@@ -1,6 +1,10 @@
 CREXX History / Change Log
 
-F0045WIP1 - Arrays
+F0045 - Arrays
+      - Address
+      - FILE IO
+      - Cleaned up Errors
+      - Binary Type
 F0044 - cREXX Level B Language enhancements (Part 2)
       - Return type of implicitly defined main() automatically set to int or void
       - Exposed Procedures

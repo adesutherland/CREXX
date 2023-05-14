@@ -704,24 +704,22 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
     return node;
 }
 
-/* ASTNode Factory - Error Node */
+/* Add error node to parent node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token) {
-    ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
-    add_ast(errorAST, ast_f(context, TOKEN, token));
-    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
-    return errorAST;
+    ASTNode *newNode = ast_f(context, TOKEN, token);
+    mknd_err(newNode, error_string);
+    return newNode;
 }
 
 /* Add warning node to parent node */
-ASTNode *ast_war(ASTNode* parent, char *warning_string) {
-    ASTNode *warningAST = ast_ftt(parent->context, WARNING, warning_string);
-    add_ast(parent, warningAST);
-    if (parent->context->debug_mode) print_error(warningAST, stdout, "DEBUG: Error in");
-    return warningAST;
+ASTNode *ast_war(Context* context, char *warning_string, Token *token) {
+    ASTNode *newNode = ast_f(context, TOKEN, token);
+    mknd_war(newNode, warning_string);
+    return newNode;
 }
 
-/* Add an ERROR node to a node */
-void mknd_err(ASTNode* node, char *error_string, ...) {
+/* Add an ERROR node to a node - returns node for chaining */
+ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
@@ -755,16 +753,19 @@ void mknd_err(ASTNode* node, char *error_string, ...) {
     /* Child node */
     errNode = ast_ftt(node->context, ERROR, buffer);
     add_ast(node,  errNode);
+    errNode->token = node->token;
     errNode->free_node_string = 1;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
     errNode->line = node->line;
     errNode->column = node->column;
     if (node->context->debug_mode) print_error(errNode, stdout, "DEBUG: Error in");
+
+    return node;
 }
 
-/* Add a warning child node  */
-void mknd_war(ASTNode* node, char *error_string, ...) {
+/* Add a warning child node - returns node for chaining */
+ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
@@ -796,13 +797,17 @@ void mknd_war(ASTNode* node, char *error_string, ...) {
     }
 
     /* Child node */
-    warNode = ast_war(node, buffer);
+    warNode = ast_ftt(node->context, WARNING, buffer);
+    add_ast(node,  warNode);
+    warNode->token = node->token;
     warNode->free_node_string = 1;
     warNode->source_start = node->source_start;
     warNode->source_end = node->source_end;
     warNode->line = node->line;
     warNode->column = node->column;
     if (node->context->debug_mode) print_error(warNode, stdout, "DEBUG: Error in");
+
+    return node;
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for

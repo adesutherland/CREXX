@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0045WIP1"
+#define rxversion "cREXX F0045WIP2"
 
 #include <stdio.h>
 #include "platform.h"
@@ -218,10 +218,10 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node);
  * - Ordinals
  */
 ASTNode *ast_dup(Context* new_context, ASTNode *node);
-/* Add warning node to parent node */;
-ASTNode *ast_war(ASTNode* parent, char *warning_string);
-/* ASTNode Factory - Error Node */
+/* Add error node to parent node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
+/* Add warning node to parent node */
+ASTNode *ast_war(Context* context, char *warning_string, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
 /* Add a duplicate of the tree headed by the source node as a child to dest
@@ -233,10 +233,10 @@ void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
-/* Add an error child node  */
-void mknd_err(ASTNode* node, char *error_string, ...);
-/* Add a warning child node  */
-void mknd_war(ASTNode* node, char *error_string, ...);
+/* Add an error child node  - returns node for chaining */
+ASTNode *mknd_err(ASTNode* node, char *error_string, ...);
+/* Add a warning child node  - returns node for chaining */
+ASTNode *mknd_war(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
