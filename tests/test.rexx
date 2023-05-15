@@ -1,1 +1,0 @@
-/* Address testbed */options levelbnamespace testimport rxfnsbarg searches = .string[]/* Add a default search if none are given */if searches.0 < 1 then searches.2 = ".rexx"/* Count the files */do i = 1 to searches.0    say searches.iend
