@@ -1217,12 +1217,13 @@ static void meta_set_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
     int symbol_ordinal;
     char *type;
+    SymbolNode *symbol_node;
 
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         /* Logic that works out if we should emit the variable meta data here */
         if (symbol->meta_emitted) return;     /* Aleady done */
-        if (node->high_ordinal == -1) return; /* Weird optimiser added node - skip as we don't know whats going on */
+        if (node->high_ordinal == -1) return; /* Weird optimiser added node - skip as we don't know what's going on */
         symbol_ordinal = sym_lord(symbol);
         if (symbol_ordinal > node->high_ordinal) return; /* Symbol is not yet valid */
         symbol->meta_emitted = 1;
@@ -1230,15 +1231,16 @@ static void meta_set_symbol(Symbol *symbol, void *payload) {
         if (symbol->symbol_type == CONSTANT_SYMBOL) {
             type = sym_2tp(symbol);
             symbol_fqn = sym_frnm(symbol);
-            value_node = sym_trnd(symbol, 0)->node->sibling;
-            if (value_node) {
+
+            symbol_node = sym_trnd(symbol, 0);
+            if (symbol_node) {
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%.*s\"\n",
                                  symbol_fqn,
                                  type,
-                                 (int) value_node->node_string_length, value_node->node_string);
+                                 (int) symbol_node->node->node_string_length, symbol_node->node->node_string);
             }
             else {
-                /* Taken constant so no defining node - the name is its value */
+                /* Must be a taken constant - the name is its value */
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%s\"\n",
                                  symbol_fqn,
                                  type,

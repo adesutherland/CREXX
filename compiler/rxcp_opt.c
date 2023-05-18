@@ -23,7 +23,7 @@ typedef struct Payload {
 static void update_string(ASTNode* node) {
     char* buffer;
     size_t length;
-    if (node->node_type == ERROR) return; /* Don't over write error codes */
+    if (ast_hase(node)) return; /* Don't over write error codes */
     switch (node->value_type) {
         case TP_INTEGER:
         case TP_BOOLEAN:
@@ -140,7 +140,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             node->value_type = TP_FLOAT;
             node->target_type = TP_FLOAT;
             if (string2float(&node->float_value,node->node_string,node->node_string_length)) {
-                mknd_err(node, "31.1");
+                mknd_err(node, "BAD_CONVERSION");
             }
             return;
 
@@ -149,7 +149,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             node->target_type = TP_BOOLEAN;
             /* Convert it to a float and then to 1/0 - slow but safe */
             if (string2float(&f,node->node_string,node->node_string_length)) {
-                mknd_err(node, "31.1");
+                mknd_err(node, "BAD_CONVERSION");
             }
             if (f) node->int_value = 1;
             else node->int_value = 0;
@@ -162,7 +162,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             if (string2integer(&node->int_value,node->node_string,node->node_string_length)) {
                 /* Check if it is an int in float format */
                 if (string2float(&f,node->node_string,node->node_string_length)) {
-                    mknd_err(node, "31.1");
+                    mknd_err(node, "BAD_CONVERSION");
                 }
                 floor_val = floor(f);
                 /* Less than an "EPSILON" above the floor? */
@@ -179,7 +179,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     return;
                 }
                 /* Not an integer */
-                mknd_err(node, "31.1");
+                mknd_err(node, "BAD_CONVERSION");
             }
             return;
 
@@ -195,7 +195,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 /* Note the string has to be malloced and memory management is then owned by the
  * node (ie. malloc string but DONT free it after the call */
 static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
-    node->child = 0;
+    ast_prnc(node);
     node->value_type = TP_STRING;
     node->node_type = CONSTANT;
     ast_sstr(node, string, length);
@@ -204,7 +204,7 @@ static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* st
 }
 
 static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double value) {
-    node->child = 0;
+    ast_prnc(node);
     node->value_type = TP_FLOAT;
     node->node_type = CONSTANT;
     node->float_value = value;
@@ -214,7 +214,7 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 }
 
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value) {
-    node->child = 0;
+    ast_prnc(node);
     node->value_type = TP_INTEGER;
     node->node_type = CONSTANT;
     node->int_value = value;
@@ -225,7 +225,7 @@ static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteg
 
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value) {
     if (value) value = 1;
-    node->child = 0;
+    ast_prnc(node);
     node->value_type = TP_BOOLEAN;
     node->node_type = CONSTANT;
     node->int_value = value;
@@ -303,7 +303,7 @@ static walker_result opt1_walker(walker_direction direction,
                 }
                 else {
                     /* Just a NOP - prune the whole if node from the tree */
-                    ast_del(node);
+                    ast_prun(node);
                 }
                 payload->changed = 1;
             }
@@ -642,11 +642,20 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     /* TODO the logic here must be revisited once we have control flow analysis */
     Payload* payload = pload;
     ASTNode* n;
+    ASTNode* m;
     ASTNode* value_node;
     size_t i;
+    ValueType value_type;
+    rxinteger int_value;
+    int bool_value;
+    double float_value;
+    char *node_string;
+    size_t node_string_length;
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
     if (symbol->value_dims) return; /* Arrays are never constants */
+    if (!sym_nond(symbol)) return; /* No nodes - weird - return */
+
 
     n = sym_trnd(symbol, 0)->node;
     if (n->parent->node_type == ASSIGN  && n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {
@@ -656,33 +665,104 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         for (i=1; i<sym_nond(symbol); i++) {
             if (sym_trnd(symbol, i)->writeUsage) return; /* Not a constant as it is updated */
         }
+        value_type = value_node->value_type;
+        int_value = value_node->int_value;
+        bool_value = value_node->bool_value;
+        float_value = value_node->float_value;
+        node_string = value_node->node_string;
+        node_string_length = value_node->node_string_length;
+
+        /* Prune the original assignment from the tree */
+        ast_prun(n->parent);
     }
+
+    else if (n->parent->node_type == DEFINE) {
+        /* OK - an explicit declaration, this could be a constant symbol */
+
+        /* After the "define" usage could be an "assign" - this is the value of the constant */
+        if (sym_nond(symbol) < 2) m = 0;
+        else m = sym_trnd(symbol,1)->node;
+        if (m && m->parent->node_type == ASSIGN) {
+
+            /* Check to see if it is updated - we check after the next node (i=2) because the first write is just
+             * setting the initial value, but any writes after than mean it is not a constant */
+            for (i=2; i<sym_nond(symbol); i++) {
+                if (sym_trnd(symbol, i)->writeUsage) return; /* Not a constant as it is updated */
+            }
+
+            if (m->node_type == VAR_TARGET && m->sibling->node_type == CONSTANT) {
+                value_node = m->sibling;
+                value_type = value_node->value_type;
+                int_value = value_node->int_value;
+                bool_value = value_node->bool_value;
+                float_value = value_node->float_value;
+                node_string = value_node->node_string;
+                node_string_length = value_node->node_string_length;
+
+                /* Remove the assign */
+                ast_prun(m->parent);
+
+                /* Remove the define */
+                m = sym_trnd(symbol,0)->node->parent;
+                sym_dnd(symbol, 0);
+                ast_prun(m);
+            }
+            else return; /* The assign is not a constant - so neither if the symbol */
+        }
+
+        else {
+
+            /* Check to see if the symbol is updated */
+            for (i=1; i<sym_nond(symbol); i++) {
+                if (sym_trnd(symbol, i)->writeUsage) return; /* Not a constant as it is updated */
+            }
+
+            /* Otherwise the value is zero */
+            value_node = n->sibling;
+            value_type = value_node->value_type;
+            int_value = 0;
+            bool_value = 0;
+            float_value = 0.0;
+            /* if type is string it is blank, else 0 */
+            if (value_type == TP_STRING) {
+                node_string = "";
+                node_string_length = 0;
+            }
+            else {
+                node_string = "0";
+                node_string_length = 1;
+            }
+
+            /* Remove the define */
+            m = sym_trnd(symbol,0)->node->parent;
+            ast_prun(m);
+        }
+    }
+
     else return;
 
     /* Set all the AST nodes to constants - copied from the value_node */
     symbol->symbol_type = CONSTANT_SYMBOL;
     payload->changed = 1;
-    for (i=1; i<sym_nond(symbol); i++) {
+    for (i=0; i<sym_nond(symbol); i++) {
         n = sym_trnd(symbol, i)->node;
         n->node_type = CONSTANT;
-        n->value_type = value_node->value_type;
-        n->int_value = value_node->int_value;
-        n->float_value = value_node->float_value;
+        n->value_type = value_type;
+        n->int_value = int_value;
+        n->float_value = float_value;
+        n->bool_value = bool_value;
         if (n->free_node_string) {
             free(n->node_string);
             n->free_node_string = 0;
         }
-        n->node_string = value_node->node_string;
-        n->node_string_length = value_node->node_string_length;
+        n->node_string = node_string;
+        n->node_string_length = node_string_length;
 
-        /* Patchup to the right target type */
+        /* Patch up to the right target type */
         string_to_type(n, n->target_type);
         update_string(n);
         payload->changed = 1;
     }
-
-    /* Prune the original assignment from the tree */
-    ast_del(value_node->parent);
 }
 
 /* Propagate constant symbols  */

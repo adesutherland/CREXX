@@ -1101,8 +1101,12 @@ static walker_result build_symbols_walker(walker_direction direction,
             else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
                 mknd_err(node, "IS_A_NAMESPACE");
             }
+            else if (node->parent->node_type == DEFINE) {
+                mknd_err(node, "ALREADY_DECLARED");
+            }
 
-            sym_adnd(symbol, node, 0, 1);
+            if (node->parent->node_type == ASSIGN) sym_adnd(symbol, node, 0, 1);
+            else sym_adnd(symbol, node, 0, 0);
         }
 
         else if (node->node_type == VAR_SYMBOL) {
@@ -2015,9 +2019,9 @@ static walker_result type_safety_walker(walker_direction direction,
                     if (child1->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
                 }
 
-                if (child1->child) {
+                if (ast_nchd(child1)) {
                     /* We have unexpected array parameters */
-                    mknd_err(child1->child, "INVALID_LHS_ARRAY");
+                    mknd_err(ast_chdn(child1,0), "INVALID_LHS_ARRAY");
                 }
 
                 ast_sttn(child2, child1);

@@ -680,11 +680,14 @@ int sym_lord(Symbol *symbol) {
     dpa* array = (dpa*)(symbol->ast_node_array);
     size_t i;
     int o;
-    int ord = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+    int ord = 0;
+    if (array->size) {
+        ord = ((SymbolNode *) (array->pointers[0]))->node->low_ordinal;
 
-    for (i = 1; i < array->size; i++) {
-        o = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
-        if (o < ord) ord = o;
+        for (i = 1; i < array->size; i++) {
+            o = ((SymbolNode *) (array->pointers[0]))->node->low_ordinal;
+            if (o < ord) ord = o;
+        }
     }
 
     return ord;
@@ -728,6 +731,18 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 /* Returns the number of AST nodes connected to a symbol */
 size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
+}
+
+/* Disconnects a node from a symbol */
+void sym_dnd(Symbol *symbol, size_t node_num) {
+
+    /* unlink and free the symbolnode */
+    SymbolNode* sn = sym_trnd(symbol, node_num);
+    sn->node->symbolNode = 0;
+    free(sn);
+
+    /* Remove from array */
+    dpa_del((dpa*)(symbol->ast_node_array),node_num);
 }
 
 static void prepend_scope(char* buffer, const char* scope)

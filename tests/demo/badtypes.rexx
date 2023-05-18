@@ -11,5 +11,3 @@ a = 100
 b = "Value is"
 
 say a + b
-
-# TODO Implicit type safety issue in this build

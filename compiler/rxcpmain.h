@@ -257,6 +257,12 @@ char* ast_frnm(ASTNode* node);
 ASTNode* ast_proc(ASTNode *node);
 /* Get the child node of a certain type1 or type2 (or null) */
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
+/* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
+int ast_hase(ASTNode *node);
+/* Prune all nodes except ERRORs and WARNINGs */
+void ast_prun(ASTNode *node);
+/* Prune all children nodes except ERRORs and WARNINGs */
+void ast_prnc(ASTNode *node);
 /* Returns the number of children of a node */
 size_t ast_nchd(ASTNode* node);
 /* Returns the index number of a child of its parent (or -1 on error) */
@@ -436,6 +442,9 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
+
+/* Disconnects a node from a symbol */
+void sym_dnd(Symbol *symbol, size_t node_num);
 
 /* Returns the lowest ASTNode ordinal associated with the symbol */
 int sym_lord(Symbol *symbol);

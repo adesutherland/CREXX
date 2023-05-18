@@ -1547,6 +1547,43 @@ ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
     return 0;
 }
 
+/* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
+int ast_hase(ASTNode *node) {
+    if (node->node_type == ERROR || node->node_type == WARNING) return 1;
+
+    ASTNode *n = node->child;
+    while (n) {
+        if (ast_hase(n)) return 1;
+        n = n->sibling;
+    }
+    return 0;
+}
+
+/* Prune all nodes except ERRORs and WARNINGs */
+void ast_prun(ASTNode *node) {
+    ASTNode *n = node->child;
+    ASTNode *next;
+    while (n) {
+        next = n->sibling;
+        if (ast_hase(n)) ast_prun(n); /* If it has error nodes just prune it (recursive) */
+        else ast_del(n); /* Else delete it */
+        n = next;
+    }
+    if (!node->child && node->node_type != ERROR && node->node_type != WARNING) ast_del(node);
+}
+
+/* Prune all children nodes except ERRORs and WARNINGs */
+void ast_prnc(ASTNode *node) {
+    ASTNode *n = node->child;
+    ASTNode *next;
+    while (n) {
+        next = n->sibling;
+        if (ast_hase(n)) ast_prun(n); /* If it has error nodes just prune it (recursive) */
+        else ast_del(n); /* Else delete it */
+        n = next;
+    }
+}
+
 walker_result pdot_walker_handler(walker_direction direction,
                                   ASTNode* node, void *payload) {
     FILE* output = (FILE*)payload;
