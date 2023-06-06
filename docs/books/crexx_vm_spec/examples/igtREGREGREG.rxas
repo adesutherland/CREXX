@@ -1,4 +1,4 @@
-/* irt example */
+/* igt example */
 main()  .locals=6
     load r3,0   
     load r4,""
