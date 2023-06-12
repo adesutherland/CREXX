@@ -1521,6 +1521,18 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+*  IGTBR_ID_REG_REG  if op2>op3 ; goto op1                             pej 12 June 2023
+*  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(IGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - IGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RI > op3RI) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FEQ_REG_REG_REG  Float Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
@@ -2706,7 +2718,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
- *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1              pej 26 August 2021
+ *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3)
@@ -2718,6 +2730,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 CALC_DISPATCH_MANUAL
             }
         DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  BCTP_ID_REG  inc op2; goto op1                                     pej 11 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTP_ID_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - BCTP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(2)]->int_value)++;
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL
+        DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  -----------------------------------------------------------------------------------

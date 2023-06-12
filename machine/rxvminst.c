@@ -153,6 +153,7 @@ void init_ops() {
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_INT);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_INT, OP_REG);
+    instr_f("igtbr", "Int Greater than if (op2>op3) goto op1", OP_ID, OP_REG, OP_REG);
 
     instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_FLOAT);
@@ -293,6 +294,8 @@ void init_ops() {
     instr_f("bct", "dec op2; inc op3, if op2>0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
     instr_f("bctnm", "dec op2; if op2>=0; goto op1(if true)", OP_ID, OP_REG,OP_NONE);
     instr_f("bctnm", "dec op2; inc op3, if op2>=0; goto op1(if true)", OP_ID,OP_REG, OP_REG);
+    instr_f("bctp", "inc op2; goto op1", OP_ID, OP_REG,OP_NONE);
+
     instr_f("bcf", "if op2=0 goto op1(if false) else dec op2", OP_ID, OP_REG,OP_NONE);
     instr_f("bcf", "if op2=0 goto op1(if false) else dec op2 and inc op3", OP_ID,OP_REG, OP_REG);
 
