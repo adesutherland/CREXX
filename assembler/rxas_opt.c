@@ -83,8 +83,19 @@ typedef struct op_map {
  * b) The input mapping which is used to map a rule to an instruction.
  * c) 0,1, or 2 output template mappings that are used to replace the
  *    mapped instruction.
+ * d) syntax of the mapping rules
+ * *          *  flag type   type     inst    op1 v1  op2  v2 op3  v3
+ * input    *  {NO_HAZARD, OP_CODE, "instruction", 'r', 0, 'r', 0, 'r', 1,
+ * output 1 *              OP_CODE, "instruction", 'r', 0, 'r', 1,  0, 0},
+ * output 2 *
+ * input    *  {END_OF_RULE},  ...
  *
- * All the rules of a ruleset need to map to instructions correctly. When they do
+ *  op1/op2/op3 are the parameter types of the instruction, r: register, l: label, b: branch, ...
+ *  v1/v2/v3 is the temporary variable number in which the parameter content is kept, for the optimising statement.
+ *     0:    parameter is not kept
+ *     1-10: parameter is kept in the specified variable
+ *     This number can be used in the optimised template and allows to merge parts of several input templates
+ * * All the rules of a ruleset need to map to instructions correctly. When they do
  * all the mapped instructions are replaced by the output templates.
  *
  * Each instruction mapping can have a type of
@@ -353,6 +364,16 @@ rule rules[] =
                         ASM_LABEL,0,      'l', 2,  0,  0,  0,  0},
             {END_OF_RULE},
 
+            /* do loop improvement: replace igt/brt check by igtbr instruction:     igt r0,r3,r4; brt label,r0 => igtbr label,r3,r4  */
+              {ANY_GAP,   OP_CODE, "igt",   'r', 0, 'r', 1, 'r', 2},
+            {NO_GAP,   OP_CODE, "brt",   'b', 3, 'r', 4,  0,  0,
+                                OP_CODE, "igtbr", 'b', 3, 'r', 1, 'r', 2},
+            {END_OF_RULE},
+            /*  do loop increase ctr+1 and branch to start   inc rx; br dostart */
+            {NO_GAP,   OP_CODE, "inc",   'r', 1, 0, 0, 0, 0},
+            {NO_GAP,   OP_CODE, "br",   'b', 2, 0, 0,  0,  0,
+                                OP_CODE, "bctp", 'b', 2, 'r', 1, 0, 0},
+            {END_OF_RULE},
             /* NOTE Branch to unconditional branch is optimised later anyway so
              * no rule needed for these scenarios */
 
