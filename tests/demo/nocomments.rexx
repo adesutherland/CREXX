@@ -1,6 +1,6 @@
 #!/usr/local/crexx/rexx.sh
 /* Comments */
-options levelb dashcomments
+options levelb noslashcomments nodashcomments hashcomments
 
 # Hash Comments (this is enabled by default)
 -- Dash Comments
@@ -9,4 +9,3 @@ options levelb dashcomments
 
 say "hello Comments"
 
-# TODO - Check a freeze with some comment option combinations

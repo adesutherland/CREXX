@@ -407,7 +407,12 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
+    symbol->fixed_args = 0;
+    symbol->has_vargs = 0;
     symbol->exposed = 0;
+    symbol->is_arg = 0;
+    symbol->is_ref_arg = 0;
+    symbol->is_opt_arg = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -743,6 +748,19 @@ void sym_dnd(Symbol *symbol, size_t node_num) {
 
     /* Remove from array */
     dpa_del((dpa*)(symbol->ast_node_array),node_num);
+}
+
+/* Disconnects a node from a symbol */
+void sym_dno(Symbol *symbol, ASTNode* node) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node == node) {
+            sym_dnd(symbol, i);
+            return;
+        }
+    }
 }
 
 static void prepend_scope(char* buffer, const char* scope)

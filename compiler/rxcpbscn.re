@@ -113,7 +113,7 @@ int rexbscan(Context* s) {
   //  "&" ob "&" { return(TK_OR); } // TODO Check
     not { return(TK_NOT); }
     "," { return(TK_COMMA); }
-  //  "." { return(TK_STOP); }
+    "..." { return(TK_ELLIPSIS); }
     "(" { return(TK_OPEN_BRACKET); }
     ")" { return(TK_CLOSE_BRACKET); }
     "[" { return(TK_OPEN_SBRACKET); }
@@ -187,6 +187,10 @@ int rexbscan(Context* s) {
     class { return(TK_CLASS); }
     float { return(TK_FLOAT); }
     integer { return(TK_INTEGER); }
+    'ARG' / [.] {
+      s->lexer_stem_mode = 1;
+      return(TK_ARG_STEM);
+    }
     simple / [.] {
       s->lexer_stem_mode = 1;
       return(TK_STEM);

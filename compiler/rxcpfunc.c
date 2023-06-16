@@ -539,11 +539,11 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
             break;
 
         default:
-            if (parent_context->debug_mode) fprintf(stderr, "Importing Procedures - INTERNAL ERROR: Failed to determine REXX Level\n");
+            if (parent_context->debug_mode) fprintf(stderr, "Importing Procedures - Failed to determine REXX Level of imported rexx file\n");
     }
 
     if (!context->ast) {
-        if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
+        if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - Failure to create AST of imported rexx file\n");
         goto finish;
     }
 
@@ -782,6 +782,9 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
             add_dast(context->ast, func->context->ast->child);
             found_symbol = sym_rfqn(context->ast, found_func->fqname);
             found_symbol->exposed = 1; /* Exposed by definition! */
+            found_symbol->is_arg = 0; /* Can't expose args */
+            found_symbol->is_opt_arg = 0;
+            found_symbol->is_ref_arg = 0;
         }
     }
 

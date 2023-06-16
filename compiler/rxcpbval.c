@@ -597,8 +597,15 @@ static walker_result initial_checks_walker(walker_direction direction,
         if (node->node_type == PROGRAM_FILE) {
             /* Set namespace if not already set */
             if (!context->namespace) {
+                size_t i;
                 node->node_string = context->file_name;
                 node->node_string_length = strlen(context->file_name);
+                for (i = 0; i < node->node_string_length; i++) {
+                    if (node->node_string[i] == '.' || node->node_string[i] == ' ') {
+                        node->node_string_length = i;
+                        break;
+                    }
+                }
             }
             else {
                 node->node_string = context->namespace->node_string;
@@ -815,6 +822,16 @@ static walker_result initial_checks_walker(walker_direction direction,
                 free(buffer);
             }
         }
+
+        /* OP_ARG_VALUE to OP_ARGS Rewrites */
+        else if (node->node_type == OP_ARG_VALUE) {
+            if (node->child && ( (node->child->node_type == NOVAL) ||
+                                 (node->child->node_type == INTEGER && node_to_integer(node->child) == 0)) ) {
+                ast_del(node->child);
+                node->node_type = OP_ARGS;
+            }
+        }
+
     }
     return result_normal;
 }
@@ -999,12 +1016,13 @@ static walker_result build_symbols_walker(walker_direction direction,
     ASTNode *n;
 
     if (direction == in) {
+
+        /* IN - TOP DOWN */
         if (node->scope) {
             context->current_scope = node->scope;
             return result_normal; /* Skip if we have already processed this node */
         }
 
-        /* IN - TOP DOWN */
         if (node->node_type == REXX_UNIVERSE) {
             /* This top level scope will contain the project file scope & imported file scopes */
             context->current_scope = scp_f(context->current_scope, node, 0);
@@ -1105,7 +1123,53 @@ static walker_result build_symbols_walker(walker_direction direction,
                 mknd_err(node, "ALREADY_DECLARED");
             }
 
+            /* Set Argument flags - set by the parser grammar */
+            if (node->parent->node_type == ARG) {
+                symbol->is_arg = 1;
+                symbol->is_opt_arg = node->parent->is_opt_arg;
+                symbol->is_ref_arg = node->parent->is_ref_arg;
+                /* Add the count of fixed args for the procedure symbol */
+                ast_proc(node)->symbolNode->symbol->fixed_args++;
+            }
+
             if (node->parent->node_type == ASSIGN) sym_adnd(symbol, node, 0, 1);
+            else sym_adnd(symbol, node, 0, 0);
+        }
+
+        else if (node->node_type == VARG || node->node_type == VARG_REFERENCE) {
+            /* Set the procedure symbol has_vargs flag */
+            ast_proc(node)->symbolNode->symbol->has_vargs = 1;
+        }
+
+        else if (node->node_type == OP_ARG_EXISTS) {
+            node->scope = context->current_scope;
+            /* Find the symbol */
+            symbol = sym_rslv(context->current_scope, node);
+
+            /* At this point the arguments will have been processed so no need to attempt to add a symbol */
+            if (!symbol) {
+                mknd_err(node, "UNKNOWN_SYMBOL");
+            }
+            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
+                mknd_err(node, "IS_A_FUNCTION");
+            }
+            else if (symbol->symbol_type == CLASS_SYMBOL) {
+                mknd_err(node, "IS_A_CLASS");
+            }
+            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                mknd_err(node, "IS_A_NAMESPACE");
+            }
+            else if (!symbol->is_arg) {
+                mknd_err(node, "NOT_AN_ARGUMENT");
+            }
+            else if (!symbol->is_opt_arg) {
+                /* It's not options, so it must always exist (be specified in the call) */
+                node->node_type = INTEGER;
+                node->value_type = TP_BOOLEAN;
+                node->int_value = 1;
+                node->node_string = "1";
+                node->node_string_length = 1;
+            }
             else sym_adnd(symbol, node, 0, 0);
         }
 
@@ -1160,6 +1224,7 @@ static walker_result build_symbols_walker(walker_direction direction,
     }
 
     else {
+        /* OUT - BOTTOM UP */
         if (node->parent) context->current_scope = node->parent->scope;
         else context->current_scope = 0;
     }
@@ -1239,7 +1304,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
 
                             /* We might be exposing one of the procedure's variables */
                             symbol = sym_lrsv(proc_node->scope, n); /* find it */
-                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                                 if (symbol->exposed == 0) { /* Avoid double processing */
                                     /* We found a variable to expose - so expose it by moving its scope */
                                     merged_symbol = sym_merg(symbol->scope->parent, symbol);
@@ -1255,7 +1320,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                         if (!found) {
                             /* Add an error - if it has not already errored */
                             if (ast_chld(n, ERROR, 0) == 0)
-                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                                mknd_err(n, "UNKNOWN_SYMBOL");
                         }
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
@@ -1292,13 +1357,12 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                 /* We are exposing variables in a procedure */
                 ASTNode* n = node->child;
                 while (n) {
-                    symbol = sym_rvfc(context->ast, n); /* Is this is procedure/function? */
+                    /* Check if it is a global symbol (already) */
+                    symbol = sym_rvfc(context->ast, n); /* Is this is a procedure/function? */
                     if (!symbol) {
-                        /* Procedure Symbol not found so it "must" be a variable we need to expose */
-
-                        /* We should be exposing one of the procedure's variables */
+                        /* It is not global yet, so we should be exposing one of the procedure's variables */
                         symbol = sym_lrsv(node->parent->scope, n); /* find it */
-                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL) {
+                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                             if (symbol->exposed == 0) { /* Avoid double processing */
                                 /* We found a variable to expose - so expose it by moving its scope */
                                 merged_symbol = sym_merg(symbol->scope->parent, symbol);
@@ -1311,23 +1375,34 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                         }
                         else {
                             /* Add an error - if it has not already errored */
-                            if (ast_chld(n, ERROR, 0) == 0)
-                                mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                            if (ast_chld(n, ERROR, 0) == 0) {
+                                if (symbol->is_arg) mknd_err(n, "CANNOT_EXPOSED_ARG");
+                                else mknd_err(n, "UNKNOWN_SYMBOL");
+                            }
                         }
                     }
 
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
-                        /* Does the symbol exist in the procedure? */
+                        /* Already a global symbol - does it exist in the procedure? */
                         Symbol *proc_symbol = sym_lrsv(node->parent->scope, n);
                         if (proc_symbol) {
-                            if (proc_symbol->exposed == 0) { /* Avoid double processing */
-                                /* We need to promote this symbol to the parent scope */
-                                merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
-                                /* Link to the exposed node */
-                                sym_adnd(merged_symbol, n, 1, 1);
-                                /* Link to the Procedure's INSTRUCTION node */
-                                sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
-                                merged_symbol->exposed = 1;
+                            if (proc_symbol->is_arg) {
+                                /* If it is an arg it can't b e exposed */
+                                /* Add an error - if it has not already errored */
+                                if (ast_chld(n, ERROR, 0) == 0)
+                                    mknd_err(n, "CANNOT_EXPOSED_ARG");
+                            }
+                            else {
+                                /* Expose it */
+                                if (proc_symbol->exposed == 0) { /* Avoid double processing */
+                                    /* We need to promote this symbol to the parent scope */
+                                    merged_symbol = sym_merg(proc_symbol->scope->parent, proc_symbol);
+                                    /* Link to the exposed node */
+                                    sym_adnd(merged_symbol, n, 1, 1);
+                                    /* Link to the Procedure's INSTRUCTION node */
+                                    sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                    merged_symbol->exposed = 1;
+                                }
                             }
                         }
                         else {
@@ -1343,7 +1418,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                                 /* Must be unused */
                                 /* Add an error - if it has not already errored */
                                 if (ast_chld(n, ERROR, 0) == 0)
-                                    mknd_err(n, "UNKNOWN_EXPOSED_SYMBOL");
+                                    mknd_err(n, "UNKNOWN_SYMBOL");
                             }
                         }
                     }
@@ -1526,7 +1601,7 @@ static void validate_symbols(Scope* scope) {
  */
 
 /* Type promotion matrix for numeric operators */
-const ValueType promotion[8][8] = {
+static const ValueType promotion[8][8] = {
 /*                  TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_BINARY,   TP_OBJECT */
 
 /* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN},
@@ -1623,6 +1698,8 @@ static walker_result set_node_types_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_ARG_EXISTS:
+            case OP_ARG_IX_EXISTS:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
                     set_node_type(node, TP_BOOLEAN);
@@ -1772,6 +1849,7 @@ static walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case INTEGER:
+            case OP_ARGS:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
                     set_node_type(node, TP_INTEGER);
@@ -1824,17 +1902,49 @@ static walker_result set_node_types_walker(walker_direction direction,
 
             case ARG:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet */
-                        child1->symbolNode->symbol->type = node_to_type(child2,
-                                                                        &(child1->symbolNode->symbol->value_dims),
-                                                                        &(child1->symbolNode->symbol->dim_base),
-                                                                        &(child1->symbolNode->symbol->dim_elements),
-                                                                        &(child1->symbolNode->symbol->value_class));
+                    if (node->child->node_type == VARG || node->child->node_type == VARG_REFERENCE) {
+                        /* Ellipse */
+                        context->changed = 1;
+                        child1->value_type = node_to_type(child2,
+                                                          &(child1->value_dims),
+                                                          &(child1->value_dim_base),
+                                                          &(child1->value_dim_elements),
+                                                          &(child1->value_class));
+                        ast_rttp(child1);
+                        ast_svtn(node, child1);
                     }
-                    ast_svtp(child1, child1->symbolNode->symbol);
-                    ast_svtn(node, child1);
+                    else {
+                        /* Normal Arg */
+                        if (child1->symbolNode) {
+                            context->changed = 1;
+                            if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                                /* If the symbol does not have a known type yet */
+                                child1->symbolNode->symbol->type = node_to_type(child2,
+                                                                                &(child1->symbolNode->symbol->value_dims),
+                                                                                &(child1->symbolNode->symbol->dim_base),
+                                                                                &(child1->symbolNode->symbol->dim_elements),
+                                                                                &(child1->symbolNode->symbol->value_class));
+                            }
+                            ast_svtp(child1, child1->symbolNode->symbol);
+                            ast_svtn(node, child1);
+                        }
+                    }
+                }
+                break;
+
+            case OP_ARG_VALUE:
+                if (node->value_type == TP_UNKNOWN) {
+                    /* Find the procedure ellipse type node */
+                    n1 = ast_proc(node); /* Procedure node */
+                    n1 = ast_chld(n1, ARGS, 0); /* ARGS Node */
+                    if (ast_nchd(n1) == 0) break; /* No ARGS at all! */
+                    n1 = ast_chdn(n1, ast_nchd(n1) - 1); /* Last ARG */
+                    n1 = n1->child; /* The VARG */
+                    if (n1->node_type != VARG) break; /* No VARGS */
+
+                    n1 = n1->sibling; /* This is the CLASS of the VARGS */
+                    ast_svtn(node, n1);
+                    context->changed = 1;
                 }
                 break;
 
@@ -2063,14 +2173,16 @@ static walker_result type_safety_walker(walker_direction direction,
                                 val = node_to_integer(n1);
                                 ix = ast_chdi(n1);
 
-                                if (val < n1->parent->symbolNode->symbol->dim_base[ix])
-                                    mknd_err(n1, "OUT_OF_RANGE");
-
-                                else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
-                                    /* There is a max number of elements - so check it */
-                                    if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
-                                              n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
+                                if (ix < child1->value_dims) {
+                                    if (val < n1->parent->symbolNode->symbol->dim_base[ix])
                                         mknd_err(n1, "OUT_OF_RANGE");
+
+                                    else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
+                                        /* There is a max number of elements - so check it */
+                                        if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                                  n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
+                                            mknd_err(n1, "OUT_OF_RANGE");
+                                    }
                                 }
                             }
 
@@ -2119,9 +2231,6 @@ static walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case ARG:
-                ast_sttp(child2, child1->symbolNode->symbol);
-                validate_node_promotion(child2);
-
                 if (ast_chld(node->parent->parent, INSTRUCTIONS, NOP)->node_type == INSTRUCTIONS) {
                     /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
                      * definition needs to know the default value that can only be defined by the expression on the
@@ -2132,7 +2241,24 @@ static walker_result type_safety_walker(walker_direction direction,
                         mknd_err(node, "NO_DEFAULT_VALUE");
                     }
                 }
+                break;
 
+            case OP_ARG_VALUE:
+            case OP_ARG_IX_EXISTS:
+                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                set_node_target_type(child1,TP_INTEGER);
+
+                if (child1->node_type == INTEGER) {
+                    /* As a constant integer we can check it is in range
+                     * In fact this never works as the node will be OP_NEG (but leaving it here in case it is needed in the future) */
+                    val = node_to_integer(child1);
+                    if (val < 1)
+                        mknd_err(child1, "OUT_OF_RANGE");
+                }
+                break;
+
+            case OP_ARGS:
+                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
                 break;
 
             case ADDRESS:
@@ -2227,6 +2353,11 @@ static walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+
+            case STRING:
+                if (ast_nchd(node)) mknd_err(ast_chdn(node,0), "TAKENCONSTANT_ARRAY");
+                break;
+
             default:;
         }
 
@@ -2236,8 +2367,8 @@ static walker_result type_safety_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Fix up types for function arguments - needs to be done after the procedure
- * arguments have been processed in step 4 */
+/* Fix up types for function arguments and OP_ARG_VALUE nodes
+ * Needs to be done after the procedure arguments have been processed */
 static walker_result func_type_safety_walker(walker_direction direction,
                                              ASTNode* node,
                                              void *payload) {
@@ -2271,33 +2402,74 @@ static walker_result func_type_safety_walker(walker_direction direction,
                     if (!n2) {
                         /* Its not an error for the first NOVAL argument */
                         if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
+                        else if (n1->node_type == NOVAL) {
+                            /* Prune the unwanted NOVAL - the parser grammar just added it */
+                            ast_del(n1);
+                        }
                         break;
                     }
 
-                    n1->is_opt_arg = n2->is_opt_arg;
-                    if (n1->node_type == NOVAL) {
-                        ast_svtn(n1, n2);
-                        if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
+                    if (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE) {
+                        /* Last ellipsis */
+                        n1->is_opt_arg = 0;
+
+                        if (n1->node_type == NOVAL) {
+                            if (n1->sibling) {
+                                /* If n1 is not the last argument then it can't be NOVAL */
+                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"...\"", arg_num);
+                            }
+                            else {
+                                /* Prune the unwanted NOVAL - the parser grammar just added it */
+                                ast_del(n1);
+                            }
+                        } else {
+                            ast_sttn(n1, n2);
+                            validate_node_promotion(n1);
+
+
+                            if (n2->child->node_type == VAR_REFERENCE) {
+                                n1->is_ref_arg = 1;
+                                if (n1->symbolNode) {
+                                    validate_node_promotion_for_ref(n1);
+
+                                    /* Mark as write access for the optimiser */
+                                    n1->symbolNode->writeUsage = 1;
+                                }
+                            }
                         }
                     }
+
                     else {
-                        ast_sttn(n1, n2);
-                        validate_node_promotion(n1);
-                    }
-
-                    if (n2->child->node_type == VAR_REFERENCE) {
-                        n1->is_ref_arg = 1;
-                        if (n1->symbolNode) {
-                            validate_node_promotion_for_ref(n1);
-
-                            /* Mark as write access for the optimiser */
-                            n1->symbolNode->writeUsage = 1;
+                        /* Normal Argument */
+                        n1->is_opt_arg = n2->is_opt_arg;
+                        if (n1->node_type == NOVAL) {
+                            ast_svtn(n1, n2);
+                            if (!n1->is_opt_arg) {
+                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num,
+                                         n2->child->symbolNode->symbol->name);
+                            }
+                        } else {
+                            ast_sttn(n1, n2);
+                            validate_node_promotion(n1);
                         }
+
+                        if (n2->child->node_type == VAR_REFERENCE) {
+                            n1->is_ref_arg = 1;
+                            if (n1->symbolNode) {
+                                validate_node_promotion_for_ref(n1);
+
+                                /* Mark as write access for the optimiser */
+                                n1->symbolNode->writeUsage = 1;
+                            }
+                        }
+                        n2 = n2->sibling;
                     }
                     n1 = n1->sibling;
-                    n2 = n2->sibling;
                 }
+
+                /* Skip an ellipse */
+                if (n2 && (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE)) n2 = n2->sibling;
+
                 while (n2) {
                     arg_num++;
                     n1 = ast_ft(context, NOVAL);

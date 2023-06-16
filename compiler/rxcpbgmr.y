@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 }
 
@@ -480,8 +481,6 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_UNTIL(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_IF(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ARG(K) error.
-    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ADDRESS(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_OUTPUT(K) error.
@@ -705,6 +704,13 @@ argument(T)       ::= var_symbol(V) TK_EQUAL type_def(E).
 argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL type_def(E).
                       { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 0;
                         add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_ELLIPSIS(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); add_ast(T,ast_f(context, VARG, V)); add_ast(T,E); T->is_ref_arg = 0;
+                        T->is_opt_arg = 0; T->is_varg = 1; }
+argument(T)       ::= TK_EXPOSE TK_ELLIPSIS(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); add_ast(T,ast_f(context, VARG_REFERENCE, V)); add_ast(T,E);
+                        T->is_ref_arg = 1; T->is_opt_arg = 0; T->is_varg = 1; }
+
 /* With Optional (?) Flag */
 argument(T)       ::= TK_EXPOSE TK_OPTIONAL var_symbol(V) TK_EQUAL expression(E).
                       { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
@@ -736,6 +742,16 @@ argument(E)         ::= TK_EXPOSE TK_STEM(S).
 argument(E)         ::= TK_CLASS_STEM(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_EXPOSE TK_CLASS_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_OPTIONAL(S) TK_ELLIPSIS TK_EQUAL type_def.
+                      { E = ast_err(context, "OPTIONAL_ELLIPSIS", S); }
+argument(E)         ::= TK_EXPOSE TK_OPTIONAL(S) TK_ELLIPSIS TK_EQUAL type_def.
+                      { E = ast_err(context, "OPTIONAL_ELLIPSIS", S); }
+argument(E)         ::= TK_ELLIPSIS TK_EQUAL(X) expression.
+                      { E = ast_err(context, "MUST_EQUAL_TYPE", X); }
+argument(E)         ::= TK_EXPOSE TK_ELLIPSIS TK_EQUAL(X) expression.
+                      { E = ast_err(context, "MUST_EQUAL_TYPE", X); }
+argument(E)         ::= TK_ELLIPSIS(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 
 /* Instructions */
@@ -905,6 +921,8 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA expression_in_list(E).
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L,E);}
 expression_list(L)     ::= expression_list(L1) TK_COMMA.
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
+
+/* Expression terminal nodes */
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STRING(S) function_parameters(P).
@@ -917,7 +935,48 @@ term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
 term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
-term(A)                ::= TK_STRING(S). { A = ast_fstr(context,S); }
+term(A)                ::= TK_STRING(S).
+                         { A = ast_fstr(context,S); }
+
+/* Special Operator - ARG */
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARGS, A); }
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARG_VALUE, A); add_ast(F, E);}
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_STRING(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                              if (OP->length>2 && toupper(OP->token_string[1]) == 'E') {
+                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
+                              }
+                              else if (OP->length>2 && toupper(OP->token_string[1]) == 'O') {
+                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
+                              }
+                              else F = mknd_err(ast_fstr(context,OP), "INVALID_ARG_OPTION");
+                           }
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_VAR_SYMBOL(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                              if (OP->length>0 && toupper(OP->token_string[0]) == 'E') {
+                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
+                              }
+                              else if (OP->length>0 && toupper(OP->token_string[0]) == 'O') {
+                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
+                              }
+                              else F = ast_err(context, "INVALID_ARG_OPTION", OP);
+                           }
+term(F)                ::= TK_ARG TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
+                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+term(F)                ::= TK_ARG TK_OPEN_BRACKET ANYTHING(A).
+                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+
+/* Special Operator - ? */
+term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARG_EXISTS, S); }
+
+/* Special Operator - arg pseudo array/stem */
+term(A)                ::= TK_ARG(S) array_parameters(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
+term(A)                ::= TK_ARG_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
 
 /* These Keywords can be trapped at error terms - e.g. they are not instructions */
 term(E)                 ::= TK_OPTIONS(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }

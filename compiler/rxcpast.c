@@ -198,6 +198,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->num_additional_registers = 0;
     node->is_ref_arg = 0;
     node->is_opt_arg = 0;
+    node->is_varg = 0;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -401,6 +402,11 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             new_symbol->symbol_type = symbol->symbol_type;
             new_symbol->type = symbol->type;
             new_symbol->exposed = symbol->exposed;
+            new_symbol->fixed_args = symbol->fixed_args;
+            new_symbol->has_vargs = symbol->has_vargs;
+            new_symbol->is_arg = symbol->is_arg;
+            new_symbol->is_ref_arg = symbol->is_ref_arg;
+            new_symbol->is_opt_arg = symbol->is_opt_arg;
 
             sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             free(fqname);
@@ -931,6 +937,14 @@ const char *ast_ndtp(NodeType type) {
             return "OP_MINUS";
         case OP_AND:
             return "OP_AND";
+        case OP_ARGS:
+            return "OP_ARGS";
+        case OP_ARG_VALUE:
+            return "OP_ARG_VALUE";
+        case OP_ARG_EXISTS:
+            return "OP_ARG_EXISTS";
+        case OP_ARG_IX_EXISTS:
+            return "OP_ARG_IX_EXISTS";
         case OP_COMPARE_EQUAL:
             return "OP_COMPARE_EQUAL";
         case OP_COMPARE_NEQ:
@@ -1033,6 +1047,10 @@ const char *ast_ndtp(NodeType type) {
             return "VAR_SYMBOL";
         case VAR_TARGET:
             return "VAR_TARGET";
+        case VARG:
+            return "VARG";
+        case VARG_REFERENCE:
+            return "VARG_REFERENCE";
         case VOID:
             return "VOID";
         default: return "*UNKNOWN*";
@@ -1673,6 +1691,10 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_ADD:
             case OP_MINUS:
             case OP_AND:
+            case OP_ARGS:
+            case OP_ARG_VALUE:
+            case OP_ARG_EXISTS:
+            case OP_ARG_IX_EXISTS:
             case OP_CONCAT:
             case OP_MULT:
             case OP_DIV:
@@ -1718,6 +1740,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case VAR_SYMBOL:
             case VAR_TARGET:
             case VAR_REFERENCE:
+            case VARG_REFERENCE:
+            case VARG:
             case CONST_SYMBOL:
             case LITERAL:
                 attributes = "color=cyan3 shape=cds";

@@ -16,16 +16,12 @@ result = .string[]
 address cmd "/usr/local/crexx/rxc" program error result
 
 /* Check the expected result */
-has_error = 0
-if rc <> expected_rc then has_error = 1
-if result.0 <> expected_result.0 then has_error = 1
-if result.1 <> expected_result.1 then has_error = 1
-if result.2 <> expected_result.2 then has_error = 1
+if rc <> expected_rc ||,
+   result.0 <> expected_result.0 ||,
+   result.1 <> expected_result.1 ||,
+   result.2 <> expected_result.2 then do
 
-/* TODO - Check logical or expression with >2 ors */
-
-/* Report result */
-if has_error = 1 then do
+    /* Report result */
     say "Error in" program "unexpected result"
     say "Result rc =" rc
     say "Result stderr:"

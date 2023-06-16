@@ -11,6 +11,7 @@
 typedef struct value value;
 
 typedef union {
+    /* todo - these flag definitions are not used and are not correct */
     struct {
         unsigned int type_object : 1;
         unsigned int type_string : 1;

@@ -9,11 +9,7 @@ import _rxsysb
 lineout: procedure = .int
     arg fname = .string, line = ""
 
-    /* Use the register flag to see if a line was specified in the call */
-    line_given = 0
-    assembler getandtp line_given,line,1
-
-    if line_given > 0 then do
+    if ?line then do
         /* line specified - open file */
         nl = '0a'x
 

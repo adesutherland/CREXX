@@ -103,7 +103,8 @@ typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, OP_MAKE_ARRAY,
-    NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_ARGS, OP_ARG_VALUE, OP_ARG_EXISTS, OP_ARG_IX_EXISTS,
+    OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
@@ -111,7 +112,8 @@ typedef enum NodeType {
     OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, RANGE, REPEAT,
     REDIRECT_IN, REDIRECT_OUT, REDIRECT_ERROR, REDIRECT_EXPOSE,
     RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, BINARY, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WARNING, WHILE, UNTIL
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID,
+    VARG, VARG_REFERENCE, CONSTANT, WARNING, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -148,6 +150,7 @@ struct ASTNode {
     int num_additional_registers;
     char is_ref_arg;
     char is_opt_arg;
+    char is_varg;
     ASTNode *free_list;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
@@ -351,7 +354,12 @@ struct Symbol {
     SymbolType symbol_type;
     int register_num;
     char register_type;
+    size_t fixed_args; /* Number of fixed arguments (for a procedure) */
+    char has_vargs;    /* If it has variable arguments (for a procedure) */
     char exposed;      /* Is the symbol exposed */
+    char is_arg;       /* Is an argument */
+    char is_ref_arg;   /* Is  reference arg */
+    char is_opt_arg;   /* Is an optional arg */
     char meta_emitted; /* Has the emitter output the symbol's metadata yet */
 };
 
@@ -443,8 +451,11 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
 
-/* Disconnects a node from a symbol */
+/* Disconnects a node (via index) from a symbol */
 void sym_dnd(Symbol *symbol, size_t node_num);
+
+/* Disconnects a node from a symbol */
+void sym_dno(Symbol *symbol, ASTNode* node);
 
 /* Returns the lowest ASTNode ordinal associated with the symbol */
 int sym_lord(Symbol *symbol);

@@ -527,11 +527,13 @@ static walker_result opt1_walker(walker_direction direction,
                             rewrite_to_float_constant(node, payload,
                                                       pow(child1->float_value,
                                                           child2->float_value));
-                        else
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                         (rxinteger) pow(
                                                                 (double)child1->int_value,
                                                                 (double)child2->int_value));
+                            if (!node->int_value) mknd_err(node, "OVERFLOW_UNDERFLOW");
+                        }
                         break;
 
                     case OP_DIV:
@@ -622,6 +624,12 @@ static walker_result opt1_walker(walker_direction direction,
                                                           node->parent->symbolNode->symbol->dim_elements[index] - 1)
                                         mknd_err(node, "OUT_OF_RANGE");
                                 }
+                            }
+                        }
+                        else if (node->parent && (node->parent->node_type == OP_ARG_VALUE || node->parent->node_type == OP_ARG_IX_EXISTS)) {
+                            if (node->target_type == TP_INTEGER) { /* This 'must' be true */
+                                if (node->int_value < 1)
+                                    mknd_err(node, "OUT_OF_RANGE");
                             }
                         }
                         break;
@@ -802,16 +810,18 @@ static walker_result opt2_walker(walker_direction direction,
 
                 /* Internal Procedure - do constant check */
                 is_constant = 1;
-                symbol = node->child->symbolNode->symbol; /* The symbol is linked to the child node */
-                /* Check to see if the symbol is written to in the procedure */
-                for (i=1; i<sym_nond(symbol); i++) {
-                    if (sym_trnd(symbol, i)->writeUsage) {
-                        is_constant = 0; /* Not a constant as it is updated */
-                        break;
+                if (node->child->symbolNode) { /* If there is no symbol it is a varg (and this optimisation is irrelevant) */
+                    symbol = node->child->symbolNode->symbol; /* The symbol is linked to the child node */
+                    /* Check to see if the symbol is written to in the procedure */
+                    for (i = 1; i < sym_nond(symbol); i++) {
+                        if (sym_trnd(symbol, i)->writeUsage) {
+                            is_constant = 0; /* Not a constant as it is updated */
+                            break;
+                        }
                     }
+                    /* If it us readonly make the argument pass by reference */
+                    if (is_constant) node->is_ref_arg = 1;
                 }
-                /* If it us readonly make the argument pass by reference */
-                if (is_constant) node->is_ref_arg = 1;
             }
         }
     }

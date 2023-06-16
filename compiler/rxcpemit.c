@@ -43,13 +43,37 @@ static int is_constant(ASTNode* node) {
     }
 }
 
-/* Tests if a node has a symbol whose register we can use for copies etc. */
+/* Tests if a node uses a symbol register */
 static int use_symbol_reg(ASTNode* node) {
     if (    node->symbolNode                 // It's a symbol
             && node->symbolNode->symbol->symbol_type != FUNCTION_SYMBOL   // It's not a function
+            && node->node_type != OP_ARG_EXISTS // If it's not OP_ARG_EXISTS (if this list become long we need a better way ...)
             && !(node->child)           // It's not an array element
         ) return 1;
     else return 0;
+}
+
+/* This function returns 1 if the node register should not be used by the parent (it should be returned AFTER the
+ * parent has finished with it) */
+static int defer_reg_return(ASTNode* node) {
+
+    ASTNode* child1 = node->child;
+    switch (node->node_type)
+    {
+        case VAR_SYMBOL:
+            if (node->child && node->child->node_type != NOVAL) return 1;
+            break;
+
+        case VAR_TARGET:
+            if (node->child) return 1;
+            break;
+
+        case OP_ARG_VALUE:
+            return 1;
+
+        default: ;
+    }
+    return 0;
 }
 
 /* printf - but returns a malloced buffer with the result */
@@ -407,16 +431,17 @@ static walker_result register_walker(walker_direction direction,
                 c = node->child;
                 a = 1;
                 while (c) {
-                    c->register_num = a;
-                    c->register_type ='a';
-                    if ( c->is_ref_arg && !(c->child->symbolNode->symbol->exposed) ) {
-                        /* Pass by reference and not exposed - no copy so just use the 'a' register */
-                        c->child->symbolNode->symbol->register_num = a;
-                        c->child->symbolNode->symbol->register_type = 'a';
+                    if (c->child->node_type == VAR_TARGET || c->child->node_type == VAR_REFERENCE) {
+                        c->register_num = a;
+                        c->register_type = 'a';
+                        if (c->is_ref_arg) {
+                            /* Pass by reference - no copy so just use the 'a' register */
+                            c->child->symbolNode->symbol->register_num = a;
+                            c->child->symbolNode->symbol->register_type = 'a';
+                        }
+                        /* Otherwise, a register will be assigned to the symbol later */
+                        a++;
                     }
-                    /* Otherwise, a register will be assigned to the symbol later */
-
-                    a++;
                     c = c->sibling;
                 }
                 break;
@@ -487,18 +512,13 @@ static walker_result register_walker(walker_direction direction,
 
             case ADDRESS:
             case SAY:
+            case RETURN:
                 /*
-                 * We do not need a register as we can "say" a constant directly
+                 * We do not need a register as we can handle a constant directly
                  */
                 if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
-            case RETURN:
-                /*
-                 * We do not need a register as we can "ret" a constant directly
-                 */
-                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
-                break;
 
             case ASSEMBLER:
                 /*
@@ -560,15 +580,23 @@ static walker_result register_walker(walker_direction direction,
                   * anyway the instructions cannot accept constants
                   * But we do want this node and all children to have the
                   * same register if possible to avoid register copies */
-                if (!use_symbol_reg(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
-                if (!use_symbol_reg(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (!use_symbol_reg(child1)
+                && !defer_reg_return(child1))
+                    child1->register_num = DONT_ASSIGN_REGISTER;
+                if (!use_symbol_reg(child2) && !defer_reg_return(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
 
             case VAR_SYMBOL:
             case VAR_TARGET:
                 for (c=child1; c; c = c->sibling) {
-                    if (!use_symbol_reg(c) || is_constant(c))
-                        c->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                    if (is_constant(c)) c->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
                 }
+                break;
+
+            case OP_ARG_VALUE:
+            case OP_ARG_IX_EXISTS:
+                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
+                break;
 
             default:
                 ;
@@ -606,31 +634,42 @@ static walker_result register_walker(walker_direction direction,
             case OP_CONCAT:
             case OP_SCONCAT:
 
-                /* Set result temporary register */
-                if (node->register_num != DONT_ASSIGN_REGISTER)
-                    /* DONT_ASSIGN_REGISTER means that the register number will be set later */
-                    node->register_num = get_reg(node->scope);
-
-                /* If it is a temporary mark the register for reuse */
-                if (!use_symbol_reg(child1))
+                /* If it is a temporary mark the register for reuse - if the register CAN be resued by this node */
+                if (!defer_reg_return(child1) && !use_symbol_reg(child1))
                     ret_reg(node->scope, child1->register_num);
-                if (!use_symbol_reg(child2))
+                if (!defer_reg_return(child2) && !use_symbol_reg(child2))
                     ret_reg(node->scope, child2->register_num);
+
+                /* Set result temporary register */
+                /* DONT_ASSIGN_REGISTER means that the register number will be set later  but this must be overrider
+                 * if we have deferred register actions (unlink) */
+                if (node->register_num != DONT_ASSIGN_REGISTER
+                    || defer_reg_return(child1)
+                    || defer_reg_return(child2))
+                        node->register_num = get_reg(node->scope);
+
+                /* If it is a temporary mark the register for reuse - if the register CANNOT be resued by this node */
+                if (defer_reg_return(child1) && !use_symbol_reg(child1))
+                    ret_reg(node->scope, child1->register_num);
+                if (defer_reg_return(child2) && !use_symbol_reg(child2))
+                    ret_reg(node->scope, child2->register_num);
+
                 break;
 
             case OP_AND:
             case OP_OR:
                 /* What we try and do here is use the same register for the
                  * node and children to avoid copies */
-                if (child1->register_num == DONT_ASSIGN_REGISTER ||
-                    child2->register_num == DONT_ASSIGN_REGISTER) {
+                if ( (!defer_reg_return(child1) && child1->register_num == DONT_ASSIGN_REGISTER) ||
+                     (!defer_reg_return(child2) && child2->register_num == DONT_ASSIGN_REGISTER) ) {
                     /* If we are assigning a register to either children we
                      * will assign to this node and children, overriding/ignoring
-                     * any DONT_ASSIGN_REGISTER flag for this node */
+                     * any DONT_ASSIGN_REGISTER flag for this node
+                     * HOWEVER this is only possible if we have defer_reg_return children */
                     node->register_num = get_reg(node->scope);
-                    if (child1->register_num == DONT_ASSIGN_REGISTER)
+                    if (!defer_reg_return(child1) && child1->register_num == DONT_ASSIGN_REGISTER)
                         child1->register_num = node->register_num;
-                    if (child2->register_num == DONT_ASSIGN_REGISTER)
+                    if (!defer_reg_return(child1) && child2->register_num == DONT_ASSIGN_REGISTER)
                         child2->register_num = node->register_num;
                 }
                 else {
@@ -645,7 +684,6 @@ static walker_result register_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
-
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later */
@@ -654,6 +692,23 @@ static walker_result register_walker(walker_direction direction,
                 /* If it is a temporary mark the register for reuse */
                 if (!use_symbol_reg(child1))
                     ret_reg(node->scope, child1->register_num);
+                break;
+
+            case OP_ARG_EXISTS:
+                /* This node needs an array for the result but we also have to make sure the symbol has a register */
+                /* Set the symbols register */
+                if (node->symbolNode->symbol->register_num == UNSET_REGISTER) {
+                    if (node->symbolNode->symbol->exposed) {
+                        /* Should never happen - as its an arg but in case this changes */
+                        node->symbolNode->symbol->register_num = payload->globals++;
+                        node->symbolNode->symbol->register_type = 'g';
+                    }
+                    else node->symbolNode->symbol->register_num = get_reg(node->scope);
+                }
+                /* Set result temporary register */
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    /* DONT_ASSIGN_REGISTER means that the register number will be set later */
+                    node->register_num = get_reg(node->scope);
                 break;
 
             case VAR_SYMBOL:
@@ -672,25 +727,51 @@ static walker_result register_walker(walker_direction direction,
                 if (node->parent->node_type == DEFINE) break;
 
                 if (node->child) {
-                    /* If it has a child it is an array element - so we need a register for the node
-                     * Note we ignore DONT_ASSIGN_REGISTER - we always want our own so we can link/unlink it without
-                     * any weird side effects */
+                    /* If it has a child it is an array element - so we need registers for the node */
+                    char unlink_needed = 0;
+                    int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
                     node->register_num = get_reg(node->scope);
 
-                    /* Do we need a temporary register for making array parameters 1-base */
+                    /* Do we need a temporary register for making array parameters 1-base or for getting the array size */
                     char needs_extra_reg = 0;
                     c = node->child;
                     while (c && !needs_extra_reg) {
-                        if (node->symbolNode->symbol->dim_base[ast_chdi(c)] != 1)
-                            if (c->node_type != INTEGER &&
-                                c->node_type != CONSTANT &&
-                                c->node_type != NOVAL) needs_extra_reg = 1;
+
+                        if (node->node_type == VAR_SYMBOL && c->node_type == NOVAL) {
+                            /* This is the logic for getting the number of elements in an array */
+                            /* This is last parameter - we may have done earlier parameters */
+
+                            if (unlink_needed) {
+                                /* The register of the attribute is linked so ... */
+                                unlink_needed = 0;   /* ... we will unlink it here */
+                                if (!(node->symbolNode->symbol->dim_elements[ast_chdi(c)])) {
+                                    /* For fixed arrays we just return the upperbound (taking into the base)
+                                     * But variable arrays the max array element we need to copy via the additional
+                                     * register so we can unlink correctly */
+                                    needs_extra_reg = 1;
+                                }
+                            }
+                            /* Should be no more dimensions so we are done */
+                            break;
+                        }
+
+                        /* This is the logic to get the register attribute for this parameter (child1) */
+                        /* Link Array element */
+                        if (!(c->node_type == INTEGER || c->node_type == CONSTANT || base == 1)) {
+                            /* Need to make it 1 base */
+                            needs_extra_reg = 1;
+                        }
+
+                        unlink_needed = 1; /* We will need to define a cleanup action to unlink */
+
                         c = c->sibling;
                     }
+
                     if (needs_extra_reg) {
-                        /* Yes we do */
+                        /* Yes we do need an additional register */
                         node->num_additional_registers = 1;
                         node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                        /* We return it straight away - we only need it for this node */
                         ret_reg(node->scope, node->additional_registers);
                     }
 
@@ -710,12 +791,38 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_ARG_VALUE:
+                /* We need a register for the node
+                 * Note we ignore DONT_ASSIGN_REGISTER - we always want our own so we can link/unlink it without
+                 * any weird side effects */
+                node->register_num = get_reg(node->scope);
+
+                /* Release child registers */
+                if (!use_symbol_reg(child1)) ret_reg(node->scope, child1->register_num);
+                break;
+
+            case OP_ARG_IX_EXISTS:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
+                    node->register_num = get_reg(node->scope);
+
+                /* Release child registers */
+                if (!use_symbol_reg(child1)) ret_reg(node->scope, child1->register_num);
+                break;
+
             case NOVAL:
                 if (node->parent->node_type == VAR_SYMBOL) {
                     /* If parent is a variable this is a request for the array length
                      * So we need a temporary register to hold the length */
                     node->register_num = get_reg(node->scope);
                 }
+                break;
+
+            case OP_ARGS:
+                /* Set result temporary register */
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
+                    node->register_num = get_reg(node->scope);
                 break;
 
             case FLOAT:
@@ -1102,56 +1209,30 @@ static char* get_comment_line_number_only(ASTNode *node, char* comment_text) {
         return mprintf("   * Line %d:\n", node->line + 1);
 }
 
-static void type_promotion(ASTNode *node) {
 
-    char *op1, *op2;
+/* Type promotion matrix for numeric operators */
+static const char* promotion[8][8] = {
+/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT,TP_STRING,TP_BINARY,TP_OBJECT */
+
+/* TP_UNKNOWN */   {0,         0,      0,         0,         0,       0,        0,        0},
+/* TP_VOID    */   {0,         0,      0,         0,         0,       0,        0,        0},
+/* TP_BOOLEAN */   {0,         0,      0,         "btoi",    "btof",  "btos",   0,        0},
+/* TP_INTEGER */   {0,         0,      0,         0,         "itof",  "itos",   0,        0},
+/* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,       "ftos",   0,        0},
+/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof",  0,        0,        0},
+/* TP_BINARY  */   {0,         0,      0,         0,         0,       0,        0,        0},
+/* TP_OBJECT  */   {0,         0,      0,         0,         0,       0,        0,        0},
+};
+static void type_promotion(ASTNode *node) {
     char *temp;
 
-    if (node->value_type != node->target_type) {
-
-        switch (node->value_type) {
-            case TP_INTEGER:
-            case TP_BOOLEAN:
-                op1 = "i";
-                break;
-
-            case TP_FLOAT:
-                op1 = "f";
-                break;
-
-            default:
-                op1 = "s";
-                break;
-        }
-
-        switch (node->target_type) {
-            case TP_BOOLEAN:
-                if (node->value_type == TP_FLOAT) op2 = "b";
-                else op2 = "i";
-                break;
-
-            case TP_INTEGER:
-                op2 = "i";
-                break;
-
-            case TP_FLOAT:
-                op2 = "f";
-                break;
-
-            default:
-                op2 = "s";
-                break;
-        }
-
-        if (*op1 != *op2) { /* Check that there is a promotion (i.e. boolean / integer) */
-            temp = mprintf("   %sto%s %c%d\n",
-                           op1,
-                           op2,
-                           node->register_type,
-                           node->register_num);
-            output_append_text(node->output, temp);
-            free(temp);
-        }
+    if (promotion[node->value_type][node->target_type]) { /* Check that there is a promotion */
+        temp = mprintf("   %s %c%d\n",
+                       promotion[node->value_type][node->target_type],
+                       node->register_type,
+                       node->register_num);
+        output_append_text(node->output, temp);
+        free(temp);
     }
 }
 
@@ -1490,9 +1571,16 @@ char *meta_narg(ASTNode *node) {
     buffer_len = 0;
     for (i=0; i<args; i++) {
         a = ast_chdn(node, i);
-        type[i] = sym_2tp(a->child->symbolNode->symbol);
-        name[i] = malloc(strlen(a->child->symbolNode->symbol->name) + 1);
-        strcpy(name[i], a->child->symbolNode->symbol->name);
+        if (a->child->node_type == VARG || a->child->node_type == VARG_REFERENCE) {
+            type[i] = ast_n2tp(a->child->sibling);
+            name[i] = malloc(4);
+            strcpy(name[i], "...");
+        }
+        else {
+            type[i] = sym_2tp(a->child->symbolNode->symbol);
+            name[i] = malloc(strlen(a->child->symbolNode->symbol->name) + 1);
+            strcpy(name[i], a->child->symbolNode->symbol->name);
+        }
 
         /* Workout length */
         buffer_len += strlen(type[i]);
@@ -1736,120 +1824,139 @@ static walker_result emit_walker(walker_direction direction,
                 comment_meta = get_metaline(node);
                 node->output = output_fs(comment_meta);
                 free(comment_meta);
+                if (node->child->node_type == VAR_TARGET || node->child->node_type == VAR_REFERENCE) {
+                    /* Add Variable Metadata */
+                    add_variable_metadata(node);
 
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                if (node->is_opt_arg) { /* Optional Argument */
-                    /* If the register flag is set then an argument was specified */
-                    temp1 = mprintf("   brtpandt l%da,%c%d,%d\n",
-                                    child1->node_number,
-                                    node->register_type,
-                                    node->register_num,
-                                    REGTP_VAL);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-
-                    /* Set the default value */
-                    output_concat(node->output, child2->output);
-
-                    if (child1->register_num != child2->register_num ||
-                        child1->register_type != child2->register_type) {
-                        temp1 = mprintf("   copy %c%d,%c%d\n",
-                                        child1->register_type,
-                                        child1->register_num,
-                                        child2->register_type,
-                                        child2->register_num);
+                    if (node->is_opt_arg) { /* Optional Argument */
+                        /* If the register flag is set then an argument was specified */
+                        temp1 = mprintf("   brtpandt l%da,%c%d,%d\n",
+                                        child1->node_number,
+                                        node->register_type,
+                                        node->register_num,
+                                        REGTP_VAL);
                         output_append_text(node->output, temp1);
                         free(temp1);
-                    }
 
-                    /* End of logic */
-                    if (node->is_ref_arg) {
-                        /* Reference so no copy needed */
-                        temp1 = mprintf("l%da:\n", child1->node_number);
-                        output_append_text(node->output, temp1);
-                        free(temp1);
-                    }
-                    else {
-                        /* Pass by value - so if the default is not used we may need to
-                         * to do a copy - but check if the argument needs preserving */
+                        /* Set the default value */
+                        output_concat(node->output, child2->output);
 
-                        /* Only worry about it if it is a big register */
-                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT || node->value_type == TP_BINARY) {
-                            temp1 = mprintf(
-                                    "   br l%dd\n"
-                                    "l%da:\n"
-                                    "   brtpandt l%dc,%c%d,%d\n"
-                                    "   %scopy %c%d,%c%d\n"
-                                    "   br l%dd\n"
-                                    "l%dc:\n"
-                                    "   swap %c%d,%c%d\n"
-                                    "l%dd:\n",
-                                    child1->node_number, child1->node_number,
-                                    child1->node_number,
-                                    node->register_type, node->register_num,
-                                    REGTP_NOTSYM,
-                                    tp_prefix,
-                                    child1->register_type, child1->register_num,
-                                    node->register_type, node->register_num,
-                                    child1->node_number,
-                                    child1->node_number,
-                                    child1->register_type, child1->register_num,
-                                    node->register_type, node->register_num,
-                                    child1->node_number);
-                            output_append_text(node->output, temp1);
-                            free(temp1);
-                        }
-                        else {
-                            temp1 = mprintf("   br l%db\n"
-                                            "l%da:\n"
-                                            "   %scopy %c%d,%c%d\n"
-                                            "l%db:\n",
-                                            child1->node_number, child1->node_number,
-                                            tp_prefix, child1->register_type,
+                        if (child1->register_num != child2->register_num ||
+                            child1->register_type != child2->register_type) {
+                            temp1 = mprintf("   copy %c%d,%c%d\n",
+                                            child1->register_type,
                                             child1->register_num,
-                                            node->register_type, node->register_num,
-                                            child1->node_number);
+                                            child2->register_type,
+                                            child2->register_num);
                             output_append_text(node->output, temp1);
                             free(temp1);
                         }
-                    }
-                }
 
-                else if (!node->is_ref_arg) {
-                    /* Copy by value so may need to do a copy - but check if the argument needs preserving */
+                        /* End of logic */
+                        if (node->is_ref_arg) {
+                            /* Reference so no copy needed */
+                            temp1 = mprintf("l%da:\n", child1->node_number);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Pass by value - so if the default is not used we may need to
+                             * to do a copy - but check if the argument needs preserving */
 
-                    /* Only worry about it if it is a big register */
-                    if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT || node->value_type == TP_BINARY) {
-                        temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
+                            /* Only worry about it if it is a big register */
+                            if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT ||
+                                node->value_type == TP_BINARY) {
+                                temp1 = mprintf(
+                                        "   br l%dd\n"
+                                        "l%da:\n"
+                                        "   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
+                                        "   acopy %c%d,%c%d\n"
                                         "   br l%dd\n"
                                         "l%dc:\n"
                                         "   swap %c%d,%c%d\n"
                                         "l%dd:\n",
-                                        child1->node_number,
-                                        node->register_type, node->register_num,
-                                        REGTP_NOTSYM,
+                                        child1->node_number, /* br l%dd */
+                                        child1->node_number, /* l%da: */
+
+                                        /* brtpandt l%dc,%c%d,%d */
+                                        child1->node_number, node->register_type, node->register_num, REGTP_NOTSYM,
+
+                                        /* %scopy %c%d,%c%d */
                                         tp_prefix,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-                                        child1->node_number,
-                                        child1->node_number,
+
+                                        /* acopy %c%d,%c%d */
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-                                        child1->node_number);
-                        output_append_text(node->output, temp1);
-                        free(temp1);
-                    }
-                    else {
-                        /* Just need to copy register */
-                        temp1 = mprintf("   %scopy %c%d,%c%d\n",
-                                        tp_prefix, child1->register_type,
-                                        child1->register_num,
-                                        node->register_type, node->register_num);
-                        output_append_text(node->output, temp1);
-                        free(temp1);
+
+                                        child1->node_number, /* br l%dd */
+                                        child1->node_number, /* l%dc: */
+
+                                        /* swap %c%d,%c%d */
+                                        child1->register_type, child1->register_num,
+                                        node->register_type, node->register_num,
+
+                                        child1->node_number); /* l%dd: */
+                                output_append_text(node->output, temp1);
+                                free(temp1);
+                            } else {
+                                temp1 = mprintf("   br l%db\n"
+                                                "l%da:\n"
+                                                "   %scopy %c%d,%c%d\n"
+                                                "   acopy %c%d,%c%d\n"
+                                                "l%db:\n",
+                                                child1->node_number, /* br l%db */
+                                                child1->node_number, /* l%da: */
+
+                                                /* %scopy %c%d,%c%d */
+                                                tp_prefix,
+                                                child1->register_type, child1->register_num,
+                                                node->register_type, node->register_num,
+
+                                                /* acopy %c%d,%c%d */
+                                                child1->register_type, child1->register_num,
+                                                node->register_type, node->register_num,
+
+                                                child1->node_number); /* l%db: */
+                                output_append_text(node->output, temp1);
+                                free(temp1);
+                            }
+                        }
+                    } else if (!node->is_ref_arg) {
+                        /* Copy by value so may need to do a copy - but check if the argument needs preserving */
+
+                        /* Only worry about it if it is a big register */
+                        if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT ||
+                            node->value_type == TP_BINARY) {
+                            temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   br l%dd\n"
+                                            "l%dc:\n"
+                                            "   swap %c%d,%c%d\n"
+                                            "l%dd:\n",
+                                            child1->node_number,
+                                            node->register_type, node->register_num,
+                                            REGTP_NOTSYM,
+                                            tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            node->register_type, node->register_num,
+                                            child1->node_number,
+                                            child1->node_number,
+                                            child1->register_type, child1->register_num,
+                                            node->register_type, node->register_num,
+                                            child1->node_number);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Just need to copy register */
+                            temp1 = mprintf("   %scopy %c%d,%c%d\n",
+                                            tp_prefix, child1->register_type,
+                                            child1->register_num,
+                                            node->register_type, node->register_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        }
                     }
                 }
                 break;
@@ -2090,7 +2197,7 @@ static walker_result emit_walker(walker_direction direction,
                                         child2->register_num);
                     }
 
-                    else if (child2->value_type == TP_FLOAT) {
+                    else if (child2->target_type == TP_FLOAT) {
                         /* Need to make sure the float literal has an ".0" */
                         flag = 1; /* Assume we should add .0 */
                         for (i = 0; i < child1->node_string_length; i++) {
@@ -2152,7 +2259,7 @@ static walker_result emit_walker(walker_direction direction,
                                         child2->node_string_length, child2->node_string);
                     }
 
-                    else if (child2->value_type == TP_FLOAT) {
+                    else if (child2->target_type == TP_FLOAT) {
                         /* Need to make sure the float literal has an ".0" */
                         flag = 1; /* Assume we should add .0 */
                         for (i = 0; i < child2->node_string_length; i++) {
@@ -2417,6 +2524,182 @@ static walker_result emit_walker(walker_direction direction,
                 type_promotion(node);
                 break;
 
+            case OP_ARG_EXISTS:
+                node->output = output_f();
+                temp1 = mprintf("   getandtp %c%d,%c%d,%d\n",
+                                node->register_type,
+                                node->register_num,
+                                node->symbolNode->symbol->register_type,
+                                node->symbolNode->symbol->register_num,
+                                REGTP_VAL);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                type_promotion(node);
+                break;
+
+            case OP_ARGS:
+                node->output = output_f();
+                /* Get the total args and subtract the fixed args of the procedure we are in */
+                temp1 = mprintf("   icopy %c%d,a0\n"
+                                "   isub %c%d,%c%d,%d\n",
+                                node->register_type,
+                                node->register_num,
+                                node->register_type,
+                                node->register_num,
+                                node->register_type,
+                                node->register_num,
+                                ast_proc(node)->symbolNode->symbol->fixed_args
+                );
+                output_append_text(node->output, temp1);
+                free(temp1);
+                type_promotion(node);
+                break;
+
+            case OP_ARG_VALUE:
+                node->output = output_f();
+
+                /* Link the argument */
+                if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    /* Child is a constant */
+
+                    /* Needed to calculate the argument number taking into account the number of fixed args */
+                    temp2 = format_constant(child1->value_type, child1);
+                    int arg_ix = atoi(temp2) + ast_proc(node)->symbolNode->symbol->fixed_args;
+                    free(temp2);
+
+                    temp1 = mprintf("   icopy %c%d,a0\n" /* Total number of arguments */
+                                    "   isub %c%d,%c%d,%d\n"    /* Deduct # fixed arguments */
+                                    "   ichkrng %.*s,1,%c%d\n"  /* Validate Range */
+                                    "   linkarg %c%d,%d\n",     /* Link to argument (with added # fixed arguments) */
+
+                                    /* icopy %c%d,a0 */
+                                    node->register_type, node->register_num,
+
+                                    /* isub %c%d,%c%d,%d */
+                                    node->register_type,
+                                    node->register_num,
+                                    node->register_type,
+                                    node->register_num,
+                                    ast_proc(node)->symbolNode->symbol->fixed_args,
+
+                                    /* ichkrng %.*s,1,%c%d */
+                                    child1->node_string_length, child1->node_string,
+                                    node->register_type, node->register_num,
+
+                                    /* linkarg %c%d,%.*s */
+                                    node->register_type, node->register_num,
+                                    arg_ix);
+                }
+
+                else {
+                    /* Child is a register */
+                    temp1 = mprintf("   icopy %c%d,a0\n"    /* Total number of arguments */
+                                    "   isub %c%d,%c%d,%d\n"       /* Deduct # of fixed arguments */
+                                    "   ichkrng %c%d,1,%c%d\n"     /* Validate Range */
+                                    "   linkarg %c%d,%c%d,%d\n",   /* Link to argument (third param adds # fixed arguments) */
+
+                                    /* icopy %c%d,a0 */
+                                    node->register_type, node->register_num,
+
+                                    /* isub %c%d,%c%d,%d */
+                                    node->register_type,
+                                    node->register_num,
+                                    node->register_type,
+                                    node->register_num,
+                                    ast_proc(node)->symbolNode->symbol->fixed_args,
+
+                                    /* ichkrng %.*s,1,%c%d */
+                                    child1->register_type, child1->register_num,
+                                    node->register_type, node->register_num,
+
+                                    /* linkarg %c%d,%c%d,%d */
+                                    node->register_type, node->register_num,
+                                    child1->register_type, child1->register_num,
+                                    ast_proc(node)->symbolNode->symbol->fixed_args);
+
+                }
+
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                /* Call child cleanup action */
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+
+                /* Type Promotion */
+                type_promotion(node);
+
+                /* Set cleanup action */
+                temp1 = mprintf("   unlink r%d\n", node->register_num);
+                node->cleanup = output_fs(temp1);
+                free(temp1);
+                break;
+
+            case OP_ARG_IX_EXISTS:
+                node->output = output_f();
+
+                /* This is really a compatability operator - if the argument number given is smaller or equal
+                 * to the number of variable arguments then it does exist otherwise it doesn't. If smaller than 1
+                 * a signal should be thrown */
+                if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                    /* Child is a constant */
+                    /* < 1 will already be checked */
+
+                    /* Needed to calculate the argument number by adding #fixed args */
+                    temp2 = format_constant(child1->value_type, child1);
+                    int arg_ix = atoi(temp2) + ast_proc(node)->symbolNode->symbol->fixed_args;
+                    free(temp2);
+
+                    temp1 = mprintf("   icopy %c%d,a0\n"       /* Total number of arguments (fixed and variable) */
+                                    "   ilte %c%d,%d,%c%d\n",  /* `Is <= number of registers? */
+
+                                    /* icopy %c%d,a0 */
+                                    node->register_type, node->register_num,
+
+                                    /* ilte %c%d,%d,%c%d */
+                                    node->register_type, node->register_num,
+                                    arg_ix,
+                                    node->register_type, node->register_num);
+                }
+
+                else {
+                    /* Child is a register */
+                    temp1 = mprintf("   ilt %c%d,%c%d,1\n"         /* Is parm < 1? */
+                                    "   signalt \"OUT_OF_RANGE\",%c%d\n"   /* Signal if so */
+                                    "   icopy %c%d,a0\n"           /* Total number of arguments */
+                                    "   isub %c%d,%c%d,%d\n"       /* Deduct # of fixed arguments */
+                                    "   ilte %c%d,%c%d,%c%d\n",    /* Is <= number of registers? */
+
+                                    /* ilt %c%d,%c%d,1 */
+                                    node->register_type, node->register_num,
+                                    child1->register_type, child1->register_num,
+
+                                    /* signalt "OUT_OF_RANGE",%c%d */
+                                    node->register_type, node->register_num,
+
+                                    /* icopy %c%d,a0 */
+                                    node->register_type, node->register_num,
+
+                                    /* isub %c%d,%c%d,%d */
+                                    node->register_type, node->register_num,
+                                    node->register_type, node->register_num,
+                                    ast_proc(node)->symbolNode->symbol->fixed_args,
+
+                                    /* ilte %c%d,%c%d,%c%d */
+                                    node->register_type, node->register_num,
+                                    child1->register_type, child1->register_num,
+                                    node->register_type, node->register_num);
+                }
+
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                /* Call child cleanup action */
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+
+                /* Type Promotion */
+                type_promotion(node);
+                break;
+
             case OP_NOT:
                 node->output = output_f();
                 if (child1->output) output_concat(node->output, child1->output);
@@ -2483,39 +2766,104 @@ static walker_result emit_walker(walker_direction direction,
                 node->output = output_f();
 
                 if (child1) {
+                    /* We are an array */
+                    /* Essentially we are linking the found array element as the nodes result - which will need unlinking later */
                     char from_reg_type = node->symbolNode->symbol->register_type;
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
 
                     while (child1) {
-                        if (child1->output) output_concat(node->output, child1->output);
                         int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
 
+                        if (child1->output) output_concat(node->output, child1->output);
+
+                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
+                            /* This is the logic for getting the number of elements in an array */
+                            /* This is last parameter - we may have done earlier parameters */
+
+                            if (!unlink_needed) {
+                                /* No unlinking funny business - i.e. we are the first dimension */
+                                if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                                    /* For fixed arrays we just return the upperbound (taking into the base) */
+                                    temp1 = mprintf("   load r%d,%d\n",
+                                                    node->register_num,
+                                                    node->symbolNode->symbol->dim_elements[ast_chdi(child1)] +
+                                                    base - 1);
+                                } else {
+                                    /* Return the max array element taking into account the array base */
+                                    temp1 = mprintf("   getattrs r%d,%c%d,%d\n",
+                                                    node->register_num,
+                                                    from_reg_type,
+                                                    from_reg_num,
+                                                    base - 1);
+                                }
+                            } else {
+                                /* The register of the attribute is linked so ... */
+                                unlink_needed = 0;   /* ... we will unlink it here */
+                                if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                                    /* For fixed arrays we just return the upperbound (taking into the base) */
+                                    /* We have linked and worked though all the dimensions to get here and then
+                                     * don't actually use the linked register (!), but we have checked all the parameters
+                                     * to this point so actually IT IS valid to do this */
+                                    temp1 = mprintf(
+                                            "   unlink r%d\n"
+                                            "   load r%d,%d\n",
+                                                    node->register_num,
+                                                    node->register_num,
+                                                    node->symbolNode->symbol->dim_elements[ast_chdi(child1)] +
+                                                    base - 1);
+                                } else {
+                                    /* Return the max array element taking into account the array base */
+                                    /* We need to copy via the additional register so we can unlink correctly */
+                                    temp1 = mprintf("   getattrs r%d,%c%d,%d\n"
+                                                    "   unlink r%d\n"
+                                                    "   icopy r%d,r%d\n",
+                                                    node->additional_registers,
+                                                    from_reg_type,
+                                                    from_reg_num,
+                                                    base - 1,
+
+                                                    node->register_num,
+
+                                                    node->register_num,
+                                                    node->additional_registers);
+                                }
+                            }
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+
+                            /* Call child cleanup action */
+                            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+
+                            /* Should be no more dimensions so we are done */
+                            goto var_symbol_end;
+                        }
+
+                        /* This is the logic to get the register attribute for this parameter (child1) */
+
+                        /* We might need a string of the index number later (we need it twice) */
                         if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
                             /* Make temp2 the base 1 element index number */
                             temp2 = format_constant(child1->value_type, child1);
                             if (base != 1) {
                                 int ix = atoi(temp2) + 1 - base;
                                 free(temp2);
-                                temp2 = mprintf("%d",ix);
+                                temp2 = mprintf("%d", ix);
                             }
-                        }
-                        else temp2 = 0;
+                        } else temp2 = 0;
 
                         /* Make sure there is enough attributes */
                         if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
-                            /* Fixed array set to the dimension size */
+                            /* Fixed array set to the dimension size - later linkattr1 might throw a signal if out of range by design */
                             temp1 = mprintf("   setattrs %c%d,%d\n",
                                             from_reg_type, from_reg_num,
                                             node->symbolNode->symbol->dim_elements[ast_chdi(child1)]);
-                        }
-                        else if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                            /* Variable array set min attributes which gives a growth buffer */
+                        } else if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
+                            /* Variable array and constant parameter - set min attributes which gives a growth buffer */
                             temp1 = mprintf("   minattrs %c%d,%s\n",
                                             from_reg_type, from_reg_num,
                                             temp2);
-                        }
-                        else {
+                        } else {
                             /* Variable array set min attributes which gives a growth buffer */
                             temp1 = mprintf("   minattrs %c%d,%c%d,%d\n",
                                             from_reg_type, from_reg_num,
@@ -2525,37 +2873,20 @@ static walker_result emit_walker(walker_direction direction,
                         output_append_text(node->output, temp1);
                         free(temp1);
 
-                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
-                            /* Return the max array element taking into account the array base */
-                            temp1 = mprintf("   getattrs r%d,%c%d,%d\n",
-                                            node->register_num,
-                                            node->symbolNode->symbol->register_type, node->symbolNode->symbol->register_num,
-                                            base - 1);
-                            output_append_text(node->output, temp1);
-                            free(temp1);
-                            if (temp2) free(temp2);
-                            /* Should be no more dimensions, and no cleanup (unlink) needed */
-                            goto var_symbol_end;
-                        }
-
                         /* Link Array element */
                         if (child1->node_type == INTEGER || child1->node_type == CONSTANT) {
-                            /* Constant */
+                            /* Constant Parameter */
                             temp1 = mprintf("   linkattr1 r%d,%c%d,%s\n",
                                             node->register_num,
                                             from_reg_type, from_reg_num,
                                             temp2);
-                        }
-
-                        else if (base == 1) {
-                            /* Already 1 base */
+                        } else if (base == 1) {
+                            /* Already 1 base - simpler */
                             temp1 = mprintf("   linkattr1 r%d,%c%d,%c%d\n",
                                             node->register_num,
                                             from_reg_type, from_reg_num,
                                             child1->register_type, child1->register_num);
-                        }
-
-                        else {
+                        } else {
                             /* Need to make it 1 base */
                             temp1 = mprintf("   iadd r%d,%c%d,%d\n"
                                             "   linkattr1 r%d,%c%d,r%d\n",
@@ -2567,17 +2898,19 @@ static walker_result emit_walker(walker_direction direction,
                                             node->additional_registers);
                         }
 
-                        unlink_needed = 1;
+                        unlink_needed = 1; /* We will need to define a cleanup action to unlink */
                         output_append_text(node->output, temp1);
                         free(temp1);
                         if (temp2) free(temp2);
 
+                        /* Call child cleanup action */
+                        if (child1->cleanup) output_concat(node->output, child1->cleanup);
+
+                        /* Loop round to the next parameter */
                         from_reg_type = 'r';
                         from_reg_num = node->register_num;
                         child1 = child1->sibling;
                     }
-
-                    var_symbol_end:
 
                     /* Set cleanup action */
                     if (unlink_needed) {
@@ -2586,6 +2919,7 @@ static walker_result emit_walker(walker_direction direction,
                         free(temp1);
                     }
                 }
+                var_symbol_end:
 
                 if (node->node_type == VAR_SYMBOL) type_promotion(node);
                 break;
