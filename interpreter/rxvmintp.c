@@ -1521,12 +1521,23 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
-*  IGTBR_ID_REG_REG  if op2>op3 ; goto op1                             pej 12 June 2023
-*  -----------------------------------------------------------------------------------
-*/
+ *  IGTBR_ID_REG_REG  if op2>op3 ; goto op1                             pej 12 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(IGTBR_ID_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - IGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
     if (op2RI > op3RI) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  ILTBR_ID_REG_REG  if op2<op3 ; goto op1                             pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(ILTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - ILTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RI < op3RI) {
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
@@ -1667,7 +1678,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - FLTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF <= op3F)
             DISPATCH
-
 /* ------------------------------------------------------------------------------------
  *  FLTE_REG_FLOAT_REG  Float Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
@@ -1676,6 +1686,29 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - FLTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F <= op3RF)
             DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  FGTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RF > op3RF) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  FLTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FLTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FLTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RF < op3RF) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  SEQ_REG_REG_REG  String Equals op1=(op2==op3)

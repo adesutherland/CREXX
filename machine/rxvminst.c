@@ -154,6 +154,7 @@ void init_ops() {
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_INT);
     instr_f("ilte", "Int Less than equals op1=(op2<=op3)", OP_REG, OP_INT, OP_REG);
     instr_f("igtbr", "Int Greater than if (op2>op3) goto op1", OP_ID, OP_REG, OP_REG);
+    instr_f("iltbr", "Int Less than if (op2<op3) goto op1", OP_ID, OP_REG, OP_REG);
 
     instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("feq", "Float Equals op1=(op2==op3)", OP_REG, OP_REG, OP_FLOAT);
@@ -171,6 +172,9 @@ void init_ops() {
     instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("flte", "Float Less than equals op1=(op2<=op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("fgtbr", "Float Greater than if (op2>op3) goto op1", OP_ID, OP_REG, OP_REG);
+    instr_f("fltbr", "Float Less than if (op2<op3) goto op1", OP_ID, OP_REG, OP_REG);
+
 
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("seq", "String Equals op1=(op2==op3)", OP_REG, OP_REG, OP_STRING);
