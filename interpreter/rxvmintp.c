@@ -2565,7 +2565,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
         START_INSTRUCTION(LINKARG_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKARG R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            op1R = current_frame->locals[op2RI + op3I - 1 +
+            op1R = current_frame->locals[op2RI + op3I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
             DISPATCH
@@ -2576,7 +2576,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  */
         START_INSTRUCTION(LINKARG_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - LINKARG R%d,%d\n", (int)REG_IDX(1), (int)op2I);
-            op1R = current_frame->locals[op2I - 1 +
+            op1R = current_frame->locals[op2I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
             DISPATCH
