@@ -918,7 +918,6 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                 /*   r->in.instruction    which will be replaced
                  *   r->out.instruction   replacement instruction(s)
                  */
-                printf("Opt %s %s\n",r->in.instruction,r->out.instruction);
                 switch (r->out.inst_type) {
                     case OP_CODE:
                         context->optimiser_queue[inst_no].instrType = OP_CODE;
