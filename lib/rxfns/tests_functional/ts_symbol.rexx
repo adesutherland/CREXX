@@ -4,6 +4,8 @@ import rxfnsb
 mary=10
 bert="Fred"
 
-say value('mary')
-say value('bert')
-say value('cccc')
+say symbol('mary')
+say symbol('bert')
+say symbol('cccc')
+say symbol('cc*cc')
+return 0

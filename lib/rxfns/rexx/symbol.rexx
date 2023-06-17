@@ -1,20 +1,16 @@
-/* REXX Levelb VALUE Implementation */
+/* REXX Levelb SYMBOL Implementation */
 options levelb
 
-namespace rxfnsb expose value
+namespace rxfnsb expose symbol
 
 /* Only does a read (and value is always returned as a string) for the initial release */
 
-value: procedure = .string
-  arg input = .string
-
+symbol: procedure = .string
+arg input = .string
   if input = "" then return "BAD" /* ? */
   result = ""
-  ires = 0
-  fres = 0.0
-  sres = ""
   reg = lower(input)
-  symbol = ""
+  symb = ""
   type = ""
   module = 0
   address = 0
@@ -34,12 +30,16 @@ value: procedure = .string
      assembler metaloaddata meta_array,module,a
      do i = 1 to meta_array
         assembler linkattr meta_entry,meta_array,i
-        say i meta_entry
         if meta_entry = ".meta_clear" then do /* Object type */
-           assembler linkattr symbol,meta_entry,1
-           if pos("."reg"@",symbol"@") > 0 then return "VAR"
+           assembler linkattr symb,meta_entry,1
+           if pos("."reg"@",symb"@") > 0 then leave
         end
-    end
-  end
-  if result = "" then result = upper(input)
-  return result
+        else if meta_entry = ".meta_const"| meta_entry = ".meta_reg"  then do /* Object type */
+           assembler linkattr symb,meta_entry,1
+           if pos("."reg"@",symb"@") > 0 then return 'VAR'
+        end
+     end
+   end
+  result = translate(input,,'-+*/\:;')
+  if result=input then return 'LIT'
+  return 'BAD'

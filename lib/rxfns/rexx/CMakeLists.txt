@@ -35,6 +35,7 @@ set(BIFS
 		space
 		strip
 		substr
+		symbol
 		time
 		translate
 		trunc
