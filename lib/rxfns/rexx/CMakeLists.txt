@@ -21,6 +21,7 @@ set(BIFS
 		date
 		delstr
 		delword
+		filter
 		format
 #		global
 		insert

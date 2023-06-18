@@ -25,11 +25,11 @@ arg input = .string
   assembler linkattr address,address_object,2 /* 2 = Address in module */
 
   /* Read the addresses backwards */
-  do a = address to 0 by -1
+  do i = address to 0 by -1
      /* Get the metadata for that address */
-     assembler metaloaddata meta_array,module,a
-     do i = 1 to meta_array
-        assembler linkattr meta_entry,meta_array,i
+     assembler metaloaddata meta_array,module,i
+     do j = 1 to meta_array
+        assembler linkattr meta_entry,meta_array,j
         if meta_entry = ".meta_clear" then do /* Object type */
            assembler linkattr symb,meta_entry,1
            if pos("."reg"@",symb"@") > 0 then leave
