@@ -23,6 +23,7 @@ set(BIFS
 		delword
 		filter
 		format
+		fnv
 #		global
 		insert
 		length
