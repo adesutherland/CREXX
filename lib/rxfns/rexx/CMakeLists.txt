@@ -44,6 +44,7 @@ set(BIFS
 		upper
 		value
 		verify
+		version
 		wordlength
 		wordpos
 		x2b
