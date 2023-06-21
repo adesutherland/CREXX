@@ -1,6 +1,6 @@
 /* rexx */
 options levelb
+import rxfnsb
 
-version=''
 say version()
 
