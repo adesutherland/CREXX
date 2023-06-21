@@ -339,6 +339,9 @@ void init_ops() {
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
 
+    instr_f("rxvers", "returns os / 32/64 bit, etc, op1=verstion details", OP_REG, OP_NONE,OP_NONE);
+
+
     /* ENDINSTRUCTIONS */
 
     /* Space for the instructions plus instructions[0] and null termination */

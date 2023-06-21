@@ -3191,6 +3191,34 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
             set_int(op1R, rand());   // receive new random value
         DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  rxvers  returns os information                                    pej 20. June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(RXVERS_REG)
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
+    {
+        char vers[64];
+        strcpy(vers, "UNKNOWN ");
+# if defined(__LINUX__)
+        strcpy(vers, "LINUX ");
+# elif defined(__WINDOWS__)
+        strcpy(vers, "WINDOWS ");
+# elif defined(__APPLE__)
+        strcpy(vers, "APPLE ");
+# endif
+#ifdef __32BIT__
+        strcat(vers, "32BIT ");
+#else
+        strcat(vers, "64BIT ");
+        strcat(vers, rxversion );
+#endif
+        set_null_string(op1R, vers);
+    }
+    DISPATCH;
+
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------
