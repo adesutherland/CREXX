@@ -41,6 +41,7 @@ struct value {
     char *binary_value;
     size_t binary_length;
     value **attributes;
+    value **unlinked_attributes;
     value **attribute_buffers;
     size_t max_num_attributes;
     size_t num_attributes;
@@ -257,6 +258,7 @@ int shellspawn(const char *command,
                REDIRECT* pIn,
                REDIRECT* pOut,
                REDIRECT* pErr,
+               value* variables,
                int *rc,
                char **errorText);
 

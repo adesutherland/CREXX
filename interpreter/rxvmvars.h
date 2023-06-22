@@ -40,6 +40,7 @@ RX_INLINE void value_init(value *v) {
     v->string_value = v->small_string_buffer;
     v->string_buffer_length = sizeof(v->small_string_buffer);
     v->attributes = 0;
+    v->unlinked_attributes = 0;
     v->attribute_buffers = 0;
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
@@ -68,19 +69,26 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
 
     else if (num <= v->max_num_attributes) {
         /* Just need to reset the recycled attributes */
-        for (i = v->num_attributes; i < num; i++)
+        for (i = v->num_attributes; i < num; i++) {
+            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
             value_zero(v->attributes[i]);
+        }
         v->num_attributes = num;
     }
 
     else {
         /* We first need to recycle any unused attributes */
-        for (i = v->num_attributes; i < v->max_num_attributes; i++)
+        for (i = v->num_attributes; i < v->max_num_attributes; i++) {
+            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
             value_zero(v->attributes[i]);
+        }
 
         /* Now we need to make the pointer arrays big enough */
         if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * num);
         else v->attributes = malloc(sizeof(value*) * num);
+
+        if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * num);
+        else v->unlinked_attributes = malloc(sizeof(value*) * num);
 
         v->num_attribute_buffers++;
         if (v->attribute_buffers) v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * v->num_attribute_buffers);
@@ -95,6 +103,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         for (i = v->max_num_attributes; i < num; i++, a++) {
             value_init(a);
             v->attributes[i] = a;
+            v->unlinked_attributes[i] = a;
         }
 
         /* Set the new number of attributes */
@@ -156,13 +165,14 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     int i;
 
     /* Clear attribute values */
-    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->attributes[i]);
+    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->unlinked_attributes[i]);
 
     /* Free attribute buffer */
     for (i = 0; i < v->num_attribute_buffers; i++) free(v->attribute_buffers[i]);
 
     /* Free pointer arrays */
     if (v->attributes) free(v->attributes);
+    if (v->unlinked_attributes) free(v->unlinked_attributes);
     if (v->attribute_buffers) free(v->attribute_buffers);
 
     /* Free strings */
@@ -424,6 +434,7 @@ RX_INLINE void move_value(value *dest, value *source) {
 
     /* Move Attributes */
     dest->attributes = source->attributes;
+    dest->unlinked_attributes = source->unlinked_attributes;
     dest->attribute_buffers = source->attribute_buffers;
     dest->max_num_attributes = source->max_num_attributes;
     dest->num_attributes = source->num_attributes;

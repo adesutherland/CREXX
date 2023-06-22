@@ -28,7 +28,6 @@
  * In terms of memory usage / waste each one is only 2 x pointer size */
 #define NOMINAL_NUM_ARGS 20
 
-
 /* Misc. Utilities here */
 
 /* Fast integer pow calculation - loop unwound - based / from https://gist.github.com/orlp/3551590
@@ -1215,7 +1214,71 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             op1R = op2R->attributes[(int)op3I - 1];
             DISPATCH
 
-        /* Link op2 to op1 */
+        /* Link op3 to attribute op1 of op2 */
+        START_INSTRUCTION(LINKTOATTR_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKTOATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            if (op1R->int_value < 0) goto OUT_OF_RANGE;
+            if (op1R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[op1R->int_value] = op3R;
+            DISPATCH
+
+        /* Link op3 to attribute op1 of op2 */
+        START_INSTRUCTION(LINKTOATTR_INT_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKTOATTR %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
+            if ((int)op1I < 0) goto OUT_OF_RANGE;
+            if ((int)op1I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[(int)op1I] = op3R;
+            DISPATCH
+
+        /* Link op3 to attribute op1 (1 base) of op2 */
+        START_INSTRUCTION(LINKTOATTR1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKTOATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            if (op1R->int_value - 1 < 0) goto OUT_OF_RANGE;
+            if (op1R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[op1R->int_value - 1] = op3R;
+            DISPATCH
+
+        /* Link op3 to attribute op1 (1 base) of op2 */
+        START_INSTRUCTION(LINKTOATTR1_INT_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - LINKTOATTR1 %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
+            if ((int)op1I - 1 < 0) goto OUT_OF_RANGE;
+            if ((int)op1I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[(int)op1I -1] = op3R;
+            DISPATCH
+
+        /* Unlink attribute op1 of op2 */
+        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - UNLINKATTR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            if (op1R->int_value < 0) goto OUT_OF_RANGE;
+            if (op1R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[op1R->int_value] = op2R->unlinked_attributes[op1R->int_value];
+            DISPATCH
+
+        /* Unlink attribute op1 of op2 */
+        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - UNLINKATTR %d,R%lu\n", (int)op1I, REG_IDX(2));
+            if ((int)op1I < 0) goto OUT_OF_RANGE;
+            if ((int)op1I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[(int)op1I] = op2R->unlinked_attributes[(int)op1I];
+            DISPATCH
+
+        /* Unlink attribute op1 (1 base) of op2 */
+        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - UNLINKATTR1 R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            if (op1R->int_value - 1 < 0) goto OUT_OF_RANGE;
+            if (op1R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[op1R->int_value - 1] = op2R->unlinked_attributes[op1R->int_value - 1];
+            DISPATCH
+
+        /* Unlink attribute op1 (1 base) of op2 */
+        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - UNLINKATTR1 %d,R%lu\n", (int)op1I, REG_IDX(2));
+            if ((int)op1I - 1 < 0) goto OUT_OF_RANGE;
+            if ((int)op1I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            op2R->attributes[(int)op1I - 1] = op2R->unlinked_attributes[(int)op1I - 1];
+            DISPATCH
+
+            /* Link op2 to op1 */
         START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - LINK R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R = op2R;
@@ -3537,7 +3600,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
                 if (op3R->num_attributes > 1) pOut = (REDIRECT*)(op3R->attributes[1])->binary_value;
                 if (op3R->num_attributes > 2) pErr = (REDIRECT*)(op3R->attributes[2])->binary_value;
 
-                if (shellspawn(command, pIn, pOut, pErr, &command_rc, &errorText)) {
+                /* op3R->attributes[2] is the environment variables */
+                if (shellspawn(command, pIn, pOut, pErr, op3R->attributes[3], &command_rc, &errorText)) {
                     signal_details = errorText;
                     free(command);
                     goto FAILURE;

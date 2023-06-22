@@ -712,7 +712,11 @@ static walker_result initial_checks_walker(walker_direction direction,
             }
 
             /* Now add the nodes in the right order */
-            child = node->child->sibling; /* Child1 = environment, child2 = command */
+            child = node->child; /* Child1 = environment - make it a STRING (from a LITERAL) */
+            if (child->node_type != NOVAL) child->node_type = STRING;
+
+            child = child->sibling; /* child2 = command */
+
             /* Input */
             if (input_node) child->sibling = input_node;
             else {
@@ -744,12 +748,11 @@ static walker_result initial_checks_walker(walker_direction direction,
             child = child->sibling;
 
             /* Exposed Variables */
-            // TODO WHEN WE HAVE OP_MAKE_ARRAY
-//            if (expose_node) child->sibling = expose_node;
-//            else {
-//                add_sbtr(child,ast_ft(context, REDIRECT_EXPOSE));
-//            }
-//            child = child->sibling;
+            if (expose_node) child->sibling = expose_node;
+            else {
+                add_sbtr(child,ast_ft(context, REDIRECT_EXPOSE));
+             }
+            child = child->sibling;
 
             /* Errors / Junk */
             child->sibling = bad_nodes;
@@ -847,6 +850,10 @@ static walker_result rewrite_address_walker(walker_direction direction,
     ASTNode* args_node;
     ASTNode* function_node;
     ASTNode* temp_node;
+    ASTNode* current_child;
+    ASTNode* last_child;
+    ASTNode* next_child;
+    ASTNode* var_name;
 
     if (direction == out) {
         /* Bottom Up */
@@ -919,8 +926,43 @@ static walker_result rewrite_address_walker(walker_direction direction,
                 break;
 
             case REDIRECT_EXPOSE:
-                /* Turn into an array - or no value */
-                node->node_type = OP_MAKE_ARRAY;
+                /* Replace this node with its children (if any)
+                 * Each child turns into a string (name of variable) followed by the variable itself */
+                if (node->child) {
+                    last_child = ast_chdn(node->parent, ast_chdi(node) - 1); /* node's older sibling */
+                    current_child = node->child;
+                    next_child = current_child->sibling;
+                    while (current_child) {
+                        /* Link in new string */
+                        var_name = ast_fstk(context, current_child);
+                        var_name->node_type = STRING;
+                        var_name->parent = node->parent;
+                        last_child->sibling = var_name;
+
+                        /* Link in current_child - as VAR_SYMBOL */
+                        current_child->parent = node->parent;
+                        var_name->sibling = current_child;
+
+                        /* Next child */
+                        last_child = current_child;
+                        current_child = next_child;
+                        if (current_child) next_child = current_child->sibling;
+                        else next_child = 0;
+                    }
+                    /* Link to the next node */
+                    last_child->sibling = node->sibling;
+
+                    /* Remove NODE safely */
+                    node->sibling = 0;
+                    node->child = 0;
+                    ast_del(node);
+                }
+                else {
+                    /* No children / environment variables - delete node */
+                    ast_del(node);
+                }
+                break;
+
             default:;
         }
     }
@@ -2261,7 +2303,7 @@ static walker_result type_safety_walker(walker_direction direction,
                 if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
                 break;
 
-            case ADDRESS:
+//            case ADDRESS:
             case SAY:
                 if (child1) set_node_target_type(child1, TP_STRING);
                 break;

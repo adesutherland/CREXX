@@ -757,9 +757,9 @@ argument(E)         ::= TK_ELLIPSIS(S).
 /* Instructions */
 
 /* ADDRESS */
-address(A)   ::= TK_ADDRESS var_symbol(S) expression(E).
+address(A)   ::= TK_ADDRESS literal(S) expression(E).
              { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); }
-address(A)   ::= TK_ADDRESS var_symbol(S) expression(E) redirect_list(R).
+address(A)   ::= TK_ADDRESS literal(S) expression(E) redirect_list(R).
              { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); add_ast(A,R); }
 redirect_list(L) ::= redirect(E).
                  { L = E; }
@@ -771,8 +771,12 @@ redirect(C)      ::= TK_ERROR var_symbol(S).
                  { C = ast_ft(context, REDIRECT_ERROR); add_ast(C, S); }
 redirect(C)      ::= TK_INPUT expression(S).
                  { C = ast_ft(context, REDIRECT_IN); add_ast(C, S); }
-redirect(C)      ::= TK_EXPOSE expose_list(S).
+redirect(C)      ::= TK_EXPOSE expose_list_as_var(S).
                  { C = ast_ft(context, REDIRECT_EXPOSE); add_ast(C, S); }
+expose_list_as_var(I) ::= var_symbol(L).
+                      { I = L; }
+expose_list_as_var(I) ::= expose_list_as_var(I1) var_symbol(L).
+                      { I = I1; add_sbtr(I,L); }
 
 /* Assembler */
 assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).

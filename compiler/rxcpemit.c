@@ -449,7 +449,7 @@ static walker_result register_walker(walker_direction direction,
             case ASSIGN:
                 /*
                  * If an assignment from an expression (rather than a symbol) then
-                 * then mark the register as don't assign (DONT_ASSIGN_REGISTER) so we can assign
+                 * mark the register as don't assign (DONT_ASSIGN_REGISTER) so we can assign
                  * it to the target register on the way out (bottom up) and save
                  * a copy instruction
                  */
@@ -880,7 +880,7 @@ static walker_result register_walker(walker_direction direction,
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
                 if (!use_symbol_reg(child1))
-                    ret_reg(node->scope, child1->register_num);
+                    if (node->parent->node_type != REPEAT) ret_reg(node->scope, child1->register_num);
                 break;
 
             case ARG:
@@ -965,15 +965,8 @@ static walker_result register_walker(walker_direction direction,
 
                 c = child1->child; /* The first child under the REPEAT */
                 while (c) {
-                    if (c->node_type == FOR) {
-                        /* Always node register  */
+                    if (c->node_type == FOR || (c->child && !use_symbol_reg(c->child))) {
                         ret_reg(node->scope, c->register_num);
-                    }
-                    /* Don't do it for the ASSIGN node - it takes care of itself */
-                    else if (c->node_type != ASSIGN && c->child) {
-                        /* release the temporary register */
-                        if (!use_symbol_reg(c->child))
-                            ret_reg(node->scope, c->register_num);
                     }
                     c = c->sibling;
                 }
@@ -3055,7 +3048,12 @@ static walker_result emit_walker(walker_direction direction,
                     free(temp1);
                 }
                 output_concat(node->output, child2->cleanup);
-                output_concat(node->output, child1->cleanup);
+                if (node->parent->node_type == REPEAT) {
+                    /* Defer cleanup for repeat - the inc/to needs the register */
+                    node->cleanup = child1->cleanup;
+                    child1->cleanup = 0;
+                }
+                else output_concat(node->output, child1->cleanup);
                 break;
 
             case NOP:
@@ -3245,12 +3243,18 @@ static walker_result emit_walker(walker_direction direction,
                         if (child1->loopendchecks)
                             output_concat(node->loopendchecks, child1->loopendchecks);
                     }
+                    child1 = child1->sibling;
+                }
+                /* Output Cleanups */
+                child1 = node->child;
+                while (child1) {
                     if (child1->cleanup) {
                         if (!node->cleanup) node->cleanup = output_f();
                         output_concat(node->cleanup, child1->cleanup);
                     }
                     child1 = child1->sibling;
                 }
+
                 break;
 
             case FOR:

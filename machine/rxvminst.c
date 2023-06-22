@@ -241,6 +241,16 @@ void init_ops() {
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_INT);
     instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_REG);
     instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_INT);
+
+    instr_f("linktoattr", "Link op3 to attribute op1 of op2 ", OP_REG, OP_REG, OP_REG);
+    instr_f("linktoattr", "Link op3 to attribute op1 of op2 ", OP_INT, OP_REG, OP_REG);
+    instr_f("linktoattr1", "Link op3 to attribute op1 (1 base) of op2 ", OP_REG, OP_REG, OP_REG);
+    instr_f("linktoattr1", "Link op3 to attribute op1 (1 base) of op2 ", OP_INT, OP_REG, OP_REG);
+    instr_f("unlinkattr", "Unlink attribute op1 of op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("unlinkattr", "Unlink attribute op1 of op2", OP_INT, OP_REG, OP_NONE);
+    instr_f("unlinkattr1", "Unlink attribute op1 (1 base) of op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("unlinkattr1", "Unlink attribute op1 (1 base) of op2", OP_INT, OP_REG, OP_NONE);
+
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);

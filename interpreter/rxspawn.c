@@ -34,6 +34,7 @@ typedef struct shelldata {
     char* buffer;
     char* file_path;
     char** argv;
+    value* variables;
 } SHELLDATA;
 
 // Private structure for output to string thread
@@ -82,6 +83,7 @@ int shellspawn (const char *command,
                 REDIRECT* pIn,
                 REDIRECT* pOut,
                 REDIRECT* pErr,
+                value* variables,
                 int *rc,
                 char **errorText) {
 
@@ -97,6 +99,7 @@ int shellspawn (const char *command,
     data.file_path = 0;
     data.argv = 0;
     data.waitThreadRC = 0;
+    data.variables = variables;
 
     // Parse the command
     char *base_name;
@@ -723,6 +726,36 @@ int ParseCommand(const char *command_string, char **command, char **file, char *
 // Launches the child job - never returns
 void launchChild(SHELLDATA* data)
 {
+
+    /* Set Environmental Variables */
+    int i;
+    char *name;
+    char *value;
+    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+        /* Variable Name */
+        name = malloc(data->variables->attributes[i]->string_length + 1);
+        memcpy(name, data->variables->attributes[i]->string_value, data->variables->attributes[i]->string_length);
+        name[data->variables->attributes[i]->string_length] = 0;
+
+        /* Uppercase it - following exported variables convention on posix */
+        char *s = name;
+        while (*s) {
+            *s = (char)toupper(*s);
+            s++;
+        }
+
+        /* Variable Value */
+        value = malloc(data->variables->attributes[i + 1]->string_length + 1);
+        memcpy(value, data->variables->attributes[i + 1]->string_value, data->variables->attributes[i + 1]->string_length);
+        value[data->variables->attributes[i + 1]->string_length] = 0;
+
+        /* Set/export variable */
+        setenv(name, value,1);
+
+        free(value);
+        free(name);
+    }
+
     // Close parent end of the pipes
     if (data->pInput && data->pInput->hWrite != -1) {
         close(data->pInput->hWrite);

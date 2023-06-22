@@ -5,13 +5,28 @@ namespace _rxsysb expose _address _noredir _redir2array _redir2string _array2red
 
 /* This is the function that the compiler calls for the ADDRESS instruction */
 _address: procedure = .int
-  arg env = "shell", command = "", in = .binary, out = .binary, err = .binary
+  arg env = "shell", command = "", in = .binary, out = .binary, err = .binary, expose ... = .string
 
-  redirect = .binary[1 to 3]
+  redirect = .binary[4]
   redirect[1] = in
   redirect[2] = out
   redirect[3] = err
   rc = 0
+
+  /* Set up redirect[4] to hold the environment variables                    */
+  /* After this redirect[4] is an array of "pointers" to the args            */
+  /* We need to do this with assembler as cREXX does not support objects yet */
+  num_envs = arg.0
+  envs = .string[]
+  e = .string
+  assembler linkattr1 envs,redirect,4
+  assembler setattrs envs,num_envs
+  do i = 1 to num_envs
+    assembler linkarg e,i,5         /* Link args[op2+op3] to op1 - there are 5 fixed arguments */
+    assembler linktoattr1 i,envs,e  /* Link op3 to attribute op1 (1 base) of op2 */
+    assembler unlink e
+  end
+  assembler unlink envs
 
   /* Spawn the process */
   assembler spawn rc,command,redirect
