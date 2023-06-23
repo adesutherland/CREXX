@@ -1,0 +1,67 @@
+\subsubsection{Leave instruction}\label{refleave}
+\index{LEAVE instruction,}
+\index{Instructions,LEAVE}
+\index{LEAVE instruction,use of variable on}
+\index{,}
+\index{Loops,termination of}
+\begin{shaded}
+\begin{alltt}
+\textbf{leave} [\emph{name}];
+
+where \emph{name} is a non-numeric \emph{symbol}.
+\end{alltt}
+\end{shaded}
+ \keyword{leave} causes immediate exit from one or more \keyword{do},
+\keyword{loop}, or \keyword{select} constructs.
+It may only be used in the body (the first \emph{instructionlist})
+of the construct.
+ 
+Execution of the instruction list is terminated, and control is
+passed to the \keyword{end} clause of the construct, just as though the
+last clause in the body of the construct had just been executed or (if
+a loop) the termination condition had been met normally, except that on
+exit the control variable (if any) will contain the value it had when
+the \keyword{leave} instruction was executed.
+ 
+If no \emph{name} is specified, then \keyword{leave} must be
+within an active loop and will terminate the innermost active loop.
+ 
+If a \emph{name} is specified, then it must be the name of the
+label (or control variable for a loop with no label), of a currently
+active \keyword{do}, \keyword{loop}, or \keyword{select} construct
+(which may be the innermost).  That construct (and any active constructs
+inside it) is then terminated.  Control then passes to the clause
+following the \keyword{end} clause that matches the
+\keyword{do}, \keyword{loop}, or \keyword{select} clause identified by the
+\emph{name}.
+
+\textbf{Example:}
+\begin{lstlisting}
+loop i=1 to 5
+  say i
+  if i=3 then leave
+  end i
+/* Would display the numbers:  1, 2, 3  */
+\end{lstlisting}
+ \textbf{Notes:}
+\begin{enumerate}
+\index{FINALLY,reached by LEAVE}
+\item If any construct being left includes a \keyword{finally} clause, the
+\emph{instructionlist} following the \keyword{finally} will be
+executed before the construct is left.
+\index{Active constructs,}
+\index{Loops,active}
+\index{Constructs,active}
+\index{Names,on LEAVE instructions}
+\item 
+A \keyword{do}, \keyword{loop}, or \keyword{select} construct
+is active if it is currently being executed.
+If a method (even in the same class) is called during execution of an
+active construct, then the construct becomes inactive until the method
+has returned.
+\keyword{leave} cannot be used to leave an inactive construct.
+\item The \emph{name} symbol, if specified, must exactly match the
+label (or the name of the control variable, for a loop with no label) in
+the \keyword{do}, \keyword{loop}, or \keyword{select} clause in all
+respects except case.
+\end{enumerate}

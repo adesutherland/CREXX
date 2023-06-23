@@ -1,0 +1,11 @@
+digraph{
+graph [pad="0.5", nodesep="0.5", ranksep="2" ]
+node [shape=plain]
+Foo [label=<
+<table border="0" cellborder="1" cellspacing="0">
+<tr><td> Name </td> <td> OP1 </td><td> OP2 </td><td> OP3 </td> </tr>
+<tr><td> SLT </td><td> REG </td><td> REG </td><td> REG </td> </tr>
+<tr><td> SLT </td><td> REG </td><td> REG </td><td> STRING </td> </tr>
+<tr><td> SLT </td><td> REG </td><td> STRING </td><td> REG </td> </tr>
+</table>>];
+}

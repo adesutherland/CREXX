@@ -1,0 +1,110 @@
+# version/s390 ABI specification -- Makefile
+#
+# Create various output formats from the source files.  PDF is the
+# default, others are experimental.  While the version ABI (64 bit) is the
+# main target, the s390 ABI (32 bit, preliminary) can be built as well.
+
+MAIN = crexx_props
+OTHERS = 
+INPUTS = $(MAIN) $(OTHERS)
+
+TEX2PDF = latexmk -lualatex
+TEX2HTML = make4ht --lua
+
+# Markdown formatter (for README.md)
+MD2HTML = comrak --syntax-highlighting none
+
+# Conversion to plain text
+HTML2TXT = elinks \
+	-dump -dump-charset ascii -dump-width 81 \
+	-no-references -no-numbering
+# Sample command line with alternate tool
+#  HTML2TXT = w3m -dump -no-graph
+
+LATEXDIFF = latexdiff --exclude-textcmd="section,subsection,subsubsection"
+
+SUBDIRS = version-pdf s390-pdf version-html s390-html
+
+PHONY := all tex pdf html txt
+
+# Default target
+
+all: $(MAIN)_version.pdf
+
+# Prepare TeX source in separate subdirectories
+
+$(SUBDIRS:=/$(MAIN).tex): $(INPUTS:=.tex)
+	mkdir -p $(dir $@) && cd $(dir $@) && \
+	ln -sf $(INPUTS:%=../%.tex) .
+
+tex: $(SUBDIRS:=/index.tex)
+
+version-%/index.tex: version-%/$(MAIN).tex $(OTHERS:=.tex)
+	printf '%s\n' '\newif\ifzseries\zseriestrue\input{crexx_props.tex}' > $@
+
+s390-%/index.tex: s390-%/$(MAIN).tex $(OTHERS:=.tex)
+	printf '%s\n' '\newif\ifzseries\zseriesfalse\input{crexx_props.tex}' > $@
+
+# PDF output
+# Targets 'crexx_props_version.pdf', 'crexx_props_s390.pdf'
+
+pdf: $(MAIN)_version.pdf $(MAIN)_s390.pdf
+
+$(MAIN)_%.pdf: %-pdf/index.tex
+	cd $*-pdf && $(TEX2PDF) index.tex
+	mv $*-pdf/index.pdf $@
+
+# HTML output
+# Targets 'version-html/index.html', 's390-html/index.html'
+
+html: version-html/index.html s390-html/index.html
+
+%-html/index.html: %-html/index.tex
+	cd $*-html && $(TEX2HTML) index.tex
+
+# Plain text output
+# Targets 'crexx_props_version.txt', 'crexx_props_s390.txt'
+
+txt: $(MAIN)_version.txt $(MAIN)_s390.txt
+
+$(MAIN)_%.txt: %-html/index.html
+	$(HTML2TXT) $< \
+	| sed 's/━/-/g; s/  *$$//' | cat - local-vars.txt > $@ \
+	|| rm -f $@
+
+# Different revisions of the main document
+# Source must be in "revs/", such as "revs/crexx_props-1.5.tex".
+
+version-%-html/$(MAIN).tex s390-%-html/$(MAIN).tex \
+version-%-pdf/$(MAIN).tex s390-%-pdf/$(MAIN).tex: \
+  revs/$(MAIN)-%.tex $(INPUTS:=.tex)
+	mkdir -p $(dir $@) && cd $(dir $@) && \
+	ln -sf $(OTHERS:%=../%.tex) . && \
+	ln -sf ../revs/$(MAIN)-$*.tex $(MAIN).tex
+
+# Diff output
+# These rules enable targets like 'crexx_props_version-vs-1.5.pdf'.
+
+version-vs-%-html/$(MAIN).tex s390-vs-%-html/$(MAIN).tex \
+version-vs-%-pdf/$(MAIN).tex s390-vs-%-pdf/$(MAIN).tex: \
+  revs/$(MAIN)-%.tex $(INPUTS:=.tex)
+	mkdir -p $(dir $@) && cd $(dir $@) && \
+	ln -sf $(OTHERS:%=../%.tex) .
+	$(LATEXDIFF) revs/$(MAIN)-$*.tex $(MAIN).tex > $@
+
+$(MAIN)_version-%.patch: $(MAIN)_version-%.txt $(MAIN)_version.txt
+	diff -ud $(MAIN)_version-$*.txt $(MAIN)_version.txt > $@ || true
+
+# Other targets
+
+%.html: %.md
+	$(MD2HTML) $< > $@
+
+$(MAIN).tar.gz : $(MAIN).tex $(INPUTS:=.tex)  $(MAIN).mk4 \
+		Makefile README.md LICENSE
+	tar -czf $@ $^
+
+clean:
+	rm -rf $(SUBDIRS) version-*-html s390-*-html version-*-pdf s390-*-pdf
+	rm -rf *.patch $(MAIN)_*.pdf $(MAIN)_*.txt $(MAIN).tar.gz
+	rm -rf README.html

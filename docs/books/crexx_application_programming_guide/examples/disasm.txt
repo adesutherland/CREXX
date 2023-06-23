@@ -1,0 +1,42 @@
+*******************************************************************************
+* MODULE - examples/sumLoop1000
+* DESCRIPTION - examples/sumLoop1000
+
+* CONSTANT POOL - Size 0x7c0.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x21
+
+.globals=0
+.srcfile="sumLoop1000.rexx"
+
+main()          .locals=4
+                .meta "sumloop1000.rexx.main"="b" ".void" main() "" ""
+                .src 4:1="sum = 0"
+                .meta "sumloop1000.rexx.main.sum"="b" ".int" r1
+                load r1,0                                    * 0x000000:00c2 Load op1 with op2
+                .src 5:1="do"
+                .src 5:4="i=1"
+                .meta "sumloop1000.rexx.main.i"="b" ".int" r2
+                load r2,1                                    * 0x000003:00c2 Load op1 with op2
+                .src 5:8="to 100000"
+                load r3,100000                               * 0x000006:00c2 Load op1 with op2
+                .src 5:8="to 100000"
+lb_9:           igt r0,r2,r3                                 * 0x000009:0068 Int Greater than op1=(op2>op3)
+                brt lb_18,r0                                 * 0x00000d:00b4 Branch to op1 if op2 true
+                .src 6:4="sum = i+sum"
+                iadd r1,r2,r1                                * 0x000010:000f Integer Add (op1=op2+op3)
+                .src 5:4="i"
+                inc r2                                       * 0x000014:0038 Increment Int (op1++)
+                .src 7:1="end"
+                br lb_9                                      * 0x000016:00b3 Branch to op1
+                .src 8:1="say \"the sum of the numbers 1 to 100000 is:\" sum"
+lb_18:          itos r1                                      * 0x000018:00d1 Set register string value from its int value
+                sconcat r3,"the sum of the numbers 1 to 100000 is:",r1 * 0x00001a:004e String Concat with space (op1=op2||op3)
+                say r3                                       * 0x00001e:00c6 Say op1
+                .src 9:1="return"
+                ret                                          * 0x000020:00ad Return VOID
+                .meta "sumloop1000.rexx.main.i"
+                .meta "sumloop1000.rexx.main.sum"
+*******************************************************************************
+

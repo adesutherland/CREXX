@@ -1,0 +1,3 @@
+The \code{dec1} instruction decrements the \code{r1} register, and is a shortcut that allows a performance increase in the microcode implementation.
+
+
