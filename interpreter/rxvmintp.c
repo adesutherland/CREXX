@@ -3196,8 +3196,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  rxvers  returns os information                                    pej 20. June 2023
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(RXVERS_REG)
-    CALC_DISPATCH(1);
+    START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1);
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
         char vers[64];
@@ -3218,7 +3217,41 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         set_null_string(op1R, vers);
     }
     DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  rxhash  returns hash of a string                                  pej 24. June 2023
+ *  op1=hash(op2,op3)
+ *      op2=string
+ *      op3=length(string)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(RXHASH_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
 
+    {
+#ifdef __32BIT__
+        uint32_t hash, FNVOffset, FNV_PRIME;
+        FNV_PRIME=16777619;
+        FNVOffset=2166136261U;
+#else
+        uint64_t hash, FNVOffset, FNV_PRIME;
+        FNV_PRIME = 1099511628211;
+        FNVOffset = 14695981039346656037U;
+#endif
+        int i1, ch, len;
+        char str[128];
+
+        hash = FNVOffset;
+        GETSTRLEN(len, op2R)
+        for (i1 = 0; i1 < len; i1++) {
+            GETSTRCHAR(ch, op2R, i1)
+            hash = hash ^ (ch);          // xor next byte into the bottom of the hash
+            hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
+        }
+        sprintf(str, "%u", hash);
+        set_null_string(op1R, str);
+     }
+
+            DISPATCH;
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------

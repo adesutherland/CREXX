@@ -339,8 +339,9 @@ void init_ops() {
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_REG,OP_NONE);
     instr_f("irand", "random number random, op1=irand(op2)", OP_REG, OP_INT,OP_NONE);
 
-    instr_f("rxvers", "returns os / 32/64 bit, etc, op1=verstion details", OP_REG, OP_NONE,OP_NONE);
+    instr_f("rxvers", "returns os / 32/64 bit, etc, op1=version details", OP_REG, OP_NONE,OP_NONE);
 
+    instr_f("rxhash", "returns hash value, etc, op1=hash(op2,len(op3))", OP_REG, OP_REG,OP_REG);
 
     /* ENDINSTRUCTIONS */
 

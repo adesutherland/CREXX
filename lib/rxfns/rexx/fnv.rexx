@@ -3,20 +3,13 @@ options levelb
 
 namespace rxfnsb expose fnv
 
-fnv: procedure = .int
+fnv: procedure = .string
 arg input = .string
 
-/* algorithm fnv-1 is */
+len=0
+hashr=""
 
-   hashr = 2166136261   /* 32 bit FNV offset basis value */
-   fnvp =   16777619    /* 32 bit FNV prime value */
-   data=""
-   slen = 0
+assembler strlen len,input
+assembler rxhash hashr,input,len
 
-   assembler strlen slen,input
-   do i=0 to slen-1
-      assembler strchar data,input,i
-      hashr = hashr*FNVP
-      assembler ixor hashr,hashr,data
-   end
 return hashr
