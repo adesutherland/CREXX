@@ -13,12 +13,12 @@ expected_result.2 = '1 error(s) in source file'
 /* Run the test */
 say "Testing" program
 result = .string[]
-address cmd "/usr/local/crexx/rxc" program error result
+address cmd "rxc" program error result
 
 /* Check the expected result */
-if rc <> expected_rc ||,
-   result.0 <> expected_result.0 ||,
-   result.1 <> expected_result.1 ||,
+if rc <> expected_rc | ,
+   result.0 <> expected_result.0 | ,
+   result.1 <> expected_result.1 | ,
    result.2 <> expected_result.2 then do
 
     /* Report result */

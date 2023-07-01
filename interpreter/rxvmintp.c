@@ -3591,7 +3591,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
                 REDIRECT *pOut = 0;
                 REDIRECT *pErr = 0;
                 char *command;
-                command = malloc(op2R->string_length);
+                command = malloc(op2R->string_length + 1);
                 memcpy(command,op2R->string_value, op2R->string_length);
                 command[op2R->string_length] = 0;
                 char* errorText = 0;
