@@ -16,29 +16,13 @@
 
 #ifdef _WIN32
 #include <windows.h>
-//#include <process.h> // for _beginthreadex
-//#include <io.h>    // for _get_osfhandle(), _isatty(), _fileno()
-/* Stuff to make it easy to call _beginthreadex */
-//typedef unsigned (__stdcall *PTHREAD_START) (void *);
-/*
-#define safeCreateThread(psa, cbStack, pfnStartAddr, \
-     pvParam, fdwCreate, pdwThreadID)                \
-       ((HANDLE) _beginthreadex(                     \
-          (void *) (psa),                            \
-          (unsigned) (cbStack),                      \
-          (PTHREAD_START) (pfnStartAddr),            \
-          (void *) (pvParam),                        \
-          (unsigned) (fdwCreate),                    \
-          (unsigned *) (pdwThreadID)))
-*/
 #ifndef _MSC_VER // Windows Visual Studio
 #include <stdint.h>
 #endif
 #endif
 
 #ifdef __APPLE__
-define _GNU_SOURCE             /* See feature_test_macros(7) */
-#include <sys/types.h>
+#define _GNU_SOURCE            /* See feature_test_macros(7) */
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -183,7 +167,7 @@ int shellspawn (const char *command,
         const char *env = getenv("PATH");
         if (env) data.file_path = malloc(sizeof(char) * (strlen(env) + strlen(base_name) + 2)); // Make a buffer big enough
         while (env && *env != ':') {
-            for (i = 0; (data.file_path[i] = *env); i++, env++) {
+            for (int i = 0; (data.file_path[i] = *env); i++, env++) {
                 if (*env == ':') {
                     data.file_path[i] = 0;
                     env++;
@@ -682,7 +666,7 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
     DWORD nBytesWrote = 0;
 #else
     size_t nTotalWrote = 0;
-    size_t nBytesWrote = 0;
+    size_t nBytesWrote;
 #endif
     while (nTotalWrote < nBytes)
     {
@@ -1305,8 +1289,8 @@ int launchChild(SHELLDATA* data) {
 #else
 
     if ((data->ChildProcessPID = fork()) == -1) {
-        Error("Failure spawn U33", errorText);
-        CleanUp(&data);
+        // Error("Failure spawn U33", errorText);
+        CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
 
