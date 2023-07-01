@@ -1,0 +1,162 @@
+\hypertarget{running-crexx-entails-compiling}{%
+\section{Running cRexx entails
+compiling}\label{running-crexx-entails-compiling}}
+
+All Rexx scripts you run with cRexx are compiled by \texttt{rxc} into
+Rexx assembler code (.rxas) and then assembled into an .rxbin file,
+which contains the Rexx bytecode for execution by the Rexx Virtual
+Machine \texttt{rxvm}. During both the compliation and assembler steps
+optimization of the code takes place. The rxvm executable takes care of
+linking separately compiled modules together and executing them, so one
+function can find another.
+
+\hypertarget{a-first-program---hello-world}{%
+\section{A first program - Hello
+World}\label{a-first-program---hello-world}}
+
+Let's say you have a Rexx exec you would like to run. To not have any
+surprises, it is of the \emph{hello world} kind. We have a file called
+hello.rexx, containing:
+
+\lstinputlisting[language=rexx,label=hello_example]{examples/hello.rexx}
+\fontspec{IBM Plex Mono}
+\splice{rxc examples/hello}
+\splice{rxas examples/hello}
+\begin{shaded}
+  \small
+\obeylines \splice{rxvm examples/hello}
+\end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+When cRexx level `C' (for `Classic') is available, the `options levelb'
+(on line 2) statement can be left out; for the moment, level B is all we
+have, and the compiler will refuse to compile without it.
+
+With all our cRexx executables on the PATH, we only need to do:
+
+\begin{verbatim}
+rxc hello
+rxas hello
+rxvm hello
+\end{verbatim}
+
+to see `hello cRexx world!' on the console, as include above this, run
+from the included program. Like all the programs in the \crexx{}
+documentation, these programs are compiled and run from the included
+source by the process that builds the document.
+
+It might be a good idea to make a shell script to execute these three
+programs in succession, and perhaps call it `crexx'. But take into
+account that this really is a very simple case, in which no built-in
+functions are called. We can have a look at the generated rexx assembler
+(hello.rxas) file:
+
+\lstinputlisting[language=rxas,label=hellorxas_example]{examples/hello.rxas}
+
+and you can see here that the compiler actually has generated a `say'
+assembler instruction for the Rexx `say' instruction. (Assembler became
+a whole lot easier with Rexx assembler.) But we did not yet call any
+function.
+
+\hypertarget{using-built-in-functions}{%
+\section{Using built-in functions}\label{using-built-in-functions}}
+
+Most Rexx programs use the extremely well designed built-in functions.
+Now with these functions written in Rexx, and not hidden in the compiler
+somewhere, we must tell it to import those from the library where we put
+them earlier during the build process. Let's say we want to add a
+display of the current weekday to our hello program. This will now be:
+
+\lstinputlisting[language=rexx,label=hellodateexample]{examples/hellodate.rexx}
+
+Never mind the import statement, which you will not need when cRexx
+`Classic' level C is available. But in level B, we need this, because we
+need the flexibility it affords our plans for the future. See more
+about \code{import} on page \pageref{intraImport}.
+
+We must tell the compiler where to find the signature of the date()
+function, so it can check if we call it in the correct way, with the
+right parameters. This is done with the -i switch, which points to the
+directory containing the library - which is called `library', by the
+way.
+
+\begin{verbatim}
+rxc -i ~/crexx-build/lib/rxfns hellodate
+\end{verbatim}
+
+[todo]
+% \splice{rxc -i /Users/apps/crexx_release/lib/rxfns examples/hellodate}
+% \splice{rxas examples/hellodate}
+
+
+The assembler runs unchanged, because it trusts the compiler to have
+checked if the called function really sits in that library, and has the
+right parameters - the right code to call it has been generated.
+
+\begin{verbatim}
+rxas hellodate
+\end{verbatim}
+
+To run it, we can employ the \texttt{rxvme} executable - this one is
+extended with linked-in versions of all the functions in the library:
+
+\begin{verbatim}
+rxvme hellodate
+\end{verbatim}
+
+which yields:
+
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+\obeylines \splice{rxvme examples/hellodate}
+\end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+\hypertarget{building-a-standalone-executable}{%
+\section{Building a standalone
+executable}\label{building-a-standalone-executable}}
+
+It is possible to build a standalone executable of this program. It is
+possible to run your compiled Rexx program, e.g.~from a USB stick,
+without ever installing crexx, on the same OS and instruction set
+architecture.
+
+For this, we need the next set of commands, expressed as a Rexx exec:
+
+\begin{verbatim}
+/* rexx compile a rexx exec to a native executable */
+/* Classic Rexx and NetRexx compatible             */
+crexx_home='~/crexx-build'
+if arg='' then do
+  say 'exec name expected.'
+  exit 99
+end
+parse arg execName'.'extension
+if extension<>'' then say 'filename extension ignored.'
+'rxc  -i' crexx_home'/lib/rxfns' execName
+'rxas' execName
+'rxcpack' execName crexx_home'/lib/rxfns/library'
+'gcc -o' execName,
+'-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
+crexx_home'/interpreter -L'crexx_home'/machine -L',
+crexx_home'/avl_tree -L'crexx_home'/platform'  execName'.c'
+\end{verbatim}
+
+This exec is delivered in the source tree, bin directory.
+
+The exec works by compiling the Rexx program specified (again without
+the .rexx file extension) to an .rxbin Rexx bytecode file, which is then
+serialized to a C source file, containing the cRexx Virtual Machine and
+the library rxbin files, by the rxcpack command. It is a rather peculiar
+looking C source, but nevertheless it will compile to a working
+executable, which is done by the last step in the exec, here using the
+gcc compiler. And you will be able to run it without the overhead of
+checking, compiling, tokenizing to bytecode and linking, so it will be
+quite fast:
+
+\begin{verbatim}
+hello cRexx world!
+today is Saturday
+./hello  0.00s user 0.00s system 61% cpu 0.009 total
+\end{verbatim}

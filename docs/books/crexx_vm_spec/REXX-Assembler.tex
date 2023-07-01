@@ -1,0 +1,749 @@
+\hypertarget{rexx-assembler-specification}{%
+\section{REXX Assembler
+Specification}\label{rexx-assembler-specification}}
+
+\hypertarget{overview}{%
+\subsection{Overview}\label{overview}}
+
+{[}Work in Progress{]}
+
+\href{Logical-REXX-VM}{Additional details of the RXVM virtual machine}
+
+\hypertarget{features-required-to-support-crexx-languages}{%
+\subsection{Features Required to Support cREXX
+Languages}\label{features-required-to-support-crexx-languages}}
+
+The following table maps REXX features to RXAS capabilities to explain
+the motivation for RXAS capabilities and approach for implementing REXX
+features. Details of the REXX Features themselves are documented in the
+REXX specifications, and more details of the RXAS capabilities follow.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2308}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.3718}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2308}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+REXX~Features
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+RXAS~Capabilities
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Implementation~Approach
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Available
+\end{minipage} \\
+\midrule()
+\endhead
+Program Flow & Branches & Generate loops in RX & Yes \\
+Simple Variables & Local Registers & & Yes \\
+STEM Variables & See Classes & STEMs implemented as class & N/A \\
+PROCEDURES & Procedures & & Yes \\
+SIGNAL / Labels & branches / labels & may need duplicate code & Yes \\
+Static EXPOSE & Pass by Reference args & EXPOSED vars by reference &
+Yes \\
+Dynamic EXPOSE & No Additional & Pool implemented in REXX & N/A \\
+VALUE() & No Additional & Pool implemented in REXX & N/A \\
+INTERPRET & Dynamically created rxbin & Complex\footnote{Version 1 will
+  require the compiler / assembler linked into the runtime. Version 2
+  (REXX on REXX) will require advanced REXX parsing.} & No \\
+REXXb Classes & Regs contain sub-regs & \footnote{Class Attributes
+  (always private) are stored in sub-registers. Member functions are
+  statically linked and use a naming convention ``class.member''. The
+  first argument to the member is the object} & No \\
+REXXc Singleton Classes & global regs & \footnote{Singleton Classes
+  replace static classes / members in other languages. The singleton is
+  stored in a global register and exposed with a naming convention
+  ``class.@1''. Note that ``@'' cannot be used from REXX programs
+  directly} & Yes \\
+REXXb Interface & Regs hold function pointer & No & \\
+Dynamic / Late binding & footnote & by REXXb class(s) & No \\
+Arbitrary Precision Maths & No Additional & in REXXb class(s) & N/A \\
+ADDRESS & Platform specific & & No \\
+External Functions & Platform specific & \footnote{Dynamic discovery and
+  linking, call-backs to access variable pool. Classic REXX
+  implementation will need to ensure all required variables are
+  available in the variable pool} & No \\
+Error Reporting & Annotation and debug pool & \footnote{Source line
+  information stored in a ``debug'' pool to allow source line error
+  reporting. Run time error conditions (signals) call REXX Exit
+  functions} & No \\
+\bottomrule()
+\end{longtable}
+
+\hypertarget{rxas-source-syntax-and-structure}{%
+\subsection{RXAS Source Syntax and
+Structure}\label{rxas-source-syntax-and-structure}}
+
+\hypertarget{structure}{%
+\subsubsection{Structure}\label{structure}}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Global Variable definition or Declaration
+\item
+  Procedure Definition or Declaration (repeated)
+\end{enumerate}
+
+\hypertarget{comments}{%
+\subsubsection{Comments}\label{comments}}
+
+\begin{verbatim}
+/* Block Comment */
+
+* Line Comment
+\end{verbatim}
+
+\hypertarget{instructions}{%
+\subsubsection{Instructions}\label{instructions}}
+
+These have the format OP\_CODE {[}ARG1{[},ARG2{[},ARG3{]}{]}{]} where
+each argument can be a
+
+\begin{itemize}
+\tightlist
+\item
+  Register - e.g.~r0\ldots1 (for locals), a0\ldots n (for arguments) or
+  g0\ldots n (for globals)
+\item
+  String - e.g.~``hello''
+\item
+  Integer - e.g.~5
+\item
+  Float - e.g.~5.0
+\item
+  Function - e.g.~proc()
+\item
+  Identifiers / Label - e.g.~label1
+\end{itemize}
+
+\hypertarget{directives}{%
+\subsubsection{Directives}\label{directives}}
+
+RXAS supports the following directives.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.1233}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.8767}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Directive
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} \\
+\midrule()
+\endhead
+.globals = \{INT\} & Defines the number of globals defined for the
+file \\
+.locals = \{INT\} & Defines the number of local registers in a
+procedure \\
+.expose = \{ID\} & Defines the exposed index of a global register
+\footnote{or Procedure. These are used for linking between files/modules} \\
+\bottomrule()
+\end{longtable}
+
+\hypertarget{file-scope-global-registers}{%
+\subsubsection{File Scope Global
+Registers}\label{file-scope-global-registers}}
+
+\begin{verbatim}
+.globals={int}
+\end{verbatim}
+
+Defines \{int\} global variable g0 \ldots{} gn. These can be used within
+any procedure in the file.
+
+\hypertarget{global-registers}{%
+\subsubsection{Global Registers}\label{global-registers}}
+
+Any global register marked as exposed is available to any file which
+also has the corresponding exposed index/name.
+
+\hypertarget{file-1}{%
+\paragraph{File 1}\label{file-1}}
+
+\begin{verbatim}
+.globals=2            * 2 Global Registers
+g0 .expose=namespace.var_name   * 
+\end{verbatim}
+
+\hypertarget{file-2}{%
+\paragraph{File 2}\label{file-2}}
+
+\begin{verbatim}
+.globals=3            * 3 Global Registers
+g2 .expose=namespace.var_name   * 
+\end{verbatim}
+
+In this case file 1 g0 is mapped to file 2 g2 under the index/name of
+``namespace.var\_name''.
+
+\hypertarget{file-scope-procedure}{%
+\subsubsection{File Scope Procedure}\label{file-scope-procedure}}
+
+The locals define how many local registers, r0 to r(locals-1), are
+needed by the procedure.
+
+\begin{verbatim}
+* The ".locals" shows the procedure is defined in here
+file_scope_proc() .locals=3
+...
+ret
+\end{verbatim}
+
+\hypertarget{global-procedures}{%
+\subsubsection{Global Procedures}\label{global-procedures}}
+
+Global Procedures can be called between file/modules.
+
+\hypertarget{file-1-1}{%
+\paragraph{File 1}\label{file-1-1}}
+
+\begin{verbatim}
+* The ".locals" shows the procedure is defined in here
+proc() .locals=3 .expose=namespace.proc
+ret
+\end{verbatim}
+
+\hypertarget{file-2-1}{%
+\paragraph{File 2}\label{file-2-1}}
+
+\begin{verbatim}
+* No ".locals" here! Showing that the procedure is only being declared 
+rproc() .expose=namespace.proc
+
+main() .locals=3 
+call rproc()
+ret
+\end{verbatim}
+
+In this case main() in File 2, calls rproc() which is globally provided
+under the index/name of ``namespace.proc''. In File 1, proc() is exposed
+under this name and hence called from File 1.
+
+Note: that ``namespace'' hints at the use of namespaces as part of
+exposed names; this facility is used by the compiler to define classes.
+
+Also, as shown names can be mapped - they don't have to be the same in
+the source and in the target.
+
+\hypertarget{rxas-capabilities-alphabetical}{%
+\subsection{RXAS Capabilities
+(alphabetical)}\label{rxas-capabilities-alphabetical}}
+
+\hypertarget{branching-and-labels}{%
+\subsubsection{Branching and Labels}\label{branching-and-labels}}
+
+Within a procedure labels can be defined as branch targets. Conditional
+and unconditional branch instructions can target these labels. The
+following example shows a loop structure.
+
+\begin{verbatim}
+   ...                   * Code before loop
+l75:                     * Loop start label
+   igt r0,r1,r4          * Does a integer compare of r1 and r4 - puts true (1) or false (0) into r0
+   brt l37,r0            * Branch if true to l37 (i.e. branch out of the loop)
+   ...                   * Instructions in the loop
+   inc r1                * Increment r1 (the loop counter)
+   br l75                * Unconditional Branch to the start of the loop
+l37:                     * Loop end Label 
+   ...                   * Instructions following the loop
+\end{verbatim}
+
+\hypertarget{code-annotation-and-debug-pool}{%
+\subsubsection{Code Annotation and Debug
+Pool}\label{code-annotation-and-debug-pool}}
+
+NOT IMPLEMENTED
+
+cREXX needs to support appropriate error messages (including source line
+number / text), breakpoints, and tracing. RXAS directives (.file and
+.line) allow the source file, source line to be defined. The .clause
+directive allow clause boundaries to be defined.
+
+\begin{verbatim}
+.file = "testfile.rexx"   * Source file name 
+proc()   .locals=3
+   .regname r1,a          * Maps r1 to an id for debugging purposes 
+   .regname r2,b
+   .line 9 "a=5; b=6"     * The line number and source string
+   .clause                * REXX clause boundary
+   load r1,5
+   .clause
+   load r2,6
+   .line 10 "say a+b"
+   .clause
+   iadd r0,r1,r2
+   itos r0
+   say r0
+   .line 11 "return"
+   .clause
+   ret
+\end{verbatim}
+
+The directives are processed at ``build time'' and the debug constant
+pool is created which allow assembler instructions to be mapped back to
+source lines. In this way error messages can be generated as if the
+source file was being interpreted ``classically'' but with no run-time
+overhead.
+
+In addition, tracing/debugging is implemented by the VM machine using
+the clause boundaries stored in the debug pool. The VM can set a
+breakpoint by replacing the instruction at the appropriate address with
+a breakpoint instruction. When the breakpoint is reached it uses the
+clause boundary information to determine where the next breakpoint
+should be set. Tools can be made available to allow a REXX programmer to
+set a breakpoint at a REXX source code line number.
+
+The debug pool also contains the information to display the rexx
+variable name stored in a register.
+
+Note that accessing debug information is a significant overhead as the
+debug pool will need repeated searching, and will only be used for
+debugging/tracing (or creating an error message) where performance is
+not critical. The reason this approach is used is that when there is no
+debugging in action there is no runtime performance overhead at all
+(obviously the size of the rxbin binary file is made larger with the
+debug pool).
+
+\hypertarget{constant-pool}{%
+\subsubsection{Constant Pool}\label{constant-pool}}
+
+Each File/Module has a constant pool that stores: * String Constants *
+Procedure Details * PTable information (mapping class to interface
+procedures for a class and objects)
+
+\hypertarget{dynamic-access-to-registers-including-arguments}{%
+\subsubsection{Dynamic Access to Registers (including
+Arguments)}\label{dynamic-access-to-registers-including-arguments}}
+
+Dynamic access to a register is enabled by additional members of the
+link family of instructions these allow a register to point to the same
+value as a dynmically number primary register.
+
+\begin{verbatim}
+alink secondary_reg, arg_reg_num * Links secondary_reg to the argument register with number stored in the int value of arg_reg_num 
+glink secondary_reg, global_reg_num * Links secondary_reg to the global register with number stored in the int value of global_reg_num 
+\end{verbatim}
+
+\hypertarget{dynamic-type-instructions}{%
+\subsubsection{Dynamic Type
+Instructions}\label{dynamic-type-instructions}}
+
+The compiler will be able to manage which registers have what values
+most of the time but there will be certain dynamic situations where the
+value type or status is not known. To handle this the compiler use the
+registers type flag:
+
+\begin{verbatim}
+gettp - gets the register type flag (op1 = op2.typeflag)
+settp - sets the register type flag (op1.typeflag = op2)
+setortp - or the register type flag (op1.typeflag = op1.typeflag || op2)
+brtpt - if op2.typeflag true then goto op1
+brtpandt - if op2.typeflag && op3 true then goto op1
+\end{verbatim}
+
+The typeflag is a 64bit integer and its usage is defined by convention
+only \protect\hyperlink{crexx-calling-convention}{see cREXX Calling
+Convention}.
+
+\hypertarget{dynamic-procedure-pointers}{%
+\subsubsection{Dynamic Procedure
+Pointers}\label{dynamic-procedure-pointers}}
+
+This capability is to support interfaces. Where the compiler knows the
+object's class it can link statically to the correct member by using the
+procedure name (i.e.~class\_name.member\_name(), however when the object
+is only known to implement an interface (i.e.~its class is not known)
+then the VM needs to dynamically link interface members to the object's
+class specific implementation.
+
+Each register, that contains an object whose call implements an
+interface, has a pointer to a entry in the constant pool. This entry
+allows the the interface name and member number to be searched at
+runtime, returning its implementation procedure pointer. This is known
+as the register's static ptable. The static ptable also stores the name
+of the objects class.
+
+\emph{Note: Where an object members are dynamically assigned at runtime
+(not an immediately required capability) the dynamic mapping from member
+name to procedure pointer will be done within the REXX runtime library
+(i.e.~not applicable to RXAS).}
+
+A directive defines the entry
+
+\begin{verbatim}
+.ptable class_name interface1_name(impl1_1(), impl1_2(), ...) interface2_name(impl2_1() ...) ...
+\end{verbatim}
+
+This creates the entry into the constant pool with links to the
+procedure implementing an interfaces members \#1,\#2 etc.
+
+The object is linked to the entry with an instruction:
+
+\begin{verbatim}
+setptable r1,class_name
+\end{verbatim}
+
+This sets the register r1 ptable to the entry ``class\_name'' in the
+constant pool.
+
+Finally the entry can be used at runtime:
+
+\begin{verbatim}
+srcptable r2,"interface_name",3
+\end{verbatim}
+
+In this example r2 is a class instance (object) implementing interface
+``interface\_name''. This instruction looks up the object's procedure
+implementing member \#3 of interface ``interface\_name'' and sets the
+procedure pointer of r2 to this. Then
+
+\begin{verbatim}
+dyncall r0, r2, r3
+\end{verbatim}
+
+calls the procedure in r2, with arguments from r3 and puts the result in
+r0.
+
+\hypertarget{external-functions}{%
+\subsubsection{External Functions}\label{external-functions}}
+
+\hypertarget{injecting-dynamic-code}{%
+\subsubsection{Injecting Dynamic Code}\label{injecting-dynamic-code}}
+
+\hypertarget{instructions-1}{%
+\subsubsection{Instructions}\label{instructions-1}}
+
+\hypertarget{type-coding}{%
+\paragraph{Type coding}\label{type-coding}}
+
+Instructions have prefix to determine type: s=string, i=integer,
+f=float, o=object
+
+\hypertarget{maths}{%
+\paragraph{Maths}\label{maths}}
+
+As an example, the add family will have * iadd reg,reg,reg\\
+* fadd reg,reg,reg * etc.
+
+Each function just uses the corresponding registers value (int, float,
+etc).
+
+\hypertarget{load}{%
+\paragraph{Load}\label{load}}
+
+\begin{itemize}
+\tightlist
+\item
+  {[}s/i/f/d{]}load - lost loads the corresponding type value only
+\item
+  load (i.e.~with no prefix) copies all values and the type flag to the
+  target register
+\end{itemize}
+
+\hypertarget{conversion}{%
+\paragraph{Conversion}\label{conversion}}
+
+Converting means setting a value for a type based on the value on
+another type in the same register, e.g. * itos reg - sets the string
+value to the string representation of the integer value of reg * ftos
+reg * stof reg - This converts the string to a float, or triggers a
+signal if it can't
+
+Note: this replaces prime/master.
+
+\hypertarget{say-address-etc.}{%
+\paragraph{SAY / ADDRESS etc.}\label{say-address-etc.}}
+
+Where an instruction needs a string it will only have a string
+``version''. For clarity we will have
+
+\begin{itemize}
+\tightlist
+\item
+  say
+\item
+  address
+\end{itemize}
+
+but there will not be a isay etc. Instead the compiler might need to do
+a ``itos'' first.
+
+\hypertarget{procedures-and-arguments}{%
+\subsubsection{Procedures and
+Arguments}\label{procedures-and-arguments}}
+
+A procedures registers are independent to the caller's registers. What
+happens is that the VM maps its registers to the registers in the
+caller.
+
+Each time a procedure/function is called a new ``stack frame'' is
+provided. This means that the called function has its own set of
+registers.
+
+The function header defines how many registers (called locals) the
+function can access - for practical purposes we can consider that any
+number of registers can be assigned to a function.
+
+In addition, each file defines a number of global registers that can be
+shared between procedures.
+
+In a function with `a' arguments, `n' locals, and `m' globals: * R0
+\ldots{} R(n-1) - are local registers to be used by the function * R(n)
+\ldots{} R(n+m-1) - are the global registers, i.e.~g(0) \ldots{} g(m-1)
+* R(n+m) - holds the number of arguments (a) * R(n+m+1) \ldots{}
+R(n+m+a) holds the arguments, i.e.~a(1) \ldots{} a(a)
+
+This ordering allows a dynamic numbers of arguments.
+
+\hypertarget{crexx-calling-convention}{%
+\paragraph{cREXX Calling Convention}\label{crexx-calling-convention}}
+
+All arguments within RXAS are pass by reference, therefore arguments
+needs to be copied to another register if pass by reference is not
+wanted. This approach is a way to support moves rather than copies -
+especially important to avoid slow object and string copies.
+
+It is mandatory to use this calling convention between REXX and RXAS
+procedures. Although not necessary, it is recommended to also use this
+convention between RXAS procedures.
+
+In this convention the caller is responsible for setting argument
+registers' typeflag. This is used to indicate if an optional argument is
+present, and if a pass-by-value string or object argument needs
+preserving.
+
+The callee (procedure) is responsible for applying default values for
+optional arguments, and for ensuring that pass-by-value arguments are
+kept constant (so they are not changed, effecting the caller logic) if
+required. The callee uses the typeflag for this.
+
+\textbf{Register Type Flag Byte Values}
+
+The register typeflag is used to optimise function arguments.
+
+\begin{itemize}
+\item
+  Bit 1 - REGTP\_VAL - ONLY used for optional arguments; setting (1)
+  means the register has a specified value
+\item
+  Bit 2 - REGTP\_NOTSYM - ONLY used for ``pass be value'' and ONLY large
+  (strings, objects) registers; setting (2) means that it is not a
+  symbol so does not need copying as, even if it is changed, the caller
+  will not use its original value. Note: Small registers (int, float)
+  are always copied as this is faster than setting and checking this
+  flag; the REGTP\_NOTSYM flag is not set or read for integers and
+  floats.
+\end{itemize}
+
+The following examples demonstrate the calling convention.
+
+\textbf{Basic Call by Reference}
+
+REXX Program
+
+Annotated Generated RXAS
+
+\textbf{Optional Call by Reference}
+
+REXX Program
+
+Annotated Generated RXAS
+
+\textbf{Call By Value Integer and Optimisations}
+
+In this example, REGTP\_NOTSYM is not used as the parameter is an
+integer.
+
+REXX Program
+
+Annotated Generated RXAS
+
+\textbf{Call By Value Strings and Optimisations (optional arguments)}
+
+In this example, REGTP\_NOTSYM is used as the parameter is an string in
+optional arguments.
+
+REXX Program
+
+Annotated Generated RXAS
+
+\hypertarget{arbitrary-number-of-arguments-with}{%
+\paragraph{Arbitrary number of arguments with
+\ldots{}}\label{arbitrary-number-of-arguments-with}}
+
+\textbf{TO BE IMPLEMENTED} (requires arrays)
+
+\hypertarget{expose}{%
+\paragraph{EXPOSE}\label{expose}}
+
+\textbf{TO BE IMPLEMENTED}
+
+Syntax candy to provide familiar (but not the same) EXPOSE experience
+for REXX programmers.
+
+In this example:
+
+\begin{verbatim}
+exp = 100
+
+say test( "hello")
+exit
+
+test: procedure = .string expose exp = .int
+  arg message = .string
+  return message || exp
+\end{verbatim}
+
+Is converted by the compiler to:
+
+\begin{verbatim}
+exp = 100
+
+say test(exp, "hello")
+exit
+
+test: procedure = .string 
+  arg expose exp = .int, message = .string
+  return message || exp
+\end{verbatim}
+
+This is designed to provide a familiar (but not the same) experience for
+REXX programmers
+
+\hypertarget{procedure-lookup-tables}{%
+\subsubsection{Procedure Lookup Tables}\label{procedure-lookup-tables}}
+
+\hypertarget{registers}{%
+\subsubsection{Registers}\label{registers}}
+
+\hypertarget{register-data}{%
+\paragraph{Register Data}\label{register-data}}
+
+Each register holds 5 values - String, float, integer and object, and a
+type flag which is used to indicate which values are valid. Note that
+arbitrary position maths is handled as objects.
+
+In most cases it is for the compiler to decide what values to use, and
+how/if to set the type flag. Only a few dynamic scenarios will need some
+extended functions (see following). The type values are 0=unset,
+1=string, 2=float, 4=integer, 8=object, 16=interface. Each register can
+have multiple types set as valid. The compiler sets the valid types
+explicitly with instructions - this is not an automatic runtime
+capability. At runtime the VM has no need nor the \emph{ability} to
+validate data. Any caching has to be achieved by compiler logic.
+
+An Object has an pointer to its static ptable entry in the constant pool
+as well as an array of sub-registers. These sub-registers are the
+private attributes of the object.
+
+\hypertarget{register-initialisation}{%
+\paragraph{Register Initialisation}\label{register-initialisation}}
+
+All registers are initialized on entry to a procedure on the register
+``stack''. The rationale is that all the memory can be malloced at once
+which is faster/safer. The pointers to globals and arguments are also
+setup.
+
+In addition a shadow set of pointers to the procedure's registers are
+setup. These are used by the unlink instruction, they holding the
+base/initial register pointer, and unlink sets the register pointer to
+the pointer held in the respective shadow value.
+
+Registers hold references to their parent/owner for memory freeing
+purposes. The owner can change, for example the owner of a returned
+register is set to the caller. When an object, stack frame, global pool
+is being deleted the registers are also freed/deleted if the registers
+owner is the same as the container being deleted.
+
+\hypertarget{register-re-mapping-facilities}{%
+\paragraph{Register Re-Mapping
+Facilities}\label{register-re-mapping-facilities}}
+
+There are a few scenarios where the contents of a register is needed in
+another register number: a call requires the arguments to be in
+consecutive registers, object sub-registers need to be copied to
+registers, or accessing an arbitrary argument registers (i.e.~when the
+number of arguments is only known at runtime).
+
+Copying the contents of registers to achieve this would be slow (and for
+large strings or objects, very slow). Also it is inconsistent because an
+integer copy and an object pointer copy (which is a copy by reference)
+behave differently (integers become independent but a change to the
+object changes it in each ``copy'').
+
+We provide 2 facilities to allow very fast and safe register moves:
+
+\begin{itemize}
+\item
+  SWAP. This swaps two registers. This is very fast as it requires only
+  6 pointer copies (3 swapping the two register pointers and 3 swapping
+  the two shadow pointers). It allows the programmer to swap two
+  registers (arguments, globals, registers) to get the register into a
+  convenient register number (perhaps for a call). Doing the swap again
+  restores the register numbers.
+\item
+  LINK/UNLINK. The link instruction makes two register numbers point to
+  the same register (one is primary, the other secondary). Unlink makes
+  the \emph{secondary} register revert back to it original state by
+  using the shadow register pointer. Each instruction only requires one
+  pointer copy.
+\end{itemize}
+
+The behaviour should normally be quite simple - however swapping or
+linking already linked or swapped registers may cause complex outcomes.
+Developers should consider the above behaviour descriptions to untangle
+this!
+
+\hypertarget{runtime-error-conditions-and-exit-functions}{%
+\subsubsection{Runtime Error Conditions and Exit
+Functions}\label{runtime-error-conditions-and-exit-functions}}
+
+\hypertarget{shell-instructions}{%
+\subsubsection{Shell Instructions}\label{shell-instructions}}
+
+\hypertarget{sub-registers}{%
+\subsubsection{Sub-Registers}\label{sub-registers}}
+
+\hypertarget{super-instructions}{%
+\subsubsection{Super Instructions}\label{super-instructions}}
+
+Once we see what the code generated by the compiler looks like we may
+combine some of these instructions in to super instructions for
+performance reasons.
+
+\hypertarget{variable-pool-in-rexx}{%
+\subsection{Variable Pool in REXX}\label{variable-pool-in-rexx}}
+
+In the current code for the VM we have registers which point to a
+variable structure (that can contain string, integers etc). These can be
+considered to be ``anonymous variables'' -- the compiler will assign a
+register to hold a variable at compile time.
+
+In this way ``80\%'' of the needs for REXX programs will be handled --
+but not all. Some aspects of REXX needs dynamic variable names --
+e.g.~Some EXPOSE scenarios, INTERPRET, VALUE, and the REXXCOMM / SAA
+API. When these are needed the compiler needs to work in what I am
+calling ``Pedantic'' mode. In this mode variables are also given a
+string index in a variable pool, this index can be searched for
+dynamically at runtime.
+
+Each stack frame will also include its own variable pool. This is a
+name/value index (via a HASH or TREE) whereby a variable can be found
+via the index string. \emph{This will be implemented in REXXb.}
+
+\begin{itemize}
+\tightlist
+\item
+  When a procedure exits and the stack frame is torn down, the
+  corresponding variable pool and variables also need freeing.
+\item
+  To facilitate EXPOSE, a variable pool index can be linked to a parent
+  pool variable.
+\item
+  A register can point to an anonymous variable (as implemented today in
+  the code) or mapped to a variable in the variable pool.
+\end{itemize}

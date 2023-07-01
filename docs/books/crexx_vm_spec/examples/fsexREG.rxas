@@ -1,0 +1,11 @@
+/* fsex example */
+main()  .locals=2
+    say  "fsex example:"
+    load r1,1.0 * load 1 into register 1
+    fsex r1     * exchange the sign
+    ftos r1     * integer to string for display
+    say  r1     * display the string, -1
+    fsex r1     * sign exchange again
+    ftos r1     * need to convert again
+    say  r1     * display the string, 1
+    ret         * return to caller

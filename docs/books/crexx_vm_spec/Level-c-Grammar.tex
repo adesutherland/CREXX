@@ -1,0 +1,448 @@
+\section{Level C Grammar Specification}
+
+\emph{Page Status: This page is work in progress, incomplete, inconsistent and full of errors ... read no further!}
+
+\subsection{Notes}
+
+\begin{itemize}
+\item CREXX Level C is Classic REXX!
+
+\item See {the REXX Language Level} descriptions
+
+\item The {REXX PEG format} is used to define the grammar (implementation independent)
+
+\item This specification includes cross references to the REXX standard and to Phase 1 Implementation details
+
+\end{itemize}
+
+\subsection{Global Rules - File / Line Endings / Whitespace / Comments}
+
+\subsubsection{Whitespace \& Comments}
+
+\begin{verbatim}
+\comment <- '/*' .* \comment* .*  ('*/' / eos->ERROR[6.1]); # Get rid of comments
+ws <- [ \t\v\f]+;                                           # Simple Whitespace Characters
+continuation <- ',' ws* \eol ^\eof;                         # Continuation - trailing ','. Note: Comments already removed
+\whitespace <- ws / continuation;                           # Whitespace includes continuation
+\end{verbatim}
+
+\subsubsection{eos}
+
+\begin{verbatim}
+eos <- \eof; # Platform specific detection of EOF (which is labelled End of Stream in ANSI REXX)
+\end{verbatim}
+
+\textbar{} Cross References \textbar{} {ANSI} \textbar{} {Phase 1} \textbar{}
+\textbar{} -{}-{}- \textbar{} -{}-{}- \textbar{} -{}-{}- \textbar{}
+
+\subsubsection{eol}
+
+\begin{verbatim}
+eol <= \eol; # e.g. '\r\n' / '\n';  # Platform specific detection of EOL
+\end{verbatim}
+
+\subsubsection{Characters}
+
+\begin{verbatim}
+digit <- [0-9];
+special <- [,:;)(]
+operator <- [+\-%/&=><*\\]
+general_letter <- [_!?A-Za-z]
+valid <- digit / special / operator / general_letter / ws / [.'"\[\]] ;
+invalid <- ^valid -> ERROR[13.1];
+char <- valid / invalid;
+\end{verbatim}
+
+\subsubsection{Strings}
+
+\begin{verbatim}
+quotation_mark_string <- '"' char* '"' !'"'; 
+apostrophe_string <- '\'' char* '\'' !'\'';
+quoted_string_error  <- ['"] char* eol -> ERROR[6.3]; 
+string <- quotation_mark_string / apostrophe_string / quoted_string_error;
+hex_string <- string [xX] ^(general_letter / digit / [.]);
+binary_string <- string [bB] ^(general_letter / digit / [.]);
+string_literal <- hex_string / binary_string / string -> STRING;
+\end{verbatim}
+
+\subsubsection{Symbols and Labels}
+
+\begin{verbatim}
+var_symbol <- general_letter var_symbol_char* -> VAR_SYMBOL;
+var_symbol_char <- general_letter / digit / [.];
+label <- general_letter var_symbol_char* ':' -> LABEL;
+\end{verbatim}
+
+\subsubsection{Number}
+
+\begin{verbatim}
+number <- plain_number exponent?;
+plain_number <- '.'? digit+ / digit+ '.' digit*;
+exponent <- 'E' [+\-] digit+; # NOTE the '\' is escaping the '-'
+
+const_symbol <- (  ( plain_number 'E' [+\-] digit+ !(general_letter / [.]) )     # It could be an exponent number
+             / plain_number                                                      # If not it could be a plain number
+             / ('.' ( 'MN' &ws / 'RESULT' &ws / 'RC' &ws / 'RS' &ws / 'SIGL' &ws # Starts with a period and is one of the acceptable strings
+             / var_symbol_char+ ->ERROR[50.1] ) )                                # Otherwise add an error token to the AST
+             / ( digit var_symbol_char+)) -> CONST_SYMBOL;                       # Finally could be something like 12BLAH
+\end{verbatim}
+
+\subsubsection{Operators}
+
+\begin{verbatim}
+operator_char <- [+\-%/&=></*];
+Operator <- operator_char 
+/ '/' '/'
+/ '/' '/' 
+/ '*' '*' 
+/ '\\' '='
+/ '>' '<' 
+/ '<' '>' 
+/ '>' '='
+/ '\\' '<' 
+/ '<' '=' 
+/ '\\' '>'
+/ '=' '=' 
+/ '\\' '=' '='
+/ '>' '>' 
+/ '<' '<'
+/ '>' '>' '='
+/ '\\' '<' '<'
+/ '<' '<' '='
+/ '\\' '>' '>'
+/ '&' '&';	
+\end{verbatim}
+
+\subsubsection{TODO - are these needed?}
+
+\begin{verbatim}
+hex_string <- (hex_digit [break_hex_digit_pair+] / [hex_digit hex_digit [break_hex_digit_pair+]]) / (Msg15.1 / Msg15.3)
+hex_digit <- digit / 'a' / 'A' / 'b' / 'B' / 'c' / 'C' / 'd' / 'D' / 'e' / 'E' / 'f' / 'F'
+break_hex_digit_pair <- ws hex_digit hex_digit
+binary_string <- (binary_digit [break_binary_digit_quad+] / binary_digit binary_digit [break_binary_digit_quad+] / binary_digit binary_digit         
+binary_digit [break_binary_digit_quad+] / [binary_digit binary_digit binary_digit binary_digit [break_binary_digit_quad+]]) / (Msg15.2 / Msg15.4)
+binary_digit <- '0' / '1' 
+break_binary_digit_quad <- ws binary_digit binary_digit binary_digit binary_digit
+\end{verbatim}
+
+\subsubsection{Program}
+
+\begin{verbatim}
+program <- null_clause* instruction_list? ('END'->ERROR[10.1])? -> PROGRAM;
+end_of_clause <- ';' / eol;
+null_clause <- end_of_clause (label end_of_clause)* ;
+ncl <- ( null_clause+ ) / ( .->ERROR[21.1] resync ); 
+\end{verbatim}
+
+\emph{Resync after an error to the next clause - an addition to the specification}
+resync \textless{}- .* end\_of\_clause;
+
+\begin{verbatim}
+instruction_list<- instruction+ -> INSTRUCTIONS;
+
+instruction <- group / (single_instruction ncl);
+
+single_instruction <- assignment / keyword_instruction / command;
+
+assignment <-  v:var_symbol '=' e:expression -> (ASSIGNMENT v e)
+         / t:NUMBER '=' resync -> (ERROR[31.1] t) 
+		 / &digit t:CONST_SYMBOL '=' resync -> (ERROR[Msg31.2] t)
+		 / &'.' t:CONST_SYMBOL '=' resync -> (ERROR[Msg31.3] t);
+
+keyword_instruction <- address / arg / call / drop / exit / interpret / iterate 
+                 / leave / nop / numeric / options / parse / procedure / pull 
+	     / push / queue / return / say / signal / trace 
+	     / t:'THEN' resync -> (ERROR[8.1] t) 
+	     / t:'ELSE' resync -> (ERROR[8.2] t) 
+    	     / t:'WHEN' resync -> (ERROR[9.1] t)
+	     / t:'OTHERWISE' resync -> (ERROR[9.2] t);
+
+command <- expression -> EXPRESSION;
+
+group <- do / if / select ; 
+\end{verbatim}
+
+\subsubsection{DO Group}
+
+\emph{TODO - When should Msg21.1 be raised?}
+do \textless{}- do\_specification (ncl / t:.+ resync -\textgreater{} (ERROR{[}27.1{]} t)) instruction\_list? do\_ending -\textgreater{} DO ;
+
+\begin{verbatim}
+do_ending <-   'END' var_symbol? ncl 
+		 / eos -> ERROR[14.1]
+		 / t:.+ resync -> (ERROR[35.1] t);
+
+do_specification <- 'DO' dorep 
+		      / 'DO' docond 
+		      / 'DO' dorep docond 
+		      / 'DO' 'FOREVER' docond      
+		      / 'DO' 'FOREVER' t:.+ resync -> (ERROR[25.16, "WHILE UNTIL"] t)
+		      / 'DO' 'FOREVER' -> FOREVER;
+		      / 'DO' ;
+
+docond <-   'WHILE' e:expression -> (WHILE e)
+          / 'UNTIL' e:expression -> (UNTIL e);
+
+dorep <- ( assignment {? dot dob dof} / expression ) -> REPEAT;
+
+dot <- 'TO' e:expression -> (TO e);
+
+dob <- 'BY' e:expression -> (BY e);
+
+dof <- 'FOR' e:expression -> (FOR e);
+\end{verbatim}
+
+\subsubsection{IF Group}
+
+\begin{verbatim}
+if <- 'IF' expression ncl? (then / ((. -> ERROR[18.1]) resync )) else? -> IF;
+
+then <- 'THEN' ncl (instruction -> INSTRUCTIONS / eos -> ERROR{14.3] / 'END' -> ERROR[10.5] ) ;
+
+else <- 'ELSE' ncl (instruction -> INSTRUCTIONS / eos -> ERROR[14.4] / 'END' -> ERROR[10.6] ) ;
+\end{verbatim}
+
+\subsubsection{SELECT Group}
+
+\begin{verbatim}
+select <- 'SELECT' ncl select_body ('END' (var_symbol -> ERROR[10.4])? ncl -> SELECT
+                                 / eos -> ERROR[14.2] 
+            		 / . -> ERROR[7.2] resync );
+
+select_body <- (when / . -> ERROR[7.1] resync) when* otherwise?
+
+when <- 'WHEN' expression ncl? (then / ((. -> ERROR[18.2]) resync)) -> WHEN;
+
+otherwise <- 'OTHERWISE' ncl instruction_list? -> OTHERWISE;
+\end{verbatim}
+
+\subsubsection{ADDRESS}
+
+\begin{verbatim}
+address <- 'ADDRESS' [(taken_constant [expression] / Msg19.1 / valueexp) [ 'WITH' connection]]
+
+taken_constant <- symbol / STRING
+
+valueexp <- 'VALUE' expression
+
+connection <- error [adio] / input [adeo] / output [adei] / Msg25.5
+
+adio <- input [output] / output [input]
+
+input <- 'INPUT' (resourcei / Msg25.6)
+
+resourcei <- resources / 'NORMAL'
+
+output <- 'OUTPUT' (resourceo / Msg25.7)
+
+resourceo <- 'APPEND' (resources / Msg25.8) / 'REPLACE' (resources / Msg25.9) / resources / 'NORMAL'
+
+adeo <- error [output] / output [error]
+
+error <- 'ERROR' (resourceo / Msg25.14)
+
+adei <- error [input] / input [error]
+
+resources <- 'STREAM' (var_symbol / Msg53.1) / 'STEM' (var_symbol / Msg53.2)
+
+vref <- '(' (var_symbol / (.->ERROR[20.1]) ) ( ')' / . -> ERROR[46.1] resync)
+\end{verbatim}
+
+\subsubsection{Arg}
+
+\begin{verbatim}
+arg <- 'ARG' [template_list]
+
+call <- 'CALL' (callon_spec/ (taken_constant/Msg19.2)[expression_list])
+
+callon_spec <- 'ON' (callable_condition / Msg25.1) ['NAME' (taken_constant / Msg19.3)] / 'OFF' (callable_condition / Msg25.2)
+
+callable_condition<- 'ERROR' / 'FAILURE' / 'HALT' / 'NOTREADY'
+
+expression_list <- expr / [expr] ',' [expression_list]
+\end{verbatim}
+
+\subsubsection{Drop}
+
+\begin{verbatim}
+drop <- 'DROP' variable_list
+
+variable_list <- (vref / var_symbol)+
+\end{verbatim}
+
+\subsubsection{Exit}
+
+\begin{verbatim}
+exit <- 'EXIT' [expression]
+\end{verbatim}
+
+\subsubsection{Interpret}
+
+\begin{verbatim}
+interpret <- 'INTERPRET' expression
+\end{verbatim}
+
+\subsubsection{Iterate}
+
+\begin{verbatim}
+iterate <- 'ITERATE' [VAR_SYMBOL / Msg20.2 ]
+\end{verbatim}
+
+\subsubsection{Leave}
+
+\begin{verbatim}
+leave <- 'LEAVE' [VAR_SYMBOL / Msg20.2 ]
+\end{verbatim}
+
+\subsubsection{Nop}
+
+\begin{verbatim}
+nop <- 'NOP'
+\end{verbatim}
+
+\subsubsection{Numric}
+
+\begin{verbatim}
+numeric <- 'NUMERIC' (numeric_digits / numeric_form / numeric_fuzz / Msg25.15)
+
+numeric_digits <- 'DIGITS' [expression]
+
+numeric_form <- 'FORM' ('ENGINEERING' / 'SCIENTIFIC' / valueexp / Msg25.11)
+
+numeric_fuzz <- 'FUZZ' [expression]
+\end{verbatim}
+
+\subsubsection{Options}
+
+\begin{verbatim}
+options <- 'OPTIONS' expression
+\end{verbatim}
+
+\subsubsection{Parse}
+
+\begin{verbatim}
+parse <- 'PARSE'(parse_type / Msg25.12)[template_list] / 'PARSE' 'UPPER' (parse_type / Msg25.13) [template_list]
+
+parse_type <- parse_key / parse_value / parse_var
+
+parse_key <- 'ARG' / 'PULL' / 'SOURCE' / 'LINEIN' / 'VERSION'
+
+parse_value <- 'VALUE' [expression] ('WITH' / Msg38.3)
+
+parse_var <- 'VAR' var_symbol
+\end{verbatim}
+
+\subsubsection{Procedure}
+
+\begin{verbatim}
+procedure <- 'PROCEDURE' ['EXPOSE' variable_list / Msg25.17]
+\end{verbatim}
+
+\subsubsection{Pull}
+
+\begin{verbatim}
+pull <- 'PULL' [template_list]
+\end{verbatim}
+
+\subsubsection{Push}
+
+\begin{verbatim}
+push <- 'PUSH' [expression]
+\end{verbatim}
+
+\subsubsection{Queue}
+
+\begin{verbatim}
+queue <- 'QUEUE' [expression]
+\end{verbatim}
+
+\subsubsection{Return}
+
+\begin{verbatim}
+return <- 'RETURN' [expression]
+\end{verbatim}
+
+\subsubsection{Say}
+
+\begin{verbatim}
+say <- 'SAY' [expression]
+\end{verbatim}
+
+\subsubsection{Signal}
+
+\begin{verbatim}
+signal <- 'SIGNAL' (signal_spec / valueexp / taken_constant / Msg19.4)
+
+signal_spec <- 'ON' (condition / Msg25.3) ['NAME' (taken_constant / Msg19.3)] / 'OFF' (condition / Msg25.4)
+
+condition <- callable_condition / 'NOVALUE' / 'SYNTAX' / 'LOSTDIGITS'
+\end{verbatim}
+
+\subsubsection{Trace}
+
+\begin{verbatim}
+trace <- 'TRACE' [(taken_constant / Msg19.6) / valueexp]
+\end{verbatim}
+
+\subsubsection{Parse Templates}
+
+\begin{verbatim}
+template_list <- template / [template] ',' [template_list]
+
+template <- (trigger / target / Msg38.1)+
+
+target <- VAR_SYMBOL / '.'
+
+trigger <- pattern / positional
+
+pattern <- STRING / vrefp
+
+vrefp <- '(' (VAR_SYMBOL / Msg19.7) (')' / Msg46.1)
+
+positional <- absolute_positional / relative_positional absolute_positional<- NUMBER / '=' position
+
+position <- NUMBER / vrefp / Msg38.2
+
+relative_positional<- ('+' / '-') position
+
+symbol <- VAR_SYMBOL / CONST_SYMBOL / NUMBER
+\end{verbatim}
+
+\subsubsection{Expressions}
+
+\begin{verbatim}
+expression <- expr [(',' Msg37.1) / (')' Msg37.2 )]
+
+expr <- expr_alias
+
+expr_alias <- and_expression / expr_alias or_operator and_expression
+
+or_operator <- '/' / '&&'
+
+and_expression <- comparison / and_expression '&' comparison
+
+comparison <- concatenation / comparison comparison_operator concatenation
+
+comparison_operator<- normal_compare / strict_compare
+
+normal_compare<- '=' / '\=' / '<>' / '><' / '>' / '<' / '>=' / '<=' / '\>' / '\<'
+
+strict_compare<- '==' / '\==' / '>>' / '<<' / '>>=' / '<<=' / '\>>' / '\<<'
+
+concatenation <- addition / concatenation (' ' / '//') addition
+addition <- multiplication / addition additive_operator multiplication
+
+additive_operator<- '+' / '-'
+
+multiplication <- power_expression / multiplication multiplicative_operator power_expression
+
+multiplicative_operator<- '*' / '/' / '//' / '%'
+
+power_expression <- prefix_expression / power_expression '**' prefix_expression
+
+prefix_expression <- ('+' / '-' / '\') prefix_expression / term / Msg35.1
+
+term <- symbol / STRING / function / '(' expr_alias (',' Msg37.1 / ')' / Msg36)
+
+function <- taken_constant '(' [expression_list] (')' / Msg3632
+\end{verbatim}

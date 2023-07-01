@@ -1,14 +1,36 @@
-crexx_home=/Users/rvjansen/apps/crexx_release
-rxc  $1
-rxas $1
-rxcpack $1 $crexx_home/lib/rxfns/library
-gcc -o $1 \
+#!/bin/bash
+thisdir=$(dirname $0)
+filename=$(basename "$1")
+path=$(dirname "$1")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+if [ "$extension" = "$filename" ]; then
+  # If the filename has no extension, check for a file with .rexx extension
+  filename_rexx="${filename}.rexx"
+  if [ ! -f "$filename_rexx" ]; then
+    echo "Error: $filename_rexx does not exist."
+    exit 1
+  fi
+  # Set extension to "rexx" if the file exists
+  extension="rexx"
+fi
+
+case "$extension" in
+  rexx) true
+       ;;
+  *)   echo "File extension is not correct. Expected .rexx file."
+       exit 1
+       ;;
+esac
+
+rxc  ${filename}
+rxas ${filename}
+rxcpack ${filename} $thisdir/../lib/rxfns/library
+gcc -o ${filename} \
     -lrxvml -lmachine -lavl_tree -lplatform -lm  \
-    -L$crexx_home/interpreter \
-    -L$crexx_home/machine \
-    -L$crexx_home/avl_tree \
-    -L$crexx_home/platform \
-    $1.c
-
-
-
+    -L$thisdir/../interpreter \
+    -L$thisdir/../machine \
+    -L$thisdir/../avl_tree \
+    -L$thisdir/../platform \
+    ${filename}.c

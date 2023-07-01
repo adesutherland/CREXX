@@ -1,0 +1,1 @@
+Sign EXchange, this instructions inverts the sign of the floating point number in the register in OP1.\footnote{Named, like \code{isex} in honour of the PDP11 instruction that nearly got out in an assembler, but was stopped by management at the last moment.}

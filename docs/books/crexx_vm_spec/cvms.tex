@@ -1,0 +1,95 @@
+\input{../boilerplate/preamble}
+\begin{document}
+\renewcommand{\isbn}{978-90-819090-1-3}
+\setcounter{tocdepth}{1}
+\title{\fontspec{TeX Gyre Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW Light}\\VM Specification}
+
+\author{The \crexx{} team}
+%\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
+\date{\null\hfill \today}
+\maketitle
+\pagenumbering{Roman}
+\pagestyle{plain}
+\frontmatter
+\pagenumbering{Roman}
+\pagestyle{plain}
+\input{../boilerplate/bookmeta}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\frontmatter
+\large
+\input{../boilerplate/series}
+\input{../boilerplate/conventions}
+%% \pagestyle{fancy}
+%... then configure it.
+
+% Clear all headers and footers (see also \fancyhf{})
+%% \fancyhead{}\fancyfoot{}
+
+%% % Set the header and footer for Even
+%% % pages but omit the zone (L, C or R)
+%% \fancyhead[E]{Header: even page \thepage}
+%% %\fancyfoot[E]{Footer: even page \thepage}
+
+%% % Set the header and footer for Odd
+%% % pages but omit the zone (L, C or R)
+%% %\fancyhead[O]{Header: odd page \thepage}
+%% \fancyfoot[O]{Footer: odd page \thepage}
+
+\mainmatter
+\input{about}
+\chapter{Building \crexx{}}
+\input{Building_cRexx.tex}
+\chapter{Low-Level System Information}
+\input{lowlevel}
+\chapter{\crexx{} Virtual Machine Instruction Set}
+Most \crexx{} Virtual machine instructions share the following
+characteristics:
+\begin{itemize}
+\item Logical data flow is from right to left
+  \item There is no separate CC (Condition Code) or status register; a
+    register specified in the instruction is used for these results;
+    for example all comparisons leave their result in a register, that
+    subsequently can be used for a conditional branch
+    \item The assembler does not have any data definition directives;
+      data is entered directly into registers, which then are used by
+      the instructions. In \code{.rxbin} modules this data is
+      represented in the Constant Pool. 
+\end{itemize}
+\input{instruction_chapter}
+\chapter{\crexx{} Assembler}
+\input{REXX-Assembler.tex}
+%% \input{options}
+\appendix
+\chapter{Platform Considerations}
+
+\chapter{Notices}
+
+\chapter{Instructions by Mnemonic}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../crexx_reference_cards/mnemonic.tex}
+\end{longtable}
+
+
+\chapter{Instructions by Opcode}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../crexx_reference_cards/opcodes.tex}
+\end{longtable}
+
+\backmatter
+\listoftables
+%\listoffigures
+%\lstlistoflistings
+\printindex
+\clearpage
+\psset{unit=1in}
+\begin{pspicture}(3.5,1in)
+  \psbarcode{\isbn}{includetext guardwhitespace}{isbn}
+\end{pspicture}
+\end{document}

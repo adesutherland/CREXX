@@ -1,0 +1,201 @@
+\section{Grammar Specification}
+
+\emph{Page Status: This page is ready for review for Phase 0 (PoC). It may have errors
+and be changed based on feedback and implementation experience}
+
+\subsection{ANSI Standard}
+
+The current REXX ANSI specification describes the grammar in terms of
+implementation details, specifically pulling out details across the interactions
+between a stateful lexer and parser (although it does not describe it in these
+terms). And although not explicitly stated, it is possible that the parser is assumed
+to be a LALR one.
+
+The difficulty with this approach is that the specification logic is split up and
+therefore hard to interpret or indeed validate. Also it is often not clear where
+certain rules are:
+
+\begin{itemize}
+\item Essential to the REXX Grammar being described
+
+\item Needed to remove ambiguities in the grammar inherent in REXX itself
+
+\item Needed to overcome weaknesses in the the LALR parser (i.e. with one lookahead)
+
+\end{itemize}
+
+\subsection{Parsing Expression Grammar (PEG)}
+
+We want a format that describes the grammar in an implementation
+independent fashion that allows comprehension for a REXX programmer.
+
+We at the logical level we will use \href{https://en.wikipedia.org/wiki/Parsing_expression_grammar}{PEG}
+grammar to describe REXX syntax, and (for REXX Level C - Classic REXX) convert the
+ANSI specification to this format.
+
+For readability, we will assume that the Parser / Grammar can support Left
+Recursion.
+
+For Phases 0-2 we will specify (at the Physical Level) how we implement these
+grammars in the 3 stages - lexer, parsers, and finally AST Manipulation.
+
+For Phase 3 we intend to use a PEG parser delivered in REXX Level L directly;
+likely a \href{https://github.com/lukehutch/pikaparser}{PIKA Parser}. We are therefore
+using the PEG format defined/inspired by its reference implementation.
+
+\subsection{Parser Errors}
+
+For all cREXX Phases and REXX levels - parsing errors will be embedded into the
+AST tree, and it is expected that a AST Manipulation stage (even for phase 3)
+will be needed to ensure that error reporting is useful and standards compliant.
+
+\subsection{REXX PEG Format}
+
+This extends \href{https://en.wikipedia.org/wiki/Parsing_expression_grammar}{the PEG format} to concisely support REXX constructs, and is inspired by the
+\href{https://github.com/lukehutch/pikaparser}{PIKA Parser Reference implementation on Github}.
+
+Currently this is only supported by \textquotedbl{}human interpretation\textquotedbl{}. In time it is envisaged that this format be developed and used in a REXX Level L PARSE Instruction to allow language parsing and AST tree generation.
+
+\subsubsection{Whitespace and Comments}
+
+An issue with the PEG Format is the treatment of non-program tokens (i.e. Whitespace and Comments): either they are assumed to have been stripped out (in which case the grammar cannot make use of this information; recalling that REXX uses abuttals as an operator), or they have to be referenced throughout the grammar rules (very messy and not supportive of the common approach of implementing with a separate lexing stage).
+
+Our format defines two master rules:
+
+\begin{itemize}
+\item \texttt{\textbackslash{}WHITESPACE} - to indicate whitespace, these are discarded
+
+\item \texttt{\textbackslash{}COMMENT} - to indicate comment tokens. These tokens can be considered to have been created but hidden. For human interpretation not different to /ws but at a later date this difference could be used, as an example, for language transformation applications.
+
+\end{itemize}
+
+In addition, the \texttt{\&\textbar{}} notation for (\texttt{Abuttal}) - see below - allows languages to detect when there was no whitespace (or comments) between two tokens.
+
+String (\textquotedbl{} or \textquotesingle{}) of characters and rule names that begin with a Capital letter are treated a tokens (see below) in this case white space and comments are NOT ignored.
+
+\subsubsection{Rule Format}
+
+The rules are of the form \texttt{RuleName \textless{}- Clause;}.
+
+If a rule name starts with a capital (recommendation: capitalise the whole rule name) then it is considered to be a TOKEN. This just means that whitespaces and comments are included in the matching / token rather than being supressed.
+
+AST node labels may be specified in the form \texttt{RuleName \textless{}- ASTNodeLabel:Clause;}.
+
+Sub-Rules processed in the order specified by the parent rule to get rid of ambiguities
+
+\emph{Deprecated: The rule name may be followed by optional square brackets containing the precedence of the
+rule (as an integer), optionally followed by an associativity modifier (\texttt{,L} or \texttt{,R}).}
+
+Nonterminal clauses can be specified using the following notation:
+
+\begin{itemize}
+\item \texttt{X Y Z} for a sequence of matches (\texttt{X} should match, followed by \texttt{Y},
+followed by \texttt{Z}), i.e. \texttt{Seq}
+
+\item \texttt{X / Y / Z} for ordered choice (\texttt{X} should match, or if it doesn\textquotesingle{}t, \texttt{Y}
+should match, or if it doesn\textquotesingle{}t\textquotesingle{} \texttt{Z} should match) , i.e. \texttt{First}
+
+\item \texttt{X+} to indicate that \texttt{X} must match one or more times, i.e. \texttt{OneOrMore}
+
+\item \texttt{X*} to indicate that \texttt{X} must match zero or more times, i.e. \texttt{ZeroOrMore} - nongreedy
+
+\item \texttt{X**} to indicate that \texttt{X} must match zero or more times, i.e. \texttt{ZeroOrMore} - greedy
+
+\item \texttt{X?} to indicate that \texttt{X} may optionally match, i.e. \texttt{Optional}
+
+\item \texttt{\&X} to look ahead and require \texttt{X} to match without consuming characters, i.e. \texttt{FollowedBy}
+
+\item \texttt{!X} to look ahead and require that there is no match (the logical negation of \texttt{\&X}), i.e. \texttt{NotFollowedBy}
+
+\item \texttt{\&\textbar{}} to look ahead (without consuming characters) and require that there is no whitespace before the next token, i.e. \texttt{Abuttal}
+
+\end{itemize}
+
+Terminal clauses can be specified using the following notation. Standard
+character escaping is supported, including for Unicode codepoints.
+
+\begin{itemize}
+\item \texttt{\textquotesingle{}{[}\textquotesingle{}} for individual characters
+
+\item \texttt{\textquotedbl{}import\textquotedbl{}} for strings of characters (case sensitive)
+
+\item \texttt{\textquotesingle{}import\textquotesingle{}} for strings of characters (case insensitive)
+
+\item \texttt{{[}0-9{]}} for character ranges
+
+\item \texttt{{[}+\textbackslash{}-*/{]}} for character sets (note \texttt{-} is escaped)
+
+\item \texttt{{[}\^{}\textbackslash{}n{]}} for negated character sets (note that this will slow down the parser,
+since a negated matching rule will spuriously match in many more places)
+
+\item \texttt{\textbackslash{}} = Escape character
+
+\item \texttt{.} = wildcard (matches any single character)
+
+\end{itemize}
+
+Logic can be used between clauses
+
+\begin{itemize}
+\item \texttt{//} = logical or
+
+\item \texttt{\&\&} = logical and
+
+\item \texttt{\^{}} = not
+
+\end{itemize}
+
+Unordered Sets
+
+\begin{itemize}
+\item \texttt{\{a b c\}} - Unordered set 1 of each member in any order
+
+\item \texttt{\{+ a b c\}} - Unordered set 1 or more of each member in any order
+
+\item \texttt{\{* a b c\}} - Unordered set 0 or more of each member in any order
+
+\item \texttt{\{n* a b c\}} - Unordered set n or more of each member in any order
+
+\end{itemize}
+
+\subsubsection{Special Rules}
+
+\begin{itemize}
+\item \texttt{\textbackslash{}eof} - Platform specific detection of EOF (or End of Stream)
+
+\item \texttt{\textbackslash{}eol} - Platform specific detection of EOL
+
+\end{itemize}
+
+\subsubsection{AST Generation}
+
+\begin{itemize}
+\item Each rule returns a set of ordered nodes (which can be empty)
+
+\item \texttt{rule \textless{}- a:subrule b:subrule -\textgreater{} *} Any sub-rules AST nodes are are kept as a set of sibling nodes. Equivalent to:
+
+\item \texttt{rule \textless{}- a:subrule b:subrule} No AST Node is created, any subrules AST nodes are are kept as a set of sibling nodes (for the use of parent rules)
+
+\item \texttt{... -\textgreater{} TYPE} Creates an AST node of type TYPE made up of the complete rule selection, any subrules AST nodes are added as children. Equivalent to:
+
+\item \texttt{rule \textless{}- a:subrule b:subrule -\textgreater{} (TYPE *)} AST Tree with node type TYPE as root and nodes as children == -\textgreater{} TYPE
+
+\item \texttt{rule \textless{}- subrule subrule -\textgreater{} TYPE *} AST Tree with node type TYPE as root and any nodes as siblings following TYPE
+
+\item \texttt{rule \textless{}- a:subrule b:subrule -\textgreater{} TYPE a b} AST Tree with node type TYPE as root and a and b nodes as siblings following TYPE
+
+\item \texttt{rule \textless{}- a:subrule b:subrule -\textgreater{} a b} AST Tree with nodes a and b as siblings
+
+\item \texttt{... -\textgreater{} TYPE{[}parm{]}} As \texttt{-\textgreater{} TYPE} but with a parameter stored in the node
+
+\item \texttt{rule \textless{}- a:subrule b:subrule c:subrule ... -\textgreater{} (a b c ...)} AST Tree with rule label a as root and b and c (etc.) nodes as children (b and can be null in which case they are \textquotesingle{}\textbackslash{}\textquotesingle{} added.
+
+\item \texttt{rule \textless{}- a:subrule b:subrule* -\textgreater{} (a b)} AST Tree with rule label a as root and many children from subrule b
+
+\item \texttt{rule \textless{}- a:subrule b:subrule -\textgreater{} (TYPE a b)} AST Tree with node type TYPE as root and a and b nodes as children
+
+\item \texttt{rule \textless{}- a:subrule b:subrule c:subrule -\textgreater{} (TYPE (a b) c)} AST Tree with node type TYPE as root and a and c nodes as children b as a grandchild
+
+\item \texttt{rule \textless{}- subrule -\textgreater{} TYPE1 / subrule -\textgreater{} TYPE1} Shows how different subrules may lead to a different AST node
+
+\end{itemize}

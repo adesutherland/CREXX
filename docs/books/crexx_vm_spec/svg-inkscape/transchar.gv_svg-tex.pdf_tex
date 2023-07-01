@@ -1,0 +1,73 @@
+%% Creator: Inkscape 1.2.2 (b0a84865, 2022-12-01), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'transchar.gv_svg-tex.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{290bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.39310345)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{transchar.gv_svg-tex.pdf}}%
+    \put(0.21724138,0.22){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Name\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{transchar.gv_svg-tex.pdf}}%
+    \put(0.46724138,0.22){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}OP1\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{transchar.gv_svg-tex.pdf}}%
+    \put(0.60862069,0.22){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}OP2\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{transchar.gv_svg-tex.pdf}}%
+    \put(0.75,0.22){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}OP3\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{transchar.gv_svg-tex.pdf}}%
+    \put(0.13448276,0.14758621){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}TRANSCHAR\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{transchar.gv_svg-tex.pdf}}%
+    \put(0.46206897,0.14758621){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}REG\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{transchar.gv_svg-tex.pdf}}%
+    \put(0.60344828,0.14758621){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}REG\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{transchar.gv_svg-tex.pdf}}%
+    \put(0.74482759,0.14758621){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}REG\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

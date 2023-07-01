@@ -1,0 +1,412 @@
+\chapter{Introduction}
+\crexx{} is a general-purpose programming language. \textbf{It is
+  still designed for
+people, not computers}. In this respect it follows R\textsc{exx} closely, with
+many of the concepts and most of the syntax taken directly from R\textsc{exx}
+or its object-oriented variants, Object R\textsc{exx} and \nr{}.
+
+\crexx{} will be delivered in different levels. Level B is the first and
+contained in this MVP release. Level C will be mostly compatible with
+ISO standard Classic \textsc{Rexx}. 
+In addition to the mentioned \textsc{Rexx} variants, \crexx{} level B contains 
+static typing and binary arithmetic.
+
+Later levels will contain an object model, exception
+handling and a library of classes. The resulting language not only provides the scripting
+capabilities and decimal arithmetic of R\textsc{exx}, but also seamlessly
+extends to large application development with fast binary arithmetic.
+
+The \crexx{} team is trying to provide a new, up-to-date
+implementation of \rexx{}, and to incorporate many of the improvements
+oo\rexx{} and \nr{} added to the language. In some cases, choices
+need to be made. These choices are made in dialogue with the \rexx ARB
+(Architecture Review Board). While, in this day and age of open source
+development every language implementation team is autonomous, and in
+fact everyone can fork a repository and strike out on their own, the
+\crexx{} team seeks cooperation and efficient deployment of work.
+
+The terms 'new' and 'up-to-date' refer to several different
+developments in our technical and social reality. The developments of
+CPU and GPU technology mean that, while we might have hit a wall with
+Moore's law, parallellism and pipelining have become more important,
+as are cache sizes, RISC and vectorising of instructions, like done in
+different SIMD implementations. As address ranges have become large
+and segmentation is something of the past, we are de-emphasising
+memory management and emphasising instruction pipelining in the
+\crexx{} VM Kernel. Also, we are testing our hypothesis that \rexx{}
+can be a high-performance language, so apart from that VM Kernel,
+everything is written in that language.
+
+We are convinced that the working of interpreters and compilers needs
+to be understandable to its users; with a more complete mental imagery
+of those workings, it is possible to write much better programs. We
+strive to have a completely transparent architecture for the language
+tools. For this reason we have tried to open up the bytecode compiler
+and interpreter layers to the user of the language, instead of hiding
+these. This also enables the team (or others) to start working on
+native, true compilers that generate executable machine instructions
+for hardware instruction set architectures or future virtual machines.
+
+Also from a software point of view the world has changed. Apart from
+fads and silver bullets, some developments have stuck and are
+sometimes missed in \rexx{}, which at this point in time is more than
+40 years old. The introduction of Object Orientation in the 1990's was
+a long and arduous process, that might have taken too much time than
+was time-to-market and user expectations allowed. What did not exactly
+helped was putting this Orexx version into the hands of a different
+language architect, the product intentions published early and the
+product delivery taking a very long time - as a 'user switchable'
+implementation on a moribund operating
+system\footnote{IBM's OS/2.} Further announcements and retractions
+of its owner regarding its open sourcing status did not help it in any way.
+Another variant, for the Java Virtual Machine, has shown the
+divergence in ideas between \rexx{}'s original architect, Mike
+Cowlishaw, and the Object Rexx implementation of the same ideas.
+
+We would like to try to avoid this by opening up architecture, source
+and discussion in the user community. While \rexx{} variants may have
+diverged on small points, an effort could be set up to standardize as
+much as possible on new developments. What are these new developments
+in programming language technology?\footnote{some might be quite old}
+
+A discussion on various mailing fora brought about the following list
+of what different variants of \rexx{} need:
+\begin{itemize}
+\item Short circuit evaluation
+\item Functions as first class objects
+\item Multi-threading
+\item Dynamically typed, preferably with type hints
+\item Co-routintes
+\item Support for object oriented programming
+\item Regular expressions
+\item Libraries for web programming, jpegs, JSON/YAML parsing etc
+\item Language tools
+\item Logic programming
+\end{itemize}
+
+Note that this list is just a statement of intention and some things
+do exist in existing implementations while others might not be a
+good idea or would be done better by tools external to the language.
+  
+\section{Level B Minimally Viable Product Snapshot}
+It is important to know that the Level B implementation is not complete
+yet. What still is missing from this snapshot with
+regard to the first \crexx{} Level B release, is the following
+\begin{itemize}
+\item Adress statement
+\item stream I/O
+\item structured variables
+\end{itemize}
+
+The team deems it important to release the working parts at this time,
+so people can play with it, be amazed by the speed of code implemented
+with \rexx{}, use Unicode and see how it works, and possibly,
+hopefully participate in its development. This means that \crexx{} has
+entered the phase in which things are stable enough for working on
+specific tasks by a larger team. Everybody is welcome! Lots of things
+can be done in \rexx{}!
+
+% Appendices include a sample \crexx{} program, a description of an experimental feature, and some
+% details of the contents of the \texttt{netrexx.lang} package.
+\section{Language Objectives}
+% This document describes a programming language, called \crexx{}, which
+% is derived from both  \crexx{} is intended as a dialect
+% of R\textsc{exx} that can be as efficient and portable as languages such as
+% Java, while preserving the low threshold to learning and the ease of
+% use of the original R\textsc{exx} language.
+\subsection{Features of R\textsc{exx}}
+The R\textsc{exx} programming language\footnote{Cowlishaw, M. F., \textbf{The REXX Language} (second edition), ISBN 0-13-780651-5, Prentice-Hall, 1990.} was designed with just one objective: to make programming easier than it was before. The design achieved this by emphasizing readability and usability, with a minimum of special notations and restrictions. It was consciously designed to make life easier for its users, rather than for its implementers.
+% One important feature of R\textsc{exx} syntax is \emph{keyword
+%   safety}. Programming languages invariably need to evolve over time
+% as the needs and expectations of their users change, so this is an
+% essential requirement for languages that are intended to be executed from source.
+
+% Keywords in R\textsc{exx} are not globally reserved but are recognized only in
+% context. This language attribute has allowed the language to be
+% extended substantially over the years without invalidating existing
+% programs. Even so, some areas of R\textsc{exx} have proved difficult to extend
+% – for example, keywords are reserved within instructions such as
+% \textbf{do}. Therefore, the design for \crexx{} takes the concept of
+% keyword safety even further than in R\textsc{exx}, and also improves
+% extensibility in other areas.
+
+The great strengths of R\textsc{exx} are its human-oriented features, including
+\begin{itemize}
+\item simplicity
+\item coherent and uncluttered syntax
+\item comprehensive stringhandling
+\item case-insensitivity
+\item arbitrary precision decimal arithmetic.
+\end{itemize}
+Care has been taken to preserve these. Conversely, the interpretive
+nature of Classic Rexx has always entailed a lack of efficiency: excellent R\textsc{exx}
+compilers do exist, from IBM and other companies, but cannot offer the
+full speed of statically-scoped languages such as
+C\footnote{Kernighan, B. W., and Ritchie, D. M., \textbf{The C
+    Programming Language} (second edition), ISBN 0-13-110362-8,
+  Prentice- Hall, 1988.} or Java\footnote{Gosling, J. A., \emph{et
+    al.} \textbf{The Java Language Specification}, ISBN 0-201-63451-1,
+  Addison-Wesley, 1996.}. Where \nr{} already offers high performance
+on the Java Virtual Machine, \crexx{} aims to offer this on native platforms.
+% \subsection{Influence of Java}
+% The system-independent design of R\textsc{exx} makes it an obvious and natural
+% fit to a system-independent execution environment such as that
+% provided by the Java Virtual Machine (JVM). The JVM, especially when
+% enhanced with “just-in-time” bytecode compilers that compile bytecodes
+% into native code just before execution, offers an effective and
+% attractive target environment for a language like R\textsc{exx}.
+
+% Choosing the JVM as a target environment does, however, place significant constraints on the design of a language suitable for that environment. For example, the semantics of method invocation are in several ways determined by the environment rather than by the source language, and, to a large extent, the object model (class structure, \emph{etc.}) of the Java environment is imposed on languages that use it.
+
+% Also, Java maintains the C concept of primitive datatypes; types (such
+% as \texttt{int}, a 32-bit signed integer) which allow efficient use of the underlying hardware yet do not describe true objects. These types are pervasive in classes and interfaces written in the Java language; any language intending to use Java classes effectively must provide access to these types.
+
+% Equally, the \emph{exception} (error handling) model of Java is pervasive, to
+% the extent that methods must check certain exceptions and declare
+% those that are not handled within the method. This makes it difficult
+% to fit an alternative exception model.
+
+% The constraints of safety, efficiency, and environment necessitated
+% that \crexx{} would have to differ in some details of syntax and
+% semantics from R\textsc{exx}; unlike Object R\textsc{exx}, it could not be a fully
+% upwards-compatible extension of the language\footnote{Nash, S. C.,
+%   \textbf{Object-Oriented REXX} in Goldberg, G, and Smith, P. H. III,
+%   \textbf{The R\textsc{exx} Handbook}, pp115-125, ISBN 0-07-023682-8,
+%   McGraw-Hill, Inc., New York, 1992.}. The need for changes, however,
+% offered the opportunity to make some significant simplifications and
+% enhancements to the language, both to improve its keyword safety and to strengthen other features of the original R\textsc{exx} design\footnote{See Cowlishaw, M. F., \textbf{The Early History of REXX}, IEEE Annals of the History of Computing, ISSN 1058-6180, Vol 16, No. 4, Winter 1994, pp15-24, and Cowlishaw, M. F., \textbf{The Future of R\textsc{exx}}, Proceedings of Winter 1993 Meeting/SHARE 80, Volume II, p.2709, SHARE Inc., Chicago, 1993.}. Some additions from Object R\textsc{exx} and ANSI R\textsc{exx}\footnote{See \textbf{American National Standard for Information Technology – Programming Language REXX}, X3.274-1996, American National Standards Institute, New York, 1996.} are also included.
+
+% Similarly, the concepts and philosophy of the R\textsc{exx} design can profitably be applied to avoid many of the minor irregularities that characterize the C and Java language family, by providing suitable simplifications in the programming model. For example, the \crexx{} looping construct has only one form, rather than three, and exception handling can be applied to all blocks rather than requiring an extra construct. Also, as in R\textsc{exx}, all \crexx{} storage allocation and de-allocation is implicit – an explicit new operator is not required.
+
+% Further, the human-oriented design features of R\textsc{exx}
+% (case-insensitivity for identifiers, type deduction from context,
+% automatic conversions where safe, tracing, and a strong emphasis on
+% string representations of common values and numbers) make programming
+% for the Java environment especially easy in \crexx{}.
+% \subsection{A hybrid or a whole?}
+% As in other mixtures, not all blends are a success; when first designing \crexx{}, it was not at all obvious whether the new language would be an improvement on its parents, or would simply reflect the worst features of both.
+
+% The fulcrum of the design is perhaps the way in which datatyping is automated without losing the static typing supported by Java. Typing in \crexx{} is most apparent at interfaces – where it provides most value – but within methods it is subservient and does not obscure algorithms. A simple concept, \emph{binary classes}, also lets the programmer choose between robust decimal arithmetic and less safe (but faster) binary arithmetic for advanced programming where performance is a primary consideration.
+
+% The “seamless” integration of types into what was previously an essentially typeless language does seem to have been a success, offering the advantages of strong typing while preserving the ease of use and speed of development that R\textsc{exx} programmers have enjoyed.
+
+% The end result of adding Java typing capabilities to the R\textsc{exx} language
+% is a single language that has both the R\textsc{exx} strengths for scripting
+% and for writing macros for applications and the Java strengths of
+% robustness, good efficiency, portability, and security for application
+% development.
+% \section{Language Concepts}
+% As described in the last section, \crexx{} was created by applying the philosophy of the R\textsc{exx} language to the semantics required for programming the Java Virtual Machine (JVM). Despite the assumption that the JVM is a “target environment” for \crexx{}, it is intended that the language not be environment-dependent; the essentials of the language do not depend on the JVM. Environment- dependent details, such as the primitive types supported, are not part of the language specification.
+
+% The primary concepts of R\textsc{exx} have been described before, in \emph{The
+%   R\textsc{exx} Language}, but it is worth repeating them and also indicating
+% where modifications and additions have been necessary to support the
+% concepts of statically-typed and object-oriented environments. The
+% remainder of this section is therefore a summary of the principal
+% concepts of \crexx{}.
+% \subsection{Readability}
+% One concept was central to the evolution of R\textsc{exx} syntax, and hence \crexx{} syntax: \emph{readability} (used here in the sense of perceived legibility). Readability in this sense is a somewhat subjective quality, but the general principle followed is that the tokens which form a program can be written much as one might write them in Western European languages (English, French, and so forth). Although \crexx{} is more formal than a natural language, its syntax is lexically similar to everyday text.
+
+% The structure of the syntax means that the language is readily adapted
+% to a variety of programming styles and layouts. This helps satisfy
+% user preferences and allows a lexical familiarity that also increases
+% readability. Good readability leads to enhanced understandability,
+% thus yielding fewer errors both while writing a program and while
+% reading it for information, debugging, or maintenance.
+
+% Important factors here are:
+% \begin{enumerate}
+% \item Punctuation and other special notations are required only when absolutely necessary to remove ambiguity (though punctuation may often be added according to personal preference, so long as it is syntactically correct). Where notations are used, they follow established conventions.
+% \item The language is essentially case-insensitive. A \crexx{}
+%   programmer may choose a style of use of uppercase and lowercase letters that he or she finds most helpful (rather than a style chosen by some other programmer).
+% \item The classical constructs of structured and object-oriented
+%   programming are available in \crexx{}, and can undoubtedly lead to
+%   programs that are easier to read than they might otherwise be. The
+%   simplicity and small number of constructs also make \crexx{} an
+%   excellent language for teaching the concepts of good structure.
+% \item Loose binding between the physical lines in a program and the syntax of the language ensures that even though programs are affected by line ends, they are not irrevocably so. A clause may be spread over several lines or put on just one line; this flexibility helps a programmer lay out the program in the style felt to be most readable.
+% \end{enumerate}
+% \subsection{Natural data typing and decimal arithmetic}
+% “Strong typing”, in which the values that a variable may take are
+% tightly constrained, has been an attribute of some languages for many
+% years. The greatest advantage of strong typing is for the interfaces
+% between program modules, where errors are easy to introduce and
+% difficult to catch. Errors \emph{within} modules that would be
+% detected by strong typing (and which would not be detected from
+% context) are much rarer, certainly when compared with design errors,
+% and in the majority of cases do not justify the added program
+% complexity.
+
+% \crexx{}, therefore, treats types as unobtrusively as possible, with a simple syntax for type description which makes it easy to make types explicit at interfaces (for example, when describing the arguments to methods).
+
+% By default, common values (identifiers, numbers, and so on) are described in the form of the symbolic notation (strings of characters) that a user would normally write to represent those values. This natural datatype for values also supports decimal arithmetic for numbers, so, from the user’s perspective, numbers look like and are manipulated as strings, just as they would be in everyday use on paper.
+
+% When dealing with values in this way, no internal or machine
+% representation of characters or numbers is exposed in the language,
+% and so the need for many data types is reduced. There are, for
+% example, no fundamentally different concepts of \emph{integer} and
+% \emph{real}; there is just the single concept of \emph{number}. The
+% results of all operations have a defined symbolic representation, and
+% will therefore act consistently and predictably for every correct
+% implementation.
+
+% This concept also underlies the BASIC\footnote{Kemeny, J. G. and
+%   Kurtz, T. E., \textbf{BASIC programming}, John Wiley \& Sons Inc.,
+%   New York, 1967.} language; indeed, Kemeny and Kurtz's vision for
+% BASIC included many of the fundamental principles that inspired
+% R\textsc{exx}. For example, Thomas E. Kurtz wrote:
+% \begin{quote}
+% “Regarding variable types, we felt that a distinction between ‘fixed’
+% and ‘floating’ was less justified in 1964 than earlier ... to our
+% potential audience the distinction between an integer number and a
+% non-integer number would seem esoteric. A number is a number is a
+% number.”\footnote{Kurtz, T. E., \textbf{BASIC} in Wexelblat,
+%   R. L. (Ed), \textbf{History of Programming Languages}, ISBN
+%   0-12-745040-8, Academic Press, New York 1981.}
+% \end{quote}
+% For R\textsc{exx}, intended as a scripting language, this approach was ideal; symbolic operations were all that were necessary.
+
+% For \crexx{}, however, it is recognized that for some applications it
+% is necessary to take full advantage of the performance of the
+% underlying environment, and so the language allows for the use and
+% specification of binary arithmetic and types, if available. A very
+% simple mechanism (declaring a class or method to be \emph{binary}) is
+% provided to indicate to the language processor that binary arithmetic
+% and types are to be used where applicable. In this case, as in other
+% languages, extra care has to be taken by the programmer to avoid
+% exceeding limits of number size and so on.
+% \subsection{Emphasis on symbolic manipulation}
+% Many values that \crexx{} manipulates are (from the user’s point of view, at least) in the form of strings of characters. Productivity is greatly enhanced if these strings can be handled as easily as manipulating words on a page or in a text editor. \crexx{} therefore has a rich set of character manipulation operators and methods, which operate on values of type \texttt{R\textsc{exx}} (the name of the class of \crexx{} strings).
+
+% Concatenation, the most common string operation, is treated specially
+% in \crexx{}. In addition to a conventional concatenate operator (“||”),
+% the novel \emph{blank operator} from R\textsc{exx} concatenates two data
+% strings together with a blank in between. Furthermore, if two
+% syntactically distinct terms (such as a string and a variable name)
+% are abutted, then the data strings are concatenated directly. These
+% operators make it especially easy to build up complex character
+% strings, and may at any time be combined with the other operators.
+
+% For example, the \textbf{say} instruction consists of the keyword \textbf{say} followed
+% by any expression. In this instance of the instruction, if the
+% variable n has the value “6” then
+%  \begin{lstlisting}
+%   say 'Sorry,' n*100/50'% were rejected'
+%   \end{lstlisting}
+% would display the string
+%  \begin{lstlisting}
+%    Sorry, 12% were rejected
+%    \end{lstlisting}
+
+% Concatenation has a lower priority than the arithmetic operators. The order of evaluation of the expression is therefore first the multiplication, then the division, then the concatenate-with-blank, and finally the direct concatenation.
+% Since the concatenation operators are distinct from the arithmetic
+% operators, very natural coercion (automatic conversion) between
+% numbers and character strings is possible. Further, explicit typecasting (conversion of types) is effected by the same operators, at
+% the same priority, making for a very natural and consistent syntax for
+% changing the types of results. For example,
+% \begin{lstlisting}
+% i=int 100/7
+% \end{lstlisting}
+% would calculate the result of 100 divided by 7, convert that result to
+% an integer (assuming \texttt{int} describes an integer type) and then
+% assign it to the variable \texttt{i}.
+% \subsection{Nothing to declare}
+% Consistent with the philosophy of simplicity, \crexx{} does not require
+% that variables within methods be declared before use. Only the
+% \emph{properties}\footnote{Class variables and instance variables.} of classes – which may form part of their
+% interface to other classes – need be listed formally.
+
+% Within methods, the type of variables is deduced statically from
+% context, which saves the programmer the menial task of stating the
+% type explicitly. Of course, if preferred, variables may be listed and
+% assigned a type at the start of each method.
+% \subsection{Environment independence}
+% The core \crexx{} language is independent of both operating systems and hardware. \crexx{} programs, though, must be able to interact with their environment, which implies some dependence on that environment (for example, binary representations of numbers may be required). Certain areas of the language are therefore described as being defined by the environment.
+
+% Where environment-independence is defined, however, there may be a
+% loss of efficiency – though this can usually be justified in view of
+% the simplicity and portability gained.
+
+% As an example, character string comparison in \crexx{} is normally
+% independent of case and of leading and trailing blanks. (The string “
+% Yes ” \emph{means} the same as “yes” in most applications.) However,
+% the influence of underlying hardware has often subtly affected this
+% kind of design decision, so that many languages only allow trailing
+% blanks but not leading blanks, and insist on exact case matching. By
+% contrast, \crexx{} provides the human-oriented relaxed comparison for
+% strings as default, with optional “strict comparison” operators.
+
+% \subsection{Limited span syntactic units}
+% The fundamental unit of syntax in the \crexx{} language is the clause,
+% which is a piece of program text terminated by a semicolon (usually
+% implied by the end of a line). The span of syntactic units is
+% therefore small, usually one line or less. This means that the syntax
+% parser in the language processor can rapidly detect and locate errors,
+% which in turn means that error messages can be both precise and concise.
+
+% It is difficult to provide good diagnostics for languages (such as
+% Pascal and its derivatives) that have large fundamental syntactic
+% units. For these languages, a small error can often have a major or
+% distributed effect on the parser, which can lead to multiple error
+% messages or even misleading error messages.
+
+% \subsection{Dealing with reality}
+% A computer language is a tool for use by real people to do real work. Any tool must, above all, be reliable. In the case of a language this means that it should do what the user expects. User expectations are generally based on prior experience, including the use of various programming and natural languages, and on the human ability to abstract and generalize.
+
+% It is difficult to define exactly how to meet user expectations, but it helps to ask the question “Could there be a high \emph{astonishment} factor associated with this feature?”. If a feature, accidentally misused, gives apparently unpredictable results, then it has a high astonishment factor and is therefore undesirable.
+
+% Another important attribute of a reliable software tool is \emph{consistency}. A consistent language is by definition predictable and is often elegant. The danger here is to assume that because a rule is consistent and easily described, it is therefore simple to understand. Unfortunately, some of the most elegant rules can lead to effects that are completely alien to the intuition and expectations of a user who, after all, is human.
+
+% These constraints make programming language design more of an art than
+% a science, if the usability of the language is a primary goal. The
+% problems are further compounded for \crexx{} because the language is
+% suitable for both scripting (where rapid development and ease of use
+% are paramount) and for application development (where some programmers
+% prefer extensive checking and redundant coding). These conflicting
+% goals are balanced in \crexx{} by providing automatic handling of many
+% tasks (such as conversions between different representations of
+% strings and numbers) yet allowing for “strict” options which, for
+% example, may require that all types be explicit, identifiers be
+% identical in case as well as spelling, and so on.
+
+% \subsection{Be adaptable}
+% Wherever possible \crexx{} allows for the extension of instructions and other language constructs, building on the experience gained with R\textsc{exx}. For example, there is a useful set of common characters available for future use, since only small set is used for the few special notations in the language.
+
+% Similarly, the rules for keyword recognition allow instructions to be added whenever required without compromising the integrity of existing programs. There are no reserved keywords in \crexx{}; variable names chosen by a programmer always take precedence over recognition of keywords. This ensures that \crexx{} programs may safely be executed, from source, at a time or place remote from their original writing – even if in the meantime new keywords have been added to the language.
+
+% A language needs to be adaptable because \emph{it certainly will be
+%   used for applications not foreseen by the designer}. Like all
+% programming languages, \crexx{} may (indeed, probably will) prove
+% inadequate for certain future applications; room for expansion and
+% change is included to make the language more adaptable and robust.
+
+% \subsection{Keep the language small}
+% \crexx{} is designed as a small language. It is not the sum of all the
+% features of R\textsc{exx} and of Java; rather, unnecessary features have been
+% omitted. The intention has been to keep the language as small as
+% possible, so that users can rapidly grasp most of the language. This
+% means that:
+% \begin{itemize}
+% \item the language appears less formidable to the new user
+% \item documentation is smaller and simpler
+% \item the experienced user can be aware of all the abilities of the
+% language, and so has the whole tool at his or her disposal
+% \item there are few exceptions, special cases, or rarely used embellishments
+% \item the language is easier to implement.
+% \end{itemize}
+% Many languages have accreted “neat” features which make certain
+% algorithms easier to express; analysis shows that many of these are
+% rarely used. As a rough rule-of-thumb, features that simply provided
+% alternative ways of writing code were added to R\textsc{exx} and \crexx{} only
+% if they were likely to be used more often than once in five thousand
+% clauses.
+
+% \subsection{No defined size or shape limits}
+% The language does not define limits on the size or shape of any of its tokens or data (although there may be implementation restrictions). It does, however, define a few \emph{minimum} requirements that must be satisfied by an implementation. Wherever an implementation restriction has to be applied, it is recommended that it should be of such a magnitude that few (if any) users will be affected.
+
+% Where arbitrary implementation limits are necessary, the language
+% requires that the implementer use familiar and memorable decimal
+% values for the limits. For example 250 would be used in preference to
+% 255, 500 to 512, and so on.
+
+% \section{Acknowledgements}

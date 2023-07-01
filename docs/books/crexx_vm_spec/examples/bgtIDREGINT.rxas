@@ -1,0 +1,18 @@
+/* bgt example */
+main()  .locals=6
+    load r3,0   
+    load r4,""
+    load r5,"bgt "     
+loop:
+    bgt   endloop,r3,11
+    concat r4,r4,r5
+    inc   r3
+    br    loop
+endloop:    
+    say r4
+    itos r3
+    load r2,"we ran this "
+    concat r3,r2,r3
+    concat r3,r3," times."
+    say r3
+    ret

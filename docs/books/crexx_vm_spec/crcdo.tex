@@ -1,0 +1,98 @@
+\subsubsection{Do instruction}\label{refdo}
+\index{Instructions,DO}
+\index{Flow control,with DO construct}
+\index{Group, DO,}
+\index{DO group,}
+\index{Simple DO group,}
+\begin{shaded}
+\begin{alltt}
+\textbf{do} [\textbf{label} \emph{name}] [\textbf{protect} \emph{term}] [\textbf{binary]};
+        \emph{instructionlist}
+    [\textbf{catch} [\emph{vare} =] \emph{exception};
+        \emph{instructionlist}]...
+    [\textbf{finally}[;]
+        \emph{instructionlist}]
+    \textbf{end} [\emph{name}];
+
+where \emph{name} is a non-numeric \emph{symbol}
+
+and \emph{instructionlist} is zero or more \emph{instruction}s
+\end{alltt}
+\end{shaded}
+ The \keyword{do} instruction is used to group instructions together for
+execution; these are executed once.
+The group may optionally be given a label, and may protect an object
+while the instructions in the group are executed; exceptional conditions
+can be handled with \keyword{catch} and \keyword{finally}.
+ 
+The most common use of \keyword{do} is simply for treating a number of
+instructions as group.
+
+\textbf{Example:}
+\begin{lstlisting}
+/* The two instructions between DO and END will both */
+/* be executed if A has the value 3.                 */
+if a=3 then do
+  a=a+2
+  say 'Smile!'
+  end
+\end{lstlisting}
+\index{Body,of group}
+Here, only the first \emph{instructionlist} is used.
+This forms the \emph{body} of the group.
+ 
+The instructions in the \emph{instructionlist}s may be any assignment,
+method call, or keyword instruction, including any of the more complex
+constructions such as \keyword{loop}, \keyword{if}, \keyword{select}, and
+the \keyword{do} instruction itself.
+\subsection{Label phrase}
+\index{DO instruction,LABEL}
+\index{DO group,naming of}
+\index{LABEL,on DO instruction}
+ 
+If \keyword{label} is used to specify a \emph{name} for the group,
+then a \keyword{leave} which specifies that name may be used to leave the
+group, and the \keyword{end} that ends the group may optionally specify
+the name of the group for additional checking.
+
+\textbf{Example:}
+\begin{lstlisting}
+do label sticky
+  x=ask
+  if x='quit' then leave sticky
+  say 'x was' x
+  end sticky
+\end{lstlisting}
+\subsection{Protect phrase}
+\index{PROTECT,on DO instruction}
+ 
+If \keyword{protect} is given it must be followed by a \emph{term}
+that evaluates to a value that is not just a type and is not of a
+primitive type; while the \keyword{do} construct is being executed, the
+value (object) is protected - that is, all the instructions in the
+\keyword{do} construct have exclusive access to the object.
+ 
+Both \keyword{label} and \keyword{protect} may be specified, in any order,
+if required.
+\subsection{Exceptions in do groups}
+ 
+\index{CATCH,on DO instruction}
+\index{FINALLY,on DO instruction}
+Exceptions that are raised by the instructions within a do group may be
+caught using one or more \keyword{catch} clauses that name the
+\emph{exception} that they will catch.
+When an exception is caught, the exception object that holds the details
+of the exception may optionally be assigned to a variable,
+\emph{vare}.
+ 
+Similarly, a \keyword{finally} clause may be used to introduce
+instructions that will always be executed at the end of the group, even
+if an exception is raised (whether caught or not).
+ 
+%% The  \emph{Exceptions} section (see page \pageref{refexcep})  has details and
+%% examples of \keyword{catch} and \keyword{finally}.
+
+%% \subsection{Binary}
+%% A group of one or more statements in a do binary group will
+%% follow the semantics of binary statements in binary classes or
+%% methods; \marginnote{\color{gray}3.04}the scope is limited to the do binary group.

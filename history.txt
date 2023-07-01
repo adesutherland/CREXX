@@ -5,6 +5,8 @@ F0045 - Arrays
       - FILE IO
       - Cleaned up Errors
       - Binary Type
+
+F0046 - cREXX Level B bif completion branch, and 'escape from crexx' so-dll work
 F0044 - cREXX Level B Language enhancements (Part 2)
       - Return type of implicitly defined main() automatically set to int or void
       - Exposed Procedures

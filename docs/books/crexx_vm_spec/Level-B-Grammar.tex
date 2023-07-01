@@ -1,0 +1,344 @@
+\section{Level B Grammar Specification (Phase 0 PoC)}
+
+\emph{Page Status: This page is ready for review for Phase 0 (PoC). It may have errors
+and be changed based on feedback and implementation experience}
+
+\subsection{Notes}
+
+\begin{itemize}
+\item This document \textbf{only} covers Phase 0 (PoC Prototype) Scope
+
+\item CREXX Level B is \emph{NOT} Compatible with Classic REXX (Level A/C)
+
+\item See {the REXX Language Level} descriptions
+
+\item The {REXX PEG format} is used to define the grammar (implementation independent)
+
+\end{itemize}
+
+\subsection{Global Rules - File / Line Endings / Whitespace / Comments}
+
+\subsubsection{Keywords}
+
+\begin{verbatim}
+keywords <- 'ADDRESS' / 'ARG' / 'BY' / 'CALL' / 'DO' / 'ELSE' / 'END' /
+            'FOR' / 'IF' / 'ITERATE' / 'LEAVE' / 'NOP' / 'OTHERWISE' /
+            'PARSE' / 'PULL' / 'PROCEDURE' / 'RETURN' / 'REXXLEVEL' /
+            'REXXOPTION' / 'SAY' / 'THEN' / 'TO' / 'WHEN' / 'UPPER' 
+            'MOD' / 'IDIV';
+\end{verbatim}
+
+\subsubsection{Symbols}
+
+\begin{itemize}
+\item misc symbols: \textquotesingle{},\textquotesingle{} / \textquotesingle{})\textquotesingle{} / \textquotesingle{}(\textquotesingle{}
+
+\item logic operator: \textquotesingle{}\textbar{}\textquotesingle{} / \textquotesingle{}\&\&\textquotesingle{} / \textquotesingle{}\&\textquotesingle{}
+
+\item normal compare: \textquotesingle{}=\textquotesingle{} / \textquotesingle{}\textbackslash{}=\textquotesingle{} / \textquotesingle{}\textless{}\textgreater{}\textquotesingle{} / \textquotesingle{}\textgreater{}\textless{}\textquotesingle{} / \textquotesingle{}\textgreater{}\textquotesingle{} / \textquotesingle{}\textless{}\textquotesingle{} / \textquotesingle{}\textgreater{}=\textquotesingle{} / \textquotesingle{}\textless{}=\textquotesingle{} / \textquotesingle{}\textbackslash{}\textgreater{}\textquotesingle{} / \textquotesingle{}\textbackslash{}\textless{}\textquotesingle{}
+
+\item strict compare: \textquotesingle{}==\textquotesingle{} / \textquotesingle{}\textbackslash{}==\textquotesingle{} / \textquotesingle{}\textgreater{}\textgreater{}\textquotesingle{} / \textquotesingle{}\textless{}\textless{}\textquotesingle{} / \textquotesingle{}\textgreater{}\textgreater{}=\textquotesingle{} / \textquotesingle{}\textless{}\textless{}=\textquotesingle{} / \textquotesingle{}\textbackslash{}\textgreater{}\textgreater{}\textquotesingle{} / \textquotesingle{}\textbackslash{}\textless{}\textless{}\textquotesingle{}
+
+\item concat operator: \textquotesingle{}\textbar{}\textbar{}\textquotesingle{}
+
+\item additive operator:  \textquotesingle{}+\textquotesingle{} / \textquotesingle{}-\textquotesingle{}
+
+\item multiplicative operator: \textquotesingle{}*\textquotesingle{} / \textquotesingle{}/\textquotesingle{} / \textquotesingle{}//\textquotesingle{} / \textquotesingle{}\%\textquotesingle{}
+
+\item power operator: \textquotesingle{}**\textquotesingle{}
+
+\item prefix operator: \textquotesingle{}+\textquotesingle{} / \textquotesingle{}-\textquotesingle{} / \textquotesingle{}\textquotesingle{}
+
+\end{itemize}
+
+\subsubsection{Whitespace \& Comments}
+
+\begin{verbatim}
+\COMMENT <- '/*' .* \COMMENT* .*  ('*/' / eos->ERROR[6.1]); # Get rid of comments
+WS <- [ \t\v\f]+;                                           # Simple Whitespace Characters
+CONTINUATION <- ',' WS* \EOL ^\EOF;                         # Continuation - trailing ','. Note: Comments already removed
+\WHITESPACE <- WS / CONTINUATION;                           # Whitespace includes continuation
+\end{verbatim}
+
+\subsubsection{EOS}
+
+\begin{verbatim}
+EOS <- \EOF; # Platform specific detection of EOF (which is labelled End of Stream in ANSI REXX)
+\end{verbatim}
+
+\subsubsection{EOL}
+
+\begin{verbatim}
+EOL <- \EOL; # e.g. '\r\n' / '\n';  # Platform specific detection of EOL
+\end{verbatim}
+
+\subsubsection{Characters}
+
+\begin{verbatim}
+DIGIT <- [0-9];
+LETTER <- [_!?A-Za-z];
+VAR_CHAR <- LETTER / DIGIT;
+\end{verbatim}
+
+\subsubsection{Strings}
+
+\begin{verbatim}
+STRING <- ( ( '"'  ( (EOL -> ERROR[6.3]) / [^"] / '""'  )* '"' ) /
+            ( '\'' ( (EOL -> ERROR[6.3]) / [^'] / '\'\'')* '\'') )
+       -> STRING; 
+\end{verbatim}
+
+\subsubsection{Number}
+
+\begin{verbatim}
+NUMBER <- DIGIT+ -> NUMBER;
+\end{verbatim}
+
+\subsubsection{Symbols}
+
+\begin{verbatim}
+CONST_SYMBOL <- !keyword VAR_CHAR+ -> CONST_SYMBOL;
+VAR_SYMBOL <- !keyword LETTER VAR_CHAR* -> VAR_SYMBOL;
+LABEL <- (!keyword LETTER VAR_CHAR*) ':' -> LABEL;
+value <- VAR_SYMBOL / CONST_SYMBOL / NUMBER / STRING;
+taken_constant <- (VAR_SYMBOL / CONST_SYMBOL);
+\end{verbatim}
+
+\subsection{Program \& Structure}
+
+\begin{verbatim}
+program <- level_b_options instruction_list? EOS -> PROGRAM_FILE;
+end_of_clause <- ';' / EOL;
+ncl <- end_of_clause / ( e:.->(ERROR["21.1"] e) resync ); 
+resync <- .* &end_of_clause; # Resync after an error
+
+instruction_list <- i:(procedure / labeled_instruction)+ 
+                 -> (INSTRUCTIONS i?);
+
+labeled_instruction <- LABEL? / group / ( single_instruction ncl ) / ncl;
+
+instruction <- group / ( single_instruction ncl );
+
+single_instruction <- assignment / keyword_instruction / command;
+
+procedure <- LABEL 'PROCEDURE' ncl 
+             ( !(EOS / procedure) i:labeled_instruction )*
+          -> (PROCEDURE LABEL (INSTRUCTIONS i));
+
+assignment <-  v:var_symbol '=' e:expression -> (ASSIGN v e)
+             / t:NUMBER '=' resync -> (ERROR[31.1] t) 
+         / &digit t:CONST_SYMBOL '=' resync -> (ERROR[Msg31.2] t)
+	 / &'.' t:CONST_SYMBOL '=' resync -> (ERROR[Msg31.3] t);
+
+keyword_instruction <- address / arg / call / iterate 
+         / leave / nop / parse / pull / return / say  
+	     / t:'THEN' resync -> (ERROR[8.1] t) 
+	     / t:'ELSE' resync -> (ERROR[8.2] t) 
+    	 / t:'WHEN' resync -> (ERROR[9.1] t)
+	     / t:'OTHERWISE' resync -> (ERROR[9.2] t);
+         / t:'END' resync -> ERROR[10.1] t);
+
+command <- c:expression -> (ADDRESS c);
+
+group <- simple_do / do / if ;
+\end{verbatim}
+
+\subsection{Language Options (Level B)}
+
+\begin{verbatim}
+level_b_options <- 'REXXLEVEL' level:CONST_SYMBOL end_of_clause
+                   'REXXOPTION' options:CONST_SYMBOL* end_of_clause
+                    -> (REXX level options);
+\end{verbatim}
+
+\subsection{Groups}
+
+\subsubsection{Simple DO Group}
+
+\begin{verbatim}
+do <- 'DO' (ncl / t:. resync -> (ERROR[27.1] t)) i:instruction_list? simple_do_ending 
+   -> i;
+
+simple_do_ending <- 'END' ncl 
+	 / EOS -> ERROR[14.1]
+	 / t:. resync -> (ERROR[35.1] t);
+\end{verbatim}
+
+\subsubsection{DO Group}
+
+\begin{verbatim}
+do <- 'DO' r:dorep (ncl / t:. resync -> (ERROR[27.1] t)) i:instruction_list? do_ending 
+   -> (DO r i);
+
+do_ending <- 'END' VAR_SYMBOL? ncl 
+	 / EOS -> ERROR[14.1]
+	 / t:. resync -> (ERROR[35.1] t);
+
+dorep <- ( a:assignment {? t:dot b:dob f:dof} ) 
+      -> (REPEAT a t? b? f?);
+dot <- 'TO' e:expression -> (TO e);
+dob <- 'BY' e:expression -> (BY e);
+dof <- 'FOR' e:expression -> (FOR e);
+\end{verbatim}
+
+\subsubsection{IF Group}
+
+\begin{verbatim}
+if <- 'IF' e:expression ncl* (t:then / ((. -> ERROR[18.1]) resync )) f:else? 
+-> (IF e t f?);
+
+then <- 'THEN' ncl* (i:instruction -> (INSTRUCTIONS i) / eos -> ERROR{14.3] / 'END' -> ERROR[10.5] ) ;
+
+else <- 'ELSE' ncl* (i:instruction -> (INSTRUCTIONS i) / eos -> ERROR[14.4] / 'END' -> ERROR[10.6] ) ;
+\end{verbatim}
+
+\subsection{Instructions}
+
+\subsubsection{ADDRESS}
+
+\begin{verbatim}
+address <- 'ADDRESS' e:taken_constant c:expression? -> (ADDRESS ENVIRONMENT[e] c);
+\end{verbatim}
+
+\subsubsection{Arg}
+
+\begin{verbatim}
+arg <- 'ARG' t:template_list?
+    -> (PARSE (OPTIONS UPPER?) ARG t?)
+\end{verbatim}
+
+\subsubsection{Call}
+
+\begin{verbatim}
+call <- 'CALL' (f:taken_constant / ( (. -> ERROR[19.2]) resync) ) e:expression_list?
+     -> (CALL CONST_SYMBOL[f] e);
+expression_list <- expr (',' expr)*;
+\end{verbatim}
+
+\subsubsection{Iterate}
+
+\begin{verbatim}
+iterate <- 'ITERATE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
+        -> (ITERATE v?)
+\end{verbatim}
+
+\subsubsection{Leave}
+
+\begin{verbatim}
+leave <- 'LEAVE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
+      -> (LEAVE v?);
+\end{verbatim}
+
+\subsubsection{Nop}
+
+\begin{verbatim}
+nop <- 'NOP';
+\end{verbatim}
+
+\subsubsection{Parse}
+
+\begin{verbatim}
+parse <- ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
+         -> (PARSE OPTIONS in out)
+
+       / ('PARSE' 'op:UPPER' (in:parse_type / (. -> ERROR[25.13]) resync)) out:template_list?)
+         -> (PARSE (OPTIONS op) in out);
+
+parse_type <- parse_key;
+parse_key <- 'ARG'->ARG / 'PULL'->PULL;
+\end{verbatim}
+
+\subsubsection{Pull}
+
+\begin{verbatim}
+pull <- 'PULL' t:template_list?
+     -> (PARSE (OPTIONS UPPER?) PULL t?);
+\end{verbatim}
+
+\subsubsection{Return}
+
+\begin{verbatim}
+return <- 'RETURN' e:expression?
+       -> (RETURN e?);
+\end{verbatim}
+
+\subsubsection{Say}
+
+\begin{verbatim}
+say <- 'SAY' e:expression?
+    -> (SAY e?);
+\end{verbatim}
+
+\subsubsection{Parse Templates}
+
+\begin{verbatim}
+template_list <- t:template (',' t:template)* 
+              -> (TEMPLATES t+);
+template <- (trigger / target / ((. -> ERROR[38.1]) resync)+;
+target <- (VAR_SYMBOL / '.') 
+       -> TARGET;
+trigger <- pattern / positional;
+pattern <- STRING / vrefp 
+        -> PATTERN;
+vrefp <- '(' 
+            ( VAR_SYMBOL / ((. -> ERROR[19.7]) resync) ) 
+            ( ')' / ((. -> ERROR[46.1]) resync) );
+positional <- absolute_positional / relative_positional; 
+absolute_positional <- (NUMBER / '=' position)
+                    -> ABS_POS;
+position <- NUMBER / vrefp / ((. -> ERROR[38.2]) resync);
+relative_positional <- s:('+' / '-') position
+                    -> (REL_POS SIGN[s] position);
+\end{verbatim}
+
+\subsection{Expressions}
+
+\begin{verbatim}
+expression <- expr  
+           ( (',' -> ERROR[37.1] resync) / (')' -> ERROR[37.2] resync) )? ;
+
+expr <- and_expression / 
+        ( (a:expr op:or_operator b:and_expression)->(op a b) );
+or_operator <- ('|' / '&&') -> OP_OR ;
+
+and_expression <- comparison / 
+        ( (a:and_expression op:and_operator b:comparison)->(op a b) );
+and_operator <- ('&') -> OP_AND ;
+
+comparison <- concatenation / 
+        ( (a: comparison op:comparison_operator b:concatenation)->(op a b) );
+comparison_operator <- (normal_compare / strict_compare) -> OP_COMPARE;
+normal_compare<- '=' / '\\=' / '<>' / '><' / '>' / '<' / '>=' / '<=' / '\\>' / '\\<';
+strict_compare<- '==' / '\\==' / '>>' / '<<' / '>>=' / '<<=' / '\\>>' / '\\<<';
+
+concatenation <- addition 
+                / ( (a:concatenation &| b:addition)->(OP_CONCAT a b) ) 
+                / ( (a:concatenation b:addition)->(OP_SCONCAT a b) )  
+                / ( (a:concatenation op:concat_operator b:addition)->(op a b) );
+concat_operator <- '||' -> OP_CONCAT ;
+
+addition <- multiplication 
+                / ( (a:addition op:additive_operator b:multiplication)->(op a b) );
+additive_operator <- ('+' / '\-')->OP_ADD;
+
+multiplication <- power_expression 
+                / (a:multiplication op:multiplicative_operator b:power_expression)->(op a b) );
+multiplicative_operator <- ('*' / '/' / '//' / '%')->OP_MULT;
+
+power_expression <- prefix_expression 
+                / ( (a:power_expression op:power_operator b:prefix_expression)->(op a b) );
+power_operator <- '**' -> OP_POWER ;
+
+prefix_expression <- ( (op:prefix_operator a:prefix_expression)->(op a) ) 
+           / term 
+           / ( ( e:.->(ERROR["35.1"] e) ) resync);
+prefix_operator <- ('+' / '-' / '\') -> OP_PREFIX ;
+
+term <- value
+      / function 
+      / '(' expr ( (e:',' -> (ERROR["37.1"] e) ) resync) / ')' 
+      / ( ( e:. -> (ERROR["36"] e) ) resync) );
+
+function <- (f:taken_constant '(' p:expression_list? (')') -> (FUNCTION[f] p)
+          / ((e:. -> (ERROR["36"] e)) resync);
+\end{verbatim}

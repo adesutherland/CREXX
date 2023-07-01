@@ -1,0 +1,98 @@
+\documentclass[10pt, openany]{book}
+\usepackage[FINAL]{../boilerplate/rexx} 
+\usepackage{hyperref}
+\usepackage{graphics}
+\usepackage{fontspec}
+\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
+%\setmainfont[Mapping=tex-text]{Georgia Pro}
+%\setmainfont[Mapping=tex-text]{Minion Pro}
+\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
+%\setmonofont[Mapping=tex-text]{PragmataPro}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makeidx}
+\usepackage[all]{xy}
+%\usepackage{lingmacros}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{framed}
+\usepackage{fancyvrb}
+\definecolor{shadecolor}{rgb}{0.9,0.9,0.9}
+\definecolor{nrblue}{RGB}{38,139,210}
+\definecolor{nrgreen}{RGB}{65,133,153}
+\definecolor{nrcyan}{RGB}{42,161,152 }
+\definecolor{nrorange}{RGB}{203 ,75,22}
+\definecolor{nrgrey}{RGB}{101,123,131}
+\usepackage{alltt}
+\DeclareCaptionFont{white}{\color{white}}
+\DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+\captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+\usepackage{listings}
+\usepackage[official]{eurosym}
+\makeatletter
+\lst@CCPutMacro\lst@ProcessOther {"2D}{\lst@ttfamily{-{}}{-{}}}
+\@empty\z@\@empty
+\makeatother
+\input{../boilerplate/netrexxformat}
+\input{../boilerplate/rxasformat}
+\usepackage{../boilerplate/rail}
+\usepackage{pst-barcode,pstricks-add}
+\usepackage{bashful}
+\usepackage{metalogo}
+\usepackage{marginnote}
+\usepackage{pdfpages}
+\usepackage{svg}
+\usepackage{float}
+\hyphenation{Net-Rexx Net-Rexx-A Net-Rexx-C Net-Rexx-R Mac-OSX mac-OS
+  in-fra-struc-ture im-ple-men-ta-tion-de-pen-dent Spe-ci-fi-ca-tion
+  source-file ex-ten-sion se-quence tool-chain Uni-code ex-e-cu-ta-ble
+in-struc-tion in-struc-tions doc-u-men-ta-tion men-tio-ned
+di-a-gno-sing im-ple-men-ted}
+\makeindex
+\DeclareGraphicsExtensions{.jpg,.png}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+\usepackage{enumitem}
+\usepackage{underscore}
+\usepackage{babel}
+\usepackage{graphicx}
+\usepackage{array}
+% \usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{makeidx}
+\usepackage{framed}
+\usepackage{alltt}
+\usepackage{barracuda}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[CJK]{ucharclasses}
+% defines for consistent use
+\newcommand{\crexx}{\textsc{crexx}}
+\newcommand{\rexx}{R\textsc{exx}}
+\newcommand{\nr}{Net\textsc{rexx}}
+\newcommand{\nrpackagename}{\splice{java GetPackageName}}
+\newcommand{\minimalJVMversion}{8}
+\newcommand{\maximalJVMversion}{19ea}
+\newcommand{\keyword}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\thisyear}{\splice{java TexYear}}
+\newcommand{\ecjjarname}{ecj-I20201218-1800-NRX.jar}
+\newcommand{\msd}[1]{\msdhelper#1\relax}
+\newcommand{\msdhelper}[1]
+  {\ifx\relax#1\else
+    \ifx-#1--{}\else#1\fi
+    \expandafter\msdhelper\fi}
+  \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
+  \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

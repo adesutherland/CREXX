@@ -1,0 +1,12 @@
+/* isex example */
+main()  .locals=2
+    say  "isex example:"
+    load r1,1 * load 1 into register 1
+    isex r1   * exchange the sign
+    itos r1   * integer to string for display
+    say  r1   * display the number, -1
+    isex r1   * sign exchange again
+    itos r1   * need to convert again
+    say  r1   * display the string, 1
+    ret       * return to caller
+    

@@ -1,0 +1,40 @@
+/*
+ * cREXX COMPILER VERSION : cREXX F0044
+ * SOURCE                 : sumLoop1000.rexx
+ * BUILT                  : 2023-03-03 23:56:03
+ */
+
+.srcfile="sumLoop1000.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "sumloop1000.rexx.main"="b" ".void" main() "" ""
+   .src 4:1="sum = 0"
+   .meta "sumloop1000.rexx.main.sum"="b" ".int" r1
+   load r1,0
+   .src 5:1="do"
+   .src 5:4="i=1"
+   .meta "sumloop1000.rexx.main.i"="b" ".int" r2
+   load r2,1
+   .src 5:8="to 100000"
+   load r3,100000
+l7dostart:
+   .src 5:8="to 100000"
+   igt r0,r2,r3
+   brt l7doend,r0
+   .src 6:4="sum = i+sum"
+   iadd r1,r2,r1
+l7doinc:
+   .src 5:4="i"
+   inc r2
+   .src 7:1="end"
+   br l7dostart
+l7doend:
+   .src 8:1="say \"the sum of the numbers 1 to 100000 is:\" sum"
+   itos r1
+   sconcat r3,"the sum of the numbers 1 to 100000 is:",r1
+   say r3
+   .src 9:1="return"
+   ret
+   .meta "sumloop1000.rexx.main.i"
+   .meta "sumloop1000.rexx.main.sum"
