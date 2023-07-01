@@ -20,7 +20,7 @@ subject = upper(subject)
    /* This test not for standard. */
     if pos('E',integer)>0 then do
       say "ReRadix unable"
-      return ? 
+      return "?"
     end
  end
  r=''

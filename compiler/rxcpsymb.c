@@ -201,8 +201,8 @@ int get_reg(Scope *scope) {
     int reg;
 
     free_array = (dpa*)(scope->free_registers_array);
-
-//    printf("get a reg - free array is ");
+//    printf("get a reg");
+//    printf(" - free array is ");
 //    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
 
     /* Check the free list */
@@ -214,8 +214,10 @@ int get_reg(Scope *scope) {
         reg = (int)((scope->num_registers)++);
     }
 
-//    printf("  returned %d - free array is now ", reg);
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    printf("  returned %d", reg);
+//    printf(" - free array is now ");
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);}
+//    printf("\n");
 
     return reg;
 }
@@ -226,19 +228,24 @@ void ret_reg(Scope *scope, int reg) {
     dpa *free_array;
     free_array = (dpa*)(scope->free_registers_array);
 
+    if (reg < 0) {
+        return;
+    }
+
 //    printf("free %d", reg);
 
     for (i=0; i<free_array->size; i++) {
         if (reg == (size_t)free_array->pointers[i]) {
-            printf(" ... already freed - free array remains ");
-            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//            printf("Reg %d already freed - free array remains ", reg);
+//            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
             return;
         }
     }
     dpa_ado(free_array, (void*)(size_t)reg);
 
 //    printf(" - free array is now ");
-//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
+//    {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);}
+//    printf("\n");
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -332,10 +339,32 @@ char* type_nm(ValueType type) {
         case TP_INTEGER: return ".int";
         case TP_FLOAT: return ".float";
         case TP_STRING: return ".string";
+        case TP_BINARY: return ".binary";
         case TP_OBJECT: return ".object";
         case TP_VOID: return ".void";
         default: return ".unknown";
     }
+}
+
+
+/* Returns the type of a symbol as a text string in a malloced buffer */
+char* sym_2tp(Symbol *symbol) {
+    char *buffer = 0;
+    char *array;
+    char *result;
+
+    if (symbol->value_class) buffer = symbol->value_class;
+    else buffer = type_nm(symbol->type);
+
+    array = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
+
+    result = malloc(strlen(buffer) + strlen(array) + 1);
+    strcpy(result, buffer);
+    strcat(result, array);
+
+    free(array);
+
+    return result;
 }
 
 /* Returns string name of a SymbolValue type */
@@ -367,6 +396,10 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->scope = scope;
     symbol->defines_scope = 0;
     symbol->type = TP_UNKNOWN;
+    symbol->value_dims = 0;
+    symbol->dim_base = 0;
+    symbol->dim_elements = 0;
+    symbol->value_class = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
     memcpy(symbol->name, name, name_length);
@@ -374,7 +407,12 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
+    symbol->fixed_args = 0;
+    symbol->has_vargs = 0;
     symbol->exposed = 0;
+    symbol->is_arg = 0;
+    symbol->is_ref_arg = 0;
+    symbol->is_opt_arg = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -623,6 +661,9 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
 void free_sym(Symbol *symbol) {
     size_t i;
     free(symbol->name);
+    if (symbol->value_class) free(symbol->value_class);
+    if (symbol->dim_base) free(symbol->dim_base);
+    if (symbol->dim_elements) free(symbol->dim_elements);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
@@ -644,11 +685,14 @@ int sym_lord(Symbol *symbol) {
     dpa* array = (dpa*)(symbol->ast_node_array);
     size_t i;
     int o;
-    int ord = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
+    int ord = 0;
+    if (array->size) {
+        ord = ((SymbolNode *) (array->pointers[0]))->node->low_ordinal;
 
-    for (i = 1; i < array->size; i++) {
-        o = ((SymbolNode*)(array->pointers[0]))->node->low_ordinal;
-        if (o < ord) ord = o;
+        for (i = 1; i < array->size; i++) {
+            o = ((SymbolNode *) (array->pointers[0]))->node->low_ordinal;
+            if (o < ord) ord = o;
+        }
     }
 
     return ord;
@@ -692,6 +736,31 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 /* Returns the number of AST nodes connected to a symbol */
 size_t sym_nond(Symbol *symbol) {
     return ((dpa*)(symbol->ast_node_array))->size;
+}
+
+/* Disconnects a node from a symbol */
+void sym_dnd(Symbol *symbol, size_t node_num) {
+
+    /* unlink and free the symbolnode */
+    SymbolNode* sn = sym_trnd(symbol, node_num);
+    sn->node->symbolNode = 0;
+    free(sn);
+
+    /* Remove from array */
+    dpa_del((dpa*)(symbol->ast_node_array),node_num);
+}
+
+/* Disconnects a node from a symbol */
+void sym_dno(Symbol *symbol, ASTNode* node) {
+    size_t i;
+    SymbolNode* sn;
+    for (i=0; i < sym_nond(symbol); i++) {
+        sn = sym_trnd(symbol, i);
+        if (sn->node == node) {
+            sym_dnd(symbol, i);
+            return;
+        }
+    }
 }
 
 static void prepend_scope(char* buffer, const char* scope)

@@ -28,6 +28,11 @@ RX_INLINE void value_zero(value *v) {
     v->string_char_pos = 0;
 #endif
     v->num_attributes = 0;
+
+    /* Free binary */
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = 0;
+    v->binary_length = 0;
 }
 
 /* Setup a new value structure */
@@ -35,9 +40,12 @@ RX_INLINE void value_init(value *v) {
     v->string_value = v->small_string_buffer;
     v->string_buffer_length = sizeof(v->small_string_buffer);
     v->attributes = 0;
+    v->unlinked_attributes = 0;
     v->attribute_buffers = 0;
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
+    v->binary_value = 0;
+    v->binary_length = 0;
     value_zero(v);
 }
 
@@ -61,19 +69,26 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
 
     else if (num <= v->max_num_attributes) {
         /* Just need to reset the recycled attributes */
-        for (i = v->num_attributes; i < num; i++)
+        for (i = v->num_attributes; i < num; i++) {
+            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
             value_zero(v->attributes[i]);
+        }
         v->num_attributes = num;
     }
 
     else {
         /* We first need to recycle any unused attributes */
-        for (i = v->num_attributes; i < v->max_num_attributes; i++)
+        for (i = v->num_attributes; i < v->max_num_attributes; i++) {
+            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
             value_zero(v->attributes[i]);
+        }
 
         /* Now we need to make the pointer arrays big enough */
         if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * num);
         else v->attributes = malloc(sizeof(value*) * num);
+
+        if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * num);
+        else v->unlinked_attributes = malloc(sizeof(value*) * num);
 
         v->num_attribute_buffers++;
         if (v->attribute_buffers) v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * v->num_attribute_buffers);
@@ -88,6 +103,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         for (i = v->max_num_attributes; i < num; i++, a++) {
             value_init(a);
             v->attributes[i] = a;
+            v->unlinked_attributes[i] = a;
         }
 
         /* Set the new number of attributes */
@@ -149,18 +165,23 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     int i;
 
     /* Clear attribute values */
-    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->attributes[i]);
+    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->unlinked_attributes[i]);
 
     /* Free attribute buffer */
     for (i = 0; i < v->num_attribute_buffers; i++) free(v->attribute_buffers[i]);
 
     /* Free pointer arrays */
     if (v->attributes) free(v->attributes);
+    if (v->unlinked_attributes) free(v->unlinked_attributes);
     if (v->attribute_buffers) free(v->attribute_buffers);
 
     /* Free strings */
     if (v->string_value != v->small_string_buffer) free(v->string_value);
-    return;
+
+    /* Free binary */
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = 0;
+    v->binary_length = 0;
 }
 
 /* Int Flag */
@@ -337,6 +358,16 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
 #endif
     }
 
+    /* Copy Binary */
+    if (dest->binary_value) free(dest->binary_value);
+    dest->binary_value = 0;
+    dest->binary_length = 0;
+    if (source->binary_value) {
+        dest->binary_length = source->binary_length;
+        dest->binary_value = malloc(dest->binary_length);
+        memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+    }
+
     /* Copy Attributes */
     set_num_attributes(dest,source->num_attributes);
     for (i = 0; i < dest->num_attributes; i++)
@@ -390,8 +421,20 @@ RX_INLINE void move_value(value *dest, value *source) {
 #endif
     }
 
+    /* Move Binary */
+    if (dest->binary_value) free(dest->binary_value);
+    dest->binary_value = 0;
+    dest->binary_length = 0;
+    if (source->binary_value) {
+        dest->binary_length = source->binary_length;
+        dest->binary_value = source->binary_value;
+        source->binary_value = 0;
+        source->binary_length = 0;
+    }
+
     /* Move Attributes */
     dest->attributes = source->attributes;
+    dest->unlinked_attributes = source->unlinked_attributes;
     dest->attribute_buffers = source->attribute_buffers;
     dest->max_num_attributes = source->max_num_attributes;
     dest->num_attributes = source->num_attributes;
@@ -454,6 +497,19 @@ RX_INLINE void string_append(value *v1, value *v2) {
 #ifndef NUTF8
     v1->string_char_pos = 0;
     v1->string_chars += v2->string_chars;
+#endif
+}
+
+RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
+    size_t start = v1->string_length;
+
+    extend_string_buffer(v1, v1->string_length + length);
+    memcpy(v1->string_value + start, value, length);
+
+    v1->string_pos = 0;
+#ifndef NUTF8
+    v1->string_char_pos = 0;
+    v1->string_chars += utf8nlen(value, length); /* SLOW! */
 #endif
 }
 
@@ -804,6 +860,17 @@ RX_INLINE void string_from_float(value *v) {
 RX_INLINE void int_from_float(value *v) {
     v->int_value = floor(v->float_value);
     if (v->float_value - (double)v->int_value > 0.5) v->int_value++;
+}
+
+/* Make a malloced null terminated string from a register - needs to be free()d */
+RX_INLINE char* reg2nullstring(value* reg) {
+    char *buffer = malloc(reg->string_length + 1);
+
+    /* Null terminated buffer */
+    buffer[reg->string_length] = 0;
+    memcpy(buffer, reg->string_value, reg->string_length);
+
+    return buffer;
 }
 
 /* Convert a string to an integer - returns 1 on error */

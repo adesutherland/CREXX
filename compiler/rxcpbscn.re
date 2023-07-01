@@ -16,19 +16,22 @@
 #define   YYCTXMARKER s->ctxmarker
 
 int rexbscan(Context* s) {
-    int depth;
-    char *comment_top;
-    int comment_line;
-    char* comment_linestart;
+  int depth;
+  char *comment_top;
+  int comment_line;
+  char* comment_linestart;
 
 /*!re2c
   re2c:yyfill:enable = 0;
   re2c:eof = 0;
 */
-  regular:
 
-  /* Character Encoding Specifics  */
-  /*!include:re2c "encoding.re" */
+/* Character Encoding Specifics  */
+/*!include:re2c "encoding.re" */
+
+  if (s->lexer_stem_mode) goto lexer_stem_mode;
+
+  regular:
 
 /*!re2c
   re2c:yyfill:enable = 0;
@@ -41,17 +44,15 @@ int rexbscan(Context* s) {
   digit = [0-9];
   hex = [a-fA-F0-9];
   int_des = [uUlL]*;
-  symchr = letter|digit|[.!?_];
+  fsymchr = letter|[_];    // First Symbol Character
+  symchr = fsymchr|digit;  // Subsequent Symbol Character
 
   // floating literals
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
-
   integer = digit+;
-  simple = (symchr\(digit|[.]))(symchr\[.])*;
-  compound = simple ([.] simple)+;
-  stem = simple [.] (simple [.])*;
+  simple = fsymchr symchr*;
   class = [.] simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
@@ -90,6 +91,7 @@ int rexbscan(Context* s) {
     "*" { return(TK_MULT); }
     "/" { return(TK_DIV); }
     "%" { return(TK_IDIV); }
+    "?" { return(TK_OPTIONAL); }
     "/" ob "/" { return(TK_MOD); }
     "*" ob "*" { return(TK_POWER); }
 
@@ -111,12 +113,14 @@ int rexbscan(Context* s) {
   //  "&" ob "&" { return(TK_OR); } // TODO Check
     not { return(TK_NOT); }
     "," { return(TK_COMMA); }
-  //  "." { return(TK_STOP); }
+    "..." { return(TK_ELLIPSIS); }
     "(" { return(TK_OPEN_BRACKET); }
     ")" { return(TK_CLOSE_BRACKET); }
+    "[" { return(TK_OPEN_SBRACKET); }
+    "]" { return(TK_CLOSE_SBRACKET); }
     ";" { return(TK_EOC); }
 
-  //  'ADDRESS' { return(TK_ADDRESS); }
+    'ADDRESS' { return(TK_ADDRESS); }
     'ASSEMBLER' { return(TK_ASSEMBLER); }
     'ARG' { return(TK_ARG); }
     'CALL' { return(TK_CALL); }
@@ -124,11 +128,13 @@ int rexbscan(Context* s) {
     'LOOP' { return(TK_LOOP); }
   //  'DROP' { return(TK_DROP); }
     'ELSE' { return(TK_ELSE); }
+    'ERROR' { return(TK_ERROR); }
     'END' { return(TK_END); }
   //  'EXTERNAL' { return(TK_EXTERNAL); }
   //  'EXIT' { return(TK_EXIT); }
     'IF' { return(TK_IF); }
     'IMPORT' { return(TK_IMPORT); }
+    'INPUT' { return(TK_INPUT); }
   //  'INTERPRET' { return(TK_INTERPRET); }
     'ITERATE' { return(TK_ITERATE); }
     'LEAVE' { return(TK_LEAVE); }
@@ -137,6 +143,7 @@ int rexbscan(Context* s) {
   //  'NUMERIC' { return(TK_NUMERIC); }
   'OPTIONS' { return(TK_OPTIONS); }
   //  'OTHERWISE' { return(TK_OTHERWISE); }
+  'OUTPUT' { return(TK_OUTPUT); }
   //  'PARSE' { return(TK_PARSE); }
     'PROCEDURE' { return(TK_PROCEDURE); }
   //  'PULL' { return(TK_PULL); }
@@ -180,13 +187,22 @@ int rexbscan(Context* s) {
     class { return(TK_CLASS); }
     float { return(TK_FLOAT); }
     integer { return(TK_INTEGER); }
+    'ARG' / [.] {
+      s->lexer_stem_mode = 1;
+      return(TK_ARG_STEM);
+    }
+    simple / [.] {
+      s->lexer_stem_mode = 1;
+      return(TK_STEM);
+    }
+    class / [.] {
+      s->lexer_stem_mode = 1;
+      return(TK_CLASS_STEM);
+    }
     simple { return(TK_VAR_SYMBOL); }
-  //  stem { return(TK_SYMBOL_STEM); }
-    compound { return(TK_SYMBOL_COMPOUND); }
     simple ob ":" { return(TK_LABEL); }
     str { return(TK_STRING); }
-    str [bB] / (any\symchr) { return(TK_STRING); }
-    str [xX] / (any\symchr) { return(TK_STRING); }
+    str [bBxX] / (any\(symchr | [.])) { return(TK_STRING); }
     eof { return(TK_EOS); }
     $ { return(TK_EOS); }
     whitespace {
@@ -210,6 +226,50 @@ int rexbscan(Context* s) {
     }
   */
 
+  lexer_stem_mode:
+/*!re2c
+    stemdigit = [0-9];
+    stemfsymchr = letter|[_];    // First Symbol Character
+    stemsymchr = stemfsymchr|stemdigit;  // Subsequent Symbol Character
+
+    steminteger = stemdigit+;
+    stemsimple = stemfsymchr stemsymchr*;
+    stemstring = stemsymchr+;
+
+    [.] stemsimple / [.] {
+       s->lexer_stem_mode = 1;
+       return(TK_STEMVAR);
+    }
+    [.] stemsimple {
+       s->lexer_stem_mode = 0;
+       return(TK_STEMVAR);
+    }
+    [.] steminteger / [.] {
+       s->lexer_stem_mode = 1;
+       return(TK_STEMINT);
+    }
+    [.] steminteger {
+       s->lexer_stem_mode = 0;
+       return(TK_STEMINT);
+    }
+    [.] stemstring / [.] {
+       s->lexer_stem_mode = 1;
+       return(TK_STEMSTRING);
+    }
+    [.] stemstring {
+       s->lexer_stem_mode = 0;
+       return(TK_STEMSTRING);
+    }
+    [.] / [.] {
+       s->lexer_stem_mode = 1;
+       return(TK_STEMNOVAL);
+    }
+    [.] {
+       s->lexer_stem_mode = 0;
+       return(TK_STEMNOVAL);
+    }
+    $ { return(TK_EOS); }
+*/
     comment:
 /*!re2c
   "*/" {

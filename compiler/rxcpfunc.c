@@ -238,9 +238,8 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 else {
                     /* Add the function to the "database" of functions */
-                    type = nodetype(type_node);
-                    args = clnnode(args_node);
-//                    impl = clnnode(impl_node);
+                    type = ast_n2tp(type_node);
+                    args = meta_narg(args_node);
 
                     func = rximpf_f(context, node->context->file_name, fqname, "b", type, args, 0, 0);
 
@@ -251,7 +250,6 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                     free(type);
                     free(args);
-//                    free(impl);
                 }
             }
             free(fqname);
@@ -531,7 +529,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         case LEVELA:
         case LEVELC:
         case LEVELD:
-            fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
             break;
 
         case LEVELB:
@@ -541,11 +539,11 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
             break;
 
         default:
-            fprintf(stderr, "Importing Procedures - INTERNAL ERROR: Failed to determine REXX Level\n");
+            if (parent_context->debug_mode) fprintf(stderr, "Importing Procedures - Failed to determine REXX Level of imported rexx file\n");
     }
 
     if (!context->ast) {
-        fprintf(stderr,"Importing Procedures - INTERNAL ERROR: Compiler Exiting - Failure to create AST\n");
+        if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - Failure to create AST of imported rexx file\n");
         goto finish;
     }
 
@@ -681,6 +679,7 @@ static ValueType type_from_string(char* type) {
     if (strcmp(type, ".int") == 0) return TP_INTEGER;
     if (strcmp(type, ".float") == 0) return TP_FLOAT;
     if (strcmp(type, ".string") == 0) return TP_STRING;
+    if (strcmp(type, ".binary") == 0) return TP_BINARY;
     if (strcmp(type, ".boolean") == 0) return TP_BOOLEAN;
     if (strcmp(type, ".void") == 0) return TP_VOID;
     if (strcmp(type, ".unknown") == 0) return TP_UNKNOWN;
@@ -783,6 +782,9 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
             add_dast(context->ast, func->context->ast->child);
             found_symbol = sym_rfqn(context->ast, found_func->fqname);
             found_symbol->exposed = 1; /* Exposed by definition! */
+            found_symbol->is_arg = 0; /* Can't expose args */
+            found_symbol->is_opt_arg = 0;
+            found_symbol->is_ref_arg = 0;
         }
     }
 

@@ -7,174 +7,174 @@ a = 1; b = 2
 if test1(, a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 2 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test2"; a = 1; b = 2
 if test2(s, a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 2 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test3"; a = 1
 if test3(s, a) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test4"; a = 1; b = 2
 if test4(s, a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 10 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 20 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test5"; af = 1.0; b = 2
 if test3(s, af, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if af <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 2 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 /* Syntax error
    s = "test6"; af = 1.0; b = 2
    if test4(s, af, b) <> 3 
    then do
    errors=errors+1
-   say error
+   say "error"
    end
    if af <> 1 
    then do
    errors=errors+1
-   say error
+   say "error"
    end
    if b <> 2 
    then do
    errors=errors+1
-   say error
+   say "error"
    end
  */
 a = 1; b = 2
 if test1("test7", a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 2 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 a = 1; b = 2
 if test5("test8", a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 10 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 20 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test9"; a = 1; b = 2
 if test1(s, a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 1 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 2 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 a = 1; b = 2
 if test6("test10", a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 10 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 20 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 s = "test11"; a = 1; b = 2
 if test6(s, a, b) <> 3 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if a <> 10 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 if b <> 20 
   then do
     errors=errors+1
-    say error
+    say "error"
   end
 
 return errors<>0

@@ -111,6 +111,7 @@ Context *cntx_f() {
     context = calloc(1, sizeof(Context)); /* Zero Contents */
 
     context->level = UNKNOWN;
+    context->lexer_stem_mode = 0;
     context->hashcomments = 1; /* This is the recommended & default line comment style */
 
     return context;

@@ -4,13 +4,14 @@
 #include "rxas.h"
 #include "rxbin.h"
 
-#define rxversion "cREXX F0044"
+#define rxversion "cREXX F0045"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
 typedef struct value value;
 
 typedef union {
+    /* todo - these flag definitions are not used and are not correct */
     struct {
         unsigned int type_object : 1;
         unsigned int type_string : 1;
@@ -37,7 +38,10 @@ struct value {
     size_t string_chars;
     size_t string_char_pos;
 #endif
+    char *binary_value;
+    size_t binary_length;
     value **attributes;
+    value **unlinked_attributes;
     value **attribute_buffers;
     size_t max_num_attributes;
     size_t num_attributes;
@@ -233,5 +237,54 @@ int rxldmod(rxvm_context *context, char *new_module_file);
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
+
+/* Private structure for output to string thread */
+typedef struct redirect REDIRECT;
+
+/*
+ * - A pin, pout or perr does not need to be specified ... in this case the std streams are used.
+ * - Command contains the commands string to execute
+ * - rc will contain the return code from the command
+ * - errorText contains a descriptive text of any error in the spawn
+ *   (i.e. NOT from the executed child process). This is set if this returns
+ *   a non-zero return code.
+ *
+ * Return codes
+ *  0 - SHELLSPAWN_OK         - All OK
+ *  4 - SHELLSPAWN_NOFOUND    - The command was not found
+ *  5 - SHELLSPAWN_FAILURE    - Spawn failed unexpectedly (see error text for details)
+*/
+int shellspawn(const char *command,
+               REDIRECT* pIn,
+               REDIRECT* pOut,
+               REDIRECT* pErr,
+               value* variables,
+               int *rc,
+               char **errorText);
+
+// SPAWN Error codes
+#define SHELLSPAWN_OK         0
+#define SHELLSPAWN_NOFOUND    4
+#define SHELLSPAWN_FAILURE    5
+
+/* Create a redirect pipe to string */
+/* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
+void redr2str(value* redirect_reg, value* string_reg);
+
+/* Create a redirect pipe to string */
+/* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
+void redr2arr(value* redirect_reg, value* string_reg);
+
+/* Create a redirect pipe from a string */
+/* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
+void str2redr(value* redirect_reg, value* string_reg);
+
+/* Create a redirect pipe from an array */
+/* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
+void arr2redr(value* redirect_reg, value* string_reg);
+
+/* Create a null redirect pipe */
+/* In general, he redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
+void nullredr(value* redirect_reg);
 
 #endif //CREXX_RXVMINTP_H

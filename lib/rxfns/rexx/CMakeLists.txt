@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
 set(BIFS
+		_address
+		_rxsystem
 		_datei
 		_dateo
 		_ftrunc
@@ -21,6 +23,7 @@ set(BIFS
 		date
 		delstr
 		delword
+		fileio
 		filter
 		format
 		fnv

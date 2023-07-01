@@ -64,6 +64,17 @@ static void dpa_ado(dpa *array, void* new_element) {
     }
 }
 
+/* Delete an element in the array */
+static void dpa_del(dpa *array, size_t element) {
+    size_t num_to_shift;
+    array->size--;
+    num_to_shift = array->size - element;
+
+    if (num_to_shift) memmove(&(array->pointers[element]), &(array->pointers[element+1]), num_to_shift * sizeof(void**));
+
+    array->pointers[array->size] = 0; /* Null terminate it */
+}
+
 static void free_dpa(dpa *array) {
     free(array->pointers);
     free(array);

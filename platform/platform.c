@@ -48,8 +48,7 @@ char* file2buf(FILE *file, size_t *bytes) {
     buff = (char*) malloc((*bytes + 2) * sizeof(char) );
     *bytes = fread(buff, 1, *bytes, file);
     if (!*bytes) {
-        fprintf(stderr, "Error reading input file\n");
-        exit(-1);
+        return 0;
     }
     buff[*bytes] = 0;
     buff[*bytes+1] = 0; /* Add an extra byte for the token peak */

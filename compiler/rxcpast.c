@@ -6,6 +6,42 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 
+static void print_error(ASTNode* node, FILE* stream, char* prefix) {
+    /* Try and set error position if not already set */
+    if (node->token) {
+        if (node->line == -1) node->line = node->token->line;
+        if (node->column == -1) node->column = node->token->column;
+        if (!node->source_start) node->source_start = node->token->token_string;
+        if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
+    }
+    if (node->child && node->child->token) {
+        if (node->line == -1) node->line = node->child->token->line;
+        if (node->column == -1) node->column = node->child->token->column;
+        if (!node->source_start) node->source_start = node->child->token->token_string;
+        if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
+    }
+
+    /* Print error - truncate source to one line */
+    int len = (int) (node->source_end - node->source_start + 1);
+    int i;
+    for (i=0; i<len; i++) {
+        if (!node->source_start || node->source_start[i] == '\n') {
+            len = i;
+            break;
+        }
+    }
+    if (len) {
+        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->context->file_name, node->line + 1,
+                node->column + 1, node->node_string);
+        prt_unex(stream, node->source_start, len);
+        fprintf(stream, "\"\n");
+    }
+    else {
+        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->context->file_name, node->line + 1,
+                node->column + 1, node->node_string);
+    }
+}
+
 /* Token Factory */
 Token *token_f(Context *context, int type) {
     Token *token = malloc(sizeof(Token));
@@ -135,12 +171,21 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->symbolNode = 0;
     node->scope = 0;
     node->output = 0;
+    node->cleanup = 0;
     node->loopstartchecks = 0;
     node->loopinc = 0;
     node->loopendchecks = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
+    node->value_dims = 0;
+    node->value_dim_base = 0;
+    node->value_dim_elements = 0;
+    node->value_class = 0;
     node->target_type = TP_UNKNOWN;
+    node->target_dims = 0;
+    node->target_dim_base = 0;
+    node->target_dim_elements = 0;
+    node->target_class = 0;
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
@@ -153,6 +198,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->num_additional_registers = 0;
     node->is_ref_arg = 0;
     node->is_opt_arg = 0;
+    node->is_varg = 0;
     node->free_list = context->free_list;
     if (node->free_list) node->node_number = node->free_list->node_number + 1;
     else node->node_number = 1;
@@ -203,7 +249,37 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->token = node->token;
     new_node->node_type = node->node_type;
     new_node->value_type = node->value_type;
+    new_node->value_dims = node->value_dims;
+    if (new_node->value_dims) {
+        new_node->value_dim_base = malloc(sizeof(int) * new_node->value_dims);
+        memcpy(new_node->value_dim_base, node->value_dim_base, sizeof(int) * new_node->value_dims);
+        new_node->value_dim_elements = malloc(sizeof(int) * new_node->value_dims);
+        memcpy(new_node->value_dim_elements, node->value_dim_elements, sizeof(int) * new_node->value_dims);
+    }
+    else {
+        new_node->value_dim_base = 0;
+        new_node->value_dim_elements = 0;
+    }
+    if (node->value_class) {
+        new_node->value_class = malloc(strlen(node->value_class) + 1);
+        strcpy(new_node->value_class,node->value_class);
+    } else new_node->value_class = 0;
     new_node->target_type = node->target_type;
+    new_node->target_dims = node->target_dims;
+    if (new_node->target_dims) {
+        new_node->target_dim_base = malloc(sizeof(int) * new_node-> target_dims);
+        memcpy(new_node->target_dim_base, node->target_dim_base, sizeof(int) * new_node->target_dims);
+        new_node->target_dim_elements = malloc(sizeof(int) * new_node->target_dims);
+        memcpy(new_node->target_dim_elements, node->target_dim_elements, sizeof(int) * new_node->target_dims);
+    }
+    else {
+        new_node->target_dim_base = 0;
+        new_node->target_dim_elements = 0;
+    }
+    if (node->target_class) {
+        new_node->target_class = malloc(strlen(node->target_class) + 1);
+        strcpy(new_node->target_class,node->target_class);
+    } else new_node->target_class = 0;
     new_node->int_value = node->int_value;
     new_node->bool_value = node->bool_value;
     new_node->float_value = node->float_value;
@@ -245,6 +321,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
 
     /* These are only set when emitting - not copied */
     new_node->output = 0;
+    new_node->cleanup = 0;
     new_node->loopstartchecks = 0;
     new_node->loopinc = 0;
     new_node->loopendchecks = 0;
@@ -325,6 +402,11 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             new_symbol->symbol_type = symbol->symbol_type;
             new_symbol->type = symbol->type;
             new_symbol->exposed = symbol->exposed;
+            new_symbol->fixed_args = symbol->fixed_args;
+            new_symbol->has_vargs = symbol->has_vargs;
+            new_symbol->is_arg = symbol->is_arg;
+            new_symbol->is_ref_arg = symbol->is_ref_arg;
+            new_symbol->is_opt_arg = symbol->is_opt_arg;
 
             sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             free(fqname);
@@ -613,7 +695,7 @@ void ast_sstr(ASTNode *node, char* string, size_t length) {
 }
 
 /* ASTNode Factory - With node type and string value */
-ASTNode *ast_ftt(Context* context, NodeType type, char *string) {
+ASTNode * ast_ftt(Context* context, NodeType type, char *string) {
     ASTNode *node = ast_ft(context, type);
     node->node_string = string;
     node->node_string_length = strlen(string);
@@ -628,22 +710,22 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
     return node;
 }
 
-/* ASTNode Factory - Error Node */
+/* Add error node to parent node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token) {
-    ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
-    add_ast(errorAST, ast_f(context, TOKEN, token));
-    return errorAST;
+    ASTNode *newNode = ast_f(context, TOKEN, token);
+    mknd_err(newNode, error_string);
+    return newNode;
 }
 
 /* Add warning node to parent node */
-ASTNode *ast_war(ASTNode* parent, char *warning_string) {
-    ASTNode *warningAST = ast_ftt(parent->context, WARNING, warning_string);
-    add_ast(parent, warningAST);
-    return warningAST;
+ASTNode *ast_war(Context* context, char *warning_string, Token *token) {
+    ASTNode *newNode = ast_f(context, TOKEN, token);
+    mknd_war(newNode, warning_string);
+    return newNode;
 }
 
-/* Add an ERROR node to a node */
-void mknd_err(ASTNode* node, char *error_string, ...) {
+/* Add an ERROR node to a node - returns node for chaining */
+ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
@@ -677,15 +759,19 @@ void mknd_err(ASTNode* node, char *error_string, ...) {
     /* Child node */
     errNode = ast_ftt(node->context, ERROR, buffer);
     add_ast(node,  errNode);
+    errNode->token = node->token;
     errNode->free_node_string = 1;
     errNode->source_start = node->source_start;
     errNode->source_end = node->source_end;
     errNode->line = node->line;
     errNode->column = node->column;
+    if (node->context->debug_mode) print_error(errNode, stdout, "DEBUG: Error in");
+
+    return node;
 }
 
-/* Add a warning child node  */
-void mknd_war(ASTNode* node, char *error_string, ...) {
+/* Add a warning child node - returns node for chaining */
+ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
     size_t needed;
@@ -717,12 +803,17 @@ void mknd_war(ASTNode* node, char *error_string, ...) {
     }
 
     /* Child node */
-    warNode = ast_war(node, buffer);
+    warNode = ast_ftt(node->context, WARNING, buffer);
+    add_ast(node,  warNode);
+    warNode->token = node->token;
     warNode->free_node_string = 1;
     warNode->source_start = node->source_start;
     warNode->source_end = node->source_end;
     warNode->line = node->line;
     warNode->column = node->column;
+    if (node->context->debug_mode) print_error(warNode, stdout, "DEBUG: Error in");
+
+    return node;
 }
 
 /* Set a node string to a static value (i.e. the node isn't responsible for
@@ -740,7 +831,25 @@ void ast_str(ASTNode* node, char *string) {
 ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
+
+    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;
+}
+
+/* Returns the number of children of a node */
+size_t ast_nchd(ASTNode* node) {
+    size_t n = 0;
+    ASTNode* c;
+
+    if (!node) return 0;
+
+    c = node->child;
+    while (c) {
+        if (c->node_type != ERROR && c->node_type != WARNING) n++;
+        c = c->sibling;
+    }
+
+    return n;
 }
 
 /* Returns the PROCEDURE ASTNode procedure of an AST node */
@@ -774,6 +883,8 @@ const char *ast_ndtp(NodeType type) {
             return "CLASS";
         case CONST_SYMBOL:
             return "CONST_SYMBOL";
+        case DEFINE:
+            return "DEFINE";
         case DO:
             return "DO";
         case ENVIRONMENT:
@@ -812,6 +923,8 @@ const char *ast_ndtp(NodeType type) {
             return "FLOAT";
         case INTEGER:
             return "INTEGER";
+        case OP_MAKE_ARRAY:
+            return "OP_MAKE_ARRAY";
         case NAMESPACE:
             return "NAMESPACE";
         case NOP:
@@ -824,6 +937,14 @@ const char *ast_ndtp(NodeType type) {
             return "OP_MINUS";
         case OP_AND:
             return "OP_AND";
+        case OP_ARGS:
+            return "OP_ARGS";
+        case OP_ARG_VALUE:
+            return "OP_ARG_VALUE";
+        case OP_ARG_EXISTS:
+            return "OP_ARG_EXISTS";
+        case OP_ARG_IX_EXISTS:
+            return "OP_ARG_IX_EXISTS";
         case OP_COMPARE_EQUAL:
             return "OP_COMPARE_EQUAL";
         case OP_COMPARE_NEQ:
@@ -882,10 +1003,20 @@ const char *ast_ndtp(NodeType type) {
             return "PROGRAM_FILE";
         case PULL:
             return "PULL";
+        case RANGE:
+            return "RANGE";
         case REL_POS:
             return "REL_POS";
         case REPEAT:
             return "REPEAT";
+        case REDIRECT_IN:
+            return "REDIRECT_IN";
+        case REDIRECT_OUT:
+            return "REDIRECT_OUT";
+        case REDIRECT_ERROR:
+            return "REDIRECT_ERROR";
+        case REDIRECT_EXPOSE:
+            return "REDIRECT_EXPOSE";
         case RETURN:
             return "RETURN";
         case REXX_OPTIONS:
@@ -898,6 +1029,8 @@ const char *ast_ndtp(NodeType type) {
             return "SIGN";
         case STRING:
             return "STRING";
+        case BINARY:
+            return "BINARY";
         case TARGET:
             return "TARGET";
         case TEMPLATES:
@@ -914,6 +1047,10 @@ const char *ast_ndtp(NodeType type) {
             return "VAR_SYMBOL";
         case VAR_TARGET:
             return "VAR_TARGET";
+        case VARG:
+            return "VARG";
+        case VARG_REFERENCE:
+            return "VARG_REFERENCE";
         case VOID:
             return "VOID";
         default: return "*UNKNOWN*";
@@ -954,39 +1091,7 @@ static walker_result print_error_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == ERROR) {
-            /* Try and set error position if not already set */
-            if (node->token) {
-                if (node->line == -1) node->line = node->token->line;
-                if (node->column == -1) node->column = node->token->column;
-                if (!node->source_start) node->source_start = node->token->token_string;
-                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
-            }
-            if (node->child && node->child->token) {
-                if (node->line == -1) node->line = node->child->token->line;
-                if (node->column == -1) node->column = node->child->token->column;
-                if (!node->source_start) node->source_start = node->child->token->token_string;
-                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
-            }
-
-            /* Print error - truncate source to one line */
-            int len = (int) (node->source_end - node->source_start + 1);
-            int i;
-            for (i=0; i<len; i++) {
-                if (!node->source_start || node->source_start[i] == '\n') {
-                    len = i;
-                    break;
-                }
-            }
-            if (len) {
-                fprintf(stderr, "Error in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-                prt_unex(stderr, node->source_start, len);
-                fprintf(stderr, "\"\n");
-            }
-            else {
-                fprintf(stderr, "Error in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-            }
+            print_error(node, stderr, "Error in");
             (*errors)++;
         }
     }
@@ -1001,39 +1106,7 @@ static walker_result print_warning_walker(walker_direction direction,
 
     if (direction == in) {
         if (node->node_type == WARNING) {
-            /* Try and set error position if not already set */
-            if (node->token) {
-                if (node->line == -1) node->line = node->token->line;
-                if (node->column == -1) node->column = node->token->column;
-                if (!node->source_start) node->source_start = node->token->token_string;
-                if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
-            }
-            if (node->child && node->child->token) {
-                if (node->line == -1) node->line = node->child->token->line;
-                if (node->column == -1) node->column = node->child->token->column;
-                if (!node->source_start) node->source_start = node->child->token->token_string;
-                if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
-            }
-
-            /* Print error - truncate source to one line */
-            int len = (int) (node->source_end - node->source_start + 1);
-            int i;
-            for (i=0; i<len; i++) {
-                if (!node->source_start || node->source_start[i] == '\n') {
-                    len = i;
-                    break;
-                }
-            }
-            if (len) {
-                fprintf(stderr, "Warning in %s @ %d:%d - #%s, \"", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-                prt_unex(stderr, node->source_start, len);
-                fprintf(stderr, "\"\n");
-            }
-            else {
-                fprintf(stderr, "Warning in %s @ %d:%d - #%s\n", node->context->file_name, node->line + 1,
-                        node->column + 1, node->node_string);
-            }
+            print_error(node, stderr, "Warning in");
             (*errors)++;
         }
     }
@@ -1214,7 +1287,14 @@ void free_ast(Context *context) {
     while (t) {
         n = t->free_list;
         if (t->free_node_string) free(t->node_string);
+        if (t->value_dim_base) free(t->value_dim_base);
+        if (t->value_dim_elements) free(t->value_dim_elements);
+        if (t->value_class) free(t->value_class);
+        if (t->target_dim_base) free(t->target_dim_base);
+        if (t->target_dim_elements) free(t->target_dim_elements);
+        if (t->target_class) free(t->target_class);
         if (t->output) f_output(t->output);
+        if (t->cleanup) f_output(t->cleanup);
         if (t->loopstartchecks) f_output(t->loopstartchecks);
         if (t->loopinc) f_output(t->loopinc);
         if (t->loopendchecks) f_output(t->loopendchecks);
@@ -1279,10 +1359,151 @@ void prt_unex(FILE* output, const char *ptr, int len) {
     }
 }
 
+/* Returns a malloced string of the array part of a symbols/type
+ * (it returns a null terminated string if there is no array part - still needs a free() */
+char *ast_astr(size_t dims, int* base, int* num_elements) {
+    char* result;
+    int i, c, x;
+    if (!dims) {
+        result = malloc(1);
+        result[0] = 0;
+        return result;
+    }
+    /* Each dim could be "xxxx..xx to xxxx..xx," (each number upto 11 chars) = 11+11+5 = 27 chars plus 3 for the [, ], and terminator */
+    result = malloc((dims * 27) + 3);
+
+    result[0] = '[';
+    c = 1;
+    for (i=0; i<dims; i++) {
+
+        if (base[i] == 1 && num_elements[i] == 0) {
+            result[c++] = '*';
+        }
+        else if (base[i] == 1) {
+            c += sprintf(result + c, "%d", num_elements[i]);
+        }
+        else if (num_elements[i] == 0) {
+            c += sprintf(result + c, "%d to *", base[i]);
+        }
+        else {
+            c += sprintf(result + c, "%d to %d", base[i], base[i] + num_elements[i] - 1);
+        }
+
+        if (i + 1 != dims) {
+            result[c++] = ',';
+        }
+    }
+    result[c++] = ']';
+    result[c++] = 0;
+
+    return result;
+}
+
+/* Returns the type of a node as a text string in a malloced buffer */
+char* ast_n2tp(ASTNode *node) {
+    char *buffer = 0;
+    char *array;
+    char *result;
+    ValueType type = node->value_type;
+
+    if (type == TP_OBJECT) {
+        buffer = ast_nsrc(node);
+        if (buffer[0] == 0) {  /* I.e. an empty line */
+            free(buffer); /* set to .OBJECT below */
+            buffer = 0;
+        }
+    }
+    if (!buffer) {
+        buffer = malloc(sizeof(".BOOLEAN") + 1); /* Make it long enough for the longest option */
+        switch (type) {
+            case TP_BOOLEAN:
+                strcpy(buffer, ".boolean");
+                break;
+            case TP_INTEGER:
+                strcpy(buffer, ".int");
+                break;
+            case TP_FLOAT:
+                strcpy(buffer, ".float");
+                break;
+            case TP_STRING:
+                strcpy(buffer, ".string");
+                break;
+            case TP_BINARY:
+                strcpy(buffer, ".binary");
+                break;
+            case TP_OBJECT:
+                strcpy(buffer, ".object");
+                break;
+            case TP_VOID:
+                strcpy(buffer, ".void");
+                break;
+            default:
+                strcpy(buffer, ".unknown");
+        }
+    }
+
+    array = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
+
+    result = malloc(strlen(buffer) + strlen(array) + 1);
+    strcpy(result, buffer);
+    strcat(result, array);
+    free(buffer);
+    free(array);
+
+    return result;
+}
+
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *ast_nsrc(ASTNode *node) {
+    ASTNode *n;
+    Token *t;
+    size_t buffer_len;
+    char *buffer, *b;
+    size_t i;
+
+    /* Calculate required buffer length */
+    buffer_len = 0;
+    for  (t = node->token_start; t; t = t->token_next) {
+        buffer_len += t->length + 1; /* +1 for space */
+        if (t == node->token_end) break;
+    }
+
+    /* Empty Source Line */
+    if (!buffer_len) {
+        buffer = malloc(1);
+        buffer[0] = 0;
+        return buffer;
+    }
+
+    /* Create and write to buffer */
+    b = buffer = malloc(buffer_len);
+    for  (t = node->token_start; t; t = t->token_next) {
+        if (t->token_type != TK_STRING)  {
+            /* Lower case it */
+            for (i = 0; i < t->length; i++) {
+                *(b++) = (char)tolower(t->token_string[i]);
+            }
+        }
+        else {
+            memcpy(b, t->token_string, t->length);
+            b += t->length;
+        }
+        *(b++) = ' '; /* Add Space */
+        if (t == node->token_end) break;
+    }
+
+    /* Turn the last space to a terminating null */
+    *(--b) = 0;
+
+    return buffer;
+}
+
 /* Prints to dot file one symbol */
 void pdot_scope(Symbol *symbol, void *payload) {
     char reg[20];
+    char *arr;
     char *name;
+    char *clas;
 
     if (symbol->register_num >= 0)
         sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
@@ -1290,6 +1511,13 @@ void pdot_scope(Symbol *symbol, void *payload) {
         reg[0] = 0;
 
     name = sym_frnm(symbol);
+
+    arr = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
+
+    if (symbol->value_class)
+        clas = symbol->value_class;
+    else
+        clas = type_nm(symbol->type);
 
     switch (symbol->symbol_type) {
         case CLASS_SYMBOL:
@@ -1304,40 +1532,26 @@ void pdot_scope(Symbol *symbol, void *payload) {
 
         case FUNCTION_SYMBOL:
             fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
                     (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
-                    type_nm(symbol->type),
+                    clas, arr,
                     reg);
             break;
         default:
             fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s)\\n%s\"]\n",
+                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
                     (void*)symbol->scope->defining_node->context,
                     symbol->scope->defining_node->node_number,
                     symbol->name,
                     name,
-                    type_nm(symbol->type),
+                    clas, arr,
                     reg);
     }
-
+    free(arr);
     free(name);
-}
-
-/* Works out the which child index a child has */
-static int get_child_index(ASTNode *node) {
-    int i = 1;
-    ASTNode *n = node->parent;
-    if (!n) return 0;
-    n = n->child;
-    while (n != node) {
-        if (!n) return 0;
-        n = n->sibling;
-        i++;
-    }
-    return i;
 }
 
 /* Get the child node of a certain type1 or type2 (or null) */
@@ -1351,6 +1565,43 @@ ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
     return 0;
 }
 
+/* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
+int ast_hase(ASTNode *node) {
+    if (node->node_type == ERROR || node->node_type == WARNING) return 1;
+
+    ASTNode *n = node->child;
+    while (n) {
+        if (ast_hase(n)) return 1;
+        n = n->sibling;
+    }
+    return 0;
+}
+
+/* Prune all nodes except ERRORs and WARNINGs */
+void ast_prun(ASTNode *node) {
+    ASTNode *n = node->child;
+    ASTNode *next;
+    while (n) {
+        next = n->sibling;
+        if (ast_hase(n)) ast_prun(n); /* If it has error nodes just prune it (recursive) */
+        else ast_del(n); /* Else delete it */
+        n = next;
+    }
+    if (!node->child && node->node_type != ERROR && node->node_type != WARNING) ast_del(node);
+}
+
+/* Prune all children nodes except ERRORs and WARNINGs */
+void ast_prnc(ASTNode *node) {
+    ASTNode *n = node->child;
+    ASTNode *next;
+    while (n) {
+        next = n->sibling;
+        if (ast_hase(n)) ast_prun(n); /* If it has error nodes just prune it (recursive) */
+        else ast_del(n); /* Else delete it */
+        n = next;
+    }
+}
+
 walker_result pdot_walker_handler(walker_direction direction,
                                   ASTNode* node, void *payload) {
     FILE* output = (FILE*)payload;
@@ -1360,12 +1611,16 @@ walker_result pdot_walker_handler(walker_direction direction,
     int only_label = 0;
     int child_index;
     ASTNode *first_node;
-    char value_type_buffer[40];
+    char value_type_buffer[200];
+    char* varr;
+    char* vclas;
+    char* tarr;
+    char* tclas;
 
     if (direction == in) {
         /* IN - TOP DOWN */
 
-        child_index = get_child_index(node);
+        child_index = ast_chdi(node);
 
         /* Scope == DOT Subgraph */
         if (!node->parent || node->scope != node->parent->scope) {
@@ -1394,6 +1649,7 @@ walker_result pdot_walker_handler(walker_direction direction,
 
             case ASSIGN:
             case CALL:
+            case DEFINE:
             case ENVIRONMENT:
             case FOR:
             case WHILE:
@@ -1403,7 +1659,12 @@ walker_result pdot_walker_handler(walker_direction direction,
             case NOP:
             case OPTIONS:
             case PULL:
+            case RANGE:
             case REPEAT:
+            case REDIRECT_IN:
+            case REDIRECT_OUT:
+            case REDIRECT_ERROR:
+            case REDIRECT_EXPOSE:
             case RETURN:
             case SAY:
             case UPPER:
@@ -1430,6 +1691,10 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_ADD:
             case OP_MINUS:
             case OP_AND:
+            case OP_ARGS:
+            case OP_ARG_VALUE:
+            case OP_ARG_EXISTS:
+            case OP_ARG_IX_EXISTS:
             case OP_CONCAT:
             case OP_MULT:
             case OP_DIV:
@@ -1453,6 +1718,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_MAKE_ARRAY:
             case NOVAL:
                 attributes = "color=darkcyan";
                 only_type = 1;
@@ -1474,6 +1740,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case VAR_SYMBOL:
             case VAR_TARGET:
             case VAR_REFERENCE:
+            case VARG_REFERENCE:
+            case VARG:
             case CONST_SYMBOL:
             case LITERAL:
                 attributes = "color=cyan3 shape=cds";
@@ -1481,6 +1749,7 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case STRING:
+            case BINARY:
             case INTEGER:
             case FLOAT:
             case CONSTANT:
@@ -1508,6 +1777,16 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
         }
 
+        varr = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
+        tarr = ast_astr(node->target_dims, node->target_dim_base, node->target_dim_elements);
+
+        if (node->value_class) vclas = node->value_class;
+        else vclas = type_nm(node->value_type);
+
+        if (node->target_class) tclas = node->target_class;
+        else if (node->target_type == TP_OBJECT && node->value_class) tclas = node->value_class;
+        else tclas = type_nm(node->target_type);
+
         if (node->register_num >= 0) {
             if (node->num_additional_registers)
                 sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
@@ -1520,20 +1799,26 @@ walker_result pdot_walker_handler(walker_direction direction,
         else
             value_type_buffer[0] = 0;
 
-        if (node->value_type != TP_UNKNOWN ||
-            node->target_type != TP_UNKNOWN) {
-            if (node->value_type == node->target_type) {
+        if (node->value_type != TP_UNKNOWN || node->value_dims ||
+            node->target_type != TP_UNKNOWN || node->target_dims) {
+            if (node->value_type == node->target_type && strcmp(vclas,tclas) == 0 && strcmp(varr,tarr) == 0) {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_nm(node->value_type));
+                strcat(value_type_buffer, vclas);
+                strcat(value_type_buffer, varr);
                 strcat(value_type_buffer, ")");
             } else {
                 strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, type_nm(node->value_type));
+                strcat(value_type_buffer, vclas);
+                strcat(value_type_buffer, varr);
                 strcat(value_type_buffer, "->");
-                strcat(value_type_buffer, type_nm(node->target_type));
+                strcat(value_type_buffer, tclas);
+                strcat(value_type_buffer, tarr);
                 strcat(value_type_buffer, ")");
             }
         }
+
+        free(varr);
+        free(tarr);
 
         if (only_type) {
             fprintf(output, "n%p%d[ordering=\"out\" label=\"%s%s", (void*)node->context,node->node_number,
@@ -1661,3 +1946,211 @@ walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
 
     return result_normal;
 };
+
+/* Set Node Value and Target Type from Symbol */
+void ast_svtp(ASTNode* node, Symbol* symbol) {
+    node->value_type = symbol->type;
+    node->value_dims = symbol->value_dims;
+    node->target_type = symbol->type;
+    node->target_dims = symbol->value_dims;
+
+    if (node->value_dim_base) free(node->value_dim_base);
+    if (node->value_dim_elements) free(node->value_dim_elements);
+    if (node->value_dims) {
+        node->value_dim_base = malloc(sizeof(int) * node->value_dims);
+        memcpy(node->value_dim_base, symbol->dim_base, sizeof(int) * node->value_dims);
+        node->value_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->value_dim_elements, symbol->dim_elements, sizeof(int) * node->value_dims);
+    }
+    else {
+        node->value_dim_base = 0;
+        node->value_dim_elements = 0;
+    }
+
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    if (node->target_dims) {
+        node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_base, symbol->dim_base, sizeof(int) * node->target_dims);
+
+        node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_elements, symbol->dim_elements, sizeof(int) * node->target_dims);
+    }
+    else {
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+    }
+
+    if (node->value_class) free(node->value_class);
+    if (symbol->value_class) {
+        node->value_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->value_class, symbol->value_class);
+    } else node->value_class = 0;
+
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+}
+
+/* Set Node Target Value Type from Symbol */
+/* Note: Does not validate promotion */
+void ast_sttp(ASTNode* node, Symbol* symbol) {
+    node->target_type = symbol->type;
+    node->target_dims = symbol->value_dims;
+
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    if (node->target_dims) {
+        node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_base, symbol->dim_base, sizeof(int) * node->target_dims);
+
+        node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_elements, symbol->dim_elements, sizeof(int) * node->target_dims);
+    }
+    else {
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+    }
+
+    if (node->target_class) free(node->target_class);
+    if (symbol->value_class) {
+        node->target_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->target_class, symbol->value_class);
+    } else node->target_class = 0;
+}
+
+/* Set Node Target Value Type from Target Type of from_node */
+/* Note: Does not validate promotion */
+void ast_sttn(ASTNode* node, ASTNode* from_node) {
+    node->target_type = from_node->target_type;
+    node->target_dims = from_node->target_dims;
+
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    if (node->target_dims) {
+        node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_base, from_node->target_dim_base, sizeof(int) * node->target_dims);
+
+        node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_elements, from_node->target_dim_elements, sizeof(int) * node->target_dims);
+    }
+    else {
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+    }
+
+    if (node->target_class) free(node->target_class);
+    if (from_node->target_class) {
+        node->target_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->target_class, from_node->target_class);
+    } else node->target_class = 0;
+}
+
+/* Set Node Value (and Target) Type from the from_node target type */
+void ast_svtn(ASTNode* node, ASTNode* from_node) {
+    node->value_type = from_node->target_type;
+    node->value_dims = from_node->target_dims;
+    node->target_type = from_node->target_type;
+    node->target_dims = from_node->target_dims;
+
+    if (node->value_dim_base) free(node->value_dim_base);
+    if (node->value_dim_elements) free(node->value_dim_elements);
+    if (node->value_dims) {
+        node->value_dim_base = malloc(sizeof(int) * node->value_dims);
+        memcpy(node->value_dim_base, from_node->target_dim_base, sizeof(int) * node->value_dims);
+        node->value_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->value_dim_elements, from_node->target_dim_elements, sizeof(int) * node->value_dims);
+    }
+    else {
+        node->value_dim_base = 0;
+        node->value_dim_elements = 0;
+    }
+
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    if (node->target_dims) {
+        node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_base, from_node->target_dim_base, sizeof(int) * node->target_dims);
+
+        node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_elements, from_node->target_dim_elements, sizeof(int) * node->target_dims);
+    }
+    else {
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+    }
+
+    if (node->value_class) free(node->value_class);
+    if (from_node->target_class) {
+        node->value_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->value_class, from_node->target_class);
+    } else node->value_class = 0;
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0;
+    }
+}
+
+/* Reset Node Target Type to be the same as the node value type */
+void ast_rttp(ASTNode* node) {
+    node->target_type = node->value_type;
+    node->target_dims = node->value_dims;
+
+    if (node->target_dim_base) free(node->target_dim_base);
+    if (node->target_dim_elements) free(node->target_dim_elements);
+    if (node->target_dims) {
+        node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_base, node->value_dim_base, sizeof(int) * node->target_dims);
+
+        node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(node->target_dim_elements, node->value_dim_elements, sizeof(int) * node->target_dims);
+    }
+    else {
+        node->target_dim_base = 0;
+        node->target_dim_elements = 0;
+    }
+
+    if (node->target_class) {
+        free(node->target_class);
+        node->target_class = 0; /* I.e. assumed to be the same as the value type */
+    }
+}
+
+/* Returns the index number of a child of its parent (or -1 on error) */
+int ast_chdi(ASTNode* node) {
+    int i;
+    ASTNode* n;
+
+    if (!node->parent) return -1;
+
+    for (i = 0, n = node->parent->child; n; n = n->sibling) {
+        if (n == node) return i;
+        if (n->node_type != ERROR && n->node_type != WARNING) i++;
+    }
+    return -1;
+}
+
+/* Returns the nth child of a parent (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_chdn(ASTNode* parent, size_t n) {
+    ASTNode* node = parent->child;
+    size_t i = 0;
+    while (node) {
+        if (node->node_type != ERROR && node->node_type != WARNING) {
+            if (i == n) return node;
+            i++;
+        }
+        node = node->sibling;
+    }
+    return 0;
+}
+
+/* Returns the next sibling a node (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_nsib(ASTNode* node) {
+    while (node) {
+        node = node->sibling;
+        if (node && node->node_type != ERROR && node->node_type != WARNING) return node;
+    }
+    return 0;
+}
+

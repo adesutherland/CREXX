@@ -4,7 +4,7 @@
 #ifndef CREXX_RXCPMAIN_H
 #define CREXX_RXCPMAIN_H
 
-#define rxversion "cREXX F0044"
+#define rxversion "cREXX F0045"
 
 #include <stdio.h>
 #include "platform.h"
@@ -34,7 +34,7 @@ typedef enum RexxLevel {
 } RexxLevel;
 
 typedef enum ValueType {
-    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_OBJECT
+    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_BINARY, TP_OBJECT
 } ValueType;
 
 /*  Importable Functions */
@@ -53,6 +53,7 @@ typedef struct Context {
     char *buff_start;
     char *buff_end;
     char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
+    char lexer_stem_mode; /* 1 if lexing a stem */
     int line;
     int token_counter;
     Token* token_head;
@@ -63,6 +64,11 @@ typedef struct Context {
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
+    char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
+    char changed; /* Flag Used to see if a walker has made a change */
+    /* Do we need to import _rxsysb */
+    char need_rxsysb;
+    char has_rxsysb;
     /* Source Options */
     char processedComments;
     RexxLevel level;
@@ -84,10 +90,6 @@ int rexbscan(Context* s);
 int rexbpars(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
-/* Returns the type of a node as a malloced buffer */
-char* nodetype(ASTNode *node);
-/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
-char *clnnode(ASTNode *node);
 /* Encodes a string into a malloced buffer */
 char* encdstrg(const char* string, size_t length);
 
@@ -98,16 +100,20 @@ Symbol *sym_imfn(Context *context, ASTNode *node);
 void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, FOR, FUNCTION, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
+    FLOAT, INTEGER, OP_MAKE_ARRAY,
+    NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_ARGS, OP_ARG_VALUE, OP_ARG_EXISTS, OP_ARG_IX_EXISTS,
+    OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
     OP_COMPARE_EQUAL, OP_COMPARE_NEQ, OP_COMPARE_GT, OP_COMPARE_LT,
     OP_COMPARE_GTE, OP_COMPARE_LTE, OP_COMPARE_S_EQ, OP_COMPARE_S_NEQ,
     OP_COMPARE_S_GT, OP_COMPARE_S_LT, OP_COMPARE_S_GTE, OP_COMPARE_S_LTE,
-    OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, REPEAT,
-    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, TARGET, TEMPLATES, TO, TOKEN, UPPER,
-    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID, CONSTANT, WARNING, WHILE, UNTIL
+    OP_SCONCAT, OPTIONS, PARSE, PATTERN, PROCEDURE, PROGRAM_FILE, PULL, REL_POS, RANGE, REPEAT,
+    REDIRECT_IN, REDIRECT_OUT, REDIRECT_ERROR, REDIRECT_EXPOSE,
+    RETURN, REXX_OPTIONS, REXX_UNIVERSE, SAY, SIGN, STRING, BINARY, TARGET, TEMPLATES, TO, TOKEN, UPPER,
+    VAR_REFERENCE, VAR_SYMBOL, VAR_TARGET, VOID,
+    VARG, VARG_REFERENCE, CONSTANT, WARNING, WHILE, UNTIL
 } NodeType;
 
 struct Token {
@@ -126,8 +132,16 @@ struct ASTNode {
     Context *context;
     int node_number;
     NodeType node_type;
-    ValueType value_type;
-    ValueType target_type;
+    ValueType value_type;    /* Value type */
+    size_t value_dims;       /* Value dimensions */
+    int *value_dim_base;     /* Array of starting element number for array dimension - malloced or zero */
+    int *value_dim_elements; /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
+    char* value_class;       /* Value class name - malloced or zero */
+    int *target_dim_base;    /* Array of starting element number for target array dimension - malloced or zero */
+    int *target_dim_elements;/* Array of max number of elements for target array dimension (0=infinite) - malloced or zero */
+    ValueType target_type;   /* Target type */
+    size_t target_dims;      /* Target dimensions */
+    char* target_class;      /* Target class name - malloced or zero */
     int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
     int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
@@ -136,6 +150,7 @@ struct ASTNode {
     int num_additional_registers;
     char is_ref_arg;
     char is_opt_arg;
+    char is_varg;
     ASTNode *free_list;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE TO relevant DO node */
@@ -154,6 +169,7 @@ struct ASTNode {
     SymbolNode *symbolNode;
     /* These are used by the code emitters */
     OutputFragment *output;          /* Primary node output or loop assign / init instruction */
+    OutputFragment *cleanup;         /* Clean up logic (e.g. to unlink registers */
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
@@ -205,10 +221,10 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node);
  * - Ordinals
  */
 ASTNode *ast_dup(Context* new_context, ASTNode *node);
-/* Add warning node to parent node */;
-ASTNode *ast_war(ASTNode* parent, char *warning_string);
-/* ASTNode Factory - Error Node */
+/* Add error node to parent node */
 ASTNode *ast_err(Context* context, char *error_string, Token *token);
+/* Add warning node to parent node */
+ASTNode *ast_war(Context* context, char *warning_string, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
 /* Add a duplicate of the tree headed by the source node as a child to dest
@@ -220,10 +236,10 @@ void prnt_ast(ASTNode* node);
 void pdot_ast(FILE* output, ASTNode* node, int parent, int *counter);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
-/* Add an error child node  */
-void mknd_err(ASTNode* node, char *error_string, ...);
-/* Add a warning child node  */
-void mknd_war(ASTNode* node, char *error_string, ...);
+/* Add an error child node  - returns node for chaining */
+ASTNode *mknd_err(ASTNode* node, char *error_string, ...);
+/* Add a warning child node  - returns node for chaining */
+ASTNode *mknd_war(ASTNode* node, char *error_string, ...);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is
@@ -244,6 +260,27 @@ char* ast_frnm(ASTNode* node);
 ASTNode* ast_proc(ASTNode *node);
 /* Get the child node of a certain type1 or type2 (or null) */
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
+/* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
+int ast_hase(ASTNode *node);
+/* Prune all nodes except ERRORs and WARNINGs */
+void ast_prun(ASTNode *node);
+/* Prune all children nodes except ERRORs and WARNINGs */
+void ast_prnc(ASTNode *node);
+/* Returns the number of children of a node */
+size_t ast_nchd(ASTNode* node);
+/* Returns the index number of a child of its parent (or -1 on error) */
+int ast_chdi(ASTNode* node);
+/* Returns the nth child of a parent (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_chdn(ASTNode* parent, size_t n);
+/* Returns the next sibling a node (or 0 on error), skipping ERROR/WARNING nodes */
+ASTNode* ast_nsib(ASTNode* node);
+/* Returns the type of a node as a text string in a malloced buffer */
+char* ast_n2tp(ASTNode *node);
+/* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
+char *ast_nsrc(ASTNode *node);
+/* Returns a malloced string of the array part of a symbols/type
+ * (it returns a null terminated string if there is no array part - still needs a free() */
+char *ast_astr(size_t dims, int* base, int* num_elements);
 
 /* AST Walker Infrastructure */
 typedef enum walker_direction { in, out } walker_direction;
@@ -309,12 +346,21 @@ struct Symbol {
     void *ast_node_array;
     Scope *scope;
     Scope *defines_scope;
-    ValueType type;
+    ValueType type;       /* Value Type */
+    size_t value_dims;    /* Value dimensions */
+    int *dim_base;        /* Array of starting element number for array dimension - malloced or zero */
+    int *dim_elements;    /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
+    char* value_class;    /* Value class name - malloced or zero */
     SymbolType symbol_type;
     int register_num;
     char register_type;
+    size_t fixed_args; /* Number of fixed arguments (for a procedure) */
+    char has_vargs;    /* If it has variable arguments (for a procedure) */
     char exposed;      /* Is the symbol exposed */
-    char meta_emitted; /* Has the emitter output the symbols metadata yet */
+    char is_arg;       /* Is an argument */
+    char is_ref_arg;   /* Is  reference arg */
+    char is_opt_arg;   /* Is an optional arg */
+    char meta_emitted; /* Has the emitter output the symbol's metadata yet */
 };
 
 /* Scope Factory */
@@ -405,6 +451,12 @@ void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
 /* Get number of ASTNodes using the symbol */
 size_t sym_nond(Symbol *symbol);
 
+/* Disconnects a node (via index) from a symbol */
+void sym_dnd(Symbol *symbol, size_t node_num);
+
+/* Disconnects a node from a symbol */
+void sym_dno(Symbol *symbol, ASTNode* node);
+
 /* Returns the lowest ASTNode ordinal associated with the symbol */
 int sym_lord(Symbol *symbol);
 
@@ -425,6 +477,25 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname);
 
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
+
+/* Returns the type of a symbol as a text string in a malloced buffer */
+char* sym_2tp(Symbol *symbol);
+
+/* Set Node Value and Target Type from Symbol */
+void ast_svtp(ASTNode* node, Symbol* symbol);
+
+/* Set Node Target Value Type from Symbol */
+void ast_sttp(ASTNode* node, Symbol* symbol);
+
+/* Reset Node Target Type to be the same as the node value type */
+void ast_rttp(ASTNode* node);
+
+/* Set Node Target Value Type from Target Type of from_node */
+/* Note: Does not validate promotion */
+void ast_sttn(ASTNode* node, ASTNode* from_node);
+
+/* Set Node Value (and Target) Type from the from_node target type */
+void ast_svtn(ASTNode* node, ASTNode* from_node);
 
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);
@@ -484,5 +555,9 @@ importable_file **rxfl_lst(Context *context);
 
 /* free the list of importable files */
 void rxfl_fre(importable_file **file_list);
+
+/* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
+/* Node should be an ARG node else the program aborts */
+char *meta_narg(ASTNode *node);
 
 #endif //CREXX_RXCPMAIN_H

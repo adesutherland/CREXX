@@ -205,8 +205,6 @@ void init_ops() {
 
     instr_f("map", "Map op1 to var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("map", "Map op1 to var name op2", OP_REG, OP_STRING, OP_NONE);
-    instr_f("amap", "Map op1 to arg register index in op2", OP_REG, OP_REG, OP_NONE);
-    instr_f("amap", "Map op1 to arg register index  op2", OP_REG, OP_INT, OP_NONE);
     instr_f("pmap", "Map op1 to parent var name in op2", OP_REG, OP_REG, OP_NONE);
     instr_f("pmap", "Map op1 to parent var name op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("gmap", "Map op1 to global var name in op2", OP_REG, OP_REG, OP_NONE);
@@ -234,14 +232,30 @@ void init_ops() {
     instr_f("brf", "Branch to op1 if op2 false", OP_ID, OP_REG, OP_NONE);
     instr_f("brtf", "Branch to op1 if op3 true, otherwise branch to op2", OP_ID, OP_ID, OP_REG);
 
-    instr_f("move", "Move op2 to op1 (Deprecated use swap)", OP_REG, OP_REG, OP_NONE);
+    instr_f("move", "Move op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("swap", "Swap op1 and op2", OP_REG, OP_REG, OP_NONE);
     instr_f("copy", "Copy op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("icopy", "Copy Integer op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("fcopy", "Copy Float op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("scopy", "Copy String op2 to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("acopy", "Copy status Attributes op2 to op1", OP_REG, OP_REG, OP_NONE);
+
+    instr_f("linkarg", "Link args[op2] to op1", OP_REG, OP_INT, OP_NONE);
+    instr_f("linkarg", "Link args[op2+op3] to op1", OP_REG, OP_REG, OP_INT);
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_REG);
     instr_f("linkattr", "Link attribute op3 of op2 to op1", OP_REG, OP_REG, OP_INT);
+    instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_REG);
+    instr_f("linkattr1", "Link attribute op3 (1 base) of op2 to op1", OP_REG, OP_REG, OP_INT);
+
+    instr_f("linktoattr", "Link op3 to attribute op1 of op2 ", OP_REG, OP_REG, OP_REG);
+    instr_f("linktoattr", "Link op3 to attribute op1 of op2 ", OP_INT, OP_REG, OP_REG);
+    instr_f("linktoattr1", "Link op3 to attribute op1 (1 base) of op2 ", OP_REG, OP_REG, OP_REG);
+    instr_f("linktoattr1", "Link op3 to attribute op1 (1 base) of op2 ", OP_INT, OP_REG, OP_REG);
+    instr_f("unlinkattr", "Unlink attribute op1 of op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("unlinkattr", "Unlink attribute op1 of op2", OP_INT, OP_REG, OP_NONE);
+    instr_f("unlinkattr1", "Unlink attribute op1 (1 base) of op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("unlinkattr1", "Unlink attribute op1 (1 base) of op2", OP_INT, OP_REG, OP_NONE);
+
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);
@@ -266,6 +280,9 @@ void init_ops() {
     instr_f("exit", "Exit op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("exit", "Exit op1", OP_INT, OP_NONE, OP_NONE);
 
+    instr_f("btoi", "Set register integer value from its boolean value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("btof", "Set register float value from its boolean value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("btos", "Set register string value from its boolean value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itos", "Set register string value from its int value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftos", "Set register string value from its float value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
@@ -329,7 +346,9 @@ void init_ops() {
     instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_FLOAT,OP_INT);
     instr_f("loadsettp", "load register and sets the register type flag load op1=op2 (op1.typeflag = op3)", OP_REG, OP_STRING,OP_INT);
 
-    instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag || op2)", OP_REG, OP_INT,OP_NONE);
+    instr_f("setortp", "or the register type flag (op1.typeflag = op1.typeflag | op2)", OP_REG, OP_INT,OP_NONE);
+    instr_f("getandtp", "get the register type flag with mask (op1(int) = op2.typeflag & op3)", OP_REG, OP_REG,OP_INT);
+
     instr_f("brtpt", "if op2.typeflag true then goto op1", OP_ID, OP_REG,OP_NONE);
     instr_f("brtpandt", "if op2.typeflag && op3 true then goto op1", OP_ID, OP_REG,OP_INT);
 
@@ -342,6 +361,53 @@ void init_ops() {
     instr_f("rxvers", "returns os / 32/64 bit, etc, op1=version details", OP_REG, OP_NONE,OP_NONE);
 
     instr_f("rxhash", "returns hash value, etc, op1=hash(op2,len(op3))", OP_REG, OP_REG,OP_REG);
+
+    instr_f("getattrs", "get number attributes op1 = op2.num_attributes", OP_REG, OP_REG,OP_NONE);
+    instr_f("getattrs", "get number attributes op1 = op2.num_attributes + op3", OP_REG, OP_REG,OP_INT);
+
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2", OP_REG, OP_REG,OP_NONE);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2", OP_REG, OP_INT,OP_NONE);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2 + op3", OP_REG, OP_REG,OP_INT);
+    instr_f("setattrs", "set number attributes op1.num_attributes = op2 + op3", OP_REG, OP_INT,OP_INT);
+
+    instr_f("getabufs", "get attribute buffer size op1 = op2.max_attributes", OP_REG, OP_REG,OP_NONE);
+
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2", OP_REG, OP_REG,OP_NONE);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2", OP_REG, OP_INT,OP_NONE);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_REG,OP_INT);
+    instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_INT,OP_INT);
+
+    instr_f("signal", "Signal type op1", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("signalt", "Signal type op1 if op2 true", OP_STRING, OP_REG, OP_NONE);
+    instr_f("signalf", "Signal type op1 if op2 false", OP_STRING, OP_REG, OP_NONE);
+
+    instr_f("spawn", "Spawn Process op1 = exec op2 redirect op3", OP_REG, OP_REG, OP_REG);
+    instr_f("redir2str", "Redirect op1 -> string op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("redir2arr", "Redirect op1 -> array op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("str2redir", "Redirect op1 <- string op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("arr2redir", "Redirect op1 <- array op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("nullredir", "Redirect op1 = to/from null", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("fopen","op1 file*(int) = fopen filename op2(string) mode op3(string)", OP_REG, OP_REG, OP_REG);
+    instr_f("fclose","op1 rc(int) = fclose op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fflush","op1 rc(int) = fflush op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadb","op1(binary) = fread op2 file*(int) op3 bytes(int)", OP_REG, OP_REG, OP_REG);
+    instr_f("freadline","op1 (string) = read until newline op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadbyte","op1 (int) = read byte op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("freadcdpt","op1 (string and int) = read codepoint op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwrite","fwrite to op1 file*(int) from op2(string)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwriteb","fwrite to op1 file*(int) from op2(binary)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwritebyte","write byte to op1 file*(int) op2 source(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fwritecdpt","write codepoint to op1 file*(int) op2 source(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("fclearerr", "clearerr op1 file*(int)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("feof", "op1 rc(int) = feof op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+    instr_f("ferror", "op1 rc(int) = ferror op2 file*(int)", OP_REG, OP_REG, OP_NONE);
+
+    instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_INT, OP_INT);
+    instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_INT, OP_REG);
+    instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_REG, OP_REG);
+    instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_INT, OP_REG);
+    instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_REG, OP_REG);
 
     /* ENDINSTRUCTIONS */
 
