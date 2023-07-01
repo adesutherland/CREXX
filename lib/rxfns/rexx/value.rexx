@@ -7,9 +7,7 @@ namespace rxfnsb expose value
 
 value: procedure = .string
   arg input = .string
-
-  if input = "" then return "" /* ? */
-
+  if input = "" then return "BAD" /* ? */
   result = ""
   ires = 0
   fres = 0.0
@@ -83,5 +81,4 @@ value: procedure = .string
      end
    end
   if result = "" then result = upper(input)
-
   return result

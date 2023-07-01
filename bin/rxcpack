@@ -1,0 +1,29 @@
+#!/bin/bash
+thisdir=$(dirname $0)
+filename=$(basename "$1")
+path=$(dirname "$1")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+if [ $extension = $filename ]; then
+  # If the filename has no extension, check for a file with .rxbin extension
+  filename_rxbin="${filename}.rxbin"
+  if [ ! -f "$filename_rxbin" ]; then
+    echo "Error: $filename_rxbin does not exist."
+    exit 1
+  fi
+  # Set extension to "rexx" if the file exists
+  extension="rxbin"
+fi
+
+case "$extension" in
+  rxbin) true
+       ;;
+  *)   echo "File extension is not correct. Expected .rxbin file."
+       exit 1
+       ;;
+esac
+
+$thisdir/../cpacker/rxcpack ${filename} $thisdir/../lib/rxfns/library
+
+

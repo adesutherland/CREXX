@@ -1,0 +1,33 @@
+* source file main.rxas
+	 .globals=2
+g1 .expose=my.exposed_global
+main()   .locals=3
+         load r1,"Hello"
+         load r2,"René"
+         sconcat r2,r1,r2
+         say r2
+         load g0,100
+         call say_module_g()
+         load g1,101
+         call say_exposed_g()
+         load r0,"calling func1()"
+         say r0
+         call func1()
+         load r0,"calling func2()"
+         say r0
+         call func2()
+         ret
+log()    .locals=1 .expose=my.log
+         load r0,"Log: "
+         say r0
+         say a1
+         ret
+	 say_module_g()  .locals=1
+	 load r0,"module global="
+         itos g0
+         concat r0,r0,g0
+         say r0
+         ret
+say_exposed_g()  .expose=global.say_exposed_g
+func1()       .expose=global.func1
+func2()       .expose=global.func2

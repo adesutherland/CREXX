@@ -1521,6 +1521,29 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  IGTBR_ID_REG_REG  if op2>op3 ; goto op1                             pej 12 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(IGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - IGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RI > op3RI) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  ILTBR_ID_REG_REG  if op2<op3 ; goto op1                             pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(ILTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - ILTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RI < op3RI) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FEQ_REG_REG_REG  Float Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
@@ -1655,7 +1678,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - FLTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF <= op3F)
             DISPATCH
-
 /* ------------------------------------------------------------------------------------
  *  FLTE_REG_FLOAT_REG  Float Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
@@ -1664,6 +1686,29 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             DEBUG("TRACE - FLTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F <= op3RF)
             DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  FGTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RF > op3RF) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  FLTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FLTBR_ID_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FLTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
+    if (op2RF < op3RF) {
+        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+        CALC_DISPATCH_MANUAL
+    }
+    DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  SEQ_REG_REG_REG  String Equals op1=(op2==op3)
@@ -2706,7 +2751,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
- *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1              pej 26 August 2021
+ *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3)
@@ -2718,6 +2763,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                 CALC_DISPATCH_MANUAL
             }
         DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  BCTP_ID_REG  inc op2; goto op1                                     pej 11 June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCTP_ID_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - BCTP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+            (current_frame->locals[REG_IDX(2)]->int_value)++;
+            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+            CALC_DISPATCH_MANUAL
+        DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -3135,6 +3191,67 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             }
             set_int(op1R, rand());   // receive new random value
         DISPATCH;
+
+/* ------------------------------------------------------------------------------------
+ *  rxvers  returns os information                                    pej 20. June 2023
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1);
+    DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
+    {
+        char vers[64];
+        strcpy(vers, "UNKNOWN ");
+# if defined(__LINUX__)
+        strcpy(vers, "LINUX ");
+# elif defined(__WINDOWS__)
+        strcpy(vers, "WINDOWS ");
+# elif defined(__APPLE__)
+        strcpy(vers, "APPLE ");
+# endif
+#ifdef __32BIT__
+        strcat(vers, "32BIT ");
+#else
+        strcat(vers, "64BIT ");
+        strcat(vers, rxversion );
+#endif
+        set_null_string(op1R, vers);
+    }
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  rxhash  returns hash of a string                                  pej 24. June 2023
+ *  op1=hash(op2,op3)
+ *      op2=string
+ *      op3=length(string)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(RXHASH_REG_REG_REG) CALC_DISPATCH(3);
+            DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
+
+    {
+#ifdef __32BIT__
+        uint32_t hash, FNVOffset, FNV_PRIME;
+        FNV_PRIME=16777619;
+        FNVOffset=2166136261U;
+#else
+        uint64_t hash, FNVOffset, FNV_PRIME;
+        FNV_PRIME = 1099511628211;
+        FNVOffset = 14695981039346656037U;
+#endif
+        int i1, ch, len;
+        char str[128];
+
+        hash = FNVOffset;
+        GETSTRLEN(len, op2R)
+        for (i1 = 0; i1 < len; i1++) {
+            GETSTRCHAR(ch, op2R, i1)
+            hash = hash ^ (ch);          // xor next byte into the bottom of the hash
+            hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
+        }
+        sprintf(str, "%u", hash);
+        set_null_string(op1R, str);
+     }
+
+            DISPATCH;
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------

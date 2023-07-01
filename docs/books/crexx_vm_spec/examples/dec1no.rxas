@@ -1,0 +1,9 @@
+/* dec1 example */
+main()  .locals=2
+    say  "dec1 example:"
+    load r1,43 * load the integer 43 into register 0
+    dec1       * decrement register 0
+    itos r1    * integer to string for display
+    say  r1    * display the string, 42
+    ret        * return to caller
+

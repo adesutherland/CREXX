@@ -1,0 +1,35 @@
+\subsubsection{Exit instruction}\label{refexit}
+\index{EXIT instruction,}
+\index{Instructions,EXIT}
+\index{Return code, setting on exit,}
+\index{Return string, setting on exit,}
+\begin{shaded}
+\begin{alltt}
+\textbf{exit} [\emph{expression}];
+\end{alltt}
+\end{shaded}
+ \keyword{exit} is used to unconditionally leave a program, and
+optionally return a result to the caller.
+The entire program is terminated immediately.
+
+If an \emph{expression} is given, it is evaluated and the result
+of the evaluation is then passed back to the caller in an
+implementation-dependent manner when the program terminates.
+Typically this value is expected to be a small whole number; most
+implementations will accept values in the range 0 through 250.
+If no expression is given, a default result (which depends on the
+implementation, and is typically zero) is passed back to the caller.
+
+\textbf{Example:}
+\begin{lstlisting}
+j=3
+exit j*4
+/* Would exit with the value '12' */
+\end{lstlisting}
+\index{Running off the end of a program,}
+\index{Bottom of program, reaching during execution,}
+ "Running off the end" of a program is equivalent to the
+instruction \textbf{return;}.  In the case where the program is simply
+a stand-alone application with no \keyword{class} or \keyword{method}
+instructions, this has the same effect as \textbf{exit;}, in that it
+terminates the whole program and returns a default result.

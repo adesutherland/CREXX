@@ -1,0 +1,5 @@
+pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 strip next /'',''/ next 18-38 next /'',''/ next 39-100 next /'');/ next | > insert_ins.sql
+
+pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | > insertnames.sql
+
+pipe < cat.txt | specs /insert into inst_cat VALUES(''/ next 1-20 strip next /''/ next /,''/ next 22-22 next /'');/ next | > insert_cat.sql

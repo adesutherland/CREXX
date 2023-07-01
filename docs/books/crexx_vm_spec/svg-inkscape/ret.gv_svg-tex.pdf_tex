@@ -1,0 +1,85 @@
+%% Creator: Inkscape 1.2.2 (b0a84865, 2022-12-01), www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'ret.gv_svg-tex.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \newcommand*\fsize{\dimexpr\f@size pt\relax}%
+  \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{194bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,1.12886598)%
+    \lineheight{1}%
+    \setlength\tabcolsep{0pt}%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{ret.gv_svg-tex.pdf}}%
+    \put(0.20103093,0.86752579){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}Name\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{ret.gv_svg-tex.pdf}}%
+    \put(0.53865979,0.86752579){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}OP1\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.75927837){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{ret.gv_svg-tex.pdf}}%
+    \put(0.49484536,0.75927837){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}FLOAT\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.65103094){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{ret.gv_svg-tex.pdf}}%
+    \put(0.44329897,0.65103094){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}no operand\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.54278352){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{ret.gv_svg-tex.pdf}}%
+    \put(0.53092784,0.54278352){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}REG\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.43453608){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{ret.gv_svg-tex.pdf}}%
+    \put(0.54381443,0.43453608){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}INT\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.32628866){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=12]{ret.gv_svg-tex.pdf}}%
+    \put(0.50257732,0.32628866){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}CHAR\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=13]{ret.gv_svg-tex.pdf}}%
+    \put(0.22164948,0.21804124){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}RET\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=14]{ret.gv_svg-tex.pdf}}%
+    \put(0.4742268,0.21804124){\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}STRING\end{tabular}}}}%
+  \end{picture}%
+\endgroup%

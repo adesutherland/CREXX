@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.14)
 
 set(BIFS
 		_datei
@@ -21,7 +21,9 @@ set(BIFS
 		date
 		delstr
 		delword
+		filter
 		format
+		fnv
 #		global
 		insert
 		length
@@ -35,12 +37,14 @@ set(BIFS
 		space
 		strip
 		substr
+		symbol
 		time
 		translate
 		trunc
 		upper
 		value
 		verify
+		version
 		wordlength
 		wordpos
 		x2b

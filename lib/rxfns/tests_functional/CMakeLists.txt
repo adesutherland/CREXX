@@ -32,6 +32,7 @@ set(REXXBINS
         ts_sign.rxbin
         ts_space.rxbin
         ts_strip.rxbin
+	ts_symbol.rxbin
         ts_test.rxbin
         ts_time.rxbin
         ts_translate.rxbin

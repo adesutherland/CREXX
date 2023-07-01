@@ -1,0 +1,569 @@
+\chapter{Structure and General Syntax}\label{refclau}
+\index{Clauses,}
+\index{Semicolons,}
+\index{,}
+ A \crexx{} program is built up out of a series of \emph{clauses} that
+are composed of: zero or more blanks (which are ignored); a sequence of
+tokens (described in this section); zero or more blanks (again
+ignored); and the delimiter "\textbf{;}" (semicolon) which may
+be implied by line-ends or certain keywords.
+Conceptually, each clause is scanned from left to right before
+execution and the tokens composing it are resolved.
+ 
+Identifiers (known as symbols) and numbers are recognized at this stage,
+comments (described below) are removed, and multiple blanks (except
+within literal strings) are reduced to single blanks.
+Blanks adjacent to  operator characters % (see page \pageref{refopers})
+and
+ special characters % (see page \pageref{refspecs}) 
+ are also removed.
+\section{Blanks and White Space}\label{refblank}
+\index{Blank,}
+\index{White space,}
+ \emph{Blanks} (spaces) may be freely used in a program to
+improve appearance and layout, and most are ignored.
+Blanks, however, are usually significant
+\begin{itemize}
+\item within literal strings (see below)
+\item between two tokens that are not special characters (for example,
+between two symbols or keywords)
+\item between the two characters forming a comment delimiter
+\item immediately outside parentheses ("\textbf{(}" and
+"\textbf{)}") or brackets ("\textbf{[}" and
+"\textbf{]}").
+\end{itemize}
+ 
+\index{Form feed character,}
+\index{Tabulation character,}
+\index{Tab character,}
+\index{EOF character,}
+\index{End-of-file character,}
+For implementations that support tabulation (tab) and form feed
+characters, these characters outside of literal strings are treated as
+if they were a single blank; similarly, if the last character in a
+\crexx{} program is the End-of-file character (EOF, encoded in ASCII as
+decimal 26), that character is ignored.
+\section{Comments}\label{refcomment}
+\index{Comments,}
+\index{Delimiters,for comments}
+\index{,}
+\index{,}
+\index{,}
+ Commentary is included in a \crexx{} program by means of
+\emph{comments}.  Two forms of comment notation are provided:
+\emph{line comments} are ended by the end of the line on which they
+start, and \emph{block comments} are typically used for more extensive
+commentary.
+\begin{description}
+\item[Line comments]\label{reflineco}
+\index{Comments,line}
+\index{Line comments,}
+The default line comment character in \crexx{} level B is the
+\emph{hash} character \code{\#}, also called \emph{octothorpe}. This is
+associated with the options \code{options hashcomments (default) / nohashcomments}.
+
+A line comment can also be started by a sequence of two adjacent slashes
+(\code{//}); all characters following that sequence up to the
+end of the line are then ignored by the \crexx{} language processor.
+This is associated with the options \code{Options slashcomments  / noslashcomments (default)}.
+%     Dash '--' line comments. Options dashcomments  / nodashcomments (default)
+%     Slash '//' line comments. Options slashcomments  / noslashcomments (default)
+%     Hash '#' line comments. Options hashcomments (default) / nohashcomments
+
+A line comment can also be started by a sequence of two adjacent hyphens
+(\doublehyphen{}); all characters following that sequence up to the
+end of the line are then ignored by the \crexx{} language processor.
+This is associated with the options \code{Options dashcomments  / nosdashcomments (default)}.
+
+\textbf{Example:}
+\begin{lstlisting}
+i=j+7 # this line comment follows an assignment
+\end{lstlisting}
+\item[Block comments]\label{refblockco}
+\index{Comments,block}
+\index{Block comments,}
+ A block comment is started by the sequence of characters
+"\textbf{/*}", and is ended by the same sequence reversed,
+"\textbf{*/}".
+Within these delimiters any characters are allowed (including quotes,
+which need not be paired).
+\index{Comments,nesting}
+\index{Nesting of comments,}
+Block comments may be nested, which is to say that
+"\textbf{/*}" and "\textbf{*/}" must pair correctly.
+\index{Length,of comments}
+Block comments may be anywhere, and may be of any length.
+When a block comment is found, it is treated as though it were a blank
+(which may then be removed, if adjacent to a special character).
+ 
+\textbf{Example:}
+\begin{lstlisting}
+/* This is a valid block comment */
+\end{lstlisting}
+The two characters forming a comment delimiter
+("\textbf{/*}" or "\textbf{*/}") must be adjacent
+(that is, they may not be separated by blanks or a line-end).
+\end{description}
+\index{Comments,starting a program with}
+\begin{shaded}\noindent
+\textbf{Note: }It is recommended that \crexx{} programs start with a block comment
+that describes the program.
+Not only is this good programming practice, but some implementations may
+use this to distinguish \crexx{} programs from other languages.
+ \textbf{Implementation minimum:} Implementations should support
+nested block comments to a depth of at least 10.
+The length of a comment should not be restricted, in that it should be
+possible to "comment out" an entire program.
+\end{shaded}\indent
+\section{Tokens}\label{reftokens}
+\index{Tokens,}
+ The essential components of clauses are called \emph{tokens}.
+These may be of any length, unless limited by implementation
+restrictions,
+\footnote{
+Wherever arbitrary implementation restrictions are applied, the size of
+the restriction should be a number that is readily memorable in the
+decimal system; that is, one of 1, 25, or 5 multiplied by a power of
+ten.
+500 is preferred to 512, the number 250 is more "natural" than
+256, and so on.  Limits expressed in digits should be a multiple of
+three.
+}
+and are separated by blanks, comments, ends of lines, or by the nature
+of the tokens themselves.
+ 
+The tokens are:
+\begin{description}
+\item[Literal strings]\label{refxstr}
+\index{Strings,}
+\index{Literal strings,}
+\index{,}
+\index{Delimiters,for strings}
+\index{,}
+\index{Strings,quotes in}
+\index{Quotes in strings,}
+\index{Double-quote,string delimiter}
+\index{Single-quote,string delimiter}
+\index{Strings,as literal constants}
+
+A sequence including any characters that can safely be represented in
+an implementation
+\footnote{
+Some implementations may not allow certain "control characters"
+in literal strings.
+These characters may be included in literal strings by using one of the
+escape sequences provided.
+}
+and delimited by the single quote character (\textbf{'}) or the
+double-quote (\textbf{"}).
+Use \textbf{""} to include a \textbf{"} in a literal
+string delimited by \textbf{"}, and similarly use two single
+quotes to include a single quote in a literal string delimited by
+single quotes.
+A literal string is a constant and its contents will never be modified
+by \crexx{}.
+Literal strings must be complete on a single line (this means that
+unmatched quotes may be detected on the line that they occur).
+\index{Strings,null}
+\index{Null strings,}
+ Any string with no characters (\emph{i.e.}, a string of length 0) is called
+a \emph{null string}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+  'Fred'
+  'Aÿ'
+  "Don't Panic!"
+  ":x"
+ 'You shouldn''t'    /* Same as "You shouldn't" */
+ ''                  /* A null string */
+\end{lstlisting}
+ 
+\index{Strings,escapes in}
+\index{Escape sequences in strings,}
+\index{\textbackslash  backslash,escape character}
+\index{Backslash character,in strings}
+Within literal strings, characters that cannot safely or easily be
+represented (for example "control characters") may be introduced
+using an \emph{escape sequence}.  An escape sequence starts with a
+\emph{backslash} ("\textbf{\textbackslash }"), which must then be
+followed immediately by one of the following (letters may be in either
+uppercase or lowercase) - see table \ref{table:escapecodes}.
+
+\index{Tab character,escape sequence}
+\index{Newline character,escape sequence}
+\index{Line feed character,escape sequence}
+\index{Carriage return character,escape sequence}
+\index{Return character,escape sequence}
+\index{Double-quote,escape sequence}
+\index{Single-quote,escape sequence}
+\index{Backslash character,escape sequence}
+\index{Null character,escape sequence}
+\index{Zero character,escape sequence}
+\index{Hexadecimal,escape sequence}
+\index{Unicode,escape sequence}
+[todo back to Rexx notation]
+\begin{table}\caption{Escape sequences}\label{table:escapecodes}
+\begin{tabularx}{\textwidth}{>{\bfseries}lX}
+\toprule
+\textbackslash t& the escape sequence represents a tabulation (tab)
+character
+\\\midrule
+\textbackslash n& the escape sequence represents a new-line (line
+feed) character
+\\\midrule
+\textbackslash r& the escape sequence represents a return (carriage
+return) character
+\\\midrule
+\textbackslash f& the escape sequence represents a form-feed character
+\\\midrule
+\textbackslash "&the escape sequence represents a double-quote
+character
+\\\midrule
+\textbackslash '&the escape sequence represents a single-quote
+character
+\\\midrule
+\textbackslash& the escape sequence represents a backslash character
+\\\midrule
+\textbackslash \texttt{-}&the escape sequence represents a "null" character
+(the character whose encoding equals zero), used to indicate
+continuation in a \keyword{say} instruction
+\\\midrule
+\textbackslash 0(zero)& the escape sequence represents a "null" character
+(the character whose encoding equals zero); an alternative
+to \textbf{\textbackslash -}
+\\\midrule
+\textbackslash xhh& the escape sequence represents a character whose encoding is
+given by the two hexadecimal digits ("\textbf{hh}") following the
+"\textbf{x}".
+If the character encoding for the implementation requires more than two
+hexadecimal digits, they are padded with zero digits on the left.
+\\\midrule
+\textbackslash uhhhh& the escape sequence represents a character whose encoding is
+given by the four hexadecimal digits ("\textbf{hhhh}") following the
+"\textbf{u}".
+It is an error to use this escape if the character encoding for the
+implementation requires fewer than four hexadecimal digits.
+\\\bottomrule
+\end{tabularx}
+\end{table}
+\index{Hexadecimal,digits in escapes}
+ Hexadecimal digits for use in the escape sequences above may be any
+decimal digit (0-9) or any of the first six alphabetic
+characters (a-f), in either lowercase or uppercase.
+ \textbf{Examples:}
+\begin{alltt}
+  'You shouldn\'t'  /* Same as "You shouldn't" */
+  \end{alltt}
+\begin{lstlisting}
+'\x6d\u0066\x63'  /* In Unicode: 'mfc' */
+'\\\u005C'        /* In Unicode, two backslashes */
+\end{lstlisting}
+ \textbf{Implementation minimum:} Implementations should support
+literal strings of at least 100 characters.
+(But note that the length of string expression results, \emph{etc.}, should
+have a much larger minimum, normally only limited by the amount of
+storage available.)
+\item[Symbols]\label{refsyms}
+\index{Symbols,}
+\index{Symbols,valid names}
+\index{Extra letters, in symbols,}
+\index{Extra digits,in symbols}
+\index{Extra digits,in numeric symbols}
+\index{\_ underscore,in symbols}
+\index{Underscore,in symbols}
+\index{\$ dollar sign,in symbols}
+\index{Dollar sign,in symbols}
+\index{Euro character,}
+\index{Euro character,in symbols}
+
+Symbols are groups of characters selected from the Roman alphabet
+in uppercase or lowercase (A-Z, a-z), the Arabic numerals
+(0-9), or the characters underscore, dollar, and euro\footnote{
+Note that only UTF8-encoded source files can currently use the euro
+character.} ("\textunderscore \$ \euro")
+Implementations may also allow other alphabetic and numeric characters
+in symbols to improve the readability of programs in languages other
+than English.  These additional characters are known as \emph{extra
+letters} and \emph{extra digits}.
+\footnote{
+It is expected that implementations of \crexx{} will be based on
+Unicode or a similarly rich character set.
+However, portability to implementations with smaller character sets may
+be compromised when extra letters or extra digits are used in a program.
+}
+ 
+\textbf{Examples:}
+\begin{alltt}
+DanYrOgof
+minx
+\'{E}lan
+$Virtual3D
+\end{alltt}
+\index{Numbers,as symbols}
+\index{Numeric symbols,}
+\index{Symbols,numeric}
+\index{Simple number,}
+\index{Hexadecimal numeric symbol,}
+\index{Binary numeric symbol,}
+\index{Exponential notation,in symbols}
+\index{E-notation,in symbols}
+\index{Extra digits,in numeric symbols}
+ A symbol may include other characters only when the first character
+of the symbol is a digit (0-9 or an extra digit).
+In this case, it is a \emph{numeric symbol} - it may include a
+period ("\textbf{.}") and it must have the syntax of a number.
+This may be \emph{simple number}, which is a sequence of digits with
+at most one period (which may not be the final character of the
+sequence), or it may be a  \emph{hexadecimal or binary 
+numeric symbol}% (see page \pageref{refhexbin})
+, or it may be a number expressed in \emph{exponential
+notation}.
+ 
+A number in exponential notation is a simple number followed immediately
+by the sequence "\textbf{E}" (or "\textbf{e}"), followed
+immediately by a sign ("\textbf{+}" or "\textbf{-}"),
+\footnote{
+The sign in this context is part of the symbol; it is not an
+operator.
+}
+followed immediately by one or more digits (which may not be followed by
+any other symbol characters).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+1
+1.3
+12.007
+17.3E-12
+3e+12
+0.03E+9
+\end{lstlisting}
+ 
+\index{Extra digits,in numeric symbols}
+When \emph{extra digits} are used in numeric symbols, they must
+represent values in the range zero through nine.
+When numeric symbols are used as numbers, any extra digits are first
+converted to the corresponding character in the range 0-9, and then the
+symbol follows the usual rules for numbers in \crexx{} (that is, the most
+significant digit is on the left, \emph{etc.}).
+ 
+\marginnote{\color{gray}3.03}\emph{In the reference implementation, the extra letters are those
+characters (excluding A-Z, a-z, and underscore) that result
+in \textbf{1} when tested with
+\\\textbf{java.lang.Character.isJavaIdentifierPart}.
+Similarly, the extra digits are those characters (excluding 0-9) that
+result in \textbf{1} when tested with \textbf{java.lang.Character.isDigit}.
+}
+ 
+The meaning of a symbol depends on the context in which it is used.
+For example, a symbol may be a constant (if a number), a keyword, the
+name of a variable, or identify some algorithm.
+ 
+It is recommended that the dollar and euro only be used in symbols in
+mechanically generated programs or where otherwise essential.
+ \textbf{Implementation minimum:} Implementations should support
+symbols of at least 50 characters.
+(But note that the length of its value, if it is a string variable,
+should have a much larger limit.)
+\item[Operator characters]\label{refopers}
+\index{Operators,characters used for}
+\index{Special characters,used for operators}
+\index{Blank,adjacent to operator character}
+
+The characters \texttt{+ \textendash \-  * \% \textbar / \& \textbackslash = < >}
+are used (sometimes in combination) to indicate
+ operations % (see page \pageref{refops})
+ in expressions.
+A few of these are also used in parsing templates, and the equals sign
+is also used to indicate assignment.
+Blanks adjacent to operator characters are removed, so, for example,
+the sequences:
+\begin{lstlisting}
+345>=123
+345 >=123
+345 >=  123
+345 > =  123
+\end{lstlisting}
+are identical in meaning.
+ Some of these characters may not be available in all character sets,
+and if this is the case appropriate translations may be used.
+\index{++ invalid sequence,}
+\index{\textbackslash \textbackslash  invalid sequence,}
+\textbf{Note: }The sequences "\textbf{--}", "\textbf{/*}", and
+"\textbf{*/}" are comment delimiters, as described earlier.
+The sequences "\textbf{++}"
+and "\textbf{\textbackslash \textbackslash }" are not valid in \crexx{}
+programs.
+\item[Special characters]\label{refspecs}
+\index{Special characters,}
+\index{Parentheses,adjacent to blanks}
+\index{Blank,adjacent to special character}
+
+The characters  \textbf{.  ,  ;  )  (  ]  [}  together
+with the operator characters have special significance when found
+outside of literal strings, and constitute the set of \emph{special
+characters}.
+They all act as token delimiters, and blanks adjacent to any of these
+(except the period) are removed, except that a blank adjacent to the
+outside of a parenthesis or bracket is only deleted if it is also
+adjacent to another special character (unless this is a parenthesis or
+bracket and the blank is outside it, too).
+ Some of these characters may not be available in all character sets,
+and if this is the case appropriate translations may be used.
+\end{description}
+ To illustrate how a clause is composed out of tokens, consider this
+example:
+\begin{lstlisting}
+'REPEAT'   B + 3;
+\end{lstlisting}
+This is composed of six tokens: a literal string, a blank operator
+(described later), a symbol (which is probably the name of a variable),
+an operator, a second symbol (a number), and a semicolon.
+The blanks between the "\textbf{B}" and the "\textbf{+}"
+and between the "\textbf{+}" and the "\textbf{3}" are
+removed.
+However one of the blanks between the \textbf{'REPEAT'} and the
+"\textbf{B}" remains as an operator.
+Thus the clause is treated as though written:
+\begin{lstlisting}
+'REPEAT' B+3;
+\end{lstlisting}
+\section{Implied semicolons and continuations}\label{refsemis}
+\index{Implied semicolons,}
+\index{Semicolons,implied}
+\index{Line ends, effect of,}
+\index{Clauses,continuation of}
+\index{Continuation,character}
+\index{Continuation,of clauses}
+\index{Hyphen,as continuation character}
+\index{- continuation character,}
+ A semicolon (clause end) is implied at the end of each line, except
+if:
+\begin{enumerate}
+\item The line ends in the middle of a block comment, in which case the
+clause continues at the end of the block comment.
+\item The last token was a hyphen.
+In this case the hyphen is functionally replaced by a blank, and hence
+acts as a \emph{continuation character}.
+\end{enumerate}
+ This means that semicolons need only be included to separate
+multiple clauses on a single line.
+\begin{shaded}\noindent
+\textbf{Notes:}
+\begin{enumerate}
+\item A comment is not a token, so therefore a comment may follow the
+continuation character on a line.
+\item Semicolons are added automatically by \crexx{} after certain
+instruction keywords when in the correct context.
+The keywords that may have this effect are \keyword{else},
+\keyword{finally}, \keyword{otherwise}, \keyword{then}; they become
+complete clauses in their own right when this occurs.
+These special cases reduce program entry errors significantly.
+\end{enumerate}
+\end{shaded}\indent
+\section{The case of names and symbols}\label{refcase}
+\index{Case,of names}
+\index{Uppercase,names}
+\index{Lowercase,names}
+\index{Mixed case,names}
+\index{Symbols,case of}
+\index{Names,case of}
+\index{Class,names, case of}
+\index{Method,names, case of}
+\index{Properties,case of names}
+ 
+In general, \crexx{} is a \emph{case-insensitive} language.
+That is, the names of keywords, variables, and so on, will be recognized
+independently of the case used for each letter in a name; the name
+"\textbf{Swildon}" would match the name
+"\textbf{swilDon}".
+ 
+\crexx{}, however, uses names that may be visible outside the \crexx{}
+program, and these may well be referenced by case-sensitive languages.
+Therefore, any name that has an external use (such as the name of a
+property, method, constructor, or class) has a defined spelling, in
+which each letter of the name has the case used for that letter when the
+name was first defined or used.
+ 
+Similarly, the lookup of external names is both case-preserving and
+case-insensitive.  If a class, method, or property is referenced by the
+name "\textbf{Foo}", for example, an exact-case match will first
+be tried at each point that a search is made.
+If this succeeds, the search for a matching name is complete.
+If it does not succeed, a case-insensitive search in the same context
+is carried out, and if one item is found, then the search is complete.
+If more than one item matches then the reference is ambiguous, and an
+error is reported.
+ 
+Implementations are encouraged to offer an option that requires that all
+name matches are exact (case-sensitive), for programmers or house-styles
+that prefer that approach to name matching.
+\section{Hexadecimal and binary numeric symbols}\label{refhexbin}
+\index{Numeric symbols,hexadecimal}
+\index{Hexadecimal numeric symbol,}
+ 
+A \emph{hexadecimal numeric symbol} describes a whole number, and is
+of the form \emph{n}\textbf{X}\emph{string}.  Here,
+\emph{n} is a simple number with no decimal part (and optional
+leading insignificant zeros) which describes the effective length of the
+hexadecimal string, the \textbf{X} (which may be in lowercase) indicates
+that the notation is hexadecimal, and \emph{string} is a string of
+one or more hexadecimal characters (characters from the ranges
+"a-f", "A-F", and the digits "0-9").
+ 
+The \emph{string} is taken as a signed number expressed in
+\emph{n} hexadecimal characters.  If necessary, \emph{string} is
+padded on the left with "\textbf{0}" characters (note, not
+"sign-extended") to length \emph{n} characters.
+ 
+If the most significant (left-most) bit of the resulting string is zero
+then the number is positive; otherwise it is a negative number in
+twos-complement form.  In both cases it is converted to a \crexx{} number
+which may, therefore, be negative.  The result of the conversion is a
+number comprised of the Arabic digits 0-9, with no insignificant leading
+zeros but possibly with a leading "\textbf{-}".
+ 
+The value \emph{n} may not be less than the number of characters in
+\emph{string}, with the single exception that it may be zero, which
+indicates that the number is always positive (as though \emph{n}
+were greater than the the length of \emph{string}).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+1x8    == -8
+2x8    == 8
+2x08   == 8
+0x08   == 8
+0x10   == 16
+0x81   == 129
+2x81   == -127
+3x81   == 129
+4x81   == 129
+04x81  == 129
+16x81  == 129
+4xF081 == -3967
+8xF081 == 61569
+0Xf081 == 61569
+\end{lstlisting}
+ 
+\index{Numeric symbols,binary}
+\index{Binary numeric symbol,}
+A \emph{binary numeric symbol} describes a whole number using the
+same rules, except that the identifying character is \textbf{B}
+or \textbf{b}, and the digits of \emph{string} must be
+either \textbf{0} or \textbf{1}, each representing a single bit.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+1b0    == 0
+1b1    == -1
+0b10   == 2
+0b100  == 4
+4b1000 == -8
+8B1000 == 8
+\end{lstlisting}
+\textbf{Note: }Hexadecimal and binary numeric symbols are a purely syntactic
+device for representing decimal whole numbers.  That is, they are
+recognized only within the source of a \crexx{} program, and are not
+equivalent to a literal string with the same characters within quotes.

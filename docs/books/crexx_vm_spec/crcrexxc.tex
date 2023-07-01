@@ -1,0 +1,1512 @@
+% \chapter{Functions for \crexx{} strings}\label{refbmeth}
+% \index{R\textsc{exx},class/functions of}
+%  This section describes the set of functions defined for the \crexx{}
+% string class, \textbf{R\textsc{exx}}.  These are called \emph{built-in
+% functions}, and include character manipulation, word manipulation,
+% conversion, and arithmetic functions.
+ 
+% Implementations will also provide other functions for the \textbf{R\textsc{exx}}
+% class (for example, to implement the \crexx{} operators or to provide
+% constructors with primitive arguments), but these are not part of the
+% \crexx{} language.
+% \footnote{
+% \emph{Details of the functions provided in the reference implementation are
+% included in  Appendix C (see page \pageref{refappc}) .}
+% }
+% \section{General notes on the built-in functions:}
+% \begin{enumerate}
+% \item All functions work on a \crexx{} string of type \textbf{R\textsc{exx}}; this
+% is referred to by the name \emph{string} in the descriptions of the
+% functions.  For example, if the \textbf{word} function were invoked using
+% the term:
+% \begin{lstlisting}
+% "Three word phrase".word(2)
+% \end{lstlisting}
+% then in the description of \textbf{word} the name
+% \emph{string} refers to the string "\textbf{Three word
+% phrase}", and the name \emph{n} refers to the string
+% "\textbf{2}".
+% \item All function arguments are of type \textbf{R\textsc{exx}} and all functions
+% return a string of type \textbf{R\textsc{exx}}; if a number is returned, it
+% will be formatted as though 0 had been added with no rounding.
+% \item 
+% The first parenthesis in a function call must immediately follow the name
+% of the function, with no space in between.
+% \item The parentheses in a function call can be omitted if no
+% arguments are required and the function call is part of a
+%  \emph{compound term} (see page \pageref{refcomterm}) .
+% \footnote{
+% Unless an implementation-provided option to disallow parenthesis
+% omission is in force.
+% }
+% \item A position in a string is the number of a character in the string,
+% where the first character is at position 1, \emph{etc.}
+% \item Where arguments are optional, commas may only be included between
+% arguments that are present (that is, trailing commas in argument lists
+% are not permitted).
+% \item A \emph{pad} argument, if specified, must be exactly one
+% character long.
+% \item If a function has a sub-option selected by the first character of a
+% string, that character may be in upper or lowercase.
+% \item Conversion between character encodings and decimal or hexadecimal
+% is dependent on the machine representation (encoding) of characters
+% and hence will return appropriately different results for Unicode,
+% ASCII, EBCDIC, and other implementations.
+% \end{enumerate}
+% \subsection{The built-in functions}\label{builtinfunctions}
+\begin{description}
+\item[abbrev(info [,length{]})]\label{refabbrev}
+\index{ABBREV function,}
+\index{Function, built-in,ABBREV}
+\index{Abbreviations,testing with ABBREV function}
+returns 1 if \emph{info} is equal to the leading characters of
+\emph{string} and \emph{info} is not less than
+the minimum length, \emph{length}; 0 is returned
+if either of these conditions is not met.
+\emph{length} must be a non-negative whole number; the default is
+the length of \emph{info}.
+ \textbf{Examples:}
+\begin{lstlisting}
+'Print'.abbrev('Pri')   == 1
+'PRINT'.abbrev('Pri')   == 0
+'PRINT'.abbrev('PRI',4) == 0
+'PRINT'.abbrev('PRY')   == 0
+'PRINT'.abbrev('')      == 1
+'PRINT'.abbrev('',1)    == 0
+\end{lstlisting}
+\textbf{Note: }A null string will always match if a length of 0 (or the default)
+is used.
+This allows a default keyword to be selected automatically if desired.
+ \textbf{Example:}
+\begin{lstlisting}
+say 'Enter option:';  option=ask
+select  /* keyword1 is to be the default */
+  when 'keyword1'.abbrev(option) then ...
+  when 'keyword2'.abbrev(option) then ...
+     ...
+  otherwise ...
+  end
+\end{lstlisting}
+\item[abs()]\label{refabs}
+\index{ABS function,}
+\index{Function, built-in,ABS}
+\index{Mathematical function,ABS}
+\index{Absolute,value, finding using ABS function}
+returns the absolute value of \emph{string}, which must be a
+number.
+ Any sign is removed from the number, and it is then formatted by adding
+zero with a digits setting that is either nine or, if greater, the
+number of digits in the mantissa of the number (excluding leading
+insignificant zeros).
+Scientific notation is used, if necessary.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'12.3'.abs              == 12.3
+' -0.307'.abs           == 0.307
+'123.45E+16'.abs        == 1.2345E+18
+'- 1234567.7654321'.abs == 1234567.7654321
+\end{lstlisting}
+
+\item[b2d([n{]})]\label{refb2x}
+\index{B2D function}
+\index{Packing a string,with B2D}
+\index{Function, built-in,B2D}
+\index{Conversion,binary to decimal}
+\index{Binary,conversion to decimal}
+Binary to decimal.
+Converts \emph{string}, a string of at least one binary
+(\textbf{0} and/or \textbf{1}) digits, to an equivalent string of
+decimal characters (a number), without rounding.
+The returned string will use digits,
+and will not include any blanks.
+ If the number of binary digits in the string is not a multiple of four,
+then up to three \textbf{'0'} digits will be added on the left before
+conversion to make a total that is a multiple of four.
+ If \emph{string} is the null string, 0 is returned. If n is not specified, \emph{string} is taken to be an unsigned number.
+
+\textbf{Examples:}
+\begin{lstlisting}
+'01110'.b2d == 14 
+'10000001'.b2d == 129 
+'111110000001'.b2d == 3969 
+'1111111110000001'.b2d == 65409 
+'1100011011110000'.b2d == 50928 
+\end{lstlisting}
+If n is specified, string is taken as a signed number expressed in n binary characters. If the most significant (left-most) bit is zero then the number is positive; otherwise it is a negative number in twos-complement form. In both cases it is converted to a NetRexx number which may, therefore, be negative. If n is 0, 0 is always returned.
+
+If necessary, string is padded on the left with '0' characters (note, not “signextended”), or truncated on the left, to length n characters; (that is, as though string.right(n, '0') had been executed.)
+
+\textbf{Examples:}
+\begin{lstlisting}
+'10000001'.b2d(8) == -127 
+'10000001'.b2d(16) == 129 
+'1111000010000001'.b2d(16) == -3967 
+'1111000010000001'.b2d(12) == 129 
+'1111000010000001'.b2d(8) == -127 
+'1111000010000001'.b2d(4) == 1 
+'0000000000110001'.b2d(0) == 0
+\end{lstlisting} 
+\item[b2x()]\label{refb2x}
+\index{B2X function}
+\index{Packing a string,with B2X}
+\index{Function, built-in,B2X}
+\index{Conversion,binary to hexadecimal}
+\index{Binary,conversion to hexadecimal}
+Binary to hexadecimal.
+Converts \emph{string}, a string of at least one binary
+(\textbf{0} and/or \textbf{1}) digits, to an equivalent string of
+hexadecimal characters.
+The returned string will use uppercase Roman letters for the values A-F,
+and will not include any blanks.
+ If the number of binary digits in the string is not a multiple of four,
+then up to three \textbf{'0'} digits will be added on the left before
+conversion to make a total that is a multiple of four.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'11000011'.b2x  == 'C3'
+'10111'.b2x     == '17'
+'0101'.b2x      == '5'
+'101'.b2x       == '5'
+'111110000'.b2x == '1F0'
+\end{lstlisting}
+  
+\item[center(length [,pad{]})]\label{refcenter}
+
+\emph{or}
+\item[centre(length [,pad{]})]\label{refcentre}
+\index{CENTRE function,}
+\index{CENTER function,}
+\index{Function, built-in,CENTRE}
+\index{Function, built-in,CENTER}
+\index{Formatting,text centering}
+
+returns a string of length \emph{length} with \emph{string}
+centered in it, with \emph{pad} characters added as necessary to
+make up the required length.
+\emph{length} must be a non-negative whole number.
+The default \emph{pad} character is blank.
+If the string is longer than \emph{length}, it will be truncated at
+both ends to fit.
+If an odd number of characters are truncated or added, the right hand
+end loses or gains one more character than the left hand end.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'ABC'.centre(7)          == '  ABC  '
+'ABC'.center(8,'-')      == '--ABC---'
+'The blue sky'.centre(8) == 'e blue s'
+'The blue sky'.center(7) == 'e blue '
+\end{lstlisting}
+\textbf{Note: }This function may be called either \textbf{centre} or \textbf{center},
+which avoids difficulties due to the difference between the British and
+American spellings.
+\item[changestr(needle, new)]\label{refchastr}
+\index{CHANGESTR function,}
+\index{Function, built-in,CHANGESTR}
+\index{Replacing strings,using CHANGESTR}
+\index{Changing strings,using CHANGESTR}
+
+returns a copy of \emph{string} in which each occurrence of the
+\emph{needle} string is replaced by the \emph{new} string.
+Each unique (non-overlapping) occurrence of the \emph{needle} string
+is changed, searching from left to right and starting from the first
+(leftmost) position in \emph{string}.
+Only the original \emph{string} is searched for the
+\emph{needle}, and each character in \emph{string} can only be
+included in one match of the \emph{needle}.
+ 
+If the \emph{needle} is the null string, the result is a copy of
+\emph{string}, unchanged.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'elephant'.changestr('e','X')    == 'XlXphant'
+'elephant'.changestr('ph','X')   == 'eleXant'
+'elephant'.changestr('ph','hph') == 'elehphant'
+'elephant'.changestr('e','')     == 'lphant'
+'elephant'.changestr('','!!')    == 'elephant'
+\end{lstlisting}
+ The  \textbf{countstr} function (see page \pageref{refcoustr})  can be used to
+count the number of changes that could be made to a string in this
+fashion.
+\item[compare(target [,pad{]})]\label{refcompar}
+\index{COMPARE function,}
+\index{Function, built-in,COMPARE}
+\index{Finding a mismatch using COMPARE,}
+\index{Comparison,of strings/using COMPARE}
+
+returns 0 if \emph{string} and \emph{target}
+are the same.
+If they are not, the returned number is positive and is the position of
+the first character that is not the same in both strings.
+If one string is shorter than the other, one or more \emph{pad}
+characters are added on the right to make it the same length for the
+comparison.
+The default \emph{pad} character is a blank.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc'.compare('abc')      == 0
+'abc'.compare('ak')       == 2
+'ab '.compare('ab')       == 0
+'ab '.compare('ab',' ')   == 0
+'ab '.compare('ab','x')   == 3
+'ab-- '.compare('ab','-') == 5
+\end{lstlisting}
+\item[copies(n)]\label{refcopies}
+\index{COPIES function,}
+\index{Function, built-in,COPIES}
+\index{Copying a string using COPIES,}
+\index{Repeating a string with COPIES,}
+returns \emph{n} directly concatenated copies of
+\emph{string}.
+\emph{n} must be positive or 0; if 0, the null string is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc'.copies(3) == 'abcabcabc'
+'abc'.copies(0) == ''
+''.copies(2)    == ''
+\end{lstlisting}
+\item[copyindexed(sub)]\label{refcopyind}
+\index{COPYINDEXED function,}
+\index{Function, built-in,COPYINDEXED}
+\index{Indexed strings,merging}
+\index{Indexed strings,copying}
+\index{Copying indexed variables,}
+\index{Merging indexed variables,}
+copies the collection of indexed  sub-values (see page \pageref{refinstr}) 
+of \emph{sub} into the collection associated with
+\emph{string}, and returns the modified \emph{string}.  The
+resulting collection is the union of the two collections (that is,
+it contains the indexes and their values from both collections).
+If a given index exists in both collections then the sub-value of
+\emph{string} for that index is replaced by the sub-value from
+\emph{sub}.
+ 
+The non-indexed value of \emph{string} is not affected.
+ 
+\textbf{Example:}
+ Following the instructions:
+\begin{lstlisting}
+foo='def'
+foo['a']=1
+foo['b']=2
+bar='ghi'
+bar['b']='B'
+bar['c']='C'
+merged=foo.copyIndexed(bar)
+\end{lstlisting}
+then:
+\begin{lstlisting}
+merged['a'] == '1'
+merged['b'] == 'B'
+merged['c'] == 'C'
+merged['d'] == 'def'
+\end{lstlisting}
+
+
+\index{COUNTSTR function,}
+\index{Function, built-in,COUNTSTR}
+\index{Counting,strings, using COUNTSTR}
+\item[countstr(needle)]\label{refcoustr}
+returns the count of non-overlapping occurrences of the
+\emph{needle} string in \emph{string}, searching from left to
+right and starting from the first (leftmost) position in
+\emph{string}.
+ 
+If the \emph{needle} is the null string, \textbf{0} is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'elephant'.countstr('e')  == '2'
+'elephant'.countstr('ph') == '1'
+'elephant'.countstr('')   == '0'
+\end{lstlisting}
+ The  \textbf{changestr} function (see page \pageref{refchastr})  can be used to
+change occurrences of \emph{needle} to some other string.
+\item[c2d()]\label{refc2d}
+\index{C2D function,}
+\index{Function, built-in,C2D}
+\index{Conversion,coded character to decimal}
+\index{Conversion,character to decimal}
+\index{Character,conversion to decimal}
+\index{Coded character,conversion to decimal}
+
+Coded character to decimal.
+Converts the encoding of the character in \emph{string} (which must be
+exactly one character) to its decimal representation.
+The returned string will be a non-negative number that represents
+the encoding of the character and will not include any sign, blanks,
+insignificant leading zeros, or decimal part.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'M'.c2d  == '77'  -- ASCII or Unicode
+'7'.c2d  == '247' -- EBCDIC
+'\textbackslash{}r'.c2d == '13'  -- ASCII or Unicode
+'\textbackslash{}0'.c2d == '0'
+\end{lstlisting}
+ The  \textbf{c2x} function (see page \pageref{refc2x})  can be used to
+convert the encoding of a character to a hexadecimal representation.
+\item[c2x()]\label{refc2x}
+\index{C2X function,}
+\index{Unpacking a string,with C2X}
+\index{Function, built-in,C2X}
+\index{Conversion,coded character to hexadecimal}
+\index{Conversion,character to hexadecimal}
+\index{Character,conversion to hexadecimal}
+\index{Coded character,conversion to hexadecimal}
+
+Coded character to hexadecimal.
+Converts the encoding of the character in \emph{string} (which must be
+exactly one character) to its hexadecimal representation (unpacks).
+The returned string will use uppercase Roman letters for the values A-F,
+and will not include any blanks.
+Insignificant leading zeros are removed.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'M'.c2x  == '4D' -- ASCII or Unicode
+'7'.c2x  == 'F7' -- EBCDIC
+'\textbackslash{}r'.c2x == 'D'  -- ASCII or Unicode
+'\textbackslash{}0'.c2x == '0'
+\end{lstlisting}
+ The  \textbf{c2d} function (see page \pageref{refc2d})  can be used to
+convert the encoding of a character to a decimal number.
+\item[datatype(option)]\label{refdataty}
+\index{DATATYPE function,}
+\index{Function, built-in,DATATYPE}
+\index{Mathematical function,DATATYPE options}
+\index{Types,checking with DATATYPE}
+\index{Numbers,checking with DATATYPE}
+\index{Whole numbers,checking with DATATYPE}
+\index{Alphanumerics,checking with DATATYPE}
+\index{Alphabetics,checking with DATATYPE}
+\index{Letters,checking with DATATYPE}
+\index{Bits,checking with DATATYPE}
+\index{Binary,checking with DATATYPE}
+\index{Digits,checking with DATATYPE}
+\index{Lowercase,checking with DATATYPE}
+\index{Mixed case,checking with DATATYPE}
+\index{Whole numbers,checking with DATATYPE}
+\index{Numbers,checking with DATATYPE}
+\index{Symbol characters,checking with DATATYPE}
+\index{Uppercase,checking with DATATYPE}
+\index{Hexadecimal,checking with DATATYPE}
+\index{,}
+\index{,}
+\index{,}
+
+returns 1 if \emph{string} matches the description requested with
+the \emph{option}, or 0 otherwise.
+If \emph{string} is the null string, 0 is always returned.
+ 
+Only the first character of \emph{option} is significant, and it may
+be in either uppercase or lowercase.
+The following \emph{option} characters are recognized:
+\begin{description}
+\item[A]\label{refdta}
+(Alphanumeric); returns 1 if \emph{string} only contains
+characters from the ranges "a-z", "A-Z", and "0-9".
+\item[B]\label{refdtb}
+(Binary); returns 1 if \emph{string} only contains the
+characters "0" and/or "1".
+\item[D]\label{refdtd}
+(Digits); returns 1 if \emph{string} only contains
+characters from the range "0-9".
+\item[L]\label{refdtl}
+(Lowercase); returns 1 if \emph{string} only contains
+characters from the range "a-z".
+\item[M]\label{refdtm}
+(Mixed case); returns 1 if \emph{string} only contains
+characters from the ranges "a-z" and "A-Z".
+\item[N]\label{refdtn}
+(Number); returns 1 if \emph{string} is a syntactically valid
+\crexx{} number that could be added to \textbf{'0'} without error,
+\item[S]\label{refdts}
+(Symbol); returns 1 if \emph{string} only contains characters
+that are valid in non-numeric symbols (the alphanumeric characters and
+underscore), and does not start with a digit.  Note that both uppercase
+and lowercase letters are permitted.
+\item[U]\label{refdtu}
+(Uppercase); returns 1 if \emph{string} only contains
+characters from the range "A-Z".
+\item[W]\label{refdtw}
+(Whole Number); returns 1 if \emph{string} is a syntactically valid
+\crexx{} number that can be added to \textbf{'0'} without error, and
+whose decimal part after that addition, with no rounding, is zero.
+\item[X]\label{refdtx}
+(heXadecimal); returns 1 if \emph{string} only contains
+characters from the ranges "a-f", "A-F", and "0-9".
+\end{description}
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'101'.datatype('B')    == 1
+'12.3'.datatype('D')   == 0
+'12.3'.datatype('N')   == 1
+'12.3'.datatype('W')   == 0
+'LaArca'.datatype('M') == 1
+''.datatype('M')       == 0
+'Llanes'.datatype('L') == 0
+'3 d'.datatype('s')    == 0
+'BCd3'.datatype('X')   == 1
+'BCgd3'.datatype('X')  == 0
+\end{lstlisting}
+\textbf{Note: }The \textbf{datatype} function tests the meaning of the characters
+in a string, independent of the encoding of those characters.  Extra
+letters and Extra digits cause \textbf{datatype} to return 0 except
+for the number tests ("\textbf{N}" and "\textbf{W}"),
+which treat extra digits whose value is in the range 0-9 as though they
+were the corresponding Arabic numeral.
+\item[date()] see page \pageref{refrexxdate}
+\item[delstr(n [,length{]})]\label{refdelstr}
+\index{DELSTR function,}
+\index{Function, built-in,DELSTR}
+\index{Deleting,part of a string}
+
+returns a copy of \emph{string} with the sub-string of
+\emph{string} that begins at the \emph{n}\emph{th} character, and is
+of length \emph{length} characters, deleted.
+If \emph{length} is not specified, or is greater than the number of
+characters from \emph{n} to the end of the string, the rest of the
+string is deleted (including the \emph{n}\emph{th} character).
+\emph{length} must be a non-negative whole number, and \emph{n}
+must be a positive whole number.  If \emph{n} is greater than the
+length of \emph{string}, the string is returned unchanged.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abcd'.delstr(3)    == 'ab'
+'abcde'.delstr(3,2) == 'abe'
+'abcde'.delstr(6)   == 'abcde'
+\end{lstlisting}
+\item[delword(n [,length])]\label{refdelword}
+\index{DELWORD function,}
+\index{Function, built-in,DELWORD}
+\index{Deleting,words from a string}
+\index{Words,deleting from a string}
+
+returns a copy of \emph{string} with the sub-string of
+\emph{string} that starts at the \emph{n}\emph{th} word, and is of
+length \emph{length} blank-delimited words, deleted.
+If \emph{length} is not specified, or is greater than number of
+remaining words in the string, it defaults to be the remaining words
+in the string (including the \emph{n}\emph{th} word).
+\emph{length} must be a non-negative whole number, and \emph{n}
+must be a positive whole number.  If \emph{n} is greater than the
+number of words in \emph{string}, the string is returned unchanged.
+The string deleted includes any blanks following the final word
+involved, but none of the blanks preceding the first word involved.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the  time'.delword(2,2) == 'Now time'
+'Now is the time '.delword(3)   == 'Now is '
+'Now  time'.delword(5)          == 'Now  time'
+\end{lstlisting}
+
+\index{D2B function,}
+\index{Function, built-in,D2B}
+\index{Conversion,decimal to binary}
+\index{Decimal,conversion to binary}
+\index{Binary,from decimal}
+\index{Binary,from decimal}
+\item[d2b([n{]})]\label{refd2b}
+Decimal to binary.
+Returns a string of binary characters of length as needed or of length
+n, which is the binary representation of the decimal number. The
+returned string will use 0 and 1 characters for binary values. string
+must be a whole number, and must be non-negative unless n is
+specified, or an error will result. If n is not specified, the length
+of the result returned is such that there are no leading 0 characters,
+unless string was equal to 0 (in which case '0' is returned).
+
+If n is specified it is the length of the final result in characters;
+that is, after conversion the input string will be sign-extended to
+the required length (negative numbers are converted assuming
+twos-complement form). If the number is too big to fit into n
+characters, it will be truncated on the left. n must be a nonnegative
+whole number.
+
+ \textbf{Examples:}
+\begin{lstlisting}
+'0'.d2b == 0 
+'9'.d2b == 1001 
+'19'.d2b == 10011 
+'129'.d2b == 10000001 
+'129'.d2b(1) == 1 
+'129'.d2b(8) == 10000001 
+'127'.d2b(12) == 000001111111 
+'129'.d2b(16) == 0000000010000001 
+'257'.d2b(8) == 00000001 
+'-127'.d2b(8) == 10000001 
+'-127'.d2b(16) == 1111111110000001 
+'12'.d2b(0) == 
+\end{lstlisting}
+
+\index{D2C function,}
+\index{Function, built-in,D2C}
+\index{Conversion,decimal to character}
+\index{Decimal,conversion to character}
+\index{Coded character,from decimal}
+\index{Character,from decimal}
+\index{Character,from a number}
+\index{Numbers,conversion to character}
+\item[d2c()]\label{refd2c}
+Decimal to coded character.
+Converts the \emph{string} (a \crexx{} \emph{number}) to a
+single character, where the number is used as the encoding of the
+character.
+ 
+\emph{string} must be a non-negative whole number.
+An error results if the encoding described does not produce a valid
+character for the implementation (for example, if it has more
+significant bits than the implementation's encoding for characters).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'77'.d2c  == 'M' -- ASCII or Unicode
+'+77'.d2c == 'M' -- ASCII or Unicode
+'247'.d2c == '7' -- EBCDIC
+'0'.d2c   == '\textbackslash 0'
+\end{lstlisting}
+\item[d2x([n])]\label{refd2x}
+\index{D2X function,}
+\index{Function, built-in,D2X}
+\index{Conversion,decimal to hexadecimal}
+\index{Decimal,conversion to hexadecimal}
+\index{Numbers,conversion to hexadecimal}
+
+Decimal to hexadecimal.
+Returns a string of hexadecimal characters of length as needed or of
+length \emph{n}, which is the hexadecimal (unpacked) representation
+of the decimal number.  The returned string will use uppercase
+Roman letters for the values A-F, and will not include any blanks.
+ \emph{string} must be a whole number, and must be non-negative
+unless \emph{n} is specified, or an error will result.
+If \emph{n} is not specified, the length of the result returned is
+such that there are no leading 0 characters, unless \emph{string}
+was equal to 0 (in which case \textbf{'0'} is returned).
+ 
+If \emph{n} is specified it is the length of the final result in
+characters; that is, after conversion the input string will be
+sign-extended to the required length (negative numbers are converted
+assuming twos-complement form).
+If the number is too big to fit into \emph{n} characters, it will be
+truncated on the left.
+\emph{n} must be a non-negative whole number.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'9'.d2x       == '9'
+'129'.d2x     == '81'
+'129'.d2x(1)  == '1'
+'129'.d2x(2)  == '81'
+'127'.d2x(3)  == '07F'
+'129'.d2x(4)  == '0081'
+'257'.d2x(2)  == '01'
+'-127'.d2x(2) == '81'
+'-127'.d2x(4) == 'FF81'
+'12'.d2x(0)   == ''
+\end{lstlisting}
+
+\item[exists(index)]\label{refexists}
+\index{EXISTS function,}
+\index{Function, built-in,EXISTS}
+\index{Index strings,testing for}
+\index{Indexed strings,testing for}
+\index{Testing for indexed variables,}
+
+returns 1 if \emph{index} names a  sub-value (see page \pageref{refinstr})  of
+\emph{string} that has explicitly been assigned a value, or 0
+otherwise.
+ 
+\textbf{Example:}
+ Following the instructions:
+\begin{lstlisting}
+vowel=0
+vowel['a']=1
+vowel['b']=1
+vowel['b']=null -- drops previous assignment
+\end{lstlisting}
+then:
+\begin{lstlisting}
+vowel.exists('a') == '1'
+vowel.exists('b') == '0'
+vowel.exists('c') == '0'
+\end{lstlisting}
+
+\item[format([before [,after]])]\label{refformat}
+\index{FORMAT,function}
+\index{Function, built-in,FORMAT}
+\index{Mathematical function,FORMAT}
+\index{Formatting,numbers for display}
+\index{Numbers,formatting for display}
+\index{Numbers,rounding}
+\index{Conversion,formatting numbers}
+
+formats (lays out) \emph{string}, which must be a number.
+ 
+The number, \emph{string}, is first formatted by adding zero with a
+digits setting that is either nine or, if greater, the number of digits
+in the mantissa of the number (excluding leading insignificant zeros).
+If no arguments are given, the result is precisely that of this
+operation.
+ 
+The arguments \emph{before} and \emph{after} may be specified to
+control the number of characters to be used for the integer part and
+decimal part of the result respectively.  If either of these is omitted
+(with no arguments specified to its right), or is \textbf{null}, the
+number of characters used will be as many as are needed for that part.
+ 
+\emph{before} must be a positive number; if it is larger than is
+needed to contain the integer part, that part is padded on the left with
+blanks to the requested length.
+If \emph{before} is not large enough to contain the integer part
+of the number (including the sign, for negative numbers), an error
+results.
+ 
+\emph{after} must be a non-negative number; if it is not the same
+size as the decimal part of the number, the number will be rounded (or
+extended with zeros) to fit.  Specifying 0 for \emph{after} will
+cause the number to be rounded to an integer (that is, it will have no
+decimal part or decimal point).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+' - 12.73'.format         == '-12.73'
+'0.000'.format            == '0'
+'3'.format(4)             == '   3'
+'1.73'.format(4,0)        == '   2'
+'1.73'.format(4,3)        == '   1.730'
+'-.76'.format(4,1)        == '  -0.8'
+'3.03'.format(4)          == '   3.03'
+' - 12.73'.format(null,4) == '-12.7300'
+\end{lstlisting}
+ 
+Further arguments may be passed to the \keyword{format} function to control
+the use of exponential notation.
+The full syntax of the function is then:
+ 
+\keyword{format([before[,after[,explaces[,exdigits[,exform]]]]])}
+ The first two arguments are as already described.  The other three
+(\emph{explaces}, \emph{exdigits}, and \emph{exform})
+control the exponent part of the result.  The default for any of the
+arguments may be selected by omitting them (if there are no arguments to
+be specified to their right) or by using the value \textbf{null}.
+ 
+\emph{explaces} must be a positive number; it sets the number of
+places (digits after the sign of the exponent) to be used for any
+exponent part, the default being to use as many as are needed.
+If \emph{explaces} is specified and is not large enough to contain
+the exponent, an error results.
+If \emph{explaces} is specified and the exponent will be 0,
+then \emph{explaces}+2 blanks are supplied for the exponent
+part of the result.
+ 
+\emph{exdigits} sets the trigger point for use of exponential
+notation.
+If, after the first formatting, the number of places needed before the
+decimal point exceeds \emph{exdigits}, or if the absolute value of
+the result is less than \textbf{0.000001}, then exponential form will
+be used, provided that \emph{exdigits} was specified.
+When \emph{exdigits} is not specified, exponential notation
+will never be used.
+The current setting of \keyword{numeric digits} may be used for
+\emph{exdigits} by specifying the special word
+ \textbf{digits} (see page \pageref{refswdigit}) .
+If 0 is specified for \emph{exdigits}, exponential
+notation is always used unless the exponent would be 0.
+ 
+\emph{exform} sets the form for exponential notation (if needed).
+\emph{exform} may be either \textbf{'Scientific'} (the default)
+or \textbf{'Engineering'}.  Only the first character of
+\emph{exform} is significant and it may be in uppercase or in
+lowercase.
+The current setting of \keyword{numeric form} may be used by specifying
+the special word  \textbf{form} (see page \pageref{refswform}) .
+If engineering form is in effect, up to three digits (plus sign) may be
+needed for the integer part of the result (\emph{before}).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'12345.73'.format(null,null,2,2) == '1.234573E+04'
+'12345.73'.format(null,3,null,0) == '1.235E+4'
+'1.234573'.format(null,3,null,0) == '1.235'
+'123.45'.format(null,3,2,0)      == '1.235E+02'
+'1234.5'.format(null,3,2,0,'e')  == '1.235E+03'
+'1.2345'.format(null,3,2,0)      == '1.235    '
+'12345.73'.format(null,null,3,6) == '12345.73     '
+'12345e+5'.format(null,3)        == '1234500000.000'
+\end{lstlisting}
+ \textbf{Implementation minimum:} If exponents are supported in an
+implementation, then they must be supported for exponents whose
+absolute value is at least as large as the largest number that can be
+expressed as an exact integer in default precision, \emph{i.e.}, 999999999.
+Therefore, values for \emph{explaces} of up to 9 should also be
+supported.
+\item[insert(new [,n [,length [,pad{]]]})]\label{refinsert}
+\index{INSERT function,}
+\index{Function, built-in,INSERT}
+\index{Inserting a string into another,}
+
+inserts the string \emph{new}, padded or truncated to length
+\emph{length}, into a copy of the target \emph{string} after the
+\emph{n}\emph{th} character; the string with any inserts is returned.
+\emph{length} and \emph{n} must be a non-negative whole numbers.
+If \emph{n} is greater than the length of the target string,
+padding is added before the \emph{new} string also.
+The default value for \emph{n} is 0, which means insert before the
+beginning of the string.  The default value for \emph{length} is
+the length of \emph{new}.  The default \emph{pad} character is
+a blank.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc'.insert('123')         == '123abc'
+'abcdef'.insert(' ',3)      == 'abc def'
+'abc'.insert('123',5,6)     == 'abc  123   '
+'abc'.insert('123',5,6,'+') == 'abc++123+++'
+'abc'.insert('123',0,5,'-') == '123--abc'
+\end{lstlisting}
+
+\index{LASTPOS function,}
+\index{Function, built-in,LASTPOS}
+\index{Finding a string in another string,}
+\index{Locating,a string in another string}
+\item[lastpos(needle [,start{]})]\label{reflastpos}
+returns the position of the last occurrence of the string
+\emph{needle} in \emph{string} (the "haystack"), searching
+from right to left.
+If the string \emph{needle} is not found, or is the null string,
+0 is returned.
+By default the search starts at the last character of
+\emph{string} and scans backwards.
+This may be overridden by specifying \emph{start}, the point at
+which to start the backwards scan.
+\emph{start} must be a positive whole number, and defaults to the
+value \emph{string}\textbf{.length} if larger than that
+value or if not specified (with a minimum default value of one).
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc def ghi'.lastpos(' ')   == 8
+'abc def ghi'.lastpos(' ',7) == 4
+'abcdefghi'.lastpos(' ')     == 0
+'abcdefghi'.lastpos('cd')    == 3
+''.lastpos('?')              == 0
+\end{lstlisting}
+
+\index{LEFT function,}
+\index{Function, built-in,LEFT}
+\index{Formatting,text left justification}
+\item[left(length [,pad{]})]\label{refleft}
+returns a string of length \emph{length} containing the
+left-most \emph{length} characters of \emph{string}.
+The string is padded with \emph{pad} characters (or truncated) on
+the right as needed.
+The default \emph{pad} character is a blank.
+\emph{length} must be a non-negative whole number.
+This function is exactly equivalent to
+\emph{string}\textbf{.substr(1}, \emph{length}
+[, \emph{pad}]\textbf{)}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc d'.left(8)     == 'abc d   '
+'abc d'.left(8,'.') == 'abc d...'
+'abc defg'.left(6)  == 'abc de'
+\end{lstlisting}
+
+\index{LENGTH,function}
+\index{Function, built-in,LENGTH}
+\index{Strings,length of}
+\index{Data,length of}
+\item[length()]\label{reflength}
+returns the number of characters in \emph{string}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abcdefgh'.length == 8
+''.length         == 0
+\end{lstlisting}
+\item[lower([n [,length{]}])]\label{reflower}
+\index{LOWER function,}
+\index{Function, built-in,LOWER}
+\index{Strings,lowercasing}
+\index{Lowercasing strings,}
+
+returns a copy of \emph{string} with any uppercase characters in
+the sub-string of \emph{string} that begins at the \emph{n}\emph{th}
+character, and is of length \emph{length} characters, replaced by
+their lowercase equivalent.
+ 
+\emph{n} must be a positive whole number, and defaults to 1 (the
+first character in \emph{string}).  If \emph{n} is greater than
+the length of \emph{string}, the string is returned unchanged.
+ 
+\emph{length} must be a non-negative whole number.
+If \emph{length} is not specified, or is greater than the number of
+characters from \emph{n} to the end of the string, the rest of the
+string (including the \emph{n}\emph{th} character) is assumed.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'SumA'.lower      == 'suma'
+'SumA'.lower(2)   == 'Suma'
+'SuMB'.lower(1,1) == 'suMB'
+'SUMB'.lower(2,2) == 'SumB'
+''.lower          == ''
+\end{lstlisting}
+
+\item[max(number)]\label{refmax}
+\index{MAX function,}
+\index{Function, built-in,MAX}
+\index{Mathematical function,MAX}
+
+returns the larger of \emph{string} and \emph{number}, which
+must both be numbers.  If they compare equal (that is, when subtracted,
+the result is 0), then \emph{string} is selected for the result.
+ 
+The comparison is effected using a numerical comparison with a digits
+setting that is either nine or, if greater, the larger of the number of
+digits in the mantissas of the two numbers (excluding leading
+insignificant zeros).
+ 
+The selected result is formatted by adding zero to the selected number
+with a digits setting that is either nine or, if greater, the number of
+digits in the mantissa of the number (excluding leading insignificant
+zeros).
+Scientific notation is used, if necessary.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+0.max(1)          ==1
+'-1'.max(1)       ==1
+'+1'.max(-1)      ==1
+'1.0'.max(1.00)   =='1.0'
+'1.00'.max(1.0)   =='1.00'
+'123456700000'.max(1234567E+5)   == '123456700000'
+'1234567E+5'.max('123456700000') == '1.234567E+11'
+\end{lstlisting}
+
+\item[min(number)]\label{refmin}
+\index{MIN function,}
+\index{Function, built-in,MIN}
+\index{Mathematical function,MIN}
+
+returns the smaller of \emph{string} and \emph{number}, which
+must both be numbers.  If they compare equal (that is, when subtracted,
+the result is 0), then \emph{string} is selected for the result.
+ 
+The comparison is effected using a numerical comparison with a digits
+setting that is either nine or, if greater, the larger of the number of
+digits in the mantissas of the two numbers (excluding leading
+insignificant zeros).
+ 
+The selected result is formatted by adding zero to the selected number
+with a digits setting that is either nine or, if greater, the number of
+digits in the mantissa of the number (excluding leading insignificant
+zeros).
+Scientific notation is used, if necessary.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+0.min(1)          ==0
+'-1'.min(1)       =='-1'
+'+1'.min(-1)      =='-1'
+'1.0'.min(1.00)   =='1.0'
+'1.00'.min(1.0)   =='1.00'
+'123456700000'.min(1234567E+5)   == '123456700000'
+'1234567E+5'.min('123456700000') == '1.234567E+11'
+\end{lstlisting}
+
+\index{OVERLAY function,}
+\index{Function, built-in,OVERLAY}
+\index{Overlaying a string onto another,}
+\item[overlay(new [,n [,length [,pad{]]]})]\label{refoverlay}
+overlays the string \emph{new}, padded or truncated to length
+\emph{length}, onto a copy of the target \emph{string} starting
+at the \emph{n}\emph{th} character; the string with any overlays is
+returned.  Overlays may extend beyond the end of the original
+\emph{string}.
+If \emph{length} is specified it must be a non-negative whole
+number.
+If \emph{n} is greater than the length of
+the target string, padding is added before the \emph{new} string
+also.
+The default \emph{pad} character is a blank, and the default value
+for \emph{n} is 1.
+\emph{n} must be greater than 0.
+The default value for \emph{length} is the length of \emph{new}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abcdef'.overlay(' ',3)      == 'ab def'
+'abcdef'.overlay('.',3,2)    == 'ab. ef'
+'abcd'.overlay('qq')         == 'qqcd'
+'abcd'.overlay('qq',4)       == 'abcqq'
+'abc'.overlay('123',5,6,'+') == 'abc+123+++'
+\end{lstlisting}
+
+\index{POS position function,}
+\index{Function, built-in,POS}
+\index{Finding a string in another string,}
+\index{Locating,a string in another string}
+\index{Searching a string for a word or phrase,}
+\item[pos(needle [,start{]})]\label{refpos}
+returns the position of the string \emph{needle}, in
+\emph{string} (the "haystack"), searching from left to right.
+If the string \emph{needle} is not found, or is the null string,
+0 is returned.
+By default the search starts at the first character of
+\emph{string} (that is, \emph{start} has the value 1).
+This may be overridden by specifying \emph{start} (which must be a
+positive whole number), the point at which to start the search; if
+\emph{start} is greater than the length of \emph{string} then 0
+is returned.
+ \textbf{Examples:}
+\begin{lstlisting}
+'Saturday'.pos('day')    == 6
+'abc def ghi'.pos('x')   == 0
+'abc def ghi'.pos(' ')   == 4
+'abc def ghi'.pos(' ',5) == 8
+\end{lstlisting}
+
+\index{REVERSE function,}
+\index{Function, built-in,REVERSE}
+\item[reverse()]\label{refreverse}
+returns a copy of \emph{string}, swapped end for end.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'ABc.'.reverse        == '.cBA'
+'XYZ '.reverse        == ' ZYX'
+'Tranquility'.reverse == 'ytiliuqnarT'
+\end{lstlisting}
+
+\item[right(length [,pad{]})]\label{refright}
+\index{RIGHT function,}
+\index{Function, built-in,RIGHT}
+\index{Formatting,text right justification}
+\index{Leading zeros,adding with the RIGHT function}
+\index{Zeros,adding on the left}
+\index{Zeros,padding}
+
+returns a string of length \emph{length} containing the
+right-most \emph{length} characters of \emph{string} -
+that is, padded with \emph{pad} characters (or truncated) on the
+left as needed.  The default \emph{pad} character is a blank.
+\emph{length} must be a non-negative whole number.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc  d'.right(8)  == '  abc  d'
+'abc def'.right(5) == 'c def'
+'12'.right(5,'0')  == '00012'
+\end{lstlisting}
+
+\index{SEQUENCE function,}
+\index{Function, built-in,SEQUENCE}
+\index{Collating sequence, using SEQUENCE,}
+\item[sequence(final)]\label{refsequen}
+ returns a string of all characters, in ascending order of encoding,
+between and including the character in \emph{string} and the
+character in \emph{final}.
+\emph{string} and \emph{final} must be single characters;
+if \emph{string} is greater than \emph{final}, an error is
+reported.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'a'.sequence('f')           == 'abcdef'
+'\\0'.sequence('\\x03')       == '\\x00\\x01\\x02\\x03'
+'\\ufffe'.sequence('\\uffff') == '\\ufffe\\uffff'
+\end{lstlisting}
+
+\index{SIGN function,}
+\index{Function, built-in,SIGN}
+\index{Mathematical function,SIGN}
+\item[sign()]\label{refsign}
+returns a number that indicates the sign of \emph{string}, which
+must be a number.
+\emph{string} is first formatted, just as though the operation
+"\textbf{string+0}" had been carried out with sufficient digits
+to avoid rounding.
+If the number then starts with \textbf{'-'} then \textbf{'-1'} is
+returned; if it is \textbf{'0'} then \textbf{'0'} is returned; and
+otherwise \textbf{'1'} is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'12.3'.sign    ==  1
+'0.0'.sign     ==  0
+' -0.307'.sign == -1
+\end{lstlisting}
+
+\index{SOUNDEX function,}
+\index{Function, built-in,SOUNDEX}
+\index{Normalizing a string by its sound,SOUNDEX}
+\item[soundex()]\label{refsoundex}
+ returns the normalized soundex value of the string. This implementation
+is for the English language.  
+
+\textbf{Examples:}
+\begin{lstlisting}
+'EULER'.soundex()  == 'E460'
+\end{lstlisting}
+
+\index{SPACE function,}
+\index{Function, built-in,SPACE}
+\index{Formatting,text spacing}
+\index{Blank,removal with SPACE function}
+\item[space([n [,pad{]]})]\label{refspace}
+returns a copy of \emph{string} with the blank-delimited words in
+\emph{string} formatted with \emph{n} (and only \emph{n})
+\emph{pad} characters between each word.
+\emph{n} must be a non-negative whole number.
+If \emph{n} is 0, all blanks are removed.
+Leading and trailing blanks are always removed.
+The default for \emph{n} is 1, and the default \emph{pad}
+character is a blank.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc  def  '.space        == 'abc def'
+'  abc def '.space(3)     == 'abc   def'
+'abc  def  '.space(1)     == 'abc def'
+'abc  def  '.space(0)     == 'abcdef'
+'abc  def  '.space(2,'+') == 'abc++def'
+\end{lstlisting}
+
+\index{STRIP function,}
+\index{Function, built-in,STRIP}
+\index{Leading blanks,removal with STRIP function}
+\index{Blank,removal with STRIP function}
+\index{Zeros,removal with STRIP function}
+\index{Leading zeros,removal with STRIP function}
+\index{Character,removal with STRIP function}
+\index{Trailing blanks,removal with STRIP function}
+\item[strip([option [,char{]]}])]\label{refstrip}
+returns a copy of \emph{string} with Leading, Trailing, or Both
+leading and trailing characters removed, when the first character of
+\emph{option} is L, T, or B respectively (these may be given in
+either uppercase or lowercase).  The default is B.
+The second argument, \emph{char}, specifies the character to be
+removed, with the default being a blank.
+If given, \emph{char} must be exactly one character long.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'  ab c  '.strip        == 'ab c'
+'  ab c  '.strip('L')   == 'ab c  '
+'  ab c  '.strip('t')   == '  ab c'
+'12.70000'.strip('t',0) == '12.7'
+'0012.700'.strip('b',0) == '12.7'
+\end{lstlisting}
+
+\index{SUBSTR function,}
+\index{Function, built-in,SUBSTR}
+\index{Extracting,a sub-string}
+\index{Sub-string, extracting,}
+\item[substr(n [,length [,pad{]]})]\label{refsubstr}
+returns the sub-string of \emph{string} that begins at the
+\emph{n}\emph{th} character, and is of length \emph{length}, padded
+with \emph{pad} characters if necessary.
+\emph{n} must be a positive whole number, and \emph{length} must
+be a non-negative whole number.
+If \emph{n} is greater than \emph{string}\textbf{.length},
+then only pad characters can be returned.
+ If \emph{length} is omitted it defaults to be the rest of the
+string (or 0 if \emph{n} is greater than the length of the string).
+The default \emph{pad} character is a blank.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abc'.substr(2)       == 'bc'
+'abc'.substr(2,4)     == 'bc  '
+'abc'.substr(5,4)     == '    '
+'abc'.substr(2,6,'.') == 'bc....'
+'abc'.substr(5,6,'.') == '......'
+\end{lstlisting}
+\textbf{Note: }In some situations the positional (numeric) patterns of parsing
+templates are more convenient for selecting sub-strings, especially if
+more than one sub-string is to be extracted from a string.
+
+\index{SUBWORD function,}
+\index{Function, built-in,SUBWORD}
+\index{Extracting,words from a string}
+\index{Words,extracting from a string}
+\item[subword(n [,length{]})]\label{refsubword}
+returns the sub-string of \emph{string} that starts at the
+\emph{n}\emph{th} word, and is up to \emph{length} blank-delimited
+words long.
+\emph{n} must be a positive whole number; if greater than the number
+of words in the string then the null string is returned.
+\emph{length} must be a non-negative whole number.
+If \emph{length} is omitted it defaults to be the remaining words
+in the string.
+The returned string will never have leading or trailing blanks, but
+will include all blanks between the selected words.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the  time'.subword(2,2) == 'is the'
+'Now is the  time'.subword(3)   == 'the  time'
+'Now is the  time'.subword(5)   == ''
+\end{lstlisting}
+
+\item[time()] see page \pageref{refrexxtime}
+\index{TRANSLATE function,}
+\index{Function, built-in,TRANSLATE}
+\index{Translation,with TRANSLATE function}
+\index{Re-ordering characters,with TRANSLATE function}
+\index{Moving characters, with TRANSLATE function,}
+\index{Strings,moving with TRANSLATE function}
+\index{,}
+\index{Replacing strings,using TRANSLATE}
+\index{Changing strings,using TRANSLATE}
+\item[translate(tableo, tablei [,pad{]})]\label{reftrans}
+returns a copy of \emph{string} with each character in
+\emph{string} either unchanged or translated to another character.
+ 
+The \textbf{translate} function acts by searching the input translate
+table, \emph{tablei}, for each character in \emph{string}.
+If the character is found in \emph{tablei} (the first, leftmost,
+occurrence being used if there are duplicates) then the corresponding
+character in the same position in the output translate table,
+\emph{tableo}, is used in the result string; otherwise the original
+character found in \emph{string} is used.
+The result string is always the same length as \emph{string}.
+ 
+The translate tables may be of any length, including the null string.
+The output table, \emph{tableo}, is padded with \emph{pad} or
+truncated on the right as necessary to be the same length as
+\emph{tablei}.
+The default \emph{pad} is a blank.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'abbc'.translate('\&','b')           == 'a\&\&c'
+'abcdef'.translate('12','ec')       == 'ab2d1f'
+'abcdef'.translate('12','abcd','.') == '12..ef'
+'4123'.translate('abcd','1234')     == 'dabc'
+'4123'.translate('hods','1234')     == 'shod'
+\end{lstlisting}
+\textbf{Note: }The last two examples show how the \textbf{translate} function
+may be used to move around the characters in a string.
+In these examples, any 4-character string could be specified as the
+first argument and its last character would be moved to the beginning of
+the string.
+Similarly, the term:
+\begin{lstlisting}
+'gh.ef.abcd'.translate(19970827,'abcdefgh')
+\end{lstlisting}
+(which returns "\textbf{27.08.1997}") shows how a string (in
+this case perhaps a date) might be re-formatted and merged with other
+characters using the \textbf{translate} function.
+
+\index{TRUNC function,}
+\index{Function, built-in,TRUNC}
+\index{Truncating numbers,}
+\index{Numbers,truncating}
+\index{Formatting,numbers with TRUNC}
+\item[trunc([n{]})]\label{reftrunc}
+returns the integer part of \emph{string}, which must be a
+number, with \emph{n} decimal places (digits after the decimal
+point).
+\emph{n} must be a non-negative whole number, and defaults to zero.
+ 
+The number \emph{string} is formatted by adding zero with a digits
+setting that is either nine or, if greater, the number of digits in the
+mantissa of the number (excluding leading insignificant zeros).
+It is then truncated to \emph{n} decimal places (or trailing zeros
+are added if needed to make up the specified length).
+If \emph{n} is 0 (the default) then an integer with no decimal
+point is returned.
+The result will never be in exponential form.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'12.3'.trunc         == 12
+'127.09782'.trunc(3) == 127.097
+'127.1'.trunc(3)     == 127.100
+'127'.trunc(2)       == 127.00
+'0'.trunc(2)         == 0.00
+\end{lstlisting}
+
+\index{UPPER function,}
+\index{Function, built-in,UPPER}
+\index{Strings,uppercasing}
+\index{Uppercasing strings,}
+\item[upper([n [,length{]]})]\label{refupper}
+returns a copy of \emph{string} with any lowercase characters in
+the sub-string of \emph{string} that begins at the \emph{n}\emph{th}
+character, and is of length \emph{length} characters, replaced by
+their uppercase equivalent.
+ 
+\emph{n} must be a positive whole number, and defaults to 1 (the
+first character in \emph{string}).  If \emph{n} is greater than
+the length of \emph{string}, the string is returned unchanged.
+ 
+\emph{length} must be a non-negative whole number.
+If \emph{length} is not specified, or is greater than the number of
+characters from \emph{n} to the end of the string, the rest of the
+string (including the \emph{n}\emph{th} character) is assumed.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Fou-Baa'.upper        == 'FOU-BAA'
+'Mad Sheep'.upper      == 'MAD SHEEP'
+'Mad sheep'.upper(5)   == 'Mad SHEEP'
+'Mad sheep'.upper(5,1) == 'Mad Sheep'
+'Mad sheep'.upper(5,4) == 'Mad SHEEp'
+'tinganon'.upper(1,1)  == 'Tinganon'
+''.upper               == ''
+\end{lstlisting}
+
+\index{VERIFY function,}
+\index{Function, built-in,VERIFY}
+\index{Strings,verifying contents of}
+\item[verify(reference [,option [,start{]]})]\label{refverify}
+verifies that \emph{string} is composed only of characters
+from \emph{reference}, by returning the position of the first
+character in \emph{string} that is not also in
+\emph{reference}.  If all the characters were found in
+\emph{reference}, 0 is returned.
+ The \emph{option} may be either \textbf{'Nomatch'} (the
+default) or \textbf{'Match'}.  Only the first character of
+\emph{option} is significant and it may be in uppercase or in
+lowercase.
+If \textbf{'Match'} is specified, the position of the first character
+in \emph{string} that \textbf{is} in \emph{reference} is
+returned, or 0 is returned if none of the characters were found.
+ The default for \emph{start} is 1 (that is, the search starts at
+the first character of \emph{string}).
+This can be overridden by giving a different \emph{start} point,
+which must be positive.
+ If \emph{string} is the null string, the function returns 0,
+regardless of the value of the \emph{option}.
+Similarly if \emph{start} is greater than
+\emph{string}\textbf{.length}, 0 is returned.
+ If \emph{reference} is the null string, then the returned value
+is the same as the value used for \emph{start},
+unless \textbf{'Match'} is specified as the \emph{option}, in
+which case 0 is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'123'.verify('1234567890')          == 0
+'1Z3'.verify('1234567890')          == 2
+'AB4T'.verify('1234567890','M')     == 3
+'1P3Q4'.verify('1234567890','N',3)  == 4
+'ABCDE'.verify('','n',3)            == 3
+'AB3CD5'.verify('1234567890','m',4) == 6
+\end{lstlisting}
+
+\index{WORD function,}
+\index{Function, built-in,WORD}
+\index{Words,extracting from a string}
+\item[word(n)]\label{refword}
+returns the \emph{n}\emph{th} blank-delimited word in
+\emph{string}.
+\emph{n} must be positive.
+If there are fewer than \emph{n} words in \emph{string}, the
+null string is returned.
+This function is exactly equivalent to
+\emph{string}\textbf{.subword(}\emph{n},\textbf{1)}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the time'.word(3) == 'the'
+'Now is the time'.word(5) == ''
+\end{lstlisting}
+
+\index{WORDINDEX function,}
+\index{Function, built-in,WORDINDEX}
+\index{Words,locating in a string}
+\item[wordindex(n)]\label{refwordind}
+returns the character position of the \emph{n}\emph{th}
+blank-delimited word in \emph{string}.
+\emph{n} must be positive.
+If there are fewer than \emph{n} words in the string, 0 is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the time'.wordindex(3) == 8
+'Now is the time'.wordindex(6) == 0
+\end{lstlisting}
+
+\index{WORDLENGTH function,}
+\index{Function, built-in,WORDLENGTH}
+\index{Words,finding length of}
+\item[wordlength(n)]\label{refwordlen}
+returns the length of the \emph{n}\emph{th} blank-delimited word in
+\emph{string}.
+\emph{n} must be positive.
+If there are fewer than \emph{n} words in the string, 0 is returned.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the time'.wordlength(2)    == 2
+'Now comes the time'.wordlength(2) == 5
+'Now is the time'.wordlength(6)    == 0
+\end{lstlisting}
+
+\index{WORDPOS function,}
+\index{Function, built-in,WORDPOS}
+\index{Searching a string for a word or phrase,}
+\index{Locating,a word or phrase in a string}
+\index{Words,finding in a string}
+\item[wordpos(phrase [,start{]})]\label{refwordpos}
+searches \emph{string} for the first occurrence of the sequence
+of blank-delimited words \emph{phrase}, and returns the word number
+of the first word of \emph{phrase} in \emph{string}.  Multiple
+blanks between words in either \emph{phrase} or \emph{string}
+are treated as a single blank for the comparison, but otherwise the
+words must match exactly.  Similarly, leading or trailing blanks on
+either string are ignored.
+If \emph{phrase} is not found, or contains no words, 0 is returned.
+ By default the search starts at the first word in \emph{string}.
+This may be overridden by specifying \emph{start} (which must be
+positive), the word at which to start the search.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'now is the time'.wordpos('the')       == 3
+'now is the time'.wordpos('The')       == 0
+'now is the time'.wordpos('is the')    == 2
+'now is the time'.wordpos('is    the') == 2
+'now is the time'.wordpos('is  time')  == 0
+'To be or not to be'.wordpos('be')     == 2
+'To be or not to be'.wordpos('be',3)   == 6
+\end{lstlisting}
+
+\index{WORDS function,}
+\index{Function, built-in,WORDS}
+\index{Words,counting, using WORDS}
+\index{Counting,words, using WORDS}
+\item[words()]\label{refwords}
+returns the number of blank-delimited words in \emph{string}.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'Now is the time'.words == 4
+' '.words               == 0
+''.words                == 0
+\end{lstlisting}
+
+\index{X2B function,}
+\index{Unpacking a string,with X2B}
+\index{Function, built-in,X2B}
+\index{Conversion,hexadecimal to binary}
+\index{Hexadecimal,conversion to binary}
+\item[x2b()]\label{refx2b}
+Hexadecimal to binary.
+Converts \emph{string} (a string of at least one hexadecimal
+characters) to an equivalent string of binary digits.
+Hexadecimal characters may be any decimal digit character (0-9) or any
+of the first six alphabetic characters (a-f), in either lowercase or
+uppercase.
+ \emph{string} may be of any length; each hexadecimal character
+with be converted to a string of four binary digits.
+The returned string will have a length that is a multiple of four, and
+will not include any blanks.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'C3'.x2b  == '11000011'
+'7'.x2b   == '0111'
+'1C1'.x2b == '000111000001'
+\end{lstlisting}
+
+\index{X2C function,}
+\index{Packing a string,with X2C}
+\index{Function, built-in,X2C}
+\index{Conversion,hexadecimal to character}
+\index{Hexadecimal,conversion to character}
+\index{Coded character,from hexadecimal}
+\index{Character,from hexadecimal}
+\index{Character,from a number}
+\index{Numbers,conversion to character}
+\item[x2c()]\label{refx2c}
+Hexadecimal to coded character.
+Converts the \emph{string} (a string of hexadecimal characters) to
+a single character (packs).
+Hexadecimal characters may be any decimal digit character (0-9) or any
+of the first six alphabetic characters (a-f), in either lowercase or
+uppercase.
+ 
+\emph{string} must contain at least one hexadecimal character;
+insignificant leading zeros are removed, and the string is then padded
+with leading zeros if necessary to make a sufficient number of
+hexadecimal digits to describe a character encoding for the
+implementation.
+ 
+An error results if the encoding described does not produce a valid
+character for the implementation (for example, if it has more
+significant bits than the implementation's encoding for characters).
+ \textbf{Examples:}
+\begin{lstlisting}
+'004D'.x2c == 'M' -- ASCII or Unicode
+'4d'.x2c   == 'M' -- ASCII or Unicode
+'A2'.x2c   == 's' -- EBCDIC
+'0'.x2c    == '\textbackslash 0'
+\end{lstlisting}
+ The  \textbf{d2c} function (see page \pageref{refd2c})  can be used to
+convert a \crexx{} number to the encoding of a character.
+
+\index{X2D function,}
+\index{Function, built-in,X2D}
+\index{Conversion,hexadecimal to decimal}
+\index{Hexadecimal,conversion to decimal}
+\item[x2d([n{]})]\label{refx2d}
+Hexadecimal to decimal.
+Converts the \emph{string} (a string of hexadecimal characters) to
+a decimal number, without rounding.
+If \emph{string} is the null string, 0 is returned.
+ 
+If \emph{n} is not specified, \emph{string} is taken to
+be an unsigned number.
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'0E'.x2d    == 14
+'81'.x2d    == 129
+'F81'.x2d   == 3969
+'FF81'.x2d  == 65409
+'c6f0'.x2d  == 50928
+\end{lstlisting}
+ 
+If \emph{n} is specified, \emph{string} is taken as a signed
+number expressed in \emph{n} hexadecimal characters.
+If the most significant (left-most) bit is zero then the number is
+positive; otherwise it is a negative number in twos-complement form.
+In both cases it is converted to a \crexx{} number which may,
+therefore, be negative.
+If \emph{n} is 0, 0 is always returned.
+ 
+If necessary, \emph{string} is padded on the left
+with \textbf{'0'} characters (note, not "sign-extended"), or
+truncated on the left, to length \emph{n} characters; (that is, as
+though \emph{string}\textbf{.right(}\emph{n}, \textbf{'0')}
+had been executed.)
+ 
+\textbf{Examples:}
+\begin{lstlisting}
+'81'.x2d(2)   == -127
+'81'.x2d(4)   == 129
+'F081'.x2d(4) == -3967
+'F081'.x2d(3) == 129
+'F081'.x2d(2) == -127
+'F081'.x2d(1) == 1
+'0031'.x2d(0) == 0
+\end{lstlisting}
+ The  \textbf{c2d} function (see page \pageref{refc2d})  can be used to convert
+a character to a decimal representation of its encoding.
+\end{description}
+
