@@ -3557,23 +3557,33 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
         char vers[64];
-        strcpy(vers, "UNKNOWN ");
-# if defined(__LINUX__)
-        strcpy(vers, "LINUX ");
-# elif defined(__WINDOWS__)
-        strcpy(vers, "WINDOWS ");
-# elif defined(__APPLE__)
-        strcpy(vers, "APPLE ");
-# endif
-#ifdef __32BIT__
-        strcat(vers, "32BIT ");
+
+#if defined(__linux__)
+        strcpy(vers, "linux ");
+#elif defined(_WIN32)
+        strcpy(vers, "windows ");
+#elif defined(__APPLE__)
+        strcpy(vers, "apple ");
+#elif defined(__CMS__)
+        strcpy(vers, "cms ");
 #else
-        strcat(vers, "64BIT ");
-        strcat(vers, rxversion );
+        strcpy(vers, "unknown ");
 #endif
+
+#ifdef __32BIT__
+        strcat(vers, "32 ");
+#else
+        strcat(vers, "64 ");
+#endif
+
+        strcat(vers, rxversion);
+        strcat(vers, " ");
+        strcat(vers, __DATE__);
+
         set_null_string(op1R, vers);
     }
-    DISPATCH;
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  rxhash  returns hash of a string                                  pej 24. June 2023
  *  op1=hash(op2,op3)

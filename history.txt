@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+Q0344 - Version Function
 F0045 - Arrays
       - Address
       - FILE IO
