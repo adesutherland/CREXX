@@ -3559,15 +3559,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
         char vers[64];
 
 #if defined(__linux__)
-        strcpy(vers, "LINUX ");
+        strcpy(vers, "linux ");
 #elif defined(_WIN32)
-        strcpy(vers, "WINDOWS ");
+        strcpy(vers, "windows ");
 #elif defined(__APPLE__)
-        strcpy(vers, "APPLE ");
+        strcpy(vers, "apple ");
 #elif defined(__CMS__)
-        strcpy(vers, "CMS ");
+        strcpy(vers, "cms ");
 #else
-        strcpy(vers, "UNKNOWN ");
+        strcpy(vers, "unknown ");
 #endif
 
 #ifdef __32BIT__
@@ -3577,6 +3577,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #endif
 
         strcat(vers, rxversion);
+        strcat(vers, " ");
+        strcat(vers, __DATE__);
 
         set_null_string(op1R, vers);
     }
