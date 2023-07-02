@@ -30,6 +30,38 @@
 
 /* Misc. Utilities here */
 
+/* Constant to get create the compile time data in ta "iso" like format */
+/* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
+const char compile_date[8+1] =
+        {
+                // yyyy year
+                __DATE__[7], __DATE__[8],
+                __DATE__[9], __DATE__[10],
+
+                // First month letter, Oct Nov Dec = '1' otherwise '0'
+                (__DATE__[0] == 'O' || __DATE__[0] == 'N' || __DATE__[0] == 'D') ? '1' : '0',
+
+                // Second month letter
+                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       // Jan, Jun or Jul
+                                         ((__DATE__[2] == 'n') ? '6' : '7') ) :
+                (__DATE__[0] == 'F') ? '2' :                                // Feb
+                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   // Mar or May
+                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   // Apr or Aug
+                (__DATE__[0] == 'S') ? '9' :                                // Sep
+                (__DATE__[0] == 'O') ? '0' :                                // Oct
+                (__DATE__[0] == 'N') ? '1' :                                // Nov
+                (__DATE__[0] == 'D') ? '2' :                                // Dec
+                0,
+
+                // First day letter, replace space with digit
+                __DATE__[4]==' ' ? '0' : __DATE__[4],
+
+                // Second day letter
+                __DATE__[5],
+
+                '\0'
+        };
+
 /* Fast integer pow calculation - loop unwound - based / from https://gist.github.com/orlp/3551590
  * by Orson Peters / orlp / Leiden, Netherlands / orsonpeters@gmail.com
  * Returns the result or 0 for overflow / underflow
@@ -3553,6 +3585,11 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  *  rxvers  returns os information                                    pej 20. June 2023
  *  -----------------------------------------------------------------------------------
  */
+
+// MACRO
+
+#define FDATE (char const[]){ __DATE__[7], __DATE__[8], ..., ' ', ... , '\0' }
+
     START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1);
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
@@ -3563,7 +3600,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #elif defined(_WIN32)
         strcpy(vers, "windows ");
 #elif defined(__APPLE__)
-        strcpy(vers, "apple ");
+        strcpy(vers, "macosx ");
 #elif defined(__CMS__)
         strcpy(vers, "cms ");
 #else
@@ -3578,7 +3615,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 
         strcat(vers, rxversion);
         strcat(vers, " ");
-        strcat(vers, __DATE__);
+        strcat(vers, compile_date); /* compile_date defined earlier in this file */
 
         set_null_string(op1R, vers);
     }
@@ -3614,7 +3651,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             hash = hash ^ (ch);          // xor next byte into the bottom of the hash
             hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
         }
-        sprintf(str, "%u", hash);
+        sprintf(str, "%llu", hash);
         set_null_string(op1R, str);
      }
 
