@@ -164,7 +164,11 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
             out_len = get_func_string(pgm, buffer, buffer_len, ix);
             break;
         case OP_INT:
-            out_len = snprintf(buffer, buffer_len, "%d", (unsigned int)pgm->binary[index].iconst);
+#ifdef __32BIT__
+            out_len = snprintf(buffer, buffer_len, "%d", pgm->binary[index].iconst);
+#else
+            out_len = snprintf(buffer, buffer_len, "%lld", pgm->binary[index].iconst);
+#endif
             break;
         case OP_FLOAT:
             out_len = snprintf(buffer, buffer_len, "%f", pgm->binary[index].fconst);
@@ -619,7 +623,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     }
 
     /* Pass 1b - Print Constant Pool and add Proc entry flags to the code listing */
-    fprintf(stream, "* CONSTANT POOL - Size 0x%x.  ", (unsigned int)pgm->const_size);
+    fprintf(stream, "* CONSTANT POOL - Size 0x%lx.  ", pgm->const_size);
     if (print_all_constant_pool) fprintf(stream, "Dump of all entries (option -p used):\n\n");
     else fprintf(stream, "Dump of EXPOSED entries only (option -p not used):\n\n");
 
@@ -630,15 +634,15 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             case STRING_CONST:
                 if (print_all_constant_pool) {
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, i);
-                    fprintf(stream, "* 0x%.6x STRING %s\n", (unsigned int) i, line_buffer);
+                    fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
                 }
                 break;
             case PROC_CONST:
                 if (((proc_constant *) entry)->start == SIZE_MAX) {
                     if (print_all_constant_pool) {
                         fprintf(stream,
-                                "* 0x%.6x PROC %s() exposed from external <-- %s\n",
-                                (unsigned int) i,
+                                "* 0x%.6lx PROC %s() exposed from external <-- %s\n",
+                                i,
                                 ((proc_constant *) entry)->name,
                                 ((expose_proc_constant*)(pgm->const_pool + ((proc_constant *) entry)->exposed))->index
                                 );
@@ -646,9 +650,9 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 } else {
                     if (print_all_constant_pool) {
                         fprintf(stream,
-                                "* 0x%.6x PROC @ 0x%.6x %s() (locals=%d)\n",
-                                (unsigned int) i,
-                                (unsigned int) ((proc_constant *) entry)->start,
+                                "* 0x%.6lx PROC @ 0x%.6lx %s() (locals=%d)\n",
+                                i,
+                                ((proc_constant *) entry)->start,
                                 ((proc_constant *) entry)->name,
                                 ((proc_constant *) entry)->locals
                             );
@@ -660,8 +664,8 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
 
             case EXPOSE_REG_CONST:
                 fprintf(stream,
-                        "* 0x%.6x EXPOSED-REG g%d <-> as %s\n",
-                        (unsigned int) i,
+                        "* 0x%.6lx EXPOSED-REG g%d <-> as %s\n",
+                        i,
                         ((expose_reg_constant *) entry)->global_reg,
                         ((expose_reg_constant *) entry)->index);
                 break;
@@ -671,15 +675,15 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
 
                 if (((expose_proc_constant *) entry)->imported) {
                     fprintf(stream,
-                            "* 0x%.6x EXPOSED-PROC %s() <-- as %s\n",
-                            (unsigned int) i,
+                            "* 0x%.6lx EXPOSED-PROC %s() <-- as %s\n",
+                            i,
                             pentry->name,
                             ((expose_proc_constant *) entry)->index
                     );
                 } else {
                     fprintf(stream,
-                            "* 0x%.6x EXPOSED-PROC %s() --> as %s\n",
-                            (unsigned int) i,
+                            "* 0x%.6lx EXPOSED-PROC %s() --> as %s\n",
+                            i,
                             pentry->name,
                             ((expose_proc_constant *) entry)->index
                     );
@@ -689,8 +693,8 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             case META_SRC:
                 if (print_all_constant_pool) {
                     meta_src_constant *mentry = (meta_src_constant *) entry;
-                    fprintf(stream, "* 0x%.6x META-SRC @0x%.6x %d:%d ",
-                            (unsigned int) i, (unsigned int) mentry->base.address,
+                    fprintf(stream, "* 0x%.6lx META-SRC @0x%.6lx %d:%d ",
+                            i, mentry->base.address,
                             (int) mentry->line, (int) mentry->column);
 
                     /* Source */
@@ -703,7 +707,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 if (print_all_constant_pool) {
                     /* META function symbol */
                     meta_func_constant *mentry = (meta_func_constant *)entry;
-                    fprintf(stream, "* 0x%.6x META-FUNC @0x%.6x", (unsigned int) i, (unsigned int) mentry->base.address);
+                    fprintf(stream, "* 0x%.6lx META-FUNC @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, " %s",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
@@ -724,7 +728,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 if (print_all_constant_pool) {
                     /* META file */
                     meta_file_constant *mentry = (meta_file_constant *)entry;
-                    fprintf(stream, "* 0x%.6x META-FILE @0x%.6x", (unsigned int) i, (unsigned int) mentry->base.address);
+                    fprintf(stream, "* 0x%.6lx META-FILE @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->file);
                     fprintf(stream, " %s\n", line_buffer);
                 }
@@ -734,7 +738,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 if (print_all_constant_pool) {
                     /* META clear symbol */
                     meta_reg_constant *mentry = (meta_reg_constant *)entry;
-                    fprintf(stream, "* 0x%.6x META-REG @0x%.6x", (unsigned int) i, (unsigned int) mentry->base.address);
+                    fprintf(stream, "* 0x%.6lx META-REG @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, " %s=",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
@@ -749,7 +753,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 if (print_all_constant_pool) {
                     /* META const symbol */
                     meta_const_constant *mentry = (meta_const_constant *)entry;
-                    fprintf(stream, "* 0x%.6x META-CONST @0x%.6x", (unsigned int) i, (unsigned int) mentry->base.address);
+                    fprintf(stream, "* 0x%.6lx META-CONST @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, " %s=",line_buffer);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->option);
@@ -765,14 +769,14 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 if (print_all_constant_pool) {
                     /* META clear symbol */
                     meta_clear_constant *mentry = (meta_clear_constant *) entry;
-                    fprintf(stream, "* 0x%.6x META-CLEAR @0x%.6x", (unsigned int) i, (unsigned int) mentry->base.address);
+                    fprintf(stream, "* 0x%.6lx META-CLEAR @0x%.6lx", i, mentry->base.address);
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->symbol);
                     fprintf(stream, " %s\n", line_buffer);
                 }
                 break;
 
             default:
-                fprintf(stream, "* 0x%.6x UNKNOWN\n", (unsigned int)i);
+                fprintf(stream, "* 0x%.6lx UNKNOWN\n", i);
         }
 
         i += entry->size_in_pool;
@@ -781,7 +785,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     /* Pass 2a - Generate listing output - number of globals & header information */
     int globals = pgm->globals;
     int locals = 0;
-    fprintf(stream, "\n* CODE SEGMENT - Size 0x%x\n", (unsigned int)pgm->inst_size);
+    fprintf(stream, "\n* CODE SEGMENT - Size 0x%lx\n", pgm->inst_size);
     fprintf(stream, "\n.globals=%d\n", globals);
 
     /* Pass 2b - Exposed Registers and procedures exposed from external modules
@@ -843,7 +847,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             output_meta_post_proc(stream, module, pgm, i, globals, locals);
         }
         else if (source[i].flags == show_label) {
-            snprintf(line_buffer, MAX_LINE_SIZE, "lb_%x:", (unsigned int)i);
+            snprintf(line_buffer, MAX_LINE_SIZE, "lb_%lx:", i);
             output_meta(stream, module, pgm, i, globals, locals);
         }
         else {
@@ -876,7 +880,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 default:
                     snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len,"*INTERNAL_ERROR_NUM_OPS*");
             }
-        fprintf(stream, "%-45s * 0x%.6x:%.4x %s\n", line_buffer, (unsigned int)j, source[j].inst->opcode, source[j].comment);
+        fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].inst->opcode, source[j].comment);
     }
 
     /* Final Meta entries at the code address + 1 */
