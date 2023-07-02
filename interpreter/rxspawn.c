@@ -165,22 +165,34 @@ int shellspawn (const char *command,
     } else if (base_name[0] != '/') {
         // Get PATH environment variable so we can find the exe
         const char *env = getenv("PATH");
-        if (env) data.file_path = malloc(sizeof(char) * (strlen(env) + strlen(base_name) + 2)); // Make a buffer big enough
-        while (env && *env != ':') {
-            for (int i = 0; (data.file_path[i] = *env); i++, env++) {
-                if (*env == ':') {
-                    data.file_path[i] = 0;
-                    env++;
+        if (env) {
+            data.file_path = malloc(sizeof(char) * (strlen(env) + strlen(base_name) + 2)); // Make a buffer big enough
+            while (env) {
+                char* next_colon = strchr(env, ':');
+                size_t length;
+
+                if (next_colon) {
+                    length = next_colon - env;
+                } else {
+                    length = strlen(env);
+                }
+
+                strncpy(data.file_path, env, length);
+                data.file_path[length] = '\0';
+
+                strcat(data.file_path, "/");
+                strcat(data.file_path, base_name);
+
+                if (ExeFound(data.file_path)) {
+                    commandFound = 1;
                     break;
                 }
-            }
 
-            strcat(data.file_path, "/");
-            strcat(data.file_path, base_name);
-
-            if (ExeFound(data.file_path)) {
-                commandFound = 1;
-                break;
+                if (next_colon) {
+                    env = next_colon + 1;
+                } else {
+                    env = NULL;
+                }
             }
         }
     }
@@ -1366,60 +1378,10 @@ int launchChild(SHELLDATA* data) {
 #endif
 }
 
-
 #ifndef _WIN32
-// alarm handler doesn't need to do anything
-// other than simply exist
-static void alarm_handler( int sig ) {}
-
-// stat() with a timeout measured in seconds
-// will return -1 with errno set to EINTR should
-// it time out
-static int stat_try( const char *path, struct stat *s, unsigned int seconds )
-{
-    struct sigaction newact;
-    struct sigaction oldact;
-
-    // make sure they're entirely clear (yes I'm paranoid...)
-    memset( &newact, 0, sizeof( newact ) );
-    memset( &oldact, 0, sizeof( oldact) );
-
-    sigemptyset( &newact.sa_mask );
-
-    // note that does not have SA_RESTART set, so
-    // stat() should be interrupted on a signal
-    // (hopefully your libc doesn't restart it...)
-    newact.sa_flags = 0;
-    newact.sa_handler = alarm_handler;
-    sigaction( SIGALRM, &newact, &oldact );
-
-    alarm( seconds );
-
-    // clear errno
-    errno = 0;
-    int rc = stat( path, s );
-
-    // save the errno value as alarm() and sigaction() might change it
-    int saved_errno = errno;
-
-    // clear any alarm and reset the signal handler
-    alarm( 0 );
-    sigaction( SIGALRM, &oldact, NULL );
-
-    errno = saved_errno;
-    return( rc );
-}
-
 int ExeFound(char* exe)
 {
-    // Stat the command to see if it exists
-    struct stat stat_p;
-    if ( stat_try(exe, &stat_p, 1) ) return 0;
-    if (!S_ISREG(stat_p.st_mode)) return 0; // Not a regular file
-    if ( !( ((stat_p.st_mode & S_IXUSR) && (stat_p.st_uid==geteuid())) ||
-            ((stat_p.st_mode & S_IXGRP) && (stat_p.st_gid==getegid())) ||
-            (stat_p.st_mode & S_IXOTH) ) ) return 0; // Does not have exec permission
-
-    return 1;
+    if(access(exe, X_OK) == 0) return 1;
+    else return 0;
 }
 #endif

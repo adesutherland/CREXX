@@ -1,11 +1,11 @@
 CREXX History / Change Log
 
 I0350 - Add - EXIT
-        Fix - address "exit" freezes (on osx)
+        Fix - address for a not found command freezes (on linux and osx)
         Add - GetEnv()
         Fix - 64 bit integer problems in disassembler
         Fix - Update version() string. Change OS name 'apple' to 'macosx'
-              Format is [linux|windows|macosx] [64|32] crexx version yyyymmdd (the compile date)
+              Format is [linux|windows|macosx|cms|unknown] [64|32] crexx version yyyymmdd (the compile date)
 Q0344 - Version Function
 F0045 - Arrays
       - Address
