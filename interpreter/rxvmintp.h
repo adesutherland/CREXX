@@ -241,6 +241,15 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
 
+/* Get Environment Value
+ * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
+ * Value can be set to point to a zero length string (if the variable is not set)
+ *
+ * Returns 1 if value should bee free()d
+ * Otherwise returns 0
+ */
+int getEnvVal(char **value, char *name, size_t name_length);
+
 /*
  * - A pin, pout or perr does not need to be specified ... in this case the std streams are used.
  * - Command contains the commands string to execute

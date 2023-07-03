@@ -4059,6 +4059,29 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
         if (op1I > op3R->int_value) goto OUT_OF_RANGE;
         DISPATCH
 
+    /* getenv - get environment variable, op1=env[op2] */
+    START_INSTRUCTION(GETENV_REG_REG) CALC_DISPATCH(2)
+        DEBUG("TRACE - GETENV R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+        {
+            char *value;
+            int should_free = getEnvVal(&value, op2R->string_value, op2R->string_length);
+            set_null_string(op1R, value);
+            if (should_free) free(value);
+        }
+        DISPATCH
+
+    /* getenv - get environment variable, op1=env[op2] */
+    START_INSTRUCTION(GETENV_REG_STRING) CALC_DISPATCH(2)
+        DEBUG("TRACE - GETENV R%lu,\"%.*s\"\n", REG_IDX(1),
+              (int)(CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
+        {
+            char *value;
+            int should_free = getEnvVal(&value, (CONSTSTRING_OP(2))->string, (CONSTSTRING_OP(2))->string_len);
+            set_null_string(op1R, value);
+            if (should_free) free(value);
+        }
+        DISPATCH
+
 /* ---------------------------------------------------------------------------
  * load instructions not yet implemented generated from the instruction table
  *      and scan of this module                              pej 8. April 2021
