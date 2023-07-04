@@ -120,7 +120,8 @@ int getEnvVal(char **value, char *name, size_t name_length) {
         return 0;
     }
     nulled_name = malloc(name_length + 1);
-    strcpy(nulled_name, name);
+    memcpy(nulled_name, name, name_length);
+    nulled_name[name_length] = 0;
 
 #ifdef _WIN32
 
