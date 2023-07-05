@@ -541,6 +541,7 @@ keyword_instruction(I) ::= nop(K). { I = K; }
 keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
 keyword_instruction(I) ::= return(K). { I = K; }
+keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
@@ -823,6 +824,8 @@ assembler_op(OP)         ::= TK_VAR_SYMBOL(S).
                          { OP = ast_f(context, ASSEMBLER, S); }
 assembler_op(OP)         ::= TK_SAY(S). /* SAY is also a REXX keyword */
                          { OP = ast_f(context, ASSEMBLER, S); }
+assembler_op(OP)         ::= TK_EXIT(S). /* EXIT is also a REXX keyword */
+                         { OP = ast_f(context, ASSEMBLER, S); }
 assembler_arg(A)         ::= var_symbol(B).
                          { A = B; }
 assembler_arg(A)         ::= TK_FLOAT(S).
@@ -869,6 +872,13 @@ return(I) ::= TK_RETURN(T) expression(E).
 
 return(I) ::= TK_RETURN(T).
     { I = ast_f(context, RETURN, T); }
+
+/* EXIT */
+exit(I) ::= TK_EXIT(T) expression(E).
+    { I = ast_f(context, EXIT, T); add_ast(I,E); }
+
+exit(I) ::= TK_EXIT(T).
+    { I = ast_f(context, EXIT, T); }
 
 /* Say */
 say(I) ::= TK_SAY(T) expression(E).

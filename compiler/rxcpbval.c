@@ -840,7 +840,59 @@ static walker_result initial_checks_walker(walker_direction direction,
 }
 
 /*
- * Converts ADDRESS Instruction to Address System Function
+ * Converts EXIT Instruction to _exit System Function
+ */
+static walker_result rewrite_exit_walker(walker_direction direction,
+                                            ASTNode* node, __attribute__((unused)) void *payload) {
+
+    Context *context = (Context*)payload;
+
+    ASTNode* args_node;
+    ASTNode* function_node;
+    ASTNode* temp_node;
+    ASTNode* current_child;
+    ASTNode* last_child;
+    ASTNode* next_child;
+    ASTNode* var_name;
+
+    if (direction == out) {
+        /* Bottom Up */
+        switch (node->node_type) {
+
+            case EXIT:
+                /* Rewrite to call of _exit */
+
+                /* Assignment node and remember the command */
+                node->node_type = CALL;
+
+                /* Function */
+                function_node = ast_ft(context, FUNCTION);
+                ast_str(function_node, "_exit");
+                /* Fix up position for error messages */
+                function_node->column = node->column;
+                function_node->line = node->line;
+
+                /* Move Param(s) */
+                args_node = node->child;
+                while (args_node) {
+                    ast_del(args_node);
+                    add_ast(function_node, args_node);
+                    args_node = node->child;
+                }
+
+                /* Add Function */
+                add_ast(node, function_node);
+                break;
+
+            default: ;
+        }
+    }
+
+    return result_normal;
+}
+
+/*
+ * Converts ADDRESS Instruction to _address and redirect system functions
  */
 static walker_result rewrite_address_walker(walker_direction direction,
                                             ASTNode* node, __attribute__((unused)) void *payload) {
@@ -868,6 +920,9 @@ static walker_result rewrite_address_walker(walker_direction direction,
                 /* Function */
                 function_node = ast_ft(context, FUNCTION);
                 ast_str(function_node, "_address");
+                /* Fix up position for error messages */
+                function_node->column = node->column;
+                function_node->line = node->line;
 
                 /* Move Params */
                 args_node = node->child;
@@ -1021,6 +1076,9 @@ static walker_result needs_rxsysb_walker(walker_direction direction,
     if (direction == out) {
         /* Bottom Up */
         if (node->node_type == ADDRESS) {
+            context->need_rxsysb = 1;
+        }
+        else if (node->node_type == EXIT) {
             context->need_rxsysb = 1;
         }
     }
@@ -2543,7 +2601,7 @@ void rxcp_val(Context *context) {
     context->current_scope = 0;
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
 
-    /* Address - add rxsysb library */
+    /* Adds rxsysb library (e.g. for ADDRESS and EXIT) */
     context->current_scope = 0;
     context->need_rxsysb = 0;
     ast_wlkr(context->ast, needs_rxsysb_walker, (void *) context);
@@ -2572,10 +2630,15 @@ void rxcp_val(Context *context) {
     context->current_scope = 0;
     ast_wlkr(context->ast, set_node_types_walker, (void *) context);
 
-    /* Re-write ADDRESS Instructions and incremental update of symbols */
+    /* Re-write ADDRESS Instructions */
     context->current_scope = 0;
     ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
-    context->after_rewrite = 1; /* So walkers can avoid duplicate processing */
+
+    /* Re-write EXIT Instructions */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+
+    context->after_rewrite = 1; /* Incremental update of symbols - So walkers can avoid duplicate processing */
 
     ordinal_counter = 0;
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);

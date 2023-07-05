@@ -28,6 +28,7 @@ set(BIFS
 		format
 		fnv
 #		global
+		getenv
 		insert
 		length
 		linesize

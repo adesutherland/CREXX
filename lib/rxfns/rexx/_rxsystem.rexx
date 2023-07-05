@@ -1,7 +1,21 @@
 /* REXX LEVEB B SYSTEM FUNCTIONS */
 options levelb
-namespace _rxsysb expose _open _close
-# import rxfnsb
+namespace _rxsysb expose _open _close _exit
+#import rxfnsb
+
+/* EXIT Function */
+_exit: procedure
+    arg return_value = "0" /* A string (as per the REXX standard) which defaults to 0 */
+
+    ret_code = .int
+
+    /* We can call exit handlers here */
+
+    /* TODO Catch conversion error signal (when implemented!) */
+    ret_code =  return_value
+
+    assembler exit ret_code /* Real Exit! */
+    return /* Never Reached */
 
 /* Return the FILEID of a file - Opening it as needed */
 _open: procedure = .int expose _open_file_names _open_file_ids _open_file_modes
