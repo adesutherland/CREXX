@@ -131,7 +131,7 @@ int rexbscan(Context* s) {
     'ERROR' { return(TK_ERROR); }
     'END' { return(TK_END); }
   //  'EXTERNAL' { return(TK_EXTERNAL); }
-  //  'EXIT' { return(TK_EXIT); }
+    'EXIT' { return(TK_EXIT); }
     'IF' { return(TK_IF); }
     'IMPORT' { return(TK_IMPORT); }
     'INPUT' { return(TK_INPUT); }

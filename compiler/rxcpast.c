@@ -1019,6 +1019,8 @@ const char *ast_ndtp(NodeType type) {
             return "REDIRECT_EXPOSE";
         case RETURN:
             return "RETURN";
+        case EXIT:
+            return "EXIT";
         case REXX_OPTIONS:
             return "REXX_OPTIONS";
         case REXX_UNIVERSE:
@@ -1666,6 +1668,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case REDIRECT_ERROR:
             case REDIRECT_EXPOSE:
             case RETURN:
+            case EXIT:
             case SAY:
             case UPPER:
             case PARSE:

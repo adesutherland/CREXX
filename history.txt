@@ -1,7 +1,7 @@
 CREXX History / Change Log
 
-I0350 - Add - EXIT
-        Fix - address for a not found command freezes (on linux and osx)
+I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
+        Fix - ADDRESS for a not found command freezes (on linux and osx)
         Add - GetEnv()
         Fix - 64 bit integer problems in disassembler
         Fix - Update version() string. Change OS name 'apple' to 'macosx'

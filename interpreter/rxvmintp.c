@@ -4098,6 +4098,16 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3);
             rc = 0;
             goto interprt_finished;
 
+        START_INSTRUCTION(EXIT_INT)
+            DEBUG("TRACE - EXIT %d\n", (int)op1I);
+            rc = op1I;
+            goto interprt_finished;
+
+        START_INSTRUCTION(EXIT_REG)
+            DEBUG("TRACE - EXIT R%lu\n", REG_IDX(1));
+            rc = op1RI;
+            goto interprt_finished;
+
     END_OF_INSTRUCTIONS
 
     OVERFLOW_UNDERFLOW:
