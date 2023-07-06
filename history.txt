@@ -1,5 +1,6 @@
 CREXX History / Change Log
 
+F0019 - Parse
 I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
         Fix - ADDRESS for a not found command freezes (on linux and osx)
         Add - GetEnv()
