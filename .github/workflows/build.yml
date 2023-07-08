@@ -649,12 +649,13 @@ jobs:
         if: env.RELEASE_ID
         uses: mknejp/delete-release-assets@v1
         with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
           tag: ${{ env.RELEASE_ID }}
-          name: CREXX-*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
+          fail-if-no-release: false
+          fail-if-no-assets: false
+          assets: |
+            *.zip
+            *.gz
 
       - name: Create Release and Upload Assets
         id: create_release
