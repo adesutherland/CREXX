@@ -15,7 +15,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          echo "RELEASE_ID=dev-snapshot" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
           else
@@ -212,7 +212,7 @@ jobs:
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
         echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
         echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
         else
@@ -353,7 +353,7 @@ jobs:
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
         echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
         echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
         else
@@ -465,7 +465,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
           else
@@ -577,7 +577,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
           else
