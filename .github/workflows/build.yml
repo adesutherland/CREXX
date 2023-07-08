@@ -199,7 +199,7 @@ jobs:
           name: rxcpbgmr.h
           path: ${{ runner.temp }}/release/compiler/rxcpbgmr.h
 
-#**************************************************#
+  #**************************************************#
   build-cms:
     name: Build for CMS
     runs-on: [ubuntu-latest]
@@ -207,17 +207,17 @@ jobs:
     container: adriansutherland/vm370:builder
    
     steps:
-      - name: Determine Release Name
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=develop" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
-          else
-          echo "Skip release"
-          fi
+    - name: Determine Release Name
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+        else
+        echo "Skip release"
+        fi
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -334,17 +334,17 @@ jobs:
     needs: [build-ubuntu]
 
     steps:
-      - name: Determine Release Name
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=develop" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
-          else
-          echo "Skip release"
-          fi    
+    - name: Determine Release Name
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+        else
+        echo "Skip release"
+        fi    
 
     - name: Checkout
       uses: actions/checkout@v3
