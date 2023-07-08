@@ -218,6 +218,7 @@ jobs:
         else
         echo "Skip release"
         fi
+      shell: bash
 
     - name: Checkout
       uses: actions/checkout@v3
