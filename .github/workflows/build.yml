@@ -10,6 +10,17 @@ jobs:
     runs-on: [ubuntu-latest]
 
     steps:
+      - name: Determine Release Name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+          else
+          echo "Skip release"
+          fi
 
       - name: Get Regina
         run: |
@@ -17,7 +28,7 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -43,13 +54,23 @@ jobs:
           cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
-          cp "${{ runner.temp }}/release/interpreter/rxbvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release"          
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/debugger/rxdb"        "${{ runner.temp }}/exe/debug"          
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxbvm"     "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvm"    "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxvme"    "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvme"   "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
           cp LICENSE     "${{ runner.temp }}/exe"
           cp README.md   "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
@@ -62,13 +83,19 @@ jobs:
           ./release/rxc -v
           ./release/rxas -v
           ./release/rxdas -v
+          ./release/rxdb -v
           ./release/rxvm -v
           ./release/rxbvm -v
+          ./release/rxvme -v
+          ./release/rxbvme -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
+          ./debug/rxdb -v
           ./debug/rxvm -v
           ./debug/rxbvm -v
+          ./debug/rxvme -v
+          ./debug/rxbvme -v
         shell: bash
 
       - name: Build CMS lexers
@@ -79,7 +106,7 @@ jobs:
         shell: bash
 
       - name: Upload Executable
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE_ID
         uses: actions/upload-artifact@v2
         with:
           name: CREXX-Ubuntu
@@ -172,7 +199,7 @@ jobs:
           name: rxcpbgmr.h
           path: ${{ runner.temp }}/release/compiler/rxcpbgmr.h
 
-#**************************************************#
+  #**************************************************#
   build-cms:
     name: Build for CMS
     runs-on: [ubuntu-latest]
@@ -180,9 +207,21 @@ jobs:
     container: adriansutherland/vm370:builder
    
     steps:
+    - name: Determine Release Name
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+        else
+        echo "Skip release"
+        fi
+      shell: bash
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Download instrmiss.h
       uses: actions/download-artifact@v2
@@ -283,7 +322,7 @@ jobs:
       shell: bash
 
     - name: Upload Executable
-      if: startsWith(github.ref, 'refs/tags/')
+      if: env.RELEASE_ID
       uses: actions/upload-artifact@v2
       with:
         name: CREXX-CMS
@@ -296,9 +335,34 @@ jobs:
     needs: [build-ubuntu]
 
     steps:
+    - name: Update Toolchain (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          base-devel
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          ninja:p    
+
+    - name: Determine Release Name
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+        echo "RELEASE_ID=develop" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+        echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+        else
+        echo "Skip release"
+        fi
+      shell: bash
 
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         submodules: 'recursive'
 
@@ -313,19 +377,6 @@ jobs:
       with:
         name: instrset.h
         path: machine
-
-    - name: Update Toolchain (MSYS2)
-      uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        install: >-
-          base-devel
-          git
-          make
-        pacboy: >-
-          toolchain:p
-          cmake:p
-          ninja:p
 
     - name: Build Debug
       shell: msys2 {0}
@@ -343,17 +394,27 @@ jobs:
       run: |
         mkdir -p "${{ runner.temp }}/exe"
         mkdir -p "${{ runner.temp }}/exe/release"
-        mkdir -p "${{ runner.temp }}/exe/debug"
+        mkdir -p "${{ runner.temp }}/exe/debug"      
         cp "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/debugger/rxdb.exe"      "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/release"
-        cp "${{ runner.temp }}/release/interpreter/rxbvm.exe"   "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxbvm.exe"  "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxvme.exe"  "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxbvme.exe" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/librxbvml.a" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/librxvml.a"  "${{ runner.temp }}/exe/release"
         cp "${{ runner.temp }}/debug/compiler/rxc.exe"         "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/debugger/rxdb.exe"        "${{ runner.temp }}/exe/debug"
         cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
-        cp "${{ runner.temp }}/debug/interpreter/rxbvm.exe"     "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxbvm.exe"    "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxvme.exe"    "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxbvme.exe"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
         cp SECURITY.md "${{ runner.temp }}/exe"
@@ -366,17 +427,23 @@ jobs:
         ./release/rxc -v
         ./release/rxas -v
         ./release/rxdas -v
+        ./release/rxdb -v
         ./release/rxvm -v
         ./release/rxbvm -v
+        ./release/rxvme -v
+        ./release/rxbvme -v
         ./debug/rxc -v
         ./debug/rxas -v
         ./debug/rxdas -v
+        ./debug/rxdb -v
         ./debug/rxvm -v
         ./debug/rxbvm -v
+        ./debug/rxvme -v
+        ./debug/rxbvme -v
       shell: bash
 
     - name: Upload Executable
-      if: startsWith(github.ref, 'refs/tags/')
+      if: env.RELEASE_ID
       uses: actions/upload-artifact@v2
       with:
         name: CREXX-Windows
@@ -393,9 +460,20 @@ jobs:
     needs: [build-ubuntu]
 
     steps:
+      - name: Determine Release Name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+          else
+          echo "Skip release"
+          fi
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -433,13 +511,23 @@ jobs:
           cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
-          cp "${{ runner.temp }}/release/interpreter/rxbvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/debugger/rxdb"        "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxbvm"     "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvm"    "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxvme"    "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/rxbvme"   "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
@@ -452,17 +540,23 @@ jobs:
           ./release/rxc -v
           ./release/rxas -v
           ./release/rxdas -v
+          ./release/rxdb -v
           ./release/rxvm -v
           ./release/rxbvm -v
+          ./release/rxvme -v
+          ./release/rxbvme -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
+          ./debug/rxdb -v
           ./debug/rxvm -v
           ./debug/rxbvm -v
+          ./debug/rxvme -v
+          ./debug/rxbvme -v
         shell: bash
 
       - name: Upload Executable
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.RELEASE_ID
         uses: actions/upload-artifact@v2
         with:
           name: CREXX-MacOS
@@ -473,14 +567,39 @@ jobs:
 
 #**************************************************#
   release:
-    if: startsWith(github.ref, 'refs/tags/')
     name: Release
     needs: [build-ubuntu, build-windows, build-cms, build-macos]
     runs-on: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
 
-      - name: Get CMS binary 
+      - name: Determine Release Name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+          else
+          echo "Skip release"
+          fi
+
+      - name: Checkout
+        if: env.RELEASE_ID
+        uses: actions/checkout@v3
+
+      - name: Checkout branch and push tag
+        if: env.RELEASE_ID
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git tag -f ${{ env.RELEASE_ID }}
+          git push -f origin ${{ env.RELEASE_ID }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get CMS binary
+        if: env.RELEASE_ID
         uses: actions/download-artifact@v2
         with:
           name: CREXX-CMS
@@ -490,87 +609,67 @@ jobs:
         run: 
           zip -r CREXX-CMS.zip CREXX-CMS
 
-      - name: Get ubuntu binary 
+      - name: Get ubuntu binary
+        if: env.RELEASE_ID
         uses: actions/download-artifact@v2
         with:
           name: CREXX-Ubuntu
           path: CREXX-Ubuntu
 
-      - name: ZIP ubuntu binary 
+      - name: ZIP ubuntu binary
+        if: env.RELEASE_ID
         run: 
           zip -r CREXX-Ubuntu.zip CREXX-Ubuntu
 
-      - name: Get windows binary 
+      - name: Get windows binary
+        if: env.RELEASE_ID
         uses: actions/download-artifact@v2
         with:
           name: CREXX-Windows
           path: CREXX-Windows
 
-      - name: ZIP windows binary 
+      - name: ZIP windows binary
+        if: env.RELEASE_ID
         run: 
           zip -r CREXX-Windows.zip CREXX-Windows
 
       - name: Get MacOS binary
+        if: env.RELEASE_ID
         uses: actions/download-artifact@v2
         with:
           name: CREXX-MacOS
           path: CREXX-MacOS
 
       - name: ZIP MacOS binary
+        if: env.RELEASE_ID
         run:
           zip -r CREXX-MacOS.zip CREXX-MacOS
 
-      - name: Create Release
+      - name: Delete old release assets
+        if: env.RELEASE_ID
+        uses: mknejp/delete-release-assets@v1
+        with:
+          tag: ${{ env.RELEASE_ID }}
+          token: ${{ github.token }}
+          fail-if-no-release: false
+          fail-if-no-assets: false
+          assets: |
+            *.zip
+            *.gz
+
+      - name: Create Release and Upload Assets
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: env.RELEASE_ID
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: true
+          files: |
+            ./CREXX-CMS.zip
+            ./CREXX-Ubuntu.zip
+            ./CREXX-Windows.zip
+            ./CREXX-MacOS.zip
+          name: Snapshot ${{ env.RELEASE_ID }}
+          tag_name: ${{ env.RELEASE_ID }}
+          draft: false
           prerelease: true
-
-      - name: Upload Release Asset - CMS
-        id: upload-release-asset-CMS 
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./CREXX-CMS.zip
-          asset_name: CREXX-CMS.zip
-          asset_content_type: application/zip
-
-      - name: Upload Release Asset - Ubuntu
-        id: upload-release-asset-ubuntu 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./CREXX-Ubuntu.zip
-          asset_name: CREXX-Ubuntu.zip
-          asset_content_type: application/zip
-
-      - name: Upload Release Asset - Windows
-        id: upload-release-asset-windows 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./CREXX-Windows.zip
-          asset_name: CREXX-Windows.zip
-          asset_content_type: application/zip
-
-      - name: Upload Release Asset - MacOS
-        id: upload-release-asset-macos
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./CREXX-MacOS.zip
-          asset_name: CREXX-MacOS.zip
-          asset_content_type: application/zip
