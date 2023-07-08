@@ -334,6 +334,19 @@ jobs:
     needs: [build-ubuntu]
 
     steps:
+    - name: Update Toolchain (MSYS2)
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          base-devel
+          git
+          make
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          ninja:p    
+
     - name: Determine Release Name
       run: |
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
@@ -344,7 +357,8 @@ jobs:
         echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
         else
         echo "Skip release"
-        fi    
+        fi
+      shell: bash
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -362,19 +376,6 @@ jobs:
       with:
         name: instrset.h
         path: machine
-
-    - name: Update Toolchain (MSYS2)
-      uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        install: >-
-          base-devel
-          git
-          make
-        pacboy: >-
-          toolchain:p
-          cmake:p
-          ninja:p
 
     - name: Build Debug
       shell: msys2 {0}
