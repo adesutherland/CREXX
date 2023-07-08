@@ -208,16 +208,16 @@ jobs:
    
     steps:
       - name: Determine Release Name
-          run: |
-            if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-            elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-            echo "RELEASE_ID=develop" >> $GITHUB_ENV
-            elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
-            echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
-            else
-            echo "Skip release"
-            fi
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+          echo "RELEASE_ID=develop" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
+          else
+          echo "Skip release"
+          fi
 
     - name: Checkout
       uses: actions/checkout@v3
