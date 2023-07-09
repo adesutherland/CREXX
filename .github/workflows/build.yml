@@ -619,7 +619,7 @@ jobs:
       - name: ZIP ubuntu binary
         if: env.RELEASE_ID
         run: 
-          zip -r CREXX-Ubuntu.zip CREXX-Ubuntu
+          tar -czf CREXX-Ubuntu.tar.gz CREXX-Ubuntu
 
       - name: Get windows binary
         if: env.RELEASE_ID
@@ -643,7 +643,7 @@ jobs:
       - name: ZIP MacOS binary
         if: env.RELEASE_ID
         run:
-          zip -r CREXX-MacOS.zip CREXX-MacOS
+          zip -rX CREXX-MacOS.zip CREXX-MacOS
 
       - name: Delete old release assets
         if: env.RELEASE_ID
@@ -664,7 +664,7 @@ jobs:
         with:
           files: |
             ./CREXX-CMS.zip
-            ./CREXX-Ubuntu.zip
+            ./CREXX-Ubuntu.tar.gz
             ./CREXX-Windows.zip
             ./CREXX-MacOS.zip
           name: Snapshot ${{ env.RELEASE_ID }}
