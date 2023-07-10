@@ -12,6 +12,8 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 endif ()
 
+set (CMAKE_OSX_ARCHITECTURES arm64 x86_64)
+
 include(CTest)
 add_subdirectory(re2c)
 add_subdirectory(lemon)
