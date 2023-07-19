@@ -43,9 +43,9 @@ do i=1 to fn.0
 end -- do i
 
 /* figure out the path for libraries etc */
-crexxhome=.string[]
-address cmd 'printenv CREXX_HOME' output crexxhome
-rxpath=crexxhome[1]
+rxpath=''
+env_wanted='CREXX_HOME'
+assembler getenv rxpath,env_wanted
 
 if verbose then call logo
 if verbose then say 'using CREXX_HOME:' rxpath
