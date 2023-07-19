@@ -18,7 +18,7 @@ arg fn = .string[]
 
 if fn[0]=0 then do
   call help
-  assembler exit
+  exit
 end
 
 
@@ -48,6 +48,7 @@ address cmd 'printenv CREXX_HOME' output crexxhome
 rxpath=crexxhome[1]
 
 if verbose then call logo
+if verbose then say 'using CREXX_HOME:' rxpath
 
 do i=1 to words(filenames)
   filename=word(filenames,i)

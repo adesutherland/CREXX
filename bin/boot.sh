@@ -1,5 +1,6 @@
-rxc -i /Users/rvjansen/apps/crexx_release/lib/rxfns/ crexx
+rxc -i $CREXX_HOME/lib/rxfns/ crexx
 rxas crexx
-rxcpack crexx ~/apps/crexx_release/lib/rxfns/library
+rxcpack crexx $CREXX_HOME/lib/rxfns/library
 ./ccomp crexx.c
 cp a.out crexx
+cp crexx $CREXX_HOME/bin
