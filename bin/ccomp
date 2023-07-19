@@ -1,5 +1,5 @@
 filename=$1
-thisdir="/Users/rvjansen/apps/crexx_release/"
+thisdir=$CREXX_HOME
 gcc  \
     -lrxvml -lmachine -lavl_tree -lplatform -lm  \
     -L$thisdir/interpreter \

@@ -26,6 +26,7 @@ add_subdirectory(interpreter)
 add_subdirectory(lib)
 add_subdirectory(debugger)
 add_subdirectory(tests)
+add_subdirectory(bin)
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
@@ -33,6 +34,6 @@ set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 # copy the scripts from the source directory to the destination directory using file() command
-file(COPY ${SOURCE_SCRIPTS_DIR} DESTINATION ${DEST_SCRIPTS_DIR})
+#file(COPY ${SOURCE_SCRIPTS_DIR} DESTINATION ${DEST_SCRIPTS_DIR})
 
 
