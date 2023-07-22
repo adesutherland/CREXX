@@ -12,106 +12,52 @@ func Lex(str string) int {
 	var yych byte
 	yych = str[cursor]
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy3
 	default:
-		goto yy2
+		goto yy1
 	}
-yy2:
+yy1:
 	cursor += 1
-yy3:
+yy2:
 //line "golang/001_basic.re":17
 	{
 		return -1
 	}
-//line "golang/001_basic.go":46
-yy4:
+//line "golang/001_basic.go":28
+yy3:
 	cursor += 1
 	marker = cursor
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
+		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy5
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy7
 	default:
-		goto yy3
+		goto yy2
 	}
-yy5:
+yy4:
 	cursor += 1
 //line "golang/001_basic.re":21
 	{
 		return 1
 	}
-//line "golang/001_basic.go":83
-yy7:
+//line "golang/001_basic.go":47
+yy5:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
+		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy5
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy7
 	default:
-		goto yy9
+		goto yy6
 	}
-yy9:
+yy6:
 	cursor = marker
-	goto yy3
+	goto yy2
 }
 //line "golang/001_basic.re":24
 

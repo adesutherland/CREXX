@@ -6,51 +6,51 @@
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt2 = NULL;
-		yyt1 = YYCURSOR;
-		goto yy3;
-	default:
-		yyt1 = NULL;
-		goto yy2;
+		case 'a':
+			yyt2 = NULL;
+			yyt1 = YYCURSOR;
+			goto yy2;
+		default:
+			yyt1 = NULL;
+			goto yy1;
 	}
-yy2:
+yy1:
 	p = yyt1;
 	{}
-yy3:
+yy2:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt2 = yyt1;
-		yyt1 = YYCURSOR;
-		goto yy3;
-	case 'b':	goto yy5;
-	default:	goto yy2;
+		case 'a':
+			yyt2 = yyt1;
+			yyt1 = YYCURSOR;
+			goto yy2;
+		case 'b': goto yy3;
+		default: goto yy1;
 	}
-yy5:
+yy3:
 	YYMARKER = ++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy6;
-	default:
-		yyt1 = yyt2;
-		goto yy2;
+		case 'a': goto yy4;
+		default:
+			yyt1 = yyt2;
+			goto yy1;
 	}
-yy6:
+yy4:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy5;
-	default:	goto yy7;
+		case 'b': goto yy3;
+		default: goto yy5;
 	}
-yy7:
+yy5:
 	YYCURSOR = YYMARKER;
 	yyt1 = yyt2;
-	goto yy2;
+	goto yy1;
 }
 
 tags/copy_save.re:4:16: warning: rule matches empty string [-Wmatch-empty-string]

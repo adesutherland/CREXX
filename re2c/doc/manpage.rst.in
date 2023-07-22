@@ -2,78 +2,80 @@
 re2c
 ++++
 
-===================================
-compile regular expressions to code
-===================================
+======================================================
+generate fast lexical analyzers for C/C++, Go and Rust
+======================================================
 
 :Manual section: 1
 
 SYNOPSIS
 ========
 
-``re2c  [OPTIONS] INPUT [-o OUTPUT]``
-
-``re2go [OPTIONS] INPUT [-o OUTPUT]``
-
-DESCRIPTION
-===========
-
-re2c is a tool for generating fast lexical analyzers for C, C++ and Go.
-
 RE2C_DISCLAIMER
 
-Syntax
-======
-.. include:: @top_srcdir@/doc/manual/syntax/syntax.rst_
+.. include:: @top_srcdir@/doc/manual/synopsis.rst_
 
-EXAMPLE
-=======
+Introduction
+============
 
-Input file
-----------
+.. include:: @top_srcdir@/doc/manual/syntax/intro.rst_
+
+Here is an example of a small program that checks if a given string contains a
+decimal number:
 
 .. include:: @top_srcdir@/examples/RE2C_LANG/01_basic.re
     :literal:
     :code: RE2C_LANG
 
-Output file
------------
+In the output everything between ``/*!re2c`` and ``*/`` has been replaced with
+the generated code:
 
-.. include:: @top_srcdir@/examples/RE2C_LANG/01_basic.RE2C_LANG
+.. include:: @top_srcdir@/examples/RE2C_LANG/01_basic.RE2C_SOURCE_EXT
     :literal:
     :code: RE2C_LANG
 
-Options
-=======
-.. include:: @top_srcdir@/doc/manual/options/options.rst_
+Syntax
+======
 
-Debug options
--------------
-.. include:: @top_srcdir@/doc/manual/options/debug.rst_
-
-Internal options
-----------------
-.. include:: @top_srcdir@/doc/manual/options/internal.rst_
-
-Warnings
---------
-.. include:: @top_srcdir@/doc/manual/warnings/warnings_general.rst_
-.. include:: @top_srcdir@/doc/manual/warnings/warnings_list.rst_
+.. include:: @top_srcdir@/doc/manual/syntax/syntax.rst_
 
 Program interface
 =================
-.. include:: @top_srcdir@/doc/manual/api/api.rst_
 
-API primitives
---------------
-.. include:: @top_srcdir@/doc/manual/api/interface.rst_
+.. include:: @top_srcdir@/doc/manual/syntax/api1.rst_
+.. include:: @top_srcdir@/doc/manual/syntax/api2_RE2C_LANG.rst_
+.. include:: @top_srcdir@/doc/manual/syntax/api3.rst_
 
-Directives
-----------
+Options
+=======
+
+Some of the options have corresponding `configurations`_,
+others are global and cannot be changed after re2c starts reading the input file.
+Debug options generally require building re2c in debug configuration.
+Internal options are useful for experimenting with the algorithms used in re2c.
+
+.. include:: @top_srcdir@/doc/manual/options/options.rst_
+.. include:: @top_srcdir@/doc/manual/options/debug.rst_
+.. include:: @top_srcdir@/doc/manual/options/internal.rst_
+
+Warnings
+========
+
+Warnings can be invividually enabled, disabled and turned into an error.
+
+.. include:: @top_srcdir@/doc/manual/warnings/warnings_general.rst_
+.. include:: @top_srcdir@/doc/manual/warnings/warnings_list.rst_
+
+Blocks and directives
+=====================
 .. include:: @top_srcdir@/doc/manual/directives/directives.rst_
 
+API primitives
+==============
+.. include:: @top_srcdir@/doc/manual/api/interface.rst_
+
 Configurations
---------------
+==============
 .. include:: @top_srcdir@/doc/manual/configurations/configurations.rst_
 
 Regular expressions
@@ -112,6 +114,70 @@ Buffer refilling
     :literal:
     :code: RE2C_LANG
 
+Multiple blocks
+===============
+.. include:: @top_srcdir@/doc/manual/conditions/blocks.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/conditions/parse_u32_blocks.re
+    :literal:
+    :code: RE2C_LANG
+
+Start conditions
+================
+.. include:: @top_srcdir@/doc/manual/conditions/conditions.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/conditions/parse_u32_conditions.re
+    :literal:
+    :code: RE2C_LANG
+
+Storable state
+==============
+.. include:: @top_srcdir@/doc/manual/state/state.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/state/push.re
+    :literal:
+    :code: RE2C_LANG
+
+Reusable blocks
+===============
+.. include:: @top_srcdir@/doc/manual/reuse/reuse.rst_
+
+Example of a ``!use`` directive
+-------------------------------
+.. include:: @top_srcdir@/examples/RE2C_LANG/reuse/usedir.re
+    :literal:
+    :code: RE2C_LANG
+
+Example of a ``/*!use:re2c ... */`` block
+-----------------------------------------
+.. include:: @top_srcdir@/examples/RE2C_LANG/reuse/reuse.re
+    :literal:
+    :code: RE2C_LANG
+
+Submatch extraction
+===================
+.. include:: @top_srcdir@/doc/manual/submatch/submatch.rst_
+.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_stags.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/01_stags.re
+    :literal:
+    :code: RE2C_LANG
+.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_stags_fill.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/01_stags_fill.re
+    :literal:
+    :code: RE2C_LANG
+.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_posix.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/03_posix.re
+    :literal:
+    :code: RE2C_LANG
+.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_mtags.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/02_mtags.re
+    :literal:
+    :code: RE2C_LANG
+
+Encoding support
+================
+.. include:: @top_srcdir@/doc/manual/encodings/encodings.rst_
+.. include:: @top_srcdir@/examples/RE2C_LANG/encodings/unicode_identifier.re
+    :literal:
+    :code: RE2C_LANG
+
 Include files
 =============
 .. include:: @top_srcdir@/doc/manual/includes/includes.rst_
@@ -146,70 +212,7 @@ Input file
 
 Header file
 -----------
-.. include:: @top_srcdir@/examples/RE2C_LANG/headers/src/lexer/lexer.RE2C_HEADER_EXT
-    :literal:
-    :code: RE2C_LANG
-
-Submatch extraction
-===================
-.. include:: @top_srcdir@/doc/manual/submatch/submatch.rst_
-.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_stags.rst_
-.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/01_stags.re
-    :literal:
-    :code: RE2C_LANG
-.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_stags_fill.rst_
-.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/01_stags_fill.re
-    :literal:
-    :code: RE2C_LANG
-.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_posix.rst_
-.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/03_posix.re
-    :literal:
-    :code: RE2C_LANG
-.. include:: @top_srcdir@/doc/manual/submatch/submatch_example_mtags.rst_
-.. include:: @top_srcdir@/examples/RE2C_LANG/submatch/02_mtags.re
-    :literal:
-    :code: RE2C_LANG
-
-Storable state
-==============
-.. include:: @top_srcdir@/doc/manual/state/state.rst_
-Example
--------
-.. include:: @top_srcdir@/examples/RE2C_LANG/state/push.re
-    :literal:
-    :code: RE2C_LANG
-
-Reusable blocks
-===============
-.. include:: @top_srcdir@/doc/manual/reuse/reuse.rst_
-
-Example of ``!use`` directive
------------------------------
-.. include:: @top_srcdir@/examples/RE2C_LANG/reuse/usedir.re
-    :literal:
-    :code: RE2C_LANG
-
-Example of ``/*!use:re2c ... */`` directive
--------------------------------------------
-.. include:: @top_srcdir@/examples/RE2C_LANG/reuse/reuse.re
-    :literal:
-    :code: RE2C_LANG
-
-Encoding support
-================
-.. include:: @top_srcdir@/doc/manual/encodings/encodings.rst_
-Example
--------
-.. include:: @top_srcdir@/examples/RE2C_LANG/encodings/unicode_identifier.re
-    :literal:
-    :code: RE2C_LANG
-
-Start conditions
-================
-.. include:: @top_srcdir@/doc/manual/conditions/conditions.rst_
-Example
--------
-.. include:: @top_srcdir@/examples/RE2C_LANG/conditions/parse_u32_conditions.re
+.. include:: @top_srcdir@/examples/RE2C_LANG/headers/lexer/state.RE2C_HEADER_EXT
     :literal:
     :code: RE2C_LANG
 
@@ -228,6 +231,6 @@ Similar programs are flex(1), lex(1), quex(http://quex.sourceforge.net).
 
 AUTHORS
 =======
-Re2c was originaly written by Peter Bumbulis in 1993.
+re2c was originaly written by Peter Bumbulis in 1993.
 Since then it has been developed and maintained by multiple volunteers;
 mots notably, Brain Young, Marcus Boerger, Dan Nuffer and Ulya Trofimovich.

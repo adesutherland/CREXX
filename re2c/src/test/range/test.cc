@@ -2,57 +2,42 @@
 
 #include "src/test/range/test.h"
 #include "src/test/range/test-impl.h"
-
+#include "src/util/allocator.h"
 
 namespace re2c_test {
 
-static bool equal (const re2c::Range * r1, const re2c::Range * r2)
-{
-    for (; r1 && r2; r1 = r1->next (), r2 = r2->next ())
-    {
-        if (r1->lower () != r2->lower ()
-            || r1->upper () != r2->upper ())
-        {
+static bool equal (const re2c::Range* r1, const re2c::Range* r2) {
+    for (; r1 && r2; r1 = r1->next (), r2 = r2->next ()) {
+        if (r1->lower () != r2->lower () || r1->upper () != r2->upper ()) {
             return false;
         }
     }
     return !r1 && !r2;
 }
 
-static void show (const re2c::Range * r)
-{
-    if (!r)
-    {
+static void show (const re2c::Range* r) {
+    if (!r) {
         fprintf (stderr, "[]");
     }
-    for (; r; r = r->next ())
-    {
+    for (; r; r = r->next ()) {
         const uint32_t l = r->lower ();
         const uint32_t u = r->upper () - 1;
-        if (l < u)
-        {
+        if (l < u) {
             fprintf (stderr, "[%X-%X]", l, u);
-        }
-        else
-        {
+        } else {
             fprintf (stderr, "[%X]", l);
         }
     }
 }
 
-static int32_t diff
-    ( const re2c::Range * r1
-    , const re2c::Range * r2
-    , const re2c::Range * op1
-    , const re2c::Range * op2
-    , const char * op)
-{
-    if (equal (op1, op2))
-    {
+static int32_t diff(const re2c::Range* r1,
+                    const re2c::Range* r2,
+                    const re2c::Range* op1,
+                    const re2c::Range* op2,
+                    const char* op) {
+    if (equal (op1, op2)) {
         return 0;
-    }
-    else
-    {
+    } else {
         fprintf (stderr, "%s error: ", op);
         show (r1);
         fprintf (stderr, " %s ", op);
@@ -66,20 +51,20 @@ static int32_t diff
     }
 }
 
-static int32_t test ()
-{
+static int32_t test () {
     int32_t ok = 0;
-    re2c::RangeMgr rm;
+    re2c::IrAllocator alc;
+    re2c::RangeMgr rm(alc);
 
-    static const uint32_t BITS = 8;
-    static const uint32_t N = 1u << BITS;
+    static constexpr uint32_t BITS = 8;
+    static constexpr uint32_t N = 1u << BITS;
     for (uint32_t i = 0; i <= N; ++i) {
         for (uint32_t j = 0; j <= N; ++j) {
-            re2c::Range * r1 = range<BITS>(rm, i);
-            re2c::Range * r2 = range<BITS>(rm, j);
+            re2c::Range* r1 = range<BITS>(rm, i);
+            re2c::Range* r2 = range<BITS>(rm, j);
             ok |= diff (r1, r2, add<BITS>(rm, i, j), rm.add(r1, r2), "U");
             ok |= diff (r1, r2, sub<BITS>(rm, i, j), rm.sub(r1, r2), "D");
-            rm.clear();
+            alc.clear();
         }
     }
 
@@ -88,7 +73,6 @@ static int32_t test ()
 
 } // namespace re2c_test
 
-int main ()
-{
+int main () {
     return re2c_test::test ();
 }

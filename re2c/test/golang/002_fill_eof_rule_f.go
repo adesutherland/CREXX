@@ -70,33 +70,33 @@ func Lex(in *Input) int {
 
 	
 //line "golang/002_fill_eof_rule_f.go":73
-
+{
 	switch (in.state) {
 	default:
 		goto yy0
 	case 0:
 		if (in.limit-in.cursor < 1) {
-			goto yy16
+			goto yy11
 		}
 		goto yyFillLabel0
 	case 1:
 		if (in.limit-in.cursor < 1) {
-			goto yy7
+			goto yy4
 		}
 		goto yyFillLabel1
 	case 2:
 		if (in.limit-in.cursor < 1) {
-			goto yy10
+			goto yy6
 		}
 		goto yyFillLabel2
 	case 3:
 		if (in.limit-in.cursor < 1) {
-			goto yy12
+			goto yy8
 		}
 		goto yyFillLabel3
 	case 4:
 		if (in.limit-in.cursor < 1) {
-			goto yy15
+			goto yy10
 		}
 		goto yyFillLabel4
 	}
@@ -105,185 +105,119 @@ yyFillLabel0:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
 	case ' ':
+		goto yy3
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy5
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy8
 	default:
 		if (in.limit-in.cursor < 1) {
 			in.state = 0
 			return lexNeedMoreInput
 		}
-		goto yy3
+		goto yy2
 	}
-yy3:
+yy2:
 	in.cursor += 1
+	in.state = -1
 //line "golang/002_fill_eof_rule_f.re":80
 	{
 		fmt.Println("error")
 		return lexError
 	}
-//line "golang/002_fill_eof_rule_f.go":144
-yy5:
+//line "golang/002_fill_eof_rule_f.go":127
+yy3:
 	in.cursor += 1
 yyFillLabel1:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
 	case ' ':
-		goto yy5
+		goto yy3
 	default:
 		if (in.limit-in.cursor < 1) {
 			in.state = 1
 			return lexNeedMoreInput
 		}
-		goto yy7
+		goto yy4
 	}
-yy7:
+yy4:
+	in.state = -1
 //line "golang/002_fill_eof_rule_f.re":100
 	{
 		return lexSpace
 	}
-//line "golang/002_fill_eof_rule_f.go":164
-yy8:
+//line "golang/002_fill_eof_rule_f.go":148
+yy5:
 	in.cursor += 1
 	in.marker = in.cursor
 yyFillLabel2:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
 	case '-':
-		goto yy11
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy8
+		goto yy7
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy5
 	default:
 		if (in.limit-in.cursor < 1) {
 			in.state = 2
 			return lexNeedMoreInput
 		}
-		goto yy10
+		goto yy6
 	}
-yy10:
+yy6:
+	in.state = -1
 //line "golang/002_fill_eof_rule_f.re":90
 	{
 		fmt.Printf("number-1: %v\n", string(in.data[in.token:in.cursor]))
 		return lexNumber1
 	}
-//line "golang/002_fill_eof_rule_f.go":206
-yy11:
+//line "golang/002_fill_eof_rule_f.go":173
+yy7:
 	in.cursor += 1
 yyFillLabel3:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy13
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy9
 	default:
 		if (in.limit-in.cursor < 1) {
 			in.state = 3
 			return lexNeedMoreInput
 		}
-		goto yy12
+		goto yy8
 	}
-yy12:
+yy8:
 	in.cursor = in.marker
-	goto yy10
-yy13:
+	goto yy6
+yy9:
 	in.cursor += 1
 yyFillLabel4:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy13
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy9
 	default:
 		if (in.limit-in.cursor < 1) {
 			in.state = 4
 			return lexNeedMoreInput
 		}
-		goto yy15
+		goto yy10
 	}
-yy15:
+yy10:
+	in.state = -1
 //line "golang/002_fill_eof_rule_f.re":95
 	{
 		fmt.Printf("number-2: %v\n", string(in.data[in.token:in.cursor]))
 		return lexNumber2
 	}
-//line "golang/002_fill_eof_rule_f.go":280
-yy16:
+//line "golang/002_fill_eof_rule_f.go":212
+yy11:
+	in.state = -1
 //line "golang/002_fill_eof_rule_f.re":85
 	{
 		fmt.Println("end")
 		return lexEnd
 	}
-//line "golang/002_fill_eof_rule_f.go":287
+//line "golang/002_fill_eof_rule_f.go":220
+}
 //line "golang/002_fill_eof_rule_f.re":103
 
 }

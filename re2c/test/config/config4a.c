@@ -13,61 +13,65 @@ char *scan(char *p)
 	char *q;
 
 #line 16 "config/config4a.c"
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy0;
-	case 0:
-		goto yyFillLabel0;
-	case 1:
-		goto yyFillLabel1;
+		default: goto yy0;
+		case 0: goto yyFillLabel0;
+		case 1: goto yyFillLabel1;
 	}
 yy0:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(0);
+		YYFILL(1);
+	}
 yyFillLabel0:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy5;
-	default:	goto yy3;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy3;
+		default: goto yy2;
 	}
-yy3:
+yy2:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 #line 15 "config/config4a.re"
 	{ return NULL; }
 #line 48 "config/config4a.c"
-yy5:
+yy3:
 	++YYCURSOR;
-	YYSETSTATE(1);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(1);
+		YYFILL(1);
+	}
 yyFillLabel1:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto yy5;
-	default:	goto yy7;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy3;
+		default: goto yy4;
 	}
-yy7:
+yy4:
+	YYSETSTATE(-1);
 #line 14 "config/config4a.re"
 	{ return YYCURSOR; }
-#line 71 "config/config4a.c"
+#line 74 "config/config4a.c"
+}
 #line 16 "config/config4a.re"
 
 }

@@ -4,154 +4,70 @@
 package main
 
 type YYCTYPE byte
-type Input struct {
-	data   []YYCTYPE
-	cursor int
-	marker int
-}
-
-func peek(in *Input) func() YYCTYPE {
-	return func() YYCTYPE {
-		return in.data[in.cursor]
-	}
-}
-
-func skip(in *Input) func() {
-	return func() {
-		in.cursor++
-	}
-}
-
-func backup(in *Input) func() {
-	return func() {
-		in.marker = in.cursor
-	}
-}
-
-func restore(in *Input) func() {
-	return func() {
-		in.cursor = in.marker
-	}
-}
 
 func Lex(str string) int {
-	in := &Input{
-		data:   []YYCTYPE(str),
-		cursor: 0,
-	}
-	YYPEEK := peek(in)
-	YYSKIP := skip(in)
-	YYBACKUP := backup(in)
-	YYRESTORE := restore(in)
+	data := []YYCTYPE(str)
+	var cursor, marker int
+
+	YYPEEK := func() YYCTYPE { return data[cursor] }
+	YYSKIP := func() { cursor++ }
+	YYBACKUP := func() { marker = cursor }
+	YYRESTORE := func() { cursor = marker }
 
 	
-//line "golang/001_basic_functions.go":49
+//line "golang/001_basic_functions.go":19
 {
 	var yych YYCTYPE
 	yych = YYPEEK()
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy3
 	default:
-		goto yy2
+		goto yy1
 	}
-yy2:
+yy1:
 	YYSKIP()
-yy3:
-//line "golang/001_basic_functions.re":51
+yy2:
+//line "golang/001_basic_functions.re":21
 	{
 		return -1
 	}
-//line "golang/001_basic_functions.go":84
-yy4:
+//line "golang/001_basic_functions.go":36
+yy3:
 	YYSKIP()
 	YYBACKUP()
 	yych = YYPEEK()
 	switch (yych) {
 	case 0x00:
+		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy5
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy7
 	default:
-		goto yy3
+		goto yy2
 	}
-yy5:
+yy4:
 	YYSKIP()
-//line "golang/001_basic_functions.re":55
+//line "golang/001_basic_functions.re":25
 	{
 		return 1
 	}
-//line "golang/001_basic_functions.go":121
-yy7:
+//line "golang/001_basic_functions.go":55
+yy5:
 	YYSKIP()
 	yych = YYPEEK()
 	switch (yych) {
 	case 0x00:
+		goto yy4
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy5
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy7
 	default:
-		goto yy9
+		goto yy6
 	}
-yy9:
+yy6:
 	YYRESTORE()
-	goto yy3
+	goto yy2
 }
-//line "golang/001_basic_functions.re":58
+//line "golang/001_basic_functions.re":28
 
 }
 

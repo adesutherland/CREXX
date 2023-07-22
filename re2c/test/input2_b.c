@@ -42,20 +42,20 @@
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	if (yybm[0+yych] & 128) {
-		goto yy3;
+		goto yy2;
 	}
+yy1:
 yy2:
-yy3:
 	++YYCURSOR;
 	if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 	yych = *YYCURSOR;
 	if (yybm[0+yych] & 128) {
-		goto yy3;
+		goto yy2;
 	}
-	if (yych <= '`') goto yy2;
-	if (yych >= 'c') goto yy2;
+	if (yych <= '`') goto yy1;
+	if (yych >= 'c') goto yy1;
 	yych = *++YYCURSOR;
-	if (yych != 'b') goto yy2;
+	if (yych != 'b') goto yy1;
 	++YYCURSOR;
 #line 4 "input2_b.re"
 	{ return 1; }
@@ -63,7 +63,7 @@ yy3:
 }
 #line 6 "input2_b.re"
 
-input2_b.re:6:2: warning: control flow is undefined for strings that match 
+input2_b.re:2:0: warning: control flow is undefined for strings that match 
 	'[\x0-\x60\x62-\xFF]'
 	'\x61 [\x0-\x60\x63-\xFF]'
 	'\x61 \x62 [\x0-\x61\x63-\xFF]'

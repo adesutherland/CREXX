@@ -32,16 +32,28 @@ jobs:
           # no Windows, as Kleenex generates non-portable C code
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Setup
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Setup Common Prerequisites
         run: |
           case ${{ runner.os }} in
             Linux*)
               echo "CC=gcc" >> $GITHUB_ENV
               echo "CXX=g++" >> $GITHUB_ENV
-              sudo apt-get install libre2-dev libbenchmark-dev
+              sudo apt update
+              sudo apt install libre2-dev libbenchmark-dev
               ;;
             macOS*)
               sudo xcode-select -switch /Applications/Xcode.app
@@ -52,6 +64,7 @@ jobs:
               brew install re2 google-benchmark
               ;;
           esac
+          pip install psutil
 
       - name: Configure
         run: |
@@ -59,6 +72,7 @@ jobs:
             -G "Unix Makefiles" \
             -DRE2C_BUILD_LIBS=ON \
             -DRE2C_BUILD_RE2GO=OFF \
+            -DRE2C_BUILD_RE2RUST=OFF \
             -DRE2C_BUILD_BENCHMARKS=ON \
             -DCMAKE_CXX_FLAGS="-O3"
 
@@ -75,6 +89,10 @@ jobs:
       - name: Run submatch DFA JIT benchmark
         working-directory: .build/benchmarks/submatch_dfa_jit
         run: ./bench_submatch_dfa_jit
+
+      - name: Run submatch Java benchmark (ReTdfa)
+        working-directory: .build/benchmarks/submatch_java
+        run: ./run.py
 
       - name: Run submatch NFA benchmark
         working-directory: .build/benchmarks/submatch_nfa

@@ -2,32 +2,32 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
-#include <assert.h>
 
 #include "lib/regex.h"
 #include "lib/regex_impl.h"
-#include "src/debug/debug.h"
 #include "src/dfa/closure_posix.h"
 #include "src/dfa/posix_precedence.h"
 #include "src/dfa/tag_history.h"
 #include "src/nfa/nfa.h"
 #include "src/regexp/rule.h"
+#include "src/util/check.h"
 #include "src/util/range.h"
-
 
 namespace re2c {
 namespace libre2c {
 
-static void make_one_step(psimctx_t &, uint32_t);
-static void make_final_step(psimctx_t &);
+static void make_one_step(psimctx_t&, uint32_t);
+static void make_final_step(psimctx_t&);
 
 // we *do* want these to be inlined
-static inline void closure_posix(psimctx_t &ctx);
+static inline void closure_posix(psimctx_t& ctx);
 
-int regexec_nfa_posix(const regex_t *preg, const char *string
-    , size_t nmatch, regmatch_t pmatch[], int /* eflags */)
-{
-    psimctx_t &ctx = *static_cast<psimctx_t*>(preg->simctx);
+int regexec_nfa_posix(const regex_t* preg,
+                      const char* string,
+                      size_t nmatch,
+                      regmatch_t pmatch[],
+                      int /*eflags*/) {
+    psimctx_t& ctx = *static_cast<psimctx_t*>(preg->simctx);
     init(ctx, string);
 
     // root state can be non-core, so we pass zero as origin to avoid checks
@@ -51,35 +51,27 @@ int regexec_nfa_posix(const regex_t *preg, const char *string
     return 0;
 }
 
-void closure_posix(psimctx_t &ctx)
-{
+void closure_posix(psimctx_t& ctx) {
     ctx.history.init();
-
-    if (ctx.flags & REG_GTOP) {
-        closure_posix_gtop(ctx);
-    }
-    else {
-        closure_posix_gor1(ctx);
-    }
+    closure_posix_gor1(ctx);
 }
 
-void make_one_step(psimctx_t &ctx, uint32_t sym)
-{
-    confset_t &state = ctx.state, &reach = ctx.reach;
+void make_one_step(psimctx_t& ctx, uint32_t sym) {
+    confset_t& state = ctx.state, &reach = ctx.reach;
     uint32_t j = 0;
     reach.clear();
 
     for (cconfiter_t i = state.begin(), e = state.end(); i != e; ++i) {
-        nfa_state_t *s = i->state;
+        TnfaState* s = i->state;
 
         s->clos = NOCLOS;
         s->arcidx = 0;
-        DASSERT(s->status == GOR_NOPASS && s->active == 0);
+        DCHECK(s->status == GOR_NOPASS && s->active == 0);
 
-        if (s->type == nfa_state_t::RAN) {
-            for (const Range *r = s->ran.ran; r; r = r->next()) {
+        if (s->kind == TnfaState::Kind::RAN) {
+            for (const Range* r = s->ran; r; r = r->next()) {
                 if (r->lower() <= sym && sym < r->upper()) {
-                    const conf_t c(s->ran.out, j, HROOT);
+                    const conf_t c(s->out1, j, HROOT);
                     reach.push_back(c);
                     state[j] = *i;
                     update_offsets(ctx, *i, j);
@@ -87,8 +79,7 @@ void make_one_step(psimctx_t &ctx, uint32_t sym)
                     break;
                 }
             }
-        }
-        else if (s->type == nfa_state_t::FIN) {
+        } else if (s->kind == TnfaState::Kind::FIN) {
             update_offsets(ctx, *i, NONCORE);
         }
     }
@@ -98,8 +89,7 @@ void make_one_step(psimctx_t &ctx, uint32_t sym)
 
     if (!(ctx.flags & REG_SLOWPREC)) {
         compute_prectable_complex(ctx);
-    }
-    else {
+    } else {
         compute_prectable_naive(ctx);
     }
     std::swap(ctx.newprectbl, ctx.oldprectbl);
@@ -109,16 +99,15 @@ void make_one_step(psimctx_t &ctx, uint32_t sym)
     ++ctx.step;
 }
 
-void make_final_step(psimctx_t &ctx)
-{
+void make_final_step(psimctx_t& ctx) {
     for (cconfiter_t i = ctx.state.begin(), e = ctx.state.end(); i != e; ++i) {
-        nfa_state_t *s = i->state;
+        TnfaState* s = i->state;
 
         s->clos = NOCLOS;
         s->arcidx = 0;
-        DASSERT(s->status == GOR_NOPASS && s->active == 0);
+        DCHECK(s->status == GOR_NOPASS && s->active == 0);
 
-        if (s->type == nfa_state_t::FIN) {
+        if (s->kind == TnfaState::Kind::FIN) {
             update_offsets(ctx, *i, NONCORE);
         }
     }
@@ -126,4 +115,3 @@ void make_final_step(psimctx_t &ctx)
 
 } // namespace libre2c
 } // namespace re2c
-

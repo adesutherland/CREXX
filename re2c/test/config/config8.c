@@ -49,32 +49,32 @@ std:
 	if ((s.lim - s.cur) < 3) fill(3);
 	curr = *s.cur;
 	switch (curr) {
-	case '\t':
-	case '\n':
-	case ' ':	goto xx4;
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto xx6;
-	case 'a':
-	case 'b':	goto xx9;
-	default:	goto xx2;
+		case '\t':
+		case '\n':
+		case ' ': goto xx3;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto xx4;
+		case 'a':
+		case 'b': goto xx6;
+		default: goto xx1;
 	}
-xx2:
+xx1:
 	++s.cur;
-xx3:
+xx2:
 #line 67 "config/config8.re"
 	{
 		return UNEXPECTED;
 	}
 #line 77 "config/config8.c"
-xx4:
+xx3:
 	++s.cur;
 #line 60 "config/config8.re"
 	{
@@ -84,84 +84,84 @@ xx4:
 		goto std;
 	}
 #line 87 "config/config8.c"
-xx6:
+xx4:
 	++s.cur;
 	if (s.lim <= s.cur) fill(1);
 	curr = *s.cur;
 	switch (curr) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto xx6;
-	default:	goto xx8;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto xx4;
+		default: goto xx5;
 	}
-xx8:
+xx5:
 #line 57 "config/config8.re"
 	{ return NUMBER;  }
 #line 108 "config/config8.c"
-xx9:
+xx6:
 	curr = *++s.cur;
 	switch (curr) {
-	case '0':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':
-		s.ctx = s.cur;
-		goto xx10;
-	case '1':
-		s.ctx = s.cur;
-		goto xx13;
-	default:	goto xx3;
+		case '0':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			s.ctx = s.cur;
+			goto xx7;
+		case '1':
+			s.ctx = s.cur;
+			goto xx9;
+		default: goto xx2;
 	}
-xx10:
+xx7:
 	++s.cur;
 	if (s.lim <= s.cur) fill(1);
 	curr = *s.cur;
 	switch (curr) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto xx10;
-	default:	goto xx12;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto xx7;
+		default: goto xx8;
 	}
-xx12:
+xx8:
 	s.cur = s.ctx;
 #line 56 "config/config8.re"
 	{ return KEYWORD; }
 #line 149 "config/config8.c"
-xx13:
+xx9:
 	curr = *++s.cur;
 	switch (curr) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':	goto xx10;
-	default:	goto xx14;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto xx7;
+		default: goto xx10;
 	}
-xx14:
+xx10:
 	s.cur -= 1;
 #line 55 "config/config8.re"
 	{ return KEYWORD; }

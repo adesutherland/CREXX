@@ -7,58 +7,57 @@
 	YYCTYPE yych;
 	unsigned int yyaccept = 0;
 	if ((YYLIMIT - YYCURSOR) < 6) YYFILL(6);
-	yych = *YYCURSOR++;
-	yych = *YYCURSOR;
+	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy5;
-	default:	goto yy3;
+		case 'a': goto yy3;
+		default: goto yy1;
 	}
-yy3:
+yy1:
 	yyaccept = 0;
-	yych = *(YYMARKER = ++YYCURSOR);
-	goto yy6;
-yy4:
+	YYMARKER = ++YYCURSOR;
+	goto yy4;
+yy2:
 #line 6 "control_flow_yymarker_yyaccept_fail.re"
 	{ action3 }
-#line 24 "control_flow_yymarker_yyaccept_fail.c"
-yy5:
-	yych = *++YYCURSOR;
-yy6:
+#line 23 "control_flow_yymarker_yyaccept_fail.c"
+yy3:
+	++YYCURSOR;
+yy4:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy8;
-	default:	goto yy7;
+		case 'a': goto yy6;
+		default: goto yy5;
 	}
-yy7:
-	yych = *++YYCURSOR;
-	goto yy10;
-yy8:
+yy5:
+	++YYCURSOR;
+	goto yy8;
+yy6:
 	yyaccept = 1;
-	yych = *(YYMARKER = ++YYCURSOR);
-	goto yy10;
-yy9:
+	YYMARKER = ++YYCURSOR;
+	goto yy8;
+yy7:
 #line 5 "control_flow_yymarker_yyaccept_fail.re"
 	{ action2 }
-#line 43 "control_flow_yymarker_yyaccept_fail.c"
-yy10:
+#line 42 "control_flow_yymarker_yyaccept_fail.c"
+yy8:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy12;
-	default:	goto yy11;
+		case 'a': goto yy10;
+		default: goto yy9;
 	}
-yy11:
+yy9:
 	YYCURSOR = YYMARKER;
 	if (yyaccept == 0) {
-		goto yy4;
+		goto yy2;
 	} else {
-		goto yy9;
+		goto yy7;
 	}
-yy12:
+yy10:
 	++YYCURSOR;
 #line 4 "control_flow_yymarker_yyaccept_fail.re"
 	{ action1 }
-#line 61 "control_flow_yymarker_yyaccept_fail.c"
+#line 60 "control_flow_yymarker_yyaccept_fail.c"
 }
 #line 8 "control_flow_yymarker_yyaccept_fail.re"
 
-control_flow_yymarker_yyaccept_fail.re:8:2: warning: control flow is undefined for strings that match '[\x0-\xFF] \x61 [\x0-\xFF] [\x0-\x60\x62-\xFF] [\x0-\xFF] [\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+control_flow_yymarker_yyaccept_fail.re:2:0: warning: control flow is undefined for strings that match '[\x0-\xFF] \x61 [\x0-\xFF] [\x0-\x60\x62-\xFF] [\x0-\xFF] [\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]

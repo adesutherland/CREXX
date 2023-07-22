@@ -6,35 +6,34 @@
 {
 	YYCTYPE yych;
 	if ((YYLIMIT - YYCURSOR) < 3) YYFILL(3);
-	yych = *YYCURSOR++;
-	yych = *YYCURSOR;
+	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy5;
-	default:	goto yy3;
+		case 'a': goto yy3;
+		default: goto yy1;
 	}
+yy1:
+	yych = *++YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy5;
+		default: goto yy2;
+	}
+yy2:
+#line 5 "control_flow_fail.re"
+	{ action2 }
+#line 24 "control_flow_fail.c"
 yy3:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy7;
-	default:	goto yy4;
+		case 'a': goto yy5;
+		default: goto yy4;
 	}
 yy4:
-#line 5 "control_flow_fail.re"
-	{ action2 }
-#line 25 "control_flow_fail.c"
 yy5:
-	yych = *++YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy7;
-	default:	goto yy6;
-	}
-yy6:
-yy7:
 	++YYCURSOR;
 #line 4 "control_flow_fail.re"
 	{ action1 }
-#line 37 "control_flow_fail.c"
+#line 36 "control_flow_fail.c"
 }
 #line 7 "control_flow_fail.re"
 
-control_flow_fail.re:7:2: warning: control flow is undefined for strings that match '[\x0-\xFF] \x61 [\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+control_flow_fail.re:2:0: warning: control flow is undefined for strings that match '[\x0-\xFF] \x61 [\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]

@@ -1,0 +1,177 @@
+name: CI CMake
+
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # When set to true, GitHub cancels
+      # all in-progress jobs if any matrix job fails.
+      fail-fast: false
+
+      matrix:
+
+        include:
+          # Linux
+          - name: linux-gcc-ubsan-ootree
+            os: ubuntu-latest
+
+          - name: linux-gcc-asan-ootree
+            os: ubuntu-latest
+
+          - name: linux-gcc-valgrind-ootree
+            os: ubuntu-latest
+
+          - name: linux-gcc-debug-ootree-skeleton
+            os: ubuntu-latest
+
+          - name: linux-gcc-debug-intree-m32-skeleton
+            os: ubuntu-latest
+
+          - name: linux-gcc-release-ootree-skeleton
+            os: ubuntu-latest
+
+          # macOS
+          - name: macos-clang-debug-ootree-skeleton
+            os: macos-latest
+
+          - name: macos-clang-debug-intree-skeleton
+            os: macos-latest
+
+          - name: macos-clang-release-ootree-skeleton
+            os: macos-latest
+
+          # Windows
+          - name: windows-msvc-debug-ootree
+            os: windows-latest
+
+          - name: windows-msvc-debug-intree
+            os: windows-latest
+
+          - name: windows-msvc-release-ootree
+            os: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup chocolatey Cache (Windows)
+        if: startsWith(runner.os, 'Windows')
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+          key: ${{ runner.os }}-chocolatey-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-chocolatey-${{ matrix.os }}-
+            ${{ runner.os }}-chocolatey-
+
+      - name: Setup apt cache (Linux)
+        if: startsWith(runner.os, 'Linux')
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt
+          key: ${{ runner.os }}-apt-cache-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-apt-cache-${{ matrix.os }}-
+            ${{ runner.os }}-apt-cache-
+
+      - name: Setup Common Prerequisites
+        run: |
+          case ${{ runner.os }} in
+            Linux*)
+              sudo apt update
+              sudo apt install gcc-multilib g++-multilib  # for -m32
+              sudo apt install valgrind
+              ;;
+            macOS*)
+              sudo xcode-select -switch /Applications/Xcode.app
+              echo "SDKROOT=$(xcodebuild -version -sdk macosx Path)" >> $GITHUB_ENV
+              echo "$(xcodebuild -version -sdk macosx Path)" >> $GITHUB_PATH
+              brew install coreutils  # for `nproc`
+              ;;
+            Windows*)
+              choco install --no-progress -y winflexbison3
+              choco install gnuwin32-coreutils.install  # for `nproc`
+              ;;
+          esac
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.x
+          architecture: x64
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install docutils pygments
+
+      - name: Check Available Configure Presets
+        run: cmake --list-presets
+
+      - name: Fast Configure
+        run: cmake --preset=${{ matrix.name }}-fast -DPython3_ROOT_DIR="${{ env.pythonLocation }}"
+
+      - name: Fast Build
+        run: cmake --build --preset=${{ matrix.name }}-fast -j$(nproc)
+
+      - name: Install
+        run: cmake --build --preset=${{ matrix.name }}-fast --target install
+
+      - name: Minimal Install Test
+        working-directory: ./install/bin
+        run: ./re2c --version
+
+      - name: Get build dir
+        id: build-info
+        run: |
+          if echo "${{ matrix.name }}" | grep -q "ootree"; then
+            BUILD_DIR="$(pwd)/.build/${{ matrix.name }}-full"
+          else
+            BUILD_DIR="$(pwd)"
+          fi
+          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_OUTPUT
+
+      - name: Full Configure
+        run: cmake --preset=${{ matrix.name }}-full -DPython3_ROOT_DIR="${{ env.pythonLocation }}"
+
+      - name: Full Build
+        run: |
+          find src -name '*.re' | xargs touch
+          cmake --build --preset=${{ matrix.name }}-full -j$(nproc)
+
+      - name: Run Main Test Suite
+        run: bash -c "ulimit -s 256; cmake --build --preset=${{ matrix.name }}-full --target tests -j$(nproc)"
+
+      - name: Run Skeleton Tests
+        if: "contains(matrix.name, 'skeleton')"
+        working-directory: ${{ steps.build-info.outputs.BUILD_DIR }}
+        run: python run_tests.py --skeleton
+
+      - name: Run Valgrind Tests
+        if: "contains(matrix.name, 'valgrind')"
+        working-directory: ${{ steps.build-info.outputs.BUILD_DIR }}
+        run: python run_tests.py --valgrind
+
+      - name: Archive test artifacts
+        # Run this step only if tests failed (otherwise there is nothing to upload).
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          # To ensure that jobs don't overwrite existing artifacts,
+          # use a different name per job.
+          name: test-${{ matrix.name }}
+          # Tests run in a temporary directory that has a name test_<timestamp>.
+          path: ${{ steps.build-info.outputs.BUILD_DIR }}/test_[0-9]*
+          # Artifacts are retained for 90 days by default.
+          # In fact, we don't need such long period.
+          retention-days: 30

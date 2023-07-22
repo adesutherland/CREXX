@@ -9,39 +9,39 @@ const unsigned char *scan(const unsigned char *p, unsigned int len, int *state)
 	const unsigned char * const e = p + len;
 
 	switch (*state) {
-	default:
-		goto yy0;
-	case 0:
-		goto yyFillLabel0;
-	case 1:
-		goto yyFillLabel1;
+		default: goto yy0;
+		case 0: goto yyFillLabel0;
+		case 1: goto yyFillLabel1;
 	}
 
 
-
+	{
 yy0:
-	*state = 0;
-	if (p >= e) {
+		*state = 0;
+		if (p >= e) {
 		return NULL;
 	}
 yyFillLabel0:
-	c = *p;
-	if (c <= '/') goto yy3;
-	if (c <= '9') goto yy5;
+		c = *p;
+		if (c <= '/') goto yy2;
+		if (c <= '9') goto yy3;
+yy2:
+		++p;
+		*state = -1;
+		{ return NULL; }
 yy3:
-	++p;
-	{ return NULL; }
-yy5:
-	++p;
-	*state = 1;
-	if (p >= e) {
+		++p;
+		*state = 1;
+		if (p >= e) {
 		return NULL;
 	}
 yyFillLabel1:
-	c = *p;
-	if (c <= '/') goto yy7;
-	if (c <= '9') goto yy5;
-yy7:
-	{ return p; }
+		c = *p;
+		if (c <= '/') goto yy4;
+		if (c <= '9') goto yy3;
+yy4:
+		*state = -1;
+		{ return p; }
+	}
 
 }

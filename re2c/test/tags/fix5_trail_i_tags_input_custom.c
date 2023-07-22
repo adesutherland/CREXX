@@ -20,85 +20,85 @@ static void lex(const char *s)
 	char yych;
 	yych = YYPEEK();
 	switch (yych) {
-	case '0':
-		YYSTAGP(yyt1);
-		goto yy4;
-	case '1':
-		YYSTAGP(yyt1);
-		goto yy5;
-	default:	goto yy2;
+		case '0':
+			YYSTAGP(yyt1);
+			goto yy3;
+		case '1':
+			YYSTAGP(yyt1);
+			goto yy4;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	YYSKIP();
-yy3:
+yy2:
 	{ printf("error\n"); return; }
+yy3:
+	YYSKIP();
+	YYBACKUP();
+	yych = YYPEEK();
+	switch (yych) {
+		case '0':
+		case '1': goto yy6;
+		default: goto yy2;
+	}
 yy4:
 	YYSKIP();
 	YYBACKUP();
 	yych = YYPEEK();
 	switch (yych) {
-	case '0':
-	case '1':	goto yy7;
-	default:	goto yy3;
+		case '2':
+			YYSTAGP(yyt2);
+			goto yy9;
+		case '3':
+			YYSTAGP(yyt2);
+			goto yy10;
+		default: goto yy2;
 	}
 yy5:
 	YYSKIP();
-	YYBACKUP();
 	yych = YYPEEK();
-	switch (yych) {
-	case '2':
-		YYSTAGP(yyt2);
-		goto yy10;
-	case '3':
-		YYSTAGP(yyt2);
-		goto yy12;
-	default:	goto yy3;
-	}
 yy6:
+	switch (yych) {
+		case '0': goto yy5;
+		case '1': goto yy8;
+		default: goto yy7;
+	}
+yy7:
+	YYRESTORE();
+	goto yy2;
+yy8:
 	YYSKIP();
 	yych = YYPEEK();
-yy7:
 	switch (yych) {
-	case '0':	goto yy6;
-	case '1':	goto yy9;
-	default:	goto yy8;
+		case '2':
+			YYSTAGP(yyt2);
+			goto yy9;
+		case '3':
+			YYSTAGP(yyt2);
+			goto yy10;
+		default: goto yy7;
 	}
-yy8:
-	YYRESTORE();
-	goto yy3;
 yy9:
 	YYSKIP();
 	yych = YYPEEK();
 	switch (yych) {
-	case '2':
-		YYSTAGP(yyt2);
-		goto yy10;
-	case '3':
-		YYSTAGP(yyt2);
-		goto yy12;
-	default:	goto yy8;
+		case '2': goto yy9;
+		case '3': goto yy10;
+		default: goto yy7;
 	}
 yy10:
 	YYSKIP();
 	yych = YYPEEK();
-	switch (yych) {
-	case '2':	goto yy10;
-	case '3':	goto yy12;
-	default:	goto yy8;
-	}
-yy12:
-	YYSKIP();
-	yych = YYPEEK();
 	YYSTAGP(yyt3);
-	goto yy15;
-yy13:
+	goto yy13;
+yy11:
 	p0 = yyt1;
 	p2 = yyt2;
-	YYRESTORETAG(yyt3);
 	p1 = yyt2;
 	YYSHIFTSTAG(p1, -1);
 	p3 = yyt3;
 	YYSHIFTSTAG(p3, -1);
+	YYRESTORETAG(yyt3);
 	{
             printf("'%.*s', '%.*s', '%.*s', '%.*s', '%s'\n",
                 p1 - p0, p0,
@@ -108,13 +108,13 @@ yy13:
                 s);
                 return;
         }
-yy14:
+yy12:
 	YYSKIP();
 	yych = YYPEEK();
-yy15:
+yy13:
 	switch (yych) {
-	case '4':	goto yy14;
-	default:	goto yy13;
+		case '4': goto yy12;
+		default: goto yy11;
 	}
 }
 

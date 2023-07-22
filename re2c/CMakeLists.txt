@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(re2c VERSION 2.1.1 HOMEPAGE_URL "https://re2c.org/")
+project(re2c VERSION 3.1 HOMEPAGE_URL "https://re2c.org/")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -17,45 +17,45 @@ if(RE2C_REBUILD_LEXERS AND NOT RE2C_FOR_BUILD)
     message(FATAL_ERROR "option RE2C_FOR_BUILD is required for RE2C_REBUILD_LEXERS")
 endif()
 
-option(RE2C_REBUILD_DOCS "Regenerate manpage" OFF)
-if(RE2C_REBUILD_DOCS)
-    find_program(RST2MAN NAMES rst2man rst2man.py)
-    if(NOT RST2MAN)
-        message(FATAL_ERROR "rst2man (or rst2man.py) program is required for RE2C_REBUILD_DOCS")
-    endif()
-
-    # Windows does not have a native 'man' and 'sed' commands.
-    # Therefore, we are looking for the Cygwin versions of 'man' and 'sed'.
-    if (WIN32)
-        find_program(MAN_EXECUTABLE man)
-        if(NOT MAN_EXECUTABLE)
-            message(FATAL_ERROR "man program is required for RE2C_REBUILD_DOCS")
-        endif()
-
-        find_program(SED_EXECUTABLE sed)
-        if(NOT SED_EXECUTABLE)
-            message(FATAL_ERROR "sed program is required for RE2C_REBUILD_DOCS")
-        endif()
-    endif()
+option(RE2C_REBUILD_PARSERS "Regenerate parsers with Bison" OFF)
+if(RE2C_REBUILD_PARSERS AND NOT RE2C_FOR_BUILD)
+    find_package(BISON REQUIRED)
 endif()
 
+option(RE2C_REBUILD_DOCS "Regenerate manpage" OFF)
 option(RE2C_BUILD_LIBS "Build libraries" OFF)
 
+
 option(RE2C_BUILD_RE2GO "Build re2go executable (an alias for `re2c --lang go`)" ON)
+option(RE2C_BUILD_RE2RUST "Build re2rust executable (an alias for `re2c --lang rust`)" ON)
 
 option(RE2C_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(RE2C_REGEN_BENCHMARKS "Regenerate C code for benchmarks" OFF)
 
 # checks for programs
-find_package(BISON)
+find_package(Python3 COMPONENTS Interpreter)
+# starting from cmake 3.19 find_package can do version check, but we are on 3.12
+if(Python3_VERSION VERSION_LESS 3.7)
+    message(FATAL_ERROR "python version 3.7 or higher is required")
+endif()
+if(RE2C_REBUILD_DOCS)
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}" -c "import docutils"
+        RESULT_VARIABLE EXIT_CODE
+        OUTPUT_QUIET
+    )
+    if (NOT ${EXIT_CODE} EQUAL 0)
+        message(FATAL_ERROR "python package docutils (needed for docs) not found")
+    endif()
+endif()
 
-# checks for C++ compiler flags
-set(CMAKE_CXX_STANDARD 98)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# Use C++11 standard. Note that without `set(CMAKE_CXX_EXTENSIONS OFF)` this enables
+# -std=gnu++11, not -std=c++11. Extensions are needed to enable POSIX functions on
+# Cygwin and NetBSD.
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON) # fail if the C++ compiler does not support this standard
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # make sure object libraries work with shared libraries
 
-# use system stdint.h if present, otherwise fallback to src/c99_stdint.h
-ac_check_headers("stdint.h")
 # needed for POSIX file API
 ac_check_headers("sys/types.h")
 ac_check_headers("sys/stat.h")
@@ -64,42 +64,36 @@ ac_check_headers("unistd.h")
 # windows POSIX-like API
 ac_check_headers("io.h")
 
-# list of possible types to use in typedefs
-ac_check_sizeof("char")
-ac_check_sizeof("short")
-ac_check_sizeof("int")
-ac_check_sizeof("long")
-ac_check_sizeof("long long")
-ac_check_sizeof("__int64")
-ac_check_sizeof("void *")
-# 64-bit integer constant suffix
-ac_check_sizeof("0l")
-ac_check_sizeof("0ll")
-ac_check_sizeof("0i8")
-
 # docs (manpages and help)
-set(re2c_manpage_source       "${CMAKE_CURRENT_BINARY_DIR}/doc/manpage.rst")
-set(re2c_help_source          "${CMAKE_CURRENT_BINARY_DIR}/doc/help.rst")
-set(re2c_manpage_bootstrap_c  "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/doc/re2c.1")
-set(re2c_manpage_bootstrap_go "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/doc/re2go.1")
-set(re2c_help_bootstrap       "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/src/msg/help.cc")
-set(re2c_manpage_c            "${CMAKE_CURRENT_BINARY_DIR}/doc/re2c.1")
-set(re2c_manpage_go           "${CMAKE_CURRENT_BINARY_DIR}/doc/re2go.1")
-set(re2c_help                 "${CMAKE_CURRENT_BINARY_DIR}/src/msg/help.cc")
-set(re2c_genhelp              "${CMAKE_CURRENT_SOURCE_DIR}/build/gen_help.sh")
-set(re2c_splitman             "${CMAKE_CURRENT_SOURCE_DIR}/build/split_man.sh")
+set(re2c_manpage_source         "${CMAKE_CURRENT_BINARY_DIR}/doc/manpage.rst")
+set(re2c_help_source            "${CMAKE_CURRENT_BINARY_DIR}/doc/help.rst")
+set(re2c_manpage_bootstrap_c    "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/doc/re2c.1")
+set(re2c_manpage_bootstrap_go   "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/doc/re2go.1")
+set(re2c_manpage_bootstrap_rust "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/doc/re2rust.1")
+set(re2c_help_bootstrap         "${CMAKE_CURRENT_SOURCE_DIR}/bootstrap/src/msg/help.cc")
+set(re2c_manpage_c              "${CMAKE_CURRENT_BINARY_DIR}/doc/re2c.1")
+set(re2c_manpage_go             "${CMAKE_CURRENT_BINARY_DIR}/doc/re2go.1")
+set(re2c_manpage_rust           "${CMAKE_CURRENT_BINARY_DIR}/doc/re2rust.1")
+set(re2c_help                   "${CMAKE_CURRENT_BINARY_DIR}/src/msg/help.cc")
+set(re2c_rst2man                "${CMAKE_CURRENT_SOURCE_DIR}/build/rst2man.py")
+set(re2c_rst2txt                "${CMAKE_CURRENT_SOURCE_DIR}/build/rst2txt.py")
+set(re2c_splitman               "${CMAKE_CURRENT_SOURCE_DIR}/build/split_man.py")
 set(re2c_docs
     "${re2c_help}"
     "${re2c_manpage_c}"
     "$<$<BOOL:${RE2C_BUILD_RE2GO}>:${re2c_manpage_go}>"
+    "$<$<BOOL:${RE2C_BUILD_RE2RUST}>:${re2c_manpage_rust}>"
 )
 
 set(top_srcdir "${CMAKE_CURRENT_SOURCE_DIR}")
+set(top_builddir "${CMAKE_CURRENT_BINARY_DIR}")
+set(PYTHON "${Python3_EXECUTABLE}")
+
 configure_file(doc/manpage.rst.in doc/manpage.rst @ONLY)
 configure_file(doc/help.rst.in doc/help.rst @ONLY)
 
-configure_file(run_tests.sh.in run_tests.sh @ONLY)
-set(RE2C_RUN_TESTS "${CMAKE_CURRENT_BINARY_DIR}/run_tests.sh")
+configure_file(run_tests.py.in run_tests.py @ONLY)
+set(RE2C_RUN_TESTS "${CMAKE_CURRENT_BINARY_DIR}/run_tests.py")
 if(CMAKE_HOST_UNIX)
     execute_process(COMMAND chmod +x "${RE2C_RUN_TESTS}")
 endif()
@@ -132,21 +126,16 @@ add_library(re2c_objects_autogen_ver_to_vernum OBJECT
 )
 
 set(re2c_sources
-    src/codegen/code_goto.cc
-    src/codegen/combine.cc
-    src/codegen/gen_bitmaps.cc
-    src/codegen/gen_delayed.cc
-    src/codegen/gen_dfa.cc
-    src/codegen/gen_goto.cc
-    src/codegen/gen_program.cc
-    src/codegen/gen_state.cc
     src/codegen/helpers.cc
-    src/codegen/render.cc
+    src/codegen/output.cc
+    src/codegen/pass1_analyze.cc
+    src/codegen/pass2_generate.cc
+    src/codegen/pass3_fixup.cc
+    src/codegen/pass4_render.cc
     src/options/opt.cc
-    src/nfa/estimate_size.cc
+    src/options/symtab.cc
     src/nfa/re_to_nfa.cc
     src/adfa/adfa.cc
-    src/adfa/prepare.cc
     src/debug/dump_adfa.cc
     src/debug/dump_cfg.cc
     src/debug/dump_dfa.cc
@@ -170,26 +159,21 @@ set(re2c_sources
     src/dfa/fillpoints.cc
     src/dfa/find_state.cc
     src/dfa/minimization.cc
-    src/dfa/stacmd.cc
     src/dfa/tagver_table.cc
     src/dfa/tcmd.cc
-    src/encoding/ebcdic/ebcdic_regexp.cc
+    src/encoding/ebcdic.cc
     src/encoding/enc.cc
     src/encoding/range_suffix.cc
-    src/encoding/utf8/utf8_regexp.cc
-    src/encoding/utf8/utf8.cc
-    src/encoding/utf16/utf16_regexp.cc
-    src/encoding/utf16/utf16.cc
+    src/encoding/utf8.cc
+    src/encoding/utf16.cc
     src/msg/msg.cc
     src/msg/warn.cc
     src/regexp/ast_to_re.cc
     src/regexp/default_tags.cc
     src/regexp/fixed_tags.cc
     src/regexp/nullable.cc
-    src/regexp/rule.cc
+    src/regexp/regexp.cc
     src/regexp/split_charset.cc
-    src/regexp/tag.cc
-    src/compile.cc
     src/skeleton/control_flow.cc
     src/skeleton/generate_code.cc
     src/skeleton/generate_data.cc
@@ -197,12 +181,8 @@ set(re2c_sources
     src/skeleton/skeleton.cc
     src/parse/ast.cc
     src/parse/input.cc
-    src/parse/parse.cc
-    src/parse/scanner.cc
-    src/parse/unescape.cc
-    src/util/get_dir.cc
-    src/util/s_to_n32_unsafe.cc
-    src/util/temp_file.cc
+    src/util/file_utils.cc
+    src/util/string_utils.cc
     src/util/range.cc
     src/main.cc
     $<TARGET_OBJECTS:re2c_objects_autogen>
@@ -215,7 +195,13 @@ add_executable(re2c ${re2c_sources})
 # re2go
 if (RE2C_BUILD_RE2GO)
     add_executable(re2go ${re2c_sources})
-    target_compile_definitions(re2go PUBLIC "RE2C_LANG=LANG_GO")
+    target_compile_definitions(re2go PUBLIC "RE2C_LANG=Lang::GO")
+endif()
+
+# re2rust
+if (RE2C_BUILD_RE2RUST)
+    add_executable(re2rust ${re2c_sources})
+    target_compile_definitions(re2rust PUBLIC "RE2C_LANG=Lang::RUST")
 endif()
 
 re2c_bootstrap_lexer("src/parse/lex.re" "src/parse/lex.cc" "src/parse/lex.h")
@@ -227,8 +213,8 @@ re2c_bootstrap_parser("src/parse/parser.ypp" "src/parse/parser.cc" "src/parse/pa
 # docs
 set(re2c_docs_sources
     "${re2c_manpage_source}"
-    "doc/manual/api/api.rst_"
     "doc/manual/api/interface.rst_"
+    "doc/manual/conditions/blocks.rst_"
     "doc/manual/conditions/conditions.rst_"
     "doc/manual/configurations/configurations.rst_"
     "doc/manual/directives/directives.rst_"
@@ -253,13 +239,22 @@ set(re2c_docs_sources
     "doc/manual/state/state.rst_"
     "doc/manual/submatch/submatch_example_mtags.rst_"
     "doc/manual/submatch/submatch_example_posix.rst_"
-    "doc/manual/submatch/submatch_example_stags.rst_"
     "doc/manual/submatch/submatch_example_stags_fill.rst_"
+    "doc/manual/submatch/submatch_example_stags.rst_"
     "doc/manual/submatch/submatch.rst_"
+    "doc/manual/synopsis.rst_"
+    "doc/manual/syntax/api1.rst_"
+    "doc/manual/syntax/api2_c.rst_"
+    "doc/manual/syntax/api2_go.rst_"
+    "doc/manual/syntax/api2_rust.rst_"
+    "doc/manual/syntax/api3.rst_"
+    "doc/manual/syntax/intro.rst_"
     "doc/manual/syntax/syntax.rst_"
     "doc/manual/warnings/warnings_general.rst_"
     "doc/manual/warnings/warnings_list.rst_"
     "examples/c/01_basic.re"
+    "examples/c/01_basic.c"
+    "examples/c/conditions/parse_u32_blocks.re"
     "examples/c/conditions/parse_u32_conditions.re"
     "examples/c/encodings/unicode_identifier.re"
     "examples/c/eof/01_sentinel.re"
@@ -269,17 +264,19 @@ set(re2c_docs_sources
     "examples/c/fill/01_fill.re"
     "examples/c/fill/02_fill.re"
     "examples/c/headers/header.re"
-    "examples/c/headers/src/lexer/lexer.h"
+    "examples/c/headers/lexer/state.h"
     "examples/c/includes/include.re"
     "examples/c/includes/definitions.h"
     "examples/c/reuse/reuse.re"
     "examples/c/reuse/usedir.re"
     "examples/c/state/push.re"
-    "examples/c/submatch/01_stags.re"
     "examples/c/submatch/01_stags_fill.re"
+    "examples/c/submatch/01_stags.re"
     "examples/c/submatch/02_mtags.re"
     "examples/c/submatch/03_posix.re"
     "examples/go/01_basic.re"
+    "examples/go/01_basic.go"
+    "examples/go/conditions/parse_u32_blocks.re"
     "examples/go/conditions/parse_u32_conditions.re"
     "examples/go/encodings/unicode_identifier.re"
     "examples/go/eof/01_sentinel.re"
@@ -289,18 +286,42 @@ set(re2c_docs_sources
     "examples/go/fill/01_fill.re"
     "examples/go/fill/02_fill.re"
     "examples/go/headers/header.re"
-    "examples/go/headers/src/lexer/lexer.go"
+    "examples/go/headers/lexer/state.go"
     "examples/go/includes/include.re"
     "examples/go/includes/definitions.go"
     "examples/go/reuse/reuse.re"
     "examples/go/reuse/usedir.re"
     "examples/go/state/push.re"
+    "examples/go/submatch/01_stags_fill.re"
     "examples/go/submatch/01_stags.re"
     "examples/go/submatch/02_mtags.re"
     "examples/go/submatch/03_posix.re"
+    "examples/rust/01_basic.re"
+    "examples/rust/01_basic.rs"
+    "examples/rust/conditions/parse_u32_blocks.re"
+    "examples/rust/conditions/parse_u32_conditions.re"
+    "examples/rust/encodings/unicode_identifier.re"
+    "examples/rust/eof/01_sentinel.re"
+    "examples/rust/eof/02_bounds_checking.re"
+    "examples/rust/eof/03_eof_rule.re"
+    "examples/rust/eof/05_generic_api_eof_rule.re"
+    "examples/rust/fill/01_fill.re"
+    "examples/rust/fill/02_fill.re"
+    "examples/rust/headers/header.re"
+    "examples/rust/headers/lexer/state.rs"
+    "examples/rust/includes/include.re"
+    "examples/rust/includes/definitions.rs"
+    "examples/rust/reuse/reuse.re"
+    "examples/rust/reuse/usedir.re"
+    "examples/rust/state/push.re"
+    "examples/rust/submatch/01_stags_fill.re"
+    "examples/rust/submatch/01_stags.re"
+    "examples/rust/submatch/02_mtags.re"
+    "examples/rust/submatch/03_posix.re"
 )
-re2c_gen_manpage("${re2c_manpage_source}" "${re2c_manpage_c}"  "${re2c_manpage_bootstrap_c}"  "c")
-re2c_gen_manpage("${re2c_manpage_source}" "${re2c_manpage_go}" "${re2c_manpage_bootstrap_go}" "go")
+re2c_gen_manpage("${re2c_manpage_source}" "${re2c_manpage_c}"    "${re2c_manpage_bootstrap_c}"  "c")
+re2c_gen_manpage("${re2c_manpage_source}" "${re2c_manpage_go}"   "${re2c_manpage_bootstrap_go}" "go")
+re2c_gen_manpage("${re2c_manpage_source}" "${re2c_manpage_rust}" "${re2c_manpage_bootstrap_rust}" "rust")
 re2c_gen_help("${re2c_help_source}" "${re2c_help}" "${re2c_help_bootstrap}")
 add_custom_target(docs DEPENDS "${re2c_docs}")
 
@@ -312,6 +333,10 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     if(RE2C_BUILD_RE2GO)
         install(TARGETS re2go RUNTIME DESTINATION bin)
         install(FILES "${re2c_manpage_go}" DESTINATION "share/man/man1")
+    endif()
+    if(RE2C_BUILD_RE2RUST)
+        install(TARGETS re2rust RUNTIME DESTINATION bin)
+        install(FILES "${re2c_manpage_rust}" DESTINATION "share/man/man1")
     endif()
     install(FILES include/unicode_categories.re DESTINATION "${RE2C_STDLIB_DIR}")
 
@@ -326,19 +351,19 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     add_custom_target(tests
         DEPENDS "${RE2C_RUN_TESTS}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND "${RE2C_RUN_TESTS}"
+        COMMAND "${Python3_EXECUTABLE}" "${RE2C_RUN_TESTS}"
     )
     add_dependencies(tests re2c)
     add_custom_target(vtests
         DEPENDS "${RE2C_RUN_TESTS}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND "${RE2C_RUN_TESTS}" --valgrind
+        COMMAND "${Python3_EXECUTABLE}" "${RE2C_RUN_TESTS}" --valgrind
     )
     add_dependencies(vtests re2c)
     add_custom_target(wtests
         DEPENDS "${RE2C_RUN_TESTS}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMAND "${RE2C_RUN_TESTS}" --wine -j1
+        COMMAND "${Python3_EXECUTABLE}" "${RE2C_RUN_TESTS}" --wine -j1
     )
     add_dependencies(wtests re2c)
     add_executable(re2c_test_range
@@ -347,11 +372,10 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
         src/test/range/test.h
         src/util/range.cc
         src/util/range.h
-        src/util/static_assert.h
     )
     add_executable(re2c_test_s_to_n32_unsafe
         src/test/s_to_n32_unsafe/test.cc
-        src/util/s_to_n32_unsafe.cc
+        src/util/string_utils.cc
     )
     add_executable(re2c_test_ver_to_vernum
         src/test/ver_to_vernum/test.cc
@@ -393,22 +417,21 @@ if (RE2C_BUILD_LIBS)
     )
     re2c_bootstrap_lexer("lib/test_helper.re" "lib/test_helper.cc")
 
-    add_library(libre2c_objects OBJECT
+    set(libre2c_sources
         lib/regcomp.cc
         lib/regexec.cc
         lib/regexec_dfa.cc
-        lib/regexec_dfa_regless.cc
+        lib/regexec_dfa_multipass.cc
         lib/regexec_nfa_leftmost.cc
         lib/regexec_nfa_leftmost_trie.cc
         lib/regexec_nfa_posix.cc
         lib/regexec_nfa_posix_trie.cc
-        lib/regexec_nfa_posix_backward.cc
-        lib/regexec_nfa_posix_kuklewicz.cc
         lib/regfree.cc
         lib/stubs.cc
         src/parse/ast.cc
-        src/parse/unescape.cc
+        src/parse/input.cc
         src/options/opt.cc
+        src/options/symtab.cc
         src/cfg/cfg.cc
         src/cfg/compact.cc
         src/cfg/dce.cc
@@ -432,35 +455,28 @@ if (RE2C_BUILD_LIBS)
         src/dfa/fillpoints.cc
         src/dfa/find_state.cc
         src/dfa/minimization.cc
-        src/dfa/stacmd.cc
         src/dfa/tagver_table.cc
         src/dfa/tcmd.cc
-        src/nfa/estimate_size.cc
         src/nfa/re_to_nfa.cc
         src/encoding/enc.cc
         src/encoding/range_suffix.cc
-        src/encoding/ebcdic/ebcdic_regexp.cc
-        src/encoding/utf16/utf16.cc
-        src/encoding/utf16/utf16_regexp.cc
-        src/encoding/utf8/utf8.cc
-        src/encoding/utf8/utf8_regexp.cc
+        src/encoding/ebcdic.cc
+        src/encoding/utf16.cc
+        src/encoding/utf8.cc
         src/msg/msg.cc
         src/msg/warn.cc
         src/regexp/ast_to_re.cc
         src/regexp/default_tags.cc
         src/regexp/fixed_tags.cc
         src/regexp/nullable.cc
-        src/regexp/rule.cc
+        src/regexp/regexp.cc
         src/regexp/split_charset.cc
-        src/regexp/tag.cc
         src/skeleton/control_flow.cc
         src/skeleton/maxpath.cc
         src/skeleton/skeleton.cc
         src/util/range.cc
-        src/util/s_to_n32_unsafe.cc
-    )
-    set(libre2c_sources
-        $<TARGET_OBJECTS:libre2c_objects>
+        src/util/file_utils.cc
+        src/util/string_utils.cc
         $<TARGET_OBJECTS:libre2c_objects_autogen>
         $<TARGET_OBJECTS:re2c_objects_autogen_ver_to_vernum>
     )
@@ -504,6 +520,7 @@ if (RE2C_BUILD_LIBS)
     if(RE2C_BUILD_BENCHMARKS)
         add_subdirectory(benchmarks/submatch_nfa)
         add_subdirectory(benchmarks/submatch_dfa_jit)
+        add_subdirectory(benchmarks/submatch_java)
     endif()
 else()
     # empty check target

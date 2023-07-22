@@ -7,8 +7,8 @@
 	YYCTYPE yych;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yych != '\n') goto yy3;
-yy3:
+	if (yych != '\n') goto yy1;
+yy1:
 	++YYCURSOR;
 #line 3 "encodings/range_neg_lf_u.re"
 	{return 0;}
@@ -16,4 +16,4 @@ yy3:
 }
 #line 4 "encodings/range_neg_lf_u.re"
 
-encodings/range_neg_lf_u.re:4:2: warning: control flow is undefined for strings that match '\xA', use default rule '*' [-Wundefined-control-flow]
+encodings/range_neg_lf_u.re:2:0: warning: control flow is undefined for strings that match '\xA', use default rule '*' [-Wundefined-control-flow]

@@ -29,11 +29,11 @@ func LexSlices(str string) (a []int, b []int, c int) {
 
 	var yyt3 int
 
-	var yyt1 []int
-	var yyt2 []int
-	var yyt4 []int
-	var yyt5 []int
-	var yyt6 []int
+	var yytm1 []int
+	var yytm2 []int
+	var yytm4 []int
+	var yytm5 []int
+	var yytm6 []int
 
 	
 {
@@ -42,217 +42,217 @@ func LexSlices(str string) (a []int, b []int, c int) {
 	switch (yych) {
 	case 0x00:
 		yyt3 = -1
-		yyt2 = append(yyt2, -1)
-		yyt1 = append(yyt1, -1)
-		goto yy2
+		yytm2 = append(yytm2, -1)
+		yytm1 = append(yytm1, -1)
+		goto yy1
 	case 'a':
-		yyt1 = append(yyt1, cursor)
-		yyt5 = append(yyt5, cursor)
-		yyt4 = append(yyt4, cursor)
-		goto yy6
+		yytm1 = append(yytm1, cursor)
+		yytm5 = append(yytm5, cursor)
+		yytm4 = append(yytm4, cursor)
+		goto yy4
 	case 'b':
-		yyt2 = append(yyt2, cursor)
-		goto yy7
+		yytm2 = append(yytm2, cursor)
+		goto yy5
 	case 'c':
 		yyt3 = cursor
-		goto yy8
+		goto yy6
 	default:
-		goto yy4
+		goto yy2
 	}
-yy2:
+yy1:
 	cursor += 1
-	a = yyt1
-	b = yyt2
+	a = yytm1
+	b = yytm2
 	c = yyt3
 	{ return }
+yy2:
+	cursor += 1
+yy3:
+	{return nil, nil, -2 }
 yy4:
 	cursor += 1
+	marker = cursor
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm2 = append(yytm2, -1)
+		goto yy7
+	case 'a':
+		goto yy8
+	case 'b':
+		yytm2 = append(yytm2, cursor)
+		yytm6 = append(yytm6, cursor)
+		goto yy10
+	case 'c':
+		yyt3 = cursor
+		yytm2 = append(yytm2, -1)
+		goto yy11
+	default:
+		goto yy3
+	}
 yy5:
-	{return nil, nil, -2 }
+	cursor += 1
+	marker = cursor
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm5 = append(yytm5, -1)
+		goto yy7
+	case 'b':
+		goto yy12
+	default:
+		goto yy3
+	}
 yy6:
 	cursor += 1
 	marker = cursor
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		yyt3 = -1
-		yyt2 = append(yyt2, -1)
-		goto yy9
-	case 'a':
-		goto yy11
-	case 'b':
-		yyt2 = append(yyt2, cursor)
-		yyt6 = append(yyt6, cursor)
-		goto yy14
+		yytm2 = append(yytm2, -1)
+		yytm5 = append(yytm5, -1)
+		goto yy7
 	case 'c':
-		yyt3 = cursor
-		yyt2 = append(yyt2, -1)
-		goto yy15
+		goto yy13
 	default:
-		goto yy5
+		goto yy3
 	}
 yy7:
 	cursor += 1
-	marker = cursor
+	a = yytm5
+	b = yytm2
+	c = yyt3
+	{ return }
+yy8:
+	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
 		yyt3 = -1
-		yyt5 = append(yyt5, -1)
-		goto yy9
+		yytm2 = append(yytm2, -1)
+		goto yy7
+	case 'a':
+		goto yy8
 	case 'b':
-		goto yy16
+		yytm6 = append(yytm6, cursor)
+		goto yy14
 	default:
-		goto yy5
-	}
-yy8:
-	cursor += 1
-	marker = cursor
-	yych = str[cursor]
-	switch (yych) {
-	case 0x00:
-		yyt2 = append(yyt2, -1)
-		yyt5 = append(yyt5, -1)
 		goto yy9
-	case 'c':
-		goto yy18
-	default:
-		goto yy5
 	}
 yy9:
+	cursor = marker
+	goto yy3
+yy10:
 	cursor += 1
-	a = yyt5
-	b = yyt2
-	c = yyt3
-	{ return }
+	yych = str[cursor]
+	switch (yych) {
+	case 'c':
+		yyt3 = cursor
+		goto yy15
+	default:
+		goto yy9
+	}
 yy11:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		yyt3 = -1
-		yyt2 = append(yyt2, -1)
-		goto yy9
+		goto yy1
 	case 'a':
-		goto yy11
-	case 'b':
-		yyt6 = append(yyt6, cursor)
-		goto yy20
+		yytm1 = append(yytm1, cursor)
+		goto yy16
 	default:
-		goto yy13
+		goto yy9
+	}
+yy12:
+	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm5 = append(yytm5, -1)
+		goto yy7
+	case 'b':
+		goto yy12
+	default:
+		goto yy9
 	}
 yy13:
-	cursor = marker
-	goto yy5
+	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yytm2 = append(yytm2, -1)
+		yytm5 = append(yytm5, -1)
+		goto yy7
+	case 'c':
+		goto yy13
+	default:
+		goto yy9
+	}
 yy14:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 'c':
 		yyt3 = cursor
-		goto yy21
+		goto yy17
 	default:
-		goto yy13
+		goto yy9
 	}
 yy15:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
-	case 0x00:
-		goto yy2
 	case 'a':
-		yyt1 = append(yyt1, cursor)
-		goto yy22
+		yytm1 = append(yytm1, cursor)
+		goto yy16
 	default:
-		goto yy13
+		goto yy18
 	}
 yy16:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
-	case 0x00:
-		yyt3 = -1
-		yyt5 = append(yyt5, -1)
-		goto yy9
 	case 'b':
-		goto yy16
+		yytm2 = append(yytm2, cursor)
+		goto yy20
+	case 'c':
+		yyt3 = cursor
+		yytm2 = append(yytm2, -1)
+		goto yy11
 	default:
-		goto yy13
+		goto yy9
 	}
-yy18:
+yy17:
 	cursor += 1
 	yych = str[cursor]
+yy18:
 	switch (yych) {
 	case 0x00:
-		yyt2 = append(yyt2, -1)
-		yyt5 = append(yyt5, -1)
-		goto yy9
+		goto yy19
 	case 'c':
-		goto yy18
+		goto yy17
 	default:
-		goto yy13
+		goto yy9
 	}
+yy19:
+	cursor += 1
+	a = yytm4
+	b = yytm6
+	c = yyt3
+	{ return }
 yy20:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 'c':
 		yyt3 = cursor
-		goto yy23
+		goto yy11
 	default:
-		goto yy13
-	}
-yy21:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'a':
-		yyt1 = append(yyt1, cursor)
-		goto yy22
-	default:
-		goto yy24
-	}
-yy22:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'b':
-		yyt2 = append(yyt2, cursor)
-		goto yy27
-	case 'c':
-		yyt3 = cursor
-		yyt2 = append(yyt2, -1)
-		goto yy15
-	default:
-		goto yy13
-	}
-yy23:
-	cursor += 1
-	yych = str[cursor]
-yy24:
-	switch (yych) {
-	case 0x00:
-		goto yy25
-	case 'c':
-		goto yy23
-	default:
-		goto yy13
-	}
-yy25:
-	cursor += 1
-	a = yyt4
-	b = yyt6
-	c = yyt3
-	{ return }
-yy27:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'c':
-		yyt3 = cursor
-		goto yy15
-	default:
-		goto yy13
+		goto yy9
 	}
 }
 
@@ -264,11 +264,11 @@ func LexTrie(str string) (mt mtagTrie, a int, b int, c int) {
 
 	var yyt3 int
 
-	yyt1 := mtagRoot
-	yyt2 := mtagRoot
-	yyt4 := mtagRoot
-	yyt5 := mtagRoot
-	yyt6 := mtagRoot
+	yytm1 := mtagRoot
+	yytm2 := mtagRoot
+	yytm4 := mtagRoot
+	yytm5 := mtagRoot
+	yytm6 := mtagRoot
 
 	
 {
@@ -277,217 +277,217 @@ func LexTrie(str string) (mt mtagTrie, a int, b int, c int) {
 	switch (yych) {
 	case 0x00:
 		yyt3 = -1
-		yyt2 = mtag(&mt, yyt2, -1)
-		yyt1 = mtag(&mt, yyt1, -1)
-		goto yy30
+		yytm2 = mtag(&mt, yytm2, -1)
+		yytm1 = mtag(&mt, yytm1, -1)
+		goto yy22
 	case 'a':
-		yyt1 = mtag(&mt, yyt1, cursor)
-		yyt5 = mtag(&mt, yyt5, cursor)
-		yyt4 = mtag(&mt, yyt4, cursor)
-		goto yy34
+		yytm1 = mtag(&mt, yytm1, cursor)
+		yytm5 = mtag(&mt, yytm5, cursor)
+		yytm4 = mtag(&mt, yytm4, cursor)
+		goto yy25
 	case 'b':
-		yyt2 = mtag(&mt, yyt2, cursor)
+		yytm2 = mtag(&mt, yytm2, cursor)
+		goto yy26
+	case 'c':
+		yyt3 = cursor
+		goto yy27
+	default:
+		goto yy23
+	}
+yy22:
+	cursor += 1
+	a = yytm1
+	b = yytm2
+	c = yyt3
+	{ return }
+yy23:
+	cursor += 1
+yy24:
+	{ return mt, -2, -2, -2 }
+yy25:
+	cursor += 1
+	marker = cursor
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm2 = mtag(&mt, yytm2, -1)
+		goto yy28
+	case 'a':
+		goto yy29
+	case 'b':
+		yytm2 = mtag(&mt, yytm2, cursor)
+		yytm6 = mtag(&mt, yytm6, cursor)
+		goto yy31
+	case 'c':
+		yyt3 = cursor
+		yytm2 = mtag(&mt, yytm2, -1)
+		goto yy32
+	default:
+		goto yy24
+	}
+yy26:
+	cursor += 1
+	marker = cursor
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm5 = mtag(&mt, yytm5, -1)
+		goto yy28
+	case 'b':
+		goto yy33
+	default:
+		goto yy24
+	}
+yy27:
+	cursor += 1
+	marker = cursor
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yytm2 = mtag(&mt, yytm2, -1)
+		yytm5 = mtag(&mt, yytm5, -1)
+		goto yy28
+	case 'c':
+		goto yy34
+	default:
+		goto yy24
+	}
+yy28:
+	cursor += 1
+	a = yytm5
+	b = yytm2
+	c = yyt3
+	{ return }
+yy29:
+	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yyt3 = -1
+		yytm2 = mtag(&mt, yytm2, -1)
+		goto yy28
+	case 'a':
+		goto yy29
+	case 'b':
+		yytm6 = mtag(&mt, yytm6, cursor)
 		goto yy35
+	default:
+		goto yy30
+	}
+yy30:
+	cursor = marker
+	goto yy24
+yy31:
+	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
 	case 'c':
 		yyt3 = cursor
 		goto yy36
 	default:
-		goto yy32
+		goto yy30
 	}
-yy30:
-	cursor += 1
-	a = yyt1
-	b = yyt2
-	c = yyt3
-	{ return }
 yy32:
 	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		goto yy22
+	case 'a':
+		yytm1 = mtag(&mt, yytm1, cursor)
+		goto yy37
+	default:
+		goto yy30
+	}
 yy33:
-	{ return mt, -2, -2, -2 }
-yy34:
 	cursor += 1
-	marker = cursor
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
 		yyt3 = -1
-		yyt2 = mtag(&mt, yyt2, -1)
-		goto yy37
-	case 'a':
-		goto yy39
+		yytm5 = mtag(&mt, yytm5, -1)
+		goto yy28
 	case 'b':
-		yyt2 = mtag(&mt, yyt2, cursor)
-		yyt6 = mtag(&mt, yyt6, cursor)
-		goto yy42
-	case 'c':
-		yyt3 = cursor
-		yyt2 = mtag(&mt, yyt2, -1)
-		goto yy43
-	default:
 		goto yy33
+	default:
+		goto yy30
+	}
+yy34:
+	cursor += 1
+	yych = str[cursor]
+	switch (yych) {
+	case 0x00:
+		yytm2 = mtag(&mt, yytm2, -1)
+		yytm5 = mtag(&mt, yytm5, -1)
+		goto yy28
+	case 'c':
+		goto yy34
+	default:
+		goto yy30
 	}
 yy35:
 	cursor += 1
-	marker = cursor
 	yych = str[cursor]
 	switch (yych) {
-	case 0x00:
-		yyt3 = -1
-		yyt5 = mtag(&mt, yyt5, -1)
-		goto yy37
-	case 'b':
-		goto yy44
+	case 'c':
+		yyt3 = cursor
+		goto yy38
 	default:
-		goto yy33
+		goto yy30
 	}
 yy36:
 	cursor += 1
-	marker = cursor
 	yych = str[cursor]
 	switch (yych) {
-	case 0x00:
-		yyt2 = mtag(&mt, yyt2, -1)
-		yyt5 = mtag(&mt, yyt5, -1)
+	case 'a':
+		yytm1 = mtag(&mt, yytm1, cursor)
 		goto yy37
-	case 'c':
-		goto yy46
 	default:
-		goto yy33
+		goto yy39
 	}
 yy37:
 	cursor += 1
-	a = yyt5
-	b = yyt2
-	c = yyt3
-	{ return }
-yy39:
-	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
-	case 0x00:
-		yyt3 = -1
-		yyt2 = mtag(&mt, yyt2, -1)
-		goto yy37
-	case 'a':
-		goto yy39
 	case 'b':
-		yyt6 = mtag(&mt, yyt6, cursor)
-		goto yy48
-	default:
+		yytm2 = mtag(&mt, yytm2, cursor)
 		goto yy41
-	}
-yy41:
-	cursor = marker
-	goto yy33
-yy42:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
 	case 'c':
 		yyt3 = cursor
-		goto yy49
+		yytm2 = mtag(&mt, yytm2, -1)
+		goto yy32
 	default:
-		goto yy41
-	}
-yy43:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 0x00:
 		goto yy30
-	case 'a':
-		yyt1 = mtag(&mt, yyt1, cursor)
-		goto yy50
-	default:
-		goto yy41
 	}
-yy44:
+yy38:
 	cursor += 1
 	yych = str[cursor]
+yy39:
 	switch (yych) {
 	case 0x00:
-		yyt3 = -1
-		yyt5 = mtag(&mt, yyt5, -1)
-		goto yy37
-	case 'b':
-		goto yy44
-	default:
-		goto yy41
-	}
-yy46:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 0x00:
-		yyt2 = mtag(&mt, yyt2, -1)
-		yyt5 = mtag(&mt, yyt5, -1)
-		goto yy37
+		goto yy40
 	case 'c':
-		goto yy46
+		goto yy38
 	default:
-		goto yy41
+		goto yy30
 	}
-yy48:
+yy40:
 	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'c':
-		yyt3 = cursor
-		goto yy51
-	default:
-		goto yy41
-	}
-yy49:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'a':
-		yyt1 = mtag(&mt, yyt1, cursor)
-		goto yy50
-	default:
-		goto yy52
-	}
-yy50:
-	cursor += 1
-	yych = str[cursor]
-	switch (yych) {
-	case 'b':
-		yyt2 = mtag(&mt, yyt2, cursor)
-		goto yy55
-	case 'c':
-		yyt3 = cursor
-		yyt2 = mtag(&mt, yyt2, -1)
-		goto yy43
-	default:
-		goto yy41
-	}
-yy51:
-	cursor += 1
-	yych = str[cursor]
-yy52:
-	switch (yych) {
-	case 0x00:
-		goto yy53
-	case 'c':
-		goto yy51
-	default:
-		goto yy41
-	}
-yy53:
-	cursor += 1
-	a = yyt4
-	b = yyt6
+	a = yytm4
+	b = yytm6
 	c = yyt3
 	{ return }
-yy55:
+yy41:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 'c':
 		yyt3 = cursor
-		goto yy43
+		goto yy32
 	default:
-		goto yy41
+		goto yy30
 	}
 }
 

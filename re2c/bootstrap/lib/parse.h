@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.7.3.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -44,6 +44,16 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 1 "../lib/parse.ypp"
+
+/* pull in types to populate YYSTYPE: */
+#include "src/parse/ast.h"
+namespace re2c {
+    struct AstNode;
+}
+
+#line 57 "lib/parse.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -65,12 +75,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 37 "../lib/parse.ypp"
+#line 33 "../lib/parse.ypp"
 
-    const re2c::AST *regexp;
-    re2c::ASTBounds bounds;
+    const re2c::AstNode* regexp;
+    re2c::AstBounds bounds;
 
-#line 74 "lib/parse.h"
+#line 84 "lib/parse.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -79,8 +89,9 @@ typedef union YYSTYPE YYSTYPE;
 #endif
 
 
-extern YYSTYPE yylval;
 
-int yyparse (const char *&pattern);
+
+int yyparse (const uint8_t*& pattern, re2c::Ast& ast);
+
 
 #endif /* !YY_YY_LIB_PARSE_H_INCLUDED  */

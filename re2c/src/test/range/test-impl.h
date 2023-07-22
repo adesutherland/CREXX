@@ -3,47 +3,39 @@
 
 #include "src/test/range/test.h"
 #include "src/util/range.h"
-#include "src/util/static_assert.h"
-
 
 namespace re2c_test {
 
-static inline bool bit_set (uint32_t n, uint32_t bit)
-{
+static inline bool bit_set(uint32_t n, uint32_t bit) {
     return n & (1u << bit);
 }
 
-template <uint8_t BITS>
-re2c::Range *range(re2c::RangeMgr &rm, uint32_t n)
-{
-    RE2C_STATIC_ASSERT (BITS <= 31);
+template<uint8_t BITS>
+re2c::Range* range(re2c::RangeMgr& rm, uint32_t n) {
+    static_assert(BITS <= 31, "expected BITS <= 31");
 
-    re2c::Range * r = NULL;
-    re2c::Range ** p = &r;
-    for (uint32_t i = 0; i < BITS; ++i)
-    {
-        for (; i < BITS && !bit_set (n, i); ++i);
-        if (i == BITS && !bit_set (n, BITS - 1))
-        {
+    re2c::Range* r = nullptr;
+    re2c::Range** p = &r;
+    for (uint32_t i = 0; i < BITS; ++i) {
+        for (; i < BITS && !bit_set(n, i); ++i);
+        if (i == BITS && !bit_set(n, BITS - 1)) {
             break;
         }
         const uint32_t lb = i;
-        for (; i < BITS && bit_set (n, i); ++i);
+        for (; i < BITS && bit_set(n, i); ++i);
         rm.append(p, lb, i);
     }
     return r;
 }
 
 template <uint8_t BITS>
-re2c::Range * add (re2c::RangeMgr &rm, uint32_t n1, uint32_t n2)
-{
-    return range<BITS> (rm, n1 | n2);
+re2c::Range* add(re2c::RangeMgr& rm, uint32_t n1, uint32_t n2) {
+    return range<BITS>(rm, n1 | n2);
 }
 
 template <uint8_t BITS>
-re2c::Range * sub (re2c::RangeMgr &rm, uint32_t n1, uint32_t n2)
-{
-    return range<BITS> (rm, n1 & ~n2);
+re2c::Range* sub(re2c::RangeMgr& rm, uint32_t n1, uint32_t n2) {
+    return range<BITS>(rm, n1 & ~n2);
 }
 
 } // namespace re2c_test

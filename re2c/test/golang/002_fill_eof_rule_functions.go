@@ -8,10 +8,10 @@ import "os"
 
 var SIZE int = 11
 
-type YYCTYPE byte
+type YYCTYPE = byte
 type Input struct {
 	file   *os.File
-	data   []byte
+	data   []YYCTYPE
 	cursor int
 	marker int
 	token  int
@@ -19,266 +19,163 @@ type Input struct {
 	eof    bool
 }
 
-func peek(in *Input) func() YYCTYPE {
-	return func() YYCTYPE {
-		return YYCTYPE(in.data[in.cursor])
+func fill(in *Input) int {
+	// If nothing can be read, fail.
+	if in.eof {
+		return 1
 	}
-}
 
-func skip(in *Input) func() {
-	return func() {
-		in.cursor++
+	// Check if at least some space can be freed.
+	if in.token == 0 {
+		// In real life can reallocate a larger buffer.
+		panic("fill error: lexeme too long")
 	}
-}
 
-func backup(in *Input) func() {
-	return func() {
-		in.marker = in.cursor
+	// Discard everything up to the start of the current lexeme,
+	// shift buffer contents and adjust offsets.
+	copy(in.data[0:], in.data[in.token:in.limit])
+	in.cursor -= in.token
+	in.marker -= in.token
+	in.limit -= in.token
+	in.token = 0
+
+	// Read new data (as much as possible to fill the buffer).
+	n, _ := in.file.Read(in.data[in.limit:SIZE])
+	in.limit += n
+	in.data[in.limit] = 0
+	fmt.Printf("fill: %v '%s'\n", in.data[:in.limit+1],
+		string(in.data[:in.limit]))
+
+	// If read less than expected, this is the end of input.
+	in.eof = in.limit < SIZE
+
+	// If nothing has been read, fail.
+	if n == 0 {
+		return 1
 	}
-}
 
-func restore(in *Input) func() {
-	return func() {
-		in.cursor = in.marker
-	}
-}
-
-func fill(in *Input) func() int {
-	return func() int {
-		// If nothing can be read, fail.
-		if in.eof {
-			return 1
-		}
-
-		// Check if at least some space can be freed.
-		if in.token == 0 {
-			// In real life can reallocate a larger buffer.
-			panic("fill error: lexeme too long")
-		}
-
-		// Discard everything up to the start of the current lexeme,
-		// shift buffer contents and adjust offsets.
-		copy(in.data[0:], in.data[in.token:in.limit])
-		in.cursor -= in.token
-		in.marker -= in.token
-		in.limit -= in.token
-		in.token = 0
-
-		// Read new data (as much as possible to fill the buffer).
-		n, _ := in.file.Read(in.data[in.limit:SIZE])
-		in.limit += n
-		in.data[in.limit] = 0
-		fmt.Printf("fill: %v '%s'\n", in.data[:in.limit+1],
-			string(in.data[:in.limit]))
-
-		// If read less than expected, this is the end of input.
-		in.eof = in.limit < SIZE
-
-		// If nothing has been read, fail.
-		if n == 0 {
-			return 1
-		}
-
-		return 0
-	}
-}
-
-func lessthan(in *Input) func(int) bool {
-	return func(n int) bool {
-		return in.limit-in.cursor < n
-	}
+	return 0
 }
 
 func Lex(in *Input) int {
-	YYPEEK := peek(in)
-	YYSKIP := skip(in)
-	YYBACKUP := backup(in)
-	YYRESTORE := restore(in)
-	YYFILL := fill(in)
-	YYLESSTHAN := lessthan(in)
+	YYPEEK := func() YYCTYPE { return in.data[in.cursor] }
+	YYSKIP := func() { in.cursor++ }
+	YYBACKUP := func() { in.marker = in.cursor }
+	YYRESTORE := func() { in.cursor = in.marker }
+	YYLESSTHAN := func(n int) bool { return in.limit-in.cursor < n }
+	YYFILL := func() int { return fill(in) }
+
 	in.token = in.cursor
 
 	
-//line "golang/002_fill_eof_rule_functions.go":103
+//line "golang/002_fill_eof_rule_functions.go":72
 {
 	var yych YYCTYPE
 yyFillLabel0:
 	yych = YYPEEK()
 	switch (yych) {
 	case ' ':
-		goto yy4
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy6
+		goto yy2
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy3
 	default:
 		if (YYLESSTHAN(1)) {
 			if (YYFILL() == 0) {
 				goto yyFillLabel0
 			}
-			goto yy14
+			goto yy9
 		}
-		goto yy2
+		goto yy1
 	}
-yy2:
+yy1:
 	YYSKIP()
-//line "golang/002_fill_eof_rule_functions.re":103
+//line "golang/002_fill_eof_rule_functions.re":72
 	{
 		fmt.Println("error")
 		return -1
 	}
-//line "golang/002_fill_eof_rule_functions.go":147
-yy4:
+//line "golang/002_fill_eof_rule_functions.go":98
+yy2:
 	YYSKIP()
-//line "golang/002_fill_eof_rule_functions.re":123
+//line "golang/002_fill_eof_rule_functions.re":92
 	{
 		return 3
 	}
-//line "golang/002_fill_eof_rule_functions.go":154
-yy6:
+//line "golang/002_fill_eof_rule_functions.go":105
+yy3:
 	YYSKIP()
 	YYBACKUP()
 yyFillLabel1:
 	yych = YYPEEK()
 	switch (yych) {
 	case '-':
-		goto yy9
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy6
+		goto yy5
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy3
 	default:
 		if (YYLESSTHAN(1)) {
 			if (YYFILL() == 0) {
 				goto yyFillLabel1
 			}
 		}
-		goto yy8
+		goto yy4
 	}
-yy8:
-//line "golang/002_fill_eof_rule_functions.re":113
+yy4:
+//line "golang/002_fill_eof_rule_functions.re":82
 	{
 		fmt.Printf("number-1: %v\n", string(in.data[in.token:in.cursor]))
 		return 1
 	}
-//line "golang/002_fill_eof_rule_functions.go":197
-yy9:
+//line "golang/002_fill_eof_rule_functions.go":130
+yy5:
 	YYSKIP()
 yyFillLabel2:
 	yych = YYPEEK()
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy11
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy7
 	default:
 		if (YYLESSTHAN(1)) {
 			if (YYFILL() == 0) {
 				goto yyFillLabel2
 			}
 		}
-		goto yy10
+		goto yy6
 	}
-yy10:
+yy6:
 	YYRESTORE()
-	goto yy8
-yy11:
+	goto yy4
+yy7:
 	YYSKIP()
 yyFillLabel3:
 	yych = YYPEEK()
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy11
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy7
 	default:
 		if (YYLESSTHAN(1)) {
 			if (YYFILL() == 0) {
 				goto yyFillLabel3
 			}
 		}
-		goto yy13
+		goto yy8
 	}
-yy13:
-//line "golang/002_fill_eof_rule_functions.re":118
+yy8:
+//line "golang/002_fill_eof_rule_functions.re":87
 	{
 		fmt.Printf("number-2: %v\n", string(in.data[in.token:in.cursor]))
 		return 2
 	}
-//line "golang/002_fill_eof_rule_functions.go":273
-yy14:
-//line "golang/002_fill_eof_rule_functions.re":108
+//line "golang/002_fill_eof_rule_functions.go":170
+yy9:
+//line "golang/002_fill_eof_rule_functions.re":77
 	{
 		fmt.Println("end")
 		return 0
 	}
-//line "golang/002_fill_eof_rule_functions.go":280
+//line "golang/002_fill_eof_rule_functions.go":177
 }
-//line "golang/002_fill_eof_rule_functions.re":126
+//line "golang/002_fill_eof_rule_functions.re":95
 
 }
 

@@ -38,59 +38,43 @@ yyc_init:
 	yych = str[cursor]
 	switch (yych) {
 	case '0':
-		goto yy4
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy6
-	default:
 		goto yy2
+	case '1','2','3','4','5','6','7','8','9':
+		goto yy4
+	default:
+		goto yy1
 	}
-yy2:
+yy1:
 	cursor += 1
 	{ return -1 }
-yy4:
+yy2:
 	cursor += 1
 	yych = str[cursor]
 	switch (yych) {
 	case 'B':
 		fallthrough
 	case 'b':
-		goto yy8
+		goto yy5
 	case 'X':
 		fallthrough
 	case 'x':
-		goto yy10
+		goto yy6
 	default:
-		goto yy5
+		goto yy3
 	}
-yy5:
+yy3:
 	cond = yycoct
 	goto yyc_oct
-yy6:
+yy4:
 	cursor += 1
 	cursor += -1
 	cond = yycdec
 	goto yyc_dec
-yy8:
+yy5:
 	cursor += 1
 	cond = yycbin
 	goto yyc_bin
-yy10:
+yy6:
 	cursor += 1
 	cond = yychex
 	goto yyc_hex
@@ -99,21 +83,19 @@ yyc_bin:
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		goto yy14
-	case '0':
-		fallthrough
-	case '1':
-		goto yy18
+		goto yy8
+	case '0','1':
+		goto yy10
 	default:
-		goto yy16
+		goto yy9
 	}
-yy14:
+yy8:
 	cursor += 1
 	{ return n }
-yy16:
+yy9:
 	cursor += 1
 	{ return -1 }
-yy18:
+yy10:
 	cursor += 1
 	{ n = n*2 + int(str[cursor-1] - '0'); goto yyc_bin; }
 /* *********************************** */
@@ -121,37 +103,19 @@ yyc_dec:
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		goto yy22
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy26
+		goto yy12
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy14
 	default:
-		goto yy24
+		goto yy13
 	}
-yy22:
+yy12:
 	cursor += 1
 	{ return n }
-yy24:
+yy13:
 	cursor += 1
 	{ return -1 }
-yy26:
+yy14:
 	cursor += 1
 	{ n = n*10 + int(str[cursor-1] - '0'); goto yyc_dec; }
 /* *********************************** */
@@ -159,67 +123,29 @@ yyc_hex:
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		goto yy30
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy34
-	case 'A':
-		fallthrough
-	case 'B':
-		fallthrough
-	case 'C':
-		fallthrough
-	case 'D':
-		fallthrough
-	case 'E':
-		fallthrough
-	case 'F':
-		goto yy36
-	case 'a':
-		fallthrough
-	case 'b':
-		fallthrough
-	case 'c':
-		fallthrough
-	case 'd':
-		fallthrough
-	case 'e':
-		fallthrough
-	case 'f':
-		goto yy38
+		goto yy16
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy18
+	case 'A','B','C','D','E','F':
+		goto yy19
+	case 'a','b','c','d','e','f':
+		goto yy20
 	default:
-		goto yy32
+		goto yy17
 	}
-yy30:
+yy16:
 	cursor += 1
 	{ return n }
-yy32:
+yy17:
 	cursor += 1
 	{ return -1 }
-yy34:
+yy18:
 	cursor += 1
 	{ n = n*16 + int(str[cursor-1] - '0'); goto yyc_hex; }
-yy36:
+yy19:
 	cursor += 1
 	{ n = n*16 + int(str[cursor-1] - 'A') + 10; goto yyc_hex; }
-yy38:
+yy20:
 	cursor += 1
 	{ n = n*16 + int(str[cursor-1] - 'a') + 10; goto yyc_hex; }
 /* *********************************** */
@@ -227,33 +153,19 @@ yyc_oct:
 	yych = str[cursor]
 	switch (yych) {
 	case 0x00:
-		goto yy42
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		goto yy46
+		goto yy22
+	case '0','1','2','3','4','5','6','7':
+		goto yy24
 	default:
-		goto yy44
+		goto yy23
 	}
-yy42:
+yy22:
 	cursor += 1
 	{ return n }
-yy44:
+yy23:
 	cursor += 1
 	{ return -1 }
-yy46:
+yy24:
 	cursor += 1
 	{ n = n*8 + int(str[cursor-1] - '0'); goto yyc_oct; }
 }

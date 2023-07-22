@@ -9,27 +9,27 @@
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt1 = NULL;
-		yyt2 = YYCURSOR;
-		goto yy4;
-	default:	goto yy2;
+		case 'a':
+			yyt1 = NULL;
+			yyt2 = YYCURSOR;
+			goto yy2;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	++YYCURSOR;
 	{ * }
-yy4:
+yy2:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt1 = yyt2;
-		yyt2 = YYCURSOR;
-		goto yy4;
-	default:	goto yy6;
+		case 'a':
+			yyt1 = yyt2;
+			yyt2 = YYCURSOR;
+			goto yy2;
+		default: goto yy3;
 	}
-yy6:
+yy3:
 	x = yyt1;
 	y = YYCURSOR - 1;
 	z = YYCURSOR - 1;
@@ -44,27 +44,27 @@ yy6:
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt1 = NULL;
-		yyt2 = cur;
-		goto yy11;
-	default:	goto yy9;
+		case 'a':
+			yyt1 = NULL;
+			yyt2 = cur;
+			goto yy6;
+		default: goto yy5;
 	}
-yy9:
+yy5:
 	++cur;
 	{ * }
-yy11:
+yy6:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt1 = yyt2;
-		yyt2 = cur;
-		goto yy11;
-	default:	goto yy13;
+		case 'a':
+			yyt1 = yyt2;
+			yyt2 = cur;
+			goto yy6;
+		default: goto yy7;
 	}
-yy13:
+yy7:
 	x = yyt1;
 	y = cur;
 	y += -1;
@@ -81,35 +81,35 @@ yy13:
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt2 = yyt1;
-		mtag(&yyt2, cur);
-		yyt3 = yyt4;
-		mtag(&yyt3, cur);
-		mtag(&yyt4, NULL);
-		goto yy18;
-	default:	goto yy16;
+		case 'a':
+			yytm2 = yytm1;
+			mtag(&yytm2, cur);
+			yytm3 = yytm4;
+			mtag(&yytm3, cur);
+			mtag(&yytm4, NULL);
+			goto yy10;
+		default: goto yy9;
 	}
-yy16:
+yy9:
 	++YYCURSOR;
 	{ * }
-yy18:
+yy10:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt4 = yyt3;
-		yyt2 = yyt1;
-		mtag(&yyt2, cur);
-		mtag(&yyt3, cur);
-		goto yy18;
-	default:	goto yy20;
+		case 'a':
+			yytm4 = yytm3;
+			yytm2 = yytm1;
+			mtag(&yytm2, cur);
+			mtag(&yytm3, cur);
+			goto yy10;
+		default: goto yy11;
 	}
-yy20:
-	x = yyt4;
-	y = yyt2;
-	z = yyt2;
+yy11:
+	x = yytm4;
+	y = yytm2;
+	z = yytm2;
 	{ a }
 }
 
@@ -121,35 +121,35 @@ yy20:
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt2 = yyt1;
-		mtag(&yyt2, cur);
-		yyt3 = yyt4;
-		mtag(&yyt3, cur);
-		mtag(&yyt4, NULL);
-		goto yy25;
-	default:	goto yy23;
+		case 'a':
+			yytm2 = yytm1;
+			mtag(&yytm2, cur);
+			yytm3 = yytm4;
+			mtag(&yytm3, cur);
+			mtag(&yytm4, NULL);
+			goto yy14;
+		default: goto yy13;
 	}
-yy23:
+yy13:
 	++cur;
 	{ * }
-yy25:
+yy14:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt4 = yyt3;
-		yyt2 = yyt1;
-		mtag(&yyt2, cur);
-		mtag(&yyt3, cur);
-		goto yy25;
-	default:	goto yy27;
+		case 'a':
+			yytm4 = yytm3;
+			yytm2 = yytm1;
+			mtag(&yytm2, cur);
+			mtag(&yytm3, cur);
+			goto yy14;
+		default: goto yy15;
 	}
-yy27:
-	x = yyt4;
-	y = yyt2;
-	z = yyt2;
+yy15:
+	x = yytm4;
+	y = yytm2;
+	z = yytm2;
 	{ a }
 }
 
@@ -161,61 +161,61 @@ yy27:
 	if ((YYLIMIT - YYCURSOR) < 2) fill(2);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt1 = YYCURSOR;
-		goto yy31;
-	case 'b':	goto yy34;
-	case 'c':	goto yy37;
-	default:	goto yy30;
+		case 'a':
+			yyt1 = YYCURSOR;
+			goto yy18;
+		case 'b': goto yy20;
+		case 'c': goto yy22;
+		default: goto yy17;
 	}
-yy30:
-yy31:
+yy17:
+yy18:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		yyt1 = YYCURSOR;
-		goto yy31;
-	default:	goto yy33;
+		case 'a':
+			yyt1 = YYCURSOR;
+			goto yy18;
+		default: goto yy19;
 	}
-yy33:
+yy19:
 	YYCURSOR = yyt1;
 	{ a }
-yy34:
+yy20:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy34;
-	default:	goto yy36;
+		case 'b': goto yy20;
+		default: goto yy21;
 	}
-yy36:
+yy21:
 	YYCURSOR -= 1;
 	{ b }
-yy37:
+yy22:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'c':
-		yyt1 = YYCURSOR;
-		goto yy38;
-	default:	goto yy30;
+		case 'c':
+			yyt1 = YYCURSOR;
+			goto yy23;
+		default: goto yy17;
 	}
-yy38:
+yy23:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'c':
-		yyt1 = YYCURSOR;
-		goto yy38;
-	default:	goto yy40;
+		case 'c':
+			yyt1 = YYCURSOR;
+			goto yy23;
+		default: goto yy24;
 	}
-yy40:
+yy24:
 	z = yyt1;
-	YYCURSOR = yyt1 - 1;
 	x = yyt1 - 1;
 	y = yyt1 - 1;
+	YYCURSOR = yyt1 - 1;
 	{ c }
 }
 
@@ -227,65 +227,65 @@ yy40:
 	if (lim - cur < 2) fill(2);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt1 = cur;
-		goto yy44;
-	case 'b':	goto yy47;
-	case 'c':	goto yy50;
-	default:	goto yy43;
+		case 'a':
+			yyt1 = cur;
+			goto yy27;
+		case 'b': goto yy29;
+		case 'c': goto yy31;
+		default: goto yy26;
 	}
-yy43:
-yy44:
+yy26:
+yy27:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		yyt1 = cur;
-		goto yy44;
-	default:	goto yy46;
+		case 'a':
+			yyt1 = cur;
+			goto yy27;
+		default: goto yy28;
 	}
-yy46:
+yy28:
 	cur = yyt1;
 	{ a }
-yy47:
+yy29:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'b':	goto yy47;
-	default:	goto yy49;
+		case 'b': goto yy29;
+		default: goto yy30;
 	}
-yy49:
+yy30:
 	cur += -1;
 	{ b }
-yy50:
+yy31:
 	++cur;
 	yych = *cur;
 	switch (yych) {
-	case 'c':
-		yyt1 = cur;
-		goto yy51;
-	default:	goto yy43;
+		case 'c':
+			yyt1 = cur;
+			goto yy32;
+		default: goto yy26;
 	}
-yy51:
+yy32:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'c':
-		yyt1 = cur;
-		goto yy51;
-	default:	goto yy53;
+		case 'c':
+			yyt1 = cur;
+			goto yy32;
+		default: goto yy33;
 	}
-yy53:
+yy33:
 	z = yyt1;
-	cur = yyt1;
-	cur += -1;
 	x = yyt1;
 	x += -1;
 	y = yyt1;
 	y += -1;
+	cur = yyt1;
+	cur += -1;
 	{ c }
 }
 
@@ -297,35 +297,35 @@ yy53:
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		YYCTXMARKER = YYCURSOR;
-		goto yy57;
-	case 'b':	goto yy60;
-	default:	goto yy56;
+		case 'a':
+			YYCTXMARKER = YYCURSOR;
+			goto yy36;
+		case 'b': goto yy38;
+		default: goto yy35;
 	}
-yy56:
-yy57:
+yy35:
+yy36:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':
-		YYCTXMARKER = YYCURSOR;
-		goto yy57;
-	default:	goto yy59;
+		case 'a':
+			YYCTXMARKER = YYCURSOR;
+			goto yy36;
+		default: goto yy37;
 	}
-yy59:
+yy37:
 	YYCURSOR = YYCTXMARKER;
 	{ a }
-yy60:
+yy38:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) fill(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy60;
-	default:	goto yy62;
+		case 'b': goto yy38;
+		default: goto yy39;
 	}
-yy62:
+yy39:
 	YYCURSOR -= 1;
 	{ b }
 }
@@ -338,35 +338,35 @@ yy62:
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		ctx = cur;
-		goto yy66;
-	case 'b':	goto yy69;
-	default:	goto yy65;
+		case 'a':
+			ctx = cur;
+			goto yy42;
+		case 'b': goto yy44;
+		default: goto yy41;
 	}
-yy65:
-yy66:
+yy41:
+yy42:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'a':
-		ctx = cur;
-		goto yy66;
-	default:	goto yy68;
+		case 'a':
+			ctx = cur;
+			goto yy42;
+		default: goto yy43;
 	}
-yy68:
+yy43:
 	cur = ctx;
 	{ a }
-yy69:
+yy44:
 	++cur;
 	if (lim - cur < 1) fill(1);
 	yych = *cur;
 	switch (yych) {
-	case 'b':	goto yy69;
-	default:	goto yy71;
+		case 'b': goto yy44;
+		default: goto yy45;
 	}
-yy71:
+yy45:
 	cur += -1;
 	{ b }
 }
@@ -384,7 +384,7 @@ config/tag_api_freeform.re:58:25: warning: rule matches empty string [-Wmatch-em
 config/tag_api_freeform.re:59:25: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:57:25: warning: trailing context has 2nd degree of nondeterminism [-Wnondeterministic-tags]
 config/tag_api_freeform.re:59:25: warning: tag 'z' has 2nd degree of nondeterminism [-Wnondeterministic-tags]
-config/tag_api_freeform.re:60:2: warning: control flow is undefined for strings that match 
+config/tag_api_freeform.re:54:0: warning: control flow is undefined for strings that match 
 	'[\x0-\x60\x64-\xFF]'
 	'\x63 [\x0-\x62\x64-\xFF]'
 , use default rule '*' [-Wundefined-control-flow]
@@ -393,15 +393,15 @@ config/tag_api_freeform.re:67:25: warning: rule matches empty string [-Wmatch-em
 config/tag_api_freeform.re:68:25: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:66:25: warning: trailing context has 2nd degree of nondeterminism [-Wnondeterministic-tags]
 config/tag_api_freeform.re:68:25: warning: tag 'z' has 2nd degree of nondeterminism [-Wnondeterministic-tags]
-config/tag_api_freeform.re:69:2: warning: control flow is undefined for strings that match 
+config/tag_api_freeform.re:63:0: warning: control flow is undefined for strings that match 
 	'[\x0-\x60\x64-\xFF]'
 	'\x63 [\x0-\x62\x64-\xFF]'
 , use default rule '*' [-Wundefined-control-flow]
 config/tag_api_freeform.re:75:12: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:76:12: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:75:12: warning: trailing context has 2nd degree of nondeterminism [-Wnondeterministic-tags]
-config/tag_api_freeform.re:77:2: warning: control flow is undefined for strings that match '[\x0-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+config/tag_api_freeform.re:72:0: warning: control flow is undefined for strings that match '[\x0-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
 config/tag_api_freeform.re:83:12: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:84:12: warning: rule matches empty string [-Wmatch-empty-string]
 config/tag_api_freeform.re:83:12: warning: trailing context has 2nd degree of nondeterminism [-Wnondeterministic-tags]
-config/tag_api_freeform.re:85:2: warning: control flow is undefined for strings that match '[\x0-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+config/tag_api_freeform.re:80:0: warning: control flow is undefined for strings that match '[\x0-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]

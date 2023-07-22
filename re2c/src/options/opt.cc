@@ -1,338 +1,352 @@
 #include "src/msg/msg.h"
 #include "src/options/opt.h"
-
+#include "src/parse/input.h"
 
 namespace re2c {
 
 // This function should only change global options.
-static void fix_conopt(conopt_t &glob)
-{
-    if (glob.target == TARGET_SKELETON) {
-        glob.fFlag = false;
+LOCAL_NODISCARD(Ret fix_conopt(conopt_t& glob)) {
+    if (glob.target == Target::DOT) {
+        glob.line_dirs = false;
+    } else if (glob.target == Target::SKELETON) {
+        glob.storable_state = false;
+        glob.line_dirs = false;
     }
 
-    if (!glob.lookahead) {
-        glob.eager_skip = true;
+    if (glob.lang == Lang::RUST) {
+        glob.loop_switch = true;
+        // No line directives in Rust: https://github.com/rust-lang/rfcs/issues/1862
+        glob.line_dirs = false;
     }
 
     // append directory separator '/' to all paths that do not have it
-    for (size_t i = 0; i < glob.incpaths.size(); ++i) {
-        std::string &p = glob.incpaths[i];
+    for (std::string& p : glob.include_paths) {
         const char c = p.empty() ? 0 : *p.rbegin();
         if (c != '/' && c != '\\') {
             p.push_back('/');
         }
     }
 
+    if (glob.loop_switch) {
+        // for loop-switch enable eager-skip always (not only in cases when YYFILL labels are used)
+        // to avoid special handling of initial state when there are transitions into it.
+        glob.eager_skip = true;
+    }
+
     if (!glob.dep_file.empty() && glob.output_file.empty()) {
-        error("cannot generate dep file, output file not specified");
-        exit(1);
+        RET_FAIL(error("cannot generate dep file, output file not specified"));
+    }
+
+    return Ret::OK;
+}
+
+// This function should only change mutable option defaults (based on the global options).
+static void fix_mutopt_defaults(const conopt_t& glob, mutopt_t& defaults) {
+    // For the Go and Rust backends generic API is set by default, because the default C API with
+    // pointers doesn't work (there is no pointer arithmetics in Go, and in Rust it is different
+    // enough from C). Use freeform generic API by default to make it less restrictive.
+    if (glob.lang != Lang::C) {
+        defaults.api = Api::CUSTOM;
+        defaults.api_style = ApiStyle::FREEFORM;
     }
 }
 
-// This function should only change mutable option defaults (based on the global
-// options).
-static void fix_mutopt_defaults(const conopt_t &glob, mutopt_t &defaults)
-{
-    // For the Go backend, generic API is set by default, because "default" C
-    // API with pointers doesn't work (there is no pointer arithmetics in Go).
-    // To make the default Go API less restrictive, decorations are disabled.
-    if (glob.lang == LANG_GO) {
-        defaults.input_api = INPUT_CUSTOM;
-        defaults.api_style = API_FREEFORM;
-    }
-}
-
-// This function should only change real mutable options (based on the global
-// options, default mutable options and default flags). User-defined options are
-// intentionally not passed to prevent accidental change, and default flags are
-// passed as read-only.
-static void fix_mutopt(const conopt_t &glob, const mutopt_t &defaults,
-    const mutdef_t &is_default, mutopt_t &real)
-{
-    // For skeleton target interface options must have default values (because
-    // skeleton programs assume certain interface). For DOT target most of the
-    // options are unused.
-    if (glob.target != TARGET_CODE) {
+// This function should only change real mutable options (based on the global options, default
+// mutable options and default flags). User-defined options are intentionally not passed to prevent
+// accidental change, and default flags are passed as read-only.
+LOCAL_NODISCARD(Ret fix_mutopt(const conopt_t& glob,
+                               const mutopt_t& defaults,
+                               const mutdef_t& is_default,
+                               mutopt_t& real)) {
+    // For skeleton target interface options must have default values (because skeleton programs
+    // assume certain interface). For DOT target most of the options are unused.
+    if (glob.target != Target::CODE) {
         // output files
         real.header_file = "";
-        // default line information
-        real.iFlag = defaults.iFlag;
         // default environment-sensitive formatting
-        real.topIndent = defaults.topIndent;
-        real.indString = defaults.indString;
-        real.condDivider = defaults.condDivider;
-        real.condDividerParam = defaults.condDividerParam;
+        real.cond_div = defaults.cond_div;
+        real.cond_div_param = defaults.cond_div_param;
+        real.indent_top = defaults.indent_top;
+        real.indent_str = defaults.indent_str;
         // default environment bindings
-        real.yycondtype = defaults.yycondtype;
-        real.cond_get = defaults.cond_get;
+        real.api = defaults.api;
+        real.api_style = defaults.api_style;
+        real.api_sigil = defaults.api_sigil;
+        real.api_char_type = defaults.api_char_type;
+        real.api_cursor = defaults.api_cursor;
+        real.api_marker = defaults.api_marker;
+        real.api_ctxmarker = defaults.api_ctxmarker;
+        real.api_limit = defaults.api_limit;
+        real.api_peek = defaults.api_peek;
+        real.api_skip = defaults.api_skip;
+        real.api_backup = defaults.api_backup;
+        real.api_backup_ctx = defaults.api_backup_ctx;
+        real.api_restore = defaults.api_restore;
+        real.api_restore_ctx = defaults.api_restore_ctx;
+        real.api_restore_tag = defaults.api_restore_tag;
+        real.api_stag_neg = defaults.api_stag_neg;
+        real.api_stag_pos = defaults.api_stag_pos;
+        real.api_mtag_neg = defaults.api_mtag_neg;
+        real.api_mtag_pos = defaults.api_mtag_pos;
+        real.api_shift = defaults.api_shift;
+        real.api_shift_stag = defaults.api_shift_stag;
+        real.api_shift_mtag = defaults.api_shift_mtag;
+        real.api_fill = defaults.api_fill;
+        real.api_less_than = defaults.api_less_than;
+        real.api_cond_type = defaults.api_cond_type;
+        real.api_cond_get = defaults.api_cond_get;
+        real.api_cond_set = defaults.api_cond_set;
+        real.api_state_get = defaults.api_state_get;
+        real.api_state_set = defaults.api_state_set;
+        real.api_debug = defaults.api_debug;
+        real.var_accept = defaults.var_accept;
+        real.var_bitmaps = defaults.var_bitmaps;
+        real.var_char = defaults.var_char;
+        real.var_cond_table = defaults.var_cond_table;
+        real.var_cgoto_table = defaults.var_cgoto_table;
+        real.var_state = defaults.var_state;
+        real.fill_enable = defaults.fill_enable;
+        real.fill_check = defaults.fill_check;
+        real.fill_param = defaults.fill_param;
+        real.fill_param_enable = defaults.fill_param_enable;
+        real.fill_naked = defaults.fill_naked;
         real.cond_get_naked = defaults.cond_get_naked;
-        real.cond_set = defaults.cond_set;
-        real.cond_set_arg = defaults.cond_set_arg;
+        real.cond_set_param = defaults.cond_set_param;
         real.cond_set_naked = defaults.cond_set_naked;
-        real.yyctable = defaults.yyctable;
-        real.condPrefix = defaults.condPrefix;
-        real.condEnumPrefix = defaults.condEnumPrefix;
-        real.condGoto = defaults.condGoto;
-        real.condGotoParam = defaults.condGotoParam;
-        real.state_get = defaults.state_get;
+        real.cond_label_prefix = defaults.cond_label_prefix;
+        real.cond_enum_prefix = defaults.cond_enum_prefix;
+        real.cond_goto = defaults.cond_goto;
+        real.cond_goto_param = defaults.cond_goto_param;
+        real.state_abort = defaults.state_abort;
+        real.state_next = defaults.state_next;
         real.state_get_naked = defaults.state_get_naked;
-        real.state_set = defaults.state_set;
-        real.state_set_arg = defaults.state_set_arg;
+        real.state_set_param = defaults.state_set_param;
         real.state_set_naked = defaults.state_set_naked;
         real.tags_prefix = defaults.tags_prefix;
         real.tags_expression = defaults.tags_expression;
-        real.yyfilllabel = defaults.yyfilllabel;
-        real.yynext = defaults.yynext;
-        real.yyaccept = defaults.yyaccept;
-        real.bUseStateAbort = defaults.bUseStateAbort;
-        real.bUseStateNext = defaults.bUseStateNext;
-        real.yybm = defaults.yybm;
-        real.yytarget = defaults.yytarget;
-        real.input_api = defaults.input_api;
-        real.api_style = defaults.api_style;
-        real.api_sigil = defaults.api_sigil;
-        real.yycursor = defaults.yycursor;
-        real.yymarker = defaults.yymarker;
-        real.yyctxmarker = defaults.yyctxmarker;
-        real.yylimit = defaults.yylimit;
-        real.yypeek = defaults.yypeek;
-        real.yyskip = defaults.yyskip;
-        real.yybackup = defaults.yybackup;
-        real.yybackupctx = defaults.yybackupctx;
-        real.yyrestore = defaults.yyrestore;
-        real.yyrestorectx = defaults.yyrestorectx;
-        real.yyrestoretag = defaults.yyrestoretag;
-        real.yystagn = defaults.yystagn;
-        real.yystagp = defaults.yystagp;
-        real.yymtagn = defaults.yymtagn;
-        real.yymtagp = defaults.yymtagp;
-        real.yyshift = defaults.yyshift;
-        real.yyshiftstag = defaults.yyshiftstag;
-        real.yyshiftmtag = defaults.yyshiftmtag;
-        real.yylessthan = defaults.yylessthan;
-        real.dFlag = defaults.dFlag;
-        real.yydebug = defaults.yydebug;
-        real.yyctype = defaults.yyctype;
-        real.yych = defaults.yych;
-        real.bEmitYYCh = defaults.bEmitYYCh;
-        real.yychConversion = defaults.yychConversion;
-        real.fill = defaults.fill;
-        real.fill_use = defaults.fill_use;
-        real.fill_check = defaults.fill_check;
-        real.fill_arg = defaults.fill_arg;
-        real.fill_arg_use = defaults.fill_arg_use;
-        real.fill_naked = defaults.fill_naked;
-        real.labelPrefix = defaults.labelPrefix;
-        real.startlabel = defaults.startlabel;
-        real.startlabel_force = defaults.startlabel_force;
+        real.char_emit = defaults.char_emit;
+        real.char_conv = defaults.char_conv;
+        real.label_loop = defaults.label_loop;
+        real.label_fill = defaults.label_fill;
+        real.label_next = defaults.label_next;
+        real.label_prefix = defaults.label_prefix;
+        real.label_start = defaults.label_start;
+        real.label_start_force = defaults.label_start_force;
+        real.debug = defaults.debug;
     }
 
     // respect hierarchy
-    if (!glob.cFlag) {
-        real.yycondtype = defaults.yycondtype;
-        real.cond_get = defaults.cond_get;
+    if (!glob.start_conditions) {
+        real.api_cond_type = defaults.api_cond_type;
+        real.api_cond_get = defaults.api_cond_get;
+        real.api_cond_set = defaults.api_cond_set;
+        real.var_cond_table = defaults.var_cond_table;
         real.cond_get_naked = defaults.cond_get_naked;
-        real.cond_set = defaults.cond_set;
-        real.cond_set_arg = defaults.cond_set_arg;
+        real.cond_set_param = defaults.cond_set_param;
         real.cond_set_naked = defaults.cond_set_naked;
-        real.yyctable = defaults.yyctable;
-        real.condPrefix = defaults.condPrefix;
-        real.condEnumPrefix = defaults.condEnumPrefix;
-        real.condDivider = defaults.condDivider;
-        real.condDividerParam = defaults.condDividerParam;
-        real.condGoto = defaults.condGoto;
-        real.condGotoParam = defaults.condGotoParam;
+        real.cond_label_prefix = defaults.cond_label_prefix;
+        real.cond_enum_prefix = defaults.cond_enum_prefix;
+        real.cond_div = defaults.cond_div;
+        real.cond_div_param = defaults.cond_div_param;
+        real.cond_goto = defaults.cond_goto;
+        real.cond_goto_param = defaults.cond_goto_param;
     }
-    if (!glob.fFlag) {
-        real.state_get = defaults.state_get;
+    if (!glob.storable_state) {
+        real.api_state_get = defaults.api_state_get;
+        real.api_state_set = defaults.api_state_set;
+        real.var_accept = defaults.var_accept;
+        real.state_next = defaults.state_next;
         real.state_get_naked = defaults.state_get_naked;
-        real.state_set = defaults.state_set;
-        real.state_set_arg = defaults.state_set_arg;
+        real.state_set_param = defaults.state_set_param;
         real.state_set_naked = defaults.state_set_naked;
-        real.yyfilllabel = defaults.yyfilllabel;
-        real.yynext = defaults.yynext;
-        real.yyaccept = defaults.yyaccept;
-        real.bUseStateAbort = defaults.bUseStateAbort;
-        real.bUseStateNext = defaults.bUseStateNext;
+        real.label_fill = defaults.label_fill;
+        real.label_next = defaults.label_next;
     }
-    if (real.posix_semantics) {
-        real.posix_syntax = true;
+    if (!glob.storable_state && !glob.loop_switch) {
+        real.state_abort = defaults.state_abort;
     }
-    if (real.posix_syntax) {
+    if (real.tags_posix_semantics) {
+        real.tags_posix_syntax = true;
+    }
+    if (real.tags_posix_syntax) {
         real.tags = true;
     }
     if (!real.tags) {
         real.tags_prefix = defaults.tags_prefix;
         real.tags_expression = defaults.tags_expression;
     }
-    if (!real.bFlag) {
-        real.yybmHexTable = defaults.yybmHexTable;
-        real.yybm = defaults.yybm;
+    if (!real.bitmaps) {
+        real.bitmaps_hex = defaults.bitmaps_hex;
+        real.var_bitmaps = defaults.var_bitmaps;
     }
-    if (!real.gFlag) {
-        real.cGotoThreshold = defaults.cGotoThreshold;
-        real.yytarget = defaults.yytarget;
+    if (!real.cgoto) {
+        real.cgoto_threshold = defaults.cgoto_threshold;
+        real.var_cgoto_table = defaults.var_cgoto_table;
     }
-    if (real.input_api != INPUT_DEFAULT) {
-        real.yycursor = defaults.yycursor;
-        real.yymarker = defaults.yymarker;
-        real.yyctxmarker = defaults.yyctxmarker;
-        real.yylimit = defaults.yylimit;
+    if (real.api != Api::DEFAULT) {
+        real.api_cursor = defaults.api_cursor;
+        real.api_marker = defaults.api_marker;
+        real.api_ctxmarker = defaults.api_ctxmarker;
+        real.api_limit = defaults.api_limit;
     }
-    if (real.input_api != INPUT_CUSTOM) {
-        real.yypeek = defaults.yypeek;
-        real.yyskip = defaults.yyskip;
-        real.yybackup = defaults.yybackup;
-        real.yybackupctx = defaults.yybackupctx;
-        real.yyrestore = defaults.yyrestore;
-        real.yyrestorectx = defaults.yyrestorectx;
-        real.yyrestoretag = defaults.yyrestoretag;
-        real.yystagn = defaults.yystagn;
-        real.yystagp = defaults.yystagp;
-        real.yyshift = defaults.yyshift;
-        real.yyshiftstag = defaults.yyshiftstag;
+    if (real.api != Api::CUSTOM) {
+        real.api_peek = defaults.api_peek;
+        real.api_skip = defaults.api_skip;
+        real.api_backup = defaults.api_backup;
+        real.api_backup_ctx = defaults.api_backup_ctx;
+        real.api_restore = defaults.api_restore;
+        real.api_restore_ctx = defaults.api_restore_ctx;
+        real.api_restore_tag = defaults.api_restore_tag;
+        real.api_stag_neg = defaults.api_stag_neg;
+        real.api_stag_pos = defaults.api_stag_pos;
+        real.api_shift = defaults.api_shift;
+        real.api_shift_stag = defaults.api_shift_stag;
         // for mtags there are no sensible defaults
     }
-    if (!real.dFlag) {
-        real.yydebug = defaults.yydebug;
+    if (!real.debug) {
+        real.api_debug = defaults.api_debug;
     }
-    if (!real.fill_use) {
-        real.fill = defaults.fill;
+    if (!real.fill_enable) {
+        real.api_fill = defaults.api_fill;
         real.fill_check = defaults.fill_check;
-        real.fill_arg = defaults.fill_arg;
-        real.fill_arg_use = defaults.fill_arg_use;
+        real.fill_param = defaults.fill_param;
+        real.fill_param_enable = defaults.fill_param_enable;
         real.fill_naked = defaults.fill_naked;
     }
 
     // set implied options
-    if (glob.target == TARGET_DOT) {
-        real.iFlag = true;
+    if (glob.target == Target::SKELETON) {
+        real.api = Api::CUSTOM;
+        real.indent_str = "    ";
+        real.indent_top = 0;
     }
-    else if (glob.target == TARGET_SKELETON) {
-        real.iFlag = true;
-        real.input_api = INPUT_CUSTOM;
-        real.indString = "    ";
-        real.topIndent = 2;
+    if (real.bitmaps || real.encoding.multibyte_cunit()) {
+        real.nested_ifs = true;
     }
-    if (real.bFlag || real.encoding.multibyte_cunit()) {
-        real.sFlag = true;
+    if (real.cgoto) {
+        real.bitmaps = true;
+        real.nested_ifs = true;
     }
-    if (real.gFlag) {
-        real.bFlag = true;
-        real.sFlag = true;
-    }
-    if (real.bCaseInsensitive) {
-        real.bCaseInverted = defaults.bCaseInverted;
+    if (real.case_insensitive) {
+        real.case_inverted = defaults.case_inverted;
     }
     // individual "naked" options, unless explicitly set, inherit "api:style"
-    if (is_default.fill_naked)      real.fill_naked      = real.api_style == API_FREEFORM;
-    if (is_default.cond_get_naked)  real.cond_get_naked  = real.api_style == API_FREEFORM;
-    if (is_default.cond_set_naked)  real.cond_set_naked  = real.api_style == API_FREEFORM;
-    if (is_default.state_get_naked) real.state_get_naked = real.api_style == API_FREEFORM;
-    if (is_default.state_set_naked) real.state_set_naked = real.api_style == API_FREEFORM;
+    if (is_default.fill_naked)      real.fill_naked      = real.api_style == ApiStyle::FREEFORM;
+    if (is_default.cond_get_naked)  real.cond_get_naked  = real.api_style == ApiStyle::FREEFORM;
+    if (is_default.cond_set_naked)  real.cond_set_naked  = real.api_style == ApiStyle::FREEFORM;
+    if (is_default.state_get_naked) real.state_get_naked = real.api_style == ApiStyle::FREEFORM;
+    if (is_default.state_set_naked) real.state_set_naked = real.api_style == ApiStyle::FREEFORM;
     // individual template options, unless explicitly set, inherit "api:sigil"
-    if (is_default.fill_arg)         real.fill_arg         = real.api_sigil;
-    if (is_default.cond_set_arg)     real.cond_set_arg     = real.api_sigil;
-    if (is_default.condDividerParam) real.condDividerParam = real.api_sigil;
-    if (is_default.condGotoParam)    real.condGotoParam    = real.api_sigil;
-    if (is_default.state_set_arg)    real.state_set_arg    = real.api_sigil;
+    if (is_default.fill_param)       real.fill_param       = real.api_sigil;
+    if (is_default.cond_set_param)   real.cond_set_param   = real.api_sigil;
+    if (is_default.cond_div_param)   real.cond_div_param   = real.api_sigil;
+    if (is_default.cond_goto_param)  real.cond_goto_param  = real.api_sigil;
+    if (is_default.state_set_param)  real.state_set_param  = real.api_sigil;
     if (is_default.tags_expression)  real.tags_expression  = real.api_sigil;
-    if (is_default.condGoto) {
-        real.condGoto = "goto " + real.condGotoParam + (glob.lang == LANG_C ? ";" : "");
+    if (is_default.cond_goto) {
+        real.cond_goto = "goto " + real.cond_goto_param + (glob.lang == Lang::C ? ";" : "");
     }
-    // "startlabel" configuration exists in two variants: string and boolean,
-    // and the string one overrides the boolean one
-    if (!is_default.startlabel) {
-        real.startlabel_force = defaults.startlabel_force;
+    // "startlabel" configuration exists in two variants: string and boolean, and the string one
+    // overrides the boolean one
+    if (!is_default.label_start) {
+        real.label_start_force = defaults.label_start_force;
     }
     if (real.fill_naked) {
-        real.fill_arg_use = false;
+        real.fill_param_enable = false;
+    }
+    if (glob.loop_switch) {
+        // With --loop-switch there is no `goto`.
+        real.var_cond_table = defaults.var_cond_table;
+        real.cond_div = defaults.cond_div;
+        real.cond_div_param = defaults.cond_div_param;
+        real.cond_goto = defaults.cond_goto;
+        real.cond_goto_param = defaults.cond_goto_param;
+    }
+    if (glob.lang == Lang::RUST) {
+        // In Rust constants should be uppercase.
+        if (is_default.cond_enum_prefix) real.cond_enum_prefix = "YYC_";
+        // In Rust `continue` statements have labels, use it to avoid ambiguity.
+        if (is_default.label_loop) real.label_loop = "'yyl";
+    } else if (glob.lang == Lang::GO) {
+        // In Go `continue` statements have labels, use it to avoid ambiguity.
+        if (is_default.label_loop) real.label_loop = "yyl";
     }
 
     // errors
-    if (glob.target == TARGET_SKELETON && glob.lang != LANG_C) {
-        error("skeleton is not supported for non-C language backends");
-        exit(1);
-    }
-    if (glob.lang == LANG_GO) {
-        if (real.input_api == INPUT_DEFAULT) {
-            error("default C API is not supported for the Go backend,"
-                " as Go has no pointer arithmetics");
-            exit(1);
+    if (glob.lang != Lang::C) {
+        if (glob.target == Target::SKELETON) {
+            RET_FAIL(error("skeleton is not supported for non-C backends"));
         }
-        if (real.gFlag) {
-            error("-g, --computed-gotos option is not supported for the Go backend,"
-                " as Go does not have computed goto");
-            exit(1);
+        if (real.api == Api::DEFAULT) {
+            RET_FAIL(error("pointer API is not supported for non-C backends"));
+        }
+        if (real.cgoto) {
+            RET_FAIL(error("-g, --computed-gotos option is not supported for non-C backends"));
         }
         if (real.case_ranges) {
-            error("--case-ranges option is not supported for the Go backend,"
-                " as Go has no case ranges");
-            exit(1);
+            RET_FAIL(error("--case-ranges option is not supported for non-C backends"));
         }
     }
-    if (real.eof != NOEOF) {
-        if (real.bFlag || real.gFlag) {
-            error("configuration 're2c:eof' cannot be used with options "
-                "-b, --bit-vectors and -g, --computed gotos");
-            exit(1);
+    if (real.fill_eof != NOEOF) {
+        if (real.bitmaps || real.cgoto) {
+            RET_FAIL(error("configuration 're2c:eof' cannot be used with options -b, --bit-vectors "
+                           "and -g, --computed gotos"));
         }
-        if (real.eof >= real.encoding.nCodeUnits()) {
-            error("EOF exceeds maximum code unit value for given encoding");
-            exit(1);
+        if (real.fill_eof >= real.encoding.cunit_count()) {
+            RET_FAIL(error("EOF exceeds maximum code unit value for given encoding"));
         }
         if (!real.fill_check) {
-            error("YYFILL check is necessary if EOF rule is used");
-            exit(1);
+            RET_FAIL(error("YYFILL check is necessary if EOF rule is used"));
         }
     }
-    if (real.sentinel != NOEOF) {
-        if (real.sentinel >= real.encoding.nCodeUnits()) {
-            error("sentinel exceeds maximum code unit value for given encoding");
-            exit(1);
+    if (real.fill_sentinel != NOEOF) {
+        if (real.fill_sentinel >= real.encoding.cunit_count()) {
+            RET_FAIL(error("sentinel exceeds maximum code unit value for given encoding"));
         }
-        if (real.fill_use || real.eof != NOEOF) {
-            error("re2c:sentinel configuration is not needed"
-                " in the presence of bounds checking or EOF rule");
-            exit(1);
+        if (real.fill_enable || real.fill_eof != NOEOF) {
+            RET_FAIL(error("re2c:sentinel configuration is not needed in the presence of bounds "
+                           "checking or EOF rule"));
         }
     }
-    if (!glob.lookahead && glob.stadfa) {
-        error("cannot combine TDFA(0) and staDFA");
-        exit(1);
+    if (glob.storable_state && !real.fill_enable) {
+        // -f, --storable-state option should not be used if YYFILL is disabled, because without
+        // YYFILL the interrupt points do not necessarily correspond to storable state labels (with
+        // generic API interrupts can happen on any API invocation). This may cause subtle bugs when
+        // the lexer is resumed from the wrong program point.
+        RET_FAIL(error("storable state requires YYFILL to be enabled"));
     }
-    if (glob.fFlag && !real.fill_use) {
-        // -f, --storable-state option should not be used if YYFILL is disabled,
-        // because without YYFILL the interrupt points do not necessarily
-        // correspond to storable state labels (with generic API interrupts can
-        // happen on any API invocation). This may cause subtle bugs when the
-        // lexer is resumed from the wrong program point.
-        error("storable state requires YYFILL to be enabled");
-        exit(1);
+    if (glob.loop_switch) {
+        if (real.cgoto) {
+            RET_FAIL(error("cannot combine loop switch and computed gotos"));
+        }
+        if (real.bitmaps) {
+            // TODO: generate bitmaps before the joined loop/switch for all conditions.
+            RET_FAIL(error("bitmaps with loop switch are not supported"));
+        }
     }
+
+    return Ret::OK;
 }
 
-Opt::Opt(const conopt_t &globopts)
-    : glob(globopts)
-    , defaults()
-    , is_default()
-    , user()
-    , real()
-    , diverge(true)
-{}
+Opt::Opt(const conopt_t& globopts, Msg& msg)
+    : glob(globopts),
+      symtab(),
+      msg(msg),
+      defaults(),
+      is_default(),
+      user(),
+      real(),
+      diverge(true) {}
 
-void Opt::fix_global_and_defaults()
-{
+Ret Opt::fix_global_and_defaults() {
     // Allow to modify only the global options.
-    fix_conopt(const_cast<conopt_t&>(glob));
+    CHECK_RET(fix_conopt(const_cast<conopt_t&>(glob)));
 
-    // Allow to modify only the mutable option defaults (based on the global
-    // options).
+    // Allow to modify only the mutable option defaults (based on the global options).
     fix_mutopt_defaults(glob, const_cast<mutopt_t&>(defaults));
 
-    // Apply new defaults to all mutable options except those that have been
-    // explicitly defined by the user.
+    // Apply new defaults to all mutable options except those that have been explicitly defined by
+    // the user.
 #define MUTOPT1 MUTOPT
 #define MUTOPT(type, name, value) \
     if (is_default.name) user.name = defaults.name;
@@ -340,11 +354,12 @@ void Opt::fix_global_and_defaults()
 #undef MUTOPT1
 #undef MUTOPT
     diverge = true;
+
+    return Ret::OK;
 }
 
-void Opt::sync()
-{
-    if (!diverge) return;
+Ret Opt::sync() {
+    if (!diverge) return Ret::OK;
 
     // Copy user-defined options to real options.
 #define MUTOPT1 MUTOPT
@@ -354,22 +369,22 @@ void Opt::sync()
 #undef MUTOPT1
 #undef MUTOPT
 
-    // Fix the real mutable options (based on the global options, mutable option
-    // defaults and default flags), but do not change user-defined options or
-    // default flags.
-    fix_mutopt(glob, defaults, is_default, real);
+    // Fix the real mutable options (based on the global options, mutable option defaults and
+    // default flags), but do not change user-defined options or default flags.
+    CHECK_RET(fix_mutopt(glob, defaults, is_default, real));
 
     diverge = false;
+
+    return Ret::OK;
 }
 
-const opt_t *Opt::snapshot()
-{
-    sync();
-    return new opt_t(glob, real, is_default);
+Ret Opt::snapshot(const opt_t** opts) {
+    CHECK_RET(sync());
+    *opts = new opt_t(glob, real, is_default, symtab);
+    return Ret::OK;
 }
 
-void Opt::restore(const opt_t *opts)
-{
+Ret Opt::restore(const opt_t* opts) {
 #define MUTOPT1 MUTOPT
 #define MUTOPT(type, name, value) \
     user.name = opts->name; \
@@ -378,12 +393,13 @@ void Opt::restore(const opt_t *opts)
 #undef MUTOPT1
 #undef MUTOPT
 
+    symtab = opts->symtab;
+
     diverge = true;
-    sync();
+    return sync();
 }
 
-void Opt::merge(const opt_t *opts)
-{
+Ret Opt::merge(const opt_t* opts, Input& input) {
 #define MUTOPT1 MUTOPT
 #define MUTOPT(type, name, value) \
     if (!opts->is_default_##name) { \
@@ -394,8 +410,10 @@ void Opt::merge(const opt_t *opts)
 #undef MUTOPT1
 #undef MUTOPT
 
+    CHECK_RET(merge_symtab(symtab, opts->symtab, input));
+
     diverge = true;
-    sync();
+    return sync();
 }
 
 #define MUTOPT1 MUTOPT
@@ -416,31 +434,25 @@ RE2C_MUTOPTS
 #undef MUTOPT1
 #undef MUTOPT
 
-void Opt::set_encoding(Enc::type_t t)
-{
-    user.encoding.set(t);
+void Opt::set_encoding(Enc::Type type, bool on) {
+    if (on) {
+        user.encoding.set(type);
+    } else {
+        user.encoding.unset(type);
+    }
     is_default.encoding = false;
     diverge = true;
 }
 
-void Opt::unset_encoding(Enc::type_t t)
-{
-    user.encoding.unset(t);
-    is_default.encoding = false; // explicitly unset by the user => not default
-    diverge = true;
-}
-
-void Opt::set_encoding_policy(Enc::policy_t p)
-{
-    user.encoding.setPolicy(p);
+void Opt::set_encoding_policy(Enc::Policy p) {
+    user.encoding.set_policy(p);
     is_default.encoding = false;
     diverge = true;
 }
 
-void Opt::reset_group_startlabel()
-{
-    reset_startlabel();
-    reset_startlabel_force();
+void Opt::reset_group_label_start() {
+    reset_label_start();
+    reset_label_start_force();
     diverge = true;
 }
 

@@ -4,7 +4,7 @@ enum YYCONDTYPE {
 	yycb,
 	yycc,
 	yycd,
-	yycf,
+	yycf
 };
 
 
@@ -14,13 +14,13 @@ enum YYCONDTYPE {
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy4;
-	default:	goto yy2;
+		case 'a': goto yy2;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	++YYCURSOR;
 	{ * }
-yy4:
+yy2:
 	++YYCURSOR;
 	{ a }
 }
@@ -30,23 +30,21 @@ yy4:
 {
 	YYCTYPE yych;
 	switch (YYGETCONDITION()) {
-	case yycb:
-		goto yyc_b;
-	case yycc:
-		goto yyc_c;
+		case yycb: goto yyc_b;
+		case yycc: goto yyc_c;
 	}
 /* *********************************** */
 yyc_b:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy10;
-	default:	goto yy8;
+		case 'b': goto yy5;
+		default: goto yy4;
 	}
-yy8:
+yy4:
 	++YYCURSOR;
 	{ * }
-yy10:
+yy5:
 	++YYCURSOR;
 	{ b }
 /* *********************************** */
@@ -54,13 +52,13 @@ yyc_c:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'c':	goto yy16;
-	default:	goto yy14;
+		case 'c': goto yy8;
+		default: goto yy7;
 	}
-yy14:
+yy7:
 	++YYCURSOR;
 	{ * }
-yy16:
+yy8:
 	++YYCURSOR;
 	{ c }
 }
@@ -70,21 +68,20 @@ yy16:
 {
 	YYCTYPE yych;
 	switch (YYGETCONDITION()) {
-	case yycd:
-		goto yyc_d;
+		case yycd: goto yyc_d;
 	}
 /* *********************************** */
 yyc_d:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'd':	goto yy22;
-	default:	goto yy20;
+		case 'd': goto yy11;
+		default: goto yy10;
 	}
-yy20:
+yy10:
 	++YYCURSOR;
 	{ * }
-yy22:
+yy11:
 	++YYCURSOR;
 	{ d }
 }
@@ -97,10 +94,10 @@ yy22:
 	YYCTYPE yych;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yych == 'e') goto yy28;
+	if (yych == 'e') goto yy13;
 	++YYCURSOR;
 	{ * }
-yy28:
+yy13:
 	++YYCURSOR;
 	{ e }
 }
@@ -118,20 +115,20 @@ yy28:
 yyc_b:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yych == 'B') goto yy34;
+	if (yych == 'B') goto yy15;
 	++YYCURSOR;
 	{ * }
-yy34:
+yy15:
 	++YYCURSOR;
 	{ B }
 /* *********************************** */
 yyc_f:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yych == 'f') goto yy40;
+	if (yych == 'f') goto yy17;
 	++YYCURSOR;
 	{ * }
-yy40:
+yy17:
 	++YYCURSOR;
 	{ f }
 }

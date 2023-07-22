@@ -6,7 +6,9 @@ package main
 import "fmt"
 import "os"
 
+//line "golang/003_fill_bf.go":10
 var YYMAXFILL int = 2
+//line "golang/003_fill_bf.re":7
 
 var SIZE int = 11
 
@@ -80,9 +82,8 @@ func Lex(in *Input) (int, int) {
 	var yych YYCTYPE
 
 	
-//line "golang/003_fill_bf.go":84
+//line "golang/003_fill_bf.go":86
 {
-
 	yybm := []byte{
 		  0,   0,   0,   0,   0,   0,   0,   0, 
 		  0,   0,   0,   0,   0,   0,   0,   0, 
@@ -130,112 +131,117 @@ func Lex(in *Input) (int, int) {
 		goto yyFillLabel3
 	}
 yy0:
-	in.state = 0
 	if (in.limit-in.cursor < 1) {
+		in.state = 0
 		return lexNeedMoreInput, 1
 	}
 yyFillLabel0:
 	yych = YYCTYPE(in.data[in.cursor])
 	if (yybm[0+yych] & 64 != 0) {
-		goto yy7
+		goto yy4
 	}
 	if (yych <= 0x00) {
-		goto yy3
+		goto yy2
 	}
 	if (yych <= '/') {
-		goto yy5
+		goto yy3
 	}
 	if (yych <= '9') {
-		goto yy10
+		goto yy5
 	}
-	goto yy5
-yy3:
+	goto yy3
+yy2:
 	in.cursor += 1
+	in.state = -1
 //line "golang/003_fill_bf.re":94
 	{
 		fmt.Println("end")
 		return lexEnd, 0
 	}
-//line "golang/003_fill_bf.go":160
-yy5:
+//line "golang/003_fill_bf.go":162
+yy3:
 	in.cursor += 1
+	in.state = -1
 //line "golang/003_fill_bf.re":89
 	{
 		fmt.Println("error")
 		return lexError, 0
 	}
-//line "golang/003_fill_bf.go":168
-yy7:
+//line "golang/003_fill_bf.go":171
+yy4:
 	in.cursor += 1
-	in.state = 1
 	if (in.limit-in.cursor < 1) {
+		in.state = 1
 		return lexNeedMoreInput, 1
 	}
 yyFillLabel1:
 	yych = YYCTYPE(in.data[in.cursor])
 	if (yybm[0+yych] & 64 != 0) {
-		goto yy7
+		goto yy4
 	}
+	in.state = -1
 //line "golang/003_fill_bf.re":109
 	{
 		return lexSpace, 0
 	}
-//line "golang/003_fill_bf.go":184
-yy10:
+//line "golang/003_fill_bf.go":188
+yy5:
 	in.cursor += 1
 	in.marker = in.cursor
-	in.state = 2
 	if (in.limit-in.cursor < 2) {
+		in.state = 2
 		return lexNeedMoreInput, 2
 	}
 yyFillLabel2:
 	yych = YYCTYPE(in.data[in.cursor])
 	if (yybm[0+yych] & 128 != 0) {
-		goto yy10
+		goto yy5
 	}
 	if (yych == '-') {
-		goto yy13
+		goto yy7
 	}
-yy12:
+yy6:
+	in.state = -1
 //line "golang/003_fill_bf.re":99
 	{
 		fmt.Printf("number-1: %v\n", string(in.data[in.token:in.cursor]))
 		return lexNumber1, 0
 	}
-//line "golang/003_fill_bf.go":206
-yy13:
+//line "golang/003_fill_bf.go":211
+yy7:
 	in.cursor += 1
 	yych = YYCTYPE(in.data[in.cursor])
 	if (yych <= '/') {
-		goto yy14
+		goto yy8
 	}
 	if (yych <= '9') {
-		goto yy15
+		goto yy9
 	}
-yy14:
+yy8:
 	in.cursor = in.marker
-	goto yy12
-yy15:
+	goto yy6
+yy9:
 	in.cursor += 1
-	in.state = 3
 	if (in.limit-in.cursor < 1) {
+		in.state = 3
 		return lexNeedMoreInput, 1
 	}
 yyFillLabel3:
 	yych = YYCTYPE(in.data[in.cursor])
 	if (yych <= '/') {
-		goto yy17
+		goto yy10
 	}
 	if (yych <= '9') {
-		goto yy15
+		goto yy9
 	}
-yy17:
+yy10:
+	in.state = -1
 //line "golang/003_fill_bf.re":104
 	{
 		fmt.Printf("number-2: %v\n", string(in.data[in.token:in.cursor]))
 		return lexNumber2, 0
 	}
-//line "golang/003_fill_bf.go":239
+//line "golang/003_fill_bf.go":245
 }
 //line "golang/003_fill_bf.re":112
 

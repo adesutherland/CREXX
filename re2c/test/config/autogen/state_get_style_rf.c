@@ -3,239 +3,266 @@
 
 
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy0;
-	case 0:
-		goto yyFillLabel2_0;
+		default: goto yy0;
+		case 0: goto yyFillLabel0;
 	}
 yy0:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel2_0:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(0);
+		YYFILL(1);
+	}
+yyFillLabel0:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy5;
-	default:	goto yy3;
+		case 'a': goto yy3;
+		default: goto yy2;
 	}
+yy2:
+	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ x }
 yy3:
 	++YYCURSOR;
-	{ x }
-yy5:
-	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:api:style = free-form;
 
-
+{
 	switch (YYGETSTATE) {
-	default:
-		goto yy7;
-	case 0:
-		goto yyFillLabel3_0;
+		default: goto yy4;
+		case 1: goto yyFillLabel1;
 	}
-yy7:
-	YYSETSTATE
-	if (YYLIMIT <= YYCURSOR) YYFILL
-yyFillLabel3_0:
+yy4:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE
+		YYFILL
+	}
+yyFillLabel1:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy12;
-	default:	goto yy10;
+		case 'a': goto yy7;
+		default: goto yy6;
+	}
+yy6:
+	++YYCURSOR;
+	YYSETSTATE
+	{ x }
+yy7:
+	++YYCURSOR;
+	YYSETSTATE
+	{ a }
+}
+
+
+// re2c:api:style = functions;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy8;
+		case 2: goto yyFillLabel2;
+	}
+yy8:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(2);
+		YYFILL(1);
+	}
+yyFillLabel2:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy11;
+		default: goto yy10;
 	}
 yy10:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ x }
-yy12:
+yy11:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
-// re2c:api:style = functions;
+// re2c:define:YYGETSTATE:naked = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy14;
-	case 0:
-		goto yyFillLabel4_0;
+		default: goto yy12;
+		case 3: goto yyFillLabel3;
 	}
-yy14:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel4_0:
+yy12:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(3);
+		YYFILL(1);
+	}
+yyFillLabel3:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy19;
-	default:	goto yy17;
+		case 'a': goto yy15;
+		default: goto yy14;
 	}
-yy17:
+yy14:
 	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ x }
+yy15:
+	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:define:YYGETSTATE:naked = 0;
+// re2c:api:style = free-form;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy16;
+		case 4: goto yyFillLabel4;
+	}
+yy16:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE
+		YYFILL
+	}
+yyFillLabel4:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy19;
+		default: goto yy18;
+	}
+yy18:
+	++YYCURSOR;
+	YYSETSTATE
 	{ x }
 yy19:
 	++YYCURSOR;
+	YYSETSTATE
 	{ a }
+}
 
 
 // re2c:define:YYGETSTATE:naked = 0;
+// re2c:api:style = functions;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy21;
-	case 0:
-		goto yyFillLabel5_0;
+		default: goto yy20;
+		case 5: goto yyFillLabel5;
 	}
-yy21:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel5_0:
+yy20:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(5);
+		YYFILL(1);
+	}
+yyFillLabel5:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy26;
-	default:	goto yy24;
+		case 'a': goto yy23;
+		default: goto yy22;
+	}
+yy22:
+	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ x }
+yy23:
+	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:define:YYGETSTATE:naked = 1;
+
+{
+	switch (YYGETSTATE) {
+		default: goto yy24;
+		case 6: goto yyFillLabel6;
 	}
 yy24:
-	++YYCURSOR;
-	{ x }
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(6);
+		YYFILL(1);
+	}
+yyFillLabel6:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy27;
+		default: goto yy26;
+	}
 yy26:
 	++YYCURSOR;
+	YYSETSTATE(-1);
+	{ x }
+yy27:
+	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
-// re2c:define:YYGETSTATE:naked = 0;
+// re2c:define:YYGETSTATE:naked = 1;
 // re2c:api:style = free-form;
 
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy28;
-	case 0:
-		goto yyFillLabel6_0;
+{
+	switch (YYGETSTATE) {
+		default: goto yy28;
+		case 7: goto yyFillLabel7;
 	}
 yy28:
-	YYSETSTATE
-	if (YYLIMIT <= YYCURSOR) YYFILL
-yyFillLabel6_0:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE
+		YYFILL
+	}
+yyFillLabel7:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy33;
-	default:	goto yy31;
+		case 'a': goto yy31;
+		default: goto yy30;
 	}
+yy30:
+	++YYCURSOR;
+	YYSETSTATE
+	{ x }
 yy31:
 	++YYCURSOR;
-	{ x }
-yy33:
-	++YYCURSOR;
-	{ a }
-
-
-// re2c:define:YYGETSTATE:naked = 0;
-// re2c:api:style = functions;
-
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy35;
-	case 0:
-		goto yyFillLabel7_0;
-	}
-yy35:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel7_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy40;
-	default:	goto yy38;
-	}
-yy38:
-	++YYCURSOR;
-	{ x }
-yy40:
-	++YYCURSOR;
-	{ a }
-
-
-// re2c:define:YYGETSTATE:naked = 1;
-
-
-	switch (YYGETSTATE) {
-	default:
-		goto yy42;
-	case 0:
-		goto yyFillLabel8_0;
-	}
-yy42:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel8_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy47;
-	default:	goto yy45;
-	}
-yy45:
-	++YYCURSOR;
-	{ x }
-yy47:
-	++YYCURSOR;
-	{ a }
-
-
-// re2c:define:YYGETSTATE:naked = 1;
-// re2c:api:style = free-form;
-
-
-	switch (YYGETSTATE) {
-	default:
-		goto yy49;
-	case 0:
-		goto yyFillLabel9_0;
-	}
-yy49:
 	YYSETSTATE
-	if (YYLIMIT <= YYCURSOR) YYFILL
-yyFillLabel9_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy54;
-	default:	goto yy52;
-	}
-yy52:
-	++YYCURSOR;
-	{ x }
-yy54:
-	++YYCURSOR;
 	{ a }
+}
 
 
 // re2c:define:YYGETSTATE:naked = 1;
 // re2c:api:style = functions;
 
-
+{
 	switch (YYGETSTATE) {
-	default:
-		goto yy56;
-	case 0:
-		goto yyFillLabel10_0;
+		default: goto yy32;
+		case 8: goto yyFillLabel8;
 	}
-yy56:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel10_0:
+yy32:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(8);
+		YYFILL(1);
+	}
+yyFillLabel8:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy61;
-	default:	goto yy59;
+		case 'a': goto yy35;
+		default: goto yy34;
 	}
-yy59:
+yy34:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ x }
-yy61:
+yy35:
 	++YYCURSOR;
+	YYSETSTATE(-1);
 	{ a }
+}
 
 

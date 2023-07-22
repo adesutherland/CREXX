@@ -9,18 +9,18 @@ unsigned char scan(const unsigned char *s)
 	unsigned char ch;
 	ch = *cr;
 	switch (ch) {
-	case 0x81:	goto yy3;
-	case 0x82:	goto yy5;
-	default:	goto yy2;
+		case 0x81: goto yy2;
+		case 0x82: goto yy3;
+		default: goto yy1;
 	}
+yy1:
 yy2:
-yy3:
 	++cr;
 	return 'a';
-yy5:
+yy3:
 	++cr;
 	return 'b';
 }
 
 }
-config/config11.re:17:2: warning: control flow is undefined for strings that match '[\x0-\x80\x83-\xFF]', use default rule '*' [-Wundefined-control-flow]
+config/config11.re:6:0: warning: control flow is undefined for strings that match '[\x0-\x80\x83-\xFF]', use default rule '*' [-Wundefined-control-flow]

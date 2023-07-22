@@ -6,7 +6,9 @@ package main
 import "fmt"
 import "os"
 
+//line "golang/003_fill.go":10
 var YYMAXFILL int = 2
+//line "golang/003_fill.re":7
 
 var SIZE int = 11
 
@@ -68,7 +70,7 @@ func Lex(in *Input) int {
 	in.token = in.cursor
 
 	
-//line "golang/003_fill.go":72
+//line "golang/003_fill.go":74
 {
 	var yych YYCTYPE
 	if (in.limit-in.cursor < 1) {
@@ -77,56 +79,38 @@ func Lex(in *Input) int {
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
 	case 0x00:
-		goto yy2
+		goto yy1
 	case ' ':
-		goto yy6
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy8
-	default:
+		goto yy3
+	case '0','1','2','3','4','5','6','7','8','9':
 		goto yy4
+	default:
+		goto yy2
 	}
-yy2:
+yy1:
 	in.cursor += 1
 //line "golang/003_fill.re":80
 	{
 		fmt.Println("end")
 		return 0
 	}
-//line "golang/003_fill.go":114
-yy4:
+//line "golang/003_fill.go":98
+yy2:
 	in.cursor += 1
 //line "golang/003_fill.re":75
 	{
 		fmt.Println("error")
 		return -1
 	}
-//line "golang/003_fill.go":122
-yy6:
+//line "golang/003_fill.go":106
+yy3:
 	in.cursor += 1
 //line "golang/003_fill.re":95
 	{
 		return 3
 	}
-//line "golang/003_fill.go":129
-yy8:
+//line "golang/003_fill.go":113
+yy4:
 	in.cursor += 1
 	in.marker = in.cursor
 	if (in.limit-in.cursor < 2) {
@@ -135,104 +119,50 @@ yy8:
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
 	case '-':
-		goto yy11
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy8
+		goto yy6
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy4
 	default:
-		goto yy10
+		goto yy5
 	}
-yy10:
+yy5:
 //line "golang/003_fill.re":85
 	{
 		fmt.Printf("number-1: %v\n", string(in.data[in.token:in.cursor]))
 		return 1
 	}
-//line "golang/003_fill.go":169
-yy11:
+//line "golang/003_fill.go":135
+yy6:
 	in.cursor += 1
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy13
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy8
 	default:
-		goto yy12
+		goto yy7
 	}
-yy12:
+yy7:
 	in.cursor = in.marker
-	goto yy10
-yy13:
+	goto yy5
+yy8:
 	in.cursor += 1
 	if (in.limit-in.cursor < 1) {
 		if fill(in, 1) != 0 { return -2 }
 	}
 	yych = YYCTYPE(in.data[in.cursor])
 	switch (yych) {
-	case '0':
-		fallthrough
-	case '1':
-		fallthrough
-	case '2':
-		fallthrough
-	case '3':
-		fallthrough
-	case '4':
-		fallthrough
-	case '5':
-		fallthrough
-	case '6':
-		fallthrough
-	case '7':
-		fallthrough
-	case '8':
-		fallthrough
-	case '9':
-		goto yy13
+	case '0','1','2','3','4','5','6','7','8','9':
+		goto yy8
 	default:
-		goto yy15
+		goto yy9
 	}
-yy15:
+yy9:
 //line "golang/003_fill.re":90
 	{
 		fmt.Printf("number-2: %v\n", string(in.data[in.token:in.cursor]))
 		return 2
 	}
-//line "golang/003_fill.go":236
+//line "golang/003_fill.go":166
 }
 //line "golang/003_fill.re":98
 

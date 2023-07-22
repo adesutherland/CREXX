@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "src/util/c99_stdint.h"
+#include <stdint.h>
 
 
 enum engine_t {
@@ -23,7 +23,6 @@ struct bench_t {
     const char *name;
     const char *regexp;
     const char **strings;
-    int not_flags;
 };
 
 // Need to define benchmarks as functors for benchmark::RegisterBenchmark.

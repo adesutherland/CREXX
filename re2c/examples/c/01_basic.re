@@ -1,22 +1,20 @@
-// re2c $INPUT -o $OUTPUT -i
-#include <assert.h>                 //
-                                    // C/C++ code
-int lex(const char *YYCURSOR)       //
-{
-    /*!re2c                         // start of re2c block
-    re2c:define:YYCTYPE = char;     // configuration
-    re2c:yyfill:enable = 0;         // configuration
-    re2c:flags:case-ranges = 1;     // configuration
-                                    //
-    ident = [a-zA-Z_][a-zA-Z_0-9]*; // named definition
-                                    //
-    ident { return 0; }             // normal rule
-    *     { return 1; }             // default rule
+// re2c $INPUT -o $OUTPUT -i --case-ranges
+#include <assert.h>
+
+bool lex(const char *s) {
+    const char *YYCURSOR = s;
+    /*!re2c
+        re2c:yyfill:enable = 0;
+        re2c:define:YYCTYPE = char;
+
+        number = [1-9][0-9]*;
+
+        number { return true; }
+        *      { return false; }
     */
-}                                   //
-                                    //
-int main()                          //
-{                                   // C/C++ code
-    assert(lex("_Zer0") == 0);      //
-    return 0;                       //
-}                                   //
+}
+
+int main() {
+    assert(lex("1234"));
+    return 0;
+}

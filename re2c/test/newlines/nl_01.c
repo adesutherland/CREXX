@@ -4,36 +4,40 @@
 
 #line 3 "newlines/nl_01.re"
 
+#line 8 "newlines/nl_01.c"
 yyt1
+#line 4 "newlines/nl_01.re"
 
+#line 12 "newlines/nl_01.c"
 #define YYMAXFILL 1
+#line 5 "newlines/nl_01.re"
 
 
 
-#line 14 "newlines/nl_01.c"
+#line 18 "newlines/nl_01.c"
 {
 	YYCTYPE yych;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	yyt1 = YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy3;
-	default:	goto yy2;
+		case 'a': goto yy2;
+		default: goto yy1;
 	}
-yy2:
+yy1:
 	x = yyt1;
 #line 8 "newlines/nl_01.re"
 	{
         ;
     }
-#line 30 "newlines/nl_01.c"
-yy3:
+#line 34 "newlines/nl_01.c"
+yy2:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy3;
-	default:	goto yy2;
+		case 'a': goto yy2;
+		default: goto yy1;
 	}
 }
 #line 11 "newlines/nl_01.re"

@@ -4,340 +4,364 @@
 
 // re2c:state:nextlabel = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy0;
-	case 0:
-		goto yyFillLabel2_0;
+		default: goto yy0;
+		case 0: goto yyFillLabel0;
 	}
 yy0:
 	goto yy1;
 yy2:
 	++YYCURSOR;
 yy1:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel2_0:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(0);
+		YYFILL(1);
+	}
+yyFillLabel0:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy2;
-	default:	goto yy4;
+		case 'a': goto yy2;
+		default: goto yy3;
 	}
-yy4:
+yy3:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:state:nextlabel = 1;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy5;
-	case 0:
-		goto yyFillLabel3_0;
+		default: goto yy4;
+		case 1: goto yyFillLabel1;
 	}
 yyNext:
-yy5:
-	goto yy6;
-yy7:
-	++YYCURSOR;
+yy4:
+	goto yy5;
 yy6:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel3_0:
+	++YYCURSOR;
+yy5:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(1);
+		YYFILL(1);
+	}
+yyFillLabel1:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy7;
-	default:	goto yy9;
+		case 'a': goto yy6;
+		default: goto yy7;
 	}
-yy9:
+yy7:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:startlabel = 0;
 // re2c:state:nextlabel = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy10;
-	case 0:
-		goto yyFillLabel4_0;
+		default: goto yy8;
+		case 2: goto yyFillLabel2;
 	}
+yy8:
+	goto yy9;
 yy10:
-	goto yy11;
-yy12:
 	++YYCURSOR;
-yy11:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel4_0:
+yy9:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(2);
+		YYFILL(1);
+	}
+yyFillLabel2:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy12;
-	default:	goto yy14;
+		case 'a': goto yy10;
+		default: goto yy11;
 	}
-yy14:
+yy11:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:startlabel = 0;
 // re2c:state:nextlabel = 1;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy15;
-	case 0:
-		goto yyFillLabel5_0;
+		default: goto yy12;
+		case 3: goto yyFillLabel3;
 	}
 yyNext:
-yy15:
-	goto yy16;
-yy17:
+yy12:
+	goto yy13;
+yy14:
 	++YYCURSOR;
-yy16:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel5_0:
+yy13:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(3);
+		YYFILL(1);
+	}
+yyFillLabel3:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy17;
-	default:	goto yy19;
+		case 'a': goto yy14;
+		default: goto yy15;
 	}
-yy19:
+yy15:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:startlabel = 1;
 // re2c:state:nextlabel = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy20;
-	case 0:
-		goto yyFillLabel6_0;
+		default: goto yy16;
+		case 4: goto yyFillLabel4;
 	}
+yy16:
+	goto yy17;
+yy18:
+	++YYCURSOR;
+yy17:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(4);
+		YYFILL(1);
+	}
+yyFillLabel4:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy18;
+		default: goto yy19;
+	}
+yy19:
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:startlabel = 1;
+// re2c:state:nextlabel = 1;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy20;
+		case 5: goto yyFillLabel5;
+	}
+yyNext:
 yy20:
 	goto yy21;
 yy22:
 	++YYCURSOR;
 yy21:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel6_0:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(5);
+		YYFILL(1);
+	}
+yyFillLabel5:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy22;
-	default:	goto yy24;
+		case 'a': goto yy22;
+		default: goto yy23;
 	}
-yy24:
+yy23:
+	YYSETSTATE(-1);
 	{ a }
-
-
-// re2c:startlabel = 1;
-// re2c:state:nextlabel = 1;
-
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy25;
-	case 0:
-		goto yyFillLabel7_0;
-	}
-yyNext:
-yy25:
-	goto yy26;
-yy27:
-	++YYCURSOR;
-yy26:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel7_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy27;
-	default:	goto yy29;
-	}
-yy29:
-	{ a }
+}
 
 
 // re2c:startlabel = Lstart;
 // re2c:state:nextlabel = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy30;
-	case 0:
-		goto yyFillLabel8_0;
+		default: goto yy24;
+		case 6: goto yyFillLabel6;
 	}
-yy30:
 Lstart:
-	goto yy31;
-yy32:
+yy24:
+	goto yy25;
+yy26:
 	++YYCURSOR;
-yy31:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel8_0:
+yy25:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(6);
+		YYFILL(1);
+	}
+yyFillLabel6:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy32;
-	default:	goto yy34;
+		case 'a': goto yy26;
+		default: goto yy27;
 	}
-yy34:
+yy27:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:startlabel = Lstart;
 // re2c:state:nextlabel = 1;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy35;
-	case 0:
-		goto yyFillLabel9_0;
+		default: goto yy28;
+		case 7: goto yyFillLabel7;
 	}
 yyNext:
-yy35:
 Lstart:
-	goto yy36;
-yy37:
+yy28:
+	goto yy29;
+yy30:
 	++YYCURSOR;
-yy36:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel9_0:
+yy29:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(7);
+		YYFILL(1);
+	}
+yyFillLabel7:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy37;
-	default:	goto yy39;
+		case 'a': goto yy30;
+		default: goto yy31;
 	}
-yy39:
+yy31:
+	YYSETSTATE(-1);
 	{ a }
+}
 
 
 // re2c:startlabel = Lstart;
 // re2c:startlabel = 0;
 // re2c:state:nextlabel = 0;
 
-
+{
 	switch (YYGETSTATE()) {
-	default:
-		goto yy40;
-	case 0:
-		goto yyFillLabel10_0;
+		default: goto yy32;
+		case 8: goto yyFillLabel8;
 	}
-yy40:
 Lstart:
+yy32:
+	goto yy33;
+yy34:
+	++YYCURSOR;
+yy33:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(8);
+		YYFILL(1);
+	}
+yyFillLabel8:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy34;
+		default: goto yy35;
+	}
+yy35:
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:startlabel = Lstart;
+// re2c:startlabel = 0;
+// re2c:state:nextlabel = 1;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy36;
+		case 9: goto yyFillLabel9;
+	}
+yyNext:
+Lstart:
+yy36:
+	goto yy37;
+yy38:
+	++YYCURSOR;
+yy37:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(9);
+		YYFILL(1);
+	}
+yyFillLabel9:
+	yych = *YYCURSOR;
+	switch (yych) {
+		case 'a': goto yy38;
+		default: goto yy39;
+	}
+yy39:
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:startlabel = Lstart;
+// re2c:startlabel = 1;
+// re2c:state:nextlabel = 0;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy40;
+		case 10: goto yyFillLabel10;
+	}
+Lstart:
+yy40:
 	goto yy41;
 yy42:
 	++YYCURSOR;
 yy41:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel10_0:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(10);
+		YYFILL(1);
+	}
+yyFillLabel10:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy42;
-	default:	goto yy44;
+		case 'a': goto yy42;
+		default: goto yy43;
 	}
+yy43:
+	YYSETSTATE(-1);
+	{ a }
+}
+
+
+// re2c:startlabel = Lstart;
+// re2c:startlabel = 1;
+// re2c:state:nextlabel = 1;
+
+{
+	switch (YYGETSTATE()) {
+		default: goto yy44;
+		case 11: goto yyFillLabel11;
+	}
+yyNext:
+Lstart:
 yy44:
-	{ a }
-
-
-// re2c:startlabel = Lstart;
-// re2c:startlabel = 0;
-// re2c:state:nextlabel = 1;
-
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy45;
-	case 0:
-		goto yyFillLabel11_0;
-	}
-yyNext:
-yy45:
-Lstart:
-	goto yy46;
-yy47:
-	++YYCURSOR;
+	goto yy45;
 yy46:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel11_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy47;
-	default:	goto yy49;
-	}
-yy49:
-	{ a }
-
-
-// re2c:startlabel = Lstart;
-// re2c:startlabel = 1;
-// re2c:state:nextlabel = 0;
-
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy50;
-	case 0:
-		goto yyFillLabel12_0;
-	}
-yy50:
-Lstart:
-	goto yy51;
-yy52:
 	++YYCURSOR;
-yy51:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel12_0:
+yy45:
+	if (YYLIMIT <= YYCURSOR) {
+		YYSETSTATE(11);
+		YYFILL(1);
+	}
+yyFillLabel11:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy52;
-	default:	goto yy54;
+		case 'a': goto yy46;
+		default: goto yy47;
 	}
-yy54:
+yy47:
+	YYSETSTATE(-1);
 	{ a }
-
-
-// re2c:startlabel = Lstart;
-// re2c:startlabel = 1;
-// re2c:state:nextlabel = 1;
-
-
-	switch (YYGETSTATE()) {
-	default:
-		goto yy55;
-	case 0:
-		goto yyFillLabel13_0;
-	}
-yyNext:
-yy55:
-Lstart:
-	goto yy56;
-yy57:
-	++YYCURSOR;
-yy56:
-	YYSETSTATE(0);
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-yyFillLabel13_0:
-	yych = *YYCURSOR;
-	switch (yych) {
-	case 'a':	goto yy57;
-	default:	goto yy59;
-	}
-yy59:
-	{ a }
+}
 
 
 config/autogen/startlabel_rf.re:3:7: warning: rule matches empty string [-Wmatch-empty-string]

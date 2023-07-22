@@ -10,7 +10,7 @@ if DEBUG
 AM_CXXFLAGS += -DRE2C_DEBUG
 endif
 
-RE2CFLAGS = -br -W -Wno-match-empty-string
+RE2CFLAGS = -b -W -Wno-match-empty-string --no-generation-date
 
 # binary
 bin_PROGRAMS = re2c
@@ -18,10 +18,12 @@ noinst_PROGRAMS =
 
 # sources
 re2c_HDR = \
+	src/constants.h \
 	src/codegen/code.h \
+	src/codegen/output.h \
 	src/codegen/helpers.h \
 	src/options/opt.h \
-	src/adfa/action.h \
+	src/options/symtab.h \
 	src/adfa/adfa.h \
 	src/cfg/cfg.h \
 	src/dfa/closure_leftmost.h \
@@ -29,73 +31,51 @@ re2c_HDR = \
 	src/dfa/determinization.h \
 	src/dfa/dfa.h \
 	src/dfa/posix_precedence.h \
-	src/dfa/stacmd.h \
 	src/dfa/tag_history.h \
 	src/dfa/tagver_table.h \
 	src/dfa/tcmd.h \
 	src/nfa/nfa.h \
-	src/encoding/case.h \
-	src/encoding/ebcdic/ebcdic.h \
-	src/encoding/ebcdic/ebcdic_regexp.h \
+	src/encoding/ebcdic.h \
 	src/encoding/enc.h \
 	src/encoding/range_suffix.h \
-	src/encoding/utf8/utf8.h \
-	src/encoding/utf8/utf8_regexp.h \
-	src/encoding/utf16/utf16_regexp.h \
-	src/encoding/utf16/utf16.h \
+	src/encoding/utf8.h \
+	src/encoding/utf16.h \
 	src/msg/location.h \
 	src/msg/msg.h \
 	src/msg/ver_to_vernum.h \
 	src/msg/warn.h \
-	src/regexp/empty_class_policy.h \
-	src/regexp/re.h \
+	src/regexp/regexp.h \
 	src/regexp/rule.h \
 	src/regexp/tag.h \
-	src/compile.h \
 	src/skeleton/mtag_trie.h \
 	src/skeleton/path.h \
 	src/skeleton/skeleton.h \
 	src/parse/ast.h \
 	src/parse/input.h \
-	src/parse/parse.h \
-	src/parse/scanner.h \
-	src/parse/unescape.h \
 	src/debug/debug.h \
-	src/util/allocate.h \
+	src/util/allocator.h \
 	src/util/attribute.h \
-	src/util/c99_stdint.h \
-	src/util/fixed_allocator.h \
+	src/util/containers.h \
+	src/util/check.h \
+	src/util/file_utils.h \
 	src/util/forbid_copy.h \
-	src/util/free_list.h \
-	src/util/get_dir.h \
 	src/util/hash32.h \
-	src/util/local_increment.h \
-	src/util/lookup.h \
+	src/util/nowarn_in_bison.h \
 	src/util/range.h \
-	src/util/s_to_n32_unsafe.h \
-	src/util/slab_allocator.h \
-	src/util/smart_ptr.h \
-	src/util/static_assert.h \
 	src/util/string_utils.h \
-	src/util/temp_file.h \
-	src/util/u32lim.h \
-	src/util/uniq_vector.h
+	src/util/u32lim.h
+
 re2c_SRC = \
-	src/codegen/code_goto.cc \
-	src/codegen/combine.cc \
-	src/codegen/gen_bitmaps.cc \
-	src/codegen/gen_delayed.cc \
-	src/codegen/gen_dfa.cc \
-	src/codegen/gen_goto.cc \
-	src/codegen/gen_program.cc \
-	src/codegen/gen_state.cc \
 	src/codegen/helpers.cc \
-	src/codegen/render.cc \
+	src/codegen/output.cc \
+	src/codegen/pass1_analyze.cc \
+	src/codegen/pass2_generate.cc \
+	src/codegen/pass3_fixup.cc \
+	src/codegen/pass4_render.cc \
 	src/options/opt.cc \
-	src/nfa/estimate_size.cc \
+	src/options/symtab.cc \
 	src/nfa/re_to_nfa.cc \
 	src/adfa/adfa.cc \
-	src/adfa/prepare.cc \
 	src/debug/dump_adfa.cc \
 	src/debug/dump_cfg.cc \
 	src/debug/dump_dfa.cc \
@@ -119,26 +99,21 @@ re2c_SRC = \
 	src/dfa/fillpoints.cc \
 	src/dfa/find_state.cc \
 	src/dfa/minimization.cc \
-	src/dfa/stacmd.cc \
 	src/dfa/tagver_table.cc \
 	src/dfa/tcmd.cc \
-	src/encoding/ebcdic/ebcdic_regexp.cc \
+	src/encoding/ebcdic.cc \
 	src/encoding/enc.cc \
 	src/encoding/range_suffix.cc \
-	src/encoding/utf8/utf8_regexp.cc \
-	src/encoding/utf8/utf8.cc \
-	src/encoding/utf16/utf16_regexp.cc \
-	src/encoding/utf16/utf16.cc \
+	src/encoding/utf8.cc \
+	src/encoding/utf16.cc \
 	src/msg/msg.cc \
 	src/msg/warn.cc \
 	src/regexp/ast_to_re.cc \
 	src/regexp/default_tags.cc \
 	src/regexp/fixed_tags.cc \
 	src/regexp/nullable.cc \
-	src/regexp/rule.cc \
+	src/regexp/regexp.cc \
 	src/regexp/split_charset.cc \
-	src/regexp/tag.cc \
-	src/compile.cc \
 	src/skeleton/control_flow.cc \
 	src/skeleton/generate_code.cc \
 	src/skeleton/generate_data.cc \
@@ -146,12 +121,8 @@ re2c_SRC = \
 	src/skeleton/skeleton.cc \
 	src/parse/ast.cc \
 	src/parse/input.cc \
-	src/parse/parse.cc \
-	src/parse/scanner.cc \
-	src/parse/unescape.cc \
-	src/util/get_dir.cc \
-	src/util/s_to_n32_unsafe.cc \
-	src/util/temp_file.cc \
+	src/util/file_utils.cc \
+	src/util/string_utils.cc \
 	src/util/range.cc
 re2c_SOURCES = \
 	src/main.cc \
@@ -187,10 +158,12 @@ re2c_BOOT_PARSER = bootstrap/src/parse/parser.cc
 re2c_BOOT_PARSER_HDR = bootstrap/src/parse/parser.h
 re2c_BOOT_DOC_C = bootstrap/doc/re2c.1
 re2c_BOOT_DOC_GO = bootstrap/doc/re2go.1
+re2c_BOOT_DOC_RUST = bootstrap/doc/re2rust.1
 re2c_BOOT_HELP = bootstrap/src/msg/help.cc
 re2c_BOOT = \
 	$(re2c_BOOT_DOC_C) \
 	$(re2c_BOOT_DOC_GO) \
+	$(re2c_BOOT_DOC_RUST) \
 	$(re2c_BOOT_HELP) \
 	$(re2c_BOOT_PARSER) \
 	$(re2c_BOOT_PARSER_HDR) \
@@ -214,8 +187,8 @@ re2c_CUSTOM = \
 # docs
 re2c_SRC_DOC = doc/manpage.rst
 re2c_SRC_DOC_EXT = \
-	doc/manual/api/api.rst_ \
 	doc/manual/api/interface.rst_ \
+	doc/manual/conditions/blocks.rst_ \
 	doc/manual/conditions/conditions.rst_ \
 	doc/manual/configurations/configurations.rst_ \
 	doc/manual/directives/directives.rst_ \
@@ -240,13 +213,22 @@ re2c_SRC_DOC_EXT = \
 	doc/manual/state/state.rst_ \
 	doc/manual/submatch/submatch_example_mtags.rst_ \
 	doc/manual/submatch/submatch_example_posix.rst_ \
-	doc/manual/submatch/submatch_example_stags.rst_ \
 	doc/manual/submatch/submatch_example_stags_fill.rst_ \
+	doc/manual/submatch/submatch_example_stags.rst_ \
 	doc/manual/submatch/submatch.rst_ \
+	doc/manual/synopsis.rst_ \
+	doc/manual/syntax/api1.rst_ \
+	doc/manual/syntax/api2_c.rst_ \
+	doc/manual/syntax/api2_go.rst_ \
+	doc/manual/syntax/api2_rust.rst_ \
+	doc/manual/syntax/api3.rst_ \
+	doc/manual/syntax/intro.rst_ \
 	doc/manual/syntax/syntax.rst_ \
 	doc/manual/warnings/warnings_general.rst_ \
 	doc/manual/warnings/warnings_list.rst_ \
 	examples/c/01_basic.re \
+	examples/c/01_basic.c \
+	examples/c/conditions/parse_u32_blocks.re \
 	examples/c/conditions/parse_u32_conditions.re \
 	examples/c/encodings/unicode_identifier.re \
 	examples/c/eof/01_sentinel.re \
@@ -256,17 +238,19 @@ re2c_SRC_DOC_EXT = \
 	examples/c/fill/01_fill.re \
 	examples/c/fill/02_fill.re \
 	examples/c/headers/header.re \
-	examples/c/headers/src/lexer/lexer.h \
+	examples/c/headers/lexer/state.h \
 	examples/c/includes/include.re \
 	examples/c/includes/definitions.h \
 	examples/c/reuse/reuse.re \
 	examples/c/reuse/usedir.re \
 	examples/c/state/push.re \
-	examples/c/submatch/01_stags.re \
 	examples/c/submatch/01_stags_fill.re \
+	examples/c/submatch/01_stags.re \
 	examples/c/submatch/02_mtags.re \
 	examples/c/submatch/03_posix.re \
 	examples/go/01_basic.re \
+	examples/go/01_basic.go \
+	examples/go/conditions/parse_u32_blocks.re \
 	examples/go/conditions/parse_u32_conditions.re \
 	examples/go/encodings/unicode_identifier.re \
 	examples/go/eof/01_sentinel.re \
@@ -276,38 +260,79 @@ re2c_SRC_DOC_EXT = \
 	examples/go/fill/01_fill.re \
 	examples/go/fill/02_fill.re \
 	examples/go/headers/header.re \
-	examples/go/headers/src/lexer/lexer.go \
+	examples/go/headers/lexer/state.go \
 	examples/go/includes/include.re \
 	examples/go/includes/definitions.go \
 	examples/go/reuse/reuse.re \
 	examples/go/reuse/usedir.re \
 	examples/go/state/push.re \
+	examples/go/submatch/01_stags_fill.re \
 	examples/go/submatch/01_stags.re \
 	examples/go/submatch/02_mtags.re \
-	examples/go/submatch/03_posix.re
+	examples/go/submatch/03_posix.re \
+	examples/rust/01_basic.re \
+	examples/rust/01_basic.rs \
+	examples/rust/conditions/parse_u32_blocks.re \
+	examples/rust/conditions/parse_u32_conditions.re \
+	examples/rust/encodings/unicode_identifier.re \
+	examples/rust/eof/01_sentinel.re \
+	examples/rust/eof/02_bounds_checking.re \
+	examples/rust/eof/03_eof_rule.re \
+	examples/rust/eof/05_generic_api_eof_rule.re \
+	examples/rust/fill/01_fill.re \
+	examples/rust/fill/02_fill.re \
+	examples/rust/headers/header.re \
+	examples/rust/headers/lexer/state.rs \
+	examples/rust/includes/include.re \
+	examples/rust/includes/definitions.rs \
+	examples/rust/reuse/reuse.re \
+	examples/rust/reuse/usedir.re \
+	examples/rust/state/push.re \
+	examples/rust/submatch/01_stags_fill.re \
+	examples/rust/submatch/01_stags.re \
+	examples/rust/submatch/02_mtags.re \
+	examples/rust/submatch/03_posix.re
 
 DOC_C = doc/re2c.1
 DOCS = $(DOC_C)
+
 if WITH_GOLANG
 DOC_GO = doc/re2go.1
 DOCS += $(DOC_GO)
 endif
+
+if WITH_RUST
+DOC_RUST = doc/re2rust.1
+DOCS += $(DOC_RUST)
+endif
+
 man_MANS = $(DOCS)
 
 # include files (stdlib)
 dist_stdlib_DATA = include/unicode_categories.re
 
+BAZELFILES := \
+	BUILD.bazel \
+	WORKSPACE \
+	bazel
+
 CMAKEFILES := \
 	CMakeLists.txt \
+	CMakePresets.json \
 	cmake
 
 EXTRA_DIST = \
 	$(re2c_BOOT) \
 	$(re2c_CUSTOM) \
 	$(re2c_SRC_DOC_EXT) \
+	$(BAZELFILES) \
 	$(CMAKEFILES) \
+	BUILD.md \
 	CHANGELOG \
+	CONTRIBUTING.md \
+	IDEAS.md \
 	LICENSE \
+	MAINTAINERS.md \
 	NO_WARRANTY \
 	README.md \
 	autogen.sh \
@@ -323,13 +348,8 @@ if REBUILD_LEXERS
 # generate lexer and update bootstrap files
 .re.cc:
 	$(AM_V_at)$(MKDIR_P) $(@D)
-	$(AM_V_GEN)if test -x $(RE2C_FOR_BUILD); \
-	then \
-		$(RE2C_FOR_BUILD) $(RE2CFLAGS) -o $@ $< && \
-		cp $(@:cc=[ch]*) $(top_srcdir)/bootstrap/$(@D); \
-	else \
-		echo "RE2C is not an executable file" && exit 1 ; \
-	fi
+	$(AM_V_GEN)$(RE2C_FOR_BUILD) $(RE2CFLAGS) -o $@ $<
+	$(AM_V_GEN)cp $(@:cc=[ch]*) $(top_srcdir)/bootstrap/$(@D);
 else
 # copy bootstrap files
 .re.cc:
@@ -338,19 +358,19 @@ else
 	$(AM_V_at)echo "Reconfigure with --enable-lexers to regenerate $@"
 endif
 
-# cannot update bootstrap with distcheck (it makes srcdir readonly),
-# so we update bootstrap only on incremental build (if re2c binary exists)
+if REBUILD_PARSERS
+# generate lexer and update bootstrap files
 .ypp.cc:
 	$(AM_V_at)$(MKDIR_P) $(@D)
-	$(AM_V_GEN)if test $(BISON) = "no"; \
-	then \
-		cp $(top_srcdir)/bootstrap/$(@:cc=*) $(@D); \
-	else \
-		$(BISON) --output=$@ --defines=$(@:cc=h) $< && \
-		if test -x $(top_builddir)/re2c$(EXEEXT); then \
-			cp $@ $(@:cc=h) $(top_srcdir)/bootstrap/$(@D); \
-		fi; \
-	fi
+	$(AM_V_GEN)$(BISON) --warnings --output=$@ --defines=$(@:cc=h) $<
+	$(AM_V_GEN)cp $@ $(@:cc=h) $(top_srcdir)/bootstrap/$(@D);
+else
+# copy bootstrap files
+.ypp.cc:
+	$(AM_V_at)$(MKDIR_P) $(@D)
+	$(AM_V_GEN)cp $(top_srcdir)/bootstrap/$(@:cc=*) $(@D);
+	$(AM_V_at)echo "Reconfigure with --enable-parsers to regenerate $@"
+endif
 
 # lexer depends on bison-generated header
 $(re2c_GEN_LEX): $(re2c_GEN_PARSER)
@@ -364,29 +384,35 @@ bootstrap: all
 .PHONY: docs
 if REBUILD_DOCS
 docs: $(DOCS) $(re2c_GEN_HELP)
-GENHELP = $(top_srcdir)/build/gen_help.sh
-SPLITMAN = $(top_srcdir)/build/split_man.sh
+RST2TXT = $(top_srcdir)/build/rst2txt.py
+RST2MAN = $(top_srcdir)/build/rst2man.py
+SPLITMAN = $(top_srcdir)/build/split_man.py
 # generate manpage for C
-$(DOC_C): $(re2c_SRC_DOC) $(re2c_SRC_DOC_EXT) $(SPLITMAN)
+$(DOC_C): $(re2c_SRC_DOC) $(re2c_SRC_DOC_EXT) $(SPLITMAN) $(RST2MAN)
 	$(AM_V_at)$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SPLITMAN) $(top_builddir)/$(re2c_SRC_DOC) $(top_builddir)/$(re2c_SRC_DOC).c c \
-		&& $(RST2MAN) --tab-width=4 $(top_builddir)/$(re2c_SRC_DOC).c > $@ \
+	$(AM_V_GEN)$(PYTHON) $(SPLITMAN) $(top_builddir)/$(re2c_SRC_DOC) $(top_builddir)/$(re2c_SRC_DOC).c c \
+		&& $(PYTHON) $(RST2MAN) --tab-width=4 $(top_builddir)/$(re2c_SRC_DOC).c > $@ \
 		&& cp $@ $(top_srcdir)/$(re2c_BOOT_DOC_C) \
 		&& rm $(top_builddir)/$(re2c_SRC_DOC).c
 # generate manpage for Go
-$(DOC_GO): $(re2c_SRC_DOC) $(re2c_SRC_DOC_EXT) $(SPLITMAN)
+$(DOC_GO): $(re2c_SRC_DOC) $(re2c_SRC_DOC_EXT) $(SPLITMAN) $(RST2MAN)
 	$(AM_V_at)$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(SPLITMAN) $(top_builddir)/$(re2c_SRC_DOC) $(top_builddir)/$(re2c_SRC_DOC).go go \
-		&& $(RST2MAN) --tab-width=4 $(top_builddir)/$(re2c_SRC_DOC).go > $@ \
+	$(AM_V_GEN)$(PYTHON) $(SPLITMAN) $(top_builddir)/$(re2c_SRC_DOC) $(top_builddir)/$(re2c_SRC_DOC).go go \
+		&& $(PYTHON) $(RST2MAN) --tab-width=4 $(top_builddir)/$(re2c_SRC_DOC).go > $@ \
 		&& cp $@ $(top_srcdir)/$(re2c_BOOT_DOC_GO) \
 		&& rm $(top_builddir)/$(re2c_SRC_DOC).go
-# generate help
-$(re2c_GEN_HELP): $(re2c_CUSTOM_HELP) $(GENHELP)
+# generate manpage for Rust
+$(DOC_RUST): $(re2c_SRC_DOC) $(re2c_SRC_DOC_EXT) $(SPLITMAN) $(RST2MAN)
 	$(AM_V_at)$(MKDIR_P) $(@D)
-	$(AM_V_GEN)$(RST2MAN) $(top_builddir)/$(re2c_CUSTOM_HELP) > $@.1 \
-		&& $(GENHELP) $@.1 $@ \
-		&& cp $@ $(top_srcdir)/$(re2c_BOOT_HELP) \
-		&& rm $@.1
+	$(AM_V_GEN)$(PYTHON) $(SPLITMAN) $(top_builddir)/$(re2c_SRC_DOC) $(top_builddir)/$(re2c_SRC_DOC).rust rust \
+		&& $(PYTHON) $(RST2MAN) --tab-width=4 $(top_builddir)/$(re2c_SRC_DOC).rust > $@ \
+		&& cp $@ $(top_srcdir)/$(re2c_BOOT_DOC_RUST) \
+		&& rm $(top_builddir)/$(re2c_SRC_DOC).rust
+# generate help
+$(re2c_GEN_HELP): $(re2c_CUSTOM_HELP) $(re2c_SRC_DOC_EXT) $(RST2TXT)
+	$(AM_V_at)$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(PYTHON) $(RST2TXT) --variable-name=help $(top_builddir)/$(re2c_CUSTOM_HELP) $@ \
+		&& cp $@ $(top_srcdir)/$(re2c_BOOT_HELP)
 else
 docs: $(DOCS) $(re2c_GEN_HELP)
 	$(AM_V_at)echo "Reconfigure with --enable-docs to rebuild docs"
@@ -398,6 +424,10 @@ $(DOC_C): $(re2c_BOOT_DOC_C)
 $(DOC_GO): $(re2c_BOOT_DOC_GO)
 	$(AM_V_at)$(MKDIR_P) $(@D)
 	$(AM_V_GEN)cp $(top_srcdir)/$(re2c_BOOT_DOC_GO) $@
+# copy bootstrap manpage for Rust
+$(DOC_RUST): $(re2c_BOOT_DOC_RUST)
+	$(AM_V_at)$(MKDIR_P) $(@D)
+	$(AM_V_GEN)cp $(top_srcdir)/$(re2c_BOOT_DOC_RUST) $@
 # copy bootstrap help
 $(re2c_GEN_HELP): $(re2c_BOOT_HELP)
 	$(AM_V_at)$(MKDIR_P) $(@D)
@@ -407,28 +437,27 @@ endif
 all-local: docs $(re2c_BOOT_PARSER)
 
 # tests
-re2c_TESTSUITE = run_tests.sh
+re2c_TESTSUITE = run_tests.py
 .PHONY: tests
 tests: all $(re2c_TESTSUITE)
-	$(top_builddir)/$(re2c_TESTSUITE)
+	$(PYTHON) $(top_builddir)/$(re2c_TESTSUITE)
 .PHONY: vtests
 vtests: all $(re2c_TESTSUITE)
-	$(top_builddir)/$(re2c_TESTSUITE) --valgrind
+	$(PYTHON) $(top_builddir)/$(re2c_TESTSUITE) --valgrind
 .PHONY: wtests
 wtests: all $(re2c_TESTSUITE)
-	$(top_builddir)/$(re2c_TESTSUITE) --wine -j1
+	$(PYTHON) $(top_builddir)/$(re2c_TESTSUITE) --wine -j1
 
 re2c_test_range_SOURCES = \
 	src/test/range/test-impl.h \
 	src/test/range/test.cc \
 	src/test/range/test.h \
-	src/util/range.cc\
-	src/util/range.h \
-	src/util/static_assert.h
+	src/util/range.cc \
+	src/util/range.h
 
 re2c_test_s_to_n32_unsafe_SOURCES = \
 	src/test/s_to_n32_unsafe/test.cc \
-	src/util/s_to_n32_unsafe.cc
+	src/util/string_utils.cc
 
 re2c_test_ver_to_vernum_SOURCES = \
 	src/test/ver_to_vernum/test.cc \
@@ -463,7 +492,15 @@ endif
 # re2go
 if WITH_GOLANG
 bin_PROGRAMS += re2go
-re2go_CXXFLAGS = $(AM_CXXFLAGS) -DRE2C_LANG=LANG_GO
+re2go_CXXFLAGS = $(AM_CXXFLAGS) -DRE2C_LANG=Lang::GO
 re2go_SOURCES = $(re2c_SOURCES)
 nodist_re2go_SOURCES = $(nodist_re2c_SOURCES)
+endif
+
+# re2rust
+if WITH_RUST
+bin_PROGRAMS += re2rust
+re2rust_CXXFLAGS = $(AM_CXXFLAGS) -DRE2C_LANG=Lang::RUST
+re2rust_SOURCES = $(re2c_SOURCES)
+nodist_re2rust_SOURCES = $(nodist_re2c_SOURCES)
 endif
