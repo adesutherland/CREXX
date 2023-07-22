@@ -385,6 +385,8 @@ assignment(G)     ::= TK_NOP(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_CALL(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_PARSE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 
 /* Defines trying to assign to a keywords */
 define(G)     ::= TK_DO(K) TK_EQUAL(T) type_def(E).
@@ -445,6 +447,8 @@ define(G)     ::= TK_NOP(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_CALL(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_PARSE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 
 /* Assignments trying to assign from a keywords */
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_DO(K) error.
@@ -503,6 +507,8 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_NOP(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CALL(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_PARSE(T) TK_CALL(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 
 /* Assignments / Defines with invalid LHS */
 assignment(G) ::=  TK_FLOAT(K) TK_EQUAL(T) expression(E).
@@ -537,7 +543,7 @@ keyword_instruction(I) ::= call(K). { I = K; }
 keyword_instruction(I) ::= iterate(K). { I = K; }
 keyword_instruction(I) ::= leave(K). { I = K; }
 keyword_instruction(I) ::= nop(K). { I = K; }
-//keyword_instruction(I) ::= parse(K). { I = K; }
+keyword_instruction(I) ::= parse(K). { I = K; }
 keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
 keyword_instruction(I) ::= return(K). { I = K; }
@@ -849,22 +855,37 @@ leave(I) ::= TK_LEAVE(T) var_symbol(S).
 leave(I) ::= TK_LEAVE(T).
     { I = ast_f(context, LEAVE, T); }
 
-/*
-### Parse
-    parse ::= ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
-             -> (PARSE OPTIONS in out)
-
-           / ('PARSE' 'op:UPPER' (in:parse_type / (. -> ERROR[25.13]) resync)) out:template_list?)
-             -> (PARSE (OPTIONS op) in out);
-
-    parse_type ::= parse_key;
-    parse_key ::= 'ARG'->ARG / 'PULL'->PULL;
-
-
-### Pull
-    pull ::= 'PULL' t:template_list?
-         -> (PARSE (OPTIONS UPPER?) PULL t?);
-*/
+/* Parse */
+parse(I)               ::= TK_PARSE(T) TK_OPEN_BRACKET expression(P) TK_CLOSE_BRACKET template_list(L).
+                           { I = ast_f(context,PARSE,T); add_ast(I,P); add_ast(I,L); }
+parse(I)               ::= TK_PARSE(T) term(P) template_list(L).
+                           { I = ast_f(context,PARSE,T); add_ast(I,P); add_ast(I,L); }
+template_list(L)       ::= template(T).
+                           { L = T; }
+template_list(L)       ::= template_list(L1) template(T).
+                           { L = L1; add_sbtr(L,T); }
+template(T)            ::= var_symbol(V).
+                           { T = V; V->node_type = VAR_TARGET; }
+template(T)            ::= TK_STOP(S).
+                           { T = ast_f(context,NOVAL,S); }
+template(T)            ::= TK_STRING(TK).
+                           { T = ast_fstr(context,TK); }
+template(T)            ::= TK_OPEN_BRACKET expression(P) TK_CLOSE_BRACKET.
+                           { T = P; }
+template(T)            ::= TK_INTEGER(S).
+                           { T = ast_ft(context, ABS_POS); add_ast(T,ast_f(context, INTEGER,S)); }
+template(T)            ::= TK_EQUAL TK_INTEGER(S).
+                           { T = ast_ft(context, ABS_POS); add_ast(T,ast_f(context, INTEGER,S)); }
+template(T)            ::= TK_PLUS TK_INTEGER(S).
+                           { T = ast_ft(context,REL_POS); add_ast(T,ast_f(context, INTEGER,S)); }
+template(T)            ::= TK_MINUS(M) TK_INTEGER(S).
+                           { T = ast_ft(context,REL_POS); add_ast( add_ast(T, ast_f(context, OP_NEG, M)), ast_f(context, INTEGER,S)); }
+template(T)            ::= TK_EQUAL TK_OPEN_BRACKET expression(P) TK_CLOSE_BRACKET.
+                           { T = ast_ft(context, ABS_POS); add_ast(T,P); }
+template(T)            ::= TK_PLUS TK_OPEN_BRACKET expression(P) TK_CLOSE_BRACKET.
+                           { T = ast_ft(context,REL_POS); add_ast(T,P); }
+template(T)            ::= TK_MINUS(M) TK_OPEN_BRACKET expression(P) TK_CLOSE_BRACKET.
+                           { T = ast_ft(context,REL_POS); add_ast( add_ast(T, ast_f(context, OP_NEG, M)),P); }
 
 /* Return */
 return(I) ::= TK_RETURN(T) expression(E).
@@ -889,27 +910,6 @@ say(I) ::= TK_SAY(T).
 /* Nop */
 nop(I) ::= TK_NOP(T).
     { I = ast_f(context, NOP, T); }
-
-/*
-### Parse Templates
-    template_list ::= t:template (',' t:template)*
-                  -> (TEMPLATES t+);
-    template ::= (trigger / target / ((. -> ERROR[38.1]) resync)+;
-    target ::= (VAR_SYMBOL / '.')
-           -> TARGET;
-    trigger ::= pattern / positional;
-    pattern ::= STRING / vrefp
-            -> PATTERN;
-    vrefp ::= '('
-                ( VAR_SYMBOL / ((. -> ERROR[19.7]) resync) )
-                ( ')' / ((. -> ERROR[46.1]) resync) );
-    positional ::= absolute_positional / relative_positional;
-    absolute_positional ::= (NUMBER / '=' position)
-                        -> ABS_POS;
-    position ::= NUMBER / vrefp / ((. -> ERROR[38.2]) resync);
-    relative_positional ::= s:('+' / '-') position
-                        -> (REL_POS SIGN[s] position);
-*/
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality

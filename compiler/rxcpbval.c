@@ -1050,12 +1050,8 @@ static walker_result add_rxsysb_walker(walker_direction direction,
             }
         }
 
-        else if (node->node_type == IMPORT) {
-            /* Have we imported _rxsysb already */
-            if (node->child && is_node_string(node->child, "_rxsysb")) context->has_rxsysb = 1;
-        }
-
-        else if (node->node_type == NAMESPACE) {
+        else if (node->node_type == IMPORT || node->node_type == NAMESPACE)
+        {
             /* Have we imported _rxsysb already */
             if (node->child && is_node_string(node->child, "_rxsysb")) context->has_rxsysb = 1;
         }
@@ -1086,7 +1082,7 @@ static walker_result needs_rxsysb_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Step 1b
+/*
  * - Set node ordinal values
  */
 static walker_result set_node_ordinals_walker(walker_direction direction,
@@ -1104,7 +1100,7 @@ static walker_result set_node_ordinals_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Step 2a
+/*
  * - Builds the Symbol Table
  */
 static walker_result build_symbols_walker(walker_direction direction,
@@ -1332,7 +1328,7 @@ static walker_result build_symbols_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Step 2b
+/*
  * - Resolve Function Symbols
  */
 static walker_result resolve_functions_walker(walker_direction direction,
@@ -1375,7 +1371,7 @@ static walker_result resolve_functions_walker(walker_direction direction,
     return result_normal;
 }
 
-/* Step 2c
+/*
  * - Resolve Exposed Namespace Symbols
  */
 static walker_result exposed_symbols_walker(walker_direction direction,
@@ -1539,10 +1535,9 @@ static walker_result exposed_symbols_walker(walker_direction direction,
 }
 
 /*
- * Step 3 - Validate Symbols
+ * Validate Symbols
+ * This is called for every symbol
  */
-
-/* This is called for every symbol */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     Scope* scope = (Scope*)payload;
     SymbolNode *defining_node_link;
@@ -1599,6 +1594,22 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 break;
             }
 
+            if (defining_node_link->node->node_type == VAR_TARGET && defining_node_link->node->parent->node_type == PARSE) {
+                /* PARSE Target */
+                symbol->type = TP_STRING;
+                symbol->value_dims = 0;
+                symbol->dim_base = 0;
+                symbol->dim_elements = 0;
+                symbol->value_class = 0;
+
+                /* Is the symbol an array? */
+                node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                             &(symbol->dim_base), &(symbol->dim_elements));
+
+                ast_svtp(defining_node_link->node, symbol);
+                break;
+            }
+
             if (defining_node_link->node->node_type == VAR_TARGET) {
                 symbol->type = node_to_type(defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
@@ -1643,6 +1654,21 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                                         &(symbol->value_class));
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
+        }
+
+        else if (defining_node_link->node->node_type == VAR_TARGET && defining_node_link->node->parent->node_type == PARSE) {
+            /* PARSE Target */
+            symbol->type = TP_STRING;
+            symbol->value_dims = 0;
+            symbol->dim_base = 0;
+            symbol->dim_elements = 0;
+            symbol->value_class = 0;
+
+            /* Is the symbol an array? */
+            node_to_dims(defining_node_link->node, &(symbol->value_dims),
+                         &(symbol->dim_base), &(symbol->dim_elements));
+
+            ast_svtp(defining_node_link->node, symbol);
         }
 
         else if (defining_node_link->node->node_type == VAR_TARGET) {
@@ -1696,7 +1722,7 @@ static void validate_symbols(Scope* scope) {
     }
 }
 
-/* Step 4
+/*
  * - Type Safety
  */
 
@@ -1906,32 +1932,52 @@ static walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
-            case ASSIGN:
-                if (node->value_type == TP_UNKNOWN) {
+            case VAR_TARGET:
+                if (node->parent->node_type == PARSE && node->value_type == TP_UNKNOWN) {
+                    /* Assign logic is handled in the ASSIGN: Case below - this case here is only for PARSE */
                     context->changed = 1;
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    if (node->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet - then determine it */
-                        if (node->parent->node_type == REPEAT) {
-                            /* Special logic for LOOP Assignment - type must be numeric */
-                            child1->symbolNode->symbol->value_dims = 0;
-                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
-                            child1->symbolNode->symbol->value_class = 0;
-                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
-                        } else {
-                            child1->symbolNode->symbol->type =
-                                    node_to_type(child2,
-                                                 &(child1->symbolNode->symbol->value_dims),
-                                                 &(child1->symbolNode->symbol->dim_base),
-                                                 &(child1->symbolNode->symbol->dim_elements),
-                                                 &(child1->symbolNode->symbol->value_class));
+                        if (node->symbolNode->symbol->value_class) free(node->symbolNode->symbol->value_class);
+                        node->symbolNode->symbol->value_class = 0;
+                        node->symbolNode->symbol->type = TP_STRING;
 
-                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
-                                node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
-
-                        }
+                        if (node->symbolNode->symbol->value_dims == 0)
+                            node_to_dims(node, &(node->symbolNode->symbol->value_dims),
+                                         &(node->symbolNode->symbol->dim_base), &(node->symbolNode->symbol->dim_elements));
                     }
+                    ast_svtp(node, node->symbolNode->symbol);
+
+                    node->value_dims = 0; /* The node is a single value */
+                    node->target_dims = 0;
                 }
+                break;
+
+            case ASSIGN:
+                 if (node->value_type == TP_UNKNOWN && child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                     context->changed = 1;
+                     /* If the symbol does not have a known type yet - then determine it */
+                     child1->symbolNode->symbol->type =
+                             node_to_type(child2,
+                                          &(child1->symbolNode->symbol->value_dims),
+                                          &(child1->symbolNode->symbol->dim_base),
+                                          &(child1->symbolNode->symbol->dim_elements),
+                                          &(child1->symbolNode->symbol->value_class));
+
+                     if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                         node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
+                                      &(child1->symbolNode->symbol->dim_base),
+                                      &(child1->symbolNode->symbol->dim_elements));
+
+                     if (node->parent->node_type == REPEAT) {
+                         /* Special logic for LOOP Assignment - type must be numeric */
+                         if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                         child1->symbolNode->symbol->value_class = 0;
+                         child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
+                     }
+
+                     ast_svtp(node, child1->symbolNode->symbol);
+                 }
                 break;
 
             case CONST_SYMBOL:
@@ -2239,6 +2285,71 @@ static walker_result type_safety_walker(walker_direction direction,
                 ast_svtn(node, child1);
                 break;
 
+            case VAR_TARGET:
+                if (node->parent->node_type == PARSE) {
+                    /* Assign logic is handled in the ASSIGN: Case below - this case here is only for PARSE */
+                    if (node->value_type == TP_UNKNOWN) {
+
+                        if (node->symbolNode->symbol->type == TP_UNKNOWN) {
+                            /* If the symbol does not have a known type yet - then determine it */
+                            if (node->symbolNode->symbol->value_class) free(node->symbolNode->symbol->value_class);
+                            node->symbolNode->symbol->value_class = 0;
+                            node->symbolNode->symbol->type = TP_STRING;
+
+                            if (node->symbolNode->symbol->value_dims == 0)
+                                node_to_dims(node, &(node->symbolNode->symbol->value_dims),
+                                             &(node->symbolNode->symbol->dim_base),
+                                             &(node->symbolNode->symbol->dim_elements));
+                        }
+                        ast_svtp(node, node->symbolNode->symbol);
+                        node->value_dims = 0; /* We are a single value */
+                        node->target_dims = 0;
+                    }
+
+                    if (node->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+
+                    if (ast_nchd(node)) {
+                        /* We have array parameters */
+                        /* Set array parameter type to integer */
+                        n1 = node->child;
+                        while (n1) {
+                            set_node_target_type(n1, TP_INTEGER);
+
+                            if (n1->node_type == INTEGER) {
+                                /* As a constant integer we can check it is in range */
+                                val = node_to_integer(n1);
+                                ix = ast_chdi(n1);
+
+                                if (ix < node->value_dims) {
+                                    if (val < n1->parent->symbolNode->symbol->dim_base[ix])
+                                        mknd_err(n1, "OUT_OF_RANGE");
+
+                                    else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
+                                        /* There is a max number of elements - so check it */
+                                        if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                                  n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
+                                            mknd_err(n1, "OUT_OF_RANGE");
+                                    }
+                                }
+                            }
+
+                            n1 = n1->sibling;
+                        }
+
+                        if (!node->symbolNode->symbol->value_dims)
+                            mknd_err(node, "NOT_AN_ARRAY");
+                        else if (node->symbolNode->symbol->value_dims != ast_nchd(node)) mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        node->value_dims = 0; /* We are a single value */
+                        node->target_dims = 0;
+                    }
+                    else {
+                        if (node->symbolNode->symbol->value_dims) mknd_err(node, "UNEXPECTED_ARRAY");
+                    }
+
+                    set_node_target_type(node, TP_STRING);
+                }
+                break;
+
             case ASSIGN:
                 if (child2->value_type == TP_VOID) {
                     mknd_err(child2, "RETURNS_VOID");
@@ -2256,6 +2367,13 @@ static walker_result type_safety_walker(walker_direction direction,
                         if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
                             node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
                                          &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+
+                        if (node->parent->node_type == REPEAT) {
+                            /* Special logic for LOOP Assignment - type must be numeric */
+                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                            child1->symbolNode->symbol->value_class = 0;
+                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
+                        }
                     }
                     ast_svtp(child1, child1->symbolNode->symbol);
 
@@ -2289,18 +2407,25 @@ static walker_result type_safety_walker(walker_direction direction,
                             n1 = n1->sibling;
                         }
 
-                        if (!child1->value_dims)
+                        if (!child1->symbolNode->symbol->value_dims)
                             mknd_err(child1, "NOT_AN_ARRAY");
-                        else if (child1->value_dims != ast_nchd(child1)) mknd_err(node, "ARRAY_DIMS_MISMATCH");
+                        else if (child1->symbolNode->symbol->value_dims != ast_nchd(child1)) mknd_err(node, "ARRAY_DIMS_MISMATCH");
 
                         child1->value_dims = 0; /* We are a single value */
                         child1->target_dims = 0;
+                    }
+                    else {
+                        if (child1->symbolNode->symbol->value_dims) mknd_err(node, "UNEXPECTED_ARRAY");
                     }
 
                     ast_sttn(child2, child1);
                     validate_node_promotion(child2);
                     ast_svtn(node, child1);
                 }
+                break;
+
+            case PARSE:
+                set_node_target_type(child1, TP_STRING);
                 break;
 
             case ARGS:
@@ -2361,7 +2486,6 @@ static walker_result type_safety_walker(walker_direction direction,
                 if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
                 break;
 
-//            case ADDRESS:
             case SAY:
                 if (child1) set_node_target_type(child1, TP_STRING);
                 break;

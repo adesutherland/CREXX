@@ -132,10 +132,33 @@ void init_ops() {
     instr_f("strchar", "op1 (as int) = op2[charpos]", OP_REG, OP_REG, OP_NONE);
     instr_f("hexchar", "op1 (as hex) = op2[op3]", OP_REG, OP_REG, OP_REG);
     instr_f("poschar", "op1 = position of op3 in op2", OP_REG, OP_REG, OP_REG);
-
     instr_f("setstrpos", "Set String (op1) charpos set to op2", OP_REG, OP_REG, OP_NONE);
     instr_f("getstrpos", "Get String (op2) charpos into op1", OP_REG, OP_REG, OP_NONE);
     instr_f("substr", "op1 = op2[charpos]...op2[charpos+op3-1]", OP_REG, OP_REG, OP_REG);
+    instr_f("fformat", "Set string value from float value using a format string", OP_REG, OP_REG, OP_REG);
+    instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
+    instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
+    instr_f("dropchar", "set op1 from op2 after dropping all chars from op3", OP_REG, OP_REG, OP_REG);
+    instr_f("substring", "set op1=substr(op2,op3) remaining string", OP_REG, OP_REG, OP_REG);
+    instr_f("substcut", "set op1=substr(op1,,op2) cuts off op1 after position op3", OP_REG, OP_REG, OP_NONE);
+    instr_f("padstr", "set op1=op2[repeated op3 times]", OP_REG, OP_REG, OP_REG);
+    instr_f("fndblnk", "op1 = find next blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
+    instr_f("fndnblnk", "op1 = find next next non blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
+    instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
+
+    instr_f("setstrpos", "op1 charpos = op2", OP_REG, OP_INT, OP_NONE);
+    instr_f("setstrpos1", "op1 charpos = op2 (1 base)", OP_REG, OP_INT, OP_NONE);
+    instr_f("setstrpos1", "op1 charpos = op2 (1 base)", OP_REG, OP_REG, OP_NONE);
+    instr_f("getstrpos1", "op1 = op2 charpos (1 base)", OP_REG, OP_REG, OP_NONE);
+    instr_f("mvstrpos", "op1 charpos += op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("mvstrpos", "op1 charpos += op2", OP_REG, OP_INT, OP_NONE);
+    instr_f("skipword", "op1 = word @ op2+charpos, skip & update charpos", OP_REG, OP_REG, OP_NONE);
+    instr_f("skipword", "skip word @ op1+charpos, update charpos", OP_REG, OP_NONE, OP_NONE);
+    instr_f("skippatn", "op1 = op2 pattern from op3+charpos, skip & update charpos", OP_REG, OP_REG, OP_REG);
+    instr_f("skippatn", "skip op1 pattern from op2+charpos, update charpos", OP_REG, OP_REG, OP_NONE);
+    instr_f("skippatn", "op1 = op2 pattern from op3+charpos, skip & update charpos", OP_REG, OP_STRING, OP_REG);
+    instr_f("skippatn", "skip op1 pattern from op2+charpos, update charpos", OP_STRING, OP_REG, OP_NONE);
 
     instr_f("ieq", "Int Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("ieq", "Int Equals op1=(op2==op3)", OP_REG, OP_REG, OP_INT);
@@ -291,17 +314,6 @@ void init_ops() {
     instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
-    instr_f("fformat", "Set string value from float value using a format string", OP_REG, OP_REG, OP_REG);
-
-    instr_f("strlower", "Set string to lower case value", OP_REG, OP_REG, OP_NONE);
-    instr_f("strupper", "Set string to upper case value", OP_REG, OP_REG, OP_NONE);
-    instr_f("transchar", "replace op1 if it is in op3-list by char in op2-list", OP_REG, OP_REG, OP_REG);
-    instr_f("dropchar", "set op1 from op2 after dropping all chars from op3", OP_REG, OP_REG, OP_REG);
-    instr_f("substring", "set op1=substr(op2,op3) remaining string", OP_REG, OP_REG, OP_REG);
-    instr_f("substcut", "set op1=substr(op1,,op2) cuts off op1 after position op3", OP_REG, OP_REG, OP_NONE);
-    instr_f("padstr", "set op1=op2[repeated op3 times]", OP_REG, OP_REG, OP_REG);
-
-    instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
     instr_f("cnop", "no operation", OP_NONE, OP_NONE, OP_NONE);
 
     instr_f("ipow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
@@ -332,9 +344,6 @@ void init_ops() {
     instr_f("bne", "if op2!=op3 then goto op1", OP_ID,OP_REG, OP_INT);
     instr_f("beq", "if op2==op3 then goto op1", OP_ID,OP_REG, OP_REG);
     instr_f("beq", "if op2==op3 then goto op1", OP_ID,OP_REG, OP_INT);
-
-    instr_f("fndblnk", "op1 = find next blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
-    instr_f("fndnblnk", "op1 = find next next non blank in op2[op3] and behind", OP_REG,OP_REG, OP_REG);
 
     instr_f("isex", "dec op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
     instr_f("fsex", "float op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);

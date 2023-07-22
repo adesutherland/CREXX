@@ -113,6 +113,7 @@ int rexbscan(Context* s) {
   //  "&" ob "&" { return(TK_OR); } // TODO Check
     not { return(TK_NOT); }
     "," { return(TK_COMMA); }
+    "." { return(TK_STOP); }
     "..." { return(TK_ELLIPSIS); }
     "(" { return(TK_OPEN_BRACKET); }
     ")" { return(TK_CLOSE_BRACKET); }
@@ -141,10 +142,10 @@ int rexbscan(Context* s) {
     'NAMESPACE' { return(TK_NAMESPACE); }
     'NOP' { return(TK_NOP); }
   //  'NUMERIC' { return(TK_NUMERIC); }
-  'OPTIONS' { return(TK_OPTIONS); }
+    'OPTIONS' { return(TK_OPTIONS); }
   //  'OTHERWISE' { return(TK_OTHERWISE); }
-  'OUTPUT' { return(TK_OUTPUT); }
-  //  'PARSE' { return(TK_PARSE); }
+    'OUTPUT' { return(TK_OUTPUT); }
+    'PARSE' { return(TK_PARSE); }
     'PROCEDURE' { return(TK_PROCEDURE); }
   //  'PULL' { return(TK_PULL); }
   //  'PUSH' { return(TK_PUSH); }
