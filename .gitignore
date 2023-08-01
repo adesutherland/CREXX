@@ -90,3 +90,6 @@ _deps
 
 * cREXX
 *.rxbin
+/utf8/GraphemeBreakProperty.txt
+/utf8/GraphemeBreakTest-15.0.0.txt
+/utf8/emoji-data.txt

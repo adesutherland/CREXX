@@ -28,6 +28,7 @@ add_subdirectory(interpreter)
 add_subdirectory(lib)
 add_subdirectory(debugger)
 add_subdirectory(tests)
+add_subdirectory(utf8)
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
