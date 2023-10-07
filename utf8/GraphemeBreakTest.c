@@ -4,9 +4,9 @@
 
 void encodechar_utf32_8(unsigned int cp, char **buffer);
 void append_to_buffer(char* to_append, char **buffer);
-int lex(char *str, char* out);
+int lex_grapheme(char *str, char* out);
 
-int tests() {
+int tests_grapheme() {
     char in_buffer[250];
     char out_buffer[250];
     char expected_buffer[250];
@@ -29,7 +29,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -57,7 +57,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -83,7 +83,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -111,7 +111,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -137,7 +137,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -165,7 +165,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -191,7 +191,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -219,7 +219,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -243,7 +243,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -269,7 +269,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -295,7 +295,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -323,7 +323,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -349,7 +349,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -377,7 +377,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -401,7 +401,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -427,7 +427,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -453,7 +453,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -481,7 +481,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -507,7 +507,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -535,7 +535,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -561,7 +561,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -589,7 +589,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -615,7 +615,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -643,7 +643,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -669,7 +669,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -697,7 +697,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -723,7 +723,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -751,7 +751,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -775,7 +775,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -801,7 +801,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -825,7 +825,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -851,7 +851,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -877,7 +877,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -905,7 +905,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -931,7 +931,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -961,7 +961,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -987,7 +987,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1017,7 +1017,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1041,7 +1041,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1071,7 +1071,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1097,7 +1097,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1127,7 +1127,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1153,7 +1153,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1181,7 +1181,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1207,7 +1207,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1237,7 +1237,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1263,7 +1263,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1293,7 +1293,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1319,7 +1319,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1347,7 +1347,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1373,7 +1373,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1403,7 +1403,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1429,7 +1429,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1459,7 +1459,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1485,7 +1485,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1515,7 +1515,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1541,7 +1541,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1571,7 +1571,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1597,7 +1597,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1627,7 +1627,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1653,7 +1653,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1683,7 +1683,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1709,7 +1709,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1737,7 +1737,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1763,7 +1763,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1791,7 +1791,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1817,7 +1817,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1847,7 +1847,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1873,7 +1873,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1903,7 +1903,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1929,7 +1929,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1959,7 +1959,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -1985,7 +1985,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2015,7 +2015,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2041,7 +2041,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2071,7 +2071,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2097,7 +2097,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2125,7 +2125,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2151,7 +2151,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2181,7 +2181,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2207,7 +2207,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2237,7 +2237,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2263,7 +2263,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2291,7 +2291,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2317,7 +2317,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2347,7 +2347,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2373,7 +2373,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2403,7 +2403,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2429,7 +2429,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2459,7 +2459,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2485,7 +2485,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2515,7 +2515,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2541,7 +2541,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2571,7 +2571,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2597,7 +2597,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2627,7 +2627,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2653,7 +2653,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2681,7 +2681,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2707,7 +2707,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2735,7 +2735,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2761,7 +2761,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2791,7 +2791,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2817,7 +2817,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2847,7 +2847,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2873,7 +2873,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2903,7 +2903,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2929,7 +2929,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2959,7 +2959,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -2985,7 +2985,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3015,7 +3015,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3041,7 +3041,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3069,7 +3069,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3095,7 +3095,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3125,7 +3125,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3151,7 +3151,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3181,7 +3181,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3207,7 +3207,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3235,7 +3235,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3261,7 +3261,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3291,7 +3291,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3317,7 +3317,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3347,7 +3347,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3373,7 +3373,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3403,7 +3403,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3429,7 +3429,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3459,7 +3459,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3485,7 +3485,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3515,7 +3515,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3541,7 +3541,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3571,7 +3571,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3597,7 +3597,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3625,7 +3625,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3651,7 +3651,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3679,7 +3679,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3705,7 +3705,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3735,7 +3735,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3761,7 +3761,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3789,7 +3789,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3815,7 +3815,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3843,7 +3843,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3869,7 +3869,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3897,7 +3897,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3923,7 +3923,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3951,7 +3951,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -3975,7 +3975,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4001,7 +4001,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4027,7 +4027,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4055,7 +4055,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4081,7 +4081,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4109,7 +4109,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4133,7 +4133,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4159,7 +4159,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4185,7 +4185,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4213,7 +4213,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4239,7 +4239,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4267,7 +4267,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4293,7 +4293,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4321,7 +4321,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4347,7 +4347,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4375,7 +4375,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4401,7 +4401,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4429,7 +4429,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4455,7 +4455,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4483,7 +4483,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4507,7 +4507,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4533,7 +4533,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4557,7 +4557,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4583,7 +4583,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4609,7 +4609,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4637,7 +4637,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4663,7 +4663,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4691,7 +4691,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4717,7 +4717,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4745,7 +4745,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4771,7 +4771,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4799,7 +4799,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4825,7 +4825,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4853,7 +4853,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4877,7 +4877,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4903,7 +4903,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4927,7 +4927,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4955,7 +4955,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -4981,7 +4981,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5009,7 +5009,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5033,7 +5033,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5059,7 +5059,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5085,7 +5085,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5113,7 +5113,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5139,7 +5139,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5167,7 +5167,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5193,7 +5193,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5221,7 +5221,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5247,7 +5247,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5275,7 +5275,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5301,7 +5301,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5329,7 +5329,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5355,7 +5355,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5383,7 +5383,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5407,7 +5407,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5433,7 +5433,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5457,7 +5457,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5483,7 +5483,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5509,7 +5509,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5537,7 +5537,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5561,7 +5561,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5589,7 +5589,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5615,7 +5615,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5643,7 +5643,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5669,7 +5669,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5697,7 +5697,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5723,7 +5723,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5751,7 +5751,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5775,7 +5775,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5801,7 +5801,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5825,7 +5825,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5853,7 +5853,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5877,7 +5877,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5905,7 +5905,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5929,7 +5929,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5955,7 +5955,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -5979,7 +5979,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6007,7 +6007,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6031,7 +6031,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6059,7 +6059,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6083,7 +6083,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6111,7 +6111,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6135,7 +6135,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6163,7 +6163,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6187,7 +6187,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6215,7 +6215,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6239,7 +6239,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6267,7 +6267,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6291,7 +6291,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6317,7 +6317,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6341,7 +6341,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6367,7 +6367,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6391,7 +6391,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6419,7 +6419,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6445,7 +6445,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6473,7 +6473,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6499,7 +6499,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6527,7 +6527,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6553,7 +6553,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6581,7 +6581,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6607,7 +6607,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6635,7 +6635,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6659,7 +6659,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6685,7 +6685,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6711,7 +6711,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6739,7 +6739,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6765,7 +6765,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6793,7 +6793,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6817,7 +6817,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6843,7 +6843,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6869,7 +6869,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6897,7 +6897,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6923,7 +6923,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6951,7 +6951,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -6977,7 +6977,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7005,7 +7005,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7031,7 +7031,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7059,7 +7059,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7085,7 +7085,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7113,7 +7113,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7139,7 +7139,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7167,7 +7167,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7191,7 +7191,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7217,7 +7217,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7241,7 +7241,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7267,7 +7267,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7293,7 +7293,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7321,7 +7321,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7347,7 +7347,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7375,7 +7375,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7401,7 +7401,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7429,7 +7429,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7455,7 +7455,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7483,7 +7483,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7509,7 +7509,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7537,7 +7537,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7561,7 +7561,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7587,7 +7587,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7613,7 +7613,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7641,7 +7641,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7667,7 +7667,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7695,7 +7695,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7719,7 +7719,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7745,7 +7745,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7769,7 +7769,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7797,7 +7797,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7821,7 +7821,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7849,7 +7849,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7875,7 +7875,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7903,7 +7903,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7927,7 +7927,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7955,7 +7955,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -7979,7 +7979,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8007,7 +8007,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8033,7 +8033,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8061,7 +8061,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8085,7 +8085,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8111,7 +8111,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8135,7 +8135,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8161,7 +8161,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8187,7 +8187,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8215,7 +8215,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8241,7 +8241,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8269,7 +8269,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8295,7 +8295,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8323,7 +8323,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8349,7 +8349,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8377,7 +8377,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8403,7 +8403,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8431,7 +8431,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8455,7 +8455,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8481,7 +8481,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8507,7 +8507,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8535,7 +8535,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8561,7 +8561,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8589,7 +8589,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8613,7 +8613,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8639,7 +8639,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8665,7 +8665,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8693,7 +8693,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8717,7 +8717,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8745,7 +8745,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8769,7 +8769,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8797,7 +8797,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8823,7 +8823,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8851,7 +8851,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8877,7 +8877,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8905,7 +8905,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8931,7 +8931,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8959,7 +8959,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -8983,7 +8983,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9009,7 +9009,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9033,7 +9033,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9059,7 +9059,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9085,7 +9085,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9113,7 +9113,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9139,7 +9139,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9167,7 +9167,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9193,7 +9193,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9221,7 +9221,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9247,7 +9247,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9275,7 +9275,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9301,7 +9301,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9329,7 +9329,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9353,7 +9353,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9379,7 +9379,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9405,7 +9405,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9433,7 +9433,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9459,7 +9459,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9487,7 +9487,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9511,7 +9511,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9537,7 +9537,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9563,7 +9563,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9591,7 +9591,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9617,7 +9617,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9645,7 +9645,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9669,7 +9669,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9697,7 +9697,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9723,7 +9723,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9751,7 +9751,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9777,7 +9777,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9805,7 +9805,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9831,7 +9831,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9859,7 +9859,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9883,7 +9883,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9909,7 +9909,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9933,7 +9933,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9959,7 +9959,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -9985,7 +9985,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10013,7 +10013,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10039,7 +10039,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10067,7 +10067,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10093,7 +10093,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10121,7 +10121,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10147,7 +10147,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10175,7 +10175,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10201,7 +10201,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10229,7 +10229,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10253,7 +10253,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10279,7 +10279,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10305,7 +10305,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10333,7 +10333,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10359,7 +10359,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10387,7 +10387,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10411,7 +10411,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10437,7 +10437,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10463,7 +10463,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10491,7 +10491,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10515,7 +10515,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10543,7 +10543,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10567,7 +10567,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10595,7 +10595,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10621,7 +10621,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10649,7 +10649,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10675,7 +10675,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10703,7 +10703,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10729,7 +10729,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10757,7 +10757,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10781,7 +10781,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10807,7 +10807,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10831,7 +10831,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10857,7 +10857,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10883,7 +10883,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10911,7 +10911,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10937,7 +10937,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10965,7 +10965,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -10991,7 +10991,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11019,7 +11019,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11045,7 +11045,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11073,7 +11073,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11099,7 +11099,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11127,7 +11127,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11151,7 +11151,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11177,7 +11177,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11203,7 +11203,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11231,7 +11231,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11257,7 +11257,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11285,7 +11285,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11309,7 +11309,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11335,7 +11335,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11361,7 +11361,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11389,7 +11389,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11415,7 +11415,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11443,7 +11443,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11467,7 +11467,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11495,7 +11495,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11521,7 +11521,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11549,7 +11549,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11575,7 +11575,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11603,7 +11603,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11629,7 +11629,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11657,7 +11657,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11681,7 +11681,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11707,7 +11707,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11731,7 +11731,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11757,7 +11757,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11783,7 +11783,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11811,7 +11811,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11837,7 +11837,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11865,7 +11865,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11891,7 +11891,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11919,7 +11919,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11945,7 +11945,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11973,7 +11973,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -11999,7 +11999,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12027,7 +12027,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12051,7 +12051,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12077,7 +12077,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12103,7 +12103,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12131,7 +12131,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12157,7 +12157,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12185,7 +12185,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12209,7 +12209,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12235,7 +12235,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12261,7 +12261,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12289,7 +12289,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12315,7 +12315,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12343,7 +12343,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12369,7 +12369,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12397,7 +12397,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12423,7 +12423,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12451,7 +12451,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12477,7 +12477,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12505,7 +12505,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12531,7 +12531,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12559,7 +12559,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12583,7 +12583,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12609,7 +12609,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12633,7 +12633,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12659,7 +12659,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12685,7 +12685,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12713,7 +12713,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12739,7 +12739,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12767,7 +12767,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12793,7 +12793,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12821,7 +12821,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12847,7 +12847,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12875,7 +12875,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12901,7 +12901,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12929,7 +12929,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12953,7 +12953,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -12979,7 +12979,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13005,7 +13005,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13033,7 +13033,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13059,7 +13059,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13087,7 +13087,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13111,7 +13111,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13137,7 +13137,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13163,7 +13163,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13191,7 +13191,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13217,7 +13217,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13245,7 +13245,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13271,7 +13271,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13299,7 +13299,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13325,7 +13325,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13353,7 +13353,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13379,7 +13379,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13407,7 +13407,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13433,7 +13433,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13461,7 +13461,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13485,7 +13485,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13511,7 +13511,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13535,7 +13535,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13561,7 +13561,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13587,7 +13587,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13615,7 +13615,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13641,7 +13641,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13669,7 +13669,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13695,7 +13695,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13723,7 +13723,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13749,7 +13749,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13777,7 +13777,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13803,7 +13803,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13831,7 +13831,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13855,7 +13855,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13881,7 +13881,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13907,7 +13907,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13935,7 +13935,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13961,7 +13961,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -13989,7 +13989,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14013,7 +14013,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14039,7 +14039,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14065,7 +14065,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14093,7 +14093,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14119,7 +14119,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14147,7 +14147,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14173,7 +14173,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14201,7 +14201,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14227,7 +14227,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14255,7 +14255,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14281,7 +14281,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14309,7 +14309,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14335,7 +14335,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14363,7 +14363,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14387,7 +14387,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14413,7 +14413,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14437,7 +14437,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14463,7 +14463,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14489,7 +14489,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14517,7 +14517,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14543,7 +14543,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14571,7 +14571,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14597,7 +14597,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14625,7 +14625,7 @@ int tests() {
     encodechar_utf32_8(0x000D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14651,7 +14651,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14679,7 +14679,7 @@ int tests() {
     encodechar_utf32_8(0x000A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14705,7 +14705,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14733,7 +14733,7 @@ int tests() {
     encodechar_utf32_8(0x0001, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14757,7 +14757,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14783,7 +14783,7 @@ int tests() {
     encodechar_utf32_8(0x034F, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14809,7 +14809,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14837,7 +14837,7 @@ int tests() {
     encodechar_utf32_8(0x1F1E6, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14863,7 +14863,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14891,7 +14891,7 @@ int tests() {
     encodechar_utf32_8(0x0600, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14915,7 +14915,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14941,7 +14941,7 @@ int tests() {
     encodechar_utf32_8(0x0903, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14967,7 +14967,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -14995,7 +14995,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15021,7 +15021,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15049,7 +15049,7 @@ int tests() {
     encodechar_utf32_8(0x1160, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15075,7 +15075,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15103,7 +15103,7 @@ int tests() {
     encodechar_utf32_8(0x11A8, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15129,7 +15129,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15157,7 +15157,7 @@ int tests() {
     encodechar_utf32_8(0xAC00, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15183,7 +15183,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15211,7 +15211,7 @@ int tests() {
     encodechar_utf32_8(0xAC01, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15237,7 +15237,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15265,7 +15265,7 @@ int tests() {
     encodechar_utf32_8(0x231A, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15289,7 +15289,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15315,7 +15315,7 @@ int tests() {
     encodechar_utf32_8(0x0300, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15339,7 +15339,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15365,7 +15365,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15391,7 +15391,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15419,7 +15419,7 @@ int tests() {
     encodechar_utf32_8(0x0378, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15455,7 +15455,7 @@ int tests() {
     encodechar_utf32_8(0x0308, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15479,7 +15479,7 @@ int tests() {
     encodechar_utf32_8(0x0308, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15507,7 +15507,7 @@ int tests() {
     encodechar_utf32_8(0x0646, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15535,7 +15535,7 @@ int tests() {
     encodechar_utf32_8(0x0020, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15559,7 +15559,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15587,7 +15587,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15615,7 +15615,7 @@ int tests() {
     encodechar_utf32_8(0x1100, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15647,7 +15647,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15683,7 +15683,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15721,7 +15721,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15759,7 +15759,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15797,7 +15797,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15821,7 +15821,7 @@ int tests() {
     encodechar_utf32_8(0x200D, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15849,7 +15849,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15877,7 +15877,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15905,7 +15905,7 @@ int tests() {
     encodechar_utf32_8(0x0062, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15933,7 +15933,7 @@ int tests() {
     encodechar_utf32_8(0x1F476, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15961,7 +15961,7 @@ int tests() {
     encodechar_utf32_8(0x1F476, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -15993,7 +15993,7 @@ int tests() {
     encodechar_utf32_8(0x1F6D1, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -16025,7 +16025,7 @@ int tests() {
     encodechar_utf32_8(0x1F3FF, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -16051,7 +16051,7 @@ int tests() {
     encodechar_utf32_8(0x1F6D1, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -16079,7 +16079,7 @@ int tests() {
     encodechar_utf32_8(0x1F6D1, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -16105,7 +16105,7 @@ int tests() {
     encodechar_utf32_8(0x2701, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");
@@ -16133,7 +16133,7 @@ int tests() {
     encodechar_utf32_8(0x2701, &expected);
     append_to_buffer("]",&expected);
     *expected = 0;
-    lex(in_buffer, out_buffer);
+    lex_grapheme(in_buffer, out_buffer);
     if (strcmp(out_buffer, expected_buffer) != 0) {
         errors++;
         printf("*** ERROR ***\n");

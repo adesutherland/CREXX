@@ -3,9 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-int lex_codepoint(char *str, char* out);
-int lex_grapheme(char *str, char* out);
-int tests();
+int tests_grapheme();
+int tests_word();
 
 /* Adds a codepoint to a utf-8 buffer */
 void encodechar_utf32_8(unsigned int cp, char **buffer) {
@@ -23,21 +22,13 @@ void append_to_buffer(char* to_append, char **buffer) {
     }
 }
 
-int lex(char *str, char* out) {
-    int r;
-    out[0] = 0;
-
-//    lex_codepoint(str, out);
-//    sprintf(out + strlen(out), " --- ");
-    r = lex_grapheme(str, out);
-    return r;
-}
 
 int main() {
 
-    int errors;
+    int errors = 0;
 
-    errors = tests();
+//    errors = tests_grapheme();
+    errors += tests_word();
 
     return errors?1:0;
 }

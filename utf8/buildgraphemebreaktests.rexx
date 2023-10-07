@@ -1,12 +1,12 @@
 /* Rexx Program to read the Unicode grapheme break tests and build a c test suite */
 
-/* GraphemeBreakTest-15.0.0.txt */
-call build "GraphemeBreakTest-15.0.0.txt", "GraphemeBreakTest.c"
+call build "GraphemeBreakTest-15.0.0.txt", "GraphemeBreakTest.c", "_grapheme"
+call build "WordBreakTest-15.0.0.txt", "WordBreakTest.c", "_word"
 
 exit
 
 build: procedure
-   parse arg in_file, out_file
+   parse arg in_file, out_file, suffix
 
    line_no = 0
    no_tests = 0
@@ -19,9 +19,9 @@ build: procedure
    call lineout out_file, ''
    call lineout out_file, 'void encodechar_utf32_8(unsigned int cp, char **buffer);'
    call lineout out_file, 'void append_to_buffer(char* to_append, char **buffer);'
-   call lineout out_file, 'int lex(char *str, char* out);'
+   call lineout out_file, 'int lex'suffix'(char *str, char* out);'
    call lineout out_file, ''
-   call lineout out_file, 'int tests() {'
+   call lineout out_file, 'int tests'suffix'() {'
    call lineout out_file, '    char in_buffer[250];'
    call lineout out_file, '    char out_buffer[250];'
    call lineout out_file, '    char expected_buffer[250];'
@@ -87,7 +87,7 @@ build: procedure
       call lineout out_file, '    *expected = 0;'
 
       /* Execute and Report if test failure */
-      call lineout out_file, '    lex(in_buffer, out_buffer);'
+      call lineout out_file, '    lex'suffix'(in_buffer, out_buffer);'
       call lineout out_file, '    if (strcmp(out_buffer, expected_buffer) != 0) {'
       call lineout out_file, '        errors++;'
       call lineout out_file, '        printf("*** ERROR ***\n");'

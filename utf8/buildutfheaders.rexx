@@ -1,9 +1,37 @@
-/* Rexx Program to read the Unicode Character Databases and build re2c compatable headers with
+/* Rexx Program to read the Unicode Character Databases and build re2c compatible headers with
  * character classifications */
+
+say "Unicode Character Database to re2c converter"
+say "=========================================="
+say "This program reads the Unicode Character Database and builds re2c compatible headers with"
+say "character classifications."
+say
+say "The Unicode Character Database is available at:"
+say "https://www.unicode.org/Public/UCD/latest/ucd/"
+say
+say "The re2c tool is available at:"
+say "https://re2c.org/"
+say
+say "The generated files are:"
+say "utfcharbreak.re - Grapheme Break Property"
+say "utfwordbreak.re - Word Break Property"
+say "emoji-data.re - Emoji Data"
+say
+say "The generated files are placed in the current directory."
+say
+say "The program will now download the Unicode Character Database and build the files."
+say "This may take a while."
+say
+
+/* Download the Unicode Character Database */
+"curl -O https://www.unicode.org/Public/UCD/latest/ucd/GraphemeBreakProperty.txt"
+"curl -O https://www.unicode.org/Public/UCD/latest/ucd/emoji-data.txt"
+"curl -O https://www.unicode.org/Public/UCD/latest/ucd/WordBreakProperty.txt"
 
 /* GraphemeBreakProperty-15.0.0.txt */
 call build "GraphemeBreakProperty.txt", "utfcharbreak.re"
 call build "emoji-data.txt", "emoji-data.re"
+call build "WordBreakProperty.txt", "utfwordbreak.re"
 
 exit
 
