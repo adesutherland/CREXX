@@ -38,7 +38,7 @@ static void error_and_exit(int rc, char* message) {
 static void license() {
     char *message =
             "cREXX License (MIT)\n"
-            "Copyright (c) 2020-2021 Adrian Sutherland\n\n"
+            "Copyright (c) 2020-2024 Adrian Sutherland\n\n"
 
             "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
             "of this software and associated documentation files (the \"Software\"), to deal\n"

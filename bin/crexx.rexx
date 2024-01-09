@@ -92,6 +92,6 @@ logo: procedure
 rversion = ''
 assembler rxvers rversion
 say 'cRexx compiler driver' rversion
-say 'Copyright (c) Adrian Sutherland 2021,2023. All rights reserved.'
-say 'Copyright (c) RexxLA 2021,2023. All rights reserved.'
+say 'Copyright (c) Adrian Sutherland 2021,2024. All rights reserved.'
+say 'Copyright (c) RexxLA 2021,2024. All rights reserved.'
 return
