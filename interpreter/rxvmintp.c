@@ -903,6 +903,76 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
                   REG_IDX(2), op3I);
             REG_RETURN_INT(op2RI + op3I)
             DISPATCH
+/* -----------------------------------------------------------------------------
+ * Decimal Instructions
+ * -----------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DMULT_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
+                  REG_IDX(2), REG_IDX(3));
+            REG_RETURN_INT(op2RI * op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DMULT_REG_REG_INT) {
+            CALC_DISPATCH(3)
+            DEBUG("TRACE - DMULT R%lu,R%lu,%llu\n", REG_IDX(1),
+                  REG_IDX(2), op3I);
+            REG_RETURN_INT(op2RI * op3I)
+            DISPATCH
+        }
+
+        START_INSTRUCTION(DADD_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1),
+                  REG_IDX(2), REG_IDX(3));
+            REG_RETURN_INT(op2RI + op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DADD_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DADD R%lu,R%lu,%llu\n", REG_IDX(1),
+                  REG_IDX(2), op3I);
+            REG_RETURN_INT(op2RI + op3I)
+            DISPATCH
+
+        START_INSTRUCTION(DSUB_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1),
+                  REG_IDX(2), REG_IDX(3));
+            REG_RETURN_INT(op2RI - op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DDIV_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - IDIV R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI / op3I)
+            DISPATCH
+
+        START_INSTRUCTION(DDIV_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I / op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DDIV_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI / op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DMOD_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            REG_RETURN_INT(op2RI % op3I)
+            DISPATCH
+
+        START_INSTRUCTION(DMOD_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
+            REG_RETURN_INT(op2I % op3RI)
+            DISPATCH
+
+        START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2RI % op3RI)
+            DISPATCH
+/* ====================================================================================
+ * End of Decimal instructions
+ * ====================================================================================
+ */
+
 
         START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
             /* New stackframe - grabbing procedure object from the caller frame */

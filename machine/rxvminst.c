@@ -43,9 +43,17 @@ void init_ops() {
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
+    instr_f("dadd", "Decimal Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dadd", "Decimal Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
+
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
+
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
+
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
@@ -54,15 +62,27 @@ void init_ops() {
     instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
+    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_INT);
+
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
+
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
+
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
 
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_INT);
     instr_f("imod", "Integer Modulo (op1=op2&op3)", OP_REG, OP_INT, OP_REG);
+
+    instr_f("dmod", "Decimal Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dmod", "Decimal Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("dmod", "Decimal Modulo (op1=op2&op3)", OP_REG, OP_INT, OP_REG);
 
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_FLOAT);
