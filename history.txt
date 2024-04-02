@@ -1,5 +1,7 @@
 CREXX History / Change Log
 
+F0050 - REXXSAA Equivalent Support
+        - Added REXXSAA equivalent functions
 I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
         Fix - ADDRESS for a not found command freezes (on linux and osx)
         Add - GetEnv()

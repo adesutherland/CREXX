@@ -1,0 +1,801 @@
+Example information from the REXX/imc project as a source for our specification.
+
+1. The Application Programming Interface
+Contents
+Introductory text
+1(a). RXSTRINGs
+1(b). Starting the REXX interpreter
+1(c). The Subcommand Interface
+1(d). External Functions
+1(e). System Exits
+1(f). The Variable Pool Interface
+
+Introductory text
+REXX/imc has an implementation of the "SAA API" based on that of OS/2.  This
+API is at present partially implemented and "mostly" compatible with OS/2,
+but it will be standardised and completed in a future release.
+
+Programs using the API are typically written in C. The supplied header file
+and the descriptions below use C declarations to describe the available
+functions and their parameters.
+
+The API allows an application to start the REXX interpreter under program
+control, to add subcommand environments and external functions, to access
+the REXX variable pool, and to install system exits to process certain
+interpreter activities.
+
+A C program using the API should include the header file "rexxsaa.h".
+Before including this file, the program should define appropriate
+preprocessor symbols to indicate which parts of the API are required.
+By default, the header file includes only enough information for the
+application to start the interpreter.  The symbols which may be defined
+are:
+
+   INCL_RXSUBCOM     include definitions for the subcommand interface
+   INCL_RXSHV        include definitions for the variable pool interface
+   INCL_RXFUNC       include definitions for the external function interface
+   INCL_RXSYSEXIT    include definitions for the system exit interface.
+
+If all of the above are required, the program may just define:
+
+   INCL_REXXSAA      include definitions for the whole API.
+
+When an application is compiled, it should be linked with the REXX/imc
+library using the compiler flag "-lrexx".  The compiler may need to be
+told the location of the library file using the "-L/path/" flag.  Either
+a statically linked library or a dynamically linked library may be used.
+Details of how to make the libraries are contained in the installation
+instructions for REXX/imc.
+1(a). RXSTRINGs
+The rexxsaa.h header file defines the RXSTRING datatype as follows to
+hold a REXX string:
+
+   typedef struct {
+           ULONG strlength;     /* length of the string */
+           char *strptr;        /* pointer to the string */
+   } RXSTRING;
+
+   typedef RXSTRING *PRXSTRING; /* a pointer to an RXSTRING */
+
+All the API functions which deal with REXX strings use this structure.
+Any RXSTRING which has a value will have the strptr field set to a valid
+character pointer and the strlength field set to a length value.  The
+empty string is represented by having the strlength field set to zero.
+An RXSTRING may be NULL, in which case the strptr field will be set to
+a NULL pointer.  This represents an undefined string, for example the
+second parameter in the function call foo(1,,2), and is not the same
+as an empty string, for example the second parameter in the function
+call foo(1,'',2).
+
+Associated with the RXSTRING structure are the following helper macros:
+
+   MAKERXSTRING(rxstring,ptr,len)
+                       - sets the strptr field of the string to the given
+                         a pointer and the strlength field to the given
+                         length.
+   RXNULLSTRING(x)     - returns true if x is a NULL string.
+   RXSTRLEN(x)         - returns the length of the string x.  This function
+                         returns zero if x is a NULL string.
+   RXSTRPTR(x)         - returns the strptr field of the string x.
+   RXVALIDSTRING(x)    - returns true if x is neither NULL nor of length zero.
+   RXZEROLENSTRING(x)  - returns true if x is not NULL but is of length zero.
+
+Note that since these are macros they should not be trusted with arguments
+that have side-effects.
+1(b). Starting the REXX interpreter
+The function RexxStart invokes the interpreter to execute a REXX program.
+
+   long RexxStart(long argc,
+                  PRXSTRING argv,
+                  PSZ *name,
+                  PRXSTRING instore,
+                  PSZ envname,
+                  long calltype,
+                  PRXSYSEXIT exits,
+                  PSHORT rc,
+                  PRXSTRING result);
+
+The parameters are:
+
+   argc:    the number of arguments passed to the program
+   argv:    an array of argc RXSTRINGs containing the arguments passed to
+            the program.  Any omitted arguments should be passed as NULL
+            strings.
+   name:    a name for the program.  This will usually be the file name of
+            the program on disk (which will be searched for in the usual
+            way as described in the REXX programming reference, but will
+            not have any file extension added to it).  However, if the
+            instore parameter contains the source of the program, then the
+            name parameter is used only for the PARSE SOURCE instruction.
+   instore: either NULL or a pointer to the first of two RXSTRINGs which
+            define an in-storage REXX program.  If instore is NULL, then the
+            program is loaded from a disk file named by the name parameter.
+            Otherwise, instore[0] must be a valid RXSTRING which contains
+            the source to be executed and instore[1] must be a NULL string.
+            The source contained in instore[0] should be in the same format
+            as it would be if it had just been loaded from disk.  Note that
+            REXX/imc will not, at present, return a tokenised image of the
+            program in instore[1].
+   envname: either NULL or a null-terminated string which contains the name
+            of the initial subcommand environment for the REXX program.  The
+            environment name must be at most 30 characters in length.  If
+            envname is NULL then a default will be chosen.  This will be
+            the uppercased file extension, if this is present and suitable,
+            otherwise the string "UNIX".
+   calltype:one of the three integer values RXCOMMAND, RXSUBROUTINE
+            or RXFUNCTION as defined in rexxsaa.h.  This determines
+            the invocation method as given by the instruction
+            "PARSE SOURCE . method .".  In addition, if the calltype
+            is RXFUNCTION then any RETURN instruction which causes the
+            program to end will be required to return a result.
+   exits:   either NULL or a pointer to the first in an array of RXSYSEXIT
+            structures defining the exits which will be used (see the
+            section on system exits for more information).  The last item
+            in the array must have an exit code of RXENDLST.  Exits will
+            not be used if the exits parameter is NULL.
+   rc:      a pointer to a short which will receive the numeric form of the
+            result string.  If the result string is a whole number in the
+            range -32767 to +32767 then it will be converted to an integer
+            and stored in rc.  Otherwise, rc will be set to (short)(1<<15),
+            but note that this is an extension which is present in REXX/imc
+            only.  This parameter is documented as PLONG, but it seems to be
+            PSHORT in most versions so for the time being it is a PSHORT in
+            REXX/imc.
+   result:  a pointer to an RXSTRING which will receive the result string
+            returned by a RETURN or EXIT instruction from the REXX program,
+            or NULL to indicate that the return value should be discarded.
+            If the program did not return a result, then this parameter
+            will be set to a NULL string.  If result points to an RXSTRING
+            then the caller of RexxStart may set it to either a NULL string
+            or a valid string.  If result is a valid string which is long
+            enough to hold the result, then the result will be copied into
+            that string and result->strlength will be set to indicate its
+            length.  Otherwise, REXX will allocate (using malloc) a string
+            to hold the result and the caller of RexxStart is responsible
+            for freeing this storage.
+
+The possible return values from RexxStart are:
+
+   negative:  a syntax error (or other REXX error) occurred.  The absolute
+              value of the return value will be the same as the REXX error
+              number.
+   zero:      the program ended normally.
+   positive:  some error occurred which made it impossible to execute the
+              program.  A return value of 3 means that the program could not
+              be read in (although this number may change in the future).  A
+              return value of 1 means that the parameters were incorrect or
+              that the interpreter could not initialise properly.
+
+Note that the interpreter will never return a result string to the caller
+if an error occurred, and in this case the value of rc is undefined when
+RexxStart returns.
+
+RexxStart is recursive - that is, the application may call it from within
+a subcommand handler, external function call or system exit even though a
+previous call to RexxStart has still not finished.  It is not, however,
+re-entrant, so if the operating system supports threads or lightweight
+processes (LWPs), the SAA API should only be called from within a single
+thread.
+1(c). The Subcommand Interface
+A subcommand handler is a function supplied by the application which
+processes commands (that is, REXX instructions which consist only of
+expressions, or occurrences of "command" in instructions of the form
+"ADDRESS environment command").  Each subcommand handler must be registered
+under an environment name, and these names are selected by the ADDRESS
+instruction in REXX.
+
+A subcommand handler must be declared as a function with the following
+prototype:
+
+   ULONG command_handler(
+      PRXSTRING command,
+      PUSHORT flags,
+      PRXSTRING result);
+
+where:
+
+   command  is the command string created by REXX.  The character just
+            after the end of the string is guaranteed to be a null, but
+            the command may also contain other null characters.
+   flags    is a pointer to a short integer to receive the completion status
+            of the command.  The subcommand handler should set this to one
+            of RXSUBCOM_OK, RXSUBCOM_ERROR or RXSUBCOM_FAILURE in order to
+            indicate that the command completed successfully, completed with
+            ERROR status, or completed with FAILURE status respectively.
+   result   is a pointer to an RXSTRING which will receive the return
+            code from the command in the form of a string (note that any
+            numeric return code must be converted to a string before it
+            can be passed to REXX).  This string will be assigned to the
+            variable RC when the subcommand handler returns.  If result
+            is a NULL string, then REXX will assign the string "0" to RC.
+
+            REXX will set result to a 256-byte string before calling the
+            subcommand handler.  The handler may store the result in this
+            string (and set result->strlength to the length of the string),
+            or (if the result is longer than that) it may allocate another
+            using malloc.  If the handler allocates a new string to hold
+            the result, then REXX will call free to release the storage
+            after the handler returns.
+
+The only valid return value from a subcommand handler seems to be 0.
+
+The following functions are available to register, deregister and query
+subcommand handlers:
+
+ULONG RexxRegisterSubcomExe(
+   PSZ envname,
+   RexxSubcomHandler *handler,
+   PUCHAR userarea);
+
+   The RexxRegisterSubcomExe function registers the subcommand handler
+   whose address is given by the parameter handler under the environment
+   name given by the parameter envname.
+
+   The userarea parameter may be NULL or it may point to a user-defined
+   eight byte area of memory which will be associated with the subcommand
+   handler.  The user area information may be retrieved with the
+   RexxQuerySubcom function.
+
+   The possible return values from RexxRegisterSubcomExe are:
+
+   RXSUBCOM_OK        The handler was registered.
+   RXSUBCOM_NOTREG    The handler was not registered because there was
+                      another already registered under the same name.
+   RXSUBCOM_NOEMEM    The handler was not registered due to lack of
+                      memory.
+   RXSUBCOM_BADTYPE   The handler was not registered due to a parameter
+                      error.
+
+ULONG RexxDeregisterSubcom(PSZ envname, PSZ module);
+
+   The RexxDeregisterSubcom function deregisters the subcommand handler
+   which was registered under the name given by the parameter envname.
+   The module parameter is not used by REXX/imc.
+
+   The possible return values from RexxDeregisterSubcom are:
+
+   RXSUBCOM_OK        The handler was deregistered.
+   RXSUBCOM_NOTREG    The handler was not found.
+   RXSUBCOM_BADTYPE   The handler was not deregistered due to a parameter
+                      error.
+
+ULONG RexxQuerySubcom(PSZ envname, PSZ module, PUSHORT flag, PUCHAR userarea);
+
+   The RexxQuerySubcom function queries any subcommand handler which might
+   have been registered under the name given by the parameter envname.  The
+   module parameter is not used by REXX/imc.  The result is both stored in
+   the short integer pointed to by the flag parameter and returned as the
+   result of the function.  If the userarea parameter is supplied, it must
+   point to an eight-byte area which will receive the user area which was
+   given when the subcommand handler was registered.
+
+   The possible return values from RexxQuerySubcom are:
+
+   RXSUBCOM_OK        The handler is registered.
+   RXSUBCOM_NOTREG    The handler is not registered.
+   RXSUBCOM_BADTYPE   The parameters were in error.
+1(d). External Functions
+An external function may be registered with REXX/imc using the SAA API.
+After it has been registered, it may be called by a Rexx program as usual,
+but only using the name under which it was registered.  The names of
+functions are case-sensitive and unquoted function names are always
+translated into upper case, so that a function to be called with the REXX
+function call foo() must be registered under the name FOO.  This is a
+difference from OS/2.  Functions registered using the SAA interface of
+REXX/imc are searched just after the built-in functions, and at the same
+time as functions loaded from ".rxfn" files (see section 2).  Function names
+registered under the SAA interface of REXX/imc must not contain the slash
+character (/).  Note that function names in REXX function calls have all
+characters up to and including the last slash character removed before they
+are matched against function names which have been loaded from ".rxfn" files
+or registered under the SAA interface, so that "/tmp/FOO" matches a
+function registered under the name "FOO".  [This was done so that the path
+name of an auto-registering function may be specified, but will not
+prevent the function from being found on subsequent calls when it has
+already been registered.  This behaviour might be removed in a future
+release.]
+
+An external function to be registered using the SAA interface must be a
+function with the following prototype:
+
+   LONG function_handler(
+      PSZ name,
+      long argc,
+      PRXSTRING argv,
+      PSZ queuename,
+      PRXSTRING result);
+
+where:
+
+   name      is a null-terminated string giving the name by which REXX
+             called the function.
+   argc      is the number of arguments passed to the function.
+   argv      is an array of argc RXSTRINGs giving the arguments passed to
+             the function.  Any omitted arguments will be passed as NULL
+             strings.  The character just after the end of each argument
+             which is present is guaranteed to be a null, but the arguments
+             may also contain other null characters.
+   queuename is the null-terminated name of the current queue, which is
+             currently meaningless in REXX/imc and will equal the string
+             "SESSION".
+   result    is a pointer to an RXSTRING which will receive the result from
+             the function.  If the function does not return a result, then
+             it should set this RXSTRING to a NULL string.  If the function
+             handler was called as a function, then the result will be used
+             directly (and an error will be raised if the function did not
+             return a result).  If it was called as a subroutine, the result
+             (if any) will be assigned to the REXX variable RESULT.
+
+             REXX will set result to a 256-byte string before calling the
+             function.  The function may copy the result into this string
+             (and set result->strlength to the length of the result), or
+             (if the result is longer than 256 bytes) it may allocate a new
+             string using malloc and set the result string to that.  If the
+             function handler allocates a new string, REXX will use free to
+             release it when the function returns.
+
+The valid return values from a function handler are:
+
+     0    The function completed successfully.
+    40    An error occurred.  The REXX interpreter will raise error 40
+          (incorrect call to routine) when the function returns.  Note
+          that if the function returns this value, it must not return a
+          result.
+
+The following functions are available to register, deregister and query
+external functions:
+
+ULONG RexxRegisterFunctionExe(PSZ funcname, RexxFunctionHandler *handler);
+
+   The RexxRegisterFunctionExe function registers the function given by
+   the handler parameter under the name given by the funcname parameter,
+   which is a null-terminated string.
+
+   The possible return values from RexxRegisterFunctionExe are:
+
+   RXFUNC_OK       The function was registered.
+   RXFUNC_DEFINED  The function was not registered because it has already
+                   been registered or loaded from a ".rxfn" file.
+   RXFUNC_NOMEM    The function was not registered due to lack of memory.
+
+ULONG RexxRegisterFunctionDll(PSZ funcname, PSZ dllname, PSZ entryname);
+
+   The RexxRegisterFunctionDll call registers a function stored in a shared
+   object file (or DLL).  The name of the shared object is given in the
+   dllname parameter (see below).  The name of the function handler within
+   the shared object is given in the entryname parameter, and the name by
+   which Rexx will call the function is given by the funcname parameter.
+
+   The dllname parameter may be either the exact path name of a file or a
+   relative file name which will be searched for along a path given by one
+   of the following: the REXXLIB environment variable; if that is not set
+   the REXXFUNC environment variable; or if neither is set the compile-time
+   default.  If the name of the shared object ends with ".rxfn" then this
+   may be omitted from the dllname parameter.
+
+   This version of the RexxRegisterFunctionDll function differs from the
+   OS/2 version in that it attempts to load the function before returning
+   control to the caller, and it returns an indication of whether this
+   succeeded.  The possible return values are:
+
+   RXFUNC_OK       The function was registered.
+   RXFUNC_NOTREG   The function was not registered because the shared object
+                   could not be loaded or did not contain the required entry
+                   point.
+   RXFUNC_DEFINED  The function was not registered because it has already
+                   been registered or loaded from a ".rxfn" file.
+   RXFUNC_NOMEM    The function was not registered due to lack of memory.
+
+ULONG RexxDeregisterFunction(PSZ funcname);
+
+   The RexxDeregisterFunction function deregisters the function which was
+   previously registered under the name given by the funcname parameter,
+   which is a null-terminated string.  Note that this function is also
+   able to deregister functions which were loaded from ".rxfn" files.
+
+   The possible return values from RexxDeregisterFunction are:
+
+   RXFUNC_OK       The function was deregistered.
+   RXFUNC_NOTREG   The function was not found.
+
+ULONG RexxQueryFunction(PSZ funcname);
+
+   The RexxQueryFunction function queries whether or not a function has
+   been registered or loaded from a ".rxfn" file under the name given by
+   the funcname parameter, which is a null-terminated string.
+
+   The possible return values from RexxQueryFunction are:
+
+   RXFUNC_OK       The function is registered.
+   RXFUNC_NOTREG   The function is not registered.
+1(e). System Exits
+The application may define functions which REXX will call instead of using
+its own system interface in certain circumstances, such as whenever it needs
+to write out a line as a result of the SAY instruction.  The application
+registers its system exit functions under names (which are similar to
+environment names, although they occupy a separate name space) before
+executing a REXX program.  When the application starts REXX, it specifies
+the system exits which it wishes to handle and associates each with a named
+exit handler.  Each system exit has a major function code and a subfunction
+code; these are listed later in this section.
+
+A system exit handler must be a function with the following prototype:
+
+   LONG exit_handler(long exitcode, long subcode, PEXIT parmblock);
+
+where:
+
+   exitcode  is the major function code of the exit which the handler has
+             been called to handle.
+   subcode   is the subfunction code of the exit which the handler has been
+             called to handle.
+   parmblock is a pointer to a parameter block whose contents depend on
+             the exit being handled.  The exit descriptions below give
+             details on the parameter block required for each exit.  Some
+             exits may not require a parameter block at all, in which case
+             the parmblock parameter will be a NULL pointer.
+
+             Since each exit requires a different kind of parameter block,
+             the PEXIT data type has been declared as a union data type.  It
+             is probably most convenient for each exit handler to convert
+             the parameter block pointer into a pointer of the required type
+             for the exit (which is allowed in C (I think!)).
+
+The valid return values from a system exit handler are:
+
+   RXEXIT_HANDLED      The exit handler processed the system exit as required.
+   RXEXIT_NOT_HANDLED  The exit handler did not process the system exit, and
+                       therefore REXX should behave as if the exit handler
+                       had not been called.
+   RXEXIT_RAISE_ERROR  An error occurred.  REXX will raise error 48 (failure
+                       in system service) when the handler returns this
+                       value.
+
+A system exit handler should begin by checking the function and subfunction
+codes, and return immediately with RXEXIT_NOT_HANDLED if they correspond to
+an exit which the handler was not supposed to handle.
+
+The following functions are available to register, deregister and query
+system exit handlers.
+
+ULONG RexxRegisterExitExe(PSZ name, RexxExitHandler *handler, UCHAR *userarea);
+
+   The RexxRegisterExitExe function registers the system exit handler given
+   by the handler parameter under the name given by the name parameter,
+   which is a null-terminated string.
+
+   The userarea parameter may be NULL or it may point to a user-defined
+   eight byte area of memory which will be associated with the system
+   exit handler.  The user area information may be retrieved with the
+   RexxQueryExit function.
+
+   The possible return values from RexxRegisterExitExe are:
+
+   RXEXIT_OK       The handler was registered.
+   RXEXIT_NOTREG   The handler was not registered because there is already a
+                   system exit handler registered under the given name.
+   RXEXIT_NOEMEM   The handler was not registered due to lack of memory.
+   RXEXIT_BADTYPE  The handler was not registered due to a parameter error.
+
+ULONG RexxDeregisterExit(PSZ name, PSZ module);
+
+   The RexxDeregisterExit function deregisters the system exit handler which
+   was registered under the name given by the name parameter, which is a
+   null-terminated string.  The module parameter is not used by REXX/imc.
+
+   The possible return values from RexxDeregisterExit are:
+
+   RXEXIT_OK       The handler was deregistered.
+   RXEXIT_NOTREG   The handler was not found.
+   RXEXIT_BADTYPE  The parameters were in error.
+
+ULONG RexxQueryExit(PSZ name, PSZ module, PUSHORT flag, PUCHAR userarea);
+
+   The RexxQueryExit function queries any system exit handler which may have
+   been registered under the name given by the name parameter, which is a
+   null-terminated string.  The module parameter is not used by REXX/imc.
+   The flag parameter is a pointer to a short integer which will be set to
+   the return value from RexxQueryExit.  If the userarea parameter is not
+   NULL, it must point to an eight-byte area of memory which will receive
+   the user area which was given when the exit handler was registered.
+
+   The possible return values from RexxQueryExit are:
+
+   RXEXIT_OK       The handler is registered.
+   RXEXIT_NOTREG   The handler is not registered.
+   RXEXIT_BADTYPE  The parameters were in error.
+
+Once the required system exit handlers have been registered, they may
+be used by passing them to RexxStart in the "exits" parameter.  This
+parameter is an array of structures of the form:
+
+   typedef struct {
+      char *sysexit_name;   /* name of exit handler */
+      short sysexit_code;   /* major function code of system exit */
+   } RXSYSEXIT;
+
+Each of these structures associates a system exit handler which was
+previously registered under the name given by the sysexit_name field
+of the structure with the system exits whose major function codes agree
+with the sysexit_code field of the structure.  Note that an exit handler
+must handle all the subfunctions of any particular system exit; it may do
+this by immediately returning RXEXIT_NOT_HANDLED as described earlier.
+
+The last element of the array of RXSYSEXIT structures must have sysexit_code
+set to RXENDLST.
+
+The possible system exits are as follows.  Each major exit code is given
+by a name of the form RXxxx, and each subfunction code is given by a name
+of the form RXxxxyyy, where the RXxxx is the same as the major exit code.
+
+RXCMD: Call a subcommand handler
+
+   RXCMDHST: This exit is called when REXX is about to carry out a command.
+             By default, REXX will call the appropriate subcommand handler
+             to execute the command, but the exit may instead choose to
+             process the command.  The parameter block for this exit is:
+
+             typedef struct {
+                struct {
+                   unsigned int rxfcfail:1;   /* completed with FAILURE */
+                   unsigned int rxfcerr:1;    /* completed with ERROR */
+                } rxcmd_flags;
+                char *rxcmd_address;          /* environment name */
+                unsigned short rxcmd_addressl;/* environment length */
+                char *rxcmd_dll;              /* not used by REXX/imc */
+                unsigned short rxcmd_dll_len; /* not used by REXX/imc */
+                RXSTRING rxcmd_command;       /* the command to be executed */
+                RXSTRING rxcmd_retc;          /* the return string */
+             } RXCMDHST_PARM;
+
+             The handler may set either rxfcfail or rxfcerr to raise a
+             FAILURE or ERROR condition, respectively.  The rxcmd_address
+             parameter is the null-terminated name of the environment to
+             which the command is being sent.  The rxcmd_command is an
+             RXSTRING containing the command to be executed.  The character
+             just after the end of the string is guaranteed to be a null,
+             but the command may also contain other null characters.  The
+             rxcmd_retc is an RXSTRING which is to receive the return code
+             from the command as a string.  Any numeric return code must be
+             translated into a string before it is returned.  REXX will
+             provide a 256-byte buffer into which the return string may
+             be copied.  The handler may allocate another using malloc, in
+             which case REXX will use free to release it after the handler
+             returns.
+
+RXSIO: Perform input or output
+
+   RXSIOSAY: This exit is called when REXX is about to write a line as a
+             result of a SAY instruction.  The exit may choose to deal with
+             the line as it requires; otherwise the interpreter will write
+             the line to the standard output stream.  The parameter block
+             for this exit is:
+
+             typedef struct {
+                RXSTRING rxsio_string;
+             } RXSIOSAY_PARM;
+
+             The rxsio_string is the string to be written out.  The
+             character just after the end of the string is guaranteed
+             to be a null, but the string may also contain other null
+             characters.  The string will not contain an end-of-line
+             character unless one was present in the SAY instruction.
+
+   RXSIOTRC: This exit is called when REXX is about to write a line during
+             tracing.  The exit may choose to deal with the line as it
+             requires; otherwise the interpreter will write the line to
+             the trace output stream (usually the standard error).  The
+             parameter block for this exit is:
+
+             typedef struct {
+                RXSTRING rxsio_string;
+             } RXSIOTRC_PARM;
+
+             The rxsio_string is the string to be written out.  The
+             character just after the end of the string is guaranteed
+             to be a null.  The string will not contain an end-of-line
+             character.
+
+   RXSIOTRD: This exit is called when REXX is about to read a line of input
+             as a result of the PARSE PULL instruction when the REXX stack
+             is empty.  The exit may choose to supply a line of its own;
+             otherwise the interpreter will read the line from the standard
+             input stream.  The parameter block for this exit is:
+
+             typedef struct {
+                RXSTRING rxsiotrd_retc;
+             } RXSIOTRD_PARM;
+
+             The input line should be returned in the rxsiotrd_retc string.
+             It should not contain any end-of-line character which might
+             have been used to terminate the line of input (but it may
+             contain other end-of-line characters).  REXX will provide a
+             256-byte string in which the handler may place the input line.
+             The handler may allocate its own using malloc, in which case
+             REXX will use free to release it when the handler returns.
+
+   RXSIODTR: This exit is called when REXX is about to read a line of input
+             at a pause during interactive tracing.  The exit may choose to
+             supply a line of its own; otherwise the interpreter will read
+             the line from the standard input stream.  The parameter block
+             for this exit is:
+
+             typedef struct {
+                RXSTRING rxsiodtr_retc;
+             } RXSIODTR_PARM;
+
+             The input line should be returned in the rxsiotrd_retc string.
+             It should not contain any end-of-line character which might
+             have been used to terminate the line of input.  REXX will
+             provide a 256-byte string in which the handler may place the
+             input line.  The handler may allocate its own using malloc, in
+             which case REXX will use free to release it when the handler
+             returns.
+
+   Note: the PARSE LINEIN instruction and the built-in functions LINEIN,
+   LINEOUT, CHARIN and CHARS do not call the RXSIO exit handler.
+
+RXINI: Initialisation processing
+
+   RXINIEXT: This exit is called when initialisation is complete, just
+             before execution of the REXX program starts.  The exit handler
+             may use this exit to perform initialisation functions such as
+             setting REXX variables.  There is no parameter block for this
+             exit.
+
+RXTER: Termination processing
+
+   RXTEREXT: This exit is called just after the REXX program has finished,
+             and just before termination processing.  The exit handler
+             may use this exit to perform terminatino functions such as
+             retrieving REXX variables.  There is no parameter block for
+             this exit.
+1(f). The Variable Pool Interface
+Variables in the REXX program may be accessed using the RexxVariablePool
+function, which processes one or more request blocks arranged in a linked
+list.  Each request is a structure of the form:
+
+   typedef struct shvnode
+   {
+      struct shvnode *shvnext;
+      RXSTRING shvname;
+      RXSTRING shvvalue;
+      ULONG shvnamelen;
+      ULONG shvvaluelen;
+      UCHAR shvcode;
+      UCHAR shvret;
+   } SHVBLOCK;
+
+where:
+
+   shvnext     is the address of the next request block, or NULL if this is
+               the last request block.
+   shvcode     is the request code.  Valid request codes are listed below.
+   shvname     is an RXSTRING containing a REXX variable name.  It may be
+               an input or an output parameter according to the request
+               code.
+   shvnamelen  is the length of the buffer which the shvname RXSTRING points
+               to.
+   shvvalue    is an RXSTRING containing the value of a REXX variable.
+               It may be an input or an output parameter according to the
+               request code.
+   shvvaluelen is the length of the buffer which the shvvalue RXSTRING points
+               to.
+   shvret      is a return code which will be set when the request has been
+               processed.  It will be set to the OR of zero or more of the
+               following flags:
+
+               RXSHV_NEWV   the named variable was uninitialised before the
+                            request was processed
+               RXSHV_LVAR   no more variables are available for an
+                            RXSHV_NEXTV request.
+               RXSHV_TRUNC  A returned variable name or value was truncated
+                            because the supplied RXSTRING was too short to
+                            hold the name or value.
+               RXSHV_BADN   An invalid variable name was given.
+               RXSHV_MEMFL  The request was not processed due to lack of
+                            memory.
+               RXSHV_BADF   An invalid function code was given.
+
+The valid request codes and their meanings are:
+
+   RXSHV_SYSET: Symbolic set.  The name given in the shvname field is
+                interpreted as a variable as if it were present in a REXX
+                program.  It is set to the value given in the shvvalue
+                field.
+   RXSHV_SET:   Direct set.  The variable whose name matches that given in
+                the shvname field is set to the value given in the shvvalue
+                field.
+   RXSHV_SYFET: Symbolic fetch.  The name given in the shvname field is
+                interpreted as a variable as if it were present in a REXX
+                program.  Its value is fetched and stored in the shvvalue
+                RXSTRING.  If the application has set this to a NULL string,
+                then REXX allocates one using malloc.  The application
+                is responsible for freeing this storage.  Otherwise,
+                shvvaluelen gives the maximum length of a string which REXX
+                can store in the shvvalue RXSTRING.  If the value is longer
+                than this then it is truncated.  The RXSHV_TRUNC flag will
+                then be set in shvret.
+   RXSHV_FETCH: Direct fetch.  The value of the variable whose name matches
+                that given in the shvname field is fetched and stored in the
+                shvvalue RXSTRING, as in the RXSHV_SYFET request.
+   RXSHV_SYDRO: Symbolic drop.  The name given in the shvname field is
+                interpreted as a variable as if it were present in a REXX
+                program.  It is dropped (that is, it becomes undefined).
+   RXSHV_DROPV: Direct drop.  The variable whose name matches that given
+                in the shvname field is dropped (that is, it becomes
+                undefined).
+   RXSHV_NEXTV: Fetch next variable.  Each time this request is processed
+                the interpreter returns the name and value of a variable
+                which is currently accessible by the executing REXX program.
+                The interpreter keeps track of which variables have been
+                returned, and successive RXSHV_NEXTV requests will return
+                different variables (in no particular order) until all the
+                accessible variables have been returned.  When there is no
+                variable left to return, the RXSHV_NEXTV request will set
+                the RXSHV_LVAR flag in shvret and will leave the returned
+                variable and value undefined.  The information about which
+                variables have been returned is reset every time the REXX
+                program resumes execution, and also at every set, fetch or
+                drop request from the variable pool.
+
+                The name of each returned variable will be stored in the
+                shvname field of the request block.  If the application
+                has set this to a NULL string then REXX allocates one using
+                malloc.  The application is responsible for freeing this
+                storage.  Otherwise, shvnamelen gives the maximum length
+                of a string which REXX can store in the shvname RXSTRING.
+                If the name is longer than this then it is truncated.  The
+                RXSHV_TRUNC flag will then be set in shvret.
+
+                The value of each variable is returned in an analogous
+                manner in the shvvalue field (in exactly the same way as
+                for the RXSHV_SYFET and RXSHV_FETCH requests).
+
+                In the current release of REXX/imc, simple symbols and
+                stems are returned in (approximately) the order in which
+                they became defined.  The compound symbols of any one stem
+                are returned consecutively in a similar order, just after
+                the stem (if any) is returned.  Note that it is in general
+                not possible to tell the difference between a stem being
+                returned (for example, after the instruction foo.=3) and a
+                compound variable whose tail has length zero (for example,
+                after the instructions bar=''; foo.bar=3).  However, if
+                "foo."  is returned after any other variable with that
+                stem (including "foo."  itself), it is always the case
+                that this occurrence of "foo."  is a compound variable.
+                The converse is unfortunately not true.  That is, if
+                "foo."  is the first variable with that stem, it is not
+                necessarily a stem variable unless another copy of "foo."
+                appears, in which case the first one is a stem and the
+                second is a compound variable.
+
+A symbolic variable name is one which is interpreted according to REXX
+rules.  That is, it must contain only letters, digits, dots, and a small
+number of other characters that are valid in symbols and must not start
+with a digit or dot; it is uppercased before use, and each simple symbol
+component of a compound symbol (except the stem) is replaced by its value
+before use.
+
+A direct variable name is the exact name of a variable which appears in
+the variable pool (and it is the kind of variable name that RXSHV_NEXTV
+returns).  It is the kind of name that a symbolic variable name turns into
+after it has been processed as described in the above paragraph.  That part
+of the name up to the first dot must satisfy the conditions for a symbolic
+name and must be in upper case.  After the first dot, the name is allowed
+to contain any character.
+
+Variable pool requests are processed by the function:
+
+ULONG RexxVariablePool(PSHVBLOCK RequestBlockList);
+
+The parameter is a pointer to the first request block in the linked list.
+The return value may be RXSHV_NOAVL, meaning that the variable pool API is
+not available.  In this case, none of the requests will have been processed.
+The API is made available just before execution of a program begins (just
+before the RXINIEXT exit is called) and may be used until just after the
+execution finishes (just after the RXTEREXT exit is called).
+
+If the return value is not RXSHV_NOAVL, then it will be the OR of all the
+return codes which have been returned individually in the shvret fields of
+the request blocks.
