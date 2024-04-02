@@ -127,21 +127,21 @@ build: procedure
 /*      call lineout out_file, '    printf("NFKD   \"%s\" ( %s)\n", out_buffer, utf8_to_codepoints(out_buffer));' */
       call lineout out_file, '    checkresult(err, 'source', 'NFKD', out_buffer, "'no_tests 'NFKD \"'escape(comment)'\"");'
       call lineout out_file, ''
-/*
-      no_tests = no_tests + 1;
-      call lineout out_file, '    err = nfc_normaliser('source', strlen('source'), out_buffer, &out_len); out_buffer[out_len] = 0;'
-      call lineout out_file, '    printf("NFC   \"%s\" ( %s)\n", out_buffer, utf8_to_codepoints(out_buffer));'
-      call lineout out_file, '    checkresult(err, 'source', 'NFC', out_buffer, "'no_tests 'NFC \"'escape(comment)'\"");'
-      call lineout out_file, ''
 
       no_tests = no_tests + 1;
+      call lineout out_file, '    err = nfc_normaliser('source', strlen('source'), out_buffer, &out_len); out_buffer[out_len] = 0;'
+/*      call lineout out_file, '    printf("NFC   \"%s\" ( %s)\n", out_buffer, utf8_to_codepoints(out_buffer));' */
+      call lineout out_file, '    checkresult(err, 'source', 'NFC', out_buffer, "'no_tests 'NFC \"'escape(comment)'\"");'
+      call lineout out_file, ''
+/*
+      no_tests = no_tests + 1;
       call lineout out_file, '    err = nfkc_normaliser('source', strlen('source'), out_buffer, &out_len); out_buffer[out_len] = 0;'
-      call lineout out_file, '    printf("NFKC   \"%s\" ( %s)\n", out_buffer, utf8_to_codepoints(out_buffer));'
+ /*     call lineout out_file, '    printf("NFKC   \"%s\" ( %s)\n", out_buffer, utf8_to_codepoints(out_buffer));' */
       call lineout out_file, '    checkresult(err, 'source', 'NFKC', out_buffer, "'no_tests 'NFKC \"'escape(comment)'\"");'
       call lineout out_file, ''
 */
 
-/*      if no_tests>1000 then leave */
+     if no_tests>1000 then leave
 
    end
    call lineout in_file
