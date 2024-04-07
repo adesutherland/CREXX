@@ -81,8 +81,6 @@ int rexx_connect() {
     return sock;
 }
 
-
-
 // REXXSAA -> REST Functions
 
 int rexx_get_request(int sock, char* get_request) {
@@ -90,6 +88,7 @@ int rexx_get_request(int sock, char* get_request) {
     char request[4096];
     int body_length = -1;
     int l;
+    SHVBLOCK* shvblock = 0;
 
     snprintf(request, 4096, "GET %s HTTP/1.1\r\nHost: localhost\r\n" HTTP_HEADER "\r\n", get_request);
     printf("Request is %s\n", get_request);
@@ -127,7 +126,7 @@ int rexx_get_request(int sock, char* get_request) {
     line[body_length] = 0;
     printf("Response Body: %s\n", line);
 
-    parseJSON(line);
+    parseJSON(line, &shvblock);
     return 0;
 }
 

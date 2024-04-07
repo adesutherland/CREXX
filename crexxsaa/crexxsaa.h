@@ -53,14 +53,14 @@ typedef struct SHVOBJECT {
         char boolean;             // Boolean value (0 or 1)
         struct SHVOBJECT* member; // Pointer to a linked list of child objects (members)
     } value;
-} Object;
+} SHVOBJECT;
 
 /* SHVBLOCK - Structure for sharing variable data */
 typedef struct SHVBLOCK {
     struct SHVBLOCK *shvnext;     // Pointer to next SHVBLOCK
     char *shvname;                // Variable name (null-terminated)
     char *shvvalue;               // For null terminated string values (backward compatibility)
-    Object* shvobject;            // For SHVOBJECT type value including nested members
+    SHVOBJECT* shvobject;            // For SHVOBJECT type value including nested members
                                   // Note only one of shvvalue or shvobject should be used
     unsigned long shvcode;        // Function code
     unsigned long shvret;         // Return code
