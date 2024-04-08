@@ -1,19 +1,19 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0044
+ * cREXX COMPILER VERSION : crexx-f0049
  * SOURCE                 : utf1.rexx
- * BUILT                  : 2023-03-05 15:06:51
+ * BUILT                  : 2023-10-20 13:10:01
  */
 
 .srcfile="utf1.rexx"
 .globals=0
 
 main() .locals=3
-   .meta "utf1.rexx.main"="b" ".void" main() "" ""
+   .meta "utf1.main"="b" ".void" main() "" ""
    .src 5:1="SAY 多变的"
-   .meta "utf1.rexx.main.多变的"="b" ".string" "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
+   .meta "utf1.main.多变的"="b" ".string" "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
    say "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
    .src 7:1="équipe = \"René Vincent Jansen\""
-   .meta "utf1.rexx.main.équipe"="b" ".string" r1
+   .meta "utf1.main.équipe"="b" ".string" r1
    load r1,"Ren\xc3\xa9 Vincent Jansen"
    .src 8:1="équipe = équipe \", Mike Großmann\""
    sconcat r1,r1,", Mike Gro\xc3\x9fmann"
@@ -23,13 +23,13 @@ main() .locals=3
    sconcat r2,"cREXX \xc3\x89quipe:",r1
    say r2
    .src 14:1="Großmann = 1"
-   .meta "utf1.rexx.main.großmann"="b" ".int" r2
+   .meta "utf1.main.großmann"="b" ".int" r2
    load r2,1
    .src 15:1="GROßMANN = 2"
    load r2,2
    .src 19:1="say Großmann"
-   .meta "utf1.rexx.main.grossmann"="b" ".int" "4"
-   .meta "utf1.rexx.main.groẞmann"="b" ".int" "3"
+   .meta "utf1.main.grossmann"="b" ".int" "4"
+   .meta "utf1.main.groẞmann"="b" ".int" "3"
    itos r2
    say r2
    .src 20:1="say GROßMANN"
@@ -41,8 +41,8 @@ main() .locals=3
    say "4"
    .src 22:14=""
    ret
-   .meta "utf1.rexx.main.grossmann"
-   .meta "utf1.rexx.main.großmann"
-   .meta "utf1.rexx.main.groẞmann"
-   .meta "utf1.rexx.main.équipe"
-   .meta "utf1.rexx.main.多变的"
+   .meta "utf1.main.grossmann"
+   .meta "utf1.main.großmann"
+   .meta "utf1.main.groẞmann"
+   .meta "utf1.main.équipe"
+   .meta "utf1.main.多变的"

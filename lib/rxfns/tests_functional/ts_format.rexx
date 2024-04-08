@@ -22,4 +22,15 @@ say 'format(-3.14,,4) "'format('-3.14',,4)'"'
 say 'format(-3.14,4,3) "'format('-3.14',4,3)'"'
 say 'format(-3.14,1,4) "'format('-3.14',1,4)'"'
 
+/* walter's latest */
+_="    -0.05625000000000000000"
+Say '_='_
+Say 'format(_/1, 6)' format(_/1, 6)
+Say 'format(_+0, 6)' format(_+0, 6)
+Say 'format(_  , 6)' format(_  , 6)
+_="     0.05625000000000000000"
+Say 'format(_/1, 6)' format(_/1, 6)
+Say 'format(_+0, 6)' format(_+0, 6)
+Say 'format(_  , 6)' format(_  , 6)
+
 return 0
