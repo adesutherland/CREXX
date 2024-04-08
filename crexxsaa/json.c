@@ -120,13 +120,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 
 /* Function prototypes */
 int parseJSON(char* json, SHVBLOCK** shvblock_handle); // Parse the JSON body
 char* parseShvblock(char* json, SHVBLOCK* current_shvblock); // Parse individual service block
 long parseRequestCode(char* request_value); // Parse the request code (returns long so a negative value can be used for an error)
 long parseResultCode(char* request_value); // Parse the result code (returns long so a negative value can be used for an error)
-char * parseObject(char* json, SHVOBJECT** shvobject_handle); // Parse a single value object
+char * parseObject(char* json, SHVOBJECT** shvobject_handle, SHVOBJECT* prev_shvobject); // Parse value attribute
 
 char *json_skip_whitespace(char *json);
 char *json_skip_object(char *json);
@@ -135,6 +136,9 @@ char *json_skip_block(char *json);
 char *json_skip_colon(char *json);
 char *json_skip_comma(char *json);
 char *json_skip_string(char *json, char **string);
+char *json_skip_null(char *json);
+char *json_skip_true(char *json);
+char *json_skip_false(char *json);
 
 /* Free the SHVOBJECT */
 void FreeRexxObject(SHVOBJECT *shvobject) {
@@ -387,7 +391,7 @@ char* parseShvblock(char* json, SHVBLOCK* current_shvblock) {
             json = json_skip_colon(json);
             json = json_skip_whitespace(json);
 
-            // If the value is a string, parse it - it is the simple case
+            // If the value is a string, parse it - it is the simple case where we just store the string
             if (*json == '"') {
                 json = json_skip_string(json, &value);
                 if (!json) {
@@ -403,7 +407,7 @@ char* parseShvblock(char* json, SHVBLOCK* current_shvblock) {
             else {
                 // If the value is not a string, it must be an object
                 // Parse the object
-                json = parseObject(json, &(current_shvblock->shvobject));
+                json = parseObject(json, &(current_shvblock->shvobject), NULL);
                 if (!json) {
                     fprintf(stderr, "Failed to parse object\n");
                     return NULL;
@@ -424,6 +428,14 @@ char* parseShvblock(char* json, SHVBLOCK* current_shvblock) {
         // Skip any whitespace
         json = json_skip_whitespace(json);
     }
+
+    if (has_name == 0) {
+        fprintf(stderr, "Missing required attribute (name)\n");
+        return NULL;
+    }
+
+    // Skip the end of the object
+    json++;
 
     return json;
 }
@@ -504,34 +516,93 @@ long parseResultCode(char* result_value) {
     return -1;
 }
 
-// Function to parse a single value object
-char *parseObject(char* json, SHVOBJECT** shvobject_handle) {
+// Function to parse a value attribute
+char *parseObject(char* json, SHVOBJECT** shvobject_handle, SHVOBJECT* prev_shvobject) {
     // Parse JSON Body using the json functions, example format:
-    // {
-    //   "class": "complex_number",
-    //            "members": [
-    //    {
-    //        "name": "real",
-    //                "value": 3.2
-    //    },
-    //    {
-    //        "name": "imaginary",
-    //                "value": 4.5
-    //    }
     //
     // Note The value element can be a
     // - `string` ("string value")
     // - `number` (1234.56 - int or float)
     // - `boolean` (true/false)
     // - `binary` (base64 encoded - e.g. { "base64": "c3RyaW5nIGJpbmFyeSBkYXRh" }
-    // - `object` (I.e. an object member in this Object
+    // - `object` (I.e. an object member), e.g.
+    //   {
+    //     "class": "complex_number",
+    //              "members": [
+    //      {
+    //          "name": "real",
+    //                  "value": 3.2
+    //      },
+    //      {
+    //          "name": "imaginary",
+    //                  "value": 4.5
+    //      }
+    //    }
     // - `array` (an array of value types [value1, value2, ...])
     // - `null` (null for an empty value, although this use case is TBD)
-    //
-    // Note that the first { has already been skipped
 
-    // Loop round the object names (which can be in any order) and parse the values as they are found
+    // Create a new SHVOBJECT
+    *shvobject_handle = (SHVOBJECT*)malloc(sizeof(SHVOBJECT));
+    if (!(*shvobject_handle)) {
+        fprintf(stderr, "Memory allocation error\n");
+        return NULL;
+    }
+    (*shvobject_handle)->objnext = NULL;
+    (*shvobject_handle)->type = VALUE_NULL;
+    (*shvobject_handle)->typeName = NULL;
+    (*shvobject_handle)->value.string = NULL;
+    if (prev_shvobject) prev_shvobject->objnext = *shvobject_handle; // Link the new object to the previous object
 
+    // Work out what kind of object this is
+    char *string_value;
+    json = json_skip_whitespace(json);
+    if (*json == '"') {
+        // String
+        json_skip_string(json, &((*shvobject_handle)->value.string));
+        (*shvobject_handle)->type = VALUE_STRING;
+    }
+    else if (*json == '-' || *json == '.' || isdigit(*json)) {
+        // Number
+    }
+    else if (*json == '{') {
+        // Object or Binary
+    }
+    else if (*json == '[') {
+        // Array
+    }
+    else if (*json == 'n') {
+        // Possibly Null - so check for null
+        json = json_skip_null(json);
+        if (!json) {
+            fprintf(stderr, "Invalid value type\n");
+            return NULL;
+        }
+        (*shvobject_handle)->type = VALUE_NULL;
+    }
+    else if (*json == 't') {
+        // Possibly True - so check for true
+        json = json_skip_true(json);
+        if (!json) {
+            fprintf(stderr, "Invalid value type\n");
+            return NULL;
+        }
+        (*shvobject_handle)->type = VALUE_BOOL;
+        (*shvobject_handle)->value.boolean = 1;
+    }
+    else if (*json == 'f') {
+        // Possibly False - so check for false
+        json = json_skip_false(json);
+        if (!json) {
+            fprintf(stderr, "Invalid value type\n");
+            return NULL;
+        }
+        (*shvobject_handle)->type = VALUE_BOOL;
+        (*shvobject_handle)->value.boolean = 0;
+    }
+    else {
+        fprintf(stderr, "Invalid value type\n");
+        return NULL;
+    }
 
 }
 
@@ -600,4 +671,140 @@ char *json_skip_string(char *json, char **string) {
     if (*json != '"') return NULL; // No closing quote
     *json = '\0'; // Null terminate the string
     return json + 1;
+}
+
+// Function to skip a null token
+char *json_skip_null(char *json) {
+    // Skip the null token
+    if (strncmp(json, "null", 4) != 0) {
+        return NULL; // Not a null token
+    }
+    json += 4;
+
+    // Check the next character
+    if (*json == ' ' || *json == '\t' || *json == '\n' || *json == '\r' ||
+        *json == ']' || *json == '}' || *json == ',' || *json == '\0') {
+        return json;
+    }
+
+    return NULL; // Invalid character after null token
+}
+
+// Function to skip a true token
+char *json_skip_true(char *json) {
+    // Skip the true token
+    if (strncmp(json, "true", 4) != 0) {
+        return NULL; // Not a true token
+    }
+    json += 4;
+
+    // Check the next character
+    if (*json == ' ' || *json == '\t' || *json == '\n' || *json == '\r' ||
+        *json == ']' || *json == '}' || *json == ',' || *json == '\0') {
+        return json;
+    }
+
+    return NULL; // Invalid character after true token
+}
+
+// Function to skip a false token
+char *json_skip_false(char *json) {
+    // Skip the false token
+    if (strncmp(json, "false", 5) != 0) {
+        return NULL; // Not a false token
+    }
+    json += 5;
+
+    // Check the next character
+    if (*json == ' ' || *json == '\t' || *json == '\n' || *json == '\r' ||
+        *json == ']' || *json == '}' || *json == ',' || *json == '\0') {
+        return json;
+    }
+
+    return NULL; // Invalid character after false token
+}
+
+// Function to parse and skip a number
+char *json_skip_number(char *json, SHVVALUETYPE *type_handle, long *integer_handle, double *real_handle) {
+    // Parse and skip a nuumber (integer or float) setting the type_handle to the type
+    // and the integer_handle or real_handle to the value
+    // Return the position after the number (or NULL if the number is invalid)
+
+    char is_valid = 0;
+    char is_negative = 0;
+    *integer_handle = 0;
+    *real_handle = 0.0;
+    *type_handle = VALUE_INT;
+
+    // Parse the number
+    // Leading - sign
+    if (*json == '-') {
+        json++;
+        is_negative = 1;
+        is_valid = 1;
+    }
+    // Leading 0s
+    while (*json == '0') {
+        json++;
+        is_valid = 1;
+    }
+    // Digits
+    while (*json >= '0' && *json <= '9') {
+        *integer_handle = *integer_handle * 10 + (*json - '0');
+        *real_handle = *real_handle * 10.0 + (*json - '0');
+        json++;
+        is_valid = 1;
+    }
+    // Decimal point
+    if (*json == '.') {
+        json++;
+        *type_handle = VALUE_FLOAT;
+        double decimal = 0.1;
+        while (*json >= '0' && *json <= '9') {
+            *real_handle += (*json - '0') * decimal;
+            decimal *= 0.1;
+            json++;
+            is_valid = 1;
+        }
+    }
+    // Exponent
+    if (*json == 'e' || *json == 'E') {
+        json++;
+        *type_handle = VALUE_FLOAT;
+        int exponent = 0;
+        char is_negative_exponent = 0;
+        if (*json == '-') {
+            json++;
+            is_negative_exponent = 1;
+        }
+        else if (*json == '+') {
+            json++;
+        }
+        while (*json >= '0' && *json <= '9') {
+            exponent = exponent * 10 + (*json - '0');
+            json++;
+            is_valid = 1;
+        }
+        if (is_negative_exponent) {
+            *real_handle /= pow(10, exponent);
+        }
+        else {
+            *real_handle *= pow(10, exponent);
+        }
+    }
+
+    if (!is_valid) {
+        return NULL; // Invalid number
+    }
+
+    if (*type_handle == VALUE_INT) {
+        *real_handle = 0;
+        if (is_negative) *integer_handle = -*integer_handle;
+    }
+    else {
+        *integer_handle = 0;
+        if (is_negative) *real_handle = -*real_handle;
+    }
+
+    return json;
 }
