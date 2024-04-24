@@ -6,7 +6,7 @@ Welcome to the CREXX "SAA" API documentation. This document provides a comprehen
 "SAA" API, a superset of the REXX SAA API. The API is designed to facilitate interaction between REXX programs and the
 CREXX REXXSAA VM Server, a RESTful API server.
 
-The document covers the key structures used in the API, namely `SHVBLOCK` and `SHVOBJECT`, and their respective fields.
+The document covers the key structures used in the API, namely `SHVBLOCK` and `OBJBLOCK`, and their respective fields.
 It also provides an overview of the `RexxVariablePool` function, which serves as the interface to the REXX variable pool.
 
 In addition, the document discusses the C CREXXSAA Library, which communicates with the CREXX REXXSAA Server Component
@@ -131,21 +131,16 @@ The result could look like this.
       "result": "ok",
       "value": {
         "class": "complex_number",
-        "members": [
-          {
-            "name": "real",
-            "value": 3.2
-          },
-          {
-            "name": "imaginary",
-            "value": 4.5
-          }
-        ]
+        "members": {
+            "real": 3.2,
+            "imaginary": 4.5
+        }
       }
     }
   ]
 }
 ```
+
 ## SHVBLOCK Array Representation in JSON
 Request:
 ```json
@@ -171,32 +166,24 @@ The result could look like this.
       "result": "ok",
       "value": [
           {
-            "class": "complex_number",
-            "members": [
-              {
-                "name": "real",
-                "value": 3.2
-              },
-              {
-                "name": "imaginary",
-                "value": 4.5
+            "1": {
+              "class": "complex_number",
+              "members": {
+                "real": 3.2,
+                "imaginary": 4.5
               }
-            ]
+            }
           },
-          {
+        {
+          "2": {
             "class": "complex_number",
-            "members": [
-              {
-                "name": "real",
-                "value": 1.2
-              },
-              {
-                "name": "imaginary",
-                "value": 2.5
-              }
-            ]
+            "members": {
+              "real": 5.2,
+              "imaginary": 4.8
+            }
           }
-        ]
+        }
+      ]
     }
   ]
 }
@@ -210,7 +197,7 @@ The value element can be a
 - `binary` (base64 encoded - See Binary Representation, following)
 - `object` (See REXX Object Representation, following)
 - `array` (an array of value types [value1, value2, ...])
-- `null` (null for an empty value, although this use case is TBD)
+- `null` (null for an empty value)
 
 ## Binary Representation
 The binary representation is a JSON object with a "base64" field with the encoded binary data. 
@@ -240,16 +227,10 @@ Here's an example of how a REXX object is represented in JSON:
 ```json
 {
     "class": "complex_number",
-    "members": [
-        {
-            "name": "real",
-            "value": 3.2
-        },
-        {
-            "name": "imaginary",
-            "value": 4.5
-        }
-    ]
+    "members": {
+       "real": 3.2,
+       "imaginary": 4.5
+    }
 }
 ```
 
@@ -269,28 +250,19 @@ representation will reflect this. This is nested example of a result.
     "result": "ok",
     "value": {
         "class": "nested_object",
-        "members": [
-        {
-            "name": "nested_member",
-            "value": {
+        "members": {
+            "nested_member": {
                 "class": "nested_object",
-                "members": [
-                {
-                    "name": "nested_member",
-                    "value": {
+                "members": {
+                    "nested_member": {
                         "class": "nested_object",
-                        "members": [
-                        {
-                            "name": "nested_member",
-                            "value": "nested_value"
+                        "members": {
+                            "nested_member": "nested_value"
                         }
-                        ]
                     }
                 }
-                ]
             }
         }
-        ]
     }
     }
 ]
@@ -305,112 +277,7 @@ Each object in the `serviceBlocks` array has `name`, `request`, and `result` fie
 can be a string, number, boolean, binary data, object, array, or null. The object and array types are defined
 recursively to allow for nested objects and collections to any depth.
 
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "serviceBlocks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "request": {
-            "type": "string",
-            "enum": ["set", "fetch", "drop", "nextv", "priv", "syset", "syfet", "sydro", "sydel"]
-          },
-          "result": {
-            "type": "string",
-            "enum": ["ok", "newv", "lvar", "trunc", "badn", "memfl", "badf", "noavl", "notex"]
-          },
-          "value": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "base64": {
-                    "type": "string"
-                  }
-                },
-                "required": ["base64"]
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "class": {
-                    "type": "string"
-                  },
-                  "members": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "name": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "oneOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "object",
-                              "properties": {
-                                "base64": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": ["base64"]
-                            },
-                            {
-                              "$ref": "#"
-                            }
-                          ]
-                        }
-                      },
-                      "required": ["name", "value"]
-                    }
-                  }
-                },
-                "required": ["class", "members"]
-              },
-              {
-                "type": "array",
-                "items": {
-                  "$ref": "#/properties/serviceBlocks/items/properties/value/oneOf/3"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": ["name", "request"]
-      }
-    }
-  },
-  "required": ["serviceBlocks"]
-}
-```
+TODO - Add Schema here
 
 ## HTTP Transport
 
@@ -459,7 +326,7 @@ The `crexxsaa.h` file defines the C API for the CREXX "SAA" API. This API is a s
 designed to be used with the CREXX REXXSAA VM Server, a RESTful API server that allows REXX programs to interact with 
 the server to set and retrieve variables, execute REXX commands, and perform other operations.
 
-The `crexxsaa.h` file defines two main structures: `SHVBLOCK` and `SHVOBJECT`.
+The `crexxsaa.h` file defines two main structures: `SHVBLOCK` and `OBJBLOCK`.
 
 ### SHVBLOCK
 
@@ -468,7 +335,7 @@ The `SHVBLOCK` structure is used for sharing variable data. It contains the foll
 - `shvnext`: Pointer to the next `SHVBLOCK`.
 - `shvname`: Null-terminated string representing the variable name.
 - `shvvalue`: Null-terminated string representing the variable value. This field is used for backward compatibility.
-- `shvobject`: Pointer to an array of `SHVOBJECT` structures representing nested objects or collections. 
+- `shvobject`: Pointer to an array of `OBJBLOCK` structures representing nested objects or collections. 
 Only one of `shvvalue` or `shvobject` should be used.
 - `shvcode`: Function code.
 - `shvret`: Return code.
@@ -479,16 +346,24 @@ for fetching a variable value, and `RXSHV_DROP` for dropping a variable.
 The `shvret` field is used to store the return code of a function, indicating the status of the function, including 
 any errors that occurred.
 
-### SHVOBJECT
+### OBJBLOCK
 
-The `SHVOBJECT` structure is used for representing nested objects or collections. It contains the following fields:
+The `OBJBLOCK` structure is used for representing nested objects or collections. It contains the following fields:
 
-- `type`: Type of the value, which can be a string, binary data, integer, float, bool, null, array or another `SHVOBJECT`.
-- `typeName`: Name of the type, used only for `SHVOBJECT` type values.
-- `value`: Union representing the value, which can be a string, binary data, integer, float, bool, or an array of `SHVOBJECT` structures.
+- `type`: Type of the value, see VALUE TYPES.
+- `typeName`: Name of the type, used only for `OBJBLOCK` type values.
+- `value`: Union representing the value, which can be a string, binary data, integer, float, bool, or an array of `MEMBLOCK` structures.
 
 The `crexxsaa.h` file also provides the `RexxVariablePool` function, which serves as the interface to the REXX variable pool. 
 This function takes a pointer to a `SHVBLOCK` structure and returns a status code.
+
+### MEMBLOCK
+
+The `MEMBLOCK` structure is used for representing an object member. It contains the following fields:
+
+- `membernext`: Pointer to the next `MEMBLOCK`.
+- `membername`: Name of the member.
+- `membervalue`: Pointer to an `OBJBLOCK` structure representing the value of the member.
 
 ## C CREXXSAA Library
 

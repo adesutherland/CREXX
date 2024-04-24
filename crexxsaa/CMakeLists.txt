@@ -22,3 +22,9 @@ target_link_libraries(httpserver event)
 add_executable(httpclient httpclient.c
         json.c
         httpclient.h)
+
+# Create an executable for the test
+add_executable(test_parseJSON test_parseJSON.c json.c)
+
+# Add the test
+add_test(NAME test_parseJSON COMMAND test_parseJSON)

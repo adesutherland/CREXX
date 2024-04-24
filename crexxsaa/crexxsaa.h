@@ -24,24 +24,35 @@ extern "C" {
 #include <string.h> // For strlen()
 
 /* Define SHVBLOCK and related structure for sharing variable data */
+typedef struct SHVBLOCK SHVBLOCK;
+typedef struct OBJBLOCK OBJBLOCK;
+typedef struct MEMBLOCK MEMBLOCK;
 
-/* SVHVALLUETYPE - Type of the value */
-typedef enum {
+/* VALUETYPE - Type of the value */
+typedef enum VALUETYPE {
     VALUE_STRING = 0,
-    VALUE_NULL, // For a null value (use case for this TBD)
+    VALUE_NULL,
     VALUE_BINARY,
     VALUE_INT,
     VALUE_FLOAT,
     VALUE_BOOL,
     VALUE_ARRAY, // For Arrays
     VALUE_OBJECT // For nested objects
-} SHVVALUETYPE;
+} VALUETYPE;
 
-/* SHVOBJECT - Structure for nested objects */
-typedef struct SHVOBJECT {
-    struct SHVOBJECT *objnext;    // Pointer to next SHVOBJECT
-    SHVVALUETYPE type;            // Type of the value
-    char* typeName;               // Name of the type (used for VALUE_OBJECT only)
+/* SHVBLOCK - Structure for sharing variable data */
+struct SHVBLOCK {
+    SHVBLOCK *shvnext;            // Pointer to next SHVBLOCK
+    char *shvname;                // Variable name (null-terminated)
+    OBJBLOCK *shvobject;          // Object value
+    unsigned long shvcode;        // Function code
+    unsigned long shvret;         // Return code
+};
+
+/* OBJBLOCK - Structure for nested objects */
+struct OBJBLOCK {
+    VALUETYPE type;               // Type of the object
+    char* typename;               // Name of the object type (used for type == VALUE_OBJECT only)
     union {
         char* string;             // String value
         struct {                  // Binary data
@@ -51,20 +62,16 @@ typedef struct SHVOBJECT {
         long integer;             // Integer value
         double real;              // Float value
         char boolean;             // Boolean value (0 or 1)
-        struct SHVOBJECT* member; // Pointer to a linked list of child objects (members)
+        MEMBLOCK* members;        // Pointer to a linked list of members (type == VALUE_OBJECT) or array elements (type == VALUE_ARRAY)
     } value;
-} SHVOBJECT;
+};
 
-/* SHVBLOCK - Structure for sharing variable data */
-typedef struct SHVBLOCK {
-    struct SHVBLOCK *shvnext;     // Pointer to next SHVBLOCK
-    char *shvname;                // Variable name (null-terminated)
-    char *shvvalue;               // For null terminated string values (backward compatibility)
-    SHVOBJECT* shvobject;            // For SHVOBJECT type value including nested members
-                                  // Note only one of shvvalue or shvobject should be used
-    unsigned long shvcode;        // Function code
-    unsigned long shvret;         // Return code
-} SHVBLOCK;
+/* MEMBLOCK - Structure for linked list of members */
+struct MEMBLOCK {
+    MEMBLOCK *membernext; // Pointer to next SHVMEMBER member
+    char* membername;             // Name of the member
+    OBJBLOCK* memberobject;       // Pointer to an objects
+};
 
 /* Define function codes for SHVBLOCK */
 #define RXSHV_SET      0x0001    /* Set variable value */
