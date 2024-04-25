@@ -27,6 +27,7 @@ char *json_next_object(char *json);
 char *json_skip_block(char *json);
 char *json_skip_colon(char *json);
 char *json_skip_string(char *json, char **string);
+char *json_peek_string(char *json, char *string);
 char *json_skip_null(char *json);
 char *json_skip_true(char *json);
 char *json_skip_false(char *json);
@@ -477,12 +478,6 @@ char *parseObject(char* json, OBJBLOCK* shvobject) {
             MEMBLOCK *prev_object = NULL;
             MEMBLOCK *object;
             while (*json != '}') {
-                // Skip to the start of the object
-                json = json_next_object(json);
-                if (!json) {
-                    fprintf(stderr, "Invalid JSON format - no start of object in members\n");
-                    return NULL;
-                }
 
                 // Create the MEMBLOCK
                 object = (MEMBLOCK*)malloc(sizeof(MEMBLOCK));
@@ -534,7 +529,12 @@ char *parseObject(char* json, OBJBLOCK* shvobject) {
             fprintf(stderr, "Invalid attribute\n");
             return NULL;
         }
-
+        // Skip to the next attribute or the end of the block
+        json = json_skip_whitespace(json);
+        // If the next character is a comma, skip it
+        if (*json == ',') json++;
+        // Skip any whitespace
+        json = json_skip_whitespace(json);
     }
 
     // Check for required attributes
@@ -801,6 +801,20 @@ char *json_skip_string(char *json, char **string) {
     return json + 1;
 }
 
+// Function to peak ahead for a string - returns null if not found or the start of the position after the string
+char *json_peak_string(char *json, char *string) {
+    json = json_skip_whitespace(json);
+    if (*json != '"') return NULL;
+    json++;
+    while (*json && *json != '"') {
+        if (*json != *string) return NULL;
+        json++;
+        string++;
+    }
+    if (*json != '"') return NULL; // No closing quote
+    return json + 1;
+}
+
 // Function to skip a null token
 char *json_skip_null(char *json) {
     // Skip the null token
@@ -954,18 +968,12 @@ int json_peek_binary(char *json) {
     }
 
     // Skip to the base64 attribute
-    // todo - we need to peek for a string here (not mess with the json buffer)
-    json = json_skip_string(json, &attribute);
+    json = json_peak_string(json, "base64");
     if (!json) {
         return 0;
     }
-    if (strcmp(attribute, "base64") != 0) {
-        return 0;
-    }
-    // We need to fix the attribute sting (json buffer) as it has been null terminated by putting the " back
-    *(json-1) = '"';
 
-    return 1; // It might be a binary object
+    return 1; // It "might" be a binary object
 }
 
 // Function to skip/parse a binary object

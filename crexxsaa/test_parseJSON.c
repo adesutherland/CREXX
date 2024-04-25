@@ -89,6 +89,21 @@ void test_parseJSON() {
     assert(shvblock->shvobject->value.real == 123.456);
     FreeRexxVariablePool(shvblock);
 
+    // Test with a valid CREXX serviceBlocks JSON string with a real value with an exponent.
+    json = "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":1.23e+8}]}";
+    json_copy = malloc(strlen(json) + 1);
+    strcpy(json_copy, json);
+    result = parseJSON(json_copy, &shvblock);
+    assert(result == 0);
+    assert(shvblock != NULL);
+    assert(strcmp(shvblock->shvname, "test") == 0);
+    assert(shvblock->shvcode == RXSHV_SET);
+    assert(shvblock->shvret == RXSHV_OK);
+    assert(shvblock->shvobject->type == VALUE_FLOAT);
+    assert(shvblock->shvobject->value.real == 1.23e+8);
+    FreeRexxVariablePool(shvblock);
+
+
     // Test with a valid CREXX serviceBlocks JSON string with a boolean value.
     json = "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":true}]}";
     json_copy = malloc(strlen(json) + 1);
@@ -143,9 +158,22 @@ void test_parseJSON() {
     //     "members": {
     //        "real": 3.2,
     //        "imaginary": 4.5
-    //    }
+    //     }
     // }
-    json = "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"class\":\"complex_number\",\"members\":{\"real\":3.2,\"imaginary\":4.5}}}]}";
+    json = "{"
+           "\"serviceBlocks\":["
+                "{\"name\":\"test\","
+                "\"request\":\"set\","
+                "\"result\":\"ok\","
+                "\"value\":{"
+                        "\"class\":\"complex_number\","
+                        "\"members\":{"
+                            "\"real\":3.2,"
+                            "\"imaginary\":4.5"
+                        "}"
+                "}"
+           "]"
+           "}";
     json_copy = malloc(strlen(json) + 1);
     strcpy(json_copy, json);
     result = parseJSON(json_copy, &shvblock);
@@ -154,22 +182,20 @@ void test_parseJSON() {
     assert(strcmp(shvblock->shvname, "test") == 0);
     assert(shvblock->shvcode == RXSHV_SET);
     assert(shvblock->shvret == RXSHV_OK);
-    assert(shvblock->shvobject->type == VALUE_OBJECT);
-    assert(strcmp(shvblock->shvobject->value.members->membername, "class") == 0);
-    assert(shvblock->shvobject->value.members->memberobject->type == VALUE_STRING);
-    assert(strcmp(shvblock->shvobject->value.members->memberobject->value.string, "complex_number") == 0);
-    assert(strcmp(shvblock->shvobject->value.members->membernext->membername, "members") == 0);
-    assert(shvblock->shvobject->value.members->membernext->memberobject->type == VALUE_OBJECT);
-    assert(strcmp(shvblock->shvobject->value.members->membernext->memberobject->value.members->membername, "real") == 0);
-    assert(shvblock->shvobject->value.members->membernext->memberobject->value.members->memberobject->type == VALUE_FLOAT);
-    assert(shvblock->shvobject->value.members->membernext->memberobject->value.members->memberobject->value.real == 3.2);
-    assert(strcmp(shvblock->shvobject->value.members->membernext->memberobject->value.members->membernext->membername, "imaginary") == 0);
-    assert(shvblock->shvobject->value.members->membernext->memberobject->value.members->membernext->memberobject->type == VALUE_FLOAT);
-    assert(shvblock->shvobject->value.members->membernext->memberobject->value.members->membernext->memberobject->value.real == 4.5);
+    OBJBLOCK *object = shvblock->shvobject;
+    assert(object->type == VALUE_OBJECT);
+    assert(strcmp(object->typename, "complex_number") == 0);
+    assert(object->value.members != NULL);
+    MEMBLOCK *members = object->value.members;
+    assert(strcmp(members->membername, "real") == 0);
+    assert(members->memberobject->type == VALUE_FLOAT);
+    assert(members->memberobject->value.real == 3.2);
+    assert(members->membernext != NULL);
+    members = members->membernext;
+    assert(strcmp(members->membername, "imaginary") == 0);
+    assert(members->memberobject->type == VALUE_FLOAT);
+    assert(members->memberobject->value.real == 4.5);
     FreeRexxVariablePool(shvblock);
-
-
-
 
 }
 
