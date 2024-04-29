@@ -54,6 +54,11 @@ SHVBLOCK* execute_test(char* test_id, int expected_result, int error_position, c
             return NULL;
         }
     }
+    // If there was an expected error the SHVBLOCK structure may or may not be NULL - make it always NULL for consistency
+    if (result != PARSE_ERROR_OK) {
+        if (shvblock) FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
+        shvblock = NULL;
+    }
     return shvblock;
 }
 
@@ -148,8 +153,7 @@ void test_parseJSON() {
     // Test with a valid CREXX serviceBlocks JSON string with an invalid shvcode
     shvblock = execute_test("Shvcode Invalid Test", PARSE_ERROR_INVALID_REQUEST, 44,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"bad\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
-    assert(shvblock != NULL); // Ensure a SHVBLOCK was returned (if the position is correct execute_test will return NULL)
-    FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure
+    assert(shvblock == NULL); // Ensure a SHVBLOCK is NULL
 
     // Tests to test all valid and an invalid shvret
 
@@ -219,8 +223,7 @@ void test_parseJSON() {
     // Test with a valid CREXX serviceBlocks JSON string with an invalid shvret
     shvblock = execute_test("Shvret Invalid Test", PARSE_ERROR_INVALID_RESULT, 59,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"badret\",\"value\":\"Hello, World!\"}]}");
-    assert(shvblock != NULL); // Ensure a SHVBLOCK was returned (if the position is correct execute_test will return NULL)
-    FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure
+    assert(shvblock == NULL); // Ensure a SHVBLOCK is NULL
 
     // Tests with a valid CREXX serviceBlocks JSON strings that includes all possible types of values (string, number, boolean, binary, object, array, null).
 
@@ -533,24 +536,123 @@ void test_parseJSON() {
                             "{\"serviceBlocks\":[\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_SERVICE_BLOCKS).
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_SERVICE_BLOCKS)", PARSE_ERROR_EXPECTING_SERVICE_BLOCKS, 2,
+                            "{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_STRING)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_STRING)", PARSE_ERROR_EXPECTING_STRING, 26,
+                            "{\"serviceBlocks\":[{\"name\":test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
     // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_COLON).
     shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_COLON)", PARSE_ERROR_EXPECTING_COLON, 25,
                             "{\"serviceBlocks\":[{\"name\"\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
-    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_SERVICE_BLOCKS).
-    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_SERVICE_BLOCKS)", PARSE_ERROR_EXPECTING_SERVICE_BLOCKS, 18,
-                            "{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}");
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_ARRAY)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_ARRAY)", PARSE_ERROR_EXPECTING_ARRAY, 17,
+                            "{\"serviceBlocks\":{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_CLOSE_CURLY)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTING_CLOSE_CURLY)", PARSE_ERROR_EXPECTING_CLOSE_CURLY, 92,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":[{\"1\":\"Hello, World!\"]}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_NAME)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_NAME)", PARSE_ERROR_DUPLICATE_NAME, 34,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
-    // Tests with a JSON string that includes invalid values (e.g., a string where a number is expected).
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_REQUEST)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_REQUEST)", PARSE_ERROR_DUPLICATE_REQUEST, 50,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
-    // Tests with a JSON string that includes duplicate attributes.
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_REQUEST)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_REQUEST)", PARSE_ERROR_INVALID_REQUEST, 44,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"bad\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
-    // Tests with a JSON string that includes missing required attributes.
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_RESULT)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_RESULT)", PARSE_ERROR_DUPLICATE_RESULT, 64,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_RESULT)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_RESULT)", PARSE_ERROR_INVALID_RESULT, 59,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"badret\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_VALUE)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_VALUE)", PARSE_ERROR_DUPLICATE_VALUE, 88,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_ATTRIBUTE)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_ATTRIBUTE)", PARSE_ERROR_INVALID_ATTRIBUTE, 64,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"bad\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_MISSING_NAME)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_MISSING_NAME)", PARSE_ERROR_MISSING_NAME, 72,
+                            "{\"serviceBlocks\":[{\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_CLASS) - i.e. to class names in an object
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_CLASS)", PARSE_ERROR_DUPLICATE_CLASS, 98,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"class\":\"complex_number\",\"class\":\"complex_number\",\"members\":{\"real\":3.2,\"imaginary\":4.5}} }]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_DUPLICATE_MEMBERS) - i.e. two members blocks in an object
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_DUPLICATE_MEMBERS)", PARSE_ERROR_DUPLICATE_MEMBERS, 137,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"class\":\"complex_number\",\"members\":{\"real\":3.2,\"imaginary\":4.5},\"members\":{\"real\":3.2,\"imaginary\":4.5}} }]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_MISSING_CLASS) - i.e. missing class name in an object
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_MISSING_CLASS)", PARSE_ERROR_MISSING_CLASS, 110,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"members\":{\"real\":3.2,\"imaginary\":4.5}} }]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_MISSING_MEMBERS) - i.e. missing members block in an object
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_MISSING_MEMBERS)", PARSE_ERROR_MISSING_MEMBERS, 96,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"class\":\"complex_number\"} }]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_TYPE)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_TYPE)", PARSE_ERROR_INVALID_TYPE, 71,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":bad}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_UNEXPECTED_TOKEN) e.g. using "nuller" instead of "null"
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_UNEXPECTED_TOKEN)", PARSE_ERROR_UNEXPECTED_TOKEN, 71,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":nuller}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTING_BASE64) - i.e. missing base64 attribute in a binary object
+    // Note this can't be checked because the error code cannot be returned in the current implementation - it would assume an invalid object type
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_BASE64)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_BASE64)", PARSE_ERROR_INVALID_BASE64, 82,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":{\"base64\":\"-c3Rya-W5nIGJpbmFyeSBkYXRh\"}}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_INVALID_STRING) - i.e. invalid escape sequence
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_INVALID_STRING)", PARSE_ERROR_INVALID_STRING, 71,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\\x\"}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY)", PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY, 86,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
+
+    // Test with a JSON string that is not properly formatted (PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY)
+    shvblock = execute_test("Invalid JSON Test (PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY)", PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY, 93,
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":[{\"1\":\"Hello, World!\"}}]}");
+    assert(shvblock == NULL); // Ensure a SHVBLOCK was not returned
 
 }
 

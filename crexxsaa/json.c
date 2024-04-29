@@ -97,15 +97,16 @@ char* error_message(int error_code) {
             return "Invalid type";
         case PARSE_ERROR_UNEXPECTED_TOKEN:
             return "Unexpected token";
-        case PARSE_ERROR_INVALID_NUMBER:
-            return "Invalid number";
         case PARSE_ERROR_EXPECTING_BASE64:
             return "Expecting base64";
         case PARSE_ERROR_INVALID_BASE64:
             return "Invalid base64";
         case PARSE_ERROR_INVALID_STRING:
             return "Invalid string";
-
+        case PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY:
+            return "Expected comma or closing curly brace";
+        case PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY:
+            return "Expected comma or closing array";
         default:
             return "Unknown error";
     }
@@ -296,11 +297,25 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
 
         // Skip to the next object or the end of the array
         json_skip_whitespace(&json);
-        // If the next character is a comma, skip it
-        if (*json == ',') json++;
+        if (*json != ']') { // If not the end of the array
+            // If the next character is a comma, skip it
+            if (*json == ',') json++;
+            else {
+                rc = PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY;
+                if (error) {
+                    error->error_code = rc;
+                    error->position = json - start_json;
+                    error->message = error_message(rc);
+                }
+                return rc;
+            }
+        }
         // Skip any whitespace
         json_skip_whitespace(&json);
     }
+    json++; // Skip the end of the array
+
+    json_skip_block(&json); // skip end of the blocks
 
     if (error) {
         error->error_code = PARSE_ERROR_OK;
@@ -341,6 +356,13 @@ int parseShvblock(char** json, SHVBLOCK* current_shvblock) {
 
         // Compare the attribute and set the corresponding SHVBLOCK value
         if (strcmp(attribute, "name") == 0) {
+            // Check for duplicate
+            if (has_name) {
+                // Move the pointer back to the start of the attribute
+                *json -= strlen(attribute) + 1;
+                return PARSE_ERROR_DUPLICATE_NAME;
+            }
+            has_name = 1;
             // Skip to the value string
             rc = json_skip_colon(json);
             if (rc != PARSE_ERROR_OK) {
@@ -350,11 +372,6 @@ int parseShvblock(char** json, SHVBLOCK* current_shvblock) {
             if (rc != PARSE_ERROR_OK) {
                 return rc;
             }
-            // Check for duplicate
-            if (has_name) {
-                return PARSE_ERROR_DUPLICATE_NAME;
-            }
-            has_name = 1;
             // Set the name
             current_shvblock->shvname = value;
 
@@ -442,8 +459,11 @@ int parseShvblock(char** json, SHVBLOCK* current_shvblock) {
 
         // Skip to the next attribute or the end of the block
         json_skip_whitespace(json);
-        // If the next character is a comma, skip it
-        if (*(*json) == ',') (*json)++;
+        if (**json != '}') { // If not the end of the members
+            // If the next character is a comma, skip it
+            if (**json == ',') (*json)++;
+            else return PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY;
+        }
         // Skip any whitespace
         json_skip_whitespace(json);
     }
@@ -565,6 +585,13 @@ int parseObject(char** json, OBJBLOCK* shvobject) { // NOLINT(misc-no-recursion)
 
         // Compare the attribute and set the corresponding SHVBLOCK value
         if (strcmp(attribute, "class") == 0) {
+            // Check for duplicate
+            if (has_class) {
+                // Move the pointer back to the start of the attribute
+                *json -= strlen(attribute) + 1;
+                return PARSE_ERROR_DUPLICATE_CLASS;
+            }
+            has_class = 1;
             // Skip to the value string
             rc = json_skip_colon(json);
             if (rc != PARSE_ERROR_OK) {
@@ -574,17 +601,14 @@ int parseObject(char** json, OBJBLOCK* shvobject) { // NOLINT(misc-no-recursion)
             if (rc != PARSE_ERROR_OK) {
                 return rc;
             }
-            // Check for duplicate
-            if (has_class) {
-                return PARSE_ERROR_DUPLICATE_CLASS;
-            }
-            has_class = 1;
             // Set the class
             shvobject->typename = value;
 
         } else if (strcmp(attribute, "members") == 0) {
             // Check for duplicate
             if (has_members) {
+                // Move the pointer back to the start of the attribute
+                *json -= strlen(attribute) + 1;
                 return PARSE_ERROR_DUPLICATE_MEMBERS;
             }
             has_members = 1;
@@ -642,8 +666,11 @@ int parseObject(char** json, OBJBLOCK* shvobject) { // NOLINT(misc-no-recursion)
 
                 // Skip to the next member or the end of the members
                 json_skip_whitespace(json);
-                // If the next character is a comma, skip it
-                if (**json == ',') (*json)++;
+                if (**json != '}') { // If not the end of the members
+                    // If the next character is a comma, skip it
+                    if (**json == ',') (*json)++;
+                    else return PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY;
+                }
                 // Skip any whitespace
                 json_skip_whitespace(json);
             }
@@ -657,8 +684,11 @@ int parseObject(char** json, OBJBLOCK* shvobject) { // NOLINT(misc-no-recursion)
         }
         // Skip to the next attribute or the end of the block
         json_skip_whitespace(json);
-        // If the next character is a comma, skip it
-        if (**json == ',') (*json)++;
+        if (**json != '}') { // If not the end of the object
+            // If the next character is a comma, skip it
+            if (**json == ',') (*json)++;
+            else return PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY;
+        }
         // Skip any whitespace
         json_skip_whitespace(json);
     }
@@ -820,8 +850,11 @@ int parseValue(char** json, OBJBLOCK** shvobject_handle) { // NOLINT(misc-no-rec
 
             // Skip to the next object or the end of the array
             json_skip_whitespace(json);
-            // If the next character is a comma, skip it
-            if (**json == ',') (*json)++;
+            if (**json != ']') { // If not the end of the array
+                // If the next character is a comma, skip it
+                if (**json == ',') (*json)++;
+                else return PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY;
+            }
             // Skip any whitespace
             json_skip_whitespace(json);
         }
@@ -1066,6 +1099,8 @@ int json_skip_null(char **json) {
         **json == ']' || **json == '}' || **json == ',' || **json == '\0') {
         return PARSE_ERROR_OK;
     }
+    // Move the pointer back to the start of the null token
+    (*json) -= 4;
 
     return PARSE_ERROR_UNEXPECTED_TOKEN; // Invalid character after null token
 }
@@ -1110,7 +1145,6 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     // and the integer_handle or real_handle to the value
     // Return the position after the number (or NULL if the number is invalid)
 
-    char is_valid = 0;
     char is_negative = 0;
     *integer_handle = 0;
     *real_handle = 0.0;
@@ -1121,19 +1155,16 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     if (**json == '-') {
         (*json)++;
         is_negative = 1;
-        is_valid = 1;
     }
     // Leading 0s
     while (**json == '0') {
         (*json)++;
-        is_valid = 1;
     }
     // Digits
     while (**json >= '0' && **json <= '9') {
         *integer_handle = *integer_handle * 10 + (**json - '0');
         *real_handle = *real_handle * 10.0 + (**json - '0');
         (*json)++;
-        is_valid = 1;
     }
     // Decimal point
     if (**json == '.') {
@@ -1144,7 +1175,6 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
             *real_handle += (**json - '0') * decimal;
             decimal *= 0.1;
             (*json)++;
-            is_valid = 1;
         }
     }
     // Exponent
@@ -1163,7 +1193,6 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
         while (**json >= '0' && **json <= '9') {
             exponent = exponent * 10 + (**json - '0');
             (*json)++;
-            is_valid = 1;
         }
         if (is_negative_exponent) {
             *real_handle /= pow(10, exponent);
@@ -1171,10 +1200,6 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
         else {
             *real_handle *= pow(10, exponent);
         }
-    }
-
-    if (!is_valid) {
-        return PARSE_ERROR_INVALID_NUMBER; // Invalid number
     }
 
     if (*type_handle == VALUE_INT) {
@@ -1224,6 +1249,7 @@ int json_skip_binary(char **json, char **binary_handle, size_t *length_handle) {
     *binary_handle = NULL;
     *length_handle = 0;
     int rc;
+    int len;
 
     // Skip to the start of the object
     rc = json_next_object(json);
@@ -1236,6 +1262,8 @@ int json_skip_binary(char **json, char **binary_handle, size_t *length_handle) {
     if (rc != PARSE_ERROR_OK) {
         return rc;
     }
+
+    // Note this error is never returned as it should have been is checked in the peek function
     if (strcmp(attribute, "base64") != 0) {
         return PARSE_ERROR_EXPECTING_BASE64;
     }
@@ -1250,18 +1278,21 @@ int json_skip_binary(char **json, char **binary_handle, size_t *length_handle) {
         return rc;
     }
 
+    // Decode the base64 string into binary, in situ in the base64 string as it will be shorter, setting the *length_handle
+    // to the length of the binary data
+    *binary_handle = value;
+    len = base64_decode(value);
+    if (len < 0) { // base64_decode returns -1 if there is an error
+        // Move the pointer back to the start of the value
+        *json -= strlen(value) + 1;
+        return PARSE_ERROR_INVALID_BASE64;
+    }
+    *length_handle = (size_t)len;
+
     // Skip to the end of the object
     rc = json_skip_block(json);
     if (rc != PARSE_ERROR_OK) {
         return rc;
-    }
-
-    // Decode the base64 string into binary, in situ in the base64 string as it will be shorter, setting the *length_handle
-    // to the length of the binary data
-    *binary_handle = value;
-    *length_handle = base64_decode(value);
-    if (*length_handle < 0) { // base64_decode returns -1 if there is an error
-        return PARSE_ERROR_INVALID_BASE64;
     }
 
     return PARSE_ERROR_OK;
@@ -1277,9 +1308,15 @@ int base64_decode(char *buffer) {
     // This initializes the base64 decoding table - this could be moved outside the function for efficiency but
     // it is only done once per call to the function so it is not a big overhead
     int i;
-    int dtable[256] = {-1};
+    int dtable[256];
+    // Initialize the table
+    // Make each entry -1 to indicate that it is not a valid base64 character
+    for (i = 0; i < 256; i++)
+        dtable[i] = -1;
+    // Set the valid base64 characters
     for (i = 0; i < 64; i++)
         dtable[(uint8_t) base64_table[i]] = (uint8_t) i;
+    // Set the padding character
     dtable[(uint8_t) '='] = 0;
 
     char *src = buffer;
