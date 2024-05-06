@@ -167,7 +167,7 @@ SHVBLOCK* CreateShvBlock(SHVBLOCK* previous, char* JsonBuffer) {
 }
 
 /* Free the SHVBLOCK Variable Pool Linked List */
-void FreeRexxVariablePool(SHVBLOCK *shvblock) {
+void FreeRexxVariablePoolResult(SHVBLOCK *shvblock) {
     SHVBLOCK *shvblock_next;
     SHVBUFFER *shvbuffer;
 
@@ -1147,8 +1147,8 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
 
     char is_negative = 0;
     *integer_handle = 0;
-    *real_handle = 0.0;
     *type_handle = VALUE_INT;
+    char *value = *json;  // Remember the start of the value
 
     // Parse the number
     // Leading - sign
@@ -1163,17 +1163,13 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     // Digits
     while (**json >= '0' && **json <= '9') {
         *integer_handle = *integer_handle * 10 + (**json - '0');
-        *real_handle = *real_handle * 10.0 + (**json - '0');
         (*json)++;
     }
     // Decimal point
     if (**json == '.') {
         (*json)++;
         *type_handle = VALUE_FLOAT;
-        double decimal = 0.1;
         while (**json >= '0' && **json <= '9') {
-            *real_handle += (**json - '0') * decimal;
-            decimal *= 0.1;
             (*json)++;
         }
     }
@@ -1181,24 +1177,14 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     if (**json == 'e' || **json == 'E') {
         (*json)++;
         *type_handle = VALUE_FLOAT;
-        int exponent = 0;
-        char is_negative_exponent = 0;
         if (**json == '-') {
             (*json)++;
-            is_negative_exponent = 1;
         }
         else if (**json == '+') {
             (*json)++;
         }
         while (**json >= '0' && **json <= '9') {
-            exponent = exponent * 10 + (**json - '0');
             (*json)++;
-        }
-        if (is_negative_exponent) {
-            *real_handle /= pow(10, exponent);
-        }
-        else {
-            *real_handle *= pow(10, exponent);
         }
     }
 
@@ -1208,7 +1194,9 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     }
     else {
         *integer_handle = 0;
-        if (is_negative) *real_handle = -*real_handle;
+        // Use strtod() for conversion as it handles edge cases & rounding better than the above code would
+        // The above code has checked that the format is valid, so this should not fail
+        *real_handle = strtod(value, NULL);
     }
 
     return PARSE_ERROR_OK;

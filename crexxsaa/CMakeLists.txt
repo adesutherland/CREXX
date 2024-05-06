@@ -15,16 +15,22 @@ add_executable(server server.c
 add_executable(client client.c
         common.h
         common.c
-        crexxsaa.h)
+        crexxsaa.h
+        jsnemit.c
+        jsnparse.c)
 
 add_executable(httpserver httpserver.c)
 target_link_libraries(httpserver event)
 add_executable(httpclient httpclient.c
-        json.c
+        jsnparse.c
         httpclient.h)
 
 # Create an executable for the test
-add_executable(test_parseJSON test_parseJSON.c json.c)
+add_executable(test_parseJSON test_parseJSON.c jsnparse.c)
+add_executable(test_emitJSON test_emitJSON.c jsnemit.c)
+add_executable(test_emitparseJSON test_emitparseJSON.c jsnemit.c jsnparse.c)
 
 # Add the test
 add_test(NAME test_parseJSON COMMAND test_parseJSON)
+add_test(NAME test_emitJSON COMMAND test_emitJSON)
+add_test(NAME test_emitparseJSON COMMAND test_emitparseJSON)

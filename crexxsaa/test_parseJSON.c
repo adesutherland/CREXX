@@ -35,7 +35,7 @@ SHVBLOCK* execute_test(char* test_id, int expected_result, int error_position, c
         printf("  JSON: %.*s\n", (int)(end - start), json + start);
         // Print a pointer to the error position
         printf("         %*s\n\n", (int)(error.position - start), "^");
-        if (shvblock) FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
+        if (shvblock) FreeRexxVariablePoolResult(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
         return NULL;
     }
     else if (error_position > -1) {
@@ -50,13 +50,13 @@ SHVBLOCK* execute_test(char* test_id, int expected_result, int error_position, c
             printf("  JSON: %.*s\n", (int)(end - start), json + start);
             // Print a pointer to the error position
             printf("         %*s\n\n", (int)(error.position - start), "^");
-            if (shvblock) FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
+            if (shvblock) FreeRexxVariablePoolResult(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
             return NULL;
         }
     }
     // If there was an expected error the SHVBLOCK structure may or may not be NULL - make it always NULL for consistency
     if (result != PARSE_ERROR_OK) {
-        if (shvblock) FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
+        if (shvblock) FreeRexxVariablePoolResult(shvblock); // Free the SHVBLOCK structure if it was created - on an error it may not be created
         shvblock = NULL;
     }
     return shvblock;
@@ -83,7 +83,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK); // Check the result code
     assert(shvblock->shvobject->type == VALUE_STRING); // Check the value type
     assert(strcmp(shvblock->shvobject->value.string, "Hello, World!") == 0); // Check the value
-    FreeRexxVariablePool(shvblock); // Free the SHVBLOCK structure
+    FreeRexxVariablePoolResult(shvblock); // Free the SHVBLOCK structure
 
     // Tests to test all valid and an invalid shvcode
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_SET).
@@ -92,63 +92,63 @@ void test_parseJSON() {
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(strcmp(shvblock->shvname, "test") == 0);
     assert(shvblock->shvcode == RXSHV_SET);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_FETCH).
     shvblock = execute_test("Shvcode RXSHV_FETCH Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"fetch\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_FETCH);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_DROP).
     shvblock = execute_test("Shvcode RXSHV_DROP Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"drop\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_DROP);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_NEXTV).
     shvblock = execute_test("Shvcode RXSHV_NEXTV Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"nextv\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_NEXTV);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_PRIV).
     shvblock = execute_test("Shvcode RXSHV_PRIV Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"priv\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_PRIV);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_SYSET).
     shvblock = execute_test("Shvcode RXSHV_SYSET Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"syset\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_SYSET);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_SYFET).
     shvblock = execute_test("Shvcode RXSHV_SYFET Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"syfet\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_SYFET);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_SYDRO).
     shvblock = execute_test("Shvcode RXSHV_SYDRO Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"sydro\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_SYDRO);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvcode (RXSHV_SYDEL).
     shvblock = execute_test("Shvcode RXSHV_SYDEL Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"sydel\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvcode == RXSHV_SYDEL);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with an invalid shvcode
     shvblock = execute_test("Shvcode Invalid Test", PARSE_ERROR_INVALID_REQUEST, 44,
@@ -162,63 +162,63 @@ void test_parseJSON() {
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_OK);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_NEWV).
     shvblock = execute_test("Shvret RXSHV_NEWV Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"newv\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_NEWV);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_LVAR).
     shvblock = execute_test("Shvret RXSHV_LVAR Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"lvar\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_LVAR);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_TRUNC).
     shvblock = execute_test("Shvret RXSHV_TRUNC Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"trunc\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_TRUNC);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_BADN).
     shvblock = execute_test("Shvret RXSHV_BADN Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"badn\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_BADN);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_MEMFL).
     shvblock = execute_test("Shvret RXSHV_MEMFL Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"memfl\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_MEMFL);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_BADF).
     shvblock = execute_test("Shvret RXSHV_BADF Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"badf\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_BADF);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_NOAVL).
     shvblock = execute_test("Shvret RXSHV_NOAVL Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"noavl\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_NOAVL);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a valid shvret (RXSHV_NOTEX).
     shvblock = execute_test("Shvret RXSHV_NOTEX Test", PARSE_ERROR_OK,-1,
                             "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"notex\",\"value\":\"Hello, World!\"}]}");
     assert(shvblock != NULL); // Ensure a SHVBLOCK was returned
     assert(shvblock->shvret == RXSHV_NOTEX);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with an invalid shvret
     shvblock = execute_test("Shvret Invalid Test", PARSE_ERROR_INVALID_RESULT, 59,
@@ -236,7 +236,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_STRING);
     assert(strcmp(shvblock->shvobject->value.string, "Hello, World!") == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a string value using all the JSON escapes
     shvblock = execute_test("Value Test String Escapes", PARSE_ERROR_OK,-1,
@@ -247,7 +247,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_STRING);
     assert(strcmp(shvblock->shvobject->value.string, "\"\\/\b\f\n\r\t ") == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a integer value.
     shvblock = execute_test("Value Test Integer", PARSE_ERROR_OK,-1,
@@ -258,29 +258,29 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_INT);
     assert(shvblock->shvobject->value.integer == 123);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a real value.
     shvblock = execute_test("Value Test Real", PARSE_ERROR_OK,-1,
-                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":123.456}]}");
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":123.456789}]}");
     assert(shvblock != NULL);
     assert(strcmp(shvblock->shvname, "test") == 0);
     assert(shvblock->shvcode == RXSHV_SET);
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_FLOAT);
-    assert(shvblock->shvobject->value.real == 123.456);
-    FreeRexxVariablePool(shvblock);
+    assert(shvblock->shvobject->value.real == 123.456789);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a real value with an exponent.
     shvblock = execute_test("Value Test Real Exponent", PARSE_ERROR_OK,-1,
-                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":1.23e+8}]}");
+                            "{\"serviceBlocks\":[{\"name\":\"test\",\"request\":\"set\",\"result\":\"ok\",\"value\":1.23456789e+87}]}");
     assert(shvblock != NULL);
     assert(strcmp(shvblock->shvname, "test") == 0);
     assert(shvblock->shvcode == RXSHV_SET);
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_FLOAT);
-    assert(shvblock->shvobject->value.real == 1.23e+8);
-    FreeRexxVariablePool(shvblock);
+    assert(shvblock->shvobject->value.real == 1.23456789e+87);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a boolean value (true).
     shvblock = execute_test("Value Test Boolean True", PARSE_ERROR_OK,-1,
@@ -291,7 +291,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_BOOL);
     assert(shvblock->shvobject->value.boolean == 1);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a boolean value (false).
     shvblock = execute_test("Value Test Boolean False", PARSE_ERROR_OK,-1,
@@ -302,7 +302,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_BOOL);
     assert(shvblock->shvobject->value.boolean == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a null value.
     shvblock = execute_test("Value Test Null", PARSE_ERROR_OK,-1,
@@ -312,7 +312,7 @@ void test_parseJSON() {
     assert(shvblock->shvcode == RXSHV_SET);
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_NULL);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a binary value.
     // Note binary data is base64 encoded in a JSON object like this:
@@ -329,7 +329,7 @@ void test_parseJSON() {
     assert(shvblock->shvobject->type == VALUE_BINARY);
     assert(shvblock->shvobject->value.binary.length == 18);
     assert(strncmp(shvblock->shvobject->value.binary.data, "string binary data", 18) == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a object value.
     // Note the object is nested within the value and we will use a complex number example
@@ -359,7 +359,7 @@ void test_parseJSON() {
     assert(strcmp(members->membername, "imaginary") == 0);
     assert(members->memberobject->type == VALUE_FLOAT);
     assert(members->memberobject->value.real == 4.5);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
 
     // Tests that include nested objects and arrays.
@@ -425,7 +425,7 @@ void test_parseJSON() {
     assert(strcmp(finish_members->membername, "imaginary") == 0);
     assert(finish_members->memberobject->type == VALUE_FLOAT);
     assert(finish_members->memberobject->value.real == 4.0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a array value.
     // Note the array is nested within the value and we will use a list of strings example
@@ -446,7 +446,7 @@ void test_parseJSON() {
     assert(strcmp(element->membername, "2") == 0);
     assert(element->memberobject->type == VALUE_STRING);
     assert(strcmp(element->memberobject->value.string, "String 2") == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with a array value with an embedded object.
     // Note the array is nested within the value and we will use a list of complex numbers example
@@ -491,7 +491,7 @@ void test_parseJSON() {
     assert(strcmp(element_members->membername, "imaginary") == 0);
     assert(element_members->memberobject->type == VALUE_FLOAT);
     assert(element_members->memberobject->value.real == 4.0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with a valid CREXX serviceBlocks JSON string with an object with a array member.
     // Note the array is nested within the object and we will use a list of strings example
@@ -516,7 +516,7 @@ void test_parseJSON() {
     assert(strcmp(array_element->membername, "2") == 0);
     assert(array_element->memberobject->type == VALUE_STRING);
     assert(strcmp(array_element->memberobject->value.string, "String 2") == 0);
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Test with an empty JSON string as a value.
     shvblock = execute_test("Value Test Empty String", PARSE_ERROR_OK,-1,
@@ -527,7 +527,7 @@ void test_parseJSON() {
     assert(shvblock->shvret == RXSHV_OK);
     assert(shvblock->shvobject->type == VALUE_STRING);
     assert(shvblock->shvobject->value.string[0] == '\0');
-    FreeRexxVariablePool(shvblock);
+    FreeRexxVariablePoolResult(shvblock);
 
     // Tests with a JSON string that is not properly formatted (missing brackets, missing commas, etc.).
 

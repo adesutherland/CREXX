@@ -98,8 +98,9 @@ struct MEMBLOCK {
 /* RexxVariablePool - Interface to the REXX variable pool */
 unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result);
 
-/* FreeRexxVariablePool - Free the memory allocated for the whole Variable Pool SHVBLOCK linked list returned by RexxVariablePool */
-void FreeRexxVariablePool(SHVBLOCK *shvblock);
+/* FreeRexxVariablePoolResult - Free the memory allocated for the whole Variable Pool SHVBLOCK linked list returned by RexxVariablePool */
+/* *** NOTE This is only valid for use with the shvblock returned by RexxVariablePool result *** */
+void FreeRexxVariablePoolResult(SHVBLOCK *shvblock);
 
 /* Migration helpers */
 
