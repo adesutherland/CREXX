@@ -3,13 +3,11 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <event2/event.h>
-#include <event2/http.h>
-#include <event2/buffer.h>
-#include <event2/util.h>
-#include <event2/http_struct.h>
-#include <event2/keyvalq_struct.h>
-#include <sys/queue.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 // Common http headers for all requests
 #define HTTP_COMMON "Content-Type: application/json\r\nServer: CREXX/0.1\r\nKeep-Alive: timeout=5, max=1000\r\nConnection: Keep-Alive\r\nCache-Control: no-cache\r\n"
@@ -19,7 +17,7 @@
 
 // Default http header string to be used for long-polling connections
 #define HTTP_HEADER_LONG_POLL HTTP_COMMON
-
+/*
 void request_handler(struct evhttp_request *req, void *arg) {
     struct evbuffer *evb = evbuffer_new();
 
@@ -50,23 +48,78 @@ void request_handler(struct evhttp_request *req, void *arg) {
     evhttp_send_reply(req, HTTP_OK, "OK", evb);
     evbuffer_free(evb);
 }
+*/
+
+
+
+
+
+
+#define MAX_BUFFER_SIZE 1024
+#define PORT 8080
+
+void handle_client(int client_socket) {
+    char buffer[MAX_BUFFER_SIZE];
+    memset(buffer, 0, MAX_BUFFER_SIZE);
+
+    // Read the client's request url
+    read(client_socket, buffer, MAX_BUFFER_SIZE - 1);
+
+
+    // Read the client's request
+    read(client_socket, buffer, MAX_BUFFER_SIZE - 1);
+
+    // Prepare the response
+    char response[] = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World!\n";
+
+    // Send the response to the client
+    write(client_socket, response, sizeof(response));
+
+    // Close the connection
+    close(client_socket);
+}
 
 int main() {
-    struct event_base *base = event_base_new();
-    struct evhttp *http = evhttp_new(base);
+    int server_socket, client_socket;
+    struct sockaddr_in server_address, client_address;
+    socklen_t client_len = sizeof(client_address);
 
-    if (evhttp_bind_socket(http, "0.0.0.0", 8080) != 0) {
-        fprintf(stderr, "Could not bind to port 8080\n");
-        return 1;
+    // Create a socket
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0) {
+        perror("ERROR opening socket");
+        exit(1);
     }
 
-    evhttp_set_gencb(http, request_handler, NULL);
+    // Initialize server_address to zero
+    memset(&server_address, 0, sizeof(server_address));
 
-    printf("Server started on port 8080\n");
-    event_base_dispatch(base);
+    // Set the values in server_address
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_port = htons(PORT);
 
-    evhttp_free(http);
-    event_base_free(base);
+    // Bind the socket to the server address
+    if (bind(server_socket, (struct sockaddr *) &server_address, sizeof(server_address)) < 0) {
+        perror("ERROR on binding");
+        exit(1);
+    }
+
+    // Listen for connections
+    listen(server_socket, 5);
+
+    while (1) {
+        // Accept a connection
+        client_socket = accept(server_socket, (struct sockaddr *) &client_address, &client_len);
+        if (client_socket < 0) {
+            perror("ERROR on accept");
+            exit(1);
+        }
+
+        // Handle the client's request
+        handle_client(client_socket);
+    }
 
     return 0;
 }
+
