@@ -10,15 +10,8 @@
 #include <stdbool.h>
 
 #define INITIAL_BUFFER_SIZE 1024 // Also the minimum read size for the socket
-#define MAX_STATUS_LINE_SIZE 100
 #define MAX_HEADER_NAME 128
 #define MAX_HEADER_VALUE 128
-
-typedef struct DynamicBuffer {
-    char *buffer;
-    size_t size;
-    size_t capacity;
-} DynamicBuffer;
 
 enum READING_PHASE {
     READING_STATUS_LINE,
@@ -29,50 +22,84 @@ enum READING_PHASE {
 };
 
 typedef struct HTTPResponse {
+    // Common buffer
+    char *buffer;
+    size_t size; // Current size of data in the buffer
+    size_t capacity; // Buffer capacity
+    size_t status_line_start; // Position of the start of the status line in the buffer (always 0?)
+    size_t status_line_length; // Length of the status line (excluding a null terminator)
+    size_t header_start; // Position of the start of the headers in the buffer
+    size_t header_length; // Length of the headers (excluding a null terminator)
+    size_t body_start; // Position of the start of the body in the buffer
+    size_t body_length; // Length of the body (excluding a null terminator)
+    size_t trailer_start; // Position of the start of the trailers in the buffer
+    size_t trailer_length; // Length of the trailers (excluding a null terminator)
+
     // Parsing state
     enum READING_PHASE reading_phase;
-    bool split_buffer; // Used to signal that we have split data into the next buffer (which should be processed next)
+    size_t cursor; // Current parse position in the buffer
     int reading_error_code;
     bool chunked;
-    char* last_chunk_start; // Position of the last partial (or unread) chunk that was processed
+    bool expecting_trailers;
+    size_t last_chunk_start; // Position of the last partial (or unread) chunk that was processed
     size_t expected_body_size;
 
-    // Response data
+    // Extracted data
     int status_code;
-    char status_line[MAX_STATUS_LINE_SIZE + 1];
-    DynamicBuffer header_buffer;
-    DynamicBuffer body_buffer;
-    DynamicBuffer trailer_buffer;
 } HTTPResponse;
 
-// Reads a response from the socket
+#define READ_ERROR_NONE (0)
+#define READ_ERROR_SOCKET_CLOSED (-1)
+#define READ_ERROR_SOCKET_ERROR (-2)
+#define READ_ERROR_INVALID_STATUS_CODE (-3)
+#define READ_ERROR_MALFORMED_STATUS_LINE (-4)
+#define READ_ERROR_MALFORMED_HEADER (-5)
+#define READ_ERROR_MALFORMED_CHUNK (-6)
+#define READ_ERROR_MALFORMED_BODY (-7)
+#define READ_ERROR_MALFORMED_TRAILER (-8)
+#define READ_ERROR_EXTRANEOUS_DATA (-10)
+
+
+// macros to access the buffer (status line, headers, body, trailers)
+#define STATUS_LINE(response) ((response)->buffer + (response)->status_line_start)
+#define HEADERS(response) ((response)->buffer + (response)->header_start)
+#define BODY(response) ((response)->buffer + (response)->body_start)
+#define TRAILERS(response) ((response)->buffer + (response)->trailer_start)
+
+
+// Reads a response from the socket and parses it
+// *** This is the function clients use ***
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
 bool read_response(int sock, HTTPResponse *response);
 
-// Makes sure the buffer is at least of  size (doubling the buffer size if need be)
-void ensure_buffer_size(DynamicBuffer *buffer, size_t size);
+// Read data from the socket into the buffer
+// Returns READ_ERROR_NONE on success, <0 (READ_ERROR_...) > on an error or if the socket is closed (setting reading_error_code and reading_phase)
+int read_into_buffer(int sock, HTTPResponse *response);
 
-// Checks for \r\n\r\n in the header buffer and if so returns true and splits the buffer to body buffer
-bool split_header_buffer(HTTPResponse *response);
+// Makes sure the response buffer is at least of  size (doubling the buffer size if need be)
+void ensure_buffer_size(HTTPResponse *response, size_t size);
 
 // Parses headers to find Content-Length or Transfer-Encoding: chunked
 // This updates the response struct with the expected body size and if the body is chunked
 // Returns true if the headers were parsed successfully
 bool process_headers(HTTPResponse *response);
 
-// Function to parse and clean the body buffer (if not chunked remove the end newline, if chunked remove the chunked encoding)
-// returns true if the body was cleaned successfully
-bool clean_body_buffer(HTTPResponse *response);
-
-// Function to read a chunked response body buffer and determine if the response is complete
+// Function to check if the body is complete
+// If chunked it reads the chunked response body buffer and determine if the response is complete
+// Otherwise it checks if the body buffer is complete
 // If it is complete it also splits the buffer into the trailer buffer
 // Returns true if the response is complete
-bool is_chunking_complete(HTTPResponse *response);
+bool is_body_complete(HTTPResponse *response);
 
-// Frees the memory used by the buffer
-void free_buffer(DynamicBuffer *buffer);
+// Function to parse and clean the body buffer
+// returns true if the body was cleaned successfully
+bool process_body(HTTPResponse *response);
+
+// Parses trailers to find specific headers (to be defined)
+// Returns true if the trailers were parsed successfully
+bool process_trailers(HTTPResponse *response);
 
 // Frees the memory used by the response
 void free_response(HTTPResponse *response);
