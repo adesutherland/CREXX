@@ -44,9 +44,18 @@ bool read_response(int sock, HTTPResponse *response) {
             response->status_line_start = 0;
             response->status_line_length = crlf - response->buffer;
 
-            // Fine the second word in the status line (the status code)
+            // Validate status line
+            // Fine the first and second word in the status line (the status code)
             char *space = strchr(STATUS_LINE(response), ' ');
             if (space) {
+                // Check the HTTP version
+                if (    space - STATUS_LINE(response) != 8 || (
+                            strncmp(STATUS_LINE(response), "HTTP/1.0", 8) != 0 &&
+                            strncmp(STATUS_LINE(response), "HTTP/1.1", 8) != 0)) {
+                    response->reading_phase = READING_COMPLETE;
+                    response->reading_error_code = READ_ERROR_MALFORMED_STATUS_LINE;
+                    return false;
+                }
                 // Get the status code
                 response->status_code = (int)strtol(space, NULL, 10);
                 // Check if the status code is valid
@@ -95,9 +104,27 @@ bool read_response(int sock, HTTPResponse *response) {
 
         // If we don't have a double newline we need to read more headers
         else {
-            // Read more headers from the socket
-            if (read_into_buffer(sock, response)) return false;
+            // Check if there is no headers at all - if the line starts with a newline
+            if (response->buffer[response->header_start] == '\r' &&
+                response->buffer[response->header_start + 1] == '\n') {
+                // There is no headers - we are ready to read the body
+                response->reading_phase = READING_BODY;
+                response->body_start = response->header_start + 2;
+            }
+            else {
+                // Read more headers from the socket
+                if (read_into_buffer(sock, response)) return false;
+            }
         }
+    }
+
+    // Check if the body  is expected
+    if (response->status_code == 204) {
+        // No body
+        response->reading_phase = READING_COMPLETE;
+        response->body_length = 0;
+        response->trailer_start = response->body_start;
+        response->trailer_length = 0;
     }
 
     // Process the body
@@ -109,33 +136,63 @@ bool read_response(int sock, HTTPResponse *response) {
             // Check if there was an error reading the body
             if (response->reading_error_code) return false;
 
-            // Read the body from the socket
-            if (read_into_buffer(sock, response)) return false;
+            // Are we reading an un-sized and un-chunked body?
+            if (response->expected_body_size == 0 && !response->chunked) {
+                // Read more body from the socket
+                int rc = read_into_buffer(sock, response);
+                if (rc == READ_ERROR_SOCKET_CLOSED) {
+                    // We have reached the end of the response
+                    response->reading_phase = READING_COMPLETE;
+                    response->reading_error_code = READ_ERROR_NONE; // No error - just the end of the response
+                    if (!process_body(response)) return false;
+                }
+                else if (rc < 0) return false;
+            }
+            else {
+                // Read the body from the socket
+                if (read_into_buffer(sock, response)) return false;
+            }
         }
     }
 
     // Process the trailers
-    while (response->reading_phase == READING_TRAILERS) {
-        // Check if we have a double newline
-        char *crlf_crlf = strstr(response->buffer + response->trailer_start, "\r\n\r\n");
-        if (crlf_crlf) {
-            // We have a double newline
-            crlf_crlf += 2; // The first newline is part of the trailers
-            *crlf_crlf = '\0';
-
-            response->trailer_length = crlf_crlf - response->buffer - response->trailer_start;
-
-            // Process the headers to find the expected body size
-            if (!process_trailers(response)) return false;
-
-            // We are complete
+    if (response->reading_phase == READING_TRAILERS) {
+        // Is the trailer starting with a newline
+        if (response->buffer[response->trailer_start] == '\r' &&
+            response->buffer[response->trailer_start + 1] == '\n') {
+            // There is no trailer - this should be the end of the response
+            response->buffer[response->trailer_start] = '\0';
+            // Remove the last newline from the buffer - note when debugging this might confuse you as a null terminator put in before the end of the buffer
+            response->size -= 2;
+            response->trailer_length = 0;
             response->reading_phase = READING_COMPLETE;
         }
 
-        // If we don't have a double newline we need to read more headers
-        else {
-            // Read more headers from the socket
-            if (read_into_buffer(sock, response)) return false;
+        //  Read the trailers
+        else while (response->reading_phase == READING_TRAILERS) {
+            // Check if we have a double newline
+            char *crlf_crlf = strstr(response->buffer + response->trailer_start, "\r\n\r\n");
+            if (crlf_crlf) {
+                // We have a double newline
+                crlf_crlf += 2; // The first newline is part of the trailers
+                *crlf_crlf = '\0';
+                // Remove the last newline from the buffer - note when debugging this might confuse you as a null terminator put in before the end of the buffer
+                response->size -= 2;
+
+                response->trailer_length = crlf_crlf - response->buffer - response->trailer_start;
+
+                // Process the trailers
+                if (!process_trailers(response)) return false;
+
+                // We are complete
+                response->reading_phase = READING_COMPLETE;
+            }
+
+                // If we don't have a double newline we need to read more headers
+            else {
+                // Read more headers from the socket
+                if (read_into_buffer(sock, response)) return false;
+            }
         }
     }
 
@@ -189,7 +246,7 @@ int read_into_buffer(int sock, HTTPResponse *response) {
     }
 
     // Read from the socket
-    bytes_read = read(sock, response->buffer + response->size, response->capacity - response->size);
+    bytes_read = read(sock, response->buffer + response->size, response->capacity - response->size - 1); // -1 for null terminator (added later)
     if (bytes_read < 0) {
         response->reading_phase = READING_COMPLETE;
         response->reading_error_code = READ_ERROR_SOCKET_ERROR;
@@ -205,6 +262,10 @@ int read_into_buffer(int sock, HTTPResponse *response) {
 
     // Update the buffer size (data in the buffer)
     response->size += bytes_read;
+
+    // Null terminate the buffer
+    response->buffer[response->size] = '\0';
+
     return READ_ERROR_NONE;
 }
 
@@ -275,50 +336,53 @@ bool is_body_complete(HTTPResponse *response) {
         // We have processed all the chunks and have not found the end of the chunks
         // We need to find the end of the chunks
         size_t i;
-        size_t next_chunk_start = response->last_chunk_start;
-        char *next_chunk_size = BODY(response) + response->last_chunk_start;
-        while (next_chunk_start < response->body_length) {
-            // Find the next chunk size
-            char *crlf = strstr(next_chunk_size, "\r\n");
+        size_t chunk_start = response->last_chunk_start;
+        while (chunk_start < response->size - response->body_start) {
+            // Find ths size of the next chunk
+            char *chunk_size_pointer = BODY(response) + response->last_chunk_start;
+            char *crlf = strstr(chunk_size_pointer, "\r\n");
             if (crlf) {
-                // Get the chunk size
-                // Check we have a number
-                for (i = 0; i < crlf - next_chunk_size; i++) {
-                    if ((next_chunk_size[i] < '0' || next_chunk_size[i] > '9')
-                        && (next_chunk_size[i] < 'a' || next_chunk_size[i] > 'f')
-                        && (next_chunk_size[i] < 'A' || next_chunk_size[i] > 'F')) {
+                char *chunk_body_pointer = crlf + 2;
+                // Get the chunk size - Check we have a number
+                for (i = 0; i < crlf - chunk_size_pointer; i++) {
+                    if ((chunk_size_pointer[i] < '0' || chunk_size_pointer[i] > '9')
+                        && (chunk_size_pointer[i] < 'a' || chunk_size_pointer[i] > 'f')
+                        && (chunk_size_pointer[i] < 'A' || chunk_size_pointer[i] > 'F')) {
                         response->reading_error_code = READ_ERROR_MALFORMED_CHUNK;
                         return false;
                     }
                 }
                 // Get the chunk size from the hex string
-                size_t chunk_size = strtol(next_chunk_size, NULL, 16);
+                size_t chunk_size = strtol(chunk_size_pointer, NULL, 16);
                 if (chunk_size == 0) {
                     // We have reached the end of the chunks
                     // Null terminate the buffer
-                    *(BODY(response) + next_chunk_start) = '\0';
-                    response->body_length = next_chunk_start;
+                    *chunk_size_pointer = 0;
+                    response->body_length = chunk_size_pointer - response->buffer - response->body_start;
 
                     // Set the trailer buffer start
-                    response->trailer_start = crlf + 2 - response->buffer;
+                    response->trailer_start = chunk_body_pointer + 2 - response->buffer; // +2 Skipping  chunk end
+                    response->trailer_length = response->size - response->trailer_start;
                     return true;
                 }
 
                 // Check we have the full chunk size
-                if (crlf + 2 + chunk_size > response->buffer + response->size) {
+                if (crlf + 2 + chunk_size + 2  > response->buffer + response->size) { // +2 for the crlf at the end of the chunk
                     // No so we just return false - the caller will read more data
                     return false;
                 }
 
-                // Move the chunk and everything in the buffer after it back overwriting the chunk size field using the chunk_size_field_size
-                memmove(BODY(response) + next_chunk_start, crlf + 2, response->size - (crlf + 2 - response->buffer));
-                response->size -=
-                        crlf - (BODY(response) + next_chunk_start) + 2; // 2 for the crlf and 2 for the chunk size field
-
+                // Move the chunk body to the start of the buffer
+                memmove(chunk_size_pointer, chunk_body_pointer, chunk_size);
+                // Move the next chunk start over this chunk's terminating crlf
+                memmove(    chunk_size_pointer + chunk_size,
+                                        chunk_body_pointer + chunk_size + 2,
+                                        response->size - (chunk_body_pointer - response->buffer + chunk_size + 2) + 1); // +1 for the null terminator
+                // Frm memmove   <-- copied from here -->     <---- To here ---->   (cancelling out the chunk_size)
+                response->size -= (chunk_body_pointer + 2) - chunk_size_pointer;
                 // Set the next chunk start
-                next_chunk_start += chunk_size;
-                next_chunk_size = BODY(response) + next_chunk_start + 2; // Skip the crlf at the end of the chunk
-                response->last_chunk_start = next_chunk_start;
+                response->last_chunk_start = chunk_size_pointer + chunk_size - BODY(response) ;
+                chunk_start = response->last_chunk_start;
             } else {
                 // No crlf so we just return false - the caller will read more data
                 return false;
@@ -331,7 +395,7 @@ bool is_body_complete(HTTPResponse *response) {
         // Non-Chunked logic
         if (response->expected_body_size > 0) {
             // Have an expected body size - so we check if we have read enough data
-            if (response->size < response->expected_body_size + 2 ) {
+            if (response->size - response->body_start < response->expected_body_size + 2 ) {
                 // No so we just return false - the caller will read more data
                 return false;
             }
@@ -354,23 +418,11 @@ bool is_body_complete(HTTPResponse *response) {
             }
         }
         else {
-            // We have no expected body size - so we check if there is an end newline
-            // If there is we remove it, if not it is an error
-            if (response->size >= 2 && response->buffer[response->size - 2] == '\r' && response->buffer[response->size - 1] == '\n') {
-                // We have a complete body
-                // Null terminate the buffer
-                response->buffer[response->size - 2] = '\0';
-                response->body_length = response->size - 2;
-
-                // Set the trailer buffer start
-                response->trailer_start = response->size;
-                return true;
-            }
-            else {
-                // No end newline so we just return false - the caller will read more data
-                response->reading_error_code = READ_ERROR_MALFORMED_BODY;
-                return false;
-            }
+            // We have no expected body size - so we just have to read until the socket closes (and the parent function will handle this)
+            response->body_length = response->size - response->body_start;
+            response->trailer_start = response->size;
+            response->trailer_length = 0;
+            return false; // No real error and the caller has to check for the socket closing
         }
     }
 }
