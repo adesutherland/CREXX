@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <printf.h>
 //#include "crexxsaa.h"
-#include "httpclient.h"
+//#include "httpclient.h"
+#include "jsnemit.h"
 
 /* Helper for tests - Frees the SHVBLOCK Linked Lists and Children */
 void FreeMemBlock(MEMBLOCK *memblock);

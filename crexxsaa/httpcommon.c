@@ -7,7 +7,202 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "httpcommon.h"
+
+// Wrapper around the write function to ensure all data is written
+// -1 means an error occurred (and errno is set) - but in this scenario this
+// probably means the socket is closed
+static ssize_t write_all(int fd, const void *buf, size_t count) {
+    assert(count <= 100); // todo debugging - remove!
+    const char *buffer = buf;
+    while (count > 0) {
+        ssize_t bytes_written = write(fd, buffer, count);
+        if (bytes_written < 0) {
+            // An error occurred, handle it here
+            return -1;
+        }
+        count -= bytes_written;
+        buffer += bytes_written;
+    }
+    return 0; // Success
+}
+
+// Function to flush a SocketBuffer buffer to the socket
+// This function is used by the emit_to_socket() function
+// returns -1 on error (and errno is set) - but in this scenario this
+// probably means the socket is closed
+int flush_socket_buffer(SocketBuffer *buffer) {
+    assert(buffer->length <= 100); // todo debugging - remove!
+    if (buffer->length > 0) {
+        if (write_all(buffer->socket, buffer->buffer, buffer->length) == -1) {
+            return -1;
+        }
+        buffer->length = 0;
+    }
+    return 0;
+}
+
+// Function to write data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// This function is used by the emit_to_socket() function
+// If the length is bigger than the buffer capacity the buffer is flushed and the data is written directly to the socket
+// returns -1 on error (and errno is set) - but in this scenario this
+// probably means the socket is closed
+int write_to_socket_buffer(SocketBuffer *buffer, const char *data, size_t length) {
+    assert(buffer->length <= 100); // todo debugging - remove!
+    assert(length <= 100); // todo debugging - remove!
+    // Ensure we have enough space in the buffer
+    if (buffer->length + length > buffer->capacity) {
+        // Flush the buffer
+        if (buffer->length > 0) {
+            if (flush_socket_buffer(buffer)) return -1;
+        }
+
+        // If the data is bigger than the buffer capacity write it directly to the socket
+        if (length > buffer->capacity) {
+            if (write_all(buffer->socket, data, length)) return -1;
+            return 0;
+        }
+    }
+
+    // Copy the data to the buffer
+    memcpy(buffer->buffer + buffer->length, data, length);
+    buffer->length += length;
+
+    return 0;
+}
+
+// Function to flush a SocketBuffer buffer to the socket as a chunk
+// This function is used by the emit_to_socket() function
+// returns -1 on error (and errno is set) - but in this scenario this
+// probably means the socket is closed
+int flush_chunked_socket_buffer(SocketBuffer *buffer) {
+    assert(buffer->length <= 100); // todo debugging - remove!
+
+    if (buffer->length > 0) {
+        char chunk_size[16];
+        int chunk_size_length = sprintf(chunk_size, "%x\r\n", (int)buffer->length);
+        if (write_all(buffer->socket, chunk_size, chunk_size_length)) return -1;
+        if (write_all(buffer->socket, buffer->buffer, buffer->length)) return -1;
+        if (write_all(buffer->socket, "\r\n", 2)) return -1;
+        buffer->length = 0;
+    }
+    return 0;
+}
+
+// Function to write data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// This function generates HTTP body chunked encoding
+// This function is used by the emit_to_socket() function
+// If the length is bigger than the buffer capacity then it is added to the buffer and flushed in chunks
+// returns -1 on error (and errno is set) - but in this scenario this
+// probably means the socket is closed
+int write_to_chunked_socket_buffer(SocketBuffer *buffer, const char *data, size_t length) {
+    assert(buffer->length <= 100); // todo debugging - remove!
+    assert(length <= 100); // todo debugging - remove!
+    // Loop processing the data in chunks
+    while (buffer->length + length > buffer->capacity) {
+        // Calculate the amount of data to copy to the buffer
+        size_t copy_length = buffer->capacity - buffer->length;
+        assert(copy_length <= length);
+        // Copy the data to the buffer
+        memcpy(buffer->buffer + buffer->length, data, copy_length);
+        buffer->length += copy_length;
+        // Flush the buffer
+        if (flush_chunked_socket_buffer(buffer)) return -1;
+        // Move the data pointer and reduce the length
+        data += copy_length;
+        length -= copy_length;
+    }
+
+    // Copy the remaining data to the buffer
+    memcpy(buffer->buffer + buffer->length, data, length);
+    buffer->length += length;
+
+    return 0;
+ }
+
+// The JSON emitter functions for writing to socket using the HTTP chunked protocol
+// This is used for sending JSON data over a socket connection
+// The function buffers output into chuck sizes and sends the chunks over the socket
+// context structure holding the buffer for the current chunk, size and socket
+// returns -1 on error (and errno is set) - but in this scenario this
+// probably means the socket is closed
+__attribute__((unused)) int emit_to_socket(emit_action action, const char* data, void** context) {
+    SocketBuffer *buffer = (SocketBuffer *)*context;
+    if (buffer == NULL) {
+        // This handler requires the context to be initialized in advance - panic
+        fprintf(stderr, "Panic: emit_to_socket() called by emit_func() without an initialized context\n");
+        exit(1);
+    }
+    switch (action) {
+        case ACTION_OPEN:
+            // If the context has not already got a buffer, malloc one
+            if (buffer->buffer == NULL) {
+                if (buffer->capacity) buffer->buffer = malloc(buffer->capacity); // capacity overrides the default buffer size
+                else {
+                    buffer->buffer = malloc(SOCKET_BUFFER_SIZE);
+                    buffer->capacity = SOCKET_BUFFER_SIZE;
+                }
+            }
+            if (buffer->buffer == NULL) {
+                // Panic
+                fprintf(stderr, "Panic: emit_to_socket() malloc error\n");
+                exit(1);
+            }
+            buffer->length = 0; // Reset the buffer length
+            // Write the HTTP request and headers to the buffer
+            if (write_to_socket_buffer(buffer, buffer->http_request, strlen(buffer->http_request))) return -1;
+            if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+            if (write_to_socket_buffer(buffer, buffer->http_path, strlen(buffer->http_path))) return -1;
+            if (write_to_socket_buffer(buffer, " HTTP/1.1\r\n", 11)) return -1;
+            // Headers
+            // Host
+            if (write_to_socket_buffer(buffer, "Host: ", 6)) return -1;
+            if (write_to_socket_buffer(buffer, buffer->http_host, strlen(buffer->http_host))) return -1;
+            if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            // Secret ID
+            if (buffer->secret_id) {
+                if (write_to_socket_buffer(buffer, "Rexx-Secret: ", 11)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->secret_id, strlen(buffer->secret_id))) return -1;
+                if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            }
+            // Agent
+            if (write_to_socket_buffer(buffer, "User-Agent: CREXXSAA/0.1\r\n", 26)) return -1;
+            // Content-Type
+            if (write_to_socket_buffer(buffer, "Content-Type: application/json\r\n", 31)) return -1;
+            // Chunked encoding
+            if (write_to_socket_buffer(buffer, "Transfer-Encoding: chunked\r\n", 28)) return -1;
+            // Keep-Alive
+            if (write_to_socket_buffer(buffer, "Connection: Keep-Alive\r\n", 24)) return -1;
+            // Other headers (if specified)
+            if (buffer->http_headers) {
+                if (write_to_socket_buffer(buffer, buffer->http_headers, strlen(buffer->http_headers))) return -1;
+            }
+            // End of headers - blank line
+            if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            // Flush the buffer
+            if (flush_socket_buffer(buffer)) return -1; // Note flush now because from now on (for the body) we are using chunk encoding
+            break;
+
+        case ACTION_EMIT:
+            // Write the data to the buffer
+            if (write_to_chunked_socket_buffer(buffer, data, strlen(data))) return -1;
+            break;
+
+        case ACTION_FINISHED_EMIT:
+            // Flush the buffer
+            flush_chunked_socket_buffer(buffer);
+            // Write the last chunk (0 length)
+            if (write(buffer->socket, "0\r\n\r\n", 5)) return -1;
+            // Write Trailer headers (if specified) - currently not implemented
+            break;
+
+        case ACTION_CLOSE:
+            //  no action needed
+            break;
+    }
+    return 0;
+}
 
 // Reads a response from the socket
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
@@ -120,7 +315,7 @@ bool read_response(int sock, HTTPResponse *response) {
 
     // Check if the body  is expected
     if (response->status_code == 204) {
-        // No body
+        // There body section not expected
         response->reading_phase = READING_COMPLETE;
         response->body_length = 0;
         response->trailer_start = response->body_start;
@@ -368,7 +563,7 @@ bool is_body_complete(HTTPResponse *response) {
 
                 // Check we have the full chunk size
                 if (crlf + 2 + chunk_size + 2  > response->buffer + response->size) { // +2 for the crlf at the end of the chunk
-                    // No so we just return false - the caller will read more data
+                    // No, so we just return false - the caller will read more data
                     return false;
                 }
 

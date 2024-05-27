@@ -8,6 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+// #include <printf.h>
 
 char mock_buffer[1024];
 int mock_index = 0;
@@ -1320,6 +1321,339 @@ void test_read_response() {
     free_response(&response);
 }
 
+// Mock Write Function output buffer
+static char write_output[10 * 1024];
+static size_t write_output_length = 0; // Note also that write() outputs at this point
+static ssize_t mock_error = 0; // If set write will return this error number
+// If set write will output mock_max_write characters, and move the write pointer
+// The caller should repeat the call to write as needed - so this simulates this scenario
+static size_t mock_max_write = 0;
+// Mock Write Function
+// Writes to write_output, null terminates for tester convenience
+// Note for this test function buffer overflow is not tested for
+ssize_t write(int fd, const void *buf, size_t count) {
+    // Print the buffer being written
+ //   printf("write \"%.*s\" to socket id %d \n", (int)count, (char*)buf, fd);
+    if (mock_error) {
+        return mock_error;
+    }
+    if (mock_max_write) {
+        if (count > mock_max_write) count = mock_max_write;
+    }
+    memcpy(write_output + write_output_length, buf, count);
+    write_output_length += count;
+    write_output[write_output_length] = 0;
+    return (ssize_t)count;
+}
+
+// Function to test flush_socket_buffer() which:
+// flushes a SocketBuffer buffer to the socket
+void test_flush_socket_buffer() {
+    int rc;
+    char *out = "Hello World";
+    size_t out_length = strlen(out);
+    SocketBuffer *buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+
+    // Basic Test
+    // Setup Buffer
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    rc = flush_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+
+    // Test with write only writing a few chars at a time
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 3;
+    // Test
+    rc = flush_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+
+    // Test with a write error
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_error = -1;
+    // Test
+    rc = flush_socket_buffer(buffer);
+    assert(rc == -1);
+
+    // Cleanup
+    free(buffer->buffer);
+    free(buffer);
+}
+
+// Function test write_to_socket_buffer() which writes data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// If the length is bigger than the buffer capacity the buffer is flushed and the data is written directly to the socket
+void test_write_to_socket_buffer() {
+    int rc;
+    char *out = "Hello World";
+    size_t out_length = strlen(out);
+    SocketBuffer *buffer;
+
+    //  Test - Large buffer
+    // Setup Buffer
+    buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    rc = write_to_socket_buffer(buffer, out, out_length);
+    // Nothing should be written to the socket (yet)
+    assert(rc == 0);
+    assert(strcmp(write_output,"")==0);
+    assert(write_output_length == 0);
+    assert(buffer->length == out_length);
+    // Now Flush the buffer
+    rc = flush_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+    assert(write_output_length == out_length);
+    free(buffer->buffer);
+
+    //  Test - Very small buffer
+    // Setup Buffer
+    buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 5;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    rc = write_to_socket_buffer(buffer, out, out_length);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+    free(buffer->buffer);
+
+    //  Test - Large buffer with small write capacity
+    // Setup Buffer
+    buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 2;
+    // Test
+    rc = write_to_socket_buffer(buffer, out, out_length);
+    // Nothing should be written to the socket (yet)
+    assert(rc == 0);
+    assert(strcmp(write_output,"")==0);
+    assert(write_output_length == 0);
+    assert(buffer->length == out_length);
+    // Now Flush the buffer
+    rc = flush_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+    assert(write_output_length == out_length);
+    free(buffer->buffer);
+
+    //  Test - Very small buffer with small write capacity
+    // Setup Buffer
+    buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 5;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 3;
+    // Test
+    rc = write_to_socket_buffer(buffer, out, out_length);
+    assert(rc == 0);
+    assert(strcmp(write_output,out)==0);
+    assert(buffer->length == 0);
+    free(buffer->buffer);
+
+    // Test with a write error
+    buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 5;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_error = -1;
+    // Test
+    rc = write_to_socket_buffer(buffer, out, out_length);
+    assert(rc == -1);
+    free(buffer->buffer);
+
+    // Cleanup
+    free(buffer);
+}
+
+// Function to test flush_chunked_socket_buffer() which flushes a SocketBuffer buffer to the socket as a chunk
+void test_flush_chunked_socket_buffer() {
+    int rc;
+    char *out = "Hello World";
+    size_t out_length = strlen(out);
+    SocketBuffer *buffer = malloc(sizeof(SocketBuffer *));
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+
+    // Basic Test
+    // Setup Buffer
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,"b\r\nHello World\r\n")==0);
+    assert(buffer->length == 0);
+
+    // Test with write only writing a few chars at a time
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 3;
+    // Test
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,"b\r\nHello World\r\n")==0);
+    assert(buffer->length == 0);
+
+    // Test with a write error
+    strcpy(buffer->buffer, out);
+    buffer->length = out_length;
+    // Setup Global write target buffer
+    write_output_length = 0;
+    mock_error = 0;
+    mock_error = -1;
+    // Test
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == -1);
+
+    // Cleanup
+    free(buffer->buffer);
+    free(buffer);
+}
+
+// Function to test write_to_chunked_socket_buffer() which writes data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// This function generates HTTP body chunked encoding
+// If the length is bigger than the buffer capacity then it is added to the buffer and flushed in chunks
+void test_write_to_chunked_socket_buffer() {
+    int rc;
+    char *out = "Hello World";
+    size_t out_length = strlen(out);
+    char *expected;
+    size_t expected_length;
+    SocketBuffer *buffer;
+
+    buffer = malloc(sizeof(SocketBuffer *));
+
+    //  Test - Large buffer
+    // Setup Buffer
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+    (buffer->buffer)[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    expected = "b\r\nHello World\r\n";
+    expected_length = strlen(expected);
+    rc = write_to_chunked_socket_buffer(buffer, out, out_length);
+    // Nothing should be written to the socket (yet)
+    assert(rc == 0);
+    assert(strcmp(write_output,"")==0);
+    assert(write_output_length == 0);
+    assert(buffer->length == out_length);
+    // Now Flush the buffer
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,expected)==0);
+    assert(buffer->length == 0);
+    assert(write_output_length == expected_length);
+    free(buffer->buffer);
+
+    //  Test - Very small buffer
+    // Setup Buffer
+    buffer->capacity = 5;
+    buffer->buffer = malloc(buffer->capacity);
+    (buffer->buffer[0]) = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Test
+    expected = "5\r\nHello\r\n5\r\n Worl\r\n";
+    expected_length = strlen(expected);
+    rc = write_to_chunked_socket_buffer(buffer, out, out_length);
+    assert(rc == 0);
+    assert(strcmp(write_output, expected)==0);
+    assert(write_output_length == expected_length);
+    assert(buffer->length == 1); // for the last d in World
+    // Now Flush the buffer
+    expected = "5\r\nHello\r\n5\r\n Worl\r\n1\r\nd\r\n";
+    expected_length = strlen(expected);
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,expected)==0);
+    assert(buffer->length == 0);
+    assert(write_output_length == expected_length);
+    free(buffer->buffer);
+
+
+
+    // Cleanup
+    free(buffer);
+}
+
+// Function to test emit_to_socket() which is the JSON emitter functions for writing to socket using the HTTP chunked protocol
+// This is used for sending JSON data over a socket connection
+// The function buffers output into chuck sizes and sends the chunks over the socket
+// context structure holding the buffer for the current chunk, size and socket
+void test_emit_to_socket() {
+}
+
 int main() {
     test_read_into_buffer();
     test_ensure_buffer_size();
@@ -1331,5 +1665,10 @@ int main() {
     test_strip_whitespace();
     test_parse_header_line();
     test_read_response();
+    test_flush_socket_buffer();
+    test_write_to_socket_buffer();
+    test_flush_chunked_socket_buffer();
+    test_write_to_chunked_socket_buffer();
+    test_emit_to_socket();
     return 0;
 }

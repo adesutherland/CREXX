@@ -7,13 +7,15 @@ add_executable( httpserver httpserver.c
                 jsnparse.c jsnemit.c
                 httpclient.h
         httpcommon.c
-        httpcommon.h)
+        httpcommon.h
+        jsnemit.h)
 
 add_executable( httpclient httpclient.c
                 jsnparse.c jsnemit.c
                 httpclient.h
         httpcommon.c
-        httpcommon.h)
+        httpcommon.h
+        jsnemit.h)
 
 # Create an executable for the test
 add_executable(test_parseJSON test_parseJSON.c jsnparse.c)

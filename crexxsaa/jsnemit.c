@@ -6,10 +6,10 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include "httpclient.h"
+#include "jsnemit.h"
 
 // The JSON emitter function - for writing to stdout - this is used for logging and debugging
-__attribute__((unused)) void emit_to_stdout(emit_action action, const char* data, __attribute__((unused)) void** context) {
+__attribute__((unused)) int emit_to_stdout(emit_action action, const char* data, __attribute__((unused)) void** context) {
     switch (action) {
         case ACTION_OPEN:
             printf("JSON START\n");
@@ -24,6 +24,7 @@ __attribute__((unused)) void emit_to_stdout(emit_action action, const char* data
         default:
             break;
     }
+    return 0; // Always return success
 }
 
 // Function to create a memory buffer
@@ -38,6 +39,7 @@ MemoryBuffer *create_memory_buffer(size_t initial_capacity) {
     buffer->data = malloc(initial_capacity);
     if (buffer->data == NULL) {
         // Memory allocation error handling - panic and exit
+        free(buffer); // Free the buffer structure
         fprintf(stderr, "Memory allocation failed\n");
         exit(1);
     }
@@ -56,6 +58,7 @@ void shrink_memory_buffer(MemoryBuffer *buffer) {
     }
     // If realloc fails, the original buffer is still valid
 }
+
 // Function to write data to a memory buffer
 void write_to_memory_buffer(MemoryBuffer *buffer, const char *data, size_t data_length) {
     // Ensure enough capacity
@@ -84,7 +87,7 @@ void free_memory_buffer(MemoryBuffer *buffer) {
 }
 
 // The JSON emitter function - for writing to a memory buffer - this automatically creates, grows, and right sizes the buffer as needed
-void emit_to_memory_buffer(emit_action action, const char* data, void** context) {
+int emit_to_memory_buffer(emit_action action, const char* data, void** context) {
     MemoryBuffer *buffer = (MemoryBuffer *) *context;
 
     switch (action) {
@@ -107,13 +110,19 @@ void emit_to_memory_buffer(emit_action action, const char* data, void** context)
             *context = NULL;  // Reset context
             break;
     }
+    return 0; // Always return success
 }
 
 // Forward declarations
-void objblockEMITasArray(OBJBLOCK *object, emit_func emit, void** context); // Emit the OBJBLOCK as an array
-void objblockEMITasObject(OBJBLOCK *object, emit_func emit, void** context); // Emit the OBJBLOCK as an object
-void objblockEMIT(OBJBLOCK *shvobject, emit_func emit, void** context); // Emit the OBJBLOCK and members
-void shvblockEMIT(SHVBLOCK *shvblock, emit_func emit, void** context); // Emit the SHVBLOCK
+// These all, on success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int objblockEMITasArray(OBJBLOCK *object, emit_func emit, void** context); // Emit the OBJBLOCK as an array
+int objblockEMITasObject(OBJBLOCK *object, emit_func emit, void** context); // Emit the OBJBLOCK as an object
+int objblockEMIT(OBJBLOCK *shvobject, emit_func emit, void** context); // Emit the OBJBLOCK and members
+int shvblockEMIT(SHVBLOCK *shvblock, emit_func emit, void** context); // Emit the SHVBLOCK
+
 const char *shvcode_to_string(unsigned long shvcode); // Convert shvcode to a string
 const char *shvret_to_string(unsigned long shvret); // Convert shvret to a string
 char* base64_encode(const char *binary_data, size_t length); // Base64 encode function
@@ -126,22 +135,29 @@ char* base64_encode(const char *binary_data, size_t length); // Base64 encode fu
 //                     ... comma delimited service blocks ...
 //                ]
 //             }
-void jsonEMIT(SHVBLOCK* block, emit_func emit, void** context) {
+// On success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int jsonEMIT(SHVBLOCK* block, emit_func emit, void** context) {
     // Start
-    emit(ACTION_OPEN, NULL, context);
-    emit(ACTION_EMIT, "{\"serviceBlocks\":[", context);
+    if (emit(ACTION_OPEN, NULL, context)) return -1;
+    if (emit(ACTION_EMIT, "{\"serviceBlocks\":[", context)) return -1;
 
     /* Process the SHVBLOCK linked list */
     while (block) {
-        shvblockEMIT(block, emit, context);
-        if (block->shvnext)
-            emit(ACTION_EMIT, ",", context);
+        if (shvblockEMIT(block, emit, context)) return -1;
+        if (block->shvnext) {
+            if (emit(ACTION_EMIT, ",", context)) return -1;
+        }
         block = block->shvnext;
     }
 
     // End
-    emit(ACTION_EMIT, "]}", context);
-    emit(ACTION_FINISHED_EMIT, NULL, context);
+    if (emit(ACTION_EMIT, "]}", context)) return -1;
+    if (emit(ACTION_FINISHED_EMIT, NULL, context)) return -1;
+
+    return 0;
 }
 
 // Emit the SHVBLOCK, e.g.
@@ -151,76 +167,96 @@ void jsonEMIT(SHVBLOCK* block, emit_func emit, void** context) {
 //                        "result": "ok",
 //                        "value": ... value ...
 //                    }
-void shvblockEMIT(SHVBLOCK *shvblock, emit_func emit, void** context) {
+// On success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int shvblockEMIT(SHVBLOCK *shvblock, emit_func emit, void** context) {
     // Start
-    emit(ACTION_EMIT, "{", context);
+    if (emit(ACTION_EMIT, "{", context)) return -1;
 
     // Emit the name
-    emit(ACTION_EMIT, "\"name\":\"", context);
-    emit(ACTION_EMIT, shvblock->shvname, context);
-    emit(ACTION_EMIT, "\",", context);
+    if (emit(ACTION_EMIT, "\"name\":\"", context)) return -1;
+    if (emit(ACTION_EMIT, shvblock->shvname, context)) return -1;
+    if (emit(ACTION_EMIT, "\",", context)) return -1;
 
     // Emit the request
-    emit(ACTION_EMIT, "\"request\":\"", context);
-    emit(ACTION_EMIT, shvcode_to_string(shvblock->shvcode), context);
-    emit(ACTION_EMIT, "\",", context);
+    if (emit(ACTION_EMIT, "\"request\":\"", context)) return -1;
+    if (emit(ACTION_EMIT, shvcode_to_string(shvblock->shvcode), context)) return -1;
+    if (emit(ACTION_EMIT, "\",", context)) return -1;
 
     // Emit the result
-    emit(ACTION_EMIT, "\"result\":\"", context);
-    emit(ACTION_EMIT, shvret_to_string(shvblock->shvret), context);
-    emit(ACTION_EMIT, "\",", context);
+    if (emit(ACTION_EMIT, "\"result\":\"", context)) return -1;
+    if (emit(ACTION_EMIT, shvret_to_string(shvblock->shvret), context)) return -1;
+    if (emit(ACTION_EMIT, "\",", context)) return -1;
 
     // Emit the value
-    emit(ACTION_EMIT, "\"value\":", context);
-    objblockEMIT(shvblock->shvobject, emit, context);
+    if (emit(ACTION_EMIT, "\"value\":", context)) return -1;
+    if (objblockEMIT(shvblock->shvobject, emit, context)) return -1;
 
     // End
-    emit(ACTION_EMIT, "}", context);
+    if (emit(ACTION_EMIT, "}", context)) return -1;
+
+    return 0;
 }
 
 // Emit the OBJBLOCK and members
-void objblockEMIT(OBJBLOCK *shvobject, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
+// On success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int objblockEMIT(OBJBLOCK *shvobject, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
     char num_str[32]; // Buffer for number conversion
     char *base64_data;
 
     switch (shvobject->type) {
         case VALUE_STRING:
-            emit(ACTION_EMIT, "\"", context);
-            emit(ACTION_EMIT, shvobject->value.string, context);
-            emit(ACTION_EMIT, "\"", context);
+            if (emit(ACTION_EMIT, "\"", context)) return -1;
+            if (emit(ACTION_EMIT, shvobject->value.string, context)) return -1;
+            if (emit(ACTION_EMIT, "\"", context)) return -1;
             break;
         case VALUE_NULL:
-            emit(ACTION_EMIT, "null", context);
+            if (emit(ACTION_EMIT, "null", context)) return -1;
             break;
         case VALUE_BINARY: // Emit the binary data as base64
             base64_data = base64_encode(shvobject->value.binary.data, shvobject->value.binary.length);
-            emit(ACTION_EMIT, "{\"base64\":", context);
-            emit(ACTION_EMIT, "\"", context);
-            emit(ACTION_EMIT, base64_data, context);
-            emit(ACTION_EMIT, "\"}", context);
+            if (emit(ACTION_EMIT, "{\"base64\":", context)) {
+                free(base64_data);
+                return -1;
+            }
+            if (emit(ACTION_EMIT, "\"", context)) {
+                free(base64_data);
+                return -1;
+            }
+            if (emit(ACTION_EMIT, base64_data, context)) {
+                free(base64_data);
+                return -1;
+            }
             free(base64_data);
+            if (emit(ACTION_EMIT, "\"}", context)) return -1;
             break;
         case VALUE_INT:
             // Convert the integer to a string
             snprintf(num_str, sizeof(num_str), "%ld", shvobject->value.integer);
-            emit(ACTION_EMIT, num_str, context);
+            if (emit(ACTION_EMIT, num_str, context)) return -1;
             break;
         case VALUE_FLOAT:
             // Convert the float to a string - with no trailing zeros
             snprintf(num_str, sizeof(num_str), "%g", shvobject->value.real);
-            emit(ACTION_EMIT, num_str, context);
+            if (emit(ACTION_EMIT, num_str, context)) return -1;
             break;
         case VALUE_BOOL:
-            emit(ACTION_EMIT, shvobject->value.boolean ? "true" : "false", context);
+            if (emit(ACTION_EMIT, shvobject->value.boolean ? "true" : "false", context)) return -1;
             break;
         case VALUE_ARRAY:
-            objblockEMITasArray(shvobject, emit, context);
+            if (objblockEMITasArray(shvobject, emit, context)) return -1;
             break;
         case VALUE_OBJECT:
-            objblockEMITasObject(shvobject, emit, context);
+            if (objblockEMITasObject(shvobject, emit, context)) return -1;
             break;
-
     }
+
+    return 0;
 }
 
 // Convert shvcode to a string - the reverse of parseRequestCode() in jsnparse.c
@@ -278,50 +314,62 @@ const char *shvret_to_string(unsigned long shvret) {
 }
 
 // Emit the OBJBLOCK as an array
-void objblockEMITasArray(OBJBLOCK *object, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
+// On success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int objblockEMITasArray(OBJBLOCK *object, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
     MEMBLOCK *memblock = object->value.members;
-    emit(ACTION_EMIT, "[", context);
+    if (emit(ACTION_EMIT, "[", context)) return -1;
 
     while (memblock) {
-        emit(ACTION_EMIT, "{\"", context);
-        emit(ACTION_EMIT, memblock->membername, context);
-        emit(ACTION_EMIT, "\":", context);
-        objblockEMIT(memblock->memberobject, emit, context);
-        emit(ACTION_EMIT, "}", context);
+        if (emit(ACTION_EMIT, "{\"", context)) return -1;
+        if (emit(ACTION_EMIT, memblock->membername, context)) return -1;
+        if (emit(ACTION_EMIT, "\":", context)) return -1;
+        if (objblockEMIT(memblock->memberobject, emit, context)) return -1;
+        if (emit(ACTION_EMIT, "}", context)) return -1;
 
         if (memblock->membernext)
-            emit(ACTION_EMIT, ",", context);
+            if (emit(ACTION_EMIT, ",", context)) return -1;
 
         memblock = memblock->membernext;
     }
 
-    emit(ACTION_EMIT, "]", context);
+    if (emit(ACTION_EMIT, "]", context)) return -1;
+
+    return 0;
 }
 
 // Emit the OBJBLOCK as an object
-void objblockEMITasObject(OBJBLOCK *object, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
+// On success, returns 0, on error -1. Note in the case of an error the
+// state of the context object is undefined as is the number of
+// characters writen.
+// Error conditions currently are only raised by socket errors (likely socket closing)
+int objblockEMITasObject(OBJBLOCK *object, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
     MEMBLOCK *memblock = object->value.members;
-    emit(ACTION_EMIT, "{", context);
+    if (emit(ACTION_EMIT, "{", context)) return -1;
     // Emit the typename
-    emit(ACTION_EMIT, "\"class\":\"", context);
-    emit(ACTION_EMIT, object->typename, context);
-    emit(ACTION_EMIT, "\",", context);
+    if (emit(ACTION_EMIT, "\"class\":\"", context)) return -1;
+    if (emit(ACTION_EMIT, object->typename, context)) return -1;
+    if (emit(ACTION_EMIT, "\",", context)) return -1;
     // Emit the members
-    emit(ACTION_EMIT, "\"members\":{", context);
+    if (emit(ACTION_EMIT, "\"members\":{", context)) return -1;
     while (memblock) {
-        emit(ACTION_EMIT, "\"", context);
-        emit(ACTION_EMIT, memblock->membername, context);
-        emit(ACTION_EMIT, "\":", context);
-        objblockEMIT(memblock->memberobject, emit, context);
+        if (emit(ACTION_EMIT, "\"", context)) return -1;
+        if (emit(ACTION_EMIT, memblock->membername, context)) return -1;
+        if (emit(ACTION_EMIT, "\":", context)) return -1;
+        if (objblockEMIT(memblock->memberobject, emit, context)) return -1;
 
         if (memblock->membernext)
-            emit(ACTION_EMIT, ",", context);
+            if (emit(ACTION_EMIT, ",", context)) return -1;
 
         memblock = memblock->membernext;
     }
 
-    emit(ACTION_EMIT, "}", context); // End members
-    emit(ACTION_EMIT, "}", context); // End object
+    if (emit(ACTION_EMIT, "}", context)) return -1; // End members
+    if (emit(ACTION_EMIT, "}", context)) return -1; // End object
+
+    return 0;
 }
 
 // Base64 encode function - encoded output is returned in a malloced buffer that needs to be freed by the caller

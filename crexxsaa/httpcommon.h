@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "jsnemit.h"
 
 #define INITIAL_BUFFER_SIZE 1024 // Also the minimum read size for the socket
 #define MAX_HEADER_NAME 128
@@ -113,5 +114,52 @@ void strip_whitespace(char *str);
 // The line is terminated by a newline character
 // Returns true if the header was parsed successfully
 bool parse_header_line(char *line, char *header_name, char *header_value);
+
+// The JSON emitter functions for writing to socket using the HTTP chunked protocole
+// This is used for sending JSON data over a socket connection
+// The function buffers output into chuck sizes and sends the chunks over the socket
+// context structure holding the buffer for the currect chunk, size and socket
+#define SOCKET_BUFFER_SIZE 512
+typedef struct {
+    char *buffer;         // Pointer to the buffer
+    size_t capacity;    // Current allocated size of the buffer
+    size_t length;       // Current used length within the buffer
+    int socket;            // The socket to write the buffer to
+    char *secret_id;  // The secret id to use in the HTTP header
+    char *http_request; // The HTTP request to use (POST, PUT, etc.)
+    char *http_path;    // The HTTP path to use
+    char *http_headers; // Additional HTTP headers to use
+    char *http_host;    // The HTTP host to use
+} SocketBuffer;
+
+// Function to flush a SocketBuffer buffer to the socket
+// This function is used by the emit_to_socket() function
+// Returns 0 on success, -1 on error
+int flush_socket_buffer(SocketBuffer *buffer);
+
+// Function to write data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// This function is used by the emit_to_socket() function
+// If the length is bigger than the buffer capacity the buffer is flushed and the data is written directly to the socket
+// Returns 0 on success, -1 on error
+int write_to_socket_buffer(SocketBuffer *buffer, const char *data, size_t length);
+
+// Function to flush a SocketBuffer buffer to the socket as a chunk
+// This function is used by the emit_to_socket() function
+// Returns 0 on success, -1 on error
+int flush_chunked_socket_buffer(SocketBuffer *buffer);
+
+// Function to write data to a SocketBuffer buffer. When the buffer is full it is flushed to the socket
+// This function generates HTTP body chunked encoding
+// This function is used by the emit_to_socket() function
+// If the length is bigger than the buffer capacity then it is added to the buffer and flushed in chunks
+// Returns 0 on success, -1 on error
+int write_to_chunked_socket_buffer(SocketBuffer *buffer, const char *data, size_t length);
+
+// The JSON emitter functions for writing to socket using the HTTP chunked protocol
+// This is used for sending JSON data over a socket connection
+// The function buffers output into chuck sizes and sends the chunks over the socket
+// context structure holding the buffer for the current chunk, size and socket
+// Returns 0 on success, -1 on error
+int emit_to_socket(emit_action action, const char* data, void** context);
 
 #endif //CREXX_HTTPCOMMON_H
