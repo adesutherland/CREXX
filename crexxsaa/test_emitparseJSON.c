@@ -6,9 +6,10 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <printf.h>
+#include <stdio.h>
 //#include "crexxsaa.h"
 #include "httpclient.h"
+#include "jsnemit.h"
 
 // Function to compate a null-terminated string with a memory buffer */
 int compare_string_with_memory_buffer(const char *expected, MemoryBuffer *mem_buffer) {

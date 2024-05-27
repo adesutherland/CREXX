@@ -8,7 +8,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
-// #include <printf.h>
+#include <stdio.h>
 
 char mock_buffer[1024];
 int mock_index = 0;
@@ -1352,9 +1352,10 @@ void test_flush_socket_buffer() {
     int rc;
     char *out = "Hello World";
     size_t out_length = strlen(out);
-    SocketBuffer *buffer = malloc(sizeof(SocketBuffer *));
+    SocketBuffer *buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 200;
     buffer->buffer = malloc(buffer->capacity);
+    buffer->socket = 999;
 
     // Basic Test
     // Setup Buffer
@@ -1409,7 +1410,7 @@ void test_write_to_socket_buffer() {
 
     //  Test - Large buffer
     // Setup Buffer
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 200;
     buffer->buffer = malloc(buffer->capacity);
     buffer->buffer[0] = 0;
@@ -1433,10 +1434,11 @@ void test_write_to_socket_buffer() {
     assert(buffer->length == 0);
     assert(write_output_length == out_length);
     free(buffer->buffer);
+    free(buffer);
 
     //  Test - Very small buffer
     // Setup Buffer
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 5;
     buffer->buffer = malloc(buffer->capacity);
     buffer->buffer[0] = 0;
@@ -1452,10 +1454,11 @@ void test_write_to_socket_buffer() {
     assert(strcmp(write_output,out)==0);
     assert(buffer->length == 0);
     free(buffer->buffer);
+    free(buffer);
 
     //  Test - Large buffer with small write capacity
     // Setup Buffer
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 200;
     buffer->buffer = malloc(buffer->capacity);
     buffer->buffer[0] = 0;
@@ -1479,10 +1482,11 @@ void test_write_to_socket_buffer() {
     assert(buffer->length == 0);
     assert(write_output_length == out_length);
     free(buffer->buffer);
+    free(buffer);
 
     //  Test - Very small buffer with small write capacity
     // Setup Buffer
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 5;
     buffer->buffer = malloc(buffer->capacity);
     buffer->buffer[0] = 0;
@@ -1498,9 +1502,10 @@ void test_write_to_socket_buffer() {
     assert(strcmp(write_output,out)==0);
     assert(buffer->length == 0);
     free(buffer->buffer);
+    free(buffer);
 
     // Test with a write error
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 5;
     buffer->buffer = malloc(buffer->capacity);
     buffer->buffer[0] = 0;
@@ -1514,8 +1519,6 @@ void test_write_to_socket_buffer() {
     rc = write_to_socket_buffer(buffer, out, out_length);
     assert(rc == -1);
     free(buffer->buffer);
-
-    // Cleanup
     free(buffer);
 }
 
@@ -1524,7 +1527,7 @@ void test_flush_chunked_socket_buffer() {
     int rc;
     char *out = "Hello World";
     size_t out_length = strlen(out);
-    SocketBuffer *buffer = malloc(sizeof(SocketBuffer *));
+    SocketBuffer *buffer = malloc(sizeof(SocketBuffer));
     buffer->capacity = 200;
     buffer->buffer = malloc(buffer->capacity);
 
@@ -1581,8 +1584,7 @@ void test_write_to_chunked_socket_buffer() {
     char *expected;
     size_t expected_length;
     SocketBuffer *buffer;
-
-    buffer = malloc(sizeof(SocketBuffer *));
+    buffer = malloc(sizeof(SocketBuffer));
 
     //  Test - Large buffer
     // Setup Buffer
@@ -1641,7 +1643,50 @@ void test_write_to_chunked_socket_buffer() {
     assert(write_output_length == expected_length);
     free(buffer->buffer);
 
+    // Test Large Buffer with a small write capacity
+    // Setup Buffer
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 2;
+    // Test
+    expected = "b\r\nHello World\r\n";
+    expected_length = strlen(expected);
+    rc = write_to_chunked_socket_buffer(buffer, out, out_length);
+    // Nothing should be written to the socket (yet)
+    assert(rc == 0);
+    assert(strcmp(write_output,"")==0);
+    assert(write_output_length == 0);
+    assert(buffer->length == out_length);
+    // Now Flush the buffer
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,expected)==0);
+    assert(buffer->length == 0);
+    assert(write_output_length == expected_length);
+    free(buffer->buffer);
 
+    // Test with a write() error
+    buffer->capacity = 200;
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = -1;
+    // Test
+    rc = write_to_chunked_socket_buffer(buffer, out, out_length);
+    assert(rc == 0); // This should not fail as the error is in the flush
+    // Now Flush the buffer
+    rc = flush_chunked_socket_buffer(buffer);
+    assert(rc == -1);
+    free(buffer->buffer);
 
     // Cleanup
     free(buffer);
@@ -1652,6 +1697,53 @@ void test_write_to_chunked_socket_buffer() {
 // The function buffers output into chuck sizes and sends the chunks over the socket
 // context structure holding the buffer for the current chunk, size and socket
 void test_emit_to_socket() {
+    int rc;
+    char *out = "Hello World";
+    size_t out_length = strlen(out);
+    char *expected;
+    size_t expected_length;
+    SocketBuffer *buffer;
+    buffer = malloc(sizeof(SocketBuffer));
+
+    buffer->capacity = 20; // Small Buffer to exercise the chunking
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
+    buffer->length = 0;
+    buffer->socket = 999;
+    buffer->secret_id = "1234567890";
+    buffer->http_request = "POST";
+    buffer->http_path = "/api/v1/test";
+    buffer->http_headers = "Crexx-Version: 1.1.2\r\n";
+    buffer->http_host = "localhost";
+
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+
+    // ACTION_OPEN
+    rc = emit_to_socket(ACTION_OPEN, NULL, (void**)&buffer);
+    assert(rc == 0);
+
+    // ACTION_EMIT
+    rc = emit_to_socket(ACTION_EMIT, out, (void**)&buffer);
+    assert(rc == 0);
+
+    // ACTION_FINISHED_EMIT
+    rc = emit_to_socket(ACTION_FINISHED_EMIT, NULL, (void**)&buffer);
+    assert(rc == 0);
+
+    // ACTION_CLOSE
+    rc = emit_to_socket(ACTION_CLOSE, NULL, (void**)&buffer);
+    assert(rc == 0);
+
+    printf("write_output: %s\n", write_output);
+
+
+
+
+    free(buffer->buffer);
 }
 
 int main() {

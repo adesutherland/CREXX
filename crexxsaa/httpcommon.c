@@ -14,7 +14,6 @@
 // -1 means an error occurred (and errno is set) - but in this scenario this
 // probably means the socket is closed
 static ssize_t write_all(int fd, const void *buf, size_t count) {
-    assert(count <= 100); // todo debugging - remove!
     const char *buffer = buf;
     while (count > 0) {
         ssize_t bytes_written = write(fd, buffer, count);
@@ -33,7 +32,6 @@ static ssize_t write_all(int fd, const void *buf, size_t count) {
 // returns -1 on error (and errno is set) - but in this scenario this
 // probably means the socket is closed
 int flush_socket_buffer(SocketBuffer *buffer) {
-    assert(buffer->length <= 100); // todo debugging - remove!
     if (buffer->length > 0) {
         if (write_all(buffer->socket, buffer->buffer, buffer->length) == -1) {
             return -1;
@@ -49,8 +47,6 @@ int flush_socket_buffer(SocketBuffer *buffer) {
 // returns -1 on error (and errno is set) - but in this scenario this
 // probably means the socket is closed
 int write_to_socket_buffer(SocketBuffer *buffer, const char *data, size_t length) {
-    assert(buffer->length <= 100); // todo debugging - remove!
-    assert(length <= 100); // todo debugging - remove!
     // Ensure we have enough space in the buffer
     if (buffer->length + length > buffer->capacity) {
         // Flush the buffer
@@ -68,7 +64,6 @@ int write_to_socket_buffer(SocketBuffer *buffer, const char *data, size_t length
     // Copy the data to the buffer
     memcpy(buffer->buffer + buffer->length, data, length);
     buffer->length += length;
-
     return 0;
 }
 
@@ -77,8 +72,6 @@ int write_to_socket_buffer(SocketBuffer *buffer, const char *data, size_t length
 // returns -1 on error (and errno is set) - but in this scenario this
 // probably means the socket is closed
 int flush_chunked_socket_buffer(SocketBuffer *buffer) {
-    assert(buffer->length <= 100); // todo debugging - remove!
-
     if (buffer->length > 0) {
         char chunk_size[16];
         int chunk_size_length = sprintf(chunk_size, "%x\r\n", (int)buffer->length);
@@ -97,8 +90,6 @@ int flush_chunked_socket_buffer(SocketBuffer *buffer) {
 // returns -1 on error (and errno is set) - but in this scenario this
 // probably means the socket is closed
 int write_to_chunked_socket_buffer(SocketBuffer *buffer, const char *data, size_t length) {
-    assert(buffer->length <= 100); // todo debugging - remove!
-    assert(length <= 100); // todo debugging - remove!
     // Loop processing the data in chunks
     while (buffer->length + length > buffer->capacity) {
         // Calculate the amount of data to copy to the buffer
@@ -191,7 +182,7 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
 
         case ACTION_FINISHED_EMIT:
             // Flush the buffer
-            flush_chunked_socket_buffer(buffer);
+            if (flush_chunked_socket_buffer(buffer)) return -1;
             // Write the last chunk (0 length)
             if (write(buffer->socket, "0\r\n\r\n", 5)) return -1;
             // Write Trailer headers (if specified) - currently not implemented
@@ -410,7 +401,7 @@ void ensure_buffer_size(HTTPResponse *response, size_t size) {
         size_t new_capacity = response->capacity * 2;
         if (new_capacity < size) new_capacity = size;
 
-        // Use realloc to resize the buffer
+        // Use realloc() to resize the buffer
         if (response->buffer == NULL) {
             new_buffer = malloc(new_capacity);
         }
@@ -422,7 +413,7 @@ void ensure_buffer_size(HTTPResponse *response, size_t size) {
             response->capacity = new_capacity;
         }
         else {
-            // realloc failed - we just panic and exit on memory allocation failures
+            // realloc() failed - we just panic and exit on memory allocation failures
             // Print an error message to stderr
             fprintf(stderr, "Memory allocation failed\n");
             exit(1);

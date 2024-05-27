@@ -6,6 +6,7 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "jsnemit.h"
 
 // The JSON emitter function - for writing to stdout - this is used for logging and debugging

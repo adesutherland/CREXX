@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <printf.h>
+#include <stdio.h>
 //#include "crexxsaa.h"
 //#include "httpclient.h"
 #include "jsnemit.h"
@@ -75,11 +76,13 @@ void test_shvcode(int shvcode, const char *expected_json_code) {
 
     // Create a SHVBLOCK
     block = malloc(sizeof(SHVBLOCK));
+    memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
     block->shvname = "var";
     block->shvcode = shvcode;
     block->shvret = RXSHV_OK;
     block->shvnext = NULL;
     block->shvobject = malloc(sizeof(OBJBLOCK));
+    memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
     block->shvobject->type = VALUE_STRING;
     block->shvobject->value.string = "Hello, World!";
     block->shvobject->typename = NULL;
@@ -104,11 +107,13 @@ void test_shvret(int shvret, const char *expected_json_code) {
 
     // Create a SHVBLOCK
     block = malloc(sizeof(SHVBLOCK));
+    memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
     block->shvname = "var";
     block->shvcode = RXSHV_SET;
     block->shvret = shvret;
     block->shvnext = NULL;
     block->shvobject = malloc(sizeof(OBJBLOCK));
+    memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
     block->shvobject->type = VALUE_STRING;
     block->shvobject->value.string = "Hello, World!";
     block->shvobject->typename = NULL;
@@ -124,18 +129,19 @@ void test_shvret(int shvret, const char *expected_json_code) {
 
 
 void test_emitJSON() {
-
         MemoryBuffer *mem_context;
         SHVBLOCK *block;
 
         // Smoke test for emitJSON - tests string value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "hellovar";
         block->shvcode = RXSHV_SET;
         block->shvret = RXSHV_OK;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_STRING;
         block->shvobject->value.string = "Hello, World!";
         block->shvobject->typename = NULL;
@@ -174,11 +180,13 @@ void test_emitJSON() {
         // Test with a binary value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "binaryvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_BINARY;
         block->shvobject->value.binary.data = "Hello, World!";
         // Note that the base64 encoded value is "SGVsbG8sIFdvcmxkIQ" (without the trailing ==)
@@ -197,11 +205,13 @@ void test_emitJSON() {
         // Test with NULL value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "nullvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_NULL;
         block->shvobject->value.string = NULL;
         block->shvobject->typename = NULL;
@@ -218,11 +228,13 @@ void test_emitJSON() {
         // Test with true value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "truevar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_BOOL;
         block->shvobject->value.boolean = 1;
         block->shvobject->typename = NULL;
@@ -239,11 +251,13 @@ void test_emitJSON() {
         // Test with false value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "falsevar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_BOOL;
         block->shvobject->value.boolean = 0;
         block->shvobject->typename = NULL;
@@ -260,19 +274,23 @@ void test_emitJSON() {
         // Test with two svhblocks
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "var1";
         block->shvcode = RXSHV_SET;
         block->shvret = RXSHV_OK;
         block->shvnext = malloc(sizeof(SHVBLOCK));
+        memset(block->shvnext, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvnext->shvname = "var2";
         block->shvnext->shvcode = RXSHV_SET;
         block->shvnext->shvret = RXSHV_OK;
         block->shvnext->shvnext = NULL;
         block->shvnext->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvnext->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvnext->shvobject->type = VALUE_STRING;
         block->shvnext->shvobject->value.string = "Hello, World!";
         block->shvnext->shvobject->typename = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_STRING;
         block->shvobject->value.string = "Hello, World!";
         block->shvobject->typename = NULL;
@@ -289,11 +307,13 @@ void test_emitJSON() {
         // Test with an integer value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "intvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_INT;
         block->shvobject->value.integer = 123;
         block->shvobject->typename = NULL;
@@ -310,11 +330,13 @@ void test_emitJSON() {
         // Test with a float value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "floatvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_FLOAT;
         block->shvobject->value.real = 123.456;
         block->shvobject->typename = NULL;
@@ -331,16 +353,20 @@ void test_emitJSON() {
         // Test with an object value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "objectvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_OBJECT;
         block->shvobject->typename = "testclass";
         block->shvobject->value.members = malloc(sizeof(MEMBLOCK));
+        memset(block->shvobject->value.members, 0, sizeof(MEMBLOCK)); // Zero the members
         block->shvobject->value.members->membername = "member1";
         block->shvobject->value.members->memberobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject->value.members->memberobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->value.members->memberobject->type = VALUE_STRING;
         block->shvobject->value.members->memberobject->value.string = "Hello, World!";
         block->shvobject->value.members->memberobject->typename = NULL;
@@ -357,16 +383,20 @@ void test_emitJSON() {
         // Test with an array value
         // - Create a SHVBLOCK
         block = malloc(sizeof(SHVBLOCK));
+        memset(block, 0, sizeof(SHVBLOCK)); // Zero the block
         block->shvname = "arrayvar";
         block->shvcode = 1;
         block->shvret = 0;
         block->shvnext = NULL;
         block->shvobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->type = VALUE_ARRAY;
         block->shvobject->typename = NULL;
         block->shvobject->value.members = malloc(sizeof(MEMBLOCK));
+        memset(block->shvobject->value.members, 0, sizeof(MEMBLOCK)); // Zero the members
         block->shvobject->value.members->membername = "0";
         block->shvobject->value.members->memberobject = malloc(sizeof(OBJBLOCK));
+        memset(block->shvobject->value.members->memberobject, 0, sizeof(OBJBLOCK)); // Zero the object
         block->shvobject->value.members->memberobject->type = VALUE_STRING;
         block->shvobject->value.members->memberobject->value.string = "Hello, World!";
         block->shvobject->value.members->memberobject->typename = NULL;

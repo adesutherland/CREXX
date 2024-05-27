@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 
 /* Block to hold the first SHVBLOCK and a pointer to the JSON buffer to facilitate freeing the buffers */
 typedef struct SHVBUFFER {
@@ -205,6 +206,19 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
     SHVBLOCK* current_shvblock = 0; // This points to the current SHVBLOCK being populated
     *shvblock_handle = 0; // This points to the fist SHVBLOCK in the linked list (or NULL if there are no SHVBLOCKS yet)
 
+    // Create the SHVBLOCK
+    current_shvblock = CreateShvBlock(current_shvblock, start_json);
+    if (!current_shvblock) {
+        rc = PARSE_ERROR_CREATE_SHVBLOCK_FAILED;
+        if (error) {
+            error->error_code = rc;
+            error->position = json - start_json;
+            error->message = error_message(rc);
+        }
+        return rc;
+    }
+    *shvblock_handle = current_shvblock; // Update the head shvblock pointer
+
     // Skip to the start of the object
     rc = json_next_object(&json);
     if (rc != PARSE_ERROR_OK) {
@@ -271,19 +285,6 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
             return rc;
         }
 
-        // Create the SHVBLOCK
-        current_shvblock = CreateShvBlock(current_shvblock, start_json);
-        if (!current_shvblock) {
-            rc = PARSE_ERROR_CREATE_SHVBLOCK_FAILED;
-            if (error) {
-                error->error_code = rc;
-                error->position = json - start_json;
-                error->message = error_message(rc);
-            }
-            return rc;
-        }
-        if (*shvblock_handle == NULL) *shvblock_handle = current_shvblock; // Update the head shvblock pointer if this is the first SHVBLOCK
-
         // Parse individual service block
         rc = parseShvblock(&json, current_shvblock);
         if (rc != PARSE_ERROR_OK) {
@@ -312,6 +313,20 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
         }
         // Skip any whitespace
         json_skip_whitespace(&json);
+
+        // Create the next SHVBLOCK
+        if (*json != ']') {
+            current_shvblock = CreateShvBlock(current_shvblock, start_json);
+            if (!current_shvblock) {
+                rc = PARSE_ERROR_CREATE_SHVBLOCK_FAILED;
+                if (error) {
+                    error->error_code = rc;
+                    error->position = json - start_json;
+                    error->message = error_message(rc);
+                }
+                return rc;
+            }
+        }
     }
     json++; // Skip the end of the array
 
@@ -1070,7 +1085,7 @@ int json_escape_string(char *string) {
                         json_write += 3;
                     }
                 }
-                json_read += 6; // For the '/', 'u' and 4 hex digits
+                json_read++; // Skip the last digit
             }
             else {
                 return -1;
