@@ -22,6 +22,7 @@
 #include "rxastree.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
+#include "../decimal/decNumber.h"
 
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
@@ -907,12 +908,19 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
  * Decimal Instructions
  * -----------------------------------------------------------------------------
  */
-        START_INSTRUCTION(DMULT_REG_REG_REG) CALC_DISPATCH(3)
+	START_INSTRUCTION(DMULT_REG_REG_REG) CALC_DISPATCH(3)
+	    decNumber a;
+	    decNumber b;
+	    decContext set;                  // working context    
+	    decContextDefault(&set, DEC_INIT_BASE); // initialize 
             DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI * op3RI)
-            DISPATCH
-
+	    /* decNumberFromString(&a,op2S,&set); */
+	    /* decNumberFromString(&b,op3S,&set); */
+	    /* decNumberMult(&a,b, &set); */
+              /* REG_RETURN_STRING(op1s) */
+	      DISPATCH
+	      
         START_INSTRUCTION(DMULT_REG_REG_INT) {
             CALC_DISPATCH(3)
             DEBUG("TRACE - DMULT R%lu,R%lu,%llu\n", REG_IDX(1),

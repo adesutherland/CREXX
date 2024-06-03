@@ -1,5 +1,5 @@
  /* rexx */
-  options levelb
+options levelb
 
 namespace rxfnsb expose format
 import _rxsysb
