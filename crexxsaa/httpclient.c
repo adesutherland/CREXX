@@ -13,7 +13,6 @@
 
 // Library Header
 #include "crexxsaa.h"
-#include "httpclient.h"
 
 // Dependencies
 #include <stdio.h>
@@ -24,41 +23,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 
 // Include REXXSAA Header
-#include "crexxsaa.h"
-
-// Common http headers for all requests
-#define HTTP_COMMON "Content-Type: application/json\r\nUser-Agent: CREXX/0.1\r\nKeep-Alive: timeout=5, max=1000\r\nConnection: Keep-Alive\r\nCache-Control: no-cache\r\n"
-
-// Default http header string to be used for normal connections (including keep-alive, etc.)
-#define HTTP_HEADER HTTP_COMMON
-
-// Default http header string to be used for long-polling connections (including keep-alive, etc.)
-#define HTTP_HEADER_LONG_POLL HTTP_COMMON
-
-// strtok_crlf - Custom strtok for CRLF
-char *strtok_crlf(char *str) {
-    static char *next_start;
-
-    if (str) next_start = str;
-    else str = next_start;
-
-    if (!next_start) return NULL;
-
-    char *crlf = strstr(next_start, "\r\n");
-    if (!crlf) {
-        char *remaining = next_start;
-        next_start = NULL;
-        return remaining;
-    }
-
-    *crlf = '\0';
-    next_start = crlf + 2;
-
-    return str;
-}
+// #include "crexxsaa.h"
+#include "jsnemit.h"
+#include "httpcommon.h"
 
 /* Connect to the server */
 int rexx_connect() {
@@ -83,70 +52,100 @@ int rexx_connect() {
 
 // REXXSAA -> REST Functions
 
-int rexx_get_request(int sock, char* get_request) {
-    char response[4096];
-    char request[4096];
-    int body_length = -1;
-    int l;
-    SHVBLOCK* shvblock = 0;
+// Function to retrieve the value of a REXX variable
+int RexxVariableGet(const char *varName, char **result) {
+    SHVBLOCK *request = (SHVBLOCK *) malloc(sizeof(SHVBLOCK));
+    SHVBLOCK *return_shvblock = 0;
+    unsigned long rc;
 
-    snprintf(request, 4096, "GET %s HTTP/1.1\r\nHost: localhost\r\n" HTTP_HEADER "\r\n", get_request);
-    printf("Request is %s\n", get_request);
+    // Create request SHVBLOCK
+    memset(request, 0, sizeof(SHVBLOCK)); // Zero the block
+    request->shvname = (char*)varName;
+    request->shvcode = RXSHV_FETCH;
+    request->shvret = RXSHV_OK;
+    request->shvnext = NULL;
+    request->shvobject = NULL;
 
-    send(sock, request, strlen(request), 0);
-
-    l = read(sock, response, sizeof(response)-1);
-    response[l] = 0;
-
-    // Parse HTTP Headers
-    printf("Response Headers:\n");
-    char *line = strtok_crlf(response);
-    while (line && strlen(line)) {
-        printf("%s\n", line);
-        line = strtok_crlf(NULL);
-
-        // Note as this client is only designed to works with CREXX it can assume the case of headers
-        // TODO Confirm Server is CREXX/0.1
-
-        // TODO Get Body Length
-        if (strncmp("Content-Length:", line, 15) == 0) {
-            body_length = atoi(line + 16);
-        }
-    }
-
-    if (body_length <= 0) {
-        fprintf(stderr, "Invalid response - no body length\n");
+    // Execute
+    rc = RexxVariablePool(request, &return_shvblock);
+    if (rc) {
+        fprintf(stderr, "Error in RexxVariablePool\n");
         return -1;
     }
 
-    // Skip blank line
-    line = strtok_crlf(NULL);
+    // Get the result
+    if (return_shvblock->shvret == RXSHV_OK) {
+        // We only support string values
+        if (return_shvblock->shvobject->type != VALUE_STRING) {
+            fprintf(stderr, "Error in RexxVariablePool - Unexpected value type\n");
+            return -1;
+        }
+        // Copy the string to a new buffer
+        *result = malloc(strlen(return_shvblock->shvobject->value.string) + 1);
+        strcpy(*result, return_shvblock->shvobject->value.string);
+    } else {
+        fprintf(stderr, "Error in RexxVariablePool\n");
+        return -1;
+    }
 
-    // Print Body Payload
-    line[body_length] = 0;
-    printf("Response Body: %s\n", line);
-
-    parseJSON(line, &shvblock);
+    // Cleanup
+    free(request);
+    FreeRexxVariablePoolResult(return_shvblock);
     return 0;
 }
 
-// Function to retrieve the value of a REXX variable
-int RexxVariableGet(const char *varName, RXSTRING *result) {
-    // TODO Implement
-    return 0;
+/* RexxVariablePool - Interface to the REXX variable pool */
+unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result) {
+    int fd;
+    int rc;
 
-}
+    // Connect to the server
+    fd = rexx_connect();
+    if (fd < 0) {
+        fprintf(stderr, "Error connecting to server\n");
+        return -1;
+    }
 
-int main() {
-    printf("Starting\n");
-    int sock = rexx_connect();
-    if (sock < 0) return 1;
+    SocketBuffer *socket_buffer;
+    socket_buffer = malloc(sizeof(SocketBuffer));
+    socket_buffer->capacity = 0;
+    socket_buffer->buffer = NULL;
+    socket_buffer->length = 0;
+    socket_buffer->socket = fd;
+    socket_buffer->secret_id = "1234567890";
+    socket_buffer->http_request = "GET";
+    socket_buffer->http_path = "/crexx/api/v1/get";
+    socket_buffer->http_host = "localhost";
+    socket_buffer->http_headers = 0;
 
-    rexx_get_request(sock, "/var/test1");
-    rexx_get_request(sock, "/var/test2");
+    // Send the json request over the http socket
+    rc = jsonEMIT(request, emit_to_socket, (void*)&socket_buffer);
+    if (rc) {
+        fprintf(stderr, "Error sending request\n");
+        return -1;
+    }
 
-    printf("Finished\n");
-    close(sock);
+    // Read the response
+    // Read the http response
+    HTTPMessage *response = malloc(sizeof(HTTPMessage));
 
+    // Clear response
+    memset(response, 0, sizeof(HTTPMessage));
+    if (read_response(fd, response)) {
+        fprintf(stderr, "Error reading response\n");
+        return -1;
+    }
+
+    // Parse the response
+    PARSE_ERROR error;
+    rc = parseJSON(response, result, &error);
+    if (rc) {
+        fprintf(stderr, "Error parsing response\n");
+        return -1;
+    }
+
+    // Cleanup
+    emit_to_socket(ACTION_CLOSE, NULL, (void*)&socket_buffer);
+    free(socket_buffer);
     return 0;
 }

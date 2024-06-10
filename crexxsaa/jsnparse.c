@@ -4,7 +4,7 @@
 //
 // Created by and copyright (c) 2024 Adrian Sutherland
 
-#include "httpclient.h"
+#include "httpcommon.h"
 #include "crexxsaa.h"
 
 #include <stddef.h>
@@ -12,13 +12,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <math.h>
 #include <stdint.h>
 
 /* Block to hold the first SHVBLOCK and a pointer to the JSON buffer to facilitate freeing the buffers */
 typedef struct SHVBUFFER {
     struct SHVBLOCK shvblock;     // The SHVBLOCK
-    char *json;            // Pointer to the json buffer (the pointer is appended to the SHVBLOCK)
+    HTTPMessage *message;            // Pointer to the json buffer (the pointer is appended to the SHVBLOCK)
 } SHVBUFFER;
 
 /* Parse Function prototypes */
@@ -135,7 +134,7 @@ void FreeObjBlock(OBJBLOCK *shvobject) { // NOLINT(misc-no-recursion) - suppress
 }
 
 /* Create a SHVBLOCK */
-SHVBLOCK* CreateShvBlock(SHVBLOCK* previous, char* JsonBuffer) {
+SHVBLOCK* CreateShvBlock(SHVBLOCK* previous, HTTPMessage *messageBuffer) {
     SHVBLOCK* shvblock;
     if (previous) {
         /* Create the SHVBLOCK */
@@ -151,9 +150,9 @@ SHVBLOCK* CreateShvBlock(SHVBLOCK* previous, char* JsonBuffer) {
         SHVBUFFER* shvbuffer = (SHVBUFFER*)malloc(sizeof(SHVBUFFER));
         if (!shvbuffer) {
             fprintf(stderr, "Memory allocation error\n");
-            return 0;
+            return NULL;
         }
-        shvbuffer->json = JsonBuffer;
+        shvbuffer->message = messageBuffer;
         shvblock = (SHVBLOCK*)shvbuffer; // Set the SHVBLOCK pointer to the SHVBUFFER
     }
 
@@ -176,7 +175,8 @@ void FreeRexxVariablePoolResult(SHVBLOCK *shvblock) {
     shvbuffer = (SHVBUFFER*)shvblock;
     FreeObjBlock(shvbuffer->shvblock.shvobject); // Free the OBJBLOCK
     shvblock = shvbuffer->shvblock.shvnext;
-    free(shvbuffer->json); // Free the JSON buffer
+    free_response(shvbuffer->message); // Free the http message contents
+    free(shvbuffer->message); // Free the http message structure itself
     free(shvbuffer); // Free the SHVBUFFER
 
     /* Free the rest of the SHVBLOCK linked list */
@@ -199,20 +199,20 @@ static int strcasecmp(const char *s1, const char *s2) {
 */
 
 /* Parses the JSON body */
-int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) {
+int parseJSON(HTTPMessage *message, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) {
     char *name;
-    char* json = start_json; // Pointer to the current position in the JSON buffer
+    char* json = BODY(message); // Pointer to the current position in the JSON buffer
     int rc;
     SHVBLOCK* current_shvblock = 0; // This points to the current SHVBLOCK being populated
     *shvblock_handle = 0; // This points to the fist SHVBLOCK in the linked list (or NULL if there are no SHVBLOCKS yet)
 
     // Create the SHVBLOCK
-    current_shvblock = CreateShvBlock(current_shvblock, start_json);
+    current_shvblock = CreateShvBlock(current_shvblock, message);
     if (!current_shvblock) {
         rc = PARSE_ERROR_CREATE_SHVBLOCK_FAILED;
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json;
+            error->position = json - BODY(message);
             error->message = error_message(rc);
         }
         return rc;
@@ -224,7 +224,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
     if (rc != PARSE_ERROR_OK) {
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json;
+            error->position = json - BODY(message);
             error->message = error_message(rc);
         }
         return rc;
@@ -235,7 +235,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
     if (rc != PARSE_ERROR_OK) {
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json;
+            error->position = json - BODY(message);
             error->message = error_message(rc);
         }
         return rc;
@@ -244,7 +244,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
         rc = PARSE_ERROR_EXPECTING_SERVICE_BLOCKS;
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json - strlen(name) - 1;
+            error->position = json - BODY(message) - strlen(name) - 1;
             error->message = error_message(rc);
         }
         return rc;
@@ -255,7 +255,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
     if (rc != PARSE_ERROR_OK) {
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json;
+            error->position = json - BODY(message);
             error->message = error_message(rc);
         }
         return rc;
@@ -265,7 +265,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
         rc = PARSE_ERROR_EXPECTING_ARRAY;
         if (error) {
             error->error_code = rc;
-            error->position = json - start_json;
+            error->position = json - BODY(message);
             error->message = error_message(rc);
         }
         return rc;
@@ -279,7 +279,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
         if (rc != PARSE_ERROR_OK) {
             if (error) {
                 error->error_code = rc;
-                error->position = json - start_json;
+                error->position = json - BODY(message);
                 error->message = error_message(rc);
             }
             return rc;
@@ -290,7 +290,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
         if (rc != PARSE_ERROR_OK) {
             if (error) {
                 error->error_code = rc;
-                error->position = json - start_json;
+                error->position = json - BODY(message);
                 error->message = error_message(rc);
             }
             return rc;
@@ -305,7 +305,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
                 rc = PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY;
                 if (error) {
                     error->error_code = rc;
-                    error->position = json - start_json;
+                    error->position = json - BODY(message);
                     error->message = error_message(rc);
                 }
                 return rc;
@@ -316,12 +316,12 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
 
         // Create the next SHVBLOCK
         if (*json != ']') {
-            current_shvblock = CreateShvBlock(current_shvblock, start_json);
+            current_shvblock = CreateShvBlock(current_shvblock, message);
             if (!current_shvblock) {
                 rc = PARSE_ERROR_CREATE_SHVBLOCK_FAILED;
                 if (error) {
                     error->error_code = rc;
-                    error->position = json - start_json;
+                    error->position = json - BODY(message);
                     error->message = error_message(rc);
                 }
                 return rc;
@@ -334,7 +334,7 @@ int parseJSON(char* start_json, SHVBLOCK** shvblock_handle, PARSE_ERROR* error) 
 
     if (error) {
         error->error_code = PARSE_ERROR_OK;
-        error->position = json - start_json;
+        error->position = json - BODY(message);
         error->message = error_message(PARSE_ERROR_OK);
     }
     return PARSE_ERROR_OK;
@@ -1192,15 +1192,16 @@ int json_skip_number(char **json, VALUETYPE *type_handle, long *integer_handle, 
     if (**json == 'e' || **json == 'E') {
         (*json)++;
         *type_handle = VALUE_FLOAT;
-        if (**json == '-') {
-            (*json)++;
-        }
-        else if (**json == '+') {
+        if (**json == '-' || **json == '+') {
             (*json)++;
         }
         while (**json >= '0' && **json <= '9') {
             (*json)++;
         }
+    }
+
+    if (value == *json) {
+        return PARSE_ERROR_EXPECTED_NUMBER; // No number found
     }
 
     if (*type_handle == VALUE_INT) {

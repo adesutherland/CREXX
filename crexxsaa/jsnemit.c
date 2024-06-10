@@ -157,7 +157,6 @@ int jsonEMIT(SHVBLOCK* block, emit_func emit, void** context) {
     // End
     if (emit(ACTION_EMIT, "]}", context)) return -1;
     if (emit(ACTION_FINISHED_EMIT, NULL, context)) return -1;
-
     return 0;
 }
 
@@ -209,6 +208,12 @@ int shvblockEMIT(SHVBLOCK *shvblock, emit_func emit, void** context) {
 int objblockEMIT(OBJBLOCK *shvobject, emit_func emit, void** context) { // NOLINT(misc-no-recursion) - suppress the clang-tidy warning about recursion
     char num_str[32]; // Buffer for number conversion
     char *base64_data;
+
+    // If the object is NULL, emit "null"
+    if (shvobject == NULL) {
+        if (emit(ACTION_EMIT, "null", context)) return -1;
+        return 0;
+    }
 
     switch (shvobject->type) {
         case VALUE_STRING:

@@ -10,6 +10,7 @@
 //#include "crexxsaa.h"
 #include "httpclient.h"
 #include "jsnemit.h"
+#include "httpcommon.h"
 
 // Function to compate a null-terminated string with a memory buffer */
 int compare_string_with_memory_buffer(const char *expected, MemoryBuffer *mem_buffer) {
@@ -30,16 +31,38 @@ int compare_string_with_memory_buffer(const char *expected, MemoryBuffer *mem_bu
 // Execute a test of the emit and parse JSON functions
 void do_test(char *json) {
     MemoryBuffer *mem_context;
-    SHVBLOCK *block;
 
     // Copy json into a dynamic buffer (parseJSON mutates the buffer)
     char* json_in = malloc(strlen(json) + 1);
     strcpy(json_in, json);
 
+    // Create a mock HTTPMessage structure - we just need the body
+    HTTPMessage *httpMessage;
+    httpMessage = malloc(sizeof(HTTPMessage));
+    httpMessage->buffer = json_in;
+    httpMessage->size = strlen(json_in);
+    httpMessage->capacity = strlen(json_in) + 1;
+    httpMessage->status_line_start = 0;
+    httpMessage->status_line_length = 0;
+    httpMessage->header_start = 0;
+    httpMessage->header_length = 0;
+    httpMessage->body_start = 0;
+    httpMessage->body_length = strlen(json_in);
+    httpMessage->trailer_start = 0;
+    httpMessage->trailer_length = 0;
+    httpMessage->reading_phase = READING_COMPLETE;
+    httpMessage->cursor = 0;
+    httpMessage->reading_error_code = 0;
+    httpMessage->chunked = false;
+    httpMessage->expecting_trailers = false;
+    httpMessage->last_chunk_start = 0;
+    httpMessage->expected_body_size = 0;
+    httpMessage->status_code = 200;
+
     // Parse the JSON
     SHVBLOCK *shvblock_handle;
     PARSE_ERROR error;
-    int rc = parseJSON(json_in, &shvblock_handle, &error);
+    int rc = parseJSON(httpMessage, &shvblock_handle, &error);
     if (rc != 0) {
         printf("Test failed with error: %d (at pos %d in \"%s\")\n", rc, (int)error.position, json);
         printf("  Error: %s\n", error.message);
@@ -74,11 +97,7 @@ void do_test(char *json) {
 
 // Note the name is a misnomer - it really parses and creates a SHVBLOCK structure, then emits it back to JSON
 void test_emitparseJSON() {
-
-        MemoryBuffer *mem_context;
-        SHVBLOCK *block;
-
-        // Smoke test
+       // Smoke test
         do_test("{\"serviceBlocks\":[{\"name\":\"hellovar\",\"request\":\"set\",\"result\":\"ok\",\"value\":\"Hello, World!\"}]}");
 
         // Test with different shvcodes - "set","fetch","drop","nextv","priv","syset","syfet","sydro","sydel"

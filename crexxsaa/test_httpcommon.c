@@ -54,7 +54,7 @@ void set_buffer(char* buffer) {
 // Read data from the socket into the buffer
 // Returns READ_ERROR_NONE on success, <0 (READ_ERROR_...) > on an error or if the socket is closed (setting reading_error_code and reading_phase)
 void test_read_into_buffer() {
-    HTTPResponse response;
+    HTTPMessage response;
     int result;
     size_t size;
 
@@ -62,7 +62,7 @@ void test_read_into_buffer() {
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
     size = strlen(mock_buffer);
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Test
     result = read_into_buffer(0, &response);
     // Check the result
@@ -77,7 +77,7 @@ void test_read_into_buffer() {
     set_buffer("HTTP/1.1 200 OK\r\nConte~nt-Length: 13\r\n\r\nHello, World!\r\n");
     size = strlen(mock_buffer) - 1; // Remove the ~
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Test
     result = read_into_buffer(0, &response);
     // Check the result
@@ -95,7 +95,7 @@ void test_read_into_buffer() {
     // Test with a closed socket
     set_buffer("\0");
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Test
     result = read_into_buffer(0, &response);
     // Check the result
@@ -108,7 +108,7 @@ void test_read_into_buffer() {
     // Test with an socket error
     set_buffer("^");
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Test
     result = read_into_buffer(0, &response);
     // Check the result
@@ -122,7 +122,7 @@ void test_read_into_buffer() {
 // Tests ensure_buffer_size() which:
 // Makes sure the response buffer is at least of  size (doubling the buffer size if need be)
 void test_ensure_buffer_size() {
-    HTTPResponse buffer;
+    HTTPMessage buffer;
     buffer.buffer = NULL;
     buffer.size = 0;
     buffer.capacity = 0;
@@ -147,14 +147,14 @@ void test_ensure_buffer_size() {
 // This updates the response struct with the expected body size and if the body is chunked
 // Returns true if the headers were parsed successfully
 void test_process_headers() {
-    HTTPResponse response;
+    HTTPMessage response;
     char *header_buffer;
     bool result;
 
     // Smoke test
     header_buffer = "Content-Length: 13\r\n";
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(header_buffer) + 1);
     response.size = strlen(header_buffer);
@@ -175,7 +175,7 @@ void test_process_headers() {
     // Test with chunked
     header_buffer = "Content-Length: 20\r\nTransfer-Encoding: chunked\r\n";
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(header_buffer) + 1);
     response.size = strlen(header_buffer);
@@ -196,7 +196,7 @@ void test_process_headers() {
     // Test with error
     header_buffer = "Content-Length: 20\r\nTransfer-Encoding chunked\r\n"; // No second colon
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(header_buffer) + 1);
     response.size = strlen(header_buffer);
@@ -218,7 +218,7 @@ void test_process_headers() {
 // If it is complete it also splits the buffer into the trailer buffer
 // Returns true if the response is complete
 void test_is_body_complete() {
-    HTTPResponse response;
+    HTTPMessage response;
     char *buffer;
     size_t size;
     char* expected;
@@ -226,7 +226,7 @@ void test_is_body_complete() {
 
     // Smoke test
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!\r\n";
     size = strlen(buffer) - 2;
     ensure_buffer_size(&response, strlen(buffer) + 1);
@@ -251,7 +251,7 @@ void test_is_body_complete() {
 
     // Test non-chunked with some characters before the body start
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "XXXXHello, World!\r\n";
     expected = "Hello, World!";
     size = strlen(expected);
@@ -277,7 +277,7 @@ void test_is_body_complete() {
 
     // Test Incomplete non-chunked header
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!";
     size = strlen(buffer);
     ensure_buffer_size(&response, strlen(buffer) + 1);
@@ -297,7 +297,7 @@ void test_is_body_complete() {
 
     // Test complete chunked header
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "d\r\nHello, World!\r\n0\r\n\r\n";
     expected = "Hello, World!";
     size = strlen(expected);
@@ -323,7 +323,7 @@ void test_is_body_complete() {
 
     // Test complete chunked header with some characters before the body start
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "XXXXd\r\nHello, World!\r\n0\r\n\r\n";
     expected = "Hello, World!";
     size = strlen(expected);
@@ -349,7 +349,7 @@ void test_is_body_complete() {
 
     // Test complete chunked header with 3 chunks and a trailer field
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n";
     expected = "Wikipedia in\r\nchunks.";
     size = strlen(expected);
@@ -374,7 +374,7 @@ void test_is_body_complete() {
 
     // Test Incomplete chunked header
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks";
     expected = "WikipediaC\r\n in\r\nchunks";
     size = strlen(expected);
@@ -397,7 +397,7 @@ void test_is_body_complete() {
 
     // Test with an chunked error
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "3\r\nWiki\r\n5\r\npedia";
     expected = "WikipediaC\r\n in\r\nchunks";
     size = strlen(expected);
@@ -418,7 +418,7 @@ void test_is_body_complete() {
 
     // Test with a non-sized non-chunked body
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!\r\n";
     expected = "Hello, World!";
     size = strlen(expected);
@@ -444,7 +444,7 @@ void test_is_body_complete() {
 
     // Test with a non-sized non-chunked body error
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!\r_"; // Missing \n
     ensure_buffer_size(&response, strlen(buffer) + 1);
     response.size = strlen(buffer);
@@ -468,7 +468,7 @@ void test_is_body_complete() {
 // returns true if the body was cleaned successfully
 // Note this test assumed is_body_complete() works
 void test_process_body(){
-    HTTPResponse response;
+    HTTPMessage response;
     char *buffer;
     size_t size;
     char* expected;
@@ -476,7 +476,7 @@ void test_process_body(){
 
     // Non-Chunked
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!\r\n";
     size = strlen(buffer) - 2;
     ensure_buffer_size(&response, strlen(buffer) + 1);
@@ -499,7 +499,7 @@ void test_process_body(){
 
     // Not null terminated - internal error
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "Hello, World!\r\n";
     size = strlen(buffer) - 2;
     ensure_buffer_size(&response, strlen(buffer) + 1);
@@ -522,7 +522,7 @@ void test_process_body(){
 
     // Test complete chunked header
     // Setup
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     buffer = "d\r\nHello, World!\r\n0\r\n\r\n";
     expected = "Hello, World!";
     size = strlen(expected);
@@ -549,14 +549,14 @@ void test_process_body(){
 // Parses trailers to find specific headers (to be defined)
 // Returns true if the trailers were parsed successfully
 void test_process_trailers(){
-    HTTPResponse response;
+    HTTPMessage response;
     char *trailer_buffer;
     bool result;
 
     // Smoke test
     trailer_buffer = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\n";
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(trailer_buffer) + 1);
     response.size = strlen(trailer_buffer);
@@ -573,7 +573,7 @@ void test_process_trailers(){
     // Two Trailers test
     trailer_buffer = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\nCache-Control: no-cache\r\n";
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(trailer_buffer) + 1);
     response.size = strlen(trailer_buffer);
@@ -590,7 +590,7 @@ void test_process_trailers(){
     // Invalid Trailers test
     trailer_buffer = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\nCache-Control no-cache\r\n"; // No colon
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Set the header buffer input
     ensure_buffer_size(&response, strlen(trailer_buffer) + 1);
     response.size = strlen(trailer_buffer);
@@ -608,9 +608,9 @@ void test_process_trailers(){
 // Tests free_response() which:
 // Frees the memory used by the response
 void test_free_response() {
-    HTTPResponse response;
+    HTTPMessage response;
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
     // Setup - Set the buffer
     ensure_buffer_size(&response, 100);
     // Test
@@ -755,14 +755,14 @@ void test_parse_header_line() {
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
 void test_read_response() {
-    HTTPResponse response;
+    HTTPMessage response;
     bool result;
     char *expected_body;
     char *expected_headers;
     char *expected_trailers;
     char *expected_status_line;
     // Clear response
-    memset(&response, 0, sizeof(HTTPResponse));
+    memset(&response, 0, sizeof(HTTPMessage));
 
     // Smoke test - non-chunked
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
@@ -1705,9 +1705,9 @@ void test_emit_to_socket() {
     SocketBuffer *buffer;
     buffer = malloc(sizeof(SocketBuffer));
 
-    buffer->capacity = 20; // Small Buffer to exercise the chunking
-    buffer->buffer = malloc(buffer->capacity);
-    buffer->buffer[0] = 0;
+    // Default Buffer
+    buffer->capacity = 0;
+    buffer->buffer = NULL;
     buffer->length = 0;
     buffer->socket = 999;
     buffer->secret_id = "1234567890";
@@ -1716,34 +1716,60 @@ void test_emit_to_socket() {
     buffer->http_headers = "Crexx-Version: 1.1.2\r\n";
     buffer->http_host = "localhost";
 
+    // Test 1 - try and exercise every part of the function
+    // Set buffer
+    buffer->capacity = 10; // Small Buffer to exercise the chunking
+    buffer->buffer = malloc(buffer->capacity);
+    buffer->buffer[0] = 0;
     // Setup Global write target buffer
     write_output[0] = 0;
     write_output_length = 0;
     mock_error = 0;
     mock_max_write = 0;
-
+    // Set expected output
+    expected = "POST /api/v1/test HTTP/1.1\r\nHost: localhost\r\nRexx-Secret: 1234567890\r\nUser-Agent: CREXXSAA/0.1\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: Keep-Alive\r\nCrexx-Version: 1.1.2\r\n\r\na\r\nHello Worl\r\n1\r\nd\r\n0\r\n\r\n";
     // ACTION_OPEN
     rc = emit_to_socket(ACTION_OPEN, NULL, (void**)&buffer);
     assert(rc == 0);
-
     // ACTION_EMIT
     rc = emit_to_socket(ACTION_EMIT, out, (void**)&buffer);
     assert(rc == 0);
-
     // ACTION_FINISHED_EMIT
     rc = emit_to_socket(ACTION_FINISHED_EMIT, NULL, (void**)&buffer);
     assert(rc == 0);
-
     // ACTION_CLOSE
     rc = emit_to_socket(ACTION_CLOSE, NULL, (void**)&buffer);
     assert(rc == 0);
-
-    printf("write_output: %s\n", write_output);
-
-
-
-
+    assert(strcmp(write_output,expected)==0);
     free(buffer->buffer);
+
+    // Test 2 - big buffer and likely values for real use
+    // Set buffer
+    buffer->capacity = 0;  // The default buffer size should be used
+    buffer->buffer = NULL; // The buffer should be allocated
+    // Setup Global write target buffer
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    // Set expected output
+    expected = "POST /api/v1/test HTTP/1.1\r\nHost: localhost\r\nRexx-Secret: 1234567890\r\nUser-Agent: CREXXSAA/0.1\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: Keep-Alive\r\nCrexx-Version: 1.1.2\r\n\r\nb\r\nHello World\r\n0\r\n\r\n";
+    // ACTION_OPEN
+    rc = emit_to_socket(ACTION_OPEN, NULL, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_EMIT
+    rc = emit_to_socket(ACTION_EMIT, out, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_FINISHED_EMIT
+    rc = emit_to_socket(ACTION_FINISHED_EMIT, NULL, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_CLOSE
+    rc = emit_to_socket(ACTION_CLOSE, NULL, (void**)&buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,expected)==0);
+    // Note the buffer should be freed by the ACTION_CLOSE
+
+    free(buffer);
 }
 
 int main() {

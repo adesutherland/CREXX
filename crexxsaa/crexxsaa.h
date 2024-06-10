@@ -102,6 +102,11 @@ unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result);
 /* *** NOTE This is only valid for use with the shvblock returned by RexxVariablePool result *** */
 void FreeRexxVariablePoolResult(SHVBLOCK *shvblock);
 
+/* Helper functions */
+
+// Function to retrieve the value of a REXX variable
+int RexxVariableGet(const char *varName, char **result);
+
 /* Migration helpers */
 
 /* RXSTRING is a char* */

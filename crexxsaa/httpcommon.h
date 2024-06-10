@@ -22,7 +22,7 @@ enum READING_PHASE {
     READING_COMPLETE
 };
 
-typedef struct HTTPResponse {
+typedef struct HTTPMessage {
     // Common buffer
     char *buffer;
     size_t size; // Current size of data in the buffer
@@ -47,7 +47,7 @@ typedef struct HTTPResponse {
 
     // Extracted data
     int status_code;
-} HTTPResponse;
+} HTTPMessage;
 
 #define READ_ERROR_NONE (0)
 #define READ_ERROR_SOCKET_CLOSED (-1)
@@ -73,37 +73,37 @@ typedef struct HTTPResponse {
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
-bool read_response(int sock, HTTPResponse *response);
+bool read_response(int sock, HTTPMessage *response);
 
 // Read data from the socket into the buffer
 // Returns READ_ERROR_NONE on success, <0 (READ_ERROR_...) > on an error or if the socket is closed (setting reading_error_code and reading_phase)
-int read_into_buffer(int sock, HTTPResponse *response);
+int read_into_buffer(int sock, HTTPMessage *response);
 
 // Makes sure the response buffer is at least of  size (doubling the buffer size if need be)
-void ensure_buffer_size(HTTPResponse *response, size_t size);
+void ensure_buffer_size(HTTPMessage *response, size_t size);
 
 // Parses headers to find Content-Length or Transfer-Encoding: chunked
 // This updates the response struct with the expected body size and if the body is chunked
 // Returns true if the headers were parsed successfully
-bool process_headers(HTTPResponse *response);
+bool process_headers(HTTPMessage *response);
 
 // Function to check if the body is complete
 // If chunked it reads the chunked response body buffer and determine if the response is complete
 // Otherwise it checks if the body buffer is complete
 // If it is complete it also splits the buffer into the trailer buffer
 // Returns true if the response is complete
-bool is_body_complete(HTTPResponse *response);
+bool is_body_complete(HTTPMessage *response);
 
 // Function to parse and clean the body buffer
 // returns true if the body was cleaned successfully
-bool process_body(HTTPResponse *response);
+bool process_body(HTTPMessage *response);
 
 // Parses trailers to find specific headers (to be defined)
 // Returns true if the trailers were parsed successfully
-bool process_trailers(HTTPResponse *response);
+bool process_trailers(HTTPMessage *response);
 
 // Frees the memory used by the response
-void free_response(HTTPResponse *response);
+void free_response(HTTPMessage *response);
 
 // Strip a string of leading and trailing whitespace characters in place
 void strip_whitespace(char *str);
@@ -121,11 +121,12 @@ bool parse_header_line(char *line, char *header_name, char *header_value);
 // context structure holding the buffer for the currect chunk, size and socket
 #define SOCKET_BUFFER_SIZE 512
 typedef struct {
-    char *buffer;         // Pointer to the buffer
+    char *buffer;       // Pointer to the buffer
     size_t capacity;    // Current allocated size of the buffer
-    size_t length;       // Current used length within the buffer
-    int socket;            // The socket to write the buffer to
-    char *secret_id;  // The secret id to use in the HTTP header
+    bool i_own_buffer;  // If true the buffer is owned by the structure and should be freed when the structure is freed
+    size_t length;      // Current used length within the buffer
+    int socket;         // The socket to write the buffer to
+    char *secret_id;    // The secret id to use in the HTTP header
     char *http_request; // The HTTP request to use (POST, PUT, etc.)
     char *http_path;    // The HTTP path to use
     char *http_headers; // Additional HTTP headers to use
@@ -161,5 +162,51 @@ int write_to_chunked_socket_buffer(SocketBuffer *buffer, const char *data, size_
 // context structure holding the buffer for the current chunk, size and socket
 // Returns 0 on success, -1 on error
 int emit_to_socket(emit_action action, const char* data, void** context);
+
+// Parse Error Structure
+typedef struct {
+    int error_code;
+    size_t position; // Note the position is approximate and may not be accurate
+    char* message;
+} PARSE_ERROR;
+
+// parseJSON error codes
+#define PARSE_ERROR_OK 0
+#define PARSE_ERROR_EXPECTING_OPEN_CURLY 1
+#define PARSE_ERROR_EXPECTING_SERVICE_BLOCKS 2
+#define PARSE_ERROR_EXPECTING_STRING 3
+#define PARSE_ERROR_NO_CLOSING_QUOTE 4
+#define PARSE_ERROR_EXPECTING_COLON 5
+#define PARSE_ERROR_EXPECTING_ARRAY 6
+#define PARSE_ERROR_EXPECTING_CLOSE_CURLY 7
+#define PARSE_ERROR_CREATE_SHVBLOCK_FAILED 8
+#define PARSE_ERROR_DUPLICATE_NAME 9
+#define PARSE_ERROR_DUPLICATE_REQUEST 10
+#define PARSE_ERROR_INVALID_REQUEST 11
+#define PARSE_ERROR_DUPLICATE_RESULT 12
+#define PARSE_ERROR_INVALID_RESULT 13
+#define PARSE_ERROR_DUPLICATE_VALUE 14
+#define PARSE_ERROR_INVALID_ATTRIBUTE 15
+#define PARSE_ERROR_MISSING_NAME 16
+#define PARSE_ERROR_DUPLICATE_CLASS 17
+#define PARSE_ERROR_DUPLICATE_MEMBERS 18
+#define PARSE_ERROR_MEMORY_ALLOCATION 19
+#define PARSE_ERROR_MISSING_CLASS 20
+#define PARSE_ERROR_MISSING_MEMBERS 21
+#define PARSE_ERROR_INVALID_TYPE 22
+#define PARSE_ERROR_UNEXPECTED_TOKEN 23
+#define PARSE_ERROR_EXPECTING_BASE64 25
+#define PARSE_ERROR_INVALID_BASE64 26
+#define PARSE_ERROR_INVALID_STRING 27
+#define PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_CURLY 28
+#define PARSE_ERROR_EXPECTED_COMMA_OR_CLOSE_ARRAY 29
+#define PARSE_ERROR_EXPECTED_NUMBER 30
+
+// parseJSON - Parse JSON string and return SHVBLOCK structure
+// json - JSON string to parse
+// shvblock_handle - Pointer to SHVBLOCK handle
+// error - Pointer to PARSE_ERROR structure (if this is NULL, the function will not return error details)
+// Returns 0 if successful, otherwise returns an error code (see PARSE_ERROR structure for details
+int parseJSON(HTTPMessage *message, SHVBLOCK** shvblock_handle, PARSE_ERROR* error);
 
 #endif //CREXX_HTTPCOMMON_H

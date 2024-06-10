@@ -134,6 +134,11 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
                     buffer->buffer = malloc(SOCKET_BUFFER_SIZE);
                     buffer->capacity = SOCKET_BUFFER_SIZE;
                 }
+                buffer->i_own_buffer = true; // We own the buffer
+            }
+            else {
+                // We don't own the buffer
+                buffer->i_own_buffer = false;
             }
             if (buffer->buffer == NULL) {
                 // Panic
@@ -153,14 +158,14 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
             if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
             // Secret ID
             if (buffer->secret_id) {
-                if (write_to_socket_buffer(buffer, "Rexx-Secret: ", 11)) return -1;
+                if (write_to_socket_buffer(buffer, "Rexx-Secret: ", 13)) return -1;
                 if (write_to_socket_buffer(buffer, buffer->secret_id, strlen(buffer->secret_id))) return -1;
                 if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
             }
             // Agent
             if (write_to_socket_buffer(buffer, "User-Agent: CREXXSAA/0.1\r\n", 26)) return -1;
             // Content-Type
-            if (write_to_socket_buffer(buffer, "Content-Type: application/json\r\n", 31)) return -1;
+            if (write_to_socket_buffer(buffer, "Content-Type: application/json\r\n", 32)) return -1;
             // Chunked encoding
             if (write_to_socket_buffer(buffer, "Transfer-Encoding: chunked\r\n", 28)) return -1;
             // Keep-Alive
@@ -184,12 +189,17 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
             // Flush the buffer
             if (flush_chunked_socket_buffer(buffer)) return -1;
             // Write the last chunk (0 length)
-            if (write(buffer->socket, "0\r\n\r\n", 5)) return -1;
+            if (write_all(buffer->socket, "0\r\n\r\n", 5)) return -1;
             // Write Trailer headers (if specified) - currently not implemented
             break;
 
         case ACTION_CLOSE:
-            //  no action needed
+            // Free the buffer if we own it
+            if (buffer->i_own_buffer) {
+                free(buffer->buffer);
+                buffer->buffer = NULL;
+                buffer->i_own_buffer = false;
+            }
             break;
     }
     return 0;
@@ -199,7 +209,7 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
-bool read_response(int sock, HTTPResponse *response) {
+bool read_response(int sock, HTTPMessage *response) {
     // Initialize the response
     response->reading_error_code = 0;
     response->reading_phase = READING_STATUS_LINE;
@@ -394,7 +404,7 @@ bool read_response(int sock, HTTPResponse *response) {
 }
 
 // Makes sure the buffer is at least of  size (doubling the buffer size if need be)
-void ensure_buffer_size(HTTPResponse *response, size_t size) {
+void ensure_buffer_size(HTTPMessage *response, size_t size) {
     char *new_buffer;
     if (size < INITIAL_BUFFER_SIZE) size = INITIAL_BUFFER_SIZE;
     if (response->capacity < size) {
@@ -423,7 +433,7 @@ void ensure_buffer_size(HTTPResponse *response, size_t size) {
 
 // Read data from the socket into the buffer
 // Returns READ_ERROR_NONE on success, <0 (READ_ERROR_...) > on an error or if the socket is closed (setting reading_error_code and reading_phase)
-int read_into_buffer(int sock, HTTPResponse *response) {
+int read_into_buffer(int sock, HTTPMessage *response) {
     ssize_t bytes_read;
 
     // Ensure we have at least INITIAL_BUFFER_SIZE bytes spare in the buffer for the read
@@ -460,7 +470,7 @@ int read_into_buffer(int sock, HTTPResponse *response) {
 // It records that trailers are expected if the body is chunked, but we do not handle trailer headers specifically
 // Returns true if the headers were parsed successfully
 // If the headers are invalid it sets the reading_phase and response_error_code and returns false
-bool process_headers(HTTPResponse *response) {
+bool process_headers(HTTPMessage *response) {
     size_t i;
     char *line = HEADERS(response); // Start of the headers
     char *next_line;
@@ -517,7 +527,7 @@ bool process_headers(HTTPResponse *response) {
 // Otherwise it checks if the body buffer is complete
 // If it is complete it also splits the buffer into the trailer buffer
 // Returns true if the response is complete
-bool is_body_complete(HTTPResponse *response) {
+bool is_body_complete(HTTPMessage *response) {
     if (response->chunked) {
         // We have processed all the chunks and have not found the end of the chunks
         // We need to find the end of the chunks
@@ -617,7 +627,7 @@ bool is_body_complete(HTTPResponse *response) {
 // This is mostly nop as is_body_complete() should have already cleaned the body buffer
 // It does set if a TRAILER is expected by setting reading_phase to READING_TRAILERS or READING_COMPLETE
 // returns true
-bool process_body(HTTPResponse *response) {
+bool process_body(HTTPMessage *response) {
     // Check that the body is null terminated (otherwise something has gone wrong)
     if (response->buffer[response->body_start + response->body_length] != '\0') {
         response->reading_error_code = READ_ERROR_MALFORMED_BODY;
@@ -635,7 +645,7 @@ bool process_body(HTTPResponse *response) {
 
 // Parses trailers to find specific headers (to be defined)
 // Returns true if the trailers were parsed successfully
-bool process_trailers(HTTPResponse *response) {
+bool process_trailers(HTTPMessage *response) {
     char *line = TRAILERS(response); // Start of the headers
     char *next_line;
     char header_name[MAX_HEADER_NAME]; // We assume trailer names are less than 128 characters - and will ignore longer names
@@ -666,12 +676,12 @@ bool process_trailers(HTTPResponse *response) {
 }
 
 // Frees the memory used by the response
-void free_response(HTTPResponse *response) {
+void free_response(HTTPMessage *response) {
     if (response->buffer) {
         free(response->buffer);
     }
     // Zero the whole struct
-    memset(response, 0, sizeof(HTTPResponse));
+    memset(response, 0, sizeof(HTTPMessage));
 }
 
 // Strip a string of leading and trailing whitespace characters in place

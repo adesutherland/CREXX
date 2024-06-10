@@ -7,6 +7,7 @@
 #include <stdio.h>
 //#include "crexxsaa.h"
 #include "httpclient.h"
+#include "httpcommon.h"
 
 // Helper function to execute a test - returns the SHVBLOCK structure (or NULL if an error occurred)
 // Checks the expected result (non-conformance means it will return null but print an error message)
@@ -18,10 +19,33 @@ SHVBLOCK* execute_test(char* test_id, int expected_result, int error_position, c
     char* json_copy = malloc(strlen(json) + 1);
     strcpy(json_copy, json);
 
+    // Create a mock HTTPMessage structure - we just need the body
+    HTTPMessage *httpMessage;
+    httpMessage = malloc(sizeof(HTTPMessage));
+    httpMessage->buffer = json_copy;
+    httpMessage->size = strlen(json_copy);
+    httpMessage->capacity = strlen(json_copy) + 1;
+    httpMessage->status_line_start = 0;
+    httpMessage->status_line_length = 0;
+    httpMessage->header_start = 0;
+    httpMessage->header_length = 0;
+    httpMessage->body_start = 0;
+    httpMessage->body_length = strlen(json_copy);
+    httpMessage->trailer_start = 0;
+    httpMessage->trailer_length = 0;
+    httpMessage->reading_phase = READING_COMPLETE;
+    httpMessage->cursor = 0;
+    httpMessage->reading_error_code = 0;
+    httpMessage->chunked = false;
+    httpMessage->expecting_trailers = false;
+    httpMessage->last_chunk_start = 0;
+    httpMessage->expected_body_size = 0;
+    httpMessage->status_code = 200;
+
     // Call the parseJSON function
     SHVBLOCK* shvblock = NULL;
     PARSE_ERROR error;
-    int result = parseJSON(json_copy, &shvblock, &error);
+    int result = parseJSON(httpMessage, &shvblock, &error);
 
     /* If there is an error, print the error message */
     if (result != expected_result) {
