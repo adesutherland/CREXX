@@ -42,7 +42,7 @@ add_custom_target(packed_library ALL DEPENDS library.c)
 
 # Threaded Version
 add_executable(rxvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c ${CMAKE_CURRENT_BINARY_DIR}/library.c)
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c ${CMAKE_CURRENT_BINARY_DIR}/library.c)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -53,7 +53,7 @@ target_include_directories(rxvme PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ../platform ../avl_tree ../utf8 ../decimal)
 
 add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../decimal/decNumber.h ../decimal/decNumber.c ../machine/rxbin.h rxspawn.c ${CMAKE_CURRENT_BINARY_DIR}/library.c)
+        ../utf8/utf.h ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c ../machine/rxbin.h rxspawn.c ${CMAKE_CURRENT_BINARY_DIR}/library.c)
 add_dependencies(rxbvme machine avl_tree platform decimal packed_library)
 target_link_libraries(rxbvme machine avl_tree platform decimal m)
 target_include_directories(rxbvme PRIVATE . ${CMAKE_BINARY_DIR}/machine
