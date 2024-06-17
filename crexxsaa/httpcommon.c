@@ -13,7 +13,7 @@
 // Wrapper around the write function to ensure all data is written
 // -1 means an error occurred (and errno is set) - but in this scenario this
 // probably means the socket is closed
-static ssize_t write_all(int fd, const void *buf, size_t count) {
+ssize_t write_all(int fd, const void *buf, size_t count) {
     const char *buffer = buf;
     while (count > 0) {
         ssize_t bytes_written = write(fd, buffer, count);
@@ -146,30 +146,130 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
                 exit(1);
             }
             buffer->length = 0; // Reset the buffer length
-            // Write the HTTP request and headers to the buffer
-            if (write_to_socket_buffer(buffer, buffer->http_request, strlen(buffer->http_request))) return -1;
-            if (write_to_socket_buffer(buffer, " ", 1)) return -1;
-            if (write_to_socket_buffer(buffer, buffer->http_path, strlen(buffer->http_path))) return -1;
-            if (write_to_socket_buffer(buffer, " HTTP/1.1\r\n", 11)) return -1;
-            // Headers
-            // Host
-            if (write_to_socket_buffer(buffer, "Host: ", 6)) return -1;
-            if (write_to_socket_buffer(buffer, buffer->http_host, strlen(buffer->http_host))) return -1;
-            if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
-            // Secret ID
-            if (buffer->secret_id) {
-                if (write_to_socket_buffer(buffer, "Rexx-Secret: ", 13)) return -1;
-                if (write_to_socket_buffer(buffer, buffer->secret_id, strlen(buffer->secret_id))) return -1;
+            // Write the HTTP message and headers to the buffer
+            if (buffer->type == 'r') {
+                // Request
+                if (write_to_socket_buffer(buffer, buffer->method, strlen(buffer->method))) return -1;
+                if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->uri, strlen(buffer->uri))) return -1;
+                if (buffer->version) {
+                    if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+                    if (write_to_socket_buffer(buffer, buffer->version, strlen(buffer->version))) return -1;
+                    if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+                }
+                else {
+                    if (write_to_socket_buffer(buffer, " HTTP/1.1\r\n", 11)) return -1;
+                }
+            }
+            else if (buffer->type == 's') {
+                // Response
+                if (buffer->version) {
+                    if (write_to_socket_buffer(buffer, buffer->version, strlen(buffer->version))) return -1;
+                    if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+                }
+                else {
+                    if (write_to_socket_buffer(buffer, "HTTP/1.1 ", 9)) return -1;
+                }
+                // Status code
+                char status_code[4];
+                sprintf(status_code, "%d", buffer->status_code);
+                if (write_to_socket_buffer(buffer, status_code, strlen(status_code))) return -1;
+                // Status message
+                if (buffer->status_text) {
+                    if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+                    if (write_to_socket_buffer(buffer, buffer->status_text, strlen(buffer->status_text))) return -1;
+                }
+                else {
+                    // Write status messages for common status codes
+                    switch (buffer->status_code) {
+                        case 200:
+                            if (write_to_socket_buffer(buffer, " OK", 3)) return -1;
+                            break;
+                        case 201:
+                            if (write_to_socket_buffer(buffer, " Created", 8)) return -1;
+                            break;
+                        case 202:
+                            if (write_to_socket_buffer(buffer, " Accepted", 9)) return -1;
+                            break;
+                        case 204:
+                            if (write_to_socket_buffer(buffer, " No Content", 11)) return -1;
+                            break;
+                        case 400:
+                            if (write_to_socket_buffer(buffer, " Bad Request", 12)) return -1;
+                            break;
+                        case 401:
+                            if (write_to_socket_buffer(buffer, " Unauthorized", 12)) return -1;
+                            break;
+                        case 403:
+                            if (write_to_socket_buffer(buffer, " Forbidden", 9)) return -1;
+                            break;
+                        case 404:
+                            if (write_to_socket_buffer(buffer, " Not Found", 10)) return -1;
+                            break;
+                        case 500:
+                            if (write_to_socket_buffer(buffer, " Internal Server Error", 22)) return -1;
+                            break;
+                        case 501:
+                            if (write_to_socket_buffer(buffer, " Not Implemented", 16)) return -1;
+                            break;
+                        case 503:
+                            if (write_to_socket_buffer(buffer, " Service Unavailable", 19)) return -1;
+                            break;
+                        default:
+                            // Write the status code as the status message
+                            if (write_to_socket_buffer(buffer, " ", 1)) return -1;
+                            if (write_to_socket_buffer(buffer, status_code, strlen(status_code))) return -1;
+                            break;
+                    }
+                }
+                // End of status line
                 if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
             }
-            // Agent
-            if (write_to_socket_buffer(buffer, "User-Agent: CREXXSAA/0.1\r\n", 26)) return -1;
+            else {
+                // Panic
+                fprintf(stderr, "Panic: internal error - emit_to_socket() invalid buffer type\n");
+                exit(1);
+            }
+            // Headers
+            // Host
+            if (buffer->host) {
+                if (write_to_socket_buffer(buffer, "Host: ", 6)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->host, strlen(buffer->host))) return -1;
+                if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            }
+            // Secret ID
+            if (buffer->secret) {
+                if (write_to_socket_buffer(buffer, "Rexx-Secret: ", 13)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->secret, strlen(buffer->secret))) return -1;
+                if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            }
+            // User-Agent
+            if (buffer->user_agent) {
+                if (write_to_socket_buffer(buffer, "User-Agent: ", 12)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->user_agent, strlen(buffer->user_agent))) return -1;
+                if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            }
+            else {
+                if (write_to_socket_buffer(buffer, "User-Agent: CREXXSAA/0.1\r\n", 26)) return -1;
+            }
             // Content-Type
-            if (write_to_socket_buffer(buffer, "Content-Type: application/json\r\n", 32)) return -1;
+            if (buffer->content_type) {
+                if (write_to_socket_buffer(buffer, "Content-Type: ", 14)) return -1;
+                if (write_to_socket_buffer(buffer, buffer->content_type, strlen(buffer->content_type))) return -1;
+                if (write_to_socket_buffer(buffer, "\r\n", 2)) return -1;
+            }
+            else {
+                if (write_to_socket_buffer(buffer, "Content-Type: application/json\r\n", 32)) return -1;
+            }
             // Chunked encoding
             if (write_to_socket_buffer(buffer, "Transfer-Encoding: chunked\r\n", 28)) return -1;
             // Keep-Alive
-            if (write_to_socket_buffer(buffer, "Connection: Keep-Alive\r\n", 24)) return -1;
+            if (buffer->keep_alive) {
+                if (write_to_socket_buffer(buffer, "Connection: Keep-Alive\r\n", 24)) return -1;
+            }
+            else {
+                if (write_to_socket_buffer(buffer, "Connection: Close\r\n", 19)) return -1;
+            }
             // Other headers (if specified)
             if (buffer->http_headers) {
                 if (write_to_socket_buffer(buffer, buffer->http_headers, strlen(buffer->http_headers))) return -1;
@@ -205,11 +305,11 @@ __attribute__((unused)) int emit_to_socket(emit_action action, const char* data,
     return 0;
 }
 
-// Reads a response from the socket
+// Reads a http message from the socket
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
-bool read_response(int sock, HTTPMessage *response) {
+bool read_message(int sock, HTTPMessage *response) {
     // Initialize the response
     response->reading_error_code = 0;
     response->reading_phase = READING_STATUS_LINE;
@@ -241,24 +341,62 @@ bool read_response(int sock, HTTPMessage *response) {
             response->status_line_length = crlf - response->buffer;
 
             // Validate status line
-            // Fine the first and second word in the status line (the status code)
+            // Does the status line start with "HTTP"?
             char *space = strchr(STATUS_LINE(response), ' ');
             if (space) {
-                // Check the HTTP version
-                if (    space - STATUS_LINE(response) != 8 || (
+                if (strncmp(STATUS_LINE(response), "HTTP", 4) != 0) {
+                    response->type = 'r'; // We are a request
+                    response->status_code = 0;
+                    response->status_text = NULL;
+                    // Get the method
+                    response->method = STATUS_LINE(response);
+                    (response->method)[space - STATUS_LINE(response)] = 0;
+                    // Get the URI
+                    response->uri = space + 1;
+                    // Get the HTTP version
+                    response->version = strchr(space + 1, ' ');
+                    if (response->version) {
+                        *(response->version) = 0; // Null terminate the URI
+                        response->version++;
+                    }
+                    else {
+                        response->reading_phase = READING_COMPLETE;
+                        response->reading_error_code = READ_ERROR_MALFORMED_STATUS_LINE;
+                        return false;
+                    }
+                }
+                else {
+                    response->type = 's'; // We are a Response
+                    response->method = NULL;
+                    response->uri = NULL;
+                    // Check the HTTP version
+                    if (space - STATUS_LINE(response) != 8 || (
                             strncmp(STATUS_LINE(response), "HTTP/1.0", 8) != 0 &&
                             strncmp(STATUS_LINE(response), "HTTP/1.1", 8) != 0)) {
-                    response->reading_phase = READING_COMPLETE;
-                    response->reading_error_code = READ_ERROR_MALFORMED_STATUS_LINE;
-                    return false;
-                }
-                // Get the status code
-                response->status_code = (int)strtol(space, NULL, 10);
-                // Check if the status code is valid
-                if (response->status_code < 100 || response->status_code > 599) {
-                    response->reading_phase = READING_COMPLETE;
-                    response->reading_error_code = READ_ERROR_INVALID_STATUS_CODE;
-                    return false;
+                        response->reading_phase = READING_COMPLETE;
+                        response->reading_error_code = READ_ERROR_MALFORMED_STATUS_LINE;
+                        return false;
+                    }
+                    response->version = STATUS_LINE(response);
+                    (response->version)[8] = 0;
+                    // Get the status code
+                    response->status_code = (int) strtol(space + 1, NULL, 10);
+                    // Check if the status code is valid
+                    if (response->status_code < 100 || response->status_code > 599) {
+                        response->reading_phase = READING_COMPLETE;
+                        response->reading_error_code = READ_ERROR_INVALID_STATUS_CODE;
+                        return false;
+                    }
+                    // Get the status text
+                    char *status_text = strchr(space + 1, ' ');
+                    if (status_text) {
+                        response->status_text = status_text + 1;
+                    }
+                    else {
+                        response->reading_phase = READING_COMPLETE;
+                        response->reading_error_code = READ_ERROR_MALFORMED_STATUS_LINE;
+                        return false;
+                    }
                 }
             }
             else {
@@ -290,7 +428,7 @@ bool read_response(int sock, HTTPMessage *response) {
 
             response->header_length = crlf_crlf - response->buffer - response->header_start;
 
-            // Process the headers to find the expected body size
+            // Process the headers to find the expected body size etc.
             if (!process_headers(response)) return false;
 
             // We are ready to read the body
@@ -474,8 +612,15 @@ bool process_headers(HTTPMessage *response) {
     size_t i;
     char *line = HEADERS(response); // Start of the headers
     char *next_line;
-    char header_name[MAX_HEADER_NAME]; // We assume header names are less than 128 characters - and will ignore longer names
-    char header_value[MAX_HEADER_VALUE]; // We assume header values are less than 128 characters - and will ignore longer values
+    char *header_name;
+    char *header_value;
+
+    if (!response->version || strcmp(response->version, "HTTP/1.0") == 0) {
+        response->keep_alive = false;
+    }
+    else {
+        response->keep_alive = true;
+    }
 
     while (line && strlen(line)) {
         next_line = strstr(line, "\r\n");
@@ -487,7 +632,7 @@ bool process_headers(HTTPMessage *response) {
         }
 
         // Get the header name and value
-        if (parse_header_line(line, header_name, header_value)) {
+        if (parse_header_line(line, &header_name, &header_value)) {
             // Check for Content-Length
             if (strcmp(header_name, "Content-Length") == 0) {
                 // Validate that the value is a number
@@ -502,6 +647,35 @@ bool process_headers(HTTPMessage *response) {
             else if (strcmp(header_name, "Transfer-Encoding") == 0 && strcmp(header_value, "chunked") == 0) {
                 response->chunked = true;
                 response->expecting_trailers = true;
+            }
+            // Host Header
+            else if (strcmp(header_name, "Host") == 0) {
+                response->host = header_value;
+            }
+            // Secret Header
+            else if (strcmp(header_name, "Rexx-Secret") == 0) {
+                response->secret = header_value;
+            }
+            // User-Agent Header
+            else if (strcmp(header_name, "User-Agent") == 0) {
+                response->user_agent = header_value;
+            }
+            // Content-Type Header
+            else if (strcmp(header_name, "Content-Type") == 0) {
+                response->content_type = header_value;
+            }
+            // Connection Header
+            else if (strcmp(header_name, "Connection") == 0) {
+                if (strcmp(header_value, "Keep-Alive") == 0) {
+                    response->keep_alive = true;
+                } else if (strcmp(header_value, "Close") == 0) {
+                    response->keep_alive = false;
+                } else {
+                    // Invalid Connection header
+                    response->reading_phase = READING_COMPLETE;
+                    response->reading_error_code = READ_ERROR_MALFORMED_HEADER;
+                    return false;
+                }
             }
 
             // Check for trailer header
@@ -648,8 +822,8 @@ bool process_body(HTTPMessage *response) {
 bool process_trailers(HTTPMessage *response) {
     char *line = TRAILERS(response); // Start of the headers
     char *next_line;
-    char header_name[MAX_HEADER_NAME]; // We assume trailer names are less than 128 characters - and will ignore longer names
-    char header_value[MAX_HEADER_VALUE]; // We assume trailer values are less than 128 characters - and will ignore longer values
+    char *header_name; // We assume trailer names are less than 128 characters - and will ignore longer names
+    char *header_value; // We assume trailer values are less than 128 characters - and will ignore longer values
 
     while (line && strlen(line)) {
         next_line = strstr(line, "\r\n");
@@ -661,7 +835,7 @@ bool process_trailers(HTTPMessage *response) {
         }
 
         // Get the trailer name and value - parse_header_line() is used to get the name and value
-        if (parse_header_line(line, header_name, header_value)) {
+        if (parse_header_line(line, &header_name, &header_value)) {
             // This is where we can check for specific trailer headers e.g.  if (strcmp(header_name, "XXX") == 0) { ... }
         } else {
             response->reading_phase = READING_COMPLETE;
@@ -675,13 +849,15 @@ bool process_trailers(HTTPMessage *response) {
     return true;
 }
 
-// Frees the memory used by the response
-void free_response(HTTPMessage *response) {
-    if (response->buffer) {
-        free(response->buffer);
+// Frees the memory used by the message
+void free_message(HTTPMessage *message) {
+    if (message->buffer) {
+        free(message->buffer);
     }
     // Zero the whole struct
-    memset(response, 0, sizeof(HTTPMessage));
+    memset(message, 0, sizeof(HTTPMessage));
+    // Set the error code to OK
+    message->reading_error_code = READ_ERROR_NONE;
 }
 
 // Strip a string of leading and trailing whitespace characters in place
@@ -706,24 +882,22 @@ void strip_whitespace(char *str) {
 // Characters beyond this length are ignored (but assumed correctly formatted)
 // The line is terminated by a newline character
 // Returns true if the header was parsed successfully
-bool parse_header_line(char *line, char *header_name, char *header_value) {
+bool parse_header_line(char *line, char **header_name, char **header_value) {
     char *colon = strchr(line, ':');
     if (colon) {
-        // Copy the header name
+        // Get the header name - in buffer
         size_t name_length = colon - line;
-        if (name_length > MAX_HEADER_NAME) name_length = MAX_HEADER_NAME;
-        strncpy(header_name, line, name_length);
-        header_name[name_length] = '\0';
-        strip_whitespace(header_name);
+        *header_name = line;
+        (*header_name)[name_length] = '\0';
+        strip_whitespace(*header_name);
 
-        // Copy the header value - ending is a newline
-        char *crlf = strstr(colon, "\r\n");
+        // Get the header value in buffer - ending is a newline
+        char *crlf = strstr(colon + 1, "\r\n");
         if (crlf) {
             size_t value_length = crlf - colon - 1;
-            if (value_length > MAX_HEADER_VALUE) value_length = MAX_HEADER_VALUE;
-            strncpy(header_value, colon + 1, value_length);
-            header_value[value_length] = '\0';
-            strip_whitespace(header_value);
+            *header_value = colon + 1;
+            (*header_value)[value_length] = '\0';
+            strip_whitespace(*header_value);
             return true;
         }
     }

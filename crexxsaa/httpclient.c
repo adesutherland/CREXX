@@ -112,10 +112,10 @@ unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result) {
     socket_buffer->buffer = NULL;
     socket_buffer->length = 0;
     socket_buffer->socket = fd;
-    socket_buffer->secret_id = "1234567890";
-    socket_buffer->http_request = "GET";
-    socket_buffer->http_path = "/crexx/api/v1/get";
-    socket_buffer->http_host = "localhost";
+    socket_buffer->secret = "1234567890";
+    socket_buffer->method = "GET";
+    socket_buffer->uri = "/crexx/api/v1/get";
+    socket_buffer->host = "localhost";
     socket_buffer->http_headers = 0;
 
     // Send the json request over the http socket
@@ -131,7 +131,7 @@ unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result) {
 
     // Clear response
     memset(response, 0, sizeof(HTTPMessage));
-    if (read_response(fd, response)) {
+    if (read_message(fd, response)) {
         fprintf(stderr, "Error reading response\n");
         return -1;
     }

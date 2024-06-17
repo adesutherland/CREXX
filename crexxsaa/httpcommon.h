@@ -11,8 +11,6 @@
 #include "jsnemit.h"
 
 #define INITIAL_BUFFER_SIZE 1024 // Also the minimum read size for the socket
-#define MAX_HEADER_NAME 128
-#define MAX_HEADER_VALUE 128
 
 enum READING_PHASE {
     READING_STATUS_LINE,
@@ -46,7 +44,21 @@ typedef struct HTTPMessage {
     size_t expected_body_size;
 
     // Extracted data
+    // Common
+    char type; // r = request, s = response
+    char *version;
+    // Request
+    char *method;
+    char *uri;
+    // Response
     int status_code;
+    char *status_text;
+    // Headers
+    char *host; // Host header
+    char *secret; // Rexx-Secret header
+    char *user_agent; // User-Agent header
+    char *content_type; // Content-Type header
+    char keep_alive; // Keep-Alive header (1 = true, 0 = false)
 } HTTPMessage;
 
 #define READ_ERROR_NONE (0)
@@ -73,7 +85,7 @@ typedef struct HTTPMessage {
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
 // it is not suitable for huge / streamed responses
 // Returns true if the response was read successfully
-bool read_response(int sock, HTTPMessage *response);
+bool read_message(int sock, HTTPMessage *response);
 
 // Read data from the socket into the buffer
 // Returns READ_ERROR_NONE on success, <0 (READ_ERROR_...) > on an error or if the socket is closed (setting reading_error_code and reading_phase)
@@ -102,8 +114,8 @@ bool process_body(HTTPMessage *response);
 // Returns true if the trailers were parsed successfully
 bool process_trailers(HTTPMessage *response);
 
-// Frees the memory used by the response
-void free_response(HTTPMessage *response);
+// Frees the memory used by the message
+void free_message(HTTPMessage *message);
 
 // Strip a string of leading and trailing whitespace characters in place
 void strip_whitespace(char *str);
@@ -113,12 +125,12 @@ void strip_whitespace(char *str);
 // Characters beyond this length are ignored (but assumed correctly formatted)
 // The line is terminated by a newline character
 // Returns true if the header was parsed successfully
-bool parse_header_line(char *line, char *header_name, char *header_value);
+bool parse_header_line(char *line, char **header_name, char **header_value);
 
-// The JSON emitter functions for writing to socket using the HTTP chunked protocole
+// The JSON emitter functions for writing to socket using the HTTP chunked protocol
 // This is used for sending JSON data over a socket connection
 // The function buffers output into chuck sizes and sends the chunks over the socket
-// context structure holding the buffer for the currect chunk, size and socket
+// context structure holding the buffer for the current chunk, size and socket
 #define SOCKET_BUFFER_SIZE 512
 typedef struct {
     char *buffer;       // Pointer to the buffer
@@ -126,11 +138,22 @@ typedef struct {
     bool i_own_buffer;  // If true the buffer is owned by the structure and should be freed when the structure is freed
     size_t length;      // Current used length within the buffer
     int socket;         // The socket to write the buffer to
-    char *secret_id;    // The secret id to use in the HTTP header
-    char *http_request; // The HTTP request to use (POST, PUT, etc.)
-    char *http_path;    // The HTTP path to use
+    // Common
+    char type;          // r = request, s = response
+    char *version;      // HTTP version
+    // Request
+    char *method;       // The HTTP request to use (POST, PUT, etc.)
+    char *uri;          // The HTTP uri to use
+    // Response
+    int status_code;
+    char *status_text;
+    // Headers
+    char *host; // Host header
+    char *secret; // Rexx-Secret header
+    char *user_agent; // User-Agent header
+    char *content_type; // Content-Type header
+    char keep_alive; // Keep-Alive header (1 = true, 0 = false)
     char *http_headers; // Additional HTTP headers to use
-    char *http_host;    // The HTTP host to use
 } SocketBuffer;
 
 // Function to flush a SocketBuffer buffer to the socket
@@ -162,6 +185,11 @@ int write_to_chunked_socket_buffer(SocketBuffer *buffer, const char *data, size_
 // context structure holding the buffer for the current chunk, size and socket
 // Returns 0 on success, -1 on error
 int emit_to_socket(emit_action action, const char* data, void** context);
+
+// Wrapper around the write function to ensure all data is written
+// -1 means an error occurred (and errno is set) - but in this scenario this
+// probably means the socket is closed
+ssize_t write_all(int fd, const void *buf, size_t count);
 
 // Parse Error Structure
 typedef struct {

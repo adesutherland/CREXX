@@ -21,70 +21,99 @@ struct http_server_data {
     int *status_code; // Address of the status code
 };
 
+// Structure to hold the client parameters to pass to the client thread
+struct http_client_data {
+    int client_socket;
+    char shared_secret[SECRET_SIZE + 1];
+};
+
 // Handle the client's session
 void *handle_client_thread(void *arg) {
-    HTTPMessage response;
+    struct http_client_data *data = (struct http_client_data *)arg;
+    HTTPMessage request;
     bool result;
-    memset(&response, 0, sizeof(HTTPMessage));
+    memset(&request, 0, sizeof(HTTPMessage));
     // Set the error code to OK
-    response.reading_error_code = READ_ERROR_NONE;
-    while (response.reading_error_code == READ_ERROR_NONE) {
-        if (read_response(0, &response)) {
-            // Successfully read the response
-            // Check the status code
-            if (response.status_code == 200) {
-                // Check the shared secret
-                if (strncmp(response.buffer, "Shared-Secret: ", 15) == 0) {
-                    if (strncmp(response.buffer + 15, "secret", 6) == 0) {
-                        // Send the response
-                        result = write_response(0, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
-                        if (!result) {
-                            // Print error message to stderr
-                            fprintf(stderr, "Error in handle_client_thread() writing response\n");
-                            // TODO - Raise a REXX Signal
-                        }
-                    }
-                    else {
-                        // Send the response
-                        result = write_response(0, "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n");
-                        if (!result) {
-                            // Print error message to stderr
-                            fprintf(stderr, "Error in handle_client_thread() writing response\n");
-                            // TODO - Raise a REXX Signal
-                        }
-                    }
-                }
-                else {
-                    // Send the response
-                    result = write_response(0, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n");
-                    if (!result) {
-                        // Print error message to stderr
-                        fprintf(stderr, "Error in handle_client_thread() writing response\n");
-                        // TODO - Raise a REXX Signal
-                    }
-                }
+    request.reading_error_code = READ_ERROR_NONE;
+
+    while (request.reading_error_code == READ_ERROR_NONE) {
+        if (read_message(data->client_socket, &request)) {
+
+            // Check the shared secret
+            if (strcmp(request.secret, data->shared_secret) != 0) {
+                // Shared secret is incorrect
+                // Send the error request - don't worry about error handling
+                char* error_result = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n";
+                write_all(data->client_socket, error_result, strlen(error_result));
+                break;
             }
-            else {
-                // Send the response
-                result = write_response(0, "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n");
-                if (!result) {
-                    // Print error message to stderr
-                    fprintf(stderr, "Error in handle_client_thread() writing response\n");
-                    // TODO - Raise a REXX Signal
+
+            // Check the request method
+            if (strcmp(request.method, "POST") != 0) {
+                // Invalid method
+                // Send the error request - don't worry about error handling
+                char* error_result = "HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n";
+                write_all(data->client_socket, error_result, strlen(error_result));
+                break;
+            }
+
+            // Check the body type
+            if (strcmp(request.content_type, "application/json") == 0) {
+                // Invalid body type
+                // Send the error request - don't worry about error handling
+                char* error_result = "HTTP/1.1 415 Unsupported Media Type\r\nContent-Length: 0\r\n\r\n";
+                write_all(data->client_socket, error_result, strlen(error_result));
+                break;
+            }
+
+            // Check the URI
+            if (strcmp(request.uri, "/crexx/api/v1/shvblock") == 0) {
+                // Handle the shvblock request
+                // Parse the JSON
+                SHVBLOCK *shvblock_handle = 0;
+                PARSE_ERROR error;
+                int rc = parseJSON(&request, &shvblock_handle, &error);
+                if (rc != 0) {
+                    // Error parsing JSON
+                    // Send the error request - don't worry about error handling
+                    char* error_result = "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n";
+                    write_all(data->client_socket, error_result, strlen(error_result));
+                    // Free the shvblock handle
+                    FreeRexxVariablePoolResult(shvblock_handle);
+                    break;
                 }
+
+                // Process the shvblock request
+
+                // Emit the JSON
+
+                // Free the shvblock handle
+                FreeRexxVariablePoolResult(shvblock_handle); // todo check if this is right
+            }
+            // Other request types will be handled here
+            else {
+                // Invalid URI
+                // Send the error request - don't worry about error handling
+                char* error_result = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+                write_all(data->client_socket, error_result, strlen(error_result));
+                break;
             }
 
         }
         else {
-            if (response.reading_error_code == READ_ERROR_SOCKET_CLOSED)
-                return NULL; // Exit the thread - the client end closed the connection
-            else {
-                // Print error message / code to stderr
-                fprintf(stderr, "Error in handle_client_thread() reading response: %d\n", response.reading_error_code);
+            if (request.reading_error_code != READ_ERROR_SOCKET_CLOSED) {
+                // Note: If it was READ_ERROR_SOCKET_CLOSED then the client closed the connection
+-
+                // Some Error - so print error message / code to stderr
+                fprintf(stderr, "Error in handle_client_thread() reading request: %d\n", request.reading_error_code);
                 // TODO - Raise a REXX Signal
             }
+            break;
         }
     }
+    free(arg);
+    free_message(&request);
+    return NULL;
 }
 
 // server_thread is the function that runs in the server thread
@@ -159,12 +188,17 @@ void *server_thread(void *arg) {
             }
 
             // Handle the client's request
+            // Create the data structure to pass to the client thread
+            struct http_client_data *client_data = malloc(sizeof(struct http_client_data));
+            client_data->client_socket = client_socket;
+            strncpy(client_data->shared_secret, data->shared_secret, SECRET_SIZE);
+            client_data->shared_secret[SECRET_SIZE] = '\0';
+            // Note the client thread will free this data structure
+
             // Create a new thread to handle the client passing the client socket
             pthread_t client_thread;
-            // Note passing the socket (as a size_t to avoid warnings) as the void* argument rather than the address of the socket
-            // TODO Pass the fd and shared secret to the client thread in a malloced structure
-            pthread_create(&client_thread, NULL, handle_client_thread, (void *)(size_t)client_socket);
-            // Detach the client thread
+            pthread_create(&client_thread, NULL, handle_client_thread, (void *)client_data);
+            // Detach the client thread - its on its own!
             pthread_detach(client_thread);
             // Continue to listen for connections
         }

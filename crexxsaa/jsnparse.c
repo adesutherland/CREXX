@@ -171,11 +171,13 @@ void FreeRexxVariablePoolResult(SHVBLOCK *shvblock) {
     SHVBLOCK *shvblock_next;
     SHVBUFFER *shvbuffer;
 
+    if (!shvblock) return;
+
     /* Free the start SHVBLOCK which is a SHVBUFFER */
     shvbuffer = (SHVBUFFER*)shvblock;
     FreeObjBlock(shvbuffer->shvblock.shvobject); // Free the OBJBLOCK
     shvblock = shvbuffer->shvblock.shvnext;
-    free_response(shvbuffer->message); // Free the http message contents
+    free_message(shvbuffer->message); // Free the http message contents
     free(shvbuffer->message); // Free the http message structure itself
     free(shvbuffer); // Free the SHVBUFFER
 

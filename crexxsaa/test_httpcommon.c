@@ -3,12 +3,11 @@
 //
 // Created by Adrian Sutherland on 11/05/2024.
 //
-#include "httpcommon.h"
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include "httpcommon.h"
 
 char mock_buffer[1024];
 int mock_index = 0;
@@ -71,7 +70,7 @@ void test_read_into_buffer() {
     assert(response.size == size);
     assert(memcmp(response.buffer, "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n", size) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with two reads (to make sure buffer appending works)
     set_buffer("HTTP/1.1 200 OK\r\nConte~nt-Length: 13\r\n\r\nHello, World!\r\n");
@@ -90,7 +89,7 @@ void test_read_into_buffer() {
     assert(response.size == size);
     assert(memcmp(response.buffer, "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n", size) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with a closed socket
     set_buffer("\0");
@@ -103,7 +102,7 @@ void test_read_into_buffer() {
     assert(response.reading_error_code == READ_ERROR_SOCKET_CLOSED);
     assert(response.reading_phase == READING_COMPLETE); // Should be complete (since the socket is closed)
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with an socket error
     set_buffer("^");
@@ -116,7 +115,7 @@ void test_read_into_buffer() {
     assert(response.reading_error_code == READ_ERROR_SOCKET_ERROR);
     assert(response.reading_phase == READING_COMPLETE);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 }
 
 // Tests ensure_buffer_size() which:
@@ -161,6 +160,7 @@ void test_process_headers() {
     strcpy(response.buffer, header_buffer);
     response.header_length = strlen(header_buffer);
     response.header_start = 0;
+    response.version = "HTTP/1.1";
     // process the headers
     result = process_headers(&response);
     // Check the result
@@ -170,7 +170,7 @@ void test_process_headers() {
     // Check if the body is chunked
     assert(!response.chunked);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with chunked
     header_buffer = "Content-Length: 20\r\nTransfer-Encoding: chunked\r\n";
@@ -191,7 +191,7 @@ void test_process_headers() {
     // Check if the body is chunked
     assert(response.chunked);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with error
     header_buffer = "Content-Length: 20\r\nTransfer-Encoding chunked\r\n"; // No second colon
@@ -208,7 +208,7 @@ void test_process_headers() {
     // Check the result
     assert(!result); // Should return false
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 }
 
 // Tests is_body_complete() which:
@@ -247,7 +247,7 @@ void test_is_body_complete() {
     assert(response.trailer_start == strlen(buffer));
     assert(response.trailer_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test non-chunked with some characters before the body start
     // Setup
@@ -273,7 +273,7 @@ void test_is_body_complete() {
     assert(response.trailer_start == strlen(buffer));
     assert(response.trailer_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test Incomplete non-chunked header
     // Setup
@@ -293,7 +293,7 @@ void test_is_body_complete() {
     // Check the result
     assert(!result); // Should return false
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test complete chunked header
     // Setup
@@ -319,7 +319,7 @@ void test_is_body_complete() {
     assert(response.trailer_start == 18); // The buffer should be "Hello, World!\0\r\n\r\n"
     assert(response.trailer_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test complete chunked header with some characters before the body start
     // Setup
@@ -345,7 +345,7 @@ void test_is_body_complete() {
     assert(response.trailer_start == 22); // The buffer should be "XXXXHello, World!\0\r\n\r\n"
     assert(response.trailer_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test complete chunked header with 3 chunks and a trailer field
     // Setup
@@ -370,7 +370,7 @@ void test_is_body_complete() {
     // Check Initial Trailer buffer
     assert(memcmp(TRAILERS(&response), "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n", 42) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test Incomplete chunked header
     // Setup
@@ -393,7 +393,7 @@ void test_is_body_complete() {
     assert(memcmp(BODY(&response), expected, size) == 0);
     assert(response.last_chunk_start == 9); // Should point to the C in "WikipediaC"
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with an chunked error
     // Setup
@@ -414,7 +414,7 @@ void test_is_body_complete() {
     // Check the result
     assert(!result); // Should return false
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with a non-sized non-chunked body
     // Setup
@@ -440,7 +440,7 @@ void test_is_body_complete() {
     assert(response.trailer_start == size + 2); //  Should be the char after "Hello, World!\0\r\n"
     assert(response.trailer_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test with a non-sized non-chunked body error
     // Setup
@@ -459,7 +459,7 @@ void test_is_body_complete() {
     // Check the result
     assert(!result); // Should return false
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
 }
 
@@ -495,7 +495,7 @@ void test_process_body(){
     assert(response.chunked == false);
     assert(response.reading_phase == READING_COMPLETE);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Not null terminated - internal error
     // Setup
@@ -518,7 +518,7 @@ void test_process_body(){
     assert(!result); // Should return false
     assert((response.reading_error_code == READ_ERROR_MALFORMED_BODY));
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test complete chunked header
     // Setup
@@ -542,7 +542,7 @@ void test_process_body(){
     assert(response.chunked == true);
     assert(response.reading_phase == READING_TRAILERS);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 }
 
 // Tests process_trailers() which:
@@ -568,7 +568,7 @@ void test_process_trailers(){
     // Check the result
     assert(result); // Should return true
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Two Trailers test
     trailer_buffer = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\nCache-Control: no-cache\r\n";
@@ -585,7 +585,7 @@ void test_process_trailers(){
     // Check the result
     assert(result); // Should return true
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Invalid Trailers test
     trailer_buffer = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\nCache-Control no-cache\r\n"; // No colon
@@ -602,10 +602,10 @@ void test_process_trailers(){
     // Check the result
     assert(!result); // Should return true
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 }
 
-// Tests free_response() which:
+// Tests free_message() which:
 // Frees the memory used by the response
 void test_free_response() {
     HTTPMessage response;
@@ -614,7 +614,7 @@ void test_free_response() {
     // Setup - Set the buffer
     ensure_buffer_size(&response, 100);
     // Test
-    free_response(&response);
+    free_message(&response);
     // Check the result
     assert(response.buffer == NULL);
     assert(response.size == 0);
@@ -632,7 +632,7 @@ void test_free_response() {
     assert(response.reading_phase == READING_STATUS_LINE);
     assert(response.reading_error_code == READ_ERROR_NONE);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
     // Check the result
     assert(response.buffer == NULL);
     assert(response.size == 0);
@@ -695,14 +695,14 @@ void test_strip_whitespace(){
 // The line is terminated by a newline character
 // Returns true if the header was parsed successfully
 void test_parse_header_line() {
-    char header_name[100];
-    char header_value[100];
+    char *header_name;
+    char *header_value;
     bool result;
 
     // Test with a valid header
     strcpy(mock_buffer, "Content-Length: 13\r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content-Length") == 0);
     assert(strcmp(header_value, "13") == 0);
@@ -710,7 +710,7 @@ void test_parse_header_line() {
     // Test with a valid header with extra spaces
     strcpy(mock_buffer, "   Content-Length: 13   \r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content-Length") == 0);
     assert(strcmp(header_value, "13") == 0);
@@ -718,7 +718,7 @@ void test_parse_header_line() {
     // Test with a valid header with extra spaces and a value with spaces
     strcpy(mock_buffer, "   Content-Length: 13   \r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content-Length") == 0);
     assert(strcmp(header_value, "13") == 0);
@@ -726,7 +726,7 @@ void test_parse_header_line() {
     // Test with a valid header with extra spaces and a value with spaces
     strcpy(mock_buffer, "   Content-Length: 13   \r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content-Length") == 0);
     assert(strcmp(header_value, "13") == 0);
@@ -734,7 +734,7 @@ void test_parse_header_line() {
     // Test with a valid header with extra spaces and a value with spaces
     strcpy(mock_buffer, "   Content-Length: 13   \r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content-Length") == 0);
     assert(strcmp(header_value, "13") == 0);
@@ -742,13 +742,13 @@ void test_parse_header_line() {
     // Test with a valid header with extra spaces and a value with spaces
     strcpy(mock_buffer, "   Content-Length: 13   \r\n");
     mock_index = 0;
-    result = parse_header_line(mock_buffer, header_name, header_value);
+    result = parse_header_line(mock_buffer, &header_name, &header_value);
     assert(result);
     assert(strcmp(header_name, "Content Length") != 0);
     assert(strcmp(header_value, "13") == 0);
 }
 
-// Tests read_response() which:
+// Tests read_message() which:
 // Reads a response from the socket and parses it
 // *** This is the function clients use ***
 // Handles chunked and non-chunked encoding but the response is read into an in-memory buffer, so
@@ -758,567 +758,485 @@ void test_read_response() {
     HTTPMessage response;
     bool result;
     char *expected_body;
-    char *expected_headers;
-    char *expected_trailers;
-    char *expected_status_line;
     // Clear response
     memset(&response, 0, sizeof(HTTPMessage));
 
     // Smoke test - non-chunked
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
-    // Free response buffers
-    free_response(&response);
+     // Free response buffers
+    free_message(&response);
 
     // Smoke test - chunked
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
     expected_body = "Wikipedia in\r\nchunks.";
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.body_length == strlen(expected_body));
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(HEADERS(&response), "Transfer-Encoding: chunked\r\n", 27) == 0);
-    assert(memcmp(TRAILERS(&response), "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\n", 40) == 0);
+    assert(memcmp(HEADERS(&response), "Transfer-Encoding\0chunked", 26) == 0);
+    assert(memcmp(TRAILERS(&response), "Expires\0Wed, 21 Oct 2015 07:28:00 GMT", 37) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - without a Content-Length header
     set_buffer("HTTP/1.1 200 OK\r\n\r\nHello, World!");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked with no trailers
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\n\r\n");
     expected_body = "Wikipedia in\r\nchunks.";
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.body_length == strlen(expected_body));
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(HEADERS(&response), "Transfer-Encoding: chunked\r\n", 27) == 0);
+    assert(memcmp(HEADERS(&response), "Transfer-Encoding\0chunked", 26) == 0);
     assert(memcmp(TRAILERS(&response), "", 0) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - no Content
     set_buffer("HTTP/1.1 204 No Content\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 204);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 204 No Content") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "No Content") == 0);
     assert(response.body_length == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - no headers
     set_buffer("HTTP/1.1 200 OK\r\n\r\nHello, World!");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
+
+    // Test Headers we understand: Host, Rexx-Secret, User-Agent, Content-Type, Connection
+    set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\nHost: localhost\r\n"
+               "Rexx-Secret: 123\r\nUser-Agent: Rexx\r\n"
+               "Content-Type: test\r\nConnection: Close\r\n"
+               "\r\nHello, World!\r\n");
+    result = read_message(0, &response);
+    assert(result);
+    assert(response.status_code == 200);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
+    assert(response.expected_body_size == 13);
+    assert(response.body_length == 13);
+    assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
+    assert(strcmp(response.host, "localhost") == 0);
+    assert(strcmp(response.secret, "123") == 0);
+    assert(strcmp(response.user_agent, "Rexx") == 0);
+    assert(strcmp(response.content_type, "test") == 0);
+    assert(response.keep_alive == 0);
+    // Free response buffers
+    free_message(&response);
 
     // Tests for read() breaks at different points in a non-chunked message
     // Test - non-chunked - break in status line
     set_buffer("HTTP/1~.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after status line
     set_buffer("HTTP/1.1 200 OK\r\n~Content-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break in headers
     set_buffer("HTTP/1.1 200 OK\r\nContent-~Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after headers but before header block end
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n~\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after headers
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\n~Hello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break in body
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHell~o, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after body
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!~\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after body within newline
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r~\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break after body and after terminating newline
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n~");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - break in body with no length
     set_buffer("HTTP/1.1 200 OK\r\n\r\nHello, ~World!");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Tests for read() breaks at different points in a chunked message
     // Test - chunked - break in status line
     expected_body = "Wikipedia in\r\nchunks.";
-    expected_status_line = "HTTP/1.1 200 OK";
-    expected_headers = "Transfer-Encoding: chunked\r\n";
-    expected_trailers = "Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\n";
     // Test - chunked - break in status line
     set_buffer("HTTP/1.1 2~00 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break after status line
     set_buffer("HTTP/1.1 200 OK\r\n~Transfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in headers
     set_buffer("HTTP/1.1 200 OK\r\nTransf~er-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break after headers but before header block end
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n~\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break after headers
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n~4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in body - within chunk size
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4~\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in body - within size/body separator
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r~\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in body - within chunk body
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nW~iki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in body - between chunks
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n~5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - break in body - between null chunk body
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.~\r~\n~0~\r~\n~\r~\n~Expires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - in trailer header name
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExp~ires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - in trailer header name
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExp~ires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - in trailer header value
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015~ 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - in trailer terminating newline
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r~\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - in message terminating newline
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r~\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - no trailers
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
     assert(response.trailer_length == 0);
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - non-chunked - everything split!
     set_buffer("H~T~T~P~/~1~.~1~ ~2~0~0~ ~O~K~\r~\n~C~o~n~t~e~n~t~-~L~e~n~g~t~h~:~ ~1~3~\r~\n~\r~\n~H~e~l~l~o~,~ ~W~o~r~l~d~!~\r~\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(strcmp(STATUS_LINE(&response), "HTTP/1.1 200 OK") == 0);
+    assert(strcmp(response.version, "HTTP/1.1") == 0);
+    assert(strcmp(response.status_text, "OK") == 0);
     assert(response.expected_body_size == 13);
     assert(response.body_length == 13);
     assert(memcmp(BODY(&response), "Hello, World!", 13) == 0);
-    assert(memcmp(HEADERS(&response), "Content-Length: 13\r\n", 19) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test - chunked - everything split!
     set_buffer("H~T~T~P~/~1~.~1~ ~2~0~0~ ~O~K~\r~\n~T~r~a~n~s~f~e~r~-~E~n~c~o~d~i~n~g~:~ ~c~h~u~n~k~e~d~\r~\n~\r~\n~4~"
                "\r~\n~W~i~k~i~\r~\n~5~\r~\n~p~e~d~i~a~\r~\n~C~\r~\n~ ~i~n~\r~\n~c~h~u~n~k~s~.~\r~\n~0~\r~\n~\r~\n~E~x~p~i~r~"
                "e~s~:~ ~W~e~d~,~ ~2~1~ ~O~c~t~ ~2~0~1~5~ ~0~7~:~2~8~:~0~0~ ~G~M~T~\r~\n~\r~\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(result);
     assert(response.status_code == 200);
-    assert(response.status_line_length == strlen(expected_status_line));
-    assert(response.header_length == strlen(expected_headers));
     assert(response.body_length == strlen(expected_body));
-    assert(response.trailer_length == strlen(expected_trailers));
-    assert(memcmp(STATUS_LINE(&response), expected_status_line, strlen(expected_status_line)) == 0);
-    assert(memcmp(HEADERS(&response), expected_headers, strlen(expected_headers)) == 0);
     assert(memcmp(BODY(&response), expected_body, strlen(expected_body)) == 0);
-    assert(memcmp(TRAILERS(&response), expected_trailers, strlen(expected_trailers)) == 0);
     // Free response buffers
-    free_response(&response);
+    free_message(&response);
 
     // Test Malformed requests
     // Test - no status line
     set_buffer("Content-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_STATUS_LINE);
-    free_response(&response);
+    free_message(&response);
 
     // Test - malformed status line
     set_buffer("HTTP 200 \r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_STATUS_LINE);
-    free_response(&response);
+    free_message(&response);
 
     // Test - bad response code
     set_buffer("HTTP/1.1 2000 OK\r\nContent-Length: 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_INVALID_STATUS_CODE);
-    free_response(&response);
+    free_message(&response);
 
     // Test - malformed headers
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length 13\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_HEADER);
-    free_response(&response);
+    free_message(&response);
 
     // Test - incorrect body length (too small)
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_BODY);
-    free_response(&response);
+    free_message(&response);
 
     // Test - incorrect body length (too big)
     set_buffer("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\nHello, World!\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_SOCKET_CLOSED);
-    free_response(&response);
+    free_message(&response);
 
     // Test - malformed chunk
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n7\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_CHUNK);
-    free_response(&response);
+    free_message(&response);
 
     // Test - malformed trailer
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires - Wed, 21 Oct 2015\r\n\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_MALFORMED_TRAILER);
-    free_response(&response);
+    free_message(&response);
 
     // Test - no message end
     set_buffer("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nWiki\r\n5\r\npedia\r\nC\r\n in\r\nchunks.\r\n0\r\n\r\nExpires: Wed, 21 Oct 2015 07:28:00 GMT\r\n");
-    result = read_response(0, &response);
+    result = read_message(0, &response);
     assert(!result);
     assert(response.reading_error_code == READ_ERROR_SOCKET_CLOSED);
-    free_response(&response);
+    free_message(&response);
 }
 
 // Mock Write Function output buffer
@@ -1710,11 +1628,19 @@ void test_emit_to_socket() {
     buffer->buffer = NULL;
     buffer->length = 0;
     buffer->socket = 999;
-    buffer->secret_id = "1234567890";
-    buffer->http_request = "POST";
-    buffer->http_path = "/api/v1/test";
+    buffer->secret = "1234567890";
+    buffer->method = "POST";
+    buffer->uri = "/api/v1/test";
     buffer->http_headers = "Crexx-Version: 1.1.2\r\n";
-    buffer->http_host = "localhost";
+    buffer->host = "localhost";
+    buffer->type = 'r'; // Request
+    buffer->user_agent = "CREXXSAA/0.1";
+    buffer->version = "HTTP/1.1";
+    buffer->method = "POST";
+    buffer->status_code = 200;
+    buffer->status_text = 0;
+    buffer->content_type = 0;
+    buffer->keep_alive = 1;
 
     // Test 1 - try and exercise every part of the function
     // Set buffer
@@ -1754,6 +1680,32 @@ void test_emit_to_socket() {
     mock_max_write = 0;
     // Set expected output
     expected = "POST /api/v1/test HTTP/1.1\r\nHost: localhost\r\nRexx-Secret: 1234567890\r\nUser-Agent: CREXXSAA/0.1\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: Keep-Alive\r\nCrexx-Version: 1.1.2\r\n\r\nb\r\nHello World\r\n0\r\n\r\n";
+    // ACTION_OPEN
+    rc = emit_to_socket(ACTION_OPEN, NULL, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_EMIT
+    rc = emit_to_socket(ACTION_EMIT, out, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_FINISHED_EMIT
+    rc = emit_to_socket(ACTION_FINISHED_EMIT, NULL, (void**)&buffer);
+    assert(rc == 0);
+    // ACTION_CLOSE
+    rc = emit_to_socket(ACTION_CLOSE, NULL, (void**)&buffer);
+    assert(rc == 0);
+    assert(strcmp(write_output,expected)==0);
+    // Note the buffer should be freed by the ACTION_CLOSE
+
+    // Test 3 - A Response
+    // Set buffer
+    buffer->capacity = 0;  // The default buffer size should be used
+    buffer->buffer = NULL; // The buffer should be allocated
+    write_output[0] = 0;
+    write_output_length = 0;
+    mock_error = 0;
+    mock_max_write = 0;
+    buffer->type ='s'; // Response
+    // Set expected output
+    expected = "HTTP/1.1 200 OK\r\nHost: localhost\r\nRexx-Secret: 1234567890\r\nUser-Agent: CREXXSAA/0.1\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: Keep-Alive\r\nCrexx-Version: 1.1.2\r\n\r\nb\r\nHello World\r\n0\r\n\r\n";
     // ACTION_OPEN
     rc = emit_to_socket(ACTION_OPEN, NULL, (void**)&buffer);
     assert(rc == 0);
