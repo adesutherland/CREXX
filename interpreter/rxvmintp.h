@@ -3,6 +3,7 @@
 
 #include "rxas.h"
 #include "rxbin.h"
+#include "../decimal/decNumber.h"
 
 #define rxversion "crexx-f0049"
 
@@ -29,7 +30,7 @@ struct value {
     /* Value */
     rxinteger int_value;
     double float_value;
-    void *decimal_value; /* TODO */
+    decNumber *decimal_value; /* TODO */
     char *string_value;
     size_t string_length;
     size_t string_buffer_length;
