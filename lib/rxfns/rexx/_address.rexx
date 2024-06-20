@@ -7,15 +7,34 @@ namespace _rxsysb expose _address _noredir _redir2array _redir2string _array2red
 _address: procedure = .int
   arg env = "shell", command = "", in = .binary, out = .binary, err = .binary, expose ... = .string
 
-  redirect = .binary[4]
-  redirect[1] = in
-  redirect[2] = out
-  redirect[3] = err
+  shell_flags = 0; /* Flags for the shell command - see spawn instruction for values */
   rc = 0
+
+  if env = "shell" then do
+    shell_flags = 0
+  end
+  else if env = "crexxsaa" then do
+    shell_flags = 1
+  end
+  else do
+    return 1
+  end
+
+  redirect = .binary[5] /* Array to hold the redirect information for the rxas spawn instruction */
+  redirect[1] = in /* Set up redirect[1] to hold the input stream */
+  redirect[2] = out /* Set up redirect[2] to hold the output stream */
+  redirect[3] = err /* Set up redirect[3] to hold the error stream */
 
   /* Set up redirect[4] to hold the environment variables                    */
   /* After this redirect[4] is an array of "pointers" to the args            */
   /* We need to do this with assembler as cREXX does not support objects yet */
+  /* Note that expose is an array of names and arguments interlaced as setup */
+  /* by the compiler. The first of each pair is the name of the variable in  */
+  /* the string attribute and the type code in the integer attribute. The    */
+  /* second in each pair is the register/variable itself. The compiler       */
+  /* will have created string representation of the variable.                */
+  /* This function just needs to pass all these to the spawn assembler       */
+  /* instruction.                                                            */
   num_envs = arg.0
   envs = .string[]
   e = .string
@@ -27,6 +46,9 @@ _address: procedure = .int
     assembler unlink e
   end
   assembler unlink envs
+
+  /* Set up redirect[5] to hold spawn flags as an integer - again using assembler at this time */
+  assembler linktoattr1 5,redirect,shell_flags /* Link shell_flags to attribute 5 (1 base) of redirect */
 
   /* Spawn the process */
   assembler spawn rc,command,redirect

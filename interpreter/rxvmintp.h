@@ -268,6 +268,7 @@ int shellspawn(const char *command,
                REDIRECT* pOut,
                REDIRECT* pErr,
                value* variables,
+               int flags,
                int *rc,
                char **errorText);
 

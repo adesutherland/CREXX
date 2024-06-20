@@ -46,6 +46,7 @@ typedef struct shelldata {
     REDIRECT* pInput;
     REDIRECT* pOutput;
     REDIRECT* pError;
+    int flags;
     char *waitThreadErrorText;
     int waitThreadRC;
 #ifdef _WIN32
@@ -164,6 +165,13 @@ int getEnvVal(char **value, char *name, size_t name_length) {
 /*
  * - A pin, pout or perr does not need to be specified ... in this case the std streams are used.
  * - Command contains the commands string to execute
+ * - pIn, pOut, pErr are the redirections for stdin, stdout and stderr
+ * - variables is a pointer to and array of the value structures that hold the variables
+ *   These are an array of names and arguments interlaced as setup
+ *   by the caller. The first of each pair is the name of the variable in
+ *   the string attribute and the type code in the integer attribute. The
+ *   second in each pair is the register/variable itself. The caller
+ *   should have created string representation of the variable.
  * - rc will contain the return code from the command
  * - errorText contains a descriptive text of any error in the spawn
  *   (i.e. NOT from the executed child process). This is set if this returns
@@ -179,6 +187,7 @@ int shellspawn (const char *command,
                 REDIRECT* pOut,
                 REDIRECT* pErr,
                 value* variables,
+                int flags,
                 int *rc,
                 char **errorText) {
 
@@ -194,6 +203,7 @@ int shellspawn (const char *command,
     data.pInput = pIn;
     data.pOutput = pOut;
     data.pError = pErr;
+    data.flags = flags;
     data.buffer = 0;
     data.file_path = 0;
     data.argv = 0;
@@ -259,6 +269,13 @@ int shellspawn (const char *command,
         return SHELLSPAWN_NOFOUND;
     }
 #endif
+
+    /* Process flags */
+    if (flags == 1) {
+        // crexxsaa http server needs starting
+
+        // todo: implement
+    }
 
     /* Launch the command */
     int lrc;

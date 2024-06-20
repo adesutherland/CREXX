@@ -94,6 +94,8 @@ struct MEMBLOCK {
 #define RXSHV_BADF     6         /* Invalid function code */
 #define RXSHV_NOAVL    7         /* No more variables available */
 #define RXSHV_NOTEX    8         /* Variable does not exist */
+#define RXSHV_BADCREXX 9         /* Function code not implemented in crexx */
+
 
 /* RexxVariablePool - Interface to the REXX variable pool */
 unsigned long RexxVariablePool(SHVBLOCK *request, SHVBLOCK **result);

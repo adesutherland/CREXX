@@ -84,6 +84,40 @@ void *handle_client_thread(void *arg) {
                 }
 
                 // Process the shvblock request
+                // Loop through the shvblocks
+                SHVBLOCK *result = 0;
+                SHVBLOCK *current = shvblock_handle;
+                while (current != 0) {
+                    // Process the shvblock
+                    switch (current->shvcode) {
+                        case RXSHV_SET:
+                            // Set the variable
+                            result = 0;
+                            RexxVariablePool(current, &result);
+                            break;
+                        case RXSHV_FETCH:
+                        case RXSHV_NEXTV:
+                            // Fetch the variable
+                            result = 0;
+                            RexxVariablePool(current, &result);
+                            break;
+                        case RXSHV_DROP:
+                        case RXSHV_PRIV:
+                        case RXSHV_SYSET:
+                        case RXSHV_SYFET:
+                        case RXSHV_SYDRO:
+                        case RXSHV_SYDEL:
+                            // Not implemented in crexx
+                            current->shvret = RXSHV_BADCREXX;
+                            break;
+                        default:
+                            // Invalid function
+                            current->shvret = RXSHV_BADF;
+                            break;
+                    }
+                    // Move to the next shvblock
+                    current = current->shvnext;
+                }
 
                 // Emit the JSON
 
