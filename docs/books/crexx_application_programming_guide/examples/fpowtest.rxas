@@ -1,14 +1,14 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0044
+ * cREXX COMPILER VERSION : crexx-f0049
  * SOURCE                 : fpowtest.rexx
- * BUILT                  : 2023-03-05 00:37:56
+ * BUILT                  : 2024-06-30 18:26:56
  */
 
 .srcfile="fpowtest.rexx"
 .globals=0
 
 main() .locals=1
-   .meta "fpowtest.rexx.main"="b" ".void" main() "" ""
+   .meta "fpowtest.main"="b" ".void" main() "" ""
    .src 2:1="say 0.5**2 'should be 0.25'"
    say "0.25 should be 0.25"
    .src 2:28=""

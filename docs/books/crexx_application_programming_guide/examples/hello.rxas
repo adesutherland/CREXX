@@ -1,14 +1,14 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0044
+ * cREXX COMPILER VERSION : crexx-f0049
  * SOURCE                 : hello.rexx
- * BUILT                  : 2023-03-05 00:37:55
+ * BUILT                  : 2024-06-30 18:26:56
  */
 
 .srcfile="hello.rexx"
 .globals=0
 
 main() .locals=1
-   .meta "hello.rexx.main"="b" ".void" main() "" ""
+   .meta "hello.main"="b" ".void" main() "" ""
    .src 3:1="say 'hello cRexx world!'"
    say "hello cRexx world!"
    .src 3:25=""

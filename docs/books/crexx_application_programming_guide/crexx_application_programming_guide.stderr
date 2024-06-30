@@ -1,5 +1,0 @@
-basename: illegal option -- h
-usage: basename string [suffix]
-       basename [-a] [-s suffix] string [...]
-dirname: illegal option -- h
-usage: dirname string [...]
