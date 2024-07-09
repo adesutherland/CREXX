@@ -1,13 +1,13 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0043
- * SOURCE                 : hello
- * BUILT                  : 2022-08-13 11:48:13
+ * cREXX COMPILER VERSION : crexx-f0051
+ * SOURCE                 : hello.rexx
+ * BUILT                  : 2024-07-09 14:53:11
  */
 
-.srcfile="hello"
+.srcfile="hello.rexx"
 .globals=0
 
-main() .locals=5 .expose=hello.main
+main() .locals=5
    .meta "hello.main"="b" ".int" main() "" ""
    .src 4:1="do"
    .src 4:4="i=1"
@@ -32,7 +32,7 @@ l3doend:
    ret 0
    .meta "hello.main.i"
 
-hello() .locals=1 .expose=hello.hello
+hello() .locals=1
    .meta "hello.hello"="b" ".void" hello() "" ""
    .src 10:1="hello: procedure"
    .src 11:1="say \"Hello World\""

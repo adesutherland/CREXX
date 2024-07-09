@@ -77,13 +77,77 @@
  *
 */
 
-char iperm[16][16][8],fperm[16][16][8];/* inital and final permns      */
-char s[4][4096];                       /* S1 thru S8 precomputed       */
-char p32[4][256][4];                   /* for permuting 32-bit         */
-char kn[16][6];                        /* key selections               */ 
+/* Adrian hacks to move the code from K&Rish        */
+/* to C90ish                                        */
+/* Typedef for perms [16][16][8]                    */
+typedef char perm_t[16][16][8];
 
-endes(inblock,outblock)                /* encrypt 64-bit inblock       */
-char *inblock, *outblock;
+/* Forward declarations                             */
+
+/* permute inblock with perm                        */
+/* inblock, outblock - result into outblock,64 bits */
+/* perm - 2K bytes defining perm                    */
+static void permute(char* inblock,perm_t perm, char* outblock);
+
+/* 1 churning operation                             */
+/* num - i.e. the num-th one                        */
+/* inblock, outblock - 64 bits each                 */
+static void iter(int num, char* inblock, char* outblock);
+
+/* initialize a perm array                          */
+/* perm - 64-bit, either init or final              */
+static void perminit(perm_t perm, const char p[64]);
+
+/* initialize key schedule array                    */
+/* key - 64 bits (will use only 56)                 */
+static void kinit(const char* key);
+
+/* initialize s1-s8 arrays                          */
+static void sinit();
+
+/* initialize 32-bit permutation                    */
+static void p32init();
+
+/* 1 compression value for sinit                    */
+static int getcomp(int k, int v);
+
+/* critical cryptographic trans                     */
+/* right, fret - 32 bits each                       */
+/* num - index number of this iter                  */
+static void f(char* right, int num, char* fret);
+
+/* 32 to 48 bits with E oper                        */
+/* right is 32, bigright 48                         */
+static void expand(char* right, char* bigright);
+
+/* contract f from 48 to 32 bits                    */
+/* in48, out32 - using 12-bit pieces into bytes     */
+static void contract(char* in48, char* out32);
+
+/* 32-bit permutation at end */
+/* inblock, outblock - of the f crypto function */
+static void perm32(char* inblock, char* outblock);
+
+/* Globals */
+static char ip[]; /* Initialized later */
+static char fp[]; /* Initialized later */
+static char iperm[16][16][8],fperm[16][16][8];/* inital and final permns      */
+static char s[4][4096];                       /* S1 thru S8 precomputed       */
+static char p32[4][256][4];                   /* for permuting 32-bit         */
+static char kn[16][6];                        /* key selections               */
+
+/* initialize all des arrays */
+void desinit(char *key)
+{
+    perminit(iperm,ip);             /* initial permutation          */
+    perminit(fperm,fp);             /* final permutation            */
+    kinit(key);                     /* key schedule                 */
+    sinit();                        /* compression functions        */
+    p32init();                      /* 32-bit permutation in f      */
+}
+
+/* encrypt 64-bit inblock  */
+void endes(char* inblock, char* outblock)
 {      char iters[17][8];              /* workspace for each iteration */
        char swap[8];                   /* place to interchange L and R */
        register int i;
@@ -100,9 +164,10 @@ char *inblock, *outblock;
        permute(swap,fperm,outblock);   /* apply final permutation      */
 }
 
-dedes(inblock,outblock)                        /* decrypt 64-bit inblock       */
-char *inblock,*outblock;
-{      char iters[17][8];              /* workspace for each iteration */
+/* decrypt 64-bit inblock  */
+void dedes(char* inblock, char* outblock)
+{
+       char iters[17][8];              /* workspace for each iteration */
        char swap[8];                   /* place to interchange L and R */
        register int i;
        register char *s, *t;
@@ -118,9 +183,10 @@ char *inblock,*outblock;
        permute(swap,fperm,outblock);   /* apply final permutation      */
 }
 
-permute(inblock,perm,outblock)         /* permute inblock with perm    */
-char *inblock, *outblock;              /* result into outblock,64 bits */
-char perm[16][16][8];                  /* 2K bytes defining perm.      */
+/* permute inblock with perm    */
+/* inblock, outblock - result into outblock,64 bits */
+/* perm - 2K bytes defining perm */
+static void permute(char* inblock,perm_t perm, char* outblock)
 {      register int i,j;
        register char *ib, *ob;         /* ptr to input or output block */
        register char *p, *q;
@@ -137,7 +203,7 @@ char perm[16][16][8];                  /* 2K bytes defining perm.      */
        }
 }
 
-char ip[]                              /* initial permutation P        */
+static char ip[]                              /* initial permutation P        */
 = {    58, 50, 42, 34, 26, 18, 10,  2,
        60, 52, 44, 36, 28, 20, 12,  4,
        62, 54, 46, 38, 30, 22, 14,  6,
@@ -147,7 +213,7 @@ char ip[]                              /* initial permutation P        */
        61, 53, 45, 37, 29, 21, 13,  5,
        63, 55, 47, 39, 31, 23, 15,  7  };
 
-char fp[]                              /* final permutation F    */
+static char fp[]                              /* final permutation F    */
 = {    40,  8, 48, 16, 56, 24, 64, 32,
        39,  7, 47, 15, 55, 23, 63, 31,
        38,  6, 46, 14, 54, 22, 62, 30,
@@ -157,7 +223,7 @@ char fp[]                              /* final permutation F    */
        34,  2, 42, 10, 50, 18, 58, 26,
        33,  1, 41,  9, 49, 17, 57, 25  };
 
-char pc1[]                             /* permuted choice table (key)  */
+static char pc1[]                             /* permuted choice table (key)  */
 = {    57, 49, 41, 33, 25, 17,  9,
         1, 58, 50, 42, 34, 26, 18,
        10,  2, 59, 51, 43, 35, 27,
@@ -168,13 +234,13 @@ char pc1[]                             /* permuted choice table (key)  */
        14,  6, 61, 53, 45, 37, 29,
        21, 13,  5, 28, 20, 12,  4      };
 
-char totrot[]                     /* number left rotations of pc1 */
+static char totrot[]                     /* number left rotations of pc1 */
 = {    1,2,4,6,8,10,12,14,15,17,19,21,23,25,27,28      };
 
-char pc1m[56];                   /* place to modify pc1 into   */
-char pcr[56];                     /* place to rotate pc1 into  */
+static char pc1m[56];                   /* place to modify pc1 into   */
+static char pcr[56];                     /* place to rotate pc1 into  */
 
-char pc2[]                             /* permuted choice key (table)  */
+static char pc2[]                             /* permuted choice key (table)  */
 = {    14, 17, 11, 24,  1,  5,
         3, 28, 15,  6, 21, 10,
        23, 19, 12,  4, 26,  8,
@@ -184,7 +250,7 @@ char pc2[]                             /* permuted choice key (table)  */
        44, 49, 39, 56, 34, 53,
        46, 42, 50, 36, 29, 32  };
 
-char si[8][64]                   /* 48->32 bit compression tables*/
+static char si[8][64]                   /* 48->32 bit compression tables*/
 = {                                    /* S[1]                  */
        14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
         0, 15,  7,  4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5,  3,  8,
@@ -226,7 +292,7 @@ char si[8][64]                   /* 48->32 bit compression tables*/
         7, 11,  4,  1,  9, 12, 14,  2,  0,  6, 10, 13, 15,  3,  5,  8,
         2,  1, 14,  7,  4, 10,  8, 13, 15, 12,  9,  0,  3,  5,  6, 11  };
 
-char p32i[]                            /* 32-bit permutation function  */
+static char p32i[]                            /* 32-bit permutation function  */
 = {    16,  7, 20, 21,
        29, 12, 28, 17,
         1, 15, 23, 26,
@@ -236,22 +302,13 @@ char p32i[]                            /* 32-bit permutation function  */
        19, 13, 30,  6,
        22, 11,  4, 25  };
 
-desinit(key)                           /* initialize all des arrays    */
-char *key;
-{
-       perminit(iperm,ip);             /* initial permutation          */
-       perminit(fperm,fp);             /* final permutation            */
-       kinit(key);                     /* key schedule                 */
-       sinit();                        /* compression functions        */
-       p32init();                      /* 32-bit permutation in f      */
-}
-
-int bytebit[]                     /* bit 0 is left-most in byte        */
+static int bytebit[]                     /* bit 0 is left-most in byte        */
        = {     0200,0100,040,020,010,04,02,01 };
 
-int nibblebit[] = { 010,04,02,01 };
+static int nibblebit[] = { 010,04,02,01 };
 
-sinit()                                 /* initialize s1-s8 arrays             */
+/* initialize s1-s8 arrays */
+static void sinit()
 {      register int i,j;
 
        for (i=0; i<4; i++)             /* each 12-bit position         */
@@ -261,8 +318,8 @@ sinit()                                 /* initialize s1-s8 arrays             *
                                        /* store 2 compressions per char*/
 }
 
-getcomp(k,v)                           /* 1 compression value for sinit*/
-int k,v;
+/* 1 compression value for sinit */
+static int getcomp(int k, int v)
 {      register int i,j;               /* correspond to i and j in FIPS*/
 
        i=((v&040)>>4)|(v&1);           /* first and last bits make row */
@@ -270,8 +327,9 @@ int k,v;
        return (int) si[k][(i<<4)+j];   /* result is ith row, jth col   */
 }
 
-kinit(key)                             /* initialize key schedule array*/
-char *key;                             /* 64 bits (will use only 56)   */
+/* initialize key schedule array */
+/* key - 64 bits (will use only 56)   */
+static void kinit(const char* key)
 {      register int i,j,l;
        int m;
 
@@ -297,7 +355,8 @@ char *key;                             /* 64 bits (will use only 56)   */
        }
 }
 
-p32init()                              /* initialize 32-bit permutation*/
+/* initialize 32-bit permutation*/
+static void p32init()
 {      register int l, j, k;
        int i,m;
 
@@ -318,9 +377,9 @@ p32init()                              /* initialize 32-bit permutation*/
                }
 }
 
-perminit(perm,p)                       /* initialize a perm array      */
-char perm[16][16][8];                  /* 64-bit, either init or final */
-char p[64];
+/* initialize a perm array             */
+/* perm - 64-bit, either init or final */
+static void perminit(perm_t perm, const char p[64])
 {      register int l, j, k;
        int i,m;
 
@@ -341,9 +400,10 @@ char p[64];
                }
 }
 
-iter(num,inblock,outblock)             /* 1 churning operation         */
-int num;                               /* i.e. the num-th one          */
-char *inblock, *outblock;              /* 64 bits each                 */
+/* 1 churning operation               */
+/* num - i.e. the num-th one          */
+/* inblock, outblock - 64 bits each   */
+static void iter(int num, char* inblock, char* outblock)
 {      char fret[4];                   /* return from f(R[i-1],key)    */
        register char *ib, *ob, *fb;
 
@@ -360,9 +420,10 @@ char *inblock, *outblock;              /* 64 bits each                 */
        *ob++ = *ib++ ^ *fb++;
 }
 
-f(right,num,fret)                      /* critical cryptographic trans */
-char *right, *fret;                    /* 32 bits each                 */
-int num;                               /* index number of this iter    */
+/* critical cryptographic trans */
+/* right, fret - 32 bits each                 */
+/* num - index number of this iter    */
+static void f(char* right, int num, char* fret)
 {      register char *kb, *rb, *bb;    /* ptr to key selection &c      */
        char bigright[6];               /* right expanded to 48 bits    */
        char result[6];                 /* expand(R) XOR keyselect[num] */
@@ -382,8 +443,9 @@ int num;                               /* index number of this iter    */
        perm32(preout,fret);            /* and do final 32-bit perm     */
 }
 
-perm32(inblock,outblock)               /* 32-bit permutation at end    */
-char *inblock,*outblock;               /* of the f crypto function     */
+/* 32-bit permutation at end */
+/* inblock, outblock - of the f crypto function */
+static void perm32(char* inblock, char* outblock)
 {      register int j;
        register char *ib, *ob;
        register char *q;
@@ -401,8 +463,9 @@ char *inblock,*outblock;               /* of the f crypto function     */
        }
 }
 
-expand(right,bigright)                 /* 32 to 48 bits with E oper    */
-char *right,*bigright;                 /* right is 32, bigright 48     */
+/* 32 to 48 bits with E oper    */
+/* right is 32, bigright 48     */
+static void expand(char* right, char* bigright)
 {
        register char *bb, *r, r0, r1, r2, r3;
 
@@ -430,8 +493,9 @@ char *right,*bigright;                 /* right is 32, bigright 48     */
                ((r0 & 0200) >> 7);     /* 1                            */
 }
 
-contract(in48,out32)                   /* contract f from 48 to 32 bits*/
-char *in48,*out32;                     /* using 12-bit pieces into bytes */
+/* contract f from 48 to 32 bits */
+/* in48, out32 - using 12-bit pieces into bytes */
+static void contract(char* in48, char* out32)
 {      register char *c;
        register char *i;
        register int i0, i1, i2, i3, i4, i5;

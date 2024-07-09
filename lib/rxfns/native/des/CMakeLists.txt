@@ -1,14 +1,19 @@
-cmake_minimum_required(VERSION 3.00)
-
-project(des_external_function C)
+cmake_minimum_required(VERSION 3.5)
+project(rxdes C)
 
 set(CMAKE_C_STANDARD 90)
 
-# Define the project's flags:
-SET(${PROJECT_NAME}_C_FLAGS "-Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type" CACHE STRING
-    "${PROJECT_NAME} C FLAGS")
-# Enable the project's flags:
-SET(CMAKE_C_FLAGS "${${PROJECT_NAME}_C_FLAGS}")
+# Including RXPlugin Build System
+include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
-add_library(desbase SHARED desbase.c)
-add_library(RxDes SHARED RxDes.c desbase)
+# Create module
+add_plugin_target(des rxdes.c desbase.c desbase.h)
+
+# Test for desbase.c
+add_executable(desbase_test desbase_test.c desbase.c desbase.h)
+
+# Enable testing functionality
+enable_testing()
+
+# Add desbase_test as a test
+add_test(NAME DESBaseTest COMMAND desbase_test)

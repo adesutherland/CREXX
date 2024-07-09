@@ -1,43 +1,37 @@
 /*---------------------------------------------------------------------*/
 /*                                                                     */
-/* rexx SAA OS/2                                                       */
-/* DES in Rexx Using the External Function Interface                   */
+/* The CREXX Project                                                   */
+/* DES in Rexx Using the CREXX/plugin interface                        */
 /*                                                                     */
-/* Purpose of this exec:                                               */
+/* Purpose of this program:                                            */
 /* Verification of the Des algorithm using the example in Price&Davies */
 /* 'Security for Computer Networks', ISBN 0 471 92137 8, p. 64         */
-/* functions RxDesEncrypt and RxDesDecrypt from RxDes.dll              */
-/* these functions call the standard desbase.dll                       */
+/* functions RxDesEncrypt and RxDesDecrypt from the rxdes plugin       */
 /*                                                                     */
 /*---------------------------------------------------------------------*/
 
- CALL ON ERROR NAME Label
+options levelb  /* This is a rexx level b program */
 
- rc = RXFUNCADD('RxDesEncrypt','RxDes','RxDesEncrypt')
+import rxfnsb   /* Import the crexx level B functions */
+import rxdes    /* Import the rxdes plugin functions  */
 
- rc = RXFUNCADD('RxDesDecrypt','RxDes','RxDesDecrypt')
-                      
- Plaintext = X2C(0000000000000000)
+/* Note that the input and output to the des functions are in hex strings */
 
- key = X2C(08192A3B4C5D6E7F)
+Plaintext = "0000000000000000"
+key =       "08192A3B4C5D6E7F"
 
- say 'Plaintext is  ' C2X(Plaintext)
+say 'Plaintext is  ' Plaintext
+say 'Key is        ' Key
 
- say 'Key is        ' C2X(Key) 
-
- say 'Encrypting ...'
+say 'Encrypting ...'
                                            
- Ciphertext = RxDesEncrypt(key,Plaintext)
+Ciphertext = Encrypt(key,Plaintext)
+Ciphertext = Encrypt("A key",Plaintext)
 
- say 'Ciphertext is ' C2X(Ciphertext) 
+say 'Ciphertext is ' Ciphertext
 
- say 'Decrypting ...'
+say 'Decrypting ...'
 
- PlainText = RxDesDecrypt(key,Ciphertext)
+DecryptedText = Decrypt(key,Ciphertext)
 
- if (PlainText = Plaintext) then say 'Decrypted Ciphertext compares +.' 
-
-label:
-
- rc = RXFUNCDROP('RxDesEncrypt')
- rc = RXFUNCDROP('RxDesDecrypt')
+if (DecryptedText = Plaintext) then say 'Decrypted Ciphertext compares +.'
