@@ -26,7 +26,6 @@ say 'Key is        ' Key
 say 'Encrypting ...'
                                            
 Ciphertext = Encrypt(key,Plaintext)
-Ciphertext = Encrypt("A key",Plaintext)
 
 say 'Ciphertext is ' Ciphertext
 

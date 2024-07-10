@@ -1,4 +1,5 @@
-// CREXX/PA (Plugin Architecture) Support Header
+// CREXX/PA (Plugin Architecture) Client Header
+
 #ifndef RXPLUGIN_H_
 #define RXPLUGIN_H_
 
@@ -11,15 +12,6 @@ typedef void* attribute_value;
 // Parameters are the number of arguments, an array of attribute_value,
 // and an attribute_value return value
 typedef void (*libfunc)(int, attribute_value*, attribute_value, attribute_value);
-
-// Plugin Function Tags
-#define PROCEDURE(p) \
-        static void p(int _numargs, attribute_value* _arg, attribute_value _return, attribute_value _signal)
-
-#define NUM_ARGS _numargs
-#define ARG(n) _arg[(n)]
-#define RETURN _return
-#define SIGNAL _signal
 
 // Enumeration of Signal Codes
 typedef enum rxsignal {
@@ -155,6 +147,16 @@ rxfunc_getfloat getfloat;
 #define GETFLOAT(attr) _rxplugin_context->getfloat((attr))
 
 #endif
+
+// Plugin Function Tags
+#define PROCEDURE(p) \
+        static void p(int _numargs, attribute_value* _arg, attribute_value _return, attribute_value _signal)
+
+// Arguments
+#define NUM_ARGS _numargs
+#define ARG(n) _arg[(n)]
+#define RETURN _return
+#define SIGNAL _signal
 
 // End of LOADFUNCS
 #define ENDLOADFUNCS }
