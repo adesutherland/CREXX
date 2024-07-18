@@ -1,17 +1,17 @@
 // CREXX/PA (Plugin Architecture) Client Header
 
-#ifndef RXPLUGIN_H_
-#define RXPLUGIN_H_
+#ifndef CREXX_PA_H_
+#define CREXX_PA_H_
 
 // Plugin Support Functions and Macros
 
 // Typedef for attribute value which is an opaque pointer
-typedef void* attribute_value;
+typedef void* rxpa_attribute_value;
 
 // Typedef definition of a library function
-// Parameters are the number of arguments, an array of attribute_value,
-// and an attribute_value return value
-typedef void (*libfunc)(int, attribute_value*, attribute_value, attribute_value);
+// Parameters are the number of arguments, an array of rxpa_attribute_value,
+// and an rxpa_attribute_value return value
+typedef void (*rxpa_libfunc)(int, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
 
 // Enumeration of Signal Codes
 typedef enum rxsignal {
@@ -30,48 +30,48 @@ typedef enum rxsignal {
 
 // Plugin Helper Functions
 // The following functions are used to interact with the REXX interpreter
-typedef void (*rxfunc_addfunc)(libfunc func, char* name,
-        char* option, char* type, char* args); /* Add a function to the REXX interpreter */
-typedef char* (*rxfunc_getstring)( attribute_value attributeValue); /* Get a string from an attribute value */
-typedef void (*rxfunc_setstring)( attribute_value attributeValue, char* string); /* Set a string in an attribute value */
-typedef void (*rxfunc_setint)( attribute_value attributeValue, int value); /* Set an integer in an attribute value */
-typedef int (*rxfunc_getint)( attribute_value attributeValue); /* Get an integer from an attribute value */
-typedef void (*rxfunc_setfloat)( attribute_value attributeValue, double value); /* Set a float in an attribute value */
-typedef double (*rxfunc_getfloat)( attribute_value attributeValue); /* Get a float from an attribute value */
+typedef void (*rxpa_func_addfunc)(rxpa_libfunc func, char* name,
+                                  char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
+typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, int value); /* Set an integer in an attribute value */
+typedef int (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
+typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
 
 // The initialization context struct
-typedef struct initctx* initctxptr;
-struct initctx {
-    rxfunc_addfunc addfunc;
-    rxfunc_getstring getstring;
-    rxfunc_setstring setstring;
-    rxfunc_setint setint;
-    rxfunc_getint getint;
-    rxfunc_setfloat setfloat;
-    rxfunc_getfloat getfloat;
+typedef struct rxpa_initctxptr* rxpa_initctxptr;
+struct rxpa_initctxptr {
+    rxpa_func_addfunc addfunc;
+    rxpa_func_getstring getstring;
+    rxpa_func_setstring setstring;
+    rxpa_func_setint setint;
+    rxpa_func_getint getint;
+    rxpa_func_setfloat setfloat;
+    rxpa_func_getfloat getfloat;
 };
 
 // Global context variable declaration
-extern initctxptr _rxplugin_context;
+extern rxpa_initctxptr _rxpa_context;
 
 // Are we building a statically linked library?
 #ifdef BUILD_DLL
 
 // Macro is used to register a procedure - dynamic linkage
-#define ADDPROC(func, name, option, type, args) _rxplugin_context->addfunc((func),(name),(option),(type),(args))
-#define GETSTRING(attr) _rxplugin_context->getstring((attr))
-#define SETSTRING(attr, str) _rxplugin_context->setstring((attr),(str))
-#define SETINT(attr, value) _rxplugin_context->setint((attr),(value))
-#define GETINT(attr) _rxplugin_context->getint((attr))
-#define SETFLOAT(attr, value) _rxplugin_context->setfloat((attr),(value))
-#define GETFLOAT(attr) _rxplugin_context->getfloat((attr))
+#define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
+#define GETSTRING(attr) _rxpa_context->getstring((attr))
+#define SETSTRING(attr, str) _rxpa_context->setstring((attr),(str))
+#define SETINT(attr, value) _rxpa_context->setint((attr),(value))
+#define GETINT(attr) _rxpa_context->getint((attr))
+#define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
+#define GETFLOAT(attr) _rxpa_context->getfloat((attr))
 
 // The plugin is being built as a DLL
 // INITIALIZER is redefined to be a simple function
 #define INITIALIZER(f) \
-    void f(initctxptr context); \
-    initctxptr _rxplugin_context = NULL;                   \
-    void f(initctxptr context) { _rxplugin_context = context;
+    void f(rxpa_initctxptr context); \
+    rxpa_initctxptr _rxpa_context = NULL;                   \
+    void f(rxpa_initctxptr context) { _rxpa_context = context;
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -129,28 +129,28 @@ extern initctxptr _rxplugin_context;
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
-rxfunc_addfunc addfunc;
-rxfunc_getstring getstring;
-rxfunc_setstring setstring;
-rxfunc_setint setint;
-rxfunc_getint getint;
-rxfunc_setfloat setfloat;
-rxfunc_getfloat getfloat;
+void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
+void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+void rxpa_setint(rxpa_attribute_value attributeValue, int value); /* Set an integer in an attribute value */
+int rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
+double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
 
 // Macro is used to register a procedure - static linkage
-#define ADDPROC(func, name, option, type, args) _rxplugin_context->addfunc((func),(name),(option),(type),(args))
-#define GETSTRING(attr) _rxplugin_context->getstring((attr))
-#define SETSTRING(attr, str) _rxplugin_context->setstring((attr),(str))
-#define SETINT(attr, value) _rxplugin_context->setint((attr),(value))
-#define GETINT(attr) _rxplugin_context->getint((attr))
-#define SETFLOAT(attr, value) _rxplugin_context->setfloat((attr),(value))
-#define GETFLOAT(attr) _rxplugin_context->getfloat((attr))
+#define ADDPROC(func, name, option, type, args) rxpa_addfunc((func),(name),(option),(type),(args))
+#define GETSTRING(attr) rxpa_getstring((attr))
+#define SETSTRING(attr, str) rxpa_setstring((attr),(str))
+#define SETINT(attr, value) rxpa_setint((attr),(value))
+#define GETINT(attr) rxpa_getint((attr))
+#define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
+#define GETFLOAT(attr) rxpa_getfloat((attr))
 
 #endif
 
 // Plugin Function Tags
 #define PROCEDURE(p) \
-        static void p(int _numargs, attribute_value* _arg, attribute_value _return, attribute_value _signal)
+        static void p(int _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
 
 // Arguments
 #define NUM_ARGS _numargs
@@ -167,4 +167,4 @@ rxfunc_getfloat getfloat;
 // Macro to Reset Signal
 #define RESETSIGNAL {SETINT(SIGNAL,SIGNAL_NONE); SETSTRING(SIGNAL, "");}
 
-#endif // RXPLUGIN_H_
+#endif // CREXX_PA_H_

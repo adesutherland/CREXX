@@ -13,6 +13,6 @@
 // Returns 0 on success
 //               -1 Failed to load plugin
 //               -2 Failed to call _initfuncs
-int load_plugin(initctxptr ctx, char* file_name);
+int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name);
 
 #endif //CREXX_RXPA_H

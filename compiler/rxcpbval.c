@@ -598,8 +598,8 @@ static walker_result initial_checks_walker(walker_direction direction,
             /* Set namespace if not already set */
             if (!context->namespace) {
                 size_t i;
-                node->node_string = context->file_name;
-                node->node_string_length = strlen(context->file_name);
+                node->node_string = node->file_name;
+                node->node_string_length = strlen(node->file_name);
                 for (i = 0; i < node->node_string_length; i++) {
                     if (node->node_string[i] == '.' || node->node_string[i] == ' ') {
                         node->node_string_length = i;

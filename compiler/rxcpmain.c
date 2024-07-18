@@ -174,7 +174,7 @@ void fre_cntx(Context *context)  {
     free(context);
 }
 
-int main(int argc, char *argv[]) {
+int rxcmain(int argc, char *argv[]) {
 
     FILE *outFile = 0;
     size_t bytes;
@@ -454,6 +454,9 @@ int main(int argc, char *argv[]) {
     fre_cntx(context);
 
     if (file_directory) free(file_directory);
+
+    /* Free statically linked functions */
+   free_static_linked_functions();
 
     if (errors) return(2);
     if (warnings) return(1);

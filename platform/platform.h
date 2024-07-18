@@ -65,7 +65,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode);
  * (pass the & of void *dir_ptr to hold an opaque directory context)
  * if dir is null then the "current" (platform specific) dir is searched
  */
-char *dirfstfl(const char *dir, char *type, void **dir_ptr);
+char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr);
 
 /*
  * Get the next file from a directory (or null if there isn't one)

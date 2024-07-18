@@ -89,6 +89,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
 struct fl_dir {
     DIR *d;
     char *type;
+    char *prefix;
 };
 #endif
 
@@ -106,7 +107,7 @@ struct WIN_FILE_DATA {
  * (pass the & of void *dir_ptr to hold an opaque directory context)
  * if dir is null then the "current" (platform specific) dir is searched
  */
-char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
+char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
 #if defined(__APPLE__) || defined(__linux__)
 
@@ -114,6 +115,8 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
     *dir_ptr = ptr;
 
     ptr->type = type;
+    ptr->prefix = prefix;
+
     if (dir && strlen(dir)) ptr->d = opendir(dir);
     else ptr->d = opendir(".");
 
@@ -126,7 +129,12 @@ char *dirfstfl(const char *dir, char *type, void **dir_ptr) {
     struct WIN_FILE_DATA *win_data = malloc(sizeof(struct WIN_FILE_DATA));
     if (dir && strlen(dir)) strncpy(win_data->dir, dir, MAXFILEPATH);
     else strncpy(win_data->dir, ".", MAXFILEPATH);
-    snprintf(win_data->sPath, MAXFILEPATH, "%s\\*.%s", win_data->dir, type);
+    if (prefix) {
+        snprintf(win_data->sPath, MAXFILEPATH, "%s\\%s*.%s", win_data->dir, prefix, type);
+    }
+    else {
+        snprintf(win_data->sPath, MAXFILEPATH, "%s\\*.%s", win_data->dir, type);
+    }
 
     if ( (win_data->hFind = FindFirstFile(win_data->sPath, &(win_data->fdFile) ) ) == INVALID_HANDLE_VALUE)
     {
@@ -165,7 +173,10 @@ char *dirnxtfl(void **dir_ptr) {
         dirent = readdir(ptr->d);
         if (!dirent) return 0;
         ext = filenext(dirent->d_name);
-        if ( strcmp(ext,ptr->type) == 0 ) return dirent->d_name;
+        if ( strcmp(ext,ptr->type) == 0 ) {
+           if (ptr->prefix == 0 ) return dirent->d_name;
+           else if ( strncmp(dirent->d_name, ptr->prefix, strlen(ptr->prefix)) == 0 ) return dirent->d_name;
+        }
     } while (1);
 
 #elif defined(_WIN32)

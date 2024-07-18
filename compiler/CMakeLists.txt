@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.5)
 
 project(Compiler C)
 
@@ -32,7 +32,8 @@ add_custom_command(
         COMMENT "Create REXX B Lexer..."
 )
 
-add_executable(rxc
+# Compiler Library - can be used to link plugins to make a extended compiler
+add_library(rxclib STATIC
         rxcpmain.c rxcpast.c rxcpmain.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
@@ -40,11 +41,19 @@ add_executable(rxc
         rxcpbval.c rxcpsymb.c
         rxcpdary.h rxcpemit.c rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h rxcpfunc.c)
+        ../utf8/utf.h rxcpfunc.c
+)
 
-add_dependencies(rxc re2c lemon machine avl_tree platform rxaslib)
+add_dependencies(rxclib re2c lemon machine avl_tree platform rxaslib rxpa)
 
-target_link_libraries(rxc machine avl_tree platform rxaslib m)
+target_link_libraries(rxclib machine avl_tree platform rxaslib rxpa m)
 
-target_include_directories(rxc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_SOURCE_DIR}/assembler ../avl_tree ../machine ../platform ../utf8)
+target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/machine
+        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+
+add_executable(rxc rxc_main.c)
+
+add_dependencies(rxc rxclib)
+
+target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa m)

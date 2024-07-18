@@ -31,13 +31,13 @@ static void print_error(ASTNode* node, FILE* stream, char* prefix) {
         }
     }
     if (len) {
-        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->context->file_name, node->line + 1,
+        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->file_name, node->line + 1,
                 node->column + 1, node->node_string);
         prt_unex(stream, node->source_start, len);
         fprintf(stream, "\"\n");
     }
     else {
-        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->context->file_name, node->line + 1,
+        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->file_name, node->line + 1,
                 node->column + 1, node->node_string);
     }
 }
@@ -163,6 +163,7 @@ void free_tok(Context *context) {
 ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->context = context;
+    node->file_name = context->file_name;
     node->parent = 0;
     node->child = 0;
     node->sibling = 0;
@@ -280,6 +281,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->target_class = malloc(strlen(node->target_class) + 1);
         strcpy(new_node->target_class,node->target_class);
     } else new_node->target_class = 0;
+    new_node->file_name = node->file_name;
     new_node->int_value = node->int_value;
     new_node->bool_value = node->bool_value;
     new_node->float_value = node->float_value;

@@ -1697,7 +1697,7 @@ static walker_result emit_walker(walker_direction direction,
             case IMPORTED_FILE:
             {
                 char *buf = mprintf("\n/* Imported Declaration from file: %s */",
-                                    node->context->file_name);
+                                    node->file_name);
 
                 node->output = output_fs(buf);
                 free(buf);

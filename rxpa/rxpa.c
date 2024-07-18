@@ -2,6 +2,8 @@
 // CREXX Plugin Architecture Library
 //
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -9,21 +11,28 @@
 #endif
 #include "rxpa.h"
 
-// Typedef the initfuncs_type the initializer function - void f(initctxptr context);
-typedef void (*initfuncs_type)(initctxptr);
+// Typedef the initfuncs_type the initializer function - void f(rxpa_initctxptr context);
+typedef void (*initfuncs_type)(rxpa_initctxptr);
 
 // Function to load a plugin dynamically
 // - ctx is the context structure containing pointers to plugins helper functions
-// - file_name is the full file name of the plugin
+// - file_name is the name of the plugin
+// - dir is the directory where the plugin is located
+// dir and file_name are appended to create the full file name
+//
 // Returns 0 on success
 //               -1 Failed to load plugin
 //               -2 Failed to call _initfuncs
-int load_plugin(initctxptr ctx, char* file_name)
+int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 {
 // Windows Version
 #ifdef _WIN32
+    // Create a full file name buffer and append the directory and file name
+    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
+    sprintf(full_file_name, "%s\\%s", dir, file_name);
+
     // Load the DLL
-    HMODULE hDll = LoadLibrary(TEXT(file_name));
+    HMODULE hDll = LoadLibrary(TEXT(full_file_name));
     if (!hDll) {
         return -1;
     }
@@ -35,11 +44,16 @@ int load_plugin(initctxptr ctx, char* file_name)
         return -2;
     }
     init(ctx);
+    free(full_file_name);
 
 // OSX Version
 #elif __APPLE__
+    // Create a full file name buffer and append the directory and file name
+    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
+    sprintf(full_file_name, "%s/%s", dir, file_name);
+
     // Load the dylib
-    void* hDll = dlopen(file_name, RTLD_LAZY);
+    void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
         return -1;
     }
@@ -47,28 +61,31 @@ int load_plugin(initctxptr ctx, char* file_name)
     // Get the plugin initializer address and call it
     initfuncs_type init = (initfuncs_type)dlsym(hDll, "_initfuncs");
     if (!init) {
-        printf("Failed to find function '_initfuncs'\n");
         return -2;
     }
     init(ctx);
+    free(full_file_name);
 
 // Linux Version
 #else
+    // Create a full file name buffer and append the directory and file name
+    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
+    sprintf(full_file_name, "%s/%s", dir, file_name);
+
     // Load the so
-    void* hDll = dlopen(file_name, RTLD_LAZY);
+    void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
-        printf("Failed to load so\n");
         return -1;
     }
 
     // Get the plugin initializer address and call it
     initfuncs_type init = (initfuncs_type)dlsym(hDll, "_initfuncs");
     if (!init) {
-        printf("Failed to find function '_initfuncs'\n");
         dlclose(hDll);
-        return -1;
+        return -2;
     }
     init(ctx);
+    free(full_file_name);
 #endif
 
     return 0;

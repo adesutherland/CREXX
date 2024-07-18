@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include "platform.h"
 
+/* RXC Main Function */
+int rxcmain(int argc, char *argv[]);
+
 /* Typedefs */
 typedef struct ASTNode ASTNode;
 typedef struct Token Token;
@@ -132,6 +135,7 @@ struct ASTNode {
     Context *context;
     int node_number;
     NodeType node_type;
+    char* file_name;               /* This is a pointer to the file name in the context (which may be the original context for a duplicated node for imported functions) */
     ValueType value_type;    /* Value type */
     size_t value_dims;       /* Value dimensions */
     int *value_dim_base;     /* Array of starting element number for array dimension - malloced or zero */
@@ -539,7 +543,7 @@ void freimpfc(imported_func *func);
 
 /* Imported file types */
 typedef enum file_type {
-    REXX_FILE, RXBIN_FILE, RXAS_FILE
+    REXX_FILE, RXBIN_FILE, RXAS_FILE, NATIVE_FILE
 } file_type;
 
 /*  Importable Functions */
@@ -559,5 +563,16 @@ void rxfl_fre(importable_file **file_list);
 /* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
 /* Node should be an ARG node else the program aborts */
 char *meta_narg(ASTNode *node);
+
+/* Static Linked Plugin Support */
+struct static_linked_function {
+    char *name;
+    char *option;
+    char *type;
+    char *args;
+    struct static_linked_function *next;
+};
+struct static_linked_function *static_linked_functions;
+void free_static_linked_functions();
 
 #endif //CREXX_RXCPMAIN_H
