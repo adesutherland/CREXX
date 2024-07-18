@@ -38,17 +38,8 @@ function(add_static_plugin_target plugin_name)
     set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
 endfunction()
 
-# Function to get the plugin init function name
-function(get_plugin_init_name plugid result_var)
-    # Concatenate the strings
-    set(init_name "rx_${plugid}_init")
-
-    # Return the result by setting a variable in the parent scope
-    set(${result_var} "${init_name}" PARENT_SCOPE)
-endfunction()
-
-
-function(configure_linker_for_static_lib target staticLib staticLibPath)
+# Function to configure the linker for a static library ensuring the library is linked into the executable
+function(configure_linker_for_decl_lib target staticLib)
     if(MSVC)
         # For Visual Studio Compiler
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${staticLib}")
@@ -57,6 +48,7 @@ function(configure_linker_for_static_lib target staticLib staticLibPath)
         target_link_libraries(${target} -Wl,--whole-archive ${staticLib} -Wl,--no-whole-archive)
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
+        set(staticLibPath "${CMAKE_CURRENT_BINARY_DIR}/rx${staticLib}_decl.a")
         target_link_libraries(${target} "-Wl,-force_load,${staticLibPath}")
     endif()
 endfunction()

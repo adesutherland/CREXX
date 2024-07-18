@@ -572,7 +572,7 @@ struct static_linked_function {
     char *args;
     struct static_linked_function *next;
 };
-struct static_linked_function *static_linked_functions;
+extern struct static_linked_function *static_linked_functions;
 void free_static_linked_functions();
 
 #endif //CREXX_RXCPMAIN_H

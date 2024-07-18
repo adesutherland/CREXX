@@ -10,6 +10,9 @@
 #include "rxvminst.h"
 #include "rxcpdary.h"
 
+// Static Linked Functions
+struct static_linked_function *static_linked_functions;
+
 static void help() {
     char* helpMessage =
             "cREXX Compiler\n"

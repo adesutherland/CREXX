@@ -819,7 +819,7 @@ static walker_result opt2_walker(walker_direction direction,
                             break;
                         }
                     }
-                    /* If it us readonly make the argument pass by reference */
+                    /* If it is readonly make the argument pass by reference */
                     if (is_constant) node->is_ref_arg = 1; /* TODO This is not correct - we need a CONST keyword */
                 }
             }
