@@ -2577,6 +2577,7 @@ static walker_result func_type_safety_walker(walker_direction direction,
                     add_ast(node, n1);
                     n1->is_opt_arg = n2->is_opt_arg;
                     n1->is_ref_arg = n2->is_ref_arg;
+                    n1->is_const_arg = n2->is_const_arg;
                     if (!n1->is_opt_arg) {
                         mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
                     }

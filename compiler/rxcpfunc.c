@@ -882,6 +882,7 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
             found_symbol->is_arg = 0; /* Can't expose args */
             found_symbol->is_opt_arg = 0;
             found_symbol->is_ref_arg = 0;
+            found_symbol->is_const_arg = 0;
         }
     }
 

@@ -412,6 +412,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->exposed = 0;
     symbol->is_arg = 0;
     symbol->is_ref_arg = 0;
+    symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
 
     /* Lowercase symbol name */

@@ -154,6 +154,7 @@ struct ASTNode {
     int num_additional_registers;
     char is_ref_arg;
     char is_opt_arg;
+    char is_const_arg;
     char is_varg;
     ASTNode *free_list;
     ASTNode *parent, *child, *sibling;
@@ -364,6 +365,7 @@ struct Symbol {
     char is_arg;       /* Is an argument */
     char is_ref_arg;   /* Is  reference arg */
     char is_opt_arg;   /* Is an optional arg */
+    char is_const_arg; /* Is a constant arg */
     char meta_emitted; /* Has the emitter output the symbol's metadata yet */
 };
 

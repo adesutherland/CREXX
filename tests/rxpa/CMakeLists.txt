@@ -25,11 +25,11 @@ target_link_libraries(rxc_staticlink rxclib machine avl_tree platform rxaslib rx
 enable_testing()
 
 # Add desbase_test as a test
-add_test(NAME rxpa_dynlink_test COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -d
+add_test(NAME rxpa_dynlink_test COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
         -i "${CMAKE_BINARY_DIR}/lib/rxfns;${CMAKE_CURRENT_BINARY_DIR}" -o rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-add_test(NAME rxpa_staticlink_test COMMAND rxc_staticlink -d
+add_test(NAME rxpa_staticlink_test COMMAND rxc_staticlink
         -i "${CMAKE_BINARY_DIR}/lib/rxfns" -o rxpa_staticlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
