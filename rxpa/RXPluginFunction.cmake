@@ -42,10 +42,10 @@ endfunction()
 function(configure_linker_for_decl_lib target staticLib)
     if(MSVC)
         # For Visual Studio Compiler
-        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:rx${staticLib}")
+        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:rx${staticLib}_decl")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC
-        target_link_libraries(${target} -Wl,--whole-archive rx${staticLib} -Wl,--no-whole-archive)
+        target_link_libraries(${target} -Wl,--whole-archive rx${staticLib}_decl -Wl,--no-whole-archive)
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
         target_link_libraries(${target} "-Wl,-force_load,${CMAKE_CURRENT_BINARY_DIR}/rx${staticLib}_decl.a")
