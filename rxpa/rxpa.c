@@ -25,6 +25,9 @@ typedef void (*initfuncs_type)(rxpa_initctxptr);
 //               -2 Failed to call _initfuncs
 int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 {
+    // Provide a default current directory
+    if (!dir) dir = ".";
+
 // Windows Version
 #ifdef _WIN32
     // Create a full file name buffer and append the directory and file name

@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+// Do not need to define functions for static linking to the compiler -
+// only REXX declarations are needed
+#ifndef DECL_ONLY
+
 // Proc 1
 PROCEDURE(proc1)
 {
@@ -18,6 +22,8 @@ PROCEDURE(proc2)
     SETSTRING(RETURN, "static proc2 output");
     RESETSIGNAL
 }
+
+#endif
 
 // Functions to be provided to rexx - these are loaded either when the plugin is loaded (dynamic) or
 // before main() is called (static)

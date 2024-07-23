@@ -54,6 +54,13 @@ typedef long long rxinteger;
 char* file2buf(FILE *file, size_t *bytes);
 
 /*
+ * Function checks if a file exists
+ * dir can be null
+ * returns 1 if the file exists
+ */
+int fileexists(char *name, char *type, char *dir);
+
+/*
  * Function opens and returns a file handle
  * dir can be null - the default is platform specific (e.g. ./ )
  * mode - is the fopen() file mode

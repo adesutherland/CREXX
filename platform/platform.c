@@ -56,6 +56,45 @@ char* file2buf(FILE *file, size_t *bytes) {
 }
 
 /*
+ * Function checks if a file exists
+ * dir can be null
+ * returns 1 if the file exists
+ */
+int fileexists(char *name, char *type, char *dir) {
+    size_t len;
+    char *file_name;
+    int result;
+
+    /* Create the full file name */
+    if (dir) len = strlen(name) + strlen(type) + strlen(dir) + 3;
+    else len = strlen(name) + strlen(type) + 2;
+
+    file_name = malloc(len);
+    if (type[0] == 0) {
+        if (dir) snprintf(file_name, len, "%s/%s", dir, name);
+        else snprintf(file_name, len, "%s", name);
+    }
+    else {
+        if (dir) snprintf(file_name, len, "%s/%s.%s", dir, name, type);
+        else snprintf(file_name, len, "%s.%s", name, type);
+    }
+
+    /* Check if the file exists */
+#if defined(__linux__) || defined(__APPLE__)
+    result = access(file_name, F_OK) != -1;
+#elif defined(_WIN32)
+    DWORD dwAttrib = GetFileAttributes(file_name);
+    result =  (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+    #else
+    result =0; // Unsupported platform
+#endif
+
+    free(file_name);
+
+    return result;
+}
+
+/*
  * Function opens and returns a file handle
  * dir can be null
  * mode - is the fopen() file mode

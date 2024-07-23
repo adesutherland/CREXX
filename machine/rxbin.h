@@ -80,7 +80,7 @@ typedef struct proc_constant {
     chameleon_constant base;
     int next;
     int locals;
-    bin_space *binarySpace;
+    bin_space *binarySpace; // Pointer to the binary space in CREXX, for native functions this is set to NULL
     stack_frame **frame_free_list;
     stack_frame *frame_free_list_head;
     size_t start;
@@ -173,16 +173,17 @@ typedef struct module_header {
 
 typedef struct module_file {
     module_header header;
-    char fromfile; /* Marks if the module file etc was fromfile */
     char* name; /* Null Terminated */
     char* description; /* Null Terminated */
-    void* instructions;
+    void* instructions; /* Note - for a native module this is a dynamic library handle/pointer */
     void* constant;
+    unsigned char fromfile : 1; /* Marks if the module file was loaded from a file (rather than statically linked) */
+    unsigned char native : 1;    /* Marks if the module is a native module */
 } module_file;
 
 /* Sets Header Version and initialises the header */
 static void init_module(module_file *module) {
-    memset(module,0,sizeof(module_file)); /* Zezo module file (valgrind complains otherwise) */
+    memset(module,0,sizeof(module_file)); /* Zero module file (valgrind complains otherwise) */
     memcpy(module->header.FILE_HEADER, BIN_HEADER, sizeof(BIN_HEADER));
     memcpy(module->header.FILE_VERSION, BIN_VERSION, sizeof(BIN_VERSION));
     module->fromfile = 0;
@@ -232,6 +233,7 @@ static int read_module(module_file **module, FILE *inFile) {
 
     /* Zero these so free_module() will not crash after read_module() error */
     (*module)->fromfile = 1;
+    (*module)->native = 0;
     (*module)->name = 0;
     (*module)->description = 0;
     (*module)->instructions = 0;
@@ -297,6 +299,7 @@ static int read_module_mem(module_file **module, char** in_buffer, const char *e
 
     /* Zero these so free_module() will not crash after read_module() error */
     (*module)->fromfile = 0;
+    (*module)->native = 0;
     (*module)->name = 0;
     (*module)->description = 0;
     (*module)->instructions = 0;

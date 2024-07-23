@@ -10,7 +10,9 @@ typedef void* rxpa_attribute_value;
 
 // Typedef definition of a library function
 // Parameters are the number of arguments, an array of rxpa_attribute_value,
-// and an rxpa_attribute_value return value
+// and a rxpa_attribute_value return value, and signal value for error handling
+// e.g.
+//void myfunc(int _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
 typedef void (*rxpa_libfunc)(int, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
 
 // Enumeration of Signal Codes
@@ -25,7 +27,8 @@ typedef enum rxsignal {
     SIGNAL_FAILURE = 7,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
     SIGNAL_HALT = 8,                 /* Triggered when the REXX program receives an external request to halt its execution */
     SIGNAL_NOTREADY = 9,             /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
-    SIGNAL_INVALID_ARGUMENTS = 10    /* Triggered when invalid arguments are passed to a function or subroutine */
+    SIGNAL_INVALID_ARGUMENTS = 10,    /* Triggered when invalid arguments are passed to a function or subroutine */
+    SIGNAL_OTHER = 99               /* Triggered when an unknown error occurs */
 } rxsignal;
 
 // Plugin Helper Functions
@@ -51,11 +54,15 @@ struct rxpa_initctxptr {
     rxpa_func_getfloat getfloat;
 };
 
-// Global context variable declaration
-extern rxpa_initctxptr _rxpa_context;
-
 // Are we building a statically linked library?
 #ifdef BUILD_DLL
+
+// Include header for memcpy
+#include <string.h>
+
+// Global context variable declaration
+static struct rxpa_initctxptr _rxpa_initctx;
+static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
@@ -70,8 +77,7 @@ extern rxpa_initctxptr _rxpa_context;
 // INITIALIZER is redefined to be a simple function
 #define INITIALIZER(f) \
     void f(rxpa_initctxptr context); \
-    rxpa_initctxptr _rxpa_context = NULL;                   \
-    void f(rxpa_initctxptr context) { _rxpa_context = context;
+    void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -129,7 +135,7 @@ extern rxpa_initctxptr _rxpa_context;
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
-void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
 void rxpa_setint(rxpa_attribute_value attributeValue, int value); /* Set an integer in an attribute value */
@@ -138,7 +144,11 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a 
 double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
 
 // Macro is used to register a procedure - static linkage
+#ifndef DECL_ONLY
 #define ADDPROC(func, name, option, type, args) rxpa_addfunc((func),(name),(option),(type),(args))
+#else
+#define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
+#endif
 #define GETSTRING(attr) rxpa_getstring((attr))
 #define SETSTRING(attr, str) rxpa_setstring((attr),(str))
 #define SETINT(attr, value) rxpa_setint((attr),(value))

@@ -21,15 +21,42 @@ configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 add_dependencies(rxc_staticlink rxclib _rxpalink_decl rxpa library rxvm)
 target_link_libraries(rxc_staticlink rxclib machine avl_tree platform rxaslib rxpa _rxpalink_decl m)
 
+set(REXXTESTSPROGS
+        rxpa_dynlink
+)
+
+foreach(_rexxtest ${REXXTESTSPROGS})
+
+    add_custom_command(
+            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o ${_rexxtest}_test ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest}
+            COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_rexxtest}_test
+            DEPENDS rxas rxc library ${_rexxtest}.rexx
+            OUTPUT ${_rexxtest}_test.rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_custom_target(${_rexxtest}_test ALL
+            DEPENDS ${REXXTESTSPROGS}_test.rxbin _rxpa_dynlink
+    )
+
+endforeach()
+
 # Enable testing functionality
 enable_testing()
 
-# Add desbase_test as a test
+# Rxc tests
+# Dynamic link test
 add_test(NAME rxpa_dynlink_test COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
         -i "${CMAKE_BINARY_DIR}/lib/rxfns;${CMAKE_CURRENT_BINARY_DIR}" -o rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# Static link test
 add_test(NAME rxpa_staticlink_test COMMAND rxc_staticlink
         -i "${CMAKE_BINARY_DIR}/lib/rxfns" -o rxpa_staticlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# rxvm tests
+# Dynamic Execution Test
+add_test(NAME rxpa_dynlink_run_test
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm  -d rxpa_dynlink_test rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
