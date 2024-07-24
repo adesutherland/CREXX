@@ -38,7 +38,7 @@ function(add_static_plugin_target plugin_name)
     set_target_properties(${plugin_name}_static PROPERTIES PREFIX "rx")
 endfunction()
 
-# Function to configure the linker for a static library ensuring the library is linked into the executable
+# Function to configure the linker for a static declaration library ensuring the library is linked into the executable
 function(configure_linker_for_decl_lib target pluginId)
     if(MSVC)
         # For Visual Studio Compiler
@@ -49,5 +49,19 @@ function(configure_linker_for_decl_lib target pluginId)
     elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
         # For Clang
         target_link_libraries(${target} "-Wl,-force_load,${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_decl.a")
+    endif()
+endfunction()
+
+# Function to configure the linker for a static definition library ensuring the library is linked into the executable
+function(configure_linker_for_static_lib target pluginId)
+    if(MSVC)
+        # For Visual Studio Compiler
+        set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
+    elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+        # For GCC
+        target_link_libraries(${target} "-Wl,--whole-archive ${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_static.a -Wl,--no-whole-archive")
+    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        # For Clang
+        target_link_libraries(${target} "-Wl,-force_load,${CMAKE_CURRENT_BINARY_DIR}/rx${pluginId}_static.a")
     endif()
 endfunction()
