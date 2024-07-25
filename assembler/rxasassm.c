@@ -250,9 +250,13 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
     chameleon_constant * entry;
 
     /* Extend the buffer if we need to */
-    while (size > context->const_buffer_size - context->binary.const_size) {
+    while (size + 8 > context->const_buffer_size - context->binary.const_size) { // +8 for the 8 bit alignment
         new_size = context->const_buffer_size * 2;
         context->binary.const_pool = realloc(context->binary.const_pool, new_size);
+        if (!context->binary.const_pool) {
+            fprintf(stderr, "PANIC: Out of memory\n");
+            exit(-1);
+        }
         memset(context->binary.const_pool + context->const_buffer_size, 0, context->const_buffer_size);
         context->const_buffer_size = new_size;
     }

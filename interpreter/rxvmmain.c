@@ -165,8 +165,8 @@ int main(int argc, char *argv[]) {
         }
 
         /* Load Module */
-        if (rxldmod(&context, file_name) == 0) {
-            fprintf(stderr, "ERROR opening file %s\n", file_name);
+        if (rxldmod(&context, file_name) <= 0) {
+            fprintf(stderr, "ERROR reading module file %s\n", file_name);
             exit(-1);
         }
     }
@@ -178,6 +178,12 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 #endif
+
+    /* Load plugins statically linked from linked buffer */
+    if (rxldmodp(&context) == -1) {
+        fprintf(stderr, "ERROR reading linked plugins\n");
+        exit(-1);
+    }
 
     /* Run the program */
 #ifndef NDEBUG

@@ -1,5 +1,7 @@
 CREXX History / Change Log
 
+F0051 - CREXX/C
+           Fix - rxc optimised constant arguments to pass by reference incorrectly setting the argument signature
 I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
         Fix - ADDRESS for a not found command freezes (on linux and osx)
         Add - GetEnv()

@@ -819,8 +819,8 @@ static walker_result opt2_walker(walker_direction direction,
                             break;
                         }
                     }
-                    /* If it us readonly make the argument pass by reference */
-                    if (is_constant) node->is_ref_arg = 1;
+                    /* If it is readonly make the argument as const - this makes the emitter not bother to duplicate the register */
+                    if (is_constant) node->is_const_arg = 1;
                 }
             }
         }

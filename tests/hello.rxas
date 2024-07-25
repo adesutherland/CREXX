@@ -1,41 +1,78 @@
 /*
- * cREXX COMPILER VERSION : cREXX F0043
- * SOURCE                 : hello
- * BUILT                  : 2022-08-13 11:48:13
+ * cREXX COMPILER VERSION : crexx-f0051
+ * SOURCE                 : hello.rexx
+ * BUILT                  : 2024-07-23 11:15:27
  */
 
-.srcfile="hello"
+.srcfile="hello.rexx"
 .globals=0
 
-main() .locals=5 .expose=hello.main
+main() .locals=8
    .meta "hello.main"="b" ".int" main() "" ""
-   .src 4:1="do"
-   .src 4:4="i=1"
-   .meta "hello.main.i"="b" ".int" r1
-   load r1,1
-   .src 4:8="to 5"
-   load r2,5
-l3dostart:
-   .src 4:8="to 5"
-   igt r0,r1,r2
-   brt l3doend,r0
-   .src 5:3="call hello"
-   load r3,0
-   call r4,hello(),r3
-l3doinc:
-   .src 4:4="i"
-   inc r1
-   .src 6:1="end"
-   br l3dostart
-l3doend:
-   .src 8:1="return 0"
+   .src 8:1="say insert('much ',x,9)"
+   .meta "hello.main.x"="b" ".string" "CREXX is faster than BREXX"
+   load r1,5
+   load r2,"much "
+   settp r2,2
+   load r3,"CREXX is faster than BREXX"
+   settp r3,0
+   load r4,9
+   settp r4,1
+   settp r5,0
+   settp r6,2
+   call r7,insert(),r1
+   say r7
+   .src 10:1="return 0"
    ret 0
-   .meta "hello.main.i"
+   .meta "hello.main.x"
 
-hello() .locals=1 .expose=hello.hello
-   .meta "hello.hello"="b" ".void" hello() "" ""
-   .src 10:1="hello: procedure"
-   .src 11:1="say \"Hello World\""
-   say "Hello World"
-   .src 12:1="return"
-   ret
+hello() .locals=2
+   .meta "hello.hello"="b" ".string" hello() "insstr=.string,string=.string,?position=.int,?len=.int,?pad=.string" ""
+   .src 12:1="hello: procedure = .string"
+   .src 13:5="insstr = .string"
+   .meta "hello.hello.insstr"="b" ".string" a1
+   .src 13:23="string = .string"
+   .meta "hello.hello.string"="b" ".string" a2
+   .src 13:41="position = -1"
+   .meta "hello.hello.position"="b" ".int" a3
+   brtpandt l25a,a3,1
+   load a3,-1
+l25a:
+   .src 13:56="len = -1"
+   .meta "hello.hello.len"="b" ".int" a4
+   brtpandt l29a,a4,1
+   load a4,-1
+l29a:
+   .src 13:66="pad = \" \""
+   .meta "hello.hello.pad"="b" ".string" a5
+   brtpandt l33a,a5,1
+   load a5," "
+l33a:
+   .src 14:1="say \"insstr =\" insstr"
+   sconcat r1,"insstr =",a1
+   say r1
+   .src 15:1="say \"string =\" string"
+   sconcat r1,"string =",a2
+   say r1
+   .src 16:1="say \"position =\" position"
+   itos a3
+   sconcat r1,"position =",a3
+   say r1
+   .src 17:1="say \"len =\" len"
+   itos a4
+   sconcat r1,"len =",a4
+   say r1
+   .src 18:1="say \"pad =\" pad"
+   sconcat r1,"pad =",a5
+   say r1
+   .src 20:1="return \"Hello World\""
+   ret "Hello World"
+   .meta "hello.hello.insstr"
+   .meta "hello.hello.len"
+   .meta "hello.hello.pad"
+   .meta "hello.hello.position"
+   .meta "hello.hello.string"
+
+/* Imported Declaration from file: insert@library.rxbin */
+insert() .expose=rxfnsb.insert
+   .meta "rxfnsb.insert"="b" ".string" insert() "insstr=.string,string=.string,?position=.int,?len=.int,?pad=.string"

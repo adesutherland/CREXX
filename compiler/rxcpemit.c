@@ -434,8 +434,8 @@ static walker_result register_walker(walker_direction direction,
                     if (c->child->node_type == VAR_TARGET || c->child->node_type == VAR_REFERENCE) {
                         c->register_num = a;
                         c->register_type = 'a';
-                        if (c->is_ref_arg) {
-                            /* Pass by reference - no copy so just use the 'a' register */
+                        if (c->is_ref_arg || c->is_const_arg) {
+                            /* Constant or Pass by reference - no copy so just use the 'a' register */
                             c->child->symbolNode->symbol->register_num = a;
                             c->child->symbolNode->symbol->register_type = 'a';
                         }
@@ -486,10 +486,10 @@ static walker_result register_walker(walker_direction direction,
                     /* DONT_ASSIGN_REGISTER if it makes sense to directly assign
                      * the register later from the call sequence of registers
                      * used in the call instruction
-                     * 1. If it is a symbol with call by reference it may be possible to
+                     * 1. If it is a symbol with call by reference or constant it may be possible to
                      *    assign the symbol to the right register
                      * In this case we try to set the symbol register */
-                    if (c->symbolNode && c->is_ref_arg) {
+                    if (c->symbolNode && (c->is_ref_arg || c->is_const_arg)) {
                         /* If the register has not been assigned a register set it
                          * to the arguments register - later the node will therefore be giving
                          * this register too */
@@ -1697,7 +1697,7 @@ static walker_result emit_walker(walker_direction direction,
             case IMPORTED_FILE:
             {
                 char *buf = mprintf("\n/* Imported Declaration from file: %s */",
-                                    node->context->file_name);
+                                    node->file_name);
 
                 node->output = output_fs(buf);
                 free(buf);
@@ -1846,14 +1846,14 @@ static walker_result emit_walker(walker_direction direction,
                         }
 
                         /* End of logic */
-                        if (node->is_ref_arg) {
-                            /* Reference so no copy needed */
+                        if (node->is_ref_arg || node->is_const_arg) {
+                            /* Constant or Reference so no copy needed */
                             temp1 = mprintf("l%da:\n", child1->node_number);
                             output_append_text(node->output, temp1);
                             free(temp1);
                         } else {
                             /* Pass by value - so if the default is not used we may need to
-                             * to do a copy - but check if the argument needs preserving */
+                             * do a copy - but check if the argument needs preserving */
 
                             /* Only worry about it if it is a big register */
                             if (node->value_dims || node->value_type == TP_STRING || node->value_type == TP_OBJECT ||
@@ -1916,7 +1916,7 @@ static walker_result emit_walker(walker_direction direction,
                                 free(temp1);
                             }
                         }
-                    } else if (!node->is_ref_arg) {
+                    } else if (!(node->is_ref_arg || node->is_const_arg)) {
                         /* Copy by value so may need to do a copy - but check if the argument needs preserving */
 
                         /* Only worry about it if it is a big register */

@@ -17,6 +17,6 @@ add_custom_command(
 
 add_executable(rxdb rxdb.c)
 
-target_link_libraries(rxdb rxvml machine avl_tree platform m)
+target_link_libraries(rxdb rxvml machine avl_tree rxpa platform m)
 
-add_dependencies(rxdb rxvml machine avl_tree platform)
+add_dependencies(rxdb rxvml machine avl_tree rxpa platform)
