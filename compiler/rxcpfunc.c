@@ -1140,8 +1140,8 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
                 }
             }
         } while (name);
-        dirclose(&dir_ptr);
     }
+    dirclose(&dir_ptr);
 
 }
 

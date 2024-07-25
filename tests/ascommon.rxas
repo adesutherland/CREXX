@@ -25,7 +25,7 @@ main()         .locals=2
     
     * No failures
     say "Success"
-    ret 0
+    exit 0
     
 failures:      * There were failures
     itos g1

@@ -277,6 +277,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     value *signal_value = value_f();
     int signal_code = 0;
     char *signal_details = 0;
+    value *arguments_array; /* note that the needs mallocing / freeing */
 
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -357,7 +358,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     {
         int i;
         int a1 = procedure->binarySpace->globals + procedure->locals + 1;
-        current_frame->baselocals[a1] = value_f(); /* note that a1 needs mallocing */
+        arguments_array = value_f();
+        current_frame->baselocals[a1] = arguments_array;
         current_frame->locals[a1] = current_frame->baselocals[a1];
         set_num_attributes(current_frame->baselocals[a1], argc);
 
@@ -1048,7 +1050,6 @@ START_OF_INSTRUCTIONS
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                free_frame(temp_frame);
                 if (!current_frame) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
@@ -1063,8 +1064,11 @@ START_OF_INSTRUCTIONS
                         free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
+                    free_frame(temp_frame);
+                    arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                free_frame(temp_frame);
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT
@@ -1095,22 +1099,27 @@ START_OF_INSTRUCTIONS
                                             (int) (temp_frame->locals[(pc + 1)
                                                     ->index])
                                                     ->int_value; /* Exiting - grab the int rc */
-                free_frame(temp_frame);
                 if (!current_frame) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
                     for (i = 0, j =
                                         temp_frame->procedure->binarySpace
                                                 ->globals +
                                         temp_frame->procedure->locals + 1;
-                            i < argc;
+                            i < num_args;
                             i++, j++) {
-                        clear_value(current_frame->baselocals[j]);
-                        free(current_frame->baselocals[j]);
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
                     }
+                    free_frame(temp_frame);
+                    arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                free_frame(temp_frame);
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT
@@ -1131,23 +1140,28 @@ START_OF_INSTRUCTIONS
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                free_frame(temp_frame);
                 if (!current_frame) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
                     for (i = 0, j =
                                         temp_frame->procedure->binarySpace
                                                 ->globals +
                                         temp_frame->procedure->locals + 1;
-                            i < argc;
+                            i < num_args;
                             i++, j++) {
-                        clear_value(current_frame->baselocals[j]);
-                        free(current_frame->baselocals[j]);
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
                     }
                     rc = (int) op1I;
+                    free_frame(temp_frame);
+                    arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                free_frame(temp_frame);
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT
@@ -1171,21 +1185,26 @@ START_OF_INSTRUCTIONS
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                free_frame(temp_frame);
                 if (!current_frame) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
                     for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                                     temp_frame->procedure->locals + 1;
-                            i < argc;
+                            i < num_args;
                             i++, j++) {
-                        clear_value(current_frame->baselocals[j]);
-                        free(current_frame->baselocals[j]);
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
+                    free_frame(temp_frame);
+                    arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                free_frame(temp_frame);
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT
@@ -1210,21 +1229,25 @@ START_OF_INSTRUCTIONS
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                free_frame(temp_frame);
                 if (!current_frame) {
                     DEBUG("TRACE - RET FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
                     for (i = 0, j = temp_frame->procedure->binarySpace->globals +
                             temp_frame->procedure->locals + 1;
-                            i < argc;
+                            i < num_args;
                             i++, j++) {
-                        clear_value(current_frame->baselocals[j]);
-                        free(current_frame->baselocals[j]);
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
                     }
                     rc = 0;
+                    free_frame(temp_frame);
                     goto interprt_finished;
                 }
+                free_frame(temp_frame);
                 if (is_interrupt) {
                     pc = next_pc;
                     END_BREAKPOINT
@@ -2870,6 +2893,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
+                null_terminate_string_buffer(op1R); /* the logic requires a null terminator */
 #ifdef NUTF8
                 char *c;
                 for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
@@ -2888,6 +2912,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
+                null_terminate_string_buffer(op1R); /* the logic requires a null terminator */
 #ifdef NUTF8
                 char *c;
                 for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
@@ -4249,6 +4274,12 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Free interrupt argument */
     clear_value(interrupt_arg);
     free(interrupt_arg);
+
+    /* Free arguments array */
+    if (arguments_array) {
+        clear_value(arguments_array);
+        free(arguments_array);
+    }
 
 #ifndef NDEBUG
     if (context->debug_mode) printf("Interpreter Finished\n");

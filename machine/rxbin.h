@@ -342,7 +342,7 @@ static int read_module_mem(module_file **module, char** in_buffer, const char *e
 /* Free the module */
 /* Free's the module returned by read_module() or read_module_mem() */
 static void free_module(module_file *module) {
-    if (module->fromfile) {
+    if (module->fromfile || module->native) {
         if (module->name) free(module->name);
         if (module->description) free(module->description);
         if (module->instructions) free(module->instructions);

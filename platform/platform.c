@@ -246,6 +246,9 @@ void dirclose(void **dir_ptr) {
 #if defined(__APPLE__) || defined(__linux__)
 
     struct fl_dir *ptr = *dir_ptr;
+
+    if (!ptr) return;
+
     closedir(ptr->d);
     free(ptr);
     *dir_ptr = 0;

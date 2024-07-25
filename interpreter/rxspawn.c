@@ -1226,6 +1226,7 @@ int launchChild(SHELLDATA* data) {
 
     // Launch the redirected command
     STARTUPINFOW si;
+    int i;
 
     // Set up the start up info struct.
     ZeroMemory(&si, sizeof(STARTUPINFOW));
@@ -1255,7 +1256,7 @@ int launchChild(SHELLDATA* data) {
 
     // Calculate total length of the new environment block.
     size_t newEnvironmentSize = parentEnvironmentSize + 1; // +1 For the final extra '\0'
-    for (int i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
         newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
                                                   data->variables->attributes[i]->string_value,
                                                   (int) data->variables->attributes[i]->string_length, NULL,
@@ -1286,7 +1287,7 @@ int launchChild(SHELLDATA* data) {
     // Add the custom variables at the end of the new environment block.
     LPWSTR pszCurrentVariable = pszNewEnvironment + parentEnvironmentSize;
 
-    for (int i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
 
         // Assuming string_value is UTF-8 encoded
         int numChars = MultiByteToWideChar(CP_UTF8, 0,
