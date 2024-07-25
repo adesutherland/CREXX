@@ -15,7 +15,7 @@ add_dependencies(_rxpa_dynlink rxpa library rxvm rxc) # The test (not plugin) de
 # The static declaration library
 add_decl_plugin_target(_rxpalink rxpa_staticlink.c)
 # The static link test - a version of rxc that statically links the _rxpa_decl library
-add_executable(rxc_staticlink ${CMAKE_SOURCE_DIR}/compiler/rxc_main.c)
+add_executable(rxc_staticlink "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
 # Ensure the linker includes the plugin
 configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 # Add the dependencies and link libraries
@@ -58,7 +58,7 @@ target_include_directories(testvm PRIVATE
 
 # Build Dynamic Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_dynlink_test ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_dynlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink\"
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_dynlink_test
         DEPENDS rxas rxc library _rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
         OUTPUT rxpa_dynlink_test.rxbin
@@ -70,7 +70,7 @@ add_custom_target(rxpa_dynlink_test ALL
 
 # Build Static Test Rexx
 add_custom_command(
-        COMMAND rxc_staticlink -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_staticlink_test ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
+        COMMAND rxc_staticlink -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_staticlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink\"
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_staticlink_test
         DEPENDS rxas rxc_staticlink library ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
         OUTPUT rxpa_staticlink_test.rxbin
