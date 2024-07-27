@@ -143,6 +143,11 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
+    /* Load plugins statically linked from linked buffer */
+    if (rxldmodp(&context) == -1) {
+        fprintf(stderr, "ERROR reading linked plugins\n");
+        exit(-1);
+    }
 
     /* Run the program */
 #ifndef NDEBUG

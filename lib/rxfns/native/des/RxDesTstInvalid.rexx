@@ -4,10 +4,7 @@
 /* DES in Rexx Using the CREXX/plugin interface                        */
 /*                                                                     */
 /* Purpose of this program:                                            */
-/* Verification of the Des algorithm using the example in Price&Davies */
-/* 'Security for Computer Networks', ISBN 0 471 92137 8, p. 64         */
-/* functions RxDesEncrypt and RxDesDecrypt from the rxdes plugin       */
-/*                                                                     */
+/* Test an invalid input to trigger a rexx signal error                */
 /*---------------------------------------------------------------------*/
 
 options levelb  /* This is a rexx level b program */
@@ -18,7 +15,7 @@ import rxdes    /* Import the rxdes plugin functions  */
 /* Note that the input and output to the des functions are in hex strings */
 
 Plaintext = "0000000000000000"
-key =       "08192A3B4C5D6E7F"
+key =       "XXXXXXXXXXXXXXXX" /* Invalid hex key */
 
 say 'Plaintext is  ' Plaintext
 say 'Key is        ' Key

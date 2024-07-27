@@ -4,21 +4,18 @@
 //
 
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "avl_tree.h"
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcpdary.h"
 #include "rxbin.h"
 #include "rxas.h"
+#include "rxpa.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
 
-#include <string.h>
-#include <stdlib.h>
-#include "avl_tree.h"
 
 /* Internal Tree node structure for functions */
 struct tree_wrapper {
@@ -232,7 +229,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
 
                 if ( !type_node || !args_node || error_in_node(type_node) || error_in_node(args_node) ) {
                     /* Error in the syntax of the important function */
-                    func = rximpf_f(context, node->context->file_name, fqname, "b", 0, 0, 0, 0);
+                    func = rximpf_f(context, node->file_name, fqname, "b", 0, 0, 0, 0);
                     if (func) func->error_state = "SYNTAX_ERROR_IN_IMPORT_DECL";
                 }
 
@@ -241,7 +238,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
                     type = ast_n2tp(type_node);
                     args = meta_narg(args_node);
 
-                    func = rximpf_f(context, node->context->file_name, fqname, "b", type, args, 0, 0);
+                    func = rximpf_f(context, node->file_name, fqname, "b", type, args, 0, 0);
 
                     /* Check Type <> unknown */
                     if ( !type || strcmp(type, ".unknown") == 0 ) {
@@ -390,6 +387,82 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     }
 }
 
+// RXPA Disabler Function
+static char* plugin_being_loaded = "statically linked";
+static Context* plugin_being_loaded_context = 0;
+
+static void disablerFunction(char* fname) {
+    fprintf(stderr, "RXC Panic: When loading %s plugin, it called %s() illegally\n", plugin_being_loaded, fname);
+    exit(EXIT_FAILURE);
+}
+
+// RXPA Helper functions required to be provided - dummy functions
+char* rxpa_getstring(rxpa_attribute_value attributeValue)  /* Get a string from an attribute value */
+    { disablerFunction("rxpa_getstring"); return NULL; }
+
+void rxpa_setstring(rxpa_attribute_value attributeValue, char* string)  /* Set a string in an attribute value */
+    { disablerFunction("rxpa_setstring"); }
+
+void rxpa_setint(rxpa_attribute_value attributeValue, int value)  /* Set an integer in an attribute value */
+    { disablerFunction("rxpa_setint"); }
+
+int rxpa_getint(rxpa_attribute_value attributeValue)  /* Get an integer from an attribute value */
+    { disablerFunction("rxpa_getint"); return 0; }
+
+void rxpa_setfloat(rxpa_attribute_value attributeValue, double value)  /* Set a float in an attribute value */
+    { disablerFunction("rxpa_setfloat"); }
+
+double rxpa_getfloat(rxpa_attribute_value attributeValue)  /* Get a float from an attribute value */
+    { disablerFunction("rxpa_getfloat"); return 0.0; }
+
+// RXPA Add Function Implementation
+// This is the callback function for loadPluginFileForFunctions() when the plugin adds functions,
+// oir is called during initialising a statically linked plugin
+void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
+    if (plugin_being_loaded_context) {
+        if (plugin_being_loaded_context->debug_mode) printf("Importing Procedures - Loading %s\n", name);
+        rximpf_f(plugin_being_loaded_context, plugin_being_loaded, name, option, type, args, 0, 0);
+    }
+    else {
+        // Add to the list of statically linked functions
+        struct static_linked_function *new_static_func = malloc(sizeof(struct static_linked_function));
+        new_static_func->name = name;
+        new_static_func->option = option;
+        new_static_func->type = type;
+        new_static_func->args = args;
+        new_static_func->next = static_linked_functions;
+        static_linked_functions = new_static_func;
+    }
+}
+
+static void loadPluginFileForFunctions(Context *context, char* file_name, char* location) {
+
+    /* Update context */
+    plugin_being_loaded = file_name;
+    plugin_being_loaded_context = context;
+
+    // Create the rxpa_initctxptr context
+    struct rxpa_initctxptr rxpa_context;
+    rxpa_context.addfunc = rxpa_addfunc;
+    rxpa_context.getstring = rxpa_getstring;
+    rxpa_context.setstring = rxpa_setstring;
+    rxpa_context.setint = rxpa_setint;
+    rxpa_context.getint = rxpa_getint;
+    rxpa_context.setfloat = rxpa_setfloat;
+    rxpa_context.getfloat = rxpa_getfloat;
+
+    if (context->debug_mode) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
+
+    // Load the plugin - and run the plugin initialization function
+    int rc = load_plugin(&rxpa_context, location, file_name);
+    if (!rc) {
+        if (context->debug_mode) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
+    }
+    else {
+        fprintf(stderr, "Importing Procedures - Failed to load plugin %s\n", file_name);
+    }
+}
+
 static void parseRxasFileForFunctions(Context *context, char* file_name, char* location) {
     FILE *outFile;
     int token_type;
@@ -513,6 +586,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     context->debug_mode = parent_context->debug_mode;
     context->location = parent_context->location;
     context->file_name = (char*) filename(file_name);
+
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
 
@@ -610,6 +684,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
 
         default:
             fprintf(stderr, "INTERNAL ERROR: Importing Procedures - Failed to determine REXX Level\n");
+            return 0;
     }
 
     if (!context->ast) {
@@ -662,8 +737,13 @@ static int load_another_file(Context *context) {
                                                master_context->importable_file_list[f]->name,
                                                master_context->importable_file_list[f]->location);
                     break;
-                case RXAS_FILE:;
+                case RXAS_FILE:
                     parseRxasFileForFunctions(context,
+                                              master_context->importable_file_list[f]->name,
+                                              master_context->importable_file_list[f]->location);
+                    break;
+                case NATIVE_FILE:
+                    loadPluginFileForFunctions(context,
                                               master_context->importable_file_list[f]->name,
                                               master_context->importable_file_list[f]->location);
                     break;
@@ -671,6 +751,23 @@ static int load_another_file(Context *context) {
             return 1; /* File loaded - job done */
         }
     }
+
+    // Process any statically linked functions
+    if (static_linked_functions) {
+        struct static_linked_function *static_func = static_linked_functions;
+        while (static_func) {
+            rximpf_f(context, "statically-linked",
+                     static_func->name, static_func->option, static_func->type,
+                     static_func->args, 0, 0);
+            static_func = static_func->next;
+        }
+
+        // Free the list of statically linked functions -  we only load these once
+        free_static_linked_functions();
+        static_linked_functions = 0;
+        return 1;
+    }
+
     return 0; /* No file was loaded */
 }
 
@@ -785,6 +882,7 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
             found_symbol->is_arg = 0; /* Can't expose args */
             found_symbol->is_opt_arg = 0;
             found_symbol->is_ref_arg = 0;
+            found_symbol->is_const_arg = 0;
         }
     }
 
@@ -1009,6 +1107,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     char* name;
     importable_file *file;
     char* type_name;
+    char *file_prefix = 0;
 
     switch (type) {
         case REXX_FILE:
@@ -1020,11 +1119,13 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
         case RXBIN_FILE:
             type_name = "rxbin";
             break;
-        default: return;
+        case NATIVE_FILE:
+            type_name = "rxplugin";
+            file_prefix = "rx";
     }
 
     /* Read files in the directory */
-    name = dirfstfl(directory, type_name, &dir_ptr);
+    name = dirfstfl(directory,  file_prefix, type_name, &dir_ptr);
     if (name) {
         if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
             file = importable_file_f(name, type, directory);
@@ -1064,6 +1165,9 @@ importable_file **rxfl_lst(Context *context) {
     /* Read RXBIN files in the current directory */
     list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number);
 
+    /* Read in native plugins  in the current directory */
+    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number);
+
     /* Look in the imported location */
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
@@ -1075,6 +1179,9 @@ importable_file **rxfl_lst(Context *context) {
 
             /* Read in RXBIN files in the directory */
             list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number);
+
+            /* Read in native plugins in the directory */
+            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number);
         }
     }
 
@@ -1088,8 +1195,21 @@ importable_file **rxfl_lst(Context *context) {
         /* Read in RXBIN files in the directory holding the compiler */
         list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number);
 
+        /* Read in native plugins in the directory holding the compiler */
+        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number);
+
         free(exe_dir);
     }
 
     return list;
+}
+
+// Free statically linked functions list
+void free_static_linked_functions()
+{
+    while (static_linked_functions) {
+        struct static_linked_function *next = static_linked_functions->next;
+        free(static_linked_functions);
+        static_linked_functions = next;
+    }
 }

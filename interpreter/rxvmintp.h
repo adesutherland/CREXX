@@ -3,9 +3,9 @@
 
 #include "rxas.h"
 #include "rxbin.h"
-#include "../decimal/decNumber.h"
+#include "rxpa.h"
 
-#define rxversion "crexx-f0049"
+#define rxversion "crexx-f0051"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -53,8 +53,9 @@ struct value {
 /* Module Structure */
 typedef struct module {
     bin_space segment;         /* Binary and Constant Pool */
-    char *name;                /* Module Name */
+    char *name;                   /* Module Name */
     char *description;         /* Module Description */
+    unsigned char native;    /* Native Module */
     value **globals;           /* Globals registers array */
     int proc_head;             /* Offset to the head of the procs in the constant pool */
     int expose_head;           /* Offset to the head of the exposed procs in the constant pool */
@@ -216,8 +217,11 @@ typedef struct rxvm_context {
     char debug_mode;
 } rxvm_context;
 
-/* Signals an error - this function does not return */
-void dosignal(int code);
+/* Function to get signal text from a signal code  */
+char* rxpa_getsignaltext(rxsignal signal);
+
+/* Function to get a signal code from a signal text */
+rxsignal rxpa_getsignalcode(char* signalText);
 
 int initialz();
 int finalize();
@@ -238,6 +242,14 @@ int rxldmod(rxvm_context *context, char *new_module_file);
  * returns 0  - Error
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
+
+/* Loads statically loaded plugins
+ * returns -1  - Error
+ *         >=0 - Last Module Number loaded (1 based) (more than one, or none, might have been loaded ...)  */
+int rxldmodp(rxvm_context *context);
+
+/* Function to call a native RXPA (CREXX Plugin Architecture) function */
+void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;

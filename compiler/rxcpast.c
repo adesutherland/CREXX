@@ -31,13 +31,13 @@ static void print_error(ASTNode* node, FILE* stream, char* prefix) {
         }
     }
     if (len) {
-        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->context->file_name, node->line + 1,
+        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->file_name, node->line + 1,
                 node->column + 1, node->node_string);
         prt_unex(stream, node->source_start, len);
         fprintf(stream, "\"\n");
     }
     else {
-        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->context->file_name, node->line + 1,
+        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->file_name, node->line + 1,
                 node->column + 1, node->node_string);
     }
 }
@@ -163,6 +163,7 @@ void free_tok(Context *context) {
 ASTNode *ast_ft(Context* context, NodeType type) {
     ASTNode *node = malloc(sizeof(ASTNode));
     node->context = context;
+    node->file_name = context->file_name;
     node->parent = 0;
     node->child = 0;
     node->sibling = 0;
@@ -197,6 +198,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->additional_registers = -1;
     node->num_additional_registers = 0;
     node->is_ref_arg = 0;
+    node->is_const_arg = 0;
     node->is_opt_arg = 0;
     node->is_varg = 0;
     node->free_list = context->free_list;
@@ -280,6 +282,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->target_class = malloc(strlen(node->target_class) + 1);
         strcpy(new_node->target_class,node->target_class);
     } else new_node->target_class = 0;
+    new_node->file_name = node->file_name;
     new_node->int_value = node->int_value;
     new_node->bool_value = node->bool_value;
     new_node->float_value = node->float_value;
@@ -288,6 +291,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->additional_registers = node->additional_registers;
     new_node->num_additional_registers = node->num_additional_registers;
     new_node->is_ref_arg = node->is_ref_arg;
+    new_node->is_const_arg = node->is_const_arg;
     new_node->is_opt_arg = node->is_opt_arg;
     new_node->token_start = node->token_start;
     new_node->token_end = node->token_end;
@@ -406,6 +410,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             new_symbol->has_vargs = symbol->has_vargs;
             new_symbol->is_arg = symbol->is_arg;
             new_symbol->is_ref_arg = symbol->is_ref_arg;
+            new_symbol->is_const_arg = symbol->is_const_arg;
             new_symbol->is_opt_arg = symbol->is_opt_arg;
 
             sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
