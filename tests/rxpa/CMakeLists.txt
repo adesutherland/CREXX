@@ -23,7 +23,7 @@ add_dependencies(rxc_staticlink rxclib _rxpalink_decl rxpa library rxvm)
 target_link_libraries(rxc_staticlink rxclib machine avl_tree platform rxaslib rxpa _rxpalink_decl m)
 
 # Create static link module for rxvm
-# The static definiotion library
+# The static definition library
 add_static_plugin_target(_rxpalink rxpa_staticlink.c)
 
 # Create a version of rxvm that statically links the _rxpa_static library
@@ -37,7 +37,11 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+	${CMAKE_SOURCE_DIR}/decimal/decNumber.h
+	${CMAKE_SOURCE_DIR}/decimal/decNumber.c
+	${CMAKE_SOURCE_DIR}/decimal/decContext.h
+	${CMAKE_SOURCE_DIR}/decimal/decContext.c)
 # Set the performance properties
 set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -123,7 +127,12 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+	${CMAKE_SOURCE_DIR}/decimal/decNumber.h
+	${CMAKE_SOURCE_DIR}/decimal/decNumber.c
+	${CMAKE_SOURCE_DIR}/decimal/decContext.h
+	${CMAKE_SOURCE_DIR}/decimal/decContext.c)
+
 # Set the performance properties
 set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)

@@ -20,7 +20,7 @@ target_include_directories(rxvm PRIVATE . ${CMAKE_BINARY_DIR}/machine
 
 # Bytecode Version
 add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
+        ../utf8/utf.h ../machine/rxbin.h rxpafuncs.c rxspawn.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
 add_dependencies(rxbvm machine avl_tree rxpa platform decimal)
 target_link_libraries(rxbvm machine avl_tree rxpa platform decimal m)
 target_include_directories(rxbvm PRIVATE . ${CMAKE_BINARY_DIR}/machine

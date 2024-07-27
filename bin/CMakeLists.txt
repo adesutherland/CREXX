@@ -17,6 +17,6 @@ add_custom_command(
 
 add_executable(crexx crexx.c)
 
-target_link_libraries(crexx rxvml machine avl_tree platform m)
+target_link_libraries(crexx rxvml rxpa machine avl_tree platform m)
 
-add_dependencies(crexx rxvml machine avl_tree platform)
+add_dependencies(crexx rxvml machine rxpa avl_tree platform)

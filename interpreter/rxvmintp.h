@@ -4,6 +4,7 @@
 #include "rxas.h"
 #include "rxbin.h"
 #include "rxpa.h"
+#include "../decimal/decNumber.h"
 
 #define rxversion "crexx-f0051"
 
