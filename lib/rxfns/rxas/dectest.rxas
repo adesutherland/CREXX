@@ -1,0 +1,8 @@
+.srcfile="dectest.rxas"
+.globals=0
+
+main() .locals=4
+   load r2,"1234"
+   load r3,"4567"
+   DMULT r1,r2,r3
+   say r1

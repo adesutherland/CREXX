@@ -914,18 +914,30 @@ START_OF_INSTRUCTIONS
  * -----------------------------------------------------------------------------
  */
 	START_INSTRUCTION(DMULT_REG_REG_REG) CALC_DISPATCH(3)
-	    decNumber a;
-	    decNumber b;
-	    decContext set;                  // working context    
-	    decContextDefault(&set, DEC_INIT_BASE); // initialize 
-            DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
+	  	    DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-	    /* decNumberFromString(&a,op2S,&set); */
-	    /* decNumberFromString(&b,op3S,&set); */
-	    /* decNumberMult(&a,b, &set); */
-              /* REG_RETURN_STRING(op1s) */
-	      DISPATCH
-	      
+	    char result[132];
+        decNumber r;
+        decNumber a;
+        decNumber b;
+        decContext set;                  // working context
+        decContextDefault(&set, DEC_INIT_BASE); // initialize
+        printf("Operand 2 of ASM '%s'\n", op2R->string_value);
+        printf("Operand 3 of ASM '%s'\n", op3R->string_value);
+        op2R->string_value[op2R->string_length] = '\0';
+        op3R->string_value[op3R->string_length] = '\0';
+        decNumberFromString(&a, op2R->string_value, &set);
+        decNumberToString(&a, result);
+        printf("Operand 2 DEC re-migrated to string %s \n", result);
+        decNumberFromString(&b, op3R->string_value, &set);
+        decNumberToString(&b, result);
+        printf("Operand 3 DEC re-migrated to string %s \n", result);
+        decNumberMultiply(&r, &a, &b, &set);
+        decNumberToString(&r, result);
+        printf("Multiplication result %s\n", result);
+        set_const_string(op1R, (string_constant *) result);
+    DISPATCH
+
         START_INSTRUCTION(DMULT_REG_REG_INT) {
             CALC_DISPATCH(3)
             DEBUG("TRACE - DMULT R%lu,R%lu,%llu\n", REG_IDX(1),
