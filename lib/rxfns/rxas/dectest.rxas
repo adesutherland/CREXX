@@ -1,8 +1,20 @@
 .srcfile="dectest.rxas"
 .globals=0
 
-main() .locals=4
-   load r2,"1234"
-   load r3,"4567"
+main() .locals=5
+   S2DEC r2,"110"
+   S2DEC r3,"22000"
    DMULT r1,r2,r3
-   say r1
+   DEC2S r4,r1
+   say r4
+   DADD r1,r2,r3
+   DEC2S r4,r1
+   say r4
+   DSUB r1,r2,r3
+   DEC2S r4,r1
+   say r4
+   DDIV r1,r2,r3
+   DEC2S r4,r1
+   say r4
+
+   ret 0

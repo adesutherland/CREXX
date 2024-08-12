@@ -48,7 +48,7 @@
   /* that the structure will be immediately followed by extra space,  */
   /* as required.  DECNUMDIGITS is always >0.                         */
   #if !defined(DECNUMDIGITS)
-    #define DECNUMDIGITS 1
+    #define DECNUMDIGITS 100
   #endif
 
   /* The size (integer data type) of each unit is determined by the   */

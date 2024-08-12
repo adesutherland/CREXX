@@ -23,6 +23,7 @@
 #include "rxvmintp.h"
 #include "rxvmvars.h"
 #include "../decimal/decNumber.h"
+#include "../decimal/decNumberLocal.h"
 
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
@@ -913,86 +914,146 @@ START_OF_INSTRUCTIONS
  * Decimal Instructions
  * -----------------------------------------------------------------------------
  */
-	START_INSTRUCTION(DMULT_REG_REG_REG) CALC_DISPATCH(3)
-	  	    DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
-                  REG_IDX(2), REG_IDX(3));
-	    char result[132];
-        decNumber r;
-        decNumber a;
-        decNumber b;
-        decContext set;                  // working context
-        decContextDefault(&set, DEC_INIT_BASE); // initialize
-        printf("Operand 2 of ASM '%s'\n", op2R->string_value);
-        printf("Operand 3 of ASM '%s'\n", op3R->string_value);
-        op2R->string_value[op2R->string_length] = '\0';
-        op3R->string_value[op3R->string_length] = '\0';
-        decNumberFromString(&a, op2R->string_value, &set);
-        decNumberToString(&a, result);
-        printf("Operand 2 DEC re-migrated to string %s \n", result);
-        decNumberFromString(&b, op3R->string_value, &set);
-        decNumberToString(&b, result);
-        printf("Operand 3 DEC re-migrated to string %s \n", result);
-        decNumberMultiply(&r, &a, &b, &set);
-        decNumberToString(&r, result);
-        printf("Multiplication result %s\n", result);
-        set_const_string(op1R, (string_constant *) result);
+/* todo find better place */
+    decContext set;                  // working context
+    decContextDefault(&set, DEC_INIT_BASE);
+    int needbytes;
+    char decstring[255];
+    char result[DECNUMDIGITS+14];
+
+#define DECPRT(vx,tx)    {decNumberToString(vx, decstring); \
+                       printf("%s %s \n",tx, decstring);}
+
+    START_INSTRUCTION(DMULT_REG_REG_REG)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
+              REG_IDX(2), REG_IDX(3));
+        //   decNumber *res;                       // result structure
+        set.traps = 0;                                    // no traps
+        set.digits = 32;
+
+        needbytes = (D2U(set.digits) * 2) * sizeof(Unit);
+        op1R->decimal_value = (decNumber *) malloc(needbytes);
+        decNumberMultiply(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DECPRT(op1R->decimal_value, "xx mult result in REG 1");
+        REG_RETURN_INT(0)
     DISPATCH
 
-        START_INSTRUCTION(DMULT_REG_REG_INT) {
-            CALC_DISPATCH(3)
-            DEBUG("TRACE - DMULT R%lu,R%lu,%llu\n", REG_IDX(1),
-                  REG_IDX(2), op3I);
-            REG_RETURN_INT(op2RI * op3I)
-            DISPATCH
-        }
+    START_INSTRUCTION(S2DEC_REG_STRING)
+        CALC_DISPATCH(2)
+        DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+              (int) (CONSTSTRING_OP(2))->string_len,
+              (CONSTSTRING_OP(2))->string);
+        decContextDefault(&set, DEC_INIT_BASE);
+        set.traps = 0;                                    // no traps
+        set.digits = 32;
 
-        START_INSTRUCTION(DADD_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1),
-                  REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI + op3RI)
-            DISPATCH
+        needbytes = (D2U(set.digits)) * sizeof(Unit);
+        op1R->decimal_value = (decNumber *) malloc(needbytes);
+        printf("Dec String '%s'\n", CONSTSTRING_OP(2)->string);
+        CONSTSTRING_OP(2)->string[CONSTSTRING_OP(2)->string_len] = '\0';
 
-        START_INSTRUCTION(DADD_REG_REG_INT) CALC_DISPATCH(3)
-            DEBUG("TRACE - DADD R%lu,R%lu,%llu\n", REG_IDX(1),
-                  REG_IDX(2), op3I);
-            REG_RETURN_INT(op2RI + op3I)
-            DISPATCH
+        decNumberFromString(op1R->decimal_value, CONSTSTRING_OP(2)->string, &set);
+        DECPRT(op1R->decimal_value, "Loaded string in REG 1")
 
-        START_INSTRUCTION(DSUB_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1),
-                  REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI - op3RI)
-            DISPATCH
+        REG_RETURN_INT(0)
+    DISPATCH
 
-        START_INSTRUCTION(DDIV_REG_REG_INT) CALC_DISPATCH(3)
-            DEBUG("TRACE - IDIV R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI / op3I)
-            DISPATCH
+    START_INSTRUCTION(DEC2S_REG_REG)
+        CALC_DISPATCH(2)
+        DEBUG("TRACE - DEC2SD R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+        decContextDefault(&set, DEC_INIT_BASE);
+        set.traps = 0;                                    // no traps
+        set.digits = 32;
 
-        START_INSTRUCTION(DDIV_REG_INT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I / op3RI)
-            DISPATCH
+        decNumberToString(op2R->decimal_value, op1R->string_value);
+   //     printf("DEC2S String '%s' \n", op1R->string_value);
+        op1R->string_length = strlen(op1R->string_value);
+    DISPATCH
 
-        START_INSTRUCTION(DDIV_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI / op3RI)
-            DISPATCH
 
-        START_INSTRUCTION(DMOD_REG_REG_INT) CALC_DISPATCH(3)
-            DEBUG("TRACE - DMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI % op3I)
-            DISPATCH
+    START_INSTRUCTION(DMULT_REG_REG_INT)
+    {
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DMULT R%lu,R%lu,%llu\n", REG_IDX(1),
+              REG_IDX(2), op3I);
+        REG_RETURN_INT(op2RI * op3I)
+        DISPATCH
+    }
 
-        START_INSTRUCTION(DMOD_REG_INT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I % op3RI)
-            DISPATCH
+    START_INSTRUCTION(DADD_REG_REG_REG)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1),
+              REG_IDX(2), REG_IDX(3));
+        decContextDefault(&set, DEC_INIT_BASE);
+        needbytes = (D2U(set.digits) + 1) * sizeof(Unit);
+        op1R->decimal_value = (decNumber *) malloc(needbytes);
+        decNumberAdd(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DECPRT(op1R->decimal_value, "xx ADD result in REG 1");
+        REG_RETURN_INT(0)
+    DISPATCH
 
-        START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI % op3RI)
-            DISPATCH
+    START_INSTRUCTION(DADD_REG_REG_INT)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DADD R%lu,R%lu,%llu\n", REG_IDX(1),
+              REG_IDX(2), op3I);
+        REG_RETURN_INT(op2RI + op3I)
+    DISPATCH
+
+    START_INSTRUCTION(DSUB_REG_REG_REG)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1),
+              REG_IDX(2), REG_IDX(3));
+        decContextDefault(&set, DEC_INIT_BASE);
+        needbytes = (D2U(set.digits) + 1) * sizeof(Unit);
+        op1R->decimal_value = (decNumber *) malloc(needbytes);
+        decNumberSubtract(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DECPRT(op1R->decimal_value, "xx SUB result in REG 1");
+        REG_RETURN_INT(0)
+
+    DISPATCH
+
+    START_INSTRUCTION(DDIV_REG_REG_INT)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DDIV R%d,R%d,%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) op3I);
+
+    DISPATCH
+
+    START_INSTRUCTION(DDIV_REG_INT_REG)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DDIV R%d,%d,R%d\n", (int) REG_IDX(1), (int) op2I, (int) REG_IDX(3));
+        REG_RETURN_INT(op2I / op3RI)
+    DISPATCH
+
+    START_INSTRUCTION(DDIV_REG_REG_REG)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DDIV R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
+        decContextDefault(&set, DEC_INIT_BASE);
+        needbytes = (D2U(set.digits) + 1) * sizeof(Unit);
+        op1R->decimal_value = (decNumber *) malloc(needbytes);
+        decNumberDivide(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DECPRT(op1R->decimal_value, "xx DIV result in REG 1");
+        REG_RETURN_INT(0)
+
+    DISPATCH
+
+    START_INSTRUCTION(DMOD_REG_REG_INT)
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DMOD R%d,R%d,%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) op3I);
+        REG_RETURN_INT(op2RI % op3I)
+    DISPATCH
+
+    START_INSTRUCTION(DMOD_REG_INT_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,%d,R%d\n", (int) REG_IDX(1), (int) op2I, (int) REG_IDX(3));
+    REG_RETURN_INT(op2I % op3RI)
+    DISPATCH
+
+    START_INSTRUCTION(DMOD_REG_REG_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
+    REG_RETURN_INT(op2RI % op3RI)
+    DISPATCH
 /* ====================================================================================
  * End of Decimal instructions
  * ====================================================================================

@@ -214,6 +214,8 @@ void init_ops() {
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_STRING, OP_REG);
+    instr_f("s2dec", "Convert Decimal String to Decimal Number op1=s2dec(op2)", OP_REG, OP_STRING, OP_NONE);
+    instr_f("dec2s", "Convert Decimal Number to Decimal String op1=dec2s(op2)", OP_REG, OP_REG, OP_NONE);
 
     instr_f("and", "Logical (int) and op1=(op2 && op3)", OP_REG, OP_REG, OP_REG);
     instr_f("or", "Logical (int) or op1=(op2 || op3)", OP_REG, OP_REG, OP_REG);
