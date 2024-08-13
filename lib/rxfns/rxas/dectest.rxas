@@ -4,9 +4,10 @@
 main() .locals=5
    S2DEC r2,"110"
    S2DEC r3,"22000"
-   DMULT r1,r2,r3
+   DSUB r1,r2,r3
    DEC2S r4,r1
    say r4
+   DMULT r1,r2,r3
    DADD r1,r2,r3
    DEC2S r4,r1
    say r4
