@@ -111,6 +111,7 @@
   decNumber * decNumberAdd(decNumber *, const decNumber *, const decNumber *, decContext *);
   decNumber * decNumberAnd(decNumber *, const decNumber *, const decNumber *, decContext *);
   decNumber * decNumberCompare(decNumber *, const decNumber *, const decNumber *, decContext *);
+  int decCrexxCompare(const decNumber *lhs, const decNumber *rhs,uint8_t abs) ;
   decNumber * decNumberCompareSignal(decNumber *, const decNumber *, const decNumber *, decContext *);
   decNumber * decNumberCompareTotal(decNumber *, const decNumber *, const decNumber *, decContext *);
   decNumber * decNumberCompareTotalMag(decNumber *, const decNumber *, const decNumber *, decContext *);

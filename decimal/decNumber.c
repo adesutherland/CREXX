@@ -6210,7 +6210,9 @@ static Int decCompare(const decNumber *lhs, const decNumber *rhs,
   if (compare!=BADINT) compare*=result;      // comparison succeeded
   return compare;
   } // decCompare
-
+int decCrexxCompare(const decNumber *lhs, const decNumber *rhs,Flag abs) {
+    return decCompare(lhs, rhs, abs);     // sign matters
+}
 /* ------------------------------------------------------------------ */
 /* decUnitCompare -- compare two >=0 integers in Unit arrays          */
 /*                                                                    */

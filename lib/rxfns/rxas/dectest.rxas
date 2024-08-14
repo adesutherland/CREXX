@@ -2,8 +2,13 @@
 .globals=0
 
 main() .locals=5
-   S2DEC r2,"110"
-   S2DEC r3,"22000"
+   load r1,"110"
+   S2DEC r2,r1
+   load r1,"991"
+   S2DEC r3,r1
+   DCMP r1,r2,r3
+
+   S2DEC r3,r1
    DSUB r1,r2,r3
    DEC2S r4,r1
    say r4
@@ -15,6 +20,10 @@ main() .locals=5
    DEC2S r4,r1
    say r4
    DDIV r1,r2,r3
+   DEC2S r4,r1
+   say r4
+   load r2,3100
+   I2DEC r1,r2
    DEC2S r4,r1
    say r4
 

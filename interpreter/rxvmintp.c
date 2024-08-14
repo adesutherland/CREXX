@@ -926,7 +926,7 @@ START_OF_INSTRUCTIONS
 #define DECPRT(vx,tx)    {decNumberToString(vx, decstring); \
                        printf("%s %s \n",tx, decstring);}
 #define decAlloc(reg,dgs) { needbytes = (D2U(dgs) * sizeof(Unit)); \
-        needbytes=max(1,needbytes);                                \
+        needbytes=max(100,needbytes);                                \
         if (needbytes>reg->string_length){                         \
         if (reg->decimal_value>0)  free(reg->decimal_value);       \
         reg->decimal_value = (decNumber *) malloc(needbytes);      \
@@ -945,7 +945,7 @@ START_OF_INSTRUCTIONS
         REG_RETURN_INT(0)
     DISPATCH
 
-    START_INSTRUCTION(S2DEC_REG_STRING)
+    START_INSTRUCTION(S2DEC_REG_REG)
         CALC_DISPATCH(2)
         DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
               (int) (CONSTSTRING_OP(2))->string_len,
@@ -954,13 +954,31 @@ START_OF_INSTRUCTIONS
         set.traps = 0;                                    // no traps
         set.digits = 32;
 
-        decAlloc(op1R,set.digits*2);        printf("Dec String '%s'\n", CONSTSTRING_OP(2)->string);
-        CONSTSTRING_OP(2)->string[CONSTSTRING_OP(2)->string_len] = '\0';
+        decAlloc(op1R,set.digits*2);
+        printf("Dec String '%s'\n", op2R->string_value);
+        op2R->string_value[op2R->string_length] = '\0';
 
-        decNumberFromString(op1R->decimal_value, CONSTSTRING_OP(2)->string, &set);
+        decNumberFromString(op1R->decimal_value, op2R->string_value, &set);
         DECPRT(op1R->decimal_value, "Loaded string in REG 1")
 
         REG_RETURN_INT(0)
+    DISPATCH
+
+    START_INSTRUCTION(I2DEC_REG_REG)
+    CALC_DISPATCH(2)
+    DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+          REG_IDX(2));
+    decContextDefault(&set, DEC_INIT_BASE);
+    set.traps = 0;                                    // no traps
+    set.digits = 32;
+
+    decAlloc(op1R,set.digits*2);
+    printf("Dec String '%lld'\n", op2RI);
+
+    decNumberFromInt32(op1R->decimal_value, op2RI);
+    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
+
+    REG_RETURN_INT(0)
     DISPATCH
 
     START_INSTRUCTION(DEC2S_REG_REG)
@@ -1014,6 +1032,19 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
     REG_RETURN_INT(op2RI % op3RI)
     DISPATCH
+
+    START_INSTRUCTION(DCMP_REG_REG_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DCOMP R%lu,R%lu,R%lu\n", REG_IDX(1),
+          REG_IDX(2), REG_IDX(3));
+
+    set.traps = 0;                                    // no traps
+    set.digits = 32;
+    //     third parameter: 0= sign matters, 1=doesn't matter
+    op1R->int_value=decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0);
+    printf("Compare %d\n",op1R->int_value);
+    DISPATCH
+
 /* ====================================================================================
  * End of Decimal instructions
  * ====================================================================================
