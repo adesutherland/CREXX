@@ -926,7 +926,7 @@ START_OF_INSTRUCTIONS
                           printf("%s %s \n",tx, decstring);}
 /* Allocate storage for DECIMALs based on number of required digits, will be assigned to register */
 #define AllocDecimalStorage(reg,dgs) { bytes4Digits = (D2U(dgs) * sizeof(Unit)); \
-        bytes4Digits=max(100,bytes4Digits);                                \
+        if (bytes4Digits<100) bytes4Digits=100;  \
         if (bytes4Digits>reg->string_length){                         \
         if (reg->decimal_value>0)  free(reg->decimal_value);       \
         reg->decimal_value = (decNumber *) malloc(bytes4Digits);      \
