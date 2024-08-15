@@ -911,140 +911,172 @@ START_OF_INSTRUCTIONS
                   REG_IDX(2), op3I);
             REG_RETURN_INT(op2RI + op3I)
             DISPATCH
-/* -----------------------------------------------------------------------------
- * Decimal Instructions
- * -----------------------------------------------------------------------------
+/* ====================================================================================
+ * Decimal instructions
+ * ====================================================================================
  */
+
 /* todo find better place */
     decContext set;                  // working context
-    decContextDefault(&set, DEC_INIT_BASE);
 
-    char decstring[255];
-    char result[DECNUMDIGITS+14];
-    int needbytes;
+    char decstring[255];             // string for decimal -> string conversion
+    int bytes4Digits;                // calculated bytes for n digits
 
 #define DECPRT(vx,tx)    {decNumberToString(vx, decstring); \
-                       printf("%s %s \n",tx, decstring);}
-#define decAlloc(reg,dgs) { needbytes = (D2U(dgs) * sizeof(Unit)); \
-        needbytes=max(100,needbytes);                                \
-        if (needbytes>reg->string_length){                         \
+                          printf("%s %s \n",tx, decstring);}
+/* Allocate storage for DECIMALs based on number of required digits, will be assigned to register */
+#define AllocDecimalStorage(reg,dgs) { bytes4Digits = (D2U(dgs) * sizeof(Unit)); \
+        bytes4Digits=max(100,bytes4Digits);                                \
+        if (bytes4Digits>reg->string_length){                         \
         if (reg->decimal_value>0)  free(reg->decimal_value);       \
-        reg->decimal_value = (decNumber *) malloc(needbytes);      \
-        reg->string_length=needbytes;}}
-
+        reg->decimal_value = (decNumber *) malloc(bytes4Digits);      \
+        reg->string_length=bytes4Digits;}}
+#define CheckStatus(){}         // not yet decided what to do
+/* ------------------------------------------------------------------------------------
+ * Decimal Multiply                                               added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DMULT_REG_REG_REG)
         CALC_DISPATCH(3)
         DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
               REG_IDX(2), REG_IDX(3));
-        //   decNumber *res;                       // result structure
-        set.traps = 0;                                    // no traps
-        set.digits = 32;
-        decAlloc(op1R,set.digits*2);
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
         decNumberMultiply(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        CheckStatus()
         DECPRT(op1R->decimal_value, "xx mult result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Convert decimal string to Decimal                              added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(S2DEC_REG_REG)
         CALC_DISPATCH(2)
         DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
               (int) (CONSTSTRING_OP(2))->string_len,
               (CONSTSTRING_OP(2))->string);
-        decContextDefault(&set, DEC_INIT_BASE);
-        set.traps = 0;                                    // no traps
-        set.digits = 32;
-
-        decAlloc(op1R,set.digits*2);
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
         printf("Dec String '%s'\n", op2R->string_value);
         op2R->string_value[op2R->string_length] = '\0';
-
         decNumberFromString(op1R->decimal_value, op2R->string_value, &set);
+        CheckStatus()
         DECPRT(op1R->decimal_value, "Loaded string in REG 1")
-
         REG_RETURN_INT(0)
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Convert Integer to Decimal                                     added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(I2DEC_REG_REG)
-    CALC_DISPATCH(2)
-    DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
-          REG_IDX(2));
-    decContextDefault(&set, DEC_INIT_BASE);
-    set.traps = 0;                                    // no traps
-    set.digits = 32;
-
-    decAlloc(op1R,set.digits*2);
-    printf("Dec String '%lld'\n", op2RI);
-
-    decNumberFromInt32(op1R->decimal_value, op2RI);
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-
-    REG_RETURN_INT(0)
+        CALC_DISPATCH(2)
+        DEBUG("TRACE - S2DEC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+              REG_IDX(2));
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits * 2);  // allocate and assign to register
+        printf("Dec String '%lld'\n", op2RI);
+        decNumberFromInt32(op1R->decimal_value, op2RI);
+        CheckStatus()
+        DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
+        REG_RETURN_INT(0)
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Convert Decimal to String                                      added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DEC2S_REG_REG)
         CALC_DISPATCH(2)
-        DEBUG("TRACE - DEC2SD R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        decContextDefault(&set, DEC_INIT_BASE);
-        set.traps = 0;                                    // no traps
-        set.digits = 32;
-
+        DEBUG("TRACE - DEC2S R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
         decNumberToString(op2R->decimal_value, op1R->string_value);
+        CheckStatus()
    //     printf("DEC2S String '%s' \n", op1R->string_value);
         op1R->string_length = strlen(op1R->string_value);
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Decimal addition                                               added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DADD_REG_REG_REG)
         CALC_DISPATCH(3)
         DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1),
               REG_IDX(2), REG_IDX(3));
-        decContextDefault(&set, DEC_INIT_BASE);
-        decAlloc(op1R,set.digits+1);
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
         decNumberAdd(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        CheckStatus()
         DECPRT(op1R->decimal_value, "xx ADD result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Decimal subtraction                                            added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DSUB_REG_REG_REG)
         CALC_DISPATCH(3)
         DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1),
               REG_IDX(2), REG_IDX(3));
-        decContextDefault(&set, DEC_INIT_BASE);
-        decAlloc(op1R,set.digits+1);
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
         decNumberSubtract(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        CheckStatus()
         DECPRT(op1R->decimal_value, "xx SUB result in REG 1");
         REG_RETURN_INT(0)
-
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Decimal division                                               added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DDIV_REG_REG_REG)
         CALC_DISPATCH(3)
         DEBUG("TRACE - DDIV R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
-        decContextDefault(&set, DEC_INIT_BASE);
-        decAlloc(op1R,set.digits+1);
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
+        AllocDecimalStorage(op1R, set.digits + 1);  // allocate and assign to register
         decNumberDivide(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        CheckStatus()
         DECPRT(op1R->decimal_value, "xx DIV result in REG 1");
         REG_RETURN_INT(0)
-
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * do we need this?
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DMOD_REG_REG_REG)
     CALC_DISPATCH(3)
     DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
     REG_RETURN_INT(op2RI % op3RI)
     DISPATCH
-
+/* ------------------------------------------------------------------------------------
+ * Decimal Compare                                                added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
     START_INSTRUCTION(DCMP_REG_REG_REG)
-    CALC_DISPATCH(3)
-    DEBUG("TRACE - DCOMP R%lu,R%lu,R%lu\n", REG_IDX(1),
-          REG_IDX(2), REG_IDX(3));
-
-    set.traps = 0;                                    // no traps
-    set.digits = 32;
+        CALC_DISPATCH(3)
+        DEBUG("TRACE - DCOMP R%lu,R%lu,R%lu\n", REG_IDX(1),
+              REG_IDX(2), REG_IDX(3));
+        decContextDefault(&set, DEC_INIT_BASE); // must be set/reset everytime
+        set.traps = 0;                          // no traps
+        set.digits = 32;                        // default digits 32
     //     third parameter: 0= sign matters, 1=doesn't matter
-    op1R->int_value=decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0);
-    printf("Compare %d\n",op1R->int_value);
+        op1R->int_value=decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0);
+        CheckStatus()
+        printf("Compare %d\n",op1R->int_value);
     DISPATCH
-
 /* ====================================================================================
  * End of Decimal instructions
  * ====================================================================================
