@@ -922,7 +922,7 @@ START_OF_INSTRUCTIONS
     char decstring[255];             // string for decimal -> string conversion
     int bytes4Digits;                // calculated bytes for n digits
 
-#define DECPRT(vx,tx)    {decNumberToString(vx, decstring); \
+#define DECPRT(vx,tx)    {decNumberToString(vx->decimal_value, decstring); \
                           printf("%s %s \n",tx, decstring);}
 #define decContext(dgs,trap) {decContextDefault(&set, DEC_INIT_BASE); \
         set.traps = trap; set.digits = 64;  }
@@ -933,6 +933,15 @@ START_OF_INSTRUCTIONS
         if (reg->decimal_value>0)  free(reg->decimal_value);       \
         reg->decimal_value = (decNumber *) malloc(bytes4Digits);      \
         reg->string_length=bytes4Digits;}}
+// some macros for lazy Peter!
+#define DDIV(op1,op2,op3)   decNumberDivide(op1->decimal_value,op2->decimal_value,op3->decimal_value,&set);
+#define DMULT(op1,op2,op3)  decNumberMultiply(op1->decimal_value,op2->decimal_value,op3->decimal_value,&set);
+#define DADD(op1,op2,op3)   decNumberAdd(op1->decimal_value,op2->decimal_value,op3->decimal_value,&set);
+#define DSUBT(op1,op2,op3)  decNumberSubtract(op1->decimal_value,op2->decimal_value,op3->decimal_value,&set);
+#define INT2D(op1,op2)      decNumberFromInt32(op1->decimal_value, op2);
+#define STR2D(op1,op2)      decNumberFromString(op1->decimal_value, op2->string_value, &set);
+#define DEC2S(op1,op2)      decNumberToString(op1->decimal_value,op2->string_value);
+#define DCLC(op1,op2,mode)  decCrexxCompare(op1->decimal_value, op2->decimal_value,mode)
 #define CheckStatus(){;}         // not yet decided what to do
 
 /* ------------------------------------------------------------------------------------
@@ -945,10 +954,9 @@ START_OF_INSTRUCTIONS
               REG_IDX(2), REG_IDX(3));
         decContext(64,0)       // 64 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
-        decNumberMultiply(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
-        printf("INT32 %lld\n",decNumberToInt32(op1R->decimal_value,&set));
+        DMULT(op1R, op2R, op3R);
         CheckStatus()
-        DECPRT(op1R->decimal_value, "xx mult result in REG 1");
+/* todo remove*/  DECPRT(op1R, "xx mult result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -963,9 +971,9 @@ START_OF_INSTRUCTIONS
         AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
         op1R->string_value[op1R->string_length] = '\0';
         printf("Dec String '%s'\n", op1R->string_value);
-        decNumberFromString(op1R->decimal_value, op1R->string_value, &set);
+        STR2D(op1R,op1R)
         CheckStatus()
-        DECPRT(op1R->decimal_value, "Loaded string in REG 1")
+/* todo remove*/  DECPRT(op1R, "Loaded string in REG 1")
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -979,9 +987,9 @@ START_OF_INSTRUCTIONS
         decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits * 2);  // allocate and assign to register
         printf("Dec String '%lld'\n", op2RI);
-        decNumberFromInt32(op1R->decimal_value, op2RI);
+        INT2D(op1R,op2RI)
         CheckStatus()
-        DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
+/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -992,7 +1000,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOS R%lu \n", REG_IDX(1));
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    decNumberToString(op1R->decimal_value, op1R->string_value);
+    DEC2S(op1R, op1R)
     CheckStatus()
     op1R->string_length = strlen(op1R->string_value);
     printf("DEC2I String '%d' \n", op1R->string_value);
@@ -1005,7 +1013,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOI R%lu \n", REG_IDX(1));
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    op1R->int_value=decNumberToInt32(op1R->decimal_value, &set);
+    op1R->int_value=decNumberToInt32(op1R->decimal_value,&set);
     CheckStatus()
     printf("DEC2I String '%d' \n", op1R->int_value);
     op1R->string_length = strlen(op1R->string_value);
@@ -1021,9 +1029,9 @@ START_OF_INSTRUCTIONS
               REG_IDX(2), REG_IDX(3));
         decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
-        decNumberAdd(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DADD(op1R, op2R, op3R);
         CheckStatus()
-        DECPRT(op1R->decimal_value, "xx ADD result in REG 1");
+/* todo remove*/  DECPRT(op1R, "xx ADD result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1036,9 +1044,9 @@ START_OF_INSTRUCTIONS
               REG_IDX(2), REG_IDX(3));
         decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
-        decNumberSubtract(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DSUBT(op1R,op2R,op3R)
         CheckStatus()
-        DECPRT(op1R->decimal_value, "xx SUB result in REG 1");
+/* todo remove*/  DECPRT(op1R,"xx SUB result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1050,9 +1058,9 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - DDIV R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
         decContext(64,0)       // 64 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits + 1);  // allocate and assign to register
-        decNumberDivide(op1R->decimal_value, op2R->decimal_value, op3R->decimal_value, &set);
+        DDIV(op1R,op2R,op1R)
         CheckStatus()
-        DECPRT(op1R->decimal_value, "xx DIV result in REG 1");
+/* todo remove*/  DECPRT(op1R, "xx DIV result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1072,8 +1080,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==0) REG_RETURN_INT(1)
+    if (DCLC(op2R, op3R,0)==0) REG_RETURN_INT(1)  // third parameter: 0= sign matters, 1=doesn't matter
     else REG_RETURN_INT(0)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1084,8 +1091,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==0) REG_RETURN_INT(0)
+    if (DCLC(op2R, op3R,0)==0) REG_RETURN_INT(0)  // third parameter: 0= sign matters, 1=doesn't matter
     else REG_RETURN_INT(1)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1096,8 +1102,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==1) REG_RETURN_INT(1)
+    if (DCLC(op2R, op3R,0)==1) REG_RETURN_INT(1)  // third parameter: 0= sign matters, 1=doesn't matter
     else REG_RETURN_INT(0)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1108,10 +1113,9 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==1) REG_RETURN_INT(1) // it is greater
+    if (DCLC(op2R,op3R,0)==1) REG_RETURN_INT(1) // it is greater, third parameter: 0= sign matters, 1=doesn't matter
     else {
-        if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==0) REG_RETURN_INT(1) // it is equal
+        if (DCLC(op2R,op3R,0)==0) REG_RETURN_INT(1) // it is equal
         else REG_RETURN_INT(0)
     }
     DISPATCH;
@@ -1123,8 +1127,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)<0) REG_RETURN_INT(1)
+    if (DCLC(op2R, op3R,0)<0) REG_RETURN_INT(1)   //  third parameter: 0= sign matters, 1=doesn't matter
     else REG_RETURN_INT(0)
    DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -1135,10 +1138,9 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)<0) REG_RETURN_INT(1) // it is less than
+    if (DCLC(op2R, op3R,0)<0) REG_RETURN_INT(1) // it is less then, third parameter: 0= sign matters, 1=doesn't matter
     else {
-        if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)==0) REG_RETURN_INT(1) // it is equal
+        if (DCLC(op2R, op3R,0)==0) REG_RETURN_INT(1) // it is equal
         else REG_RETURN_INT(0)
     }
     DISPATCH;
@@ -1151,7 +1153,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DLTBR_ID R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
     //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)<0) {
+    if (DCLC(op2R, op3R,0)<0) {
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
@@ -1165,7 +1167,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DLTBR_ID R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
     //     third parameter: 0= sign matters, 1=doesn't matter
-    if (decCrexxCompare(op2R->decimal_value, op3R->decimal_value,0)>0) {
+    if (DCLC(op2R, op3R,0)>0) {
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
@@ -1204,7 +1206,7 @@ START_OF_INSTRUCTIONS
     decNumberPower(op1R->decimal_value, op2R->decimal_value,op3R->decimal_value,&set);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  DADD_REG_REG_INT  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
+ *  DADD_REG_REG_INT  Decimal Add (op1=op2+op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DADD_REG_REG_INT) // label not yet defined
@@ -1212,14 +1214,13 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DADD R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    decNumberFromInt32(op1R->decimal_value, op3I);
-    DECPRT(op1R->decimal_value, "Int value 3 r1")
+    INT2D(op1R,op3I)
+/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
     CheckStatus()
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-    decNumberAdd(op1R->decimal_value,op2R->decimal_value,op1R->decimal_value,&set);
-    DECPRT(op1R->decimal_value, "ADD Result REG 1")
+/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
+    DADD(op1R,op2R,op1R);
+/* todo remove*/  DECPRT(op1R, "ADD Result REG 1")
     CheckStatus()
-    REG_RETURN_INT(0)
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -1231,17 +1232,15 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DSUB R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    decNumberFromInt32(op1R->decimal_value, op3I);
-    DECPRT(op1R->decimal_value, "Int value 3 r1")
+    INT2D(op1R,op3I)
     CheckStatus()
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-    decNumberSubtract(op1R->decimal_value,op2R->decimal_value,op1R->decimal_value,&set);
-    DECPRT(op1R->decimal_value, "DSUB Result REG 1")
+/* todo remove*/  DECPRT(op1R,"Int value 3 r1")
+    DSUBT(op1R,op2R,op1R);
+/* todo remove*/  DECPRT(op1R,"DSUB Result REG 1")
     CheckStatus()
-    REG_RETURN_INT(0)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  DMULT_REG_REG_INT  Decimal Subtract (op1=op2*op3)              pej 17 Aug 2024
+ *  DMULT_REG_REG_INT  Decimal Multiply (op1=op2*op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DMULT_REG_REG_INT)
@@ -1249,36 +1248,34 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    decNumberFromInt32(op1R->decimal_value, op3I);
-    DECPRT(op1R->decimal_value, "Int value 3 r1")
+    INT2D(op1R,op3I)
+/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
     CheckStatus()
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-    decNumberMultiply(op1R->decimal_value,op2R->decimal_value,op1R->decimal_value,&set);
-    DECPRT(op1R->decimal_value, "DMULT Result REG 1")
+/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
+    DMULT(op1R,op2R,op1R)
+/* todo remove*/  DECPRT(op1R, "DMULT Result REG 1")
     CheckStatus()
-    REG_RETURN_INT(0)
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  DDIV_REG_REG_INT  Decimal Subtract (op1=op2/op3)                   pej 17 Aug 2024
+ *  DDIV_REG_REG_INT  Decimal Divide (op1=op2/op3)                   pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DDIV_REG_REG_INT)
     CALC_DISPATCH(3);
-    DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
+    DEBUG("TRACE - DDIV R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    decNumberFromInt32(op1R->decimal_value, op3I);
-    DECPRT(op1R->decimal_value, "Int value 3 r1")
+    INT2D(op1R,op3I)
+/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
     CheckStatus()
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-    decNumberDivide(op1R->decimal_value,op2R->decimal_value,op1R->decimal_value,&set);
-    DECPRT(op1R->decimal_value, "DDIV Result REG 1")
+/* todo remove*/  DECPRT(op1R,"Loaded Integer in REG 1")
+    DDIV(op1R,op2R,op1R)
+/* todo remove*/  DECPRT(op1R,"DDIV Result REG 1")
     CheckStatus()
-    REG_RETURN_INT(0)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  DDIV_REG_INT_REG  Decimal Subtract (op1=op2/op3)                   pej 17 Aug 2024
+ *  DDIV_REG_INT_REG  Decimal Divide  (op1=op2/op3)                   pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DDIV_REG_INT_REG)
@@ -1286,14 +1283,13 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), op2I,REG_IDX(2));
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    decNumberFromInt32(op1R->decimal_value, op2I);
-    DECPRT(op1R->decimal_value, "Int value 2 r1")
+    INT2D(op1R,op2I)
+/* todo remove*/  DECPRT(op1R, "Int value 2 r1")
     CheckStatus()
-    DECPRT(op1R->decimal_value, "Loaded Integer in REG 1")
-    decNumberDivide(op1R->decimal_value,op1R->decimal_value,op3R->decimal_value,&set);
-    DECPRT(op1R->decimal_value, "DDIV Result REG 1")
+/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
+    DDIV(op1R,op1R,op3R)
+/* todo remove*/  DECPRT(op1R, "DDIV Result REG 1")
     CheckStatus()
-    REG_RETURN_INT(0)
     DISPATCH;
 /* ====================================================================================
  * End of Decimal instructions
