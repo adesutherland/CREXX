@@ -41,6 +41,7 @@
   do while lines(file)>0
      line=strip(linein(file))
      if line='' then iterate
+     if substr(line,1,2)='//' then iterate /* allow comments within the instruction definition */
      if pos('instr_f(',line)=0 then leave  /* no more instructions end loop */
      if substr(strip(line),1,7) <>'instr_f' then iterate
      lino=lino+1
