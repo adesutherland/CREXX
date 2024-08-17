@@ -425,18 +425,23 @@ void init_ops() {
 
     instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
     instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_FLOAT, OP_REG);
 
     instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
     instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_FLOAT, OP_REG);
 
     instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
     instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_INT);
 
     instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
     instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
 
     instr_f("deq", "Decimal Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
     instr_f("deq", "Decimal Equals op1=(op2==op3)", OP_REG, OP_REG, OP_FLOAT);
@@ -463,6 +468,7 @@ void init_ops() {
 
     instr_f("dpow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
     instr_f("dpow", "op1=op2**op3", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dpow", "op1=op2**op3", OP_REG, OP_REG, OP_INT);
 
     instr_f("dsex", "Decimal op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
     // ---------------------------------------------------------------------------------------
