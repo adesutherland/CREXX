@@ -39,11 +39,19 @@
 #include "cms.h"
 #endif
 
+#ifndef RXINTEGER_T
+#define RXINTEGER_T
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
+#include <stdint.h>
+typedef intmax_t rxinteger;
+#else
 #ifdef __32BIT__
 typedef long rxinteger;
 #else
 typedef long long rxinteger;
 #endif
+#endif
+#endif //RXINTEGER_T
 
 /*
  * Read a file into a returned buffer

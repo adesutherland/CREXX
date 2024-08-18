@@ -812,19 +812,19 @@ START_OF_INSTRUCTIONS
             /* String Say - Deprecated */
             /* START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1) */
             /*     DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1)); */
-            /*     printf("%.*s", (int) op1R->string_length, op1R->string_value); */
+            /*     mprintf("%.*s", (int) op1R->string_length, op1R->string_value); */
             /*     DISPATCH */
 
             /* Say - Print string value of register as a line */
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
-            printf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+            mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 
         START_INSTRUCTION(SAY_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            printf("%.*s\n", (int) op1S->string_len, op1S->string);
+            mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH
 
             /* ------------------------------------------------------------------------------------
@@ -834,7 +834,7 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            printf("%.*s", (int) op1S->string_len, op1S->string);
+            mprintf("%.*s", (int) op1S->string_len, op1S->string);
             DISPATCH
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
@@ -2577,9 +2577,9 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
 #ifdef __32BIT__
-            printf("%ld\n", op1I);
+            mprintf("%ld\n", op1I);
 #else
-            printf("%lld\n", op1I);
+            mprintf("%lld\n", op1I);
 #endif
             DISPATCH
 
@@ -2589,7 +2589,7 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(SAY_CHAR) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \'%c\'\n", (pc + (1))->cconst);
-            printf("%c\n", (pc + (1))->cconst);
+            mprintf("%c\n", (pc + (1))->cconst);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -2598,7 +2598,7 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %g\n", op1F);
-            printf("%g\n", op1F);
+            mprintf("%g\n", op1F);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4282,7 +4282,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     }
 
 #ifndef NDEBUG
-    if (context->debug_mode) printf("Interpreter Finished\n");
+    if (context->debug_mode) mprintf("Interpreter Finished\n");
 #endif
 
     return rc;

@@ -60,7 +60,7 @@ PROCEDURE(add_integers)
     int result;
 
     /* This should never happen as the compiler will have spotted this error */
-    /* However best practice is to check this as versions may have changed   */
+    /* However, the best practice is to check this as versions may have changed   */
     if( NUM_ARGS != 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "2 arguments expected")
 
     // Add the integers
@@ -117,7 +117,7 @@ PROCEDURE(add_floats_ref)
     double result;
 
     /* This should never happen as the compiler will have spotted this error */
-    /* However best practice is to check this as versions may have changed   */
+    /* However, the best practice is to check this as versions may have changed   */
     if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "3 arguments expected")
 
     // Add the floats
