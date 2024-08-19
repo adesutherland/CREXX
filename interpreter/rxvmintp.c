@@ -993,7 +993,7 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - FTOD R%lu,\n",REG_IDX(1));
             decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
             AllocDecimalStorage(op1R, set.digits);  // allocate and assign to register
-            sprintf(decstring, "%g", op1R->float_value);
+            sprintf(decstring, "%lg", op1R->float_value);
             printf("Converted %s\n",decstring);
             decNumberFromString(op1R->decimal_value,decstring,&set);
     /* todo remove*/  DECPRT(op1R, "xx Decimal Float result in REG 1");
@@ -1025,6 +1025,19 @@ START_OF_INSTRUCTIONS
     printf("DEC2I String '%d' \n", op1R->int_value);
     op1R->string_length = strlen(op1R->string_value);
     DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DTOF_REG  Convert Decimal Number to Float op1=f2dec(op2)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(DTOF_REG) // label not yet defined
+    CALC_DISPATCH(1);
+    DEBUG("TRACE - DTOF_REG\n");
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    decNumberFromString(op1R->decimal_value,decstring,&set);
+    CheckStatus()
+    sscanf(decstring,"%lg",&op1R->float_value);
+    printf("myfloat %lg %s\n",op1R->float_value ,decstring);
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Decimal addition                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
@@ -1375,13 +1388,14 @@ START_OF_INSTRUCTIONS
  */
         START_INSTRUCTION(DLT_REG_REG_FLOAT) // label not yet defined
         CALC_DISPATCH(3);
-        DEBUG("TRACE - DLT_REG_REG_FLOAT\n");
-        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-        STR2D(op1R,op3R)
-        if (DCLC(op2R, op1R,0)<0) REG_RETURN_INT(1) // it is less than, third parameter: 0= sign matters, 1=doesn't matter
-        else REG_RETURN_INT(0)
-        DISPATCH;
+            DEBUG("TRACE - DLT_REG_REG_FLOAT\n");
+            decContext(32, 0)       // 32 digits, 0 : no trap, this needs to be set every time
+            AllocDecimalStorage(op1R, set.digits + 1);  // allocate and assign to register
+            STR2D(op1R, op3R)
+            if (DCLC(op2R, op1R, 0) < 0) REG_RETURN_INT(
+                    1) // it is less than, third parameter: 0= sign matters, 1=doesn't matter
+            else REG_RETURN_INT(0)
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_FLOAT_REG  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
@@ -1431,13 +1445,13 @@ START_OF_INSTRUCTIONS
  *  DCOPY_REG_REG  Copy Decimal op2 to op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(DCOPY_REG_REG) // label not yet defined
-    CALC_DISPATCH(2);
-    DEBUG("TRACE - DLTBR_ID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-    decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
-    op1R->decimal_value=op2R->decimal_value;
-    DISPATCH;
+        START_INSTRUCTION(DCOPY_REG_REG) // label not yet defined
+        CALC_DISPATCH(2);
+            DEBUG("TRACE - DLTBR_ID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            decContext(32, 0)       // 32 digits, 0 : no trap, this needs to be set every time
+            AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
+            op1R->decimal_value = op2R->decimal_value;
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DSEX_REG  Decimal op1 = -op1 (sign change)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
