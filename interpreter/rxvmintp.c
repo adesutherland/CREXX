@@ -911,6 +911,12 @@ START_OF_INSTRUCTIONS
                   REG_IDX(2), op3I);
             REG_RETURN_INT(op2RI + op3I)
             DISPATCH
+
+        START_INSTRUCTION(ERASE_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - IADD R%lu,R%lu,%llu\n", REG_IDX(1));
+            value_zero(op1R);
+            DISPATCH
+
 /* ====================================================================================
  * Decimal instructions
  * ====================================================================================
@@ -943,22 +949,8 @@ START_OF_INSTRUCTIONS
 #define DEC2S(op1,op2)      decNumberToString(op1->decimal_value,op2->string_value);
 #define DCLC(op1,op2,mode)  decCrexxCompare(op1->decimal_value, op2->decimal_value,mode)
 #define CheckStatus(){;}         // not yet decided what to do
-
-/* ------------------------------------------------------------------------------------
- * Decimal Multiply                                               added August 2024 pej
- * ------------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(DMULT_REG_REG_REG)
-        CALC_DISPATCH(3)
-        DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
-              REG_IDX(2), REG_IDX(3));
-        decContext(64,0)       // 64 digits, 0 : no trap, this needs to be set every time
-        AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
-        DMULT(op1R, op2R, op3R);
-        CheckStatus()
-/* todo remove*/  DECPRT(op1R, "xx mult result in REG 1");
-        REG_RETURN_INT(0)
-    DISPATCH
+#define BRANCHTO(indx)      {next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(indx); \
+                           CALC_DISPATCH_MANUAL; DISPATCH;}
 /* ------------------------------------------------------------------------------------
  * Convert decimal string to Decimal                              added August 2024 pej
  * ------------------------------------------------------------------------------------
@@ -986,11 +978,26 @@ START_OF_INSTRUCTIONS
               REG_IDX(2));
         decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
         AllocDecimalStorage(op1R, set.digits * 2);  // allocate and assign to register
-        printf("Dec String '%lld'\n", op2RI);
-        INT2D(op1R,op2RI)
+        printf("Dec String '%lld'\n", op1RI);
+        INT2D(op1R,op1RI)
         CheckStatus()
 /* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
         REG_RETURN_INT(0)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ * Convert Float to Decimal                                       added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FTOD_REG)
+        CALC_DISPATCH(1)
+        DEBUG("TRACE - FTOD R%lu,\n",REG_IDX(1));
+            decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+            AllocDecimalStorage(op1R, set.digits);  // allocate and assign to register
+            sprintf(decstring, "%g", op1R->float_value);
+            printf("Converted %s\n",decstring);
+            decNumberFromString(op1R->decimal_value,decstring,&set);
+    /* todo remove*/  DECPRT(op1R, "xx Decimal Float result in REG 1");
+            CheckStatus()
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to string                                        17. August 2024 pej
@@ -1018,7 +1025,6 @@ START_OF_INSTRUCTIONS
     printf("DEC2I String '%d' \n", op1R->int_value);
     op1R->string_length = strlen(op1R->string_value);
     DISPATCH
-
 /* ------------------------------------------------------------------------------------
  * Decimal addition                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
@@ -1035,6 +1041,20 @@ START_OF_INSTRUCTIONS
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
+ *  DADD_REG_REG_DEC  Decimal Add (op1=op2+op3)              pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DADD_REG_REG_FLOAT) // label not yet defined
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DADD R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op3R)      // convert float string to decimal
+    DADD(op1R,op2R,op1R)  // add op2+op3
+/* todo remove*/  DECPRT(op1R, "ADD Result REG 1")
+    CheckStatus()
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
  * Decimal subtraction                                            added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
@@ -1050,6 +1070,69 @@ START_OF_INSTRUCTIONS
         REG_RETURN_INT(0)
     DISPATCH
 /* ------------------------------------------------------------------------------------
+ *  DSUB_REG_REG_INT  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DSUB_REG_REG_FLOAT) // label not yet defined
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DSUB R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op3R)
+    CheckStatus()
+/* todo remove*/  DECPRT(op1R,"float value 3 r1")
+    DSUBT(op1R,op2R,op1R);
+/* todo remove*/  DECPRT(op1R,"DSUB Result REG 1")
+    CheckStatus()
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DSUB_REG_REG_FLOAT  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DSUB_REG_FLOAT_REG) // label not yet defined
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DSUB R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op2R)
+    CheckStatus()
+/* todo remove*/  DECPRT(op1R,"float value r1")
+    DSUBT(op1R,op1R,op3R);
+/* todo remove*/  DECPRT(op1R,"DSUB Result REG 1")
+    CheckStatus()
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ * Decimal Multiply                                               added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DMULT_REG_REG_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
+          REG_IDX(2), REG_IDX(3));
+    decContext(64,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits * 2); // allocate and assign to register
+    DMULT(op1R, op2R, op3R);
+    CheckStatus()
+/* todo remove*/  DECPRT(op1R, "xx mult result in REG 1");
+    REG_RETURN_INT(0)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DMULT_REG_REG_FLOAT Decimal Multiply (op1=op2*op3)              pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DMULT_REG_REG_FLOAT)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op3R)
+/* todo remove*/  DECPRT(op1R, "float value 3 r1")
+    CheckStatus()
+    DMULT(op1R,op2R,op1R)
+/* todo remove*/  DECPRT(op1R, "DMULT Result REG 1")
+    CheckStatus()
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
  * Decimal division                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
@@ -1063,6 +1146,40 @@ START_OF_INSTRUCTIONS
 /* todo remove*/  DECPRT(op1R, "xx DIV result in REG 1");
         REG_RETURN_INT(0)
     DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DDIV_REG_FLOAT_REG  Decimal Divide  (op1=op2/op3)                   pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DDIV_REG_FLOAT_REG)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), op2I,REG_IDX(2));
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op2R)
+/* todo remove*/  DECPRT(op1R, "Int value 2 r1")
+    CheckStatus()
+/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
+    DDIV(op1R,op1R,op3R)
+/* todo remove*/  DECPRT(op1R, "DDIV Result REG 1")
+    CheckStatus()
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DDIV_REG_REG_INT  Decimal Divide (op1=op2/op3)                   pej 17 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DDIV_REG_REG_FLOAT)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DDIV R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
+    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
+    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+    STR2D(op1R,op3R)
+/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
+    CheckStatus()
+/* todo remove*/  DECPRT(op1R,"Loaded Integer in REG 1")
+    DDIV(op1R,op2R,op1R)
+/* todo remove*/  DECPRT(op1R,"DDIV Result REG 1")
+    CheckStatus()
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * do we need this?
  * ------------------------------------------------------------------------------------
@@ -1145,6 +1262,19 @@ START_OF_INSTRUCTIONS
     }
     DISPATCH;
 /* ------------------------------------------------------------------------------------
+ *  DEQ_REG_REG_FLOAT  Decimal Equals op1=(op2==op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DEQ_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+            DEBUG("TRACE - DEQ_REG_REG_FLOAT\n");
+            decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+            AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+            STR2D(op1R,op3R)
+            if (DCLC(op2R,op1R,0)==0) REG_RETURN_INT(1) // it is equal
+            else REG_RETURN_INT(0)
+            DISPATCH;
+/* ------------------------------------------------------------------------------------
  *  DLTBR_ID_REG_REG  Decimal Less than if (op2<op3) goto op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
@@ -1152,11 +1282,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTBR_ID R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (DCLC(op2R, op3R,0)<0) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
-    }
+    if (DCLC(op2R, op3R,0)<0) BRANCHTO(1)
     DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGTBR_ID_REG_REG  Decimal Greater than if (op2>op3) goto op1              pej 17 Aug 2024
@@ -1166,13 +1292,141 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTBR_ID R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    //     third parameter: 0= sign matters, 1=doesn't matter
-    if (DCLC(op2R, op3R,0)>0) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
-    }
+    if (DCLC(op2R, op3R,0)>0) BRANCHTO(1)
     DISPATCH;
-
+/* ------------------------------------------------------------------------------------
+ *  DEQBR_ID_REG_REG  Decimal Equal if (op2=op3) goto op1              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DEQBR_ID_REG_REG) // label not yet defined
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DEQBR_ID_REG_REG\n");
+    if (DCLC(op2R, op3R,0)==0) BRANCHTO(1)
+    DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DNE_REG_REG_FLOAT  Decimal Not equals op1=(op2!=op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DNE_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DNE_REG_REG_FLOAT\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        if (DCLC(op2R, op3R,0)!=0) REG_RETURN_INT(1) // it is less then, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DGT_REG_REG_FLOAT  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DGT_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DGT_REG_REG_FLOAT\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op3R)
+        if (DCLC(op2R, op1R,0)>0) REG_RETURN_INT(1) // it is greater then, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DGT_REG_FLOAT_REG  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DGT_REG_FLOAT_REG) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DGT_REG_FLOAT_REG\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op2R)
+        if (DCLC(op1R, op3R,0)>0) REG_RETURN_INT(1) // it is greater then, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DGTE_REG_REG_FLOAT  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DGTE_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DGTE_REG_REG_FLOAT\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op3R)
+        if (DCLC(op1R, op3R,0)>0) REG_RETURN_INT(1) // it is greater than, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DGTE_REG_FLOAT_REG  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DGTE_REG_FLOAT_REG) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DGTE_REG_FLOAT_REG\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op2R)
+        if (DCLC(op1R, op3R,0)>0) REG_RETURN_INT(1) // it is greater than, third parameter: 0= sign matters, 1=doesn't matter
+        else {
+           if (DCLC(op1R, op3R,0)==0) REG_RETURN_INT(1)
+           else REG_RETURN_INT(0)
+        }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DLT_REG_REG_FLOAT  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DLT_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DLT_REG_REG_FLOAT\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op3R)
+        if (DCLC(op2R, op1R,0)<0) REG_RETURN_INT(1) // it is less than, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DLT_REG_FLOAT_REG  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DLT_REG_FLOAT_REG) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DLT_REG_FLOAT_REG\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op2R)
+        if (DCLC(op1R, op3R,0)<0) REG_RETURN_INT(1) // it is less than, third parameter: 0= sign matters, 1=doesn't matter
+        else REG_RETURN_INT(0)
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DLTE_REG_REG_FLOAT  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DLTE_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DLTE_REG_REG_FLOAT\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op3R)
+        if (DCLC(op2R, op1R,0)<0) REG_RETURN_INT(1) // it is greater than, third parameter: 0= sign matters, 1=doesn't matter
+        else {
+            if (DCLC(op2R, op1R,0)==0) REG_RETURN_INT(1)
+            else REG_RETURN_INT(0)
+        }
+        DISPATCH;
+/* ------------------------------------------------------------------------------------
+ *  DLTE_REG_FLOAT_REG  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(DLTE_REG_FLOAT_REG) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DLTE_REG_FLOAT_REG\n");
+        decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op2R)
+        if (DCLC(op1R, op3R,0)<0) REG_RETURN_INT(1) // it is greater than, third parameter: 0= sign matters, 1=doesn't matter
+        else {
+            if (DCLC(op1R, op3R,0)==0) REG_RETURN_INT(1)
+            else REG_RETURN_INT(0)
+        }
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DCOPY_REG_REG  Copy Decimal op2 to op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
@@ -1181,7 +1435,6 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(2);
     DEBUG("TRACE - DLTBR_ID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     decContext(32,0)       // 32 digits, 0 : no trap, this needs to be set every time
-    // todo we need to allocate storage based on digits of op2
     AllocDecimalStorage(op1R, set.digits + 1); // allocate and assign to register
     op1R->decimal_value=op2R->decimal_value;
     DISPATCH;
@@ -1206,98 +1459,32 @@ START_OF_INSTRUCTIONS
     decNumberPower(op1R->decimal_value, op2R->decimal_value,op3R->decimal_value,&set);
     DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  DADD_REG_REG_INT  Decimal Add (op1=op2+op3)              pej 17 Aug 2024
+ *  DPOW_REG_REG_FLOAT  op1=op2**op3              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(DADD_REG_REG_INT) // label not yet defined
-    CALC_DISPATCH(3);
-    DEBUG("TRACE - DADD R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
-    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    INT2D(op1R,op3I)
-/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
-    CheckStatus()
-/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
-    DADD(op1R,op2R,op1R);
-/* todo remove*/  DECPRT(op1R, "ADD Result REG 1")
-    CheckStatus()
-    DISPATCH;
-
+        START_INSTRUCTION(DPOW_REG_REG_FLOAT) // label not yet defined
+        CALC_DISPATCH(3);
+            DEBUG("TRACE - DPOW_REG_REG_FLOAT\n");
+            AllocDecimalStorage(op1R, set.digits + 1);  // allocate and assign to register
+            STR2D(op1R, op3R)
+            decNumberPower(op1R->decimal_value, op2R->decimal_value, op1R->decimal_value, &set);
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
- *  DSUB_REG_REG_INT  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
+ *  DPOW_REG_FLOAT_REG  op1=op2**op3              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(DSUB_REG_REG_INT) // label not yet defined
-    CALC_DISPATCH(3);
-    DEBUG("TRACE - DSUB R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
-    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    INT2D(op1R,op3I)
-    CheckStatus()
-/* todo remove*/  DECPRT(op1R,"Int value 3 r1")
-    DSUBT(op1R,op2R,op1R);
-/* todo remove*/  DECPRT(op1R,"DSUB Result REG 1")
-    CheckStatus()
-    DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  DMULT_REG_REG_INT  Decimal Multiply (op1=op2*op3)              pej 17 Aug 2024
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(DMULT_REG_REG_INT)
-    CALC_DISPATCH(3);
-    DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
-    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    INT2D(op1R,op3I)
-/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
-    CheckStatus()
-/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
-    DMULT(op1R,op2R,op1R)
-/* todo remove*/  DECPRT(op1R, "DMULT Result REG 1")
-    CheckStatus()
-    DISPATCH;
-
-/* ------------------------------------------------------------------------------------
- *  DDIV_REG_REG_INT  Decimal Divide (op1=op2/op3)                   pej 17 Aug 2024
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(DDIV_REG_REG_INT)
-    CALC_DISPATCH(3);
-    DEBUG("TRACE - DDIV R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), op3I);
-    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    INT2D(op1R,op3I)
-/* todo remove*/  DECPRT(op1R, "Int value 3 r1")
-    CheckStatus()
-/* todo remove*/  DECPRT(op1R,"Loaded Integer in REG 1")
-    DDIV(op1R,op2R,op1R)
-/* todo remove*/  DECPRT(op1R,"DDIV Result REG 1")
-    CheckStatus()
-    DISPATCH;
-/* ------------------------------------------------------------------------------------
- *  DDIV_REG_INT_REG  Decimal Divide  (op1=op2/op3)                   pej 17 Aug 2024
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(DDIV_REG_INT_REG)
-    CALC_DISPATCH(3);
-    DEBUG("TRACE - DMULT R%lu,R%lu,%lld\n", REG_IDX(1), op2I,REG_IDX(2));
-    decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
-    AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    INT2D(op1R,op2I)
-/* todo remove*/  DECPRT(op1R, "Int value 2 r1")
-    CheckStatus()
-/* todo remove*/  DECPRT(op1R, "Loaded Integer in REG 1")
-    DDIV(op1R,op1R,op3R)
-/* todo remove*/  DECPRT(op1R, "DDIV Result REG 1")
-    CheckStatus()
-    DISPATCH;
+        START_INSTRUCTION(DPOW_REG_FLOAT_REG) // label not yet defined
+        CALC_DISPATCH(3);
+        DEBUG("TRACE - DPOW_REG_FLOAT_REG\n");
+        AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
+        STR2D(op1R,op2R)
+        decNumberPower(op1R->decimal_value, op1R->decimal_value,op3R->decimal_value,&set);
+        DISPATCH;
 /* ====================================================================================
  * End of Decimal instructions
  * ====================================================================================
  */
-
-
-        START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
+       START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_constant *called_function = PROC_OP(1);
