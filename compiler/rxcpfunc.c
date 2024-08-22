@@ -403,10 +403,10 @@ char* rxpa_getstring(rxpa_attribute_value attributeValue)  /* Get a string from 
 void rxpa_setstring(rxpa_attribute_value attributeValue, char* string)  /* Set a string in an attribute value */
     { disablerFunction("rxpa_setstring"); }
 
-void rxpa_setint(rxpa_attribute_value attributeValue, int value)  /* Set an integer in an attribute value */
+void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value)  /* Set an integer in an attribute value */
     { disablerFunction("rxpa_setint"); }
 
-int rxpa_getint(rxpa_attribute_value attributeValue)  /* Get an integer from an attribute value */
+rxinteger rxpa_getint(rxpa_attribute_value attributeValue)  /* Get an integer from an attribute value */
     { disablerFunction("rxpa_getint"); return 0; }
 
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value)  /* Set a float in an attribute value */
@@ -414,6 +414,13 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value)  /* Set a 
 
 double rxpa_getfloat(rxpa_attribute_value attributeValue)  /* Get a float from an attribute value */
     { disablerFunction("rxpa_getfloat"); return 0.0; }
+
+// Exit Function Management
+void rxpa_setsayexit(say_exit_func sayExitFunc)  /* Set Say exit function */
+    { disablerFunction("rxpa_setsayexit"); }
+
+void rxpa_resetsayexit()  /* Reset Say exit function */
+    { disablerFunction("rxpa_resetsayexit"); }
 
 // RXPA Add Function Implementation
 // This is the callback function for loadPluginFileForFunctions() when the plugin adds functions,
@@ -450,6 +457,8 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.getint = rxpa_getint;
     rxpa_context.setfloat = rxpa_setfloat;
     rxpa_context.getfloat = rxpa_getfloat;
+    rxpa_context.setsayexit = rxpa_setsayexit;
+    rxpa_context.resetsayexit = rxpa_resetsayexit;
 
     if (context->debug_mode) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
 

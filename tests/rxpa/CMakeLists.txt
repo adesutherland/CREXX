@@ -37,6 +37,7 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
+        ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
 # Set the performance properties
 set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -58,8 +59,7 @@ target_include_directories(testvm PRIVATE
 
 # Build Dynamic Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_dynlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink\"
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_dynlink_test
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_dynlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink\" && ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_dynlink_test
         DEPENDS rxas rxc library _rxpa_dynlink ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
         OUTPUT rxpa_dynlink_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -70,8 +70,7 @@ add_custom_target(rxpa_dynlink_test ALL
 
 # Build Static Test Rexx
 add_custom_command(
-        COMMAND rxc_staticlink -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_staticlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink\"
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_staticlink_test
+        COMMAND rxc_staticlink -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o rxpa_staticlink_test \"${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink\" && ${CMAKE_BINARY_DIR}/assembler/rxas rxpa_staticlink_test
         DEPENDS rxas rxc_staticlink library ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
         OUTPUT rxpa_staticlink_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -123,6 +122,7 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
+        ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
 # Set the performance properties
 set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -163,8 +163,7 @@ foreach(idx RANGE ${len})
     list(GET OUTPUTS ${idx} _expected_output)
 
     add_custom_command(
-            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o ${_rexxtest}_test ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest}
-            COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_rexxtest}_test
+            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o ${_rexxtest}_test ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest} && ${CMAKE_BINARY_DIR}/assembler/rxas ${_rexxtest}_test
             DEPENDS rxas rxc library _testfuncs_dynamic ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest}.rexx
             OUTPUT ${_rexxtest}_test.rxbin
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

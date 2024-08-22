@@ -2056,7 +2056,7 @@ static walker_result emit_walker(walker_direction direction,
                 i = node->additional_registers + 1; /* First one is the number of arguments */
                 while (n) {
                     if (n->cleanup) output_concat(node->output, n->cleanup);
-                    if (n->register_num != i) {
+                    if (n->register_type != 'r' ||  n->register_num != i) {
                         /* We need to swap registers */
                         /* I have reversed arguments just for readability */
                         temp1 = mprintf("   swap %c%d,r%d\n",

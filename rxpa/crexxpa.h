@@ -1,9 +1,27 @@
 // CREXX/PA (Plugin Architecture) Client Header
+// Version:
 
 #ifndef CREXX_PA_H_
 #define CREXX_PA_H_
 
+#define rxpa_version "crexx-f0052"
+
 // Plugin Support Functions and Macros
+
+// Define rxinteger type
+#ifndef RXINTEGER_T
+#define RXINTEGER_T
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
+#include <stdint.h>
+typedef intmax_t rxinteger;
+#else
+#ifdef __32BIT__
+typedef long rxinteger;
+#else
+typedef long long rxinteger;
+#endif
+#endif
+#endif //RXINTEGER_T
 
 // Typedef for attribute value which is an opaque pointer
 typedef void* rxpa_attribute_value;
@@ -12,8 +30,8 @@ typedef void* rxpa_attribute_value;
 // Parameters are the number of arguments, an array of rxpa_attribute_value,
 // and a rxpa_attribute_value return value, and signal value for error handling
 // e.g.
-//void myfunc(int _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
-typedef void (*rxpa_libfunc)(int, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
+//void myfunc(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
+typedef void (*rxpa_libfunc)(rxinteger, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
 
 // Enumeration of Signal Codes
 typedef enum rxsignal {
@@ -37,10 +55,15 @@ typedef void (*rxpa_func_addfunc)(rxpa_libfunc func, char* name,
                                   char* option, char* type, char* args); /* Add a function to the REXX interpreter */
 typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
-typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, int value); /* Set an integer in an attribute value */
-typedef int (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
+typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+
+// Exit Functions
+typedef void (*say_exit_func)(char* message);
+typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit function */
+typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 
 // The initialization context struct
 typedef struct rxpa_initctxptr* rxpa_initctxptr;
@@ -52,6 +75,9 @@ struct rxpa_initctxptr {
     rxpa_func_getint getint;
     rxpa_func_setfloat setfloat;
     rxpa_func_getfloat getfloat;
+    // Exit Function Management
+    rxpa_set_say_exit setsayexit;
+    rxpa_reset_say_exit resetsayexit;
 };
 
 // Are we building a statically linked library?
@@ -72,6 +98,8 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define GETINT(attr) _rxpa_context->getint((attr))
 #define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
+#define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
+#define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
 
 // The plugin is being built as a DLL
 // INITIALIZER is redefined to be a simple function
@@ -138,10 +166,12 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
 void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
-void rxpa_setint(rxpa_attribute_value attributeValue, int value); /* Set an integer in an attribute value */
-int rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
+void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
+rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
+void rxpa_resetsayexit(); /* Set Say exit function */
 
 // Macro is used to register a procedure - static linkage
 #ifndef DECL_ONLY
@@ -155,12 +185,14 @@ double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from a
 #define GETINT(attr) rxpa_getint((attr))
 #define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
 #define GETFLOAT(attr) rxpa_getfloat((attr))
+#define SET_SAY_EXIT(func) rxpa_setsayexit((func))
+#define RESET_SAY_EXIT() rxpa_resetsayexit()
 
 #endif
 
 // Plugin Function Tags
 #define PROCEDURE(p) \
-        static void p(int _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
+        static void p(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
 
 // Arguments
 #define NUM_ARGS _numargs

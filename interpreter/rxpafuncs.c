@@ -93,15 +93,15 @@ void rxpa_setstring(rxpa_attribute_value attributeValue, char* string){
 }
 
 /* Set an integer in an attribute value */
-void rxpa_setint(rxpa_attribute_value attributeValue, int int_value) {
+void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger int_value) {
     value* val = (value*)attributeValue;
     if (val) set_int(val, int_value);
 }
 
 /* Get an integer from an attribute value */
-int rxpa_getint(rxpa_attribute_value attributeValue) {
+rxinteger rxpa_getint(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
-    if (val) return (int)val->int_value;
+    if (val) return val->int_value;
     else return 0;
 }
 

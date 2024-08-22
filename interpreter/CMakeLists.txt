@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is ab
 # Bare Interpreter
 # Threaded Version
 add_executable(rxvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c
         rxpafuncs.c)
 set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -21,7 +21,7 @@ target_include_directories(rxvm PRIVATE . ${CMAKE_BINARY_DIR}/machine
 
 # Bytecode Version
 add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c
         rxpafuncs.c)
 add_dependencies(rxbvm machine avl_tree rxpa platform)
 target_link_libraries(rxbvm machine avl_tree rxpa platform m)
@@ -44,7 +44,7 @@ add_custom_target(packed_library ALL DEPENDS library.c)
 
 # Threaded Version
 add_executable(rxvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c ${CMAKE_CURRENT_BINARY_DIR}/library.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c ${CMAKE_CURRENT_BINARY_DIR}/library.c
         rxpafuncs.c)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -56,7 +56,7 @@ target_include_directories(rxvme PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 
 add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c ${CMAKE_CURRENT_BINARY_DIR}/library.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c ${CMAKE_CURRENT_BINARY_DIR}/library.c
         rxpafuncs.c)
 add_dependencies(rxbvme machine avl_tree rxpa platform packed_library)
 target_link_libraries(rxbvme machine avl_tree rxpa platform m)
@@ -69,7 +69,7 @@ target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 
 # Threaded Version
 add_library(rxvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c
         rxpafuncs.c)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -80,7 +80,7 @@ target_include_directories(rxvml PRIVATE . ${CMAKE_BINARY_DIR}/machine
 
 # Bytecode Version
 add_library(rxbvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.c
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c
         rxpafuncs.c)
 add_dependencies(rxbvml machine avl_tree rxpa platform)
 target_include_directories(rxbvml PRIVATE . ${CMAKE_BINARY_DIR}/machine

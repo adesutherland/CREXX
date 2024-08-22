@@ -15,8 +15,7 @@ add_executable(desbase_test desbase_test.c desbase.c desbase.h)
 # Rexx Test
 add_custom_target(DESRexxTest ALL
         BYPRODUCTS RxDesTst.rxbin
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTst
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst && ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTst
         DEPENDS rxas rxc library des RxDesTst.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -24,8 +23,7 @@ add_custom_target(DESRexxTest ALL
 # Rexx Error Test
 add_custom_target(DESRexxInvalidTest ALL
         BYPRODUCTS RxDesTstInvalid.rxbin
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid
-        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTstInvalid
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid && ${CMAKE_BINARY_DIR}/assembler/rxas RxDesTstInvalid
         DEPENDS rxas rxc library des RxDesTstInvalid.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
