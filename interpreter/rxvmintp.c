@@ -1173,7 +1173,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(RET_FLOAT)
-            DEBUG("TRACE - RET %g\n", op1F);
+            DEBUG("TRACE - RET %.15g\n", op1F);
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
@@ -1983,7 +1983,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FEQ_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FEQ R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FEQ R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF == op3F)
             DISPATCH
 
@@ -2001,7 +2001,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FNE_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FNE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FNE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF != op3F)
             DISPATCH
 
@@ -2020,7 +2020,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FGT_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FGT R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FGT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF > op3F)
             DISPATCH
 
@@ -2029,7 +2029,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FGT_REG_FLOAT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - FGT R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+            DEBUG("TRACE - FGT R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F > op3RF)
             DISPATCH
 
@@ -2047,7 +2047,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLT_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FLT R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FLT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF < op3F)
             DISPATCH
 
@@ -2056,7 +2056,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLT_REG_FLOAT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - FLT R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+            DEBUG("TRACE - FLT R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F < op3RF)
             DISPATCH
 
@@ -2074,7 +2074,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FGTE_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FGTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FGTE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF >= op3F)
             DISPATCH
 
@@ -2083,7 +2083,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FGTE_REG_FLOAT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - FGTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+            DEBUG("TRACE - FGTE R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F >= op3RF)
             DISPATCH
 
@@ -2101,7 +2101,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLTE_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FLTE R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FLTE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF <= op3F)
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -2109,7 +2109,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FLTE_REG_FLOAT_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - FLTE R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+            DEBUG("TRACE - FLTE R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F <= op3RF)
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -2597,8 +2597,8 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
-            DEBUG("TRACE - SAY %g\n", op1F);
-            mprintf("%g\n", op1F);
+            DEBUG("TRACE - SAY %.15g\n", op1F);
+            mprintf("%.15g\n", op1F);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -2606,7 +2606,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(LOAD_REG_FLOAT) CALC_DISPATCH(2)
-            DEBUG("TRACE - LOAD R%d,%g\n",(int)REG_IDX(1),op2F);
+            DEBUG("TRACE - LOAD R%d,%.15g\n",(int)REG_IDX(1),op2F);
             REG_RETURN_FLOAT(op2F)
             DISPATCH
 
@@ -2652,7 +2652,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FADD_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FADD R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FADD R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF + op3F)
             DISPATCH
 
@@ -2661,7 +2661,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FSUB_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FSUB R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FSUB R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF - op3F)
             DISPATCH
 
@@ -2670,7 +2670,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FDIV_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FDIV R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FDIV R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF / op3F)
             DISPATCH
 
@@ -2679,7 +2679,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FMULT_REG_REG_FLOAT) CALC_DISPATCH(3)
-            DEBUG("TRACE - FMULT R%d,R%d,%g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            DEBUG("TRACE - FMULT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF * op3F)
             DISPATCH
 
@@ -2688,7 +2688,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FSUB_REG_FLOAT_REG) CALC_DISPATCH(3)
-        DEBUG("TRACE - FSUB R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+        DEBUG("TRACE - FSUB R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F - op3RF)
             DISPATCH
 
@@ -2697,7 +2697,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
-        DEBUG("TRACE - FDIV R%d,%g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+        DEBUG("TRACE - FDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF)
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3552,7 +3552,7 @@ START_OF_INSTRUCTIONS
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3)
-            DEBUG("TRACE - LOADSETTP R%d %g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
+            DEBUG("TRACE - LOADSETTP R%d %.15g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
             op1R->float_value = op2F;
             op1R->status.all_type_flags = op3I;
             DISPATCH

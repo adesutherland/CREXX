@@ -851,7 +851,7 @@ RX_INLINE void string_from_int(value *v) {
 /* Calculate the string value */
 RX_INLINE void string_from_float(value *v) {
     prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%g",v->float_value);
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%.15g",v->float_value);
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_char_pos = 0;

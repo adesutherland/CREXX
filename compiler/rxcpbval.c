@@ -1476,7 +1476,7 @@ static walker_result exposed_symbols_walker(walker_direction direction,
                         else {
                             /* Add an error - if it has not already errored */
                             if (ast_chld(n, ERROR, 0) == 0) {
-                                if (symbol->is_arg) mknd_err(n, "CANNOT_EXPOSED_ARG");
+                                if (symbol && symbol->is_arg) mknd_err(n, "CANNOT_EXPOSED_ARG");
                                 else mknd_err(n, "UNKNOWN_SYMBOL");
                             }
                         }
@@ -2567,21 +2567,25 @@ static walker_result func_type_safety_walker(walker_direction direction,
                     n1 = n1->sibling;
                 }
 
-                /* Skip an ellipse */
-                if (n2 && (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE)) n2 = n2->sibling;
-
                 while (n2) {
-                    arg_num++;
-                    n1 = ast_ft(context, NOVAL);
-                    ast_svtn(n1,n2);
-                    add_ast(node, n1);
-                    n1->is_opt_arg = n2->is_opt_arg;
-                    n1->is_ref_arg = n2->is_ref_arg;
-                    n1->is_const_arg = n2->is_const_arg;
-                    if (!n1->is_opt_arg) {
-                        mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
+                    /* Skip an ellipse - should be the last argument, but this does not assume it */
+                    if (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE) {
+                        n2 = n2->sibling;
+                        arg_num++;
                     }
-                    n2 = n2->sibling;
+                    else {
+                        arg_num++;
+                        n1 = ast_ft(context, NOVAL);
+                        ast_svtn(n1, n2);
+                        add_ast(node, n1);
+                        n1->is_opt_arg = n2->is_opt_arg;
+                        n1->is_ref_arg = n2->is_ref_arg;
+                        n1->is_const_arg = n2->is_const_arg;
+                        if (!n1->is_opt_arg) {
+                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, n2->child->symbolNode->symbol->name);
+                        }
+                        n2 = n2->sibling;
+                    }
                 }
                 break;
 
