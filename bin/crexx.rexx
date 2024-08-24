@@ -16,6 +16,7 @@ options levelb dashcomments
 import rxfnsb
 arg fn = .string[]
 
+/* when there are no commandline arguments found, display help */
 if fn[0]=0 then do
   call help
   exit
@@ -36,9 +37,14 @@ do i=1 to fn.0
   else
     do
       if fn.i = '-noexec' then execute=0
+      if fn.i = '-native' then native=1
+      if fn.i = '-version' then version=1
+      if fn.i = '-verbose' then verbose=1
+      if fn.i = '--noexec' then execute=0
       if fn.i = '--native' then native=1
       if fn.i = '--version' then version=1
       if fn.i = '--verbose' then verbose=1
+
     end
 end -- do i
 
@@ -63,10 +69,11 @@ do i=1 to words(filenames)
     if verbose then say 'Packing native executable' filename
     'rxcpack' filename rxpath'/lib/rxfns/library'
     if verbose then say 'Compiling native executable' filename
-    'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
+    'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lrxpa -lm -L',
     rxpath'/interpreter -L',
     rxpath'/machine -L',
     rxpath'/avl_tree -L',
+    rxpath'/rxpa -L',
     rxpath'/platform',
     filename'.c'
   end
@@ -82,10 +89,10 @@ say 'Arguments are: in_file_specification... [--option]...'
 say
 say 'The following options are available:'
 say
-say '--help           -- display (this) help info'
-say '--version        -- display the version number'
-say '--exec           -- execute (default)'
-say '--native         -- build native executable; implies noexec; default nonative'
+say '-help           -- display (this) help info'
+say '-version        -- display the version number'
+say '-exec           -- execute (default)'
+say '-native         -- build native executable; implies noexec; default nonative'
 return
 
 logo: procedure

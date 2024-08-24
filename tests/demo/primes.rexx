@@ -18,11 +18,12 @@ do p = 2 until prime.0 >= generate_primes
    end
 end
 
-address cmd "rm primes.txt"
+/* address cmd "rm primes.txt" */
 do i = 1 to prime.0
-  call lineout "primes.txt", prime.i
+  say prime.i
+  /* call lineout "primes.txt", prime.i */
 end
-call lineout "primes.txt"
+/* call lineout "primes.txt" */
 
 
 
