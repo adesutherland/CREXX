@@ -43,13 +43,9 @@ void init_ops() {
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
-    instr_f("dadd", "Decimal Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
-
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_INT);
     instr_f("isub", "Integer Subtract (op1=op2-op3)", OP_REG, OP_INT, OP_REG);
-
-    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
 
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("subi", "Convert and Subtract to Integer (op1=op2-op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
@@ -59,16 +55,12 @@ void init_ops() {
     instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("multi", "Convert and Multiply to Integer (op1=op2*op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
-    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
-
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
 
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
-
-    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
 
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_INT);
@@ -206,10 +198,6 @@ void init_ops() {
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_STRING);
     instr_f("slte", "String Less than equals op1=(op2<=op3)", OP_REG, OP_STRING, OP_REG);
-    instr_f("s2dec", "Convert Decimal String to Decimal Number op1=s2dec(op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("dec2s", "Convert Decimal Number to Decimal String op1=dec2s(op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("i2dec", "Convert Integer to Decimal Number op1=s2dec(op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("dcmp", "Compare Decimal Numbers op1=deccmp(op2,op3), op2<op3=-1, op2=op3=0, op2>op3=1", OP_REG, OP_REG, OP_REG);
 
     instr_f("and", "Logical (int) and op1=(op2 && op3)", OP_REG, OP_REG, OP_REG);
     instr_f("or", "Logical (int) or op1=(op2 || op3)", OP_REG, OP_REG, OP_REG);
@@ -425,6 +413,65 @@ void init_ops() {
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_REG, OP_REG);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_INT, OP_REG);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_REG, OP_REG);
+
+    instr_f("erase", "erases register contents", OP_REG, OP_NONE, OP_NONE);
+
+    // -------------------------------------------------------------------------
+    // Decimal library
+    // -------------------------------------------------------------------------
+    instr_f("stod", "Convert Decimal String to Decimal Number op1=s2dec(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("dtos", "Convert Decimal Number to Decimal String op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("dtoi", "Convert Decimal Number to Integer op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("itod", "Convert Integer to Decimal Number op1=s2dec(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("ftod", "Convert Float to Decimal Number op1=f2dec(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("dtof", "Convert Decimal Number to Float op1=f2dec(op2)", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dsub", "Decimal Subtract (op1=op2-op3)", OP_REG, OP_FLOAT, OP_REG);
+
+    instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dadd", "Decimal Add (op1=op2-op3)", OP_REG, OP_REG, OP_FLOAT);
+
+    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dmult", "Decimal Multiply (op1=op2*op3)", OP_REG, OP_REG, OP_FLOAT);
+
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("ddiv", "Decimal Divide (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
+
+    instr_f("deq", "Decimal Equals op1=(op2==op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("deq", "Decimal Equals op1=(op2==op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dne", "Decimal Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dne", "Decimal Not equals op1=(op2!=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dgt", "Decimal Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dgt", "Decimal Greater than op1=(op2>op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dgt", "Decimal Greater than op1=(op2>op3)", OP_REG, OP_FLOAT , OP_REG);
+    instr_f("dgte", "Decimal Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dgte", "Decimal Greater than equals op1=(op2>=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dgte", "Decimal Greater than equals op1=(op2>=op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("dlt", "Decimal Less than op1=(op2<op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dlt", "Decimal Less than op1=(op2<op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dlt", "Decimal Less than op1=(op2<op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("dlte", "Decimal Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dlte", "Decimal Less than equals op1=(op2<=op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dlte", "Decimal Less than equals op1=(op2<=op3)", OP_REG, OP_FLOAT, OP_REG);
+    instr_f("dgtbr", "Decimal Greater than if (op2>op3) goto op1", OP_ID, OP_REG, OP_REG);
+    instr_f("dltbr", "Decimal Less than if (op2<op3) goto op1", OP_ID, OP_REG, OP_REG);
+    instr_f("deqbr", "Decimal Equal if (op2=op3) goto op1", OP_ID, OP_REG, OP_REG);
+
+    instr_f("dcopy", "Copy Decimal op2 to op1", OP_REG, OP_REG, OP_NONE);
+
+    instr_f("dformat", "Set string value from Decimal value using a format string", OP_REG, OP_REG, OP_REG);
+
+    instr_f("dpow", "op1=op2**op3", OP_REG, OP_REG, OP_REG);
+    instr_f("dpow", "op1=op2**op3", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("dpow", "op1=op2**op3", OP_REG, OP_FLOAT, OP_REG); /* Not 100% sure */
+
+    instr_f("dsex", "Decimal op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
+    // ---------------------------------------------------------------------------------------
+    // end of decimal instructions
+    // ---------------------------------------------------------------------------------------
 
     /* ENDINSTRUCTIONS */
 
