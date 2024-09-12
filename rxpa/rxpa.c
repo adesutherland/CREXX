@@ -33,10 +33,22 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // Create a full file name buffer and append the directory and file name
     char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
     sprintf(full_file_name, "%s\\%s", dir, file_name);
-
     // Load the DLL
+    SetDllDirectory(".");
     HMODULE hDll = LoadLibrary(TEXT(full_file_name));
     if (!hDll) {
+        DWORD errorCode = GetLastError();
+        LPVOID errorMsg;
+        FormatMessage(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                errorCode,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPTSTR)&errorMsg,
+                0,
+                NULL
+        );
+        LocalFree(errorMsg);
         return -1;
     }
 

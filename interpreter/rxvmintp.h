@@ -6,7 +6,7 @@
 #include "rxpa.h"
 #include "../decimal/decNumber.h"
 
-#define rxversion "crexx-f0051"
+#define rxversion "crexx-HF001"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -309,5 +309,8 @@ void arr2redr(value* redirect_reg, value* string_reg);
 /* Create a null redirect pipe */
 /* In general, he redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
 void nullredr(value* redirect_reg);
+
+/* EXIT Function Support */
+void mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 #endif //CREXX_RXVMINTP_H

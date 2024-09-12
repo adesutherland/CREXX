@@ -1,6 +1,14 @@
 CREXX History / Change Log
-
-F0051 - CREXX/C
+HF001 - Hotfix for Windows
+        Fixed Windows DLL Load in current directory
+        Fixed Removal of "\r" in spawned (ADDRESS) Windows Command io Redirect
+F0052 - Fixes and enhancements
+        RXPA - Added an "exit" to trap say instruction output
+        Compiler - Fix Register swap back after a function call with global register
+        Interpreter - Printing floats, changed max precision to 15 from 6 digits
+        Compiler - Fix segfault with a missing argument before an ellipsis
+        Compiler - Fix segfault when exposing an unknown variable
+F0051 - RXPA (Plugin Architecture)
            Fix - rxc optimised constant arguments to pass by reference incorrectly setting the argument signature
 I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
         Fix - ADDRESS for a not found command freezes (on linux and osx)

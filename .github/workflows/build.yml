@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload Executable
         if: env.RELEASE_ID
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: CREXX-Ubuntu
           path: |
@@ -116,85 +116,85 @@ jobs:
             ${{ runner.temp }}/exe/release
 
       - name: Upload instrmiss.h
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: instrmiss.h
           path: ${{ runner.temp }}/release/machine/instrmiss.h
 
       - name: Upload instrset.h
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: instrset.h
           path: ${{ runner.temp }}/release/machine/instrset.h
 
       - name: Upload rxasscan.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxasscan.c
           path: ${{ runner.temp }}/release/assembler/rxasscan.c
 
       - name: Upload rxasscan.c.s370
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxasscan.c.s370
           path: S370/rxasscan.c
 
       - name: Upload rxasgrmr.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxasgrmr.c
           path: ${{ runner.temp }}/release/assembler/rxasgrmr.c
 
       - name: Upload rxasgrmr.h
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxasgrmr.h
           path: ${{ runner.temp }}/release/assembler/rxasgrmr.h
 
       - name: Upload rxcposcn.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcposcn.c
           path: ${{ runner.temp }}/release/compiler/rxcposcn.c
 
       - name: Upload rxcposcn.c.s370
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcposcn.c.s370
           path: S370/rxcposcn.c
 
       - name: Upload rxcpopgr.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcpopgr.c
           path: ${{ runner.temp }}/release/compiler/rxcpopgr.c
 
       - name: Upload rxcpopgr.h
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcpopgr.h
           path: ${{ runner.temp }}/release/compiler/rxcpopgr.h
 
       - name: Upload rexbscan.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rexbscan.c
           path: ${{ runner.temp }}/release/compiler/rexbscan.c
 
       - name: Upload rexbscan.c.s370
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rexbscan.c.s370
           path: S370/rexbscan.c
 
       - name: Upload rxcpbgmr.c
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcpbgmr.c
           path: ${{ runner.temp }}/release/compiler/rxcpbgmr.c
 
       - name: Upload rxcpbgmr.h
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: rxcpbgmr.h
           path: ${{ runner.temp }}/release/compiler/rxcpbgmr.h
@@ -224,67 +224,67 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Download instrmiss.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: instrmiss.h
         path: machine
 
     - name: Download instrset.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: instrset.h
         path: machine
 
     - name: Download rxasscan.c.s370
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxasscan.c.s370
         path: S370
 
     - name: Download rxasgrmr.c
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxasgrmr.c
         path: assembler
 
     - name: Download rxasgrmr.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxasgrmr.h
         path: assembler
 
     - name: Download rxcposcn.c.s370
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxcposcn.c.s370
         path: S370
 
     - name: Download rxcpopgr.c
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxcpopgr.c
         path: compiler
 
     - name: Download rxcpopgr.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxcpopgr.h
         path: compiler
 
     - name: Download rexbscan.c.s370
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rexbscan.c.s370
         path: S370
 
     - name: Download rxcpbgmr.c
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxcpbgmr.c
         path: compiler
 
     - name: Download rxcpbgmr.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: rxcpbgmr.h
         path: compiler
@@ -323,7 +323,7 @@ jobs:
 
     - name: Upload Executable
       if: env.RELEASE_ID
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: CREXX-CMS
         path: ./exe
@@ -367,13 +367,13 @@ jobs:
         submodules: 'recursive'
 
     - name: Download instrmiss.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: instrmiss.h
         path: machine
 
     - name: Download instrset.h
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: instrset.h
         path: machine
@@ -444,7 +444,7 @@ jobs:
 
     - name: Upload Executable
       if: env.RELEASE_ID
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: CREXX-Windows
         path: |
@@ -478,13 +478,13 @@ jobs:
           submodules: 'recursive'
 
       - name: Download instrmiss.h
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: instrmiss.h
           path: machine
 
       - name: Download instrset.h
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: instrset.h
           path: machine
@@ -557,7 +557,7 @@ jobs:
 
       - name: Upload Executable
         if: env.RELEASE_ID
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: CREXX-MacOS
           path: |
@@ -600,7 +600,7 @@ jobs:
 
       - name: Get CMS binary
         if: env.RELEASE_ID
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: CREXX-CMS
           path: CREXX-CMS
@@ -611,7 +611,7 @@ jobs:
 
       - name: Get ubuntu binary
         if: env.RELEASE_ID
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: CREXX-Ubuntu
           path: CREXX-Ubuntu
@@ -623,7 +623,7 @@ jobs:
 
       - name: Get windows binary
         if: env.RELEASE_ID
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: CREXX-Windows
           path: CREXX-Windows
@@ -635,7 +635,7 @@ jobs:
 
       - name: Get MacOS binary
         if: env.RELEASE_ID
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: CREXX-MacOS
           path: CREXX-MacOS

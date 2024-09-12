@@ -317,6 +317,10 @@ int rxldmod(rxvm_context *context, char *file_name) {
         rxpa_functions.setfloat = rxpa_setfloat;
         rxpa_functions.getfloat = rxpa_getfloat;
 
+        // Exit Function Management
+        rxpa_functions.setsayexit = rxpa_setsayexit;
+        rxpa_functions.resetsayexit = rxpa_resetsayexit;
+
         // Load the plugin - and run the plugin initialization function
         // Create the filename by appending ".rxplugin" to the file name
         char *full_file_name = malloc(strlen(file_name) + strlen(".rxplugin") + 1);
@@ -346,7 +350,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
             current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
         } else {
-            DEBUG("Failed to load plugin %s\n", file_name);
+            DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
             free_rxpa_context(current_rxpa_context);
             return(-1);
         }
@@ -545,6 +549,10 @@ int rxldmodp(rxvm_context *context) {
     rxpa_functions.getint = rxpa_getint;
     rxpa_functions.setfloat = rxpa_setfloat;
     rxpa_functions.getfloat = rxpa_getfloat;
+
+    // Exit Function Management
+    rxpa_functions.setsayexit = rxpa_setsayexit;
+    rxpa_functions.resetsayexit = rxpa_resetsayexit;
 
     // Create rxpa_context and module
     char* dummy_file_name = "statically_linked_plugins";
