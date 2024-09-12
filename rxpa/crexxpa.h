@@ -4,7 +4,7 @@
 #ifndef CREXX_PA_H_
 #define CREXX_PA_H_
 
-#define rxpa_version "crexx-f0052"
+#define rxpa_version "crexx-HF001"
 
 // Plugin Support Functions and Macros
 

@@ -5,7 +5,7 @@
 #include "rxbin.h"
 #include "rxpa.h"
 
-#define rxversion "crexx-f0052"
+#define rxversion "crexx-HF001"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 

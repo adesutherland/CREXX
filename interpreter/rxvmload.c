@@ -350,7 +350,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
             current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
         } else {
-            DEBUG("Failed to load plugin %s\n", file_name);
+            DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
             free_rxpa_context(current_rxpa_context);
             return(-1);
         }

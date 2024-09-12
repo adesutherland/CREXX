@@ -3809,6 +3809,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SPAWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 int command_rc = 0;
+                int spawn_rc = 0;
                 REDIRECT *pIn = 0;
                 REDIRECT *pOut = 0;
                 REDIRECT *pErr = 0;
@@ -3823,7 +3824,13 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 if (op3R->num_attributes > 2) pErr = (REDIRECT*)(op3R->attributes[2])->binary_value;
 
                 /* op3R->attributes[2] is the environment variables */
-                if (shellspawn(command, pIn, pOut, pErr, op3R->attributes[3], &command_rc, &errorText)) {
+                spawn_rc = shellspawn(command, pIn, pOut, pErr, op3R->attributes[3], &command_rc, &errorText);
+                if (spawn_rc == SHELLSPAWN_NOFOUND) {
+                    signal_details = "Command Not Found";
+                    free(command);
+                    goto FAILURE;
+                }
+                if (spawn_rc) {
                     signal_details = errorText;
                     free(command);
                     goto FAILURE;

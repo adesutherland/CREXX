@@ -1,5 +1,7 @@
 CREXX History / Change Log
-
+HF001 - Hotfix for Windows
+        Fixed Windows DLL Load in current directory
+        Fixed Removal of "\r" in spawned (ADDRESS) Windows Command io Redirect
 F0052 - Fixes and enhancements
         RXPA - Added an "exit" to trap say instruction output
         Compiler - Fix Register swap back after a function call with global register

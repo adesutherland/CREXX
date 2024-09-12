@@ -524,11 +524,18 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
                 if (!buffer) buffer = add_new_element(context->reg);
 #ifdef _WIN32
                 /* Remove the \r if it is there */
-                if (i > 0 && lpBuffer[i - 1] == '\r')
-                    if (i - start - 1) string_append_chars(buffer, lpBuffer + start, i - start - 1);
+                if (i > 0 && lpBuffer[i - 1] == '\r') {
+                    if (i - start - 1)
+                        string_append_chars(buffer, lpBuffer + start,
+                                            i - start - 1);
+                }
                 else
 #endif
-                    if (i - start) string_append_chars(buffer, lpBuffer + start, i - start);
+                {
+                    if (i - start)
+                        string_append_chars(buffer, lpBuffer + start,
+                                            i - start);
+                }
                 buffer = 0;
                 start = i + 1;
             }
