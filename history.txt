@@ -1,4 +1,5 @@
 CREXX History / Change Log
+F0049 - Decimal Arithmetic
 HF001 - Hotfix for Windows
         Fixed Windows DLL Load in current directory
         Fixed Removal of "\r" in spawned (ADDRESS) Windows Command io Redirect

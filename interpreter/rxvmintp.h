@@ -6,7 +6,7 @@
 #include "rxpa.h"
 #include "../decimal/decNumber.h"
 
-#define rxversion "crexx-HF001"
+#define rxversion "crexx-F0049"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 

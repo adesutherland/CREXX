@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define rxversion "crexx-HF001"
+#define rxversion "crexx-F0049"
 
 #define NAME_BUFFER_SIZE 256
 #define GLOBAL_SYMBOL "rx__pg"

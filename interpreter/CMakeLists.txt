@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is ab
 # Bare Interpreter
 # Threaded Version
 add_executable(rxvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.cexitfunc.c rxpafuncs.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
 	set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -24,7 +24,7 @@ add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxa
         ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
 add_dependencies(rxbvm machine avl_tree rxpa platform decimal)
 target_link_libraries(rxbvm machine avl_tree rxpa platform decimal m)
-)
+
 add_dependencies(rxbvm machine avl_tree rxpa platform)
 target_link_libraries(rxbvm machine avl_tree rxpa platform m)
 target_include_directories(rxbvm PRIVATE . ${CMAKE_BINARY_DIR}/machine
@@ -72,7 +72,7 @@ target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 
 # Threaded Version
 add_library(rxvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c rxspawn.cexitfunc.c
+        ../utf8/utf.h ../machine/rxbin.h ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c rxspawn.c exitfunc.c
         rxpafuncs.c)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -83,7 +83,7 @@ target_include_directories(rxvml PRIVATE . ${CMAKE_BINARY_DIR}/machine
 
 # Bytecode Version
 add_library(rxbvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c ../avl_tree/rxastree.h
-        ../utf8/utf.h ../machine/rxbin.h rxspawn.cexitfunc.c rxpafuncs.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
+        ../utf8/utf.h ../machine/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c ../decimal/decNumber.h ../decimal/decNumber.c ../decimal/decContext.h ../decimal/decContext.c)
 add_dependencies(rxbvml machine avl_tree rxpa platform decimal)
 target_include_directories(rxbvml PRIVATE . ${CMAKE_BINARY_DIR}/machine
         ../assembler ../machine ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../decimal)
