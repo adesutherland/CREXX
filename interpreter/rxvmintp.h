@@ -4,52 +4,10 @@
 #include "rxas.h"
 #include "rxbin.h"
 #include "rxpa.h"
-#include "../decimal/decNumber.h"
+#include "rxvalue.h"
+#include "../icu/decNumber.h"
 
 #define rxversion "crexx-F0049"
-
-#define SMALLEST_STRING_BUFFER_LENGTH 32
-
-typedef struct value value;
-
-typedef union {
-    /* todo - these flag definitions are not used and are not correct */
-    struct {
-        unsigned int type_object : 1;
-        unsigned int type_string : 1;
-        unsigned int type_decimal : 1;
-        unsigned int type_float : 1;
-        unsigned int type_int : 1;
-    };
-    unsigned int all_type_flags;
-} value_type;
-
-struct value {
-    /* bit field to store value status - these are explicitly set (not automatic at all) */
-    value_type status;
-
-    /* Value */
-    rxinteger int_value;
-    double float_value;
-    decNumber *decimal_value; /* TODO */
-    char *string_value;
-    size_t string_length;
-    size_t string_buffer_length;
-    size_t string_pos;
-#ifndef NUTF8
-    size_t string_chars;
-    size_t string_char_pos;
-#endif
-    char *binary_value;
-    size_t binary_length;
-    value **attributes;
-    value **unlinked_attributes;
-    value **attribute_buffers;
-    size_t max_num_attributes;
-    size_t num_attributes;
-    size_t num_attribute_buffers;
-    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH];
-};
 
 /* Module Structure */
 typedef struct module {
@@ -140,7 +98,7 @@ struct stack_frame {
                                     else REG_OP(1) = value_char_f(current_frame,val); }
 // TODO: String to integer just for real integers, or stop converting at "."
 // maximum size of rxinteger is 20 digits plus sign
-// maximum size of double is about 16 decimal digits plus sign
+// maximum size of double is about 16 icu digits plus sign
 
 #define S2INT(t,s)                 { if ((s)->string_length>20)  goto convlength;                       \
                                     (s)->string_value[(s)->string_length]='\0';                         \

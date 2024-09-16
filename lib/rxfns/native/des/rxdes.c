@@ -16,7 +16,7 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include "desbase.h"    // DES encryption/decryption functions
 
-// Helper function to convert a hex digit to a decimal digit (0-15)
+// Helper function to convert a hex digit to a icu digit (0-15)
 // Returns -1 if the character is not a valid hex digit
 static int hex2dec(char c)
 {
