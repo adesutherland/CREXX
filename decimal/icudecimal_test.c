@@ -35,22 +35,22 @@ int main(int argc, char *argv[]) {
     // Add the numbers and print the result
     plugin->decFloatAdd(plugin, &result, &a, &b);
     plugin->decFloatToString(plugin, &result, string);
-    printf("ADD %s\n", string);
+    printf("ADD:%s:\n", string);
 
     // Subtract the numbers and print the result
     plugin->decFloatSub(plugin, &result, &a, &b);
     plugin->decFloatToString(plugin, &result, string);
-    printf("SUB %s\n", string);
+    printf("SUB:%s:\n", string);
 
     // Multiply the numbers and print the result
     plugin->decFloatMul(plugin, &result, &a, &b);
     plugin->decFloatToString(plugin, &result, string);
-    printf("MUL %s\n", string);
+    printf("MUL:%s:\n", string);
 
     // Divide the numbers and print the result
     plugin->decFloatDiv(plugin, &result, &a, &b);
     plugin->decFloatToString(plugin, &result, string);
-    printf("DIV %s\n", string);
+    printf("DIV:%s:\n", string);
 
     // Free the memory
     if (a.decimal_value) {

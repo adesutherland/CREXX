@@ -87,6 +87,8 @@ void decFloatFromString(decplugin *plugin, value *result, const char *string) {
  * getRequiredStringSize() bytes */
 void decFloatToString(decplugin *plugin, const value *number, char *string) {
     decContext *context = (decContext*)(plugin->private_context);
+    // Reduce/Normalize the number
+    // Note that this changes the number internals although it should not change the number's value
     decNumberReduce(number->decimal_value, number->decimal_value, context);
     decNumberToString(number->decimal_value, string);
 }
