@@ -24,8 +24,8 @@
 /*                                                                    */
 /* Error handling is the same as decNumber (qv.).                     */
 /* ------------------------------------------------------------------ */
-#include <string.h>           // [for memset/memcpy]
-#include <stdio.h>            // [for printf]
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/string.h"           // [for memset/memcpy]
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"            // [for printf]
 
 #define  DECNUMDIGITS 16      // make decNumbers with space for 16
 #include "decNumber.h"        // base number library
@@ -609,7 +609,7 @@ void decDigitsToDPD(const decNumber *dn, uInt *targ, Int shift) {
   Int  cut;                   // work
   Int  n;                     // output bunch counter
   Int  digits=dn->digits;     // digit countdown
-  uInt dpd;                   // densely packed icu value
+  uInt dpd;                   // densely packed decimal value
   uInt bin;                   // binary value 0-999
   uInt *uout=targ;            // -> current output uInt
   uInt  uoff=0;               // -> current output offset [from right]

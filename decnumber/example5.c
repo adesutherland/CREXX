@@ -8,7 +8,7 @@
 // example5.c -- decimal64 conversions
 
 #include "decimal64.h"             // decimal64 and decNumber library
-#include <stdio.h>                 // for (s)printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for (s)printf
 
 int main(int argc, char *argv[]) {
   decimal64 a;                     // working decimal64 number

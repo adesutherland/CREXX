@@ -42,7 +42,7 @@
   /* Required include                                                 */
   #include "decContext.h"
 
-  /* The decQuad icu 128-bit type, accessible by all sizes */
+  /* The decQuad decimal 128-bit type, accessible by all sizes */
   typedef union {
     uint8_t   bytes[DECQUAD_Bytes];     /* fields: 1, 5, 12, 110 bits */
     uint16_t shorts[DECQUAD_Bytes/2];

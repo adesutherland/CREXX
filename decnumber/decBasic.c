@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/* decBasic.c -- common base code for Basic icu types             */
+/* decBasic.c -- common base code for Basic decimal types             */
 /* ------------------------------------------------------------------ */
 /* Copyright (c) IBM Corporation, 2000, 2010.  All rights reserved.   */
 /*                                                                    */
@@ -761,7 +761,7 @@ static void decFiniteMultiply(bcdnum *num, uByte *bcdacc,
   // effected, allowing accumulation of the partial products (which
   // are in base-billion at each column position) into 64 bits
   // without resolving back to base=billion after each addition.
-  // These 64-bit numbers (which may contain up to 19 icu digits)
+  // These 64-bit numbers (which may contain up to 19 decimal digits)
   // are then split using the Clark & Cowlishaw algorithm (see below).
   // [Testing for 0 in the inner loop is not really a 'win']
   for (ui=bufr; ui<bufr+MULOPLEN; ui++) { // over each item in rhs
@@ -873,7 +873,7 @@ static void decFiniteMultiply(bcdnum *num, uByte *bcdacc,
   // (which are in base-billion at each column position) into 64 bits
   // [with the high-order 32 bits in each position being held at
   // offset +ACCLEN from the low-order 32 bits in the accumulator].
-  // These 64-bit numbers (which may contain up to 19 icu digits)
+  // These 64-bit numbers (which may contain up to 19 decimal digits)
   // are then split using the Clark & Cowlishaw algorithm (see
   // below).
   for (ui=bufr;; ui++) {                // over each item in rhs

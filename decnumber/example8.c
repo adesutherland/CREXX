@@ -12,7 +12,7 @@
 
 #include "decQuad.h"               // decQuad library
 #include "decimal128.h"            // interface to decNumber
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 int main(int argc, char *argv[]) {
   decQuad a;                       // working decQuad

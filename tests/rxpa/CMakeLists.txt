@@ -39,10 +39,10 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-	${CMAKE_SOURCE_DIR}/icu/decNumber.h
-	${CMAKE_SOURCE_DIR}/icu/decNumber.c
-	${CMAKE_SOURCE_DIR}/icu/decContext.h
-	${CMAKE_SOURCE_DIR}/icu/decContext.c)
+	${CMAKE_SOURCE_DIR}/decnumber/decNumber.h
+	${CMAKE_SOURCE_DIR}/decnumber/decNumber.c
+	${CMAKE_SOURCE_DIR}/decnumber/decContext.h
+	${CMAKE_SOURCE_DIR}/decnumber/decContext.c)
 # Set the performance properties
 set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -128,10 +128,10 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-	${CMAKE_SOURCE_DIR}/icu/decNumber.h
-	${CMAKE_SOURCE_DIR}/icu/decNumber.c
-	${CMAKE_SOURCE_DIR}/icu/decContext.h
-	${CMAKE_SOURCE_DIR}/icu/decContext.c)
+	${CMAKE_SOURCE_DIR}/decnumber/decNumber.h
+	${CMAKE_SOURCE_DIR}/decnumber/decNumber.c
+	${CMAKE_SOURCE_DIR}/decnumber/decContext.h
+	${CMAKE_SOURCE_DIR}/decnumber/decContext.c)
 # Set the performance properties
 set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)

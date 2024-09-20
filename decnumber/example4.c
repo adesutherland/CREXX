@@ -10,11 +10,11 @@
 
 #define  DECNUMDIGITS 38           // work with up to 38 digits
 #include "decNumber.h"             // base number library
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 // [snip...
-#include <signal.h>                // signal handling
-#include <setjmp.h>                // setjmp/longjmp
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/signal.h"                // signal handling
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/setjmp.h"                // setjmp/longjmp
 
 jmp_buf preserve;                  // stack snapshot
 

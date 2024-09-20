@@ -22,8 +22,8 @@
 #include "rxastree.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
-#include "../icu/decNumber.h"
-#include "../icu/decNumberLocal.h"
+#include "../decnumber/decNumber.h"
+#include "../decnumber/decNumberLocal.h"
 
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
@@ -925,7 +925,7 @@ START_OF_INSTRUCTIONS
 /* todo find better place */
     decContext set;                  // working context
 
-    char decstring[255];             // string for icu -> string conversion
+    char decstring[255];             // string for decimal -> string conversion
     int bytes4Digits;                // calculated bytes for n digits
 
 #define DECPRT(vx,tx)    {decNumberToString(vx->decimal_value, decstring); \
@@ -952,7 +952,7 @@ START_OF_INSTRUCTIONS
 #define BRANCHTO(indx)      {next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(indx); \
                            CALC_DISPATCH_MANUAL; DISPATCH;}
 /* ------------------------------------------------------------------------------------
- * Convert icu string to Decimal                              added August 2024 pej
+ * Convert decimal string to Decimal                              added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(STOD_REG)
@@ -1062,7 +1062,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DADD R%lu,R%lu,%lld\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     decContext(32,0)       // 64 digits, 0 : no trap, this needs to be set every time
     AllocDecimalStorage(op1R, set.digits+1);  // allocate and assign to register
-    STR2D(op1R,op3R)      // convert float string to icu
+    STR2D(op1R,op3R)      // convert float string to decimal
     DADD(op1R,op2R,op1R)  // add op2+op3
 /* todo remove*/  DECPRT(op1R, "ADD Result REG 1")
     CheckStatus()
@@ -2328,7 +2328,7 @@ START_OF_INSTRUCTIONS
             REG_VAL(2)->int_value++;
             DISPATCH
 /* ------------------------------------------------------------------------------------
- *  ISEX   op1 = -op1  icu                                    pej 2. September 2021
+ *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1)
@@ -2337,7 +2337,7 @@ START_OF_INSTRUCTIONS
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  FSEX   op1 = -op1  icu                                    pej 2. September 2021
+ *  FSEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FSEX_REG) CALC_DISPATCH(1)

@@ -5,7 +5,7 @@
  * Created by Adrian Sutherland on 15/09/2024.
  *
  * -------------------------------------------------------------------------------
- * The following parameters have been tuned in icu decNumber for CREXX:
+ * The following parameters have been tuned in decimal decNumber for CREXX:
  * DECDPUN = 8       # For 64-bit (Overriding 3)
  * DECNUMDIGITS = 64 # Default (Overriding 100)
  * DECBUFFER = 64    # Internal Buffer size avoiding malloc (Overriding 36)
@@ -15,8 +15,8 @@
  * -------------------------------------------------------------------------------
 */
 #include "decplugin.h"
-#include "decNumber.h"
-#include "decNumberLocal.h"
+#include "../decnumber/decNumber.h"
+#include "../decnumber/decNumberLocal.h"
 
 /* Ensure that the decNumber is big enough to hold the number */
 static void EnsureCapacity(value *number, size_t digits) {

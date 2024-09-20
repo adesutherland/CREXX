@@ -5,7 +5,7 @@
 #include "rxbin.h"
 #include "rxpa.h"
 #include "rxvalue.h"
-#include "../icu/decNumber.h"
+#include "../decnumber/decNumber.h"
 
 #define rxversion "crexx-F0049"
 
@@ -98,7 +98,7 @@ struct stack_frame {
                                     else REG_OP(1) = value_char_f(current_frame,val); }
 // TODO: String to integer just for real integers, or stop converting at "."
 // maximum size of rxinteger is 20 digits plus sign
-// maximum size of double is about 16 icu digits plus sign
+// maximum size of double is about 16 decimal digits plus sign
 
 #define S2INT(t,s)                 { if ((s)->string_length>20)  goto convlength;                       \
                                     (s)->string_value[(s)->string_length]='\0';                         \

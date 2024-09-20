@@ -82,7 +82,7 @@
 #define AssertOp(x,y,op) AssertExpType(x,y,op,long,"%ld")
 
 // Same as above but the values in the error report
-// are printed in hex rather than icu.
+// are printed in hex rather than decimal.
 #define AssertEqHex(x,y) AssertHexOp(x,y,==)
 #define AssertNeHex(x,y) AssertHexOp(x,y,!=)
 #define AssertGtHex(x,y) AssertHexOp(x,y,>)

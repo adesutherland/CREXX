@@ -483,10 +483,10 @@ decNumber * decNumberFromString(decNumber *dn, const char chars[],
   Unit  resbuff[SD2U(DECBUFFER+9)];// local buffer in case need temporary
                                    // [+9 allows for ln() constants]
   Unit  *allocres=NULL;            // -> allocated result, iff allocated
-  Int   d=0;                       // count of digits found in icu part
+  Int   d=0;                       // count of digits found in decimal part
   const char *dotchar=NULL;        // where dot was found
-  const char *cfirst=chars;        // -> first character of icu part
-  const char *last=NULL;           // -> last digit of icu part
+  const char *cfirst=chars;        // -> first character of decimal part
+  const char *last=NULL;           // -> last digit of decimal part
   const char *c;                   // work
   Unit  *up;                       // ..
   #if DECDPUN>1
@@ -505,10 +505,10 @@ decNumber * decNumberFromString(decNumber *dn, const char chars[],
       if (*c>='0' && *c<='9') {    // test for Arabic digit
         last=c;
         d++;                       // count of real digits
-        continue;                  // still in icu part
+        continue;                  // still in decimal part
         }
       if (*c=='.' && dotchar==NULL) { // first '.'
-        dotchar=c;                 // record offset into icu part
+        dotchar=c;                 // record offset into decimal part
         if (c==cfirst) cfirst++;   // first digit must follow
         continue;}
       if (c==chars) {              // first in string...
@@ -630,7 +630,7 @@ decNumber * decNumberFromString(decNumber *dn, const char chars[],
       #endif
       } // at least one leading 0
 
-    // Handle icu point...
+    // Handle decimal point...
     if (dotchar!=NULL && dotchar<last)  // non-trailing '.' found?
       exponent-=(last-dotchar);         // adjust exponent
     // [we can now ignore the .]
@@ -5285,7 +5285,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
     // The comparator (tiny) needs just one digit, so use the
     // decNumber d for it (reused as the divisor, etc., below); its
     // exponent is such that if x is positive it will have
-    // set->digits-1 zeros between the icu point and the digit,
+    // set->digits-1 zeros between the decimal point and the digit,
     // which is 4, and if x is negative one more zero there as the
     // more precise result will be of the form 0.9999999 rather than
     // 1.0000001.  Hence, tiny will be 0.0000004  if digits=7 and x>0
@@ -5317,7 +5317,7 @@ decNumber * decExpOp(decNumber *res, const decNumber *rhs,
     aset.clamp=0;                       // and no concrete format
 
     // calculate the adjusted (Hull & Abrham) exponent (where the
-    // icu point is just to the left of the coefficient msd)
+    // decimal point is just to the left of the coefficient msd)
     h=rhs->exponent+rhs->digits;
     // if h>8 then 10**h cannot be calculated safely; however, when
     // h=8 then exp(|rhs|) will be at least exp(1E+7) which is at
@@ -5685,7 +5685,7 @@ decNumber * decLnOp(decNumber *res, const decNumber *rhs,
 
     // Prepare an initial estimate in acc. Calculate this by
     // considering the coefficient of x to be a normalized fraction,
-    // f, with the icu point at far left and multiplied by
+    // f, with the decimal point at far left and multiplied by
     // 10**r.  Then, rhs=f*10**r and 0.1<=f<1, and
     //   ln(x) = ln(f) + ln(10)*r
     // Get the initial estimate for ln(f) from a small lookup

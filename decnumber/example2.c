@@ -5,12 +5,12 @@
 /* ----------------------------------------------------------------+- */
 /*                                                 right margin -->|  */
 
-// example3.c -- calculate compound interest, passive checking
+// example2.c -- calculate compound interest
 // Arguments are investment, rate (%), and years
 
 #define  DECNUMDIGITS 38           // work with up to 38 digits
 #include "decNumber.h"             // base number library
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 int main(int argc, char *argv[]) {
   int need=3;
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     return 1;
     }
 
-  { // start of Example 2 segment
+  { // excerpt for User's Guide starts here--------------------------|
   decNumber one, mtwo, hundred;                   // constants
   decNumber start, rate, years;                   // parameters
   decNumber total;                                // result
@@ -33,27 +33,15 @@ int main(int argc, char *argv[]) {
   decNumberFromString(&mtwo,     "-2", &set);
   decNumberFromString(&hundred, "100", &set);
 
-// [snip...
   decNumberFromString(&start, argv[1], &set);     // parameter words
   decNumberFromString(&rate,  argv[2], &set);
   decNumberFromString(&years, argv[3], &set);
-  if (set.status & DEC_Errors) {
-    printf("An input argument word was invalid [%s]\n",
-           decContextStatusToString(&set));
-    return 1;
-    }
+
   decNumberDivide(&rate, &rate, &hundred, &set);  // rate=rate/100
   decNumberAdd(&rate, &rate, &one, &set);         // rate=rate+1
   decNumberPower(&rate, &rate, &years, &set);     // rate=rate^years
   decNumberMultiply(&total, &rate, &start, &set); // total=rate*start
   decNumberRescale(&total, &total, &mtwo, &set);  // two digits please
-  if (set.status & DEC_Errors) {
-    set.status &= DEC_Errors;                     // keep only errors
-    printf("Result could not be calculated [%s]\n",
-           decContextStatusToString(&set));
-    return 1;
-    }
-// ...snip]
 
   decNumberToString(&total, string);
   printf("%s at %s%% for %s years => %s\n",

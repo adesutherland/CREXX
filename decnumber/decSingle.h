@@ -42,7 +42,7 @@
   #include "decQuad.h"
   #include "decDouble.h"
 
-  /* The decSingle icu 32-bit type, accessible by all sizes */
+  /* The decSingle decimal 32-bit type, accessible by all sizes */
   typedef union {
     uint8_t   bytes[DECSINGLE_Bytes];   /* fields: 1, 5, 6, 20 bits */
     uint16_t shorts[DECSINGLE_Bytes/2];

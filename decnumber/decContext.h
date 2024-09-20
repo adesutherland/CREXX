@@ -93,7 +93,7 @@
   #define DEC_MIN_EMIN  -999999999
   #define DEC_MAX_MATH      999999 /* max emax, etc., for math funcs. */
 
-  /* Classifications for icu numbers, aligned with 754 (note that */
+  /* Classifications for decimal numbers, aligned with 754 (note that */
   /* 'normal' and 'subnormal' are meaningful only with a decContext   */
   /* or a fixed size format).                                         */
   enum decClass {

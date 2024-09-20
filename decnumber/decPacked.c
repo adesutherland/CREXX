@@ -22,13 +22,13 @@
 /*   conversions to and from string                                   */
 /*   arithmetic routines                                              */
 /*   utilities.                                                       */
-/* Conversions from decNumber to and from densely packed icu      */
+/* Conversions from decNumber to and from densely packed decimal      */
 /* formats are provided by the decimal32 through decimal128 modules.  */
 /* ------------------------------------------------------------------ */
 
-#include <string.h>           // for NULL
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/string.h"           // for NULL
 #include "decNumber.h"        // base number library
-#include "decPacked.h"        // packed icu
+#include "decPacked.h"        // packed decimal
 #include "decNumberLocal.h"   // decNumber local types, etc.
 
 /* ------------------------------------------------------------------ */
@@ -40,7 +40,7 @@
 /*   dn     is the decNumber                                          */
 /*   returns bcd, or NULL if error                                    */
 /*                                                                    */
-/* The number is converted to a BCD packed icu byte array,        */
+/* The number is converted to a BCD packed decimal byte array,        */
 /* right aligned in the bcd array, whose length is indicated by the   */
 /* second parameter.  The final 4-bit nibble in the array will be a   */
 /* sign nibble, C (1100) for + and D (1101) for -.  Unused bytes and  */
@@ -129,7 +129,7 @@ uByte * decPackedFromNumber(uByte *bcd, Int length, Int *scale,
 /*   dn     is the decNumber [with space for length*2 digits]         */
 /*   returns dn, or NULL if error                                     */
 /*                                                                    */
-/* The BCD packed icu byte array, together with an associated     */
+/* The BCD packed decimal byte array, together with an associated     */
 /* scale, is converted to a decNumber.  The BCD array is assumed full */
 /* of digits, and must be ended by a 4-bit sign nibble in the least   */
 /* significant four bits of the final byte.                           */

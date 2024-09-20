@@ -470,7 +470,7 @@ void init_ops() {
 
     instr_f("dsex", "Decimal op1 = -op1 (sign change)", OP_REG, OP_NONE,OP_NONE);
     // ---------------------------------------------------------------------------------------
-    // end of icu instructions
+    // end of decimal instructions
     // ---------------------------------------------------------------------------------------
 
     /* ENDINSTRUCTIONS */

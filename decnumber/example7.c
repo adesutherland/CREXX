@@ -10,7 +10,7 @@
 // compile: example7.c decContext.c decQuad.c
 
 #include "decQuad.h"               // decQuad library
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 int main(int argc, char *argv[]) {
   decQuad a, b;                    // working decQuads

@@ -41,7 +41,7 @@
   #include "decContext.h"
   #include "decQuad.h"
 
-  /* The decDouble icu 64-bit type, accessible by all sizes */
+  /* The decDouble decimal 64-bit type, accessible by all sizes */
   typedef union {
     uint8_t   bytes[DECDOUBLE_Bytes];   /* fields: 1, 5, 8, 50 bits */
     uint16_t shorts[DECDOUBLE_Bytes/2];

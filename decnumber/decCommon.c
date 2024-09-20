@@ -651,7 +651,7 @@ decFloat * decFloatFromBCD(decFloat *df, Int exp, const uByte *bcdar,
 /*  df is the target decFloat                                         */
 /*  exp is the in-range unbiased exponent, q, or a special value in   */
 /*    the form returned by decFloatGetExponent                        */
-/*  packed holds DECPMAX packed icu digits plus a sign nibble     */
+/*  packed holds DECPMAX packed decimal digits plus a sign nibble     */
 /*    (all 6 codes are OK); the first (MSD) is ignored if df is a NaN */
 /*    and all except sign are ignored if df is infinite.  For DOUBLE  */
 /*    and QUAD the first (pad) nibble is also ignored in all cases.   */
@@ -693,7 +693,7 @@ decFloat * decFloatFromPacked(decFloat *df, Int exp, const uByte *packed) {
 /*  df is the target decFloat                                         */
 /*  exp is the in-range unbiased exponent, q, or a special value in   */
 /*    the form returned by decFloatGetExponent                        */
-/*  packed holds DECPMAX packed icu digits plus a sign nibble     */
+/*  packed holds DECPMAX packed decimal digits plus a sign nibble     */
 /*    (all 6 codes are OK); the first (MSD) must be 0 if df is a NaN  */
 /*    and all digits must be 0 if df is infinite.  For DOUBLE and     */
 /*    QUAD the first (pad) nibble must be 0.                          */
@@ -777,7 +777,7 @@ decFloat * decFloatFromString(decFloat *result, const char *string,
                               decContext *set) {
   Int    digits;                   // count of digits in coefficient
   const  char *dotchar=NULL;       // where dot was found [NULL if none]
-  const  char *cfirst=string;      // -> first character of icu part
+  const  char *cfirst=string;      // -> first character of decimal part
   const  char *c;                  // work
   uByte *ub;                       // ..
   uInt   uiwork;                   // for macros
@@ -803,7 +803,7 @@ decFloat * decFloatFromString(decFloat *result, const char *string,
       if (*c=='\0') break;              // most common non-digit
       if (*c=='.') {
         if (dotchar!=NULL) break;       // not first '.'
-        dotchar=c;                      // record offset into icu part
+        dotchar=c;                      // record offset into decimal part
         continue;}
       if (c==string) {                  // first in string...
         if (*c=='-') {                  // valid - sign
@@ -1147,7 +1147,7 @@ uInt decFloatRadix(const decFloat *df) {
 /* The following function is not available if DECPRINT=0              */
 #if DECPRINT
 /* ------------------------------------------------------------------ */
-/* decFloatShow -- printf a decFloat in hexadecimal and icu       */
+/* decFloatShow -- printf a decFloat in hexadecimal and decimal       */
 /*   df  is the decFloat to show                                      */
 /*   tag is a tag string displayed with the number                    */
 /*                                                                    */
@@ -1155,7 +1155,7 @@ uInt decFloatRadix(const decFloat *df) {
 /* ------------------------------------------------------------------ */
 void decFloatShow(const decFloat *df, const char *tag) {
   char hexbuf[DECBYTES*2+DECBYTES/4+1]; // NB blank after every fourth
-  char buff[DECSTRING];                 // for value in icu
+  char buff[DECSTRING];                 // for value in decimal
   Int i, j=0;
 
   for (i=0; i<DECBYTES; i++) {
@@ -1438,7 +1438,7 @@ char * decFloatToEngString(const decFloat *df, char *string){
   } // decFloatToEngString
 
 /* ------------------------------------------------------------------ */
-/* decFloatToPacked -- convert decFloat to Packed icu + exponent  */
+/* decFloatToPacked -- convert decFloat to Packed decimal + exponent  */
 /*                                                                    */
 /*  df is the source decFloat                                         */
 /*  exp will be set to the unbiased exponent, q, or to a special      */

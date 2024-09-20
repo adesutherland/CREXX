@@ -10,7 +10,7 @@
 
 #define  DECNUMDIGITS 34           // work with up to 34 digits
 #include "decNumber.h"             // base number library
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 int main(int argc, char *argv[]) {
   decNumber a, b;                  // working numbers

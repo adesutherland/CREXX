@@ -9,7 +9,7 @@
 // Values are investment, rate (%), and years
 
 #include "decPacked.h"             // base number library
-#include <stdio.h>                 // for printf
+#include "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/stdio.h"                 // for printf
 
 int main(int argc, char *argv[]) {
   { // excerpt for User's Guide starts here--------------------------|
