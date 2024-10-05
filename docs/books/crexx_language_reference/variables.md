@@ -24,6 +24,3 @@ Variables can also be declared and initialized by class name.
 * Class Instance \= .ACLASS(ARG1,ARG2) via a factory function with 2 arguments
 
 Once a variable has been assigned a type, then the type cannot be changed.
-
-# 
-
