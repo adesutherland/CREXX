@@ -14,6 +14,9 @@
  * DECSUBSET = 0     # No subset - possibly higher performance (Default)
  * -------------------------------------------------------------------------------
 */
+
+#define DEC_PLUGIN decnumber
+
 #include "decplugin.h"
 #include "../decnumber/decNumber.h"
 #include "../decnumber/decNumberLocal.h"
@@ -61,17 +64,17 @@ static void EnsureCapacity(value *number, size_t digits) {
 /* Definitions of each of the decimal functions */
 
 /* Get the number of digits in the decimal context */
-size_t getDigits(decplugin *plugin) {
+static size_t getDigits(decplugin *plugin) {
     return ((decContext*)(plugin->private_context))->digits;
 }
 
 /* Set the number of digits in the decimal context */
-void setDigits(decplugin *plugin, size_t digits) {
+static void setDigits(decplugin *plugin, size_t digits) {
     ((decContext*)(plugin->private_context))->digits = (int32_t)digits;
 }
 
 /* Get the required string size for the decimal context */
-size_t getRequiredStringSize(decplugin *plugin) {
+static size_t getRequiredStringSize(decplugin *plugin) {
     return ((decContext*)(plugin->private_context))->digits + 14;
 }
 
@@ -85,7 +88,7 @@ void decFloatFromString(decplugin *plugin, value *result, const char *string) {
 /* Convert a decimal number to a string */
 /* The sttring must be allocated by the caller and should be at least
  * getRequiredStringSize() bytes */
-void decFloatToString(decplugin *plugin, const value *number, char *string) {
+static void decFloatToString(decplugin *plugin, const value *number, char *string) {
     decContext *context = (decContext*)(plugin->private_context);
     // Reduce/Normalize the number
     // Note that this changes the number internals although it should not change the number's value
@@ -94,31 +97,37 @@ void decFloatToString(decplugin *plugin, const value *number, char *string) {
 }
 
 /* Add two decimal numbers */
-void decFloatAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
+static void decFloatAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
     EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
     decNumberAdd(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
 }
 
 /* Subtract two decimal numbers */
-void decFloatSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
+static void decFloatSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
     EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
     decNumberSubtract(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
 }
 
 /* Multiply two decimal numbers */
-void decFloatMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
+static void decFloatMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
     EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
     decNumberMultiply(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
 }
 
 /* Divide two decimal numbers */
-void decFloatDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
+static void decFloatDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
     EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
     decNumberDivide(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
 }
 
+/* Function to destroy a decimal plugin */
+static void destroy_decplugin(decplugin *plugin) {
+    free(plugin->private_context);
+    free(plugin);
+}
+
 /* Function to create a new decimal plugin */
-decplugin *new_decplugin() {
+static decplugin *new_decplugin() {
     /* Allocate memory for the context */
     decContext* context = malloc(sizeof(decContext));
     decContextDefault(context, DEC_INIT_BASE); // initialize
@@ -128,6 +137,7 @@ decplugin *new_decplugin() {
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
     plugin->private_context = context;
+    plugin->free = destroy_decplugin;
     plugin->getDigits = getDigits;
     plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
@@ -138,13 +148,8 @@ decplugin *new_decplugin() {
     plugin->decFloatMul = decFloatMul;
     plugin->decFloatDiv = decFloatDiv;
 
-
     return plugin;
 }
 
-/* Function to destroy a decimal plugin */
-void destroy_decplugin(decplugin *plugin) {
-    free(plugin->private_context);
-    free(plugin);
-}
-
+// Register the decimal plugin factory
+REGISTER_PLUGIN(new_decplugin)
