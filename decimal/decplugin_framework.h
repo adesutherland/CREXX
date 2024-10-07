@@ -14,6 +14,9 @@ struct decplugin_factory_entry {
     decplugin_factory_entry *next; // Next factory
 };
 
+// Function to load a dynamic decimal plugin
+int load_plugin(char* dir, char *name);
+
 // Function to clear the factory list
 void clear_decplugin_factories();
 

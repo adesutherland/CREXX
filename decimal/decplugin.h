@@ -38,6 +38,25 @@ typedef void (*register_decplugin_factory)(char* factory_name, decplugin_factory
 /* This is the external function provided to the plugin when linked statically */
 void register_decplugin(char* factory_name, decplugin_factory factory);
 
+// These are designed to force the expansion of macros before concatenation
+// and be compatible with both GCC and MSVC
+#define CONCATENATE(a, b) a##b
+#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
+#define STRINGIFY(x) #x
+#define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
+// Create a function name starting with _register_dec_plugin
+#define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _register_dec_plugin)
+
+// tyoedef for an initializer function - void f(void)
+typedef void (*initializer_function)();
+
+// Macro to manually call a plugin initializer which has been compiled with MANUAL_INIT
+// This is used to manually call the initializer for a statically linked plugin without
+// the need for linker 'magic'
+#define CALL_PLUGIN_INITIALIZER(plugin_id) \
+    void UNIQUE_INIT_FUNCTION_NAME(plugin_id)(void); \
+    UNIQUE_INIT_FUNCTION_NAME(plugin_id)();
+
 // DEC_PLUGIN must have a value if we are building a plugin
 #ifdef DEC_PLUGIN
 
@@ -49,7 +68,7 @@ void register_decplugin(char* factory_name, decplugin_factory factory);
 // INITIALIZER is defined to be a simple function
 #define INITIALIZER(f) \
     void _register_dec_plugin(register_decplugin_factory register_func); \
-    void _register_dec_plugin(register_decplugin_factory register_func) {register_func("DEC_PLUGIN",f);}
+    void _register_dec_plugin(register_decplugin_factory register_func) {register_func(EXPAND_AND_STRINGIFY(DEC_PLUGIN),f);}
 
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
@@ -66,6 +85,13 @@ void register_decplugin(char* factory_name, decplugin_factory factory);
 #else
 
 // Else Static build
+
+#ifdef MANUAL_PLUGIN_LINK
+// Need to manually call the initializer via macro CALL_PLUGIN_INITIALIZER(plugin_id)
+#define INITIALIZER(factory,f,plugin_name) \
+    void f(void) {register_decplugin(plugin_name,factory);}
+
+#else
 
 // With thanks to this Initializer/finalizer sample for MSVC and GCC/Clang. 2010-2016 Joe Lowe. Released into the public domain.
 #ifdef __cplusplus
@@ -85,23 +111,16 @@ void register_decplugin(char* factory_name, decplugin_factory factory);
 #else
 #define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name) {
 #endif
-#else
+
+#else // Not _MSC_VER -> GCC/Clang
 
 #define INITIALIZER(factory,f,plugin_name) \
-        static void f(void) __attribute__((constructor)); \
-        static void f(void) {register_decplugin(plugin_name,factory);}
-#endif
+    static void f(void) __attribute__((constructor)); \
+    static void f(void) {register_decplugin(plugin_name,factory);}
 
-// The LOADFUNCS macro is used to define the initialization function for the library.
-// Create a function name based on the DEC_PLUGIN
-// These are designed to force the expansion of macros before concatenation
-// and be compatible with both GCC and MSVC
-#define CONCATENATE(a, b) a##b
-#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
-#define STRINGIFY(x) #x
-#define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
-// Now create the function name
-#define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _register_dec_plugin)
+#endif // _MSC_VER
+
+#endif // MANUAL_INIT
 
 // Define the REGISTER_PLUGIN macro
 #define REGISTER_PLUGIN(factory) INITIALIZER(factory, UNIQUE_INIT_FUNCTION_NAME(DEC_PLUGIN),EXPAND_AND_STRINGIFY(DEC_PLUGIN))
@@ -109,4 +128,4 @@ void register_decplugin(char* factory_name, decplugin_factory factory);
 #endif // BUILD_DLL
 #endif // DEC_PLUGIN
 
-#endif //CREXX_DECPLUGIN_H
+#endif //CREXX_DECPLUGIN_FRAMEWORK_H

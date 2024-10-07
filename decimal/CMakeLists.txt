@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 90)
 include(${CMAKE_SOURCE_DIR}/decimal/DecPluginFunction.cmake)
 
 # Add the decimal support library
-add_library(decplugin decplugin.c decplugin.h decplugin_framework.h)
+add_library(decplugin decplugin_framework.c decplugin.h decplugin_framework.h)
 target_include_directories(decplugin PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter)
 
 # Add the decnumber dynamic plugin library
@@ -20,7 +20,7 @@ target_include_directories(mc_decimal_dynamic PRIVATE ${CMAKE_CURRENT_SOURCE_DIR
 target_link_libraries(mc_decimal_dynamic decnumber)
 add_dependencies(mc_decimal_dynamic decnumber)
 
-# Add the decnumber static plugin library
+# Add the decnumber static plugin library - with auto linking and initialising of the plugin
 add_static_decplugin_target(mc_decimal mc_decimal.c decplugin.h)
 add_dependencies(mc_decimal decplugin rxvm) # Note: For build safety we want rxvm to be built first
 target_include_directories(mc_decimal PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -29,7 +29,7 @@ target_include_directories(mc_decimal PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../int
 target_link_libraries(mc_decimal decnumber)
 add_dependencies(mc_decimal decnumber)
 
-# Add the static test1 executable
+# Add the static test1 executable - with auto linking and initialising of the plugin
 add_executable(mc_decimal_test mc_decimal_test.c)
 target_include_directories(mc_decimal_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter)
 # Ensure the linker includes the plugin
@@ -53,6 +53,23 @@ add_executable(mc_decimal_dyn_test mc_decimal_test.c)
 target_compile_definitions(mc_decimal_dyn_test PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_dyn_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter)
 target_link_libraries(mc_decimal_dyn_test decplugin mc_decimal)
+
+# Add the decnumber static plugin library - with manual linking and initialising
+add_static_decplugin_target(mc_decimal_manual mc_decimal.c decplugin.h)
+add_dependencies(mc_decimal_manual decplugin rxvm) # Note: For build safety we want rxvm to be built first
+target_include_directories(mc_decimal_manual PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(mc_decimal_manual PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../decnumber)
+target_include_directories(mc_decimal_manual PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter)
+target_link_libraries(mc_decimal_manual decnumber)
+add_dependencies(mc_decimal_manual decnumber)
+# add MANUAL_PLUGIN_LINK to the compile definitions
+target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
+
+# Add the static test1 executable - with auto linking and initialising of the plugin
+add_executable(mc_decimal_manual_test mc_decimal_test.c)
+target_include_directories(mc_decimal_manual_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../interpreter)
+target_link_libraries(mc_decimal_manual_test decplugin mc_decimal_manual)
+target_compile_definitions(mc_decimal_manual_test PRIVATE MANUAL_PLUGIN_LINK)
 
 # Enable Testing
 enable_testing()
@@ -83,3 +100,8 @@ set_tests_properties(mc_decimal_test3 PROPERTIES PASS_REGULAR_EXPRESSION
 add_test(mc_decimal_dyn_test1 mc_decimal_dyn_test 32 1 2)
 set_tests_properties(mc_decimal_dyn_test1 PROPERTIES PASS_REGULAR_EXPRESSION
         "ADD:3:.*SUB:-1:.*MUL:2:.*DIV:0\\.5:")
+
+add_test(mc_decimal_manual_test1 mc_decimal_manual_test 32 1 2)
+set_tests_properties(mc_decimal_manual_test1 PROPERTIES PASS_REGULAR_EXPRESSION
+        "ADD:3:.*SUB:-1:.*MUL:2:.*DIV:0\\.5:")
+
