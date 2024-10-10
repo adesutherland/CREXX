@@ -44,9 +44,9 @@ add_executable(testvm
 	${CMAKE_SOURCE_DIR}/decnumber/decContext.h
 	${CMAKE_SOURCE_DIR}/decnumber/decContext.c)
 # Set the performance properties
-set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
-set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
+# set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+# set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
+# set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(testvm _rxpalink)
 # Add the dependencies and link libraries
@@ -133,9 +133,9 @@ add_executable(funcvm
 	${CMAKE_SOURCE_DIR}/decnumber/decContext.h
 	${CMAKE_SOURCE_DIR}/decnumber/decContext.c)
 # Set the performance properties
-set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
-set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
+# set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+# set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
+# set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
 # Add the dependencies and link libraries
