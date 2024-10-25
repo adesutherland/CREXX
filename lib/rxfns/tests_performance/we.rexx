@@ -49,7 +49,7 @@ do i=today  to 900000
   xr = I - date('b','10 Mar 1962')
   xm = I - date('b','19 Sep 1992')
   p = xm/xr*100
-  if p = 50 then
+  if p >= 50 then
   do
     say date('n',i,'b') 'is the date René is married for half of his life to Venetia.'
     leave
@@ -59,7 +59,7 @@ do i=today-9000  to 900000
   xr = I - date('b','10 Mar 1962')
   xz = I - date('b','26 Mar 1990')
   p = xz/xr*100
-  if p = 50 then
+  if p >= 50 then
   do
     say date('n',i,'b') 'is the date René is together for half of his life with Venetia.'
     leave
