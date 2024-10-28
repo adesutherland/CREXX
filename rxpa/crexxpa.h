@@ -6,6 +6,10 @@
 
 #define rxpa_version "crexx-F0049"
 
+// plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
+//    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
+#define pluginDEBUG 0
+
 // Plugin Support Functions and Macros
 
 // Define rxinteger type
@@ -89,14 +93,18 @@ struct rxpa_initctxptr {
 // Global context variable declaration
 static struct rxpa_initctxptr _rxpa_initctx;
 static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
-
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
+#define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
+#define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) _rxpa_context->getstring((attr))
 #define SETSTRING(attr, str) _rxpa_context->setstring((attr),(str))
+#define RETURNSTR(value) _rxpa_context->setstring(RETURN,(value))
 #define SETINT(attr, value) _rxpa_context->setint((attr),(value))
+#define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
 #define GETINT(attr) _rxpa_context->getint((attr))
 #define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
+#define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
 #define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
 #define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
@@ -193,7 +201,6 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 // Plugin Function Tags
 #define PROCEDURE(p) \
         static void p(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
-
 // Arguments
 #define NUM_ARGS _numargs
 #define ARG(n) _arg[(n)]

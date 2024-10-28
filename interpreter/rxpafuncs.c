@@ -81,9 +81,15 @@ char* rxpa_getstring(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
     if (val) {
         null_terminate_string_buffer(val);
+#if pluginDEBUG>0
+        printf("Argument String '%s'\n",val->string_value);
+#endif
         return val->string_value;
     }
-    else return "";
+#if pluginDEBUG>0
+    printf("Argument String ''\n");
+#endif
+    return "";
 }
 
 /* Set a string in an attribute value */
@@ -101,6 +107,9 @@ void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger int_value) {
 /* Get an integer from an attribute value */
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
+#if pluginDEBUG>0
+    printf("Argument INT '%d'\n",val->int_value);
+#endif
     if (val) return val->int_value;
     else return 0;
 }
@@ -114,6 +123,9 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double double_value) {
 /* Get a float from an attribute value */
 double rxpa_getfloat(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument FLOAT '%g'\n",val->float_value);
+#endif
     if (val) return val->float_value;
     else return 0.0;
 }
