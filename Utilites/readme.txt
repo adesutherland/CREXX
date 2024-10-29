@@ -1,0 +1,2 @@
+The utility directory contains files which are related to CREXX, but are not directly part of the build process.It contains rexx scripts that are intended to generate stuff,
+that will later be used in various ways. It also contains unstructured notes, descriptions, ideas, etc.
