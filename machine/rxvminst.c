@@ -268,6 +268,9 @@ void init_ops() {
     instr_f("load", "Load op1 with op2", OP_REG, OP_FLOAT, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_STRING, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_CHAR, OP_NONE);
+    instr_f("load", "Load op1 with op2", OP_REG, OP_REG, OP_NONE);
+    instr_f("load", "Load op1 with op2 (non symbolic registers)", OP_INT, OP_INT, OP_NONE);
+    instr_f("load", "Load op1 with op2 (non symbolic registers)", OP_INT, OP_REG, OP_NONE);
 
     instr_f("say", "Say op1", OP_REG, OP_NONE, OP_NONE);
     instr_f("sayx", "Say op1 without line feed", OP_REG, OP_NONE, OP_NONE);

@@ -790,6 +790,23 @@ START_OF_INSTRUCTIONS
                   (CONSTSTRING_OP(2))->string);
             set_const_string(op1R, CONSTSTRING_OP(2));
             DISPATCH
+        START_INSTRUCTION(LOAD_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - LOAD R%lu,R%lu\n",
+                  REG_IDX(1), REG_IDX(2));
+            op1R=op2R;
+            DISPATCH
+
+        START_INSTRUCTION(LOAD_INT_INT) CALC_DISPATCH(2)
+            DEBUG("TRACE - LOAD R%lu,R%lu\n",
+                  (int) op1I, (int) op2I);
+            REG_OP(op1I)=REG_OP(op2I);
+        DISPATCH
+
+    START_INSTRUCTION(LOAD_INT_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - LOAD R%lu, R%lu\n",
+          REG_IDX(1), (int) op2I);
+          REG_OP(op1I)=op2R;
+    DISPATCH
 
             /* Readline - Read a line from stdin to a register */
         START_INSTRUCTION(READLINE_REG) CALC_DISPATCH(1)
