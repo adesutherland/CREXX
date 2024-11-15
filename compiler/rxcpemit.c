@@ -2055,7 +2055,6 @@ static walker_result emit_walker(walker_direction direction,
                 n = child1;
                 i = node->additional_registers + 1; /* First one is the number of arguments */
                 while (n) {
-                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     if (n->register_type != 'r' ||  n->register_num != i) {
                         /* We need to swap registers */
                         /* I have reversed arguments just for readability */
@@ -2064,6 +2063,7 @@ static walker_result emit_walker(walker_direction direction,
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
+                    if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling; i++;
                 }
 
@@ -2760,7 +2760,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 if (child1) {
                     /* We are an array */
-                    /* Essentially we are linking the found array element as the nodes result - which will need unlinking later */
+                    /* Essentially, we are linking the found array element as the nodes result - which will need unlinking later */
                     char from_reg_type = node->symbolNode->symbol->register_type;
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;

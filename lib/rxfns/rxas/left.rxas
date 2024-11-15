@@ -15,7 +15,7 @@ left()    .locals=10 .expose=rxfnsb.left
     load a3," "
 havepad:
     dec  r2
-    load r3,4  		        /* there are 4 arguments           */
+    load r3,4  		    /* there are 4 arguments           */
     swap r4,a1 			/* the string                      */
     load r5,1 			/* second argument, startpos == 1  */
     settp r5,1
@@ -23,7 +23,10 @@ havepad:
     settp r6,1
     swap r7,a3 			/* fourth argument, pad            */
     settp r7,1
-    call r1,substr(),r3		/* call substr                     */
+    call r1,substr(),r3 /* call substr                     */
+    swap r4,a1 			/* Swap back - pedantic            */
+    swap r6,a2 			/* Swap back - pedantic            */
+    swap r7,a3 			/* Swap back - pedantic            */
     ret r1
 return_empty:
     ret ""
