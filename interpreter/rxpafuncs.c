@@ -129,3 +129,37 @@ double rxpa_getfloat(rxpa_attribute_value attributeValue) {
     if (val) return val->float_value;
     else return 0.0;
 }
+
+/* Get the number of child attributes */
+rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {
+// TODO
+    return 0;
+}
+
+/* Set the number of child attributes */
+void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs) {
+// TODO
+}
+
+/* Get the nth child attribute */
+rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index) {
+// TODO
+    return NULL;
+}
+
+/* Insert a child attribute before the nth position */
+rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index) {
+// TODO
+    return NULL;
+}
+
+/* Remove the nth child attribute */
+void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
+// TODO
+}
+
+/* Swap the nth child attribute with the mth child attribute */
+void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2) {
+// TODO
+}
+

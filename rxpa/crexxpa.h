@@ -64,6 +64,20 @@ typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* G
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 typedef double (*rxpa_func_getfloat)(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
 
+// Array / Object Functions - these access the child attributes of an attribute value
+/* Get the number of child attributes */
+typedef rxinteger (*rxpa_func_getnumattrs)(rxpa_attribute_value attributeValue);
+/* Set the number of child attributes */
+typedef void (*rxpa_func_setnumattrs)(rxpa_attribute_value attributeValue, rxinteger numAttrs);
+/* Get the nth child attribute */
+typedef rxpa_attribute_value (*rxpa_func_getattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Insert a child attribute before the nth position - a blank attribute is added that can then be accessed and changed */
+typedef rxpa_attribute_value (*rxpa_func_insertattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Remove the nth child attribute */
+typedef void (*rxpa_func_removeattr)(rxpa_attribute_value attributeValue, rxinteger index);
+/* Swap the nth child attribute with the mth child attribute */
+typedef void (*rxpa_func_swapattrs)(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
+
 // Exit Functions
 typedef void (*say_exit_func)(char* message);
 typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit function */
@@ -79,6 +93,12 @@ struct rxpa_initctxptr {
     rxpa_func_getint getint;
     rxpa_func_setfloat setfloat;
     rxpa_func_getfloat getfloat;
+    rxpa_func_getnumattrs getnumattrs;
+    rxpa_func_setnumattrs setnumattrs;
+    rxpa_func_getattr getattr;
+    rxpa_func_insertattr insertattr;
+    rxpa_func_removeattr removeattr;
+    rxpa_func_swapattrs swapattrs;
     // Exit Function Management
     rxpa_set_say_exit setsayexit;
     rxpa_reset_say_exit resetsayexit;
@@ -106,6 +126,12 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
 #define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
+#define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
+#define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
+#define GETATTR(attr, index) _rxpa_context->getattr((attr),(index))
+#define INSERTATTR(attr, index) _rxpa_context->insertattr((attr),(index))
+#define REMOVEATTR(attr, index) _rxpa_context->removeattr((attr),(index))
+#define SWAPATTRS(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
 #define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
 #define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
 
@@ -178,6 +204,14 @@ void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set a
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
 double rxpa_getfloat(rxpa_attribute_value attributeValue); /* Get a float from an attribute value */
+rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
+void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
+rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
+rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index); /* Insert a child attribute before the nth position */
+void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index); /* Remove the nth child attribute */
+void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2); /* Swap the nth child attribute with the mth child attribute */
+
+// Exit Functions
 void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
 void rxpa_resetsayexit(); /* Set Say exit function */
 
@@ -193,6 +227,12 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define GETINT(attr) rxpa_getint((attr))
 #define SETFLOAT(attr, value) rxpa_setfloat((attr),(value))
 #define GETFLOAT(attr) rxpa_getfloat((attr))
+#define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
+#define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
+#define GETATTR(attr, index) rxpa_getattr((attr),(index))
+#define INSERTATTR(attr, index) rxpa_insertattr((attr),(index))
+#define REMOVEATTR(attr, index) rxpa_removeattr((attr),(index))
+#define SWAPATTRS(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
 #define SET_SAY_EXIT(func) rxpa_setsayexit((func))
 #define RESET_SAY_EXIT() rxpa_resetsayexit()
 
