@@ -21,6 +21,16 @@ if result \= 3 then do
     return 1
 end
 
+# Test Arrays with the Bubble Sort
+array.1 = 3
+array.2 = 2
+array.3 = 1
+call bubble_sort array
+if array.1 \= 1 | array.2 \= 2 | array.3 \= 3 then do
+    say 'bubble_sort() did not sort the array'
+    return 1
+end
+
 say "OK"
 
 return 0

@@ -130,6 +130,31 @@ PROCEDURE(add_floats_ref)
     RESETSIGNAL
 }
 
+// Bubble Sorts an array of integers
+PROCEDURE(bubble_sort)
+{
+    int i, j, pivot, temp;
+    int *array;
+    int size;
+
+    // Check the number of arguments
+    if (NUM_ARGS != 1) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "1 argument expected")
+
+    // Get the ayyay size
+    size = GETNUMATTRS(ARG(0));
+
+    // Bubble-sort the array
+    for (i = 0; i < size - 1; i++) {
+        for (j = 0; j < size - i - 1; j++) {
+            if (GETINT(GETATTR(ARG(0),j)) > GETINT(GETATTR(ARG(0),j + 1))) {
+                SWAPATTRS(ARG(0), j, j + 1);
+            }
+        }
+    }
+    // Make sure the signal is reset/ok
+    RESETSIGNAL
+}
+
 #endif
 
 // Functions to be provided to rexx
@@ -142,4 +167,5 @@ ADDPROC(add_integers,      "rxpatests.add_integers",        "b",     ".int",    
 ADDPROC(add_integers_ref,  "rxpatests.add_integers_ref",    "b",     ".void",      "i1 = .int, i2 = .int, expose i3 = .int");
 ADDPROC(add_floats,        "rxpatests.add_floats",          "b",     ".float",     "f1 = .float, f2 = .float");
 ADDPROC(add_floats_ref,    "rxpatests.add_floats_ref",      "b",     ".void",      "f1 = .float, f2 = .float, expose f3 = .float");
+ADDPROC(bubble_sort,       "rxpatests.bubble_sort",         "b",     ".void",      "expose a = .int[]");
 ENDLOADFUNCS

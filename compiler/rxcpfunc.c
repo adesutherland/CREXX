@@ -415,6 +415,24 @@ void rxpa_setfloat(rxpa_attribute_value attributeValue, double value)  /* Set a 
 double rxpa_getfloat(rxpa_attribute_value attributeValue)  /* Get a float from an attribute value */
     { disablerFunction("rxpa_getfloat"); return 0.0; }
 
+rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue)  /* Get the number of child attributes */
+    { disablerFunction("rxpa_getnumattrs"); return 0; }
+
+void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs)  /* Set the number of child attributes */
+    { disablerFunction("rxpa_setnumattrs"); }
+
+rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index)  /* Get the nth child attribute */
+    { disablerFunction("rxpa_getattr"); return NULL; }
+
+rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index)  /* Insert a child attribute before the nth position */
+    { disablerFunction("rxpa_insertattr"); return NULL; }
+
+void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index)  /* Remove the nth child attribute */
+    { disablerFunction("rxpa_removeattr"); }
+
+void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2)  /* Swap the nth child attribute with the mth child attribute */
+    { disablerFunction("rxpa_swapattrs"); }
+
 // Exit Function Management
 void rxpa_setsayexit(say_exit_func sayExitFunc)  /* Set Say exit function */
     { disablerFunction("rxpa_setsayexit"); }
@@ -457,6 +475,12 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.getint = rxpa_getint;
     rxpa_context.setfloat = rxpa_setfloat;
     rxpa_context.getfloat = rxpa_getfloat;
+    rxpa_context.getnumattrs = rxpa_getnumattrs;
+    rxpa_context.setnumattrs = rxpa_setnumattrs;
+    rxpa_context.getattr = rxpa_getattr;
+    rxpa_context.insertattr = rxpa_insertattr;
+    rxpa_context.removeattr = rxpa_removeattr;
+    rxpa_context.swapattrs = rxpa_swapattrs;
     rxpa_context.setsayexit = rxpa_setsayexit;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
 

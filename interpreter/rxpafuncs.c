@@ -132,34 +132,86 @@ double rxpa_getfloat(rxpa_attribute_value attributeValue) {
 
 /* Get the number of child attributes */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {
-// TODO
-    return 0;
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument NUMATTRS '%d'\n",(int)val->num_attributes);
+#endif
+    if (val) return (rxinteger)val->num_attributes;
+    else return 0;
 }
 
 /* Set the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs) {
-// TODO
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument SETNUMATTRS '%d'\n",(int)numAttrs);
+#endif
+    if (val) set_num_attributes(val, numAttrs);
 }
 
 /* Get the nth child attribute */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index) {
-// TODO
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument GETATTR '%d'\n",(int)index);
+#endif
+    if (val && index >= 0 && index < val->num_attributes) {
+        return (rxpa_attribute_value)val->attributes[index];
+    }
     return NULL;
 }
 
 /* Insert a child attribute before the nth position */
 rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index) {
-// TODO
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument INSERTATTR '%d'\n",(int)index);
+#endif
+    if (val && index >= 0 && index <= val->num_attributes) {
+        // Increase the max number of attributes
+        set_num_attributes(val, val->num_attributes + 1);
+        val->num_attributes--;
+
+        value* newval = value_f();
+        if (newval) {
+            if (index < val->num_attributes) {
+                /* Move the attributes up */
+                memmove(&val->attributes[index+1], &val->attributes[index], (val->num_attributes - index) * sizeof(value*));
+            }
+            val->attributes[index] = newval;
+            val->num_attributes++;
+            return (rxpa_attribute_value)newval;
+        }
+    }
     return NULL;
 }
 
 /* Remove the nth child attribute */
 void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
-// TODO
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument REMOVEATTR '%d'\n",(int)index);
+#endif
+    if (val && index >= 0 && index < val->num_attributes) {
+        value* oldval = val->attributes[index];
+        if (oldval) {
+            /* Move the attributes down */
+            memmove(&val->attributes[index], &val->attributes[index+1], (val->num_attributes - index - 1) * sizeof(value*));
+            val->num_attributes--;
+            clear_value(oldval);
+        }
+    }
 }
 
 /* Swap the nth child attribute with the mth child attribute */
 void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2) {
-// TODO
+    value* val = (value*)attributeValue;
+#ifdef pluginDEBUG
+    printf("Argument SWAPATTRS '%d' '%d'\n",(int)index1,(int)index2);
+#endif
+    if (val && index1 >= 0 && index1 < val->num_attributes && index2 >= 0 && index2 < val->num_attributes) {
+        value* temp = val->attributes[index1];
+        val->attributes[index1] = val->attributes[index2];
+        val->attributes[index2] = temp;
+    }
 }
-

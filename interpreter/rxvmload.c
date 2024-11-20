@@ -316,6 +316,12 @@ int rxldmod(rxvm_context *context, char *file_name) {
         rxpa_functions.getint = rxpa_getint;
         rxpa_functions.setfloat = rxpa_setfloat;
         rxpa_functions.getfloat = rxpa_getfloat;
+        rxpa_functions.getnumattrs = rxpa_getnumattrs;
+        rxpa_functions.setnumattrs = rxpa_setnumattrs;
+        rxpa_functions.getattr = rxpa_getattr;
+        rxpa_functions.insertattr = rxpa_insertattr;
+        rxpa_functions.removeattr = rxpa_removeattr;
+        rxpa_functions.swapattrs = rxpa_swapattrs;
 
         // Exit Function Management
         rxpa_functions.setsayexit = rxpa_setsayexit;
@@ -549,6 +555,12 @@ int rxldmodp(rxvm_context *context) {
     rxpa_functions.getint = rxpa_getint;
     rxpa_functions.setfloat = rxpa_setfloat;
     rxpa_functions.getfloat = rxpa_getfloat;
+    rxpa_functions.getnumattrs = rxpa_getnumattrs;
+    rxpa_functions.setnumattrs = rxpa_setnumattrs;
+    rxpa_functions.getattr = rxpa_getattr;
+    rxpa_functions.insertattr = rxpa_insertattr;
+    rxpa_functions.removeattr = rxpa_removeattr;
+    rxpa_functions.swapattrs = rxpa_swapattrs;
 
     // Exit Function Management
     rxpa_functions.setsayexit = rxpa_setsayexit;
