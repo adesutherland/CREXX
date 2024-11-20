@@ -246,6 +246,7 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define ARG(n) _arg[(n)]
 #define RETURN _return
 #define SIGNAL _signal
+#define REGISTER rxpa_attribute_value
 
 // End of LOADFUNCS
 #define ENDLOADFUNCS }

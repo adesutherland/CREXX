@@ -134,7 +134,6 @@ PROCEDURE(add_floats_ref)
 PROCEDURE(bubble_sort)
 {
     int i, j, pivot, temp;
-    int *array;
     int size;
 
     // Check the number of arguments
@@ -144,10 +143,11 @@ PROCEDURE(bubble_sort)
     size = GETNUMATTRS(ARG(0));
 
     // Bubble-sort the array
+    REGISTER array = ARG(0);
     for (i = 0; i < size - 1; i++) {
         for (j = 0; j < size - i - 1; j++) {
-            if (GETINT(GETATTR(ARG(0),j)) > GETINT(GETATTR(ARG(0),j + 1))) {
-                SWAPATTRS(ARG(0), j, j + 1);
+            if (GETINT(GETATTR(array, j)) > GETINT(GETATTR(array, j + 1))) {
+                SWAPATTRS(array, j, j + 1);
             }
         }
     }
