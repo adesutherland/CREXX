@@ -8,7 +8,7 @@
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
-#define pluginDEBUG 0
+// #define pluginDEBUG 0
 
 // Plugin Support Functions and Macros
 
@@ -118,20 +118,27 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
 #define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) _rxpa_context->getstring((attr))
+#define GETSARRAY(pnum,index) GETSTRING(GETATTR(pnum, index))
 #define SETSTRING(attr, str) _rxpa_context->setstring((attr),(str))
+#define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
 #define RETURNSTR(value) _rxpa_context->setstring(RETURN,(value))
 #define SETINT(attr, value) _rxpa_context->setint((attr),(value))
 #define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
 #define GETINT(attr) _rxpa_context->getint((attr))
+#define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
 #define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
 #define RETURNFLOAT(value) _rxpa_context->setfloat(RETURN,(value))
 #define GETFLOAT(attr) _rxpa_context->getfloat((attr))
+#define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
+#define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
+#define SETARRAYHI(attr, num) _rxpa_context->setnumattrs((attr),(num))
 #define GETATTR(attr, index) _rxpa_context->getattr((attr),(index))
 #define INSERTATTR(attr, index) _rxpa_context->insertattr((attr),(index))
 #define REMOVEATTR(attr, index) _rxpa_context->removeattr((attr),(index))
 #define SWAPATTRS(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
+#define SWAPARRAY(attr, index1, index2) _rxpa_context->swapattrs((attr),(index1),(index2))
 #define SET_SAY_EXIT(func) _rxpa_context->setsayexit((func))
 #define RESET_SAY_EXIT() _rxpa_context->resetsayexit()
 
