@@ -1,8 +1,8 @@
-# Data Types {#data-types}
+# Data Types
 
 Types in the language are named using a period (.) followed by the type name. This naming convention helps to distinguish types from other elements in the language, such as variables and procedures.
 
-## **Built-In Types** {#built-in-types}
+## **Built-In Types**
 
 The language includes a number of built-in types, which are provided by the language itself. These types include:
 
@@ -20,7 +20,7 @@ The language's type system is statically typed, which means that the types of va
 
 REXX will automatically convert / promote variable types between Integer, Float and String \- this may cause a compile time or run time error (signal).
 
-## **Taken Constants** {#taken-constants}
+## **Taken Constants**
 
 Taken \[as a\] Constants are symbols that are unassigned REXX variables, these are read-only and have a value equal to their name.
 
@@ -32,7 +32,7 @@ SAY CONSTANT\_SYM; /\* Prints "CONSTANT\_SYM" \*/
 
 CONSTANT\_SYM \= 1; /\* "CONSTANT\_SYM is a constant" error \*/ 
 
-## **Arrays** {#arrays}
+## **Arrays**
 
 These look like STEMS but actually are (at their simplistic default) 1 based dynamic arrays, with .0 giving the array size.
 
@@ -54,7 +54,7 @@ A 2-dimensional array of type float could be implicitly declared with
 
 array.1.1 \= 0.0
 
-## **Alternative Square Bracket Syntax** {#alternative-square-bracket-syntax}
+## **Alternative Square Bracket Syntax**
 
 Square brackets can be used e.g.
 
@@ -81,8 +81,6 @@ array \= .int\[-2 to \*\]       /\* 1 Dimensional, \-2 base, dynamic growth (-2,
 array \= .string\[0 to 5, 4 to 10\]  
 
 Arrays are Objects (see next and the **Classes and Interfaces** section) and can be passed to and from functions.
-
-## 
 
 ## **Objects** {#objects}
 
@@ -112,8 +110,6 @@ Note that all these values can be used concurrently. However CREXX protocols nee
 * **Binary\_length** \- Binary data length in bytes  
 * **Attributes** \- An array of child objects (which can be nested to any level). Attributes are the capability used by the compiler to store REXX class logical attributes. They are also used to store members of an array  
 * **Num\_attributes** \- The number of child objects
-
-## 
 
 ## **CREXX VM Objects** {#crexx-vm-objects}
 
@@ -160,8 +156,6 @@ Returned by the *metaloadoperand* assembler instruction (TODO review name).
 * Int\_value \= function name
 
  TODO needs to do more that get the function name \- a function object is needed
-
-### 
 
 ### *Metadata* {#metadata}
 

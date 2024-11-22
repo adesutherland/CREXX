@@ -1,4 +1,4 @@
-# Global Variables {#global-variables}
+# Global Variables
 
 Global variables are shared among modules and are linked to the namespace of the modules, similar to exposed procedures.
 

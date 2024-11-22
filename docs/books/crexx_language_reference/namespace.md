@@ -1,4 +1,4 @@
-# Namespace {#namespace}
+# Namespace
 
 In Rexx programming, the "namespace" instruction plays a crucial role in organizing and structuring modules within a program. It allows you to define a unique identifier for a module, enabling multiple modules to coexist within the same program while maintaining their own identity and scope.
 

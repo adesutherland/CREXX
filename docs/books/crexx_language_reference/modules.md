@@ -1,4 +1,4 @@
-# Modules {#modules}
+# Modules
 
 Each source file (.rexx) is compiled and assembled into a module file (\*.rxbin). These module files can be combined into a single module library through simple file concatenation. This module library can be regarded as a module itself.
 

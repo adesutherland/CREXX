@@ -1,26 +1,20 @@
 # Statements {#statements}
 
-## **ADDRESS** {#address}
+## **ADDRESS**
 
 ADDRESS … 
 
 The ADDRESS instruction is a directive that enables the transmission of commands to an external environment.
 
-## 
-
-## **ARG**  {#arg}
+## **ARG**
 
 See Procedures and Arguments Section
 
-## 
-
-## **CALL** {#call}
+## **CALL**
 
 CALL routine \[ parameter \] \[, \[ parameter \] ... \] 
 
-## 
-
-## **DO/END** {#do/end}
+## **DO/END**
 
 DO \[ repetitor \] \[ conditional \] ; \[ clauses \]
 
@@ -32,17 +26,13 @@ conditional : \= WHILE exprw UNTIL expru
 
 The DO/END statement is the command employed to iterate and group multiple statements into a singular block. This instruction consists of multiple clauses.
 
-## 
-
-## **EXIT**  {#exit}
+## **EXIT**
 
 EXIT \[ expr \] ;
 
 Causes the Rexx program to cease execution and, optionally, returns the expression expr to the calling program.
 
-## 
-
-## **IF/THEN/ELSE** {#if/then/else}
+## **IF/THEN/ELSE**
 
 IF expr \[;\] THEN \[;\] statement
 
@@ -50,75 +40,57 @@ IF expr \[;\] THEN \[;\] statement
 
 This provides the standard conditional statement structure.
 
-## 
-
-## **ITERATE** {#iterate}
+## **ITERATE**
 
 ITERATE \[ symbol \] ;
 
 The ITERATE instruction will execute the innermost, active loop in which the ITERATE instruction is situated repeatedly. If a symbol is specified, it will execute the innermost, active loop having the symbol as the control variable repeatedly.
 
-## 
-
-## **LEAVE** {#leave}
+## **LEAVE**
 
 LEAVE \[ symbol \] ;
 
 This statement terminates the innermost, active loop. If symbol is specified, it terminates the innermost, active loop having symbol as control variable. 
 
-## 
-
-## **NOP** {#nop}
+## **NOP**
 
 NOP ;
 
 The NOP instruction is the "null operation" directive; it executes without performing any operation.
 
-## 
-
-## **OPTIONS** {#options}
+## **OPTIONS**
 
 OPTIONS expr ;
 
 The OPTIONS instruction is used to set various interpreter-specific options. See Language Level and Options Section
 
-## 
-
-## **PARSE** {#parse}
+## **PARSE**
 
 PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 
 *CURRENT STATUS: not implemented*
 
-## 
-
-## **PROCEDURE** {#procedure}
+## **PROCEDURE**
 
 See Procedures and Arguments Section.
 
-## 
-
-## **SAY** {#say}
+## **SAY**
 
 SAY \[ expr \] ;
 
 Evaluates the expression expr and prints the resulting string onto the standard output stream.
 
-## 
-
 ## **SELECT/WHEN/OTHERWISE** {#select/when/otherwise}
 
 *CURRENT STATUS: not implemented*
 
-## 
-
-## **TRACE** {#trace}
+## **TRACE**
 
 CURRENT STATUS: not implemented (Debugging Approach TBC)
 
-# Procedures and Arguments {#procedures-and-arguments}
+# Procedures and Arguments
 
-## **Function Arguments** {#function-arguments}
+## **Function Arguments**
 
 Arguments can be passed to a procedure by reference or by value. When an argument is passed by reference, the procedure can modify the original variable that was passed to it. When an argument is passed by value, a copy of the variable is passed to the procedure, and any changes made to the copy do not affect the original variable.
 
@@ -132,7 +104,7 @@ ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
 * Arg a4 is a optional class aclass pass by value, value from the default factory if not specified in the call  
 * Arg a5 is an array of strings and is one way to allow an arbitrary number of strings to be passed to the procedure (see also Ellipsis later)
 
-## **Ellipsis (...)** {#ellipsis-(...)}
+## **Ellipsis (...)**
 
 The last arguments declaration can be an ellipsis ('...'), this is used to show that 0 or more arguments can be provided. For example:
 
@@ -150,7 +122,7 @@ Pseudo Array arg allows access to the '...' arguments. Also see the Arrays secti
 
 The type of this Pseudo is the type of the '...' argument
 
-## **arg() Operator** {#arg()-operator}
+## **arg() Operator**
 
 The compatibility arg() operator is designed to provide some compatibility with classic REXX; by example:
 
@@ -159,7 +131,7 @@ The compatibility arg() operator is designed to provide some compatibility with 
 * arg(4,E), arg(4,"E"), arg(4,Exxx), arg(4,"Exxx") etc. all return 1 (true) if there were 4 or more '...' arguments given or 0 (false) otherwise. E is Exists.  
 * Likewise arg(4,'O') etc. (O is Omitted) is equivalent to \~arg(4,'E').
 
-## **Implicit Main Procedure** {#implicit-main-procedure}
+## **Implicit Main Procedure**
 
 In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. The return type of the implicitly defined main() procedure is automatically set to either int or void.
 

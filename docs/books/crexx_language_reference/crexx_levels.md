@@ -1,46 +1,44 @@
-# Introduction {#introduction}
+# Introduction
 
 The cREXX Project is a comprehensive initiative aimed at advancing the REXX language. It envisions developing a modern, ground-up implementation of a REXX interpreter and compiler, along with experimenting with language enhancements. One crucial aspect of the project is to revisit and evaluate potential improvements to the REXX language, while preserving its fundamental essence: making programming more accessible than ever before.
 
 cREXX is designed to run on various platforms, including VM/370 (paying homage to REXX's heritage), Linux, Windows, OSX, and z/Architecture. The project will encompass different levels or flavors of REXX, each serving a specific purpose:
 
-## **Level A: PoC Precursor** {#level-a:-poc-precursor}
+## **Level A: PoC Precursor**
 
 Level A was a proof-of-concept precursor and will not be actively developed further.
 
-## **Level B: Foundation for Other cREXX Levels** {#level-b:-foundation-for-other-crexx-levels}
+## **Level B: Foundation for Other cREXX Levels**
 
 Level B serves as the foundational layer for other cREXX levels. It can be viewed as a system language, and many of the cREXX components will be implemented in this level. Level B's approach emphasizes low-level built-in functions directly implemented in the bytecode interpreter. Other levels with complete sets of REXX capabilities and functions will be implemented in REXX Level B.
 
-## **Level C: Classic REXX** {#level-c:-classic-rexx}
+## **Level C: Classic REXX**
 
 Level C embodies "Classic" REXX. It aims to adhere as closely as possible to the ANSI standards and the REXX implementation found on the IBM Mainframe family.
 
-## **Level D: Extended Language Features** {#level-d:-extended-language-features}
+## **Level D: Extended Language Features**
 
 Level D builds upon Level C by introducing new language features, such as the USE statement, to enhance the capabilities of the language.
 
-## **Level E: OORexx** {#level-e:-oorexx}
+## **Level E: OORexx**
 
 Level E encompasses OORexx, an object-oriented extension of REXX. While it is not anticipated to be directly delivered by the cREXX project, it acknowledges its significance in the REXX ecosystem.
 
-## **Level G: Modern General-Purpose REXX** {#level-g:-modern-general-purpose-rexx}
+## **Level G: Modern General-Purpose REXX**
 
 Level G represents a modern, general-purpose REXX that extends Level B syntax and offers contemporary language capabilities.
 
-## **Level L: Specialist REXX for Language Engineering** {#level-l:-specialist-rexx-for-language-engineering}
+## **Level L: Specialist REXX for Language Engineering**
 
 Level L is a specialized REXX tailored for computer language engineering. A significant portion of the cREXX components will ultimately be implemented in REXX Level L.
 
-## **About this Document** {#about-this-document}
+## **About this Document**
 
 This document serves as a Language Reference for cREXX Level B as of the June 2024 snapshots. It is an ongoing document, subject to revisions and improvements. The cREXX project welcomes feedback and corrections from the community to ensure the accuracy and completeness of this resource.
 
-# 
+# Overview of cREXX Level B
 
-# Overview of cREXX Level B {#overview-of-crexx-level-b}
-
-## **cREXX Level B: A Foundation for Safe and Efficient Programming** {#crexx-level-b:-a-foundation-for-safe-and-efficient-programming}
+## **cREXX Level B: A Foundation for Safe and Efficient Programming**
 
 cREXX Level B is a typed programming language designed for enhanced safety and efficiency. It balances these qualities with a user-friendly experience through type inference. As the foundation for other cREXX levels, Level B serves as a system language for implementing core functionalities.
 
