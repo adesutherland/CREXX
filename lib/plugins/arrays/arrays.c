@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
-#include "C:/Users/PeterJ/CLionProjects/CREXX/F0049/interpreter/rxvalue.h"
 
 // Bubble Sorts an array of integers
 PROCEDURE(bubble_sort)
