@@ -1,11 +1,11 @@
 /*
- * Description: This file contains the implementation of the decimal plugin using the ICU
+ * Description: This file contains the implementation of the rxvmplugin plugin using the ICU
  *              decNumnerlibrary.
  *
  * Created by Adrian Sutherland on 15/09/2024.
  *
  * -------------------------------------------------------------------------------
- * The following parameters have been tuned in decimal decNumber for CREXX:
+ * The following parameters have been tuned in rxvmplugin decNumber for CREXX:
  * DECDPUN = 8       # For 64-bit (Overriding 3)
  * DECNUMDIGITS = 64 # Default (Overriding 100)
  * DECBUFFER = 64    # Internal Buffer size avoiding malloc (Overriding 36)
@@ -15,9 +15,9 @@
  * -------------------------------------------------------------------------------
 */
 
-#define DEC_PLUGIN decnumber
+#define RXVM_PLUGIN decnumber
 
-#include "decplugin.h"
+#include "rxvmplugin.h"
 #include "../decnumber/decNumber.h"
 #include "../decnumber/decNumberLocal.h"
 
@@ -37,7 +37,7 @@ static void EnsureCapacity(value *number, size_t digits) {
         size = sizeof(decNumber);
     }
 
-    /* If the value has a decimal buffer already */
+    /* If the value has a rxvmplugin buffer already */
     if (number->decimal_value) {
 
         /* If the size is bigger than the current size, reallocate the memory */
@@ -61,73 +61,73 @@ static void EnsureCapacity(value *number, size_t digits) {
     }
 }
 
-/* Definitions of each of the decimal functions */
+/* Definitions of each of the rxvmplugin functions */
 
-/* Get the number of digits in the decimal context */
+/* Get the number of digits in the rxvmplugin context */
 static size_t getDigits(decplugin *plugin) {
-    return ((decContext*)(plugin->private_context))->digits;
+    return ((decContext*)(plugin->base.private_context))->digits;
 }
 
-/* Set the number of digits in the decimal context */
+/* Set the number of digits in the rxvmplugin context */
 static void setDigits(decplugin *plugin, size_t digits) {
-    ((decContext*)(plugin->private_context))->digits = (int32_t)digits;
+    ((decContext*)(plugin->base.private_context))->digits = (int32_t)digits;
 }
 
-/* Get the required string size for the decimal context */
+/* Get the required string size for the rxvmplugin context */
 static size_t getRequiredStringSize(decplugin *plugin) {
-    return ((decContext*)(plugin->private_context))->digits + 14;
+    return ((decContext*)(plugin->base.private_context))->digits + 14;
 }
 
-/* Convert a string to a decimal number */
+/* Convert a string to a rxvmplugin number */
 void decFloatFromString(decplugin *plugin, value *result, const char *string) {
-    decContext *context = (decContext*)(plugin->private_context);
+    decContext *context = (decContext*)(plugin->base.private_context);
     EnsureCapacity(result, context->digits);
     decNumberFromString(result->decimal_value, string, context);
 }
 
-/* Convert a decimal number to a string */
+/* Convert a rxvmplugin number to a string */
 /* The sttring must be allocated by the caller and should be at least
  * getRequiredStringSize() bytes */
 static void decFloatToString(decplugin *plugin, const value *number, char *string) {
-    decContext *context = (decContext*)(plugin->private_context);
+    decContext *context = (decContext*)(plugin->base.private_context);
     // Reduce/Normalize the number
     // Note that this changes the number internals although it should not change the number's value
     decNumberReduce(number->decimal_value, number->decimal_value, context);
     decNumberToString(number->decimal_value, string);
 }
 
-/* Add two decimal numbers */
+/* Add two rxvmplugin numbers */
 static void decFloatAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
-    decNumberAdd(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    decNumberAdd(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
 }
 
-/* Subtract two decimal numbers */
+/* Subtract two rxvmplugin numbers */
 static void decFloatSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
-    decNumberSubtract(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    decNumberSubtract(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
 }
 
-/* Multiply two decimal numbers */
+/* Multiply two rxvmplugin numbers */
 static void decFloatMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
-    decNumberMultiply(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    decNumberMultiply(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
 }
 
-/* Divide two decimal numbers */
+/* Divide two rxvmplugin numbers */
 static void decFloatDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->private_context))->digits);
-    decNumberDivide(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->private_context));
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    decNumberDivide(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
 }
 
-/* Function to destroy a decimal plugin */
-static void destroy_decplugin(decplugin *plugin) {
+/* Function to destroy a rxvmplugin plugin */
+static void destroy_decplugin(rxvm_plugin *plugin) {
     free(plugin->private_context);
     free(plugin);
 }
 
-/* Function to create a new decimal plugin */
-static decplugin *new_decplugin() {
+/* Function to create a new rxvmplugin plugin */
+static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the context */
     decContext* context = malloc(sizeof(decContext));
     decContextDefault(context, DEC_INIT_BASE); // initialize
@@ -136,8 +136,9 @@ static decplugin *new_decplugin() {
 
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
-    plugin->private_context = context;
-    plugin->free = destroy_decplugin;
+    plugin->base.type = RXVM_PLUGIN_DECIMAL;
+    plugin->base.private_context = context;
+    plugin->base.free = destroy_decplugin;
     plugin->getDigits = getDigits;
     plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
@@ -148,8 +149,8 @@ static decplugin *new_decplugin() {
     plugin->decFloatMul = decFloatMul;
     plugin->decFloatDiv = decFloatDiv;
 
-    return plugin;
+    return (rxvm_plugin*)plugin;
 }
 
-// Register the decimal plugin factory
+// Register the rxvmplugin plugin factory
 REGISTER_PLUGIN(new_decplugin)

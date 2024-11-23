@@ -1,12 +1,11 @@
 //
 // Created by Adrian Sutherland on 16/09/2024.
 //
-// ICU Decimal Test 1
+// Decimal Test 1
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include "decplugin_framework.h"
+#include "rxvmplugin_framework.h"
 
 int main(int argc, char *argv[]) {
     value a, b, result;
@@ -15,8 +14,8 @@ int main(int argc, char *argv[]) {
 #ifdef DYNAMIC
     // Load the plugin
     printf("Loading Dynamic Plugin\n");
-    if (load_plugin(".", "rxdec_mc_decimal_dyn") != 0) {
-        printf("Unable to load the decimal plugin\n");
+    if (load_rxvmplugin(".", "rxvm_mc_decimal_dyn") != 0) {
+        printf("Unable to load the rxvmplugin plugin\n");
         return 1;
     }
 #else
@@ -32,14 +31,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    decplugin_factory plugin_factory = find_decplugin_factory("decnumber");
+    rxvm_plugin_factory plugin_factory = get_rxvmplugin_factory(RXVM_PLUGIN_DECIMAL);
     if (!plugin_factory) {
-        printf("Decimal plugin \"decnumber\" not found\n");
+        printf("No default rxvmplugin plugin\n");
         return 1;
     }
-    decplugin *plugin = plugin_factory();
+    decplugin *plugin = (decplugin*)plugin_factory();
 
-    // Set the number of digits in the decimal context
+    // Set the number of digits in the rxvmplugin context
     plugin->setDigits(plugin, atoi(argv[1]));
 
     /* Make a string buffer to hold the result */
@@ -49,7 +48,7 @@ int main(int argc, char *argv[]) {
     b.decimal_value = NULL;
     result.decimal_value = NULL;
 
-    // Convert the arguments to decimal numbers
+    // Convert the arguments to rxvmplugin numbers
     plugin->decFloatFromString(plugin, &a, argv[2]);
     plugin->decFloatFromString(plugin, &b, argv[3]);
 
@@ -85,6 +84,6 @@ int main(int argc, char *argv[]) {
     }
     free(string);
 
-    plugin->free(plugin);
+    plugin->base.free((rxvm_plugin*)plugin);
     return 0;
 } // main
