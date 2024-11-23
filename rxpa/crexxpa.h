@@ -251,6 +251,18 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 // Arguments
 #define NUM_ARGS _numargs
 #define ARG(n) _arg[(n)]
+// some laziness definitions
+#define ARG0   _arg[(0)]
+#define ARG1   _arg[(1)]
+#define ARG2   _arg[(2)]
+#define ARG3   _arg[(3)]
+#define ARG4   _arg[(4)]
+#define ARG5   _arg[(5)]
+#define ARG6   _arg[(6)]
+#define ARG7   _arg[(7)]
+#define ARG8   _arg[(8)]
+#define ARG9   _arg[(9)]
+
 #define RETURN _return
 #define SIGNAL _signal
 #define REGISTER rxpa_attribute_value
