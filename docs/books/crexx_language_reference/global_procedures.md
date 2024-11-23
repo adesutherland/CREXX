@@ -1,6 +1,6 @@
-# Global Procedures {#global-procedures}
+# Global Procedures
 
-## **Exposing Global Procedures** {#exposing-global-procedures}
+## **Exposing Global Procedures**
 
 A procedure defined in a module file can be made available to other modules (provided it is in an imported namespace) by including the procedure in the namespace instruction.
 
@@ -8,7 +8,7 @@ A procedure defined in a module file can be made available to other modules (pro
 
 namespace mynamespace expose myfunc1 myfunc2
 
-## **Importing Global Procedures** {#importing-global-procedures}
+## **Importing Global Procedures**
 
 When compiling a program, the compiler looks for procedures that are called but not defined in the current module. It searches in various locations in the following order:
 

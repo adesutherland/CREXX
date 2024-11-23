@@ -1,6 +1,6 @@
 # Tools {#tools}
 
-## **Compiler** {#compiler}
+## **Compiler**
 
 Usage   : rxc \[options\] source\_file
 
@@ -20,7 +20,7 @@ Options :
 
   \-n              No Optimising
 
-## **Assembler** {#assembler}
+## **Assembler**
 
 Usage   : rxas \[options\] source\_file
 
@@ -46,7 +46,7 @@ Options :
 
 Note that the rxbin files can be simply concatenated together to form a library archive. 
 
-## **Disassembler** {#disassembler}
+## **Disassembler**
 
 Usage   : rxdas \[options\] binary\_file
 
@@ -64,7 +64,7 @@ Options :
 
   \-o output\_file  Output file (default is stdout)
 
-## **Debugger** {#debugger}
+## **Debugger**
 
 Usage   : rxvm \[options\] binary\_file \[binary\_file\_2 ...\] \-a args ... 
 
@@ -80,7 +80,7 @@ Options :
 
 *CURRENT STATUS: This is a PoC version \- may not function correctly*
 
-## **Packager** {#packager}
+## **Packager**
 
 This takes .rxbin crexx binary files and converts them to a c data array. These can then be linked (using the native c toolchain) to rxvml vm library (see below) to form a standalone executable file.
 
@@ -126,13 +126,11 @@ Other interpreters are:
 * rxvme / rxvbme \- (b means bytecode version) interpreter linked with the cREXX stdlib (so that library.rxbin is not needed)  
 * rxvml / rxbvml \- (b means bytecode version) interpreter library used to support standalone native exe generated from cREXX source. This linked (using the native c toolchain) to a program converted to C using the packager above, creates a standalone executable.
 
-## **Helper Scripts** {#helper-scripts}
+## **Helper Scripts**
 
 In addition to these there are scripts to automate the build flow (details tbc).
 
-# 
-
-# General Syntax {#general-syntax}
+# General Syntax
 
 A REXX program consists of a series of statements, each of which is terminated by a semicolon (;) or line-end. The REXX source program is coded in utf-8. 
 
@@ -148,9 +146,7 @@ Labels can be used to identify specific statements in a REXX program. Labels are
 
 Comments are used to provide additional information about a REXX program. Comments are ignored by the REXX interpreter and can be placed anywhere in a program.
 
-# 
-
-# Language Level and Options {#language-level-and-options}
+# Language Level and Options
 
 All crexx programs can start with an “options’ instruction, which can include the language level (e.g. ‘levelb). If a crexx program does not start with an ‘options’ instruction or if the options do not include a language level then Level C (classic REXX) is assumed.
 

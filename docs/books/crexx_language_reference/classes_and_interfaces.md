@@ -48,10 +48,6 @@ This approach ensures a common and predictable structure for CREXX programs, red
 
 13. **Backward Compatibility in Class Syntax.** In anticipation of Level D, which aims to provide an updated yet backward-compatible version of classic REXX, the class syntax in CREXX should be designed with compatibility in mind. This includes ensuring that class definitions and operations can be expressed in a manner that aligns with the established syntax of classic REXX stems, facilitating an easier transition for existing REXX users and preserving the language's legacy features.
 
-## 
-
-## 
-
 ## **Interface Definition Syntax** {#interface-definition-syntax}
 
 A single file / module can only define one interface or class and cannot define any other non-object language elements, meaning that procedures (including the implicit main procedure) and globals cannot be defined in an interface file.
@@ -71,9 +67,6 @@ an\_interface: interface
 
     a\_method\_2: method \= .int /\* returns an int\*/  
         arg ...
-
-### 
-
 ### *Default Method Definitions* {#default-method-definitions}
 
 A method can include the implementation (which is used as the default unless overridden by a class), in this case attributes can also be defined. Note that method and attribute names must be unique across a class which may be implementing multiple interfaces. 
@@ -124,8 +117,6 @@ a\_singleton() /\* Default Factory \*/
 a\_singleton.factory\_with\_params(“initfile.txt”) /\* Maybe \*/
 
 Multiple assignments replace the singleton instance. If a singleton is used before it is assigned the default factory will be used (or a signal raises), in this case the class is instantiated on first use.
-
-## 
 
 ## **Class Definition Syntax** {#class-definition-syntax}
 
@@ -209,8 +200,6 @@ Instance2 \= .interface1.from\_string(“something”)
 
 Instance3 \= .interface1.something\_else() /\* From a different class \*/
 
-## 
-
 ## **Syntax to use Interfaces and Classes** {#syntax-to-use-interfaces-and-classes}
 
 ### *Calling a method* {#calling-a-method}
@@ -234,8 +223,6 @@ config.fileinit(“initfile.txt”) /\* Maybe \*/
 ### *Accessing a Singleton* {#accessing-a-singleton}
 
 Currency \= config.default\_currency /\* Example \*/
-
-## 
 
 ## **Class / Interface Example** {#class-/-interface-example}
 
