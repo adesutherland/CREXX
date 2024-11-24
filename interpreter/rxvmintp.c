@@ -30,6 +30,10 @@
  * In terms of memory usage / waste each one is only 2 x pointer size */
 #define NOMINAL_NUM_ARGS 20
 
+/* Define this to use a safe stack frame recycling mechanism - zeros registers in the stack frame */
+//#define SAFE_RECYCLED_STACKFRAMES
+#undef SAFE_RECYCLED_STACKFRAMES
+
 /* Misc. Utilities here */
 
 /* Constant to get create the compile time data in ta "iso" like format */
@@ -191,7 +195,9 @@ RX_INLINE stack_frame *frame_f(
         /* Reset Local Registers */
         for (i = 0; i < procedure->locals; i++) {
             this->locals[i] = this->baselocals[i];
+#ifdef SAFE_RECYCLED_STACKFRAMES
             value_zero(this->locals[i]);
+#endif
         }
         /* Make sure global registers are linked correctly */
         for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
