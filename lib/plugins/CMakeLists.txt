@@ -4,3 +4,4 @@ project(plugins NONE)
 
 add_subdirectory(sysinfo)
 add_subdirectory(arrays)
+add_subdirectory(rxmath)
