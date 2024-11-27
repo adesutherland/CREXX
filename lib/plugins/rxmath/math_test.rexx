@@ -43,7 +43,7 @@ say "hypot "hypot(4,10)
 
 do i=1 to 5000
    mm.i=i*1.0
-   nn.i=i*2.0
+   nn.i=i*2.0+7
 end
 
 
@@ -54,3 +54,9 @@ say 'stddev 2 'stddev(nn)
 
 say 'covar   'covar(mm,nn)
 say 'correl  'correl(mm,nn)
+
+slope=-99.0
+yaxis=-99.0
+say 'regression  'regression(mm,nn,slope,yaxis)
+say 'slope       'slope
+say 'Y-intercept 'yaxis

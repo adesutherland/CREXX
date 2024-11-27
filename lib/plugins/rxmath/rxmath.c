@@ -145,7 +145,7 @@ PROCEDURE(covar) {
     PROCRETURN
     ENDPROC
 }
-/* ***** not working at the moment as calling fields can't be updated
+/* ***** not working at the moment as calling fields can't be updated */
 PROCEDURE(regression) {
 //void linear_regression(double *x, double *y, int n, double *m, double *b) {
     double sum_x = 0.0, sum_y = 0.0, sum_xx = 0.0, sum_xy = 0.0;
@@ -167,7 +167,7 @@ PROCEDURE(regression) {
     PROCRETURN
     ENDPROC
 }
- */
+
 
 
 // RXMATH function definitions
@@ -210,5 +210,5 @@ LOADFUNCS
     ADDPROC(stddev,"rxmath.stddev","b",  ".float", "expose a = .float[]");
     ADDPROC(covar,"rxmath.covar",  "b",  ".float", "expose arg1=.float[],arg2=.float[]");
     ADDPROC(correl,"rxmath.correl","b",  ".float", "expose arg1=.float[],expose arg2=.float[]");
- //   ADDPROC(regression, "rxmath.regression","b",".float", "expose arg0=.float[],expose arg1=.float[],arg2=.float,arg3=.float");
+    ADDPROC(regression, "rxmath.regression","b",".float", "expose arg0=.float[],expose arg1=.float[],expose arg2=.float,expose arg3=.float");
  ENDLOADFUNCS
