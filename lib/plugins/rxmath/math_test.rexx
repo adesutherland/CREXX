@@ -24,6 +24,7 @@ say 'fmod  'fmod(-pi(),3)
 say "SIN  "sin (90)
 say "SINH "sinh(90)
 say "SQRT "sqrt(16)
+say "CBRT "cbrt(3*3*3)
 say "TAN  "tan (90)
 say "TANH "tanh(90)
 say "POW10 "pow10(3)
@@ -39,3 +40,17 @@ say "asinh "asinh(10)
 say "acosh "acosh(50)
 say "atanh "atanh(0)
 say "hypot "hypot(4,10)
+
+do i=1 to 5000
+   mm.i=i*1.0
+   nn.i=i*2.0
+end
+
+
+say 'mean   1 'mean(mm)
+say 'stddev 1 'stddev(mm)
+say 'mean   2 'mean(nn)
+say 'stddev 2 'stddev(nn)
+
+say 'covar   'covar(mm,nn)
+say 'correl  'correl(mm,nn)

@@ -15,6 +15,46 @@
             PROCRETURN \
         ENDPROC}
 /* --------------------------------------------------------------------------------------------
+ * some standard statistic modules
+ * * --------------------------------------------------------------------------------------------
+ */
+// Function to calculate the mean of an array
+double meanx(void *array) {
+    int i,n;
+    double sum;
+    n=GETARRAYHI(array);
+    sum = 0.0;
+    for (i = 0; i < n; i++) {
+        sum += GETFARRAY(array,i);
+    }
+    return sum / n;
+}
+// Function to calculate the standard deviation of an array
+double stddevx(void *array) {
+    int i,n;
+    double sum = 0.0;
+    double avg = meanx(array);
+
+    n=GETARRAYHI(array);
+    for (i = 0; i < n; i++) {
+        sum += pow(GETFARRAY(array,i) - avg, 2);
+    }
+    return sqrt(sum /(n-1));
+  }
+double covarx(void *array1, void *array2) {
+    int    i;
+    int    n=GETARRAYHI(array1);
+    double mean_x = meanx(array1);
+    double mean_y = meanx(array2);
+    double covariance = 0.0;
+
+    for (i = 0; i < n; i++) {
+        covariance += (GETFARRAY(array1,i) - mean_x) * (GETFARRAY(array2,i) - mean_y);
+    }
+    covariance=covariance/(n-1);
+    return covariance;
+}
+/* --------------------------------------------------------------------------------------------
  * some Mathematical functions
  * * --------------------------------------------------------------------------------------------
  */
@@ -43,6 +83,8 @@
     MATHPROC(sin )
     MATHPROC(sinh)
     MATHPROC(sqrt)
+    MATHPROC(cbrt)
+
     MATHPROC(tan )
     MATHPROC(tanh)
     MATHPROC(erf)
@@ -57,6 +99,7 @@ PROCEDURE(xpow) {  //  ADDMATH uses functionX to distinguish plugin function nam
     RETURNFLOAT( pow(GETFLOAT(ARG0), GETFLOAT(ARG1)));
     PROCRETURN
 ENDPROC}
+
 PROCEDURE(xpow10) {  //  ADDMATH uses functionX to distinguish plugin function name from math function name
     RETURNFLOAT( pow(10.0, (GETFLOAT(ARG0))));
     PROCRETURN
@@ -70,13 +113,63 @@ PROCEDURE(xhypot) {  //  ADDMATH uses functionX to distinguish plugin function n
 PROCEDURE(pi) {
     RETURNFLOAT(M_PI);
     PROCRETURN
-ENDPROC
-}
+ENDPROC}
+
 PROCEDURE(euler) {
     RETURNFLOAT(M_E);
     PROCRETURN
+ENDPROC
+}
+PROCEDURE(mean) {
+   RETURNFLOAT(meanx(ARG0));
+   PROCRETURN
+ENDPROC
+}
+PROCEDURE(stddev) {
+    RETURNFLOAT(stddevx(ARG0));
+    PROCRETURN
+ENDPROC
+}
+
+PROCEDURE(correl) {
+    double stddev_x = stddevx(ARG0);
+    double stddev_y = stddevx(ARG1);
+
+    RETURNFLOAT(covarx(ARG0,ARG1)/(stddev_x * stddev_y));
+    PROCRETURN 
     ENDPROC
 }
+
+PROCEDURE(covar) {
+    RETURNFLOAT(covarx(ARG0,ARG1));
+    PROCRETURN
+    ENDPROC
+}
+/* ***** not working at the moment as calling fields can't be updated
+PROCEDURE(regression) {
+//void linear_regression(double *x, double *y, int n, double *m, double *b) {
+    double sum_x = 0.0, sum_y = 0.0, sum_xx = 0.0, sum_xy = 0.0;
+    double m,b;
+    int i;
+    int n=GETARRAYHI(ARG0);
+    for (i = 0; i < n; i++) {
+        sum_x += GETFARRAY(ARG0,i);
+        sum_y += GETFARRAY(ARG1,i);
+        sum_xx += GETFARRAY(ARG0,i) * GETFARRAY(ARG0,i);
+        sum_xy += GETFARRAY(ARG0,i) * GETFARRAY(ARG1,i);
+    }
+    // Berechnung der Steigung (m) und des y-Achsenabschnitts (b)
+    m = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+    b = (sum_y - m * sum_x) / n;
+    SETFLOAT(ARG2,m);
+    SETFLOAT(ARG3,b);
+    RETURNFLOAT(m);
+    PROCRETURN
+    ENDPROC
+}
+ */
+
+
 // RXMATH function definitions
 LOADFUNCS
     ADDMATH(acos)
@@ -100,6 +193,7 @@ LOADFUNCS
     ADDMATH(sin)
     ADDMATH(sinh)
     ADDMATH(sqrt)
+    ADDMATH(cbrt)
     ADDMATH(tan)
     ADDMATH(tanh)
     ADDMATH(erf)
@@ -112,4 +206,9 @@ LOADFUNCS
     ADDPROC(xhypot,"rxmath.hypot",   "b",  ".float", "arg1=.float,arg2=.float");
     ADDPROC(pi,   "rxmath.pi",   "b",  ".float", "");
     ADDPROC(euler,"rxmath.euler","b",  ".float", "");
+    ADDPROC(mean, "rxmath.mean", "b",  ".float", "expose a = .float[]");
+    ADDPROC(stddev,"rxmath.stddev","b",  ".float", "expose a = .float[]");
+    ADDPROC(covar,"rxmath.covar",  "b",  ".float", "expose arg1=.float[],arg2=.float[]");
+    ADDPROC(correl,"rxmath.correl","b",  ".float", "expose arg1=.float[],expose arg2=.float[]");
+ //   ADDPROC(regression, "rxmath.regression","b",".float", "expose arg0=.float[],expose arg1=.float[],arg2=.float,arg3=.float");
  ENDLOADFUNCS
