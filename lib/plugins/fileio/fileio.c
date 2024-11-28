@@ -95,7 +95,7 @@ PROCEDURE(readdir) {
 
     FindClose(hFind);
     RETURNINT(0);
-    PROCRETURN;
+    PROCRETURN
 ENDPROC
 }
 // File IO function definitions

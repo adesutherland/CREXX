@@ -7,6 +7,7 @@ import rxfnsb
 files.1=""
 dirs.1=""
 say readdir(files,dirs,"c:\temp\")
+Say "Read Temp Directory"
 do i=1 to files.0
    say "file "files.i
 end
