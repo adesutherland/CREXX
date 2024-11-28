@@ -68,6 +68,7 @@ PROCEDURE(writeall) {
 PROCEDURE(readdir) {
     int indx1=0,indx2=0;
     char vname[512];
+#ifdef _WIN32
     WIN32_FIND_DATA findFileData;
 
     memset(vname, 0, sizeof(vname));
@@ -75,7 +76,6 @@ PROCEDURE(readdir) {
     sprintf(vname, "%s%s",GETSTRING(ARG2),"/*");
 
     HANDLE hFind = FindFirstFile(vname, &findFileData);
-
     if (hFind == INVALID_HANDLE_VALUE) {
         RETURNINT(-8);
         PROCRETURN;
@@ -94,6 +94,7 @@ PROCEDURE(readdir) {
     } while (FindNextFile(hFind, &findFileData) != 0);
 
     FindClose(hFind);
+#endif
     RETURNINT(0);
     PROCRETURN
 ENDPROC
