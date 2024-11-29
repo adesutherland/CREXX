@@ -1,6 +1,6 @@
 /*
  * Description: This file contains the implementation of the rxvmplugin plugin using the ICU
- *              decNumnerlibrary.
+ *              decNumber library.
  *
  * Created by Adrian Sutherland on 15/09/2024.
  *

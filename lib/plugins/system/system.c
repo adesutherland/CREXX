@@ -3,6 +3,10 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__APPLE__)
+ #include <sys/stat.h>
+#endif
+
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #ifdef _WIN32
   #include <direct.h>     // For Windows
@@ -18,8 +22,8 @@
     #define TEST_FILE(fname) _access(fname, 0)
 #else
     #define REMOVE_DIR(path) rmdir(path)
-    #define MAKE_DIR(path)   mkdir(directory_name, 0755)
-    #define TEST_DIR(path    access(verzeichnis, F_OK)
+    #define MAKE_DIR(path)   mkdir(path, 0755)
+    #define TEST_DIR(path)    access(path, F_OK)
     #define TEST_FILE(fname) access(fname, F_OK)
 #endif
 
