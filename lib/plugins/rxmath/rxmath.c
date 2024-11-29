@@ -6,8 +6,15 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
+// #include "windows.h"
 
-// some internal macros for the RXMATH library, can remain in coding
+/* --------------------------------------------------------------------------------------------
+ * some internal macros for the RXMATH library, can remain in coding
+ * these macros take into account that most math functions have the same structure
+ * float in -> math function -> float out, the only difference is thea actual math function
+ * to distinguish the rexx math function call and the base c math function the function in the plugin call has x prefix
+ * --------------------------------------------------------------------------------------------
+ */
 #define STRINGIFY(x) #x      //   stringify
 #define ADDMATH(func) ADDPROC(x##func,STRINGIFY(rxmath.func),"b",".float","argin=.float");
 #define MATHPROC(func) PROCEDURE(x##func) { \
@@ -16,7 +23,7 @@
         ENDPROC}
 /* --------------------------------------------------------------------------------------------
  * some standard statistic modules
- * * --------------------------------------------------------------------------------------------
+ * --------------------------------------------------------------------------------------------
  */
 // Function to calculate the mean of an array
 double meanx(void *array) {
@@ -169,7 +176,6 @@ PROCEDURE(regression) {
 }
 
 
-
 // RXMATH function definitions
 LOADFUNCS
     ADDMATH(acos)
@@ -211,4 +217,4 @@ LOADFUNCS
     ADDPROC(covar,"rxmath.covar",  "b",  ".float", "expose arg1=.float[],arg2=.float[]");
     ADDPROC(correl,"rxmath.correl","b",  ".float", "expose arg1=.float[],expose arg2=.float[]");
     ADDPROC(regression, "rxmath.regression","b",".float", "expose arg0=.float[],expose arg1=.float[],expose arg2=.float,expose arg3=.float");
- ENDLOADFUNCS
+ENDLOADFUNCS
