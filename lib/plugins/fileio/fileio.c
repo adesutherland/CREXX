@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
-#include <math.h>
+#ifdef _WIN32
+#include "windows.h"
+#endif
+
 /* #include "windows.h" */
 
 void searchReplace(char *str, char search, char replace) {
@@ -61,6 +64,7 @@ PROCEDURE(writeall) {
           lines++;
         if (maxlines>0 && lines>=maxlines) break;
     }
+    fclose(file);
     RETURNINT(lines);
     PROCRETURN
     ENDPROC
@@ -102,6 +106,6 @@ ENDPROC
 // File IO function definitions
 LOADFUNCS
     ADDPROC(readall,"fileio.readall",   "b",  ".int", "expose array=.string[],file=.string,arg2=.int");
-    ADDPROC(writeall,"fileio.writeall",   "b",  ".int", "expose array=.string[],file=.string,arg2=.int");
+    ADDPROC(writeall,"fileio.writeall",  "b",  ".int", "expose array=.string[],file=.string,arg2=.int");
     ADDPROC(readdir,"fileio.readdir",   "b",  ".int", "expose entries=.string[],expose dirs=.string[],file=.string");
 ENDLOADFUNCS
