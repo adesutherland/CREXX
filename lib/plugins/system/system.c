@@ -57,17 +57,17 @@ PROCEDURE(setdir) {
     }
 ENDPROC
 }
-PROCEDURE(createdir) {
-    searchReplace(GETSTRING(ARG0),'\\','/');
-    if (chdir(GETSTRING(ARG0)) == 0) {
-        RETURNINT(-4);     // already there
-    } else {
-        if (_mkdir(GETSTRING(ARG0)) == 0) {
-            RETURNINT(0);
-        } else RETURNINT(-8);   // not created
-    }
-    ENDPROC
-}
+/* PROCEDURE(createdir) { */
+/*     searchReplace(GETSTRING(ARG0),'\\','/'); */
+/*     if (chdir(GETSTRING(ARG0)) == 0) { */
+/*         RETURNINT(-4);     // already there */
+/*     } else { */
+/*         if (_mkdir(GETSTRING(ARG0)) == 0) { */
+/*             RETURNINT(0); */
+/*         } else RETURNINT(-8);   // not created */
+/*     } */
+/*     ENDPROC */
+/* } */
 
 PROCEDURE(removedir) {
     searchReplace(GETSTRING(ARG0),'\\','/');
@@ -84,6 +84,6 @@ LOADFUNCS
 ADDPROC(getEnv,     "system.getenv",      "b",    ".string",   "env_name=.string");
 ADDPROC(getdir,     "system.getdir",      "b",    ".string",   "");
 ADDPROC(setdir,     "system.setdir",      "b",    ".int",   "arg0=.string");
-ADDPROC(createdir,  "system.createdir",   "b",    ".int",   "arg0=.string");
+/* ADDPROC(createdir,  "system.createdir",   "b",    ".int",   "arg0=.string"); */
 ADDPROC(removedir,  "system.removedir",   "b",    ".int",   "arg0=.string");
 ENDLOADFUNCS

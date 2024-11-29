@@ -6,7 +6,7 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
-#include "windows.h"
+/* #include "windows.h" */
 
 void searchReplace(char *str, char search, char replace) {
     int i;
