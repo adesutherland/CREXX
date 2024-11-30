@@ -148,13 +148,11 @@ PROCEDURE(deletefile) {
 PROCEDURE(listdir) {
     int indx=0;
     char vname[512];
-#ifdef _WIN32
-    WIN32_FIND_DATA findFileData;
-
     memset(vname, 0, sizeof(vname));
     searchReplace(GETSTRING(ARG0),'\\','/');
+#ifdef _WIN32
+    WIN32_FIND_DATA findFileData;
     sprintf(vname, "%s%s",GETSTRING(ARG0),"/*");
-
     HANDLE hFind = FindFirstFile(vname, &findFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
         RETURNINT(-8);
@@ -171,6 +169,25 @@ PROCEDURE(listdir) {
         indx++;
     } while (FindNextFile(hFind, &findFileData) != 0);
     FindClose(hFind);
+#else
+    DIR *dir = opendir(vname);
+    if (dir == NULL) {
+        RETURNINT(-8);
+        PROCRETURN;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            sprintf(vname, "%s%s","> ",entry->d_name);
+        } else if (entry->d_type == DT_REG) {
+            sprintf(vname, "%s%s","+ ",entry->d_name);
+        } else {
+            sprintf(vname, "%s%s","? ",entry->d_name);
+        }
+        SETARRAYHI(ARG1,indx+1);
+        SETSARRAY(ARG1,indx,vname);
+        indx++;
+    }
+    closedir(dir);
 #endif
     RETURNINT(0);
     PROCRETURN
