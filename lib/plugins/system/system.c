@@ -12,6 +12,8 @@
   #include <direct.h>     // For Windows
   #include <windows.h>
   #define getcwd _getcwd  // Map to Windows-specific version
+#else
+  #include <dirent.h>
 #endif
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
