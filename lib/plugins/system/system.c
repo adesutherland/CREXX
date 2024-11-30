@@ -172,6 +172,7 @@ PROCEDURE(listdir) {
     } while (FindNextFile(hFind, &findFileData) != 0);
     FindClose(hFind);
 #else
+    struct dirent *entry;
     DIR *dir = opendir(vname);
     if (dir == NULL) {
         RETURNINT(-8);
