@@ -93,7 +93,7 @@ do i=1 to outstem[0]
       lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.def}{\\input{../../examples/'mnemonic||oper'.def}}{}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rexx}{\\splice{rxc ../../examples/'mnemonic||oper'}}{}')
-      lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvm examples/'mnemonic||oper'} \\end{shaded} \\fontspec{TeX Gyre Pagella}}{}')
+      lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvm ../../examples/'mnemonic||oper'} \\end{shaded} \\fontspec{TeX Gyre Pagella}}{}')
     end
     lineout('instruction_chapter.tex','\\end{description}')
     lineout('instruction_chapter.tex','\\clearpage')
