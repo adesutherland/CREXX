@@ -6,7 +6,10 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
-// Bubble Sorts an array of integers
+/* -------------------------------------------------------------------------------------
+ * Bubble Sorts as a poor example not to be used
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE(bubble_sort)
 {
     int i, j;
@@ -28,7 +31,10 @@ PROCEDURE(bubble_sort)
     }
 ENDPROC
 }
-
+/* -------------------------------------------------------------------------------------
+ * Shell Sort
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (shell_sort) {
     int from, to, offset;
     int i, j, gap;
@@ -59,6 +65,10 @@ PROCEDURE (shell_sort) {
     PROCRETURN
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Reverse array order
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (reverse_array) {
     int i, k, to;
     to = GETARRAYHI(ARG0)-1; // make max index to offset
@@ -70,6 +80,10 @@ PROCEDURE (reverse_array) {
      PROCRETURN
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Serach certain strin in array and return its index or zero
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (search_array) {
     int i, from, to;
 
@@ -85,6 +99,10 @@ PROCEDURE (search_array) {
     RETURNINT(0);
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Delete item(s) in an array and shift elements accordingly
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (delete_array) {
     int i, hi, from, to, del = 0, todel;
     hi = GETARRAYHI(ARG0) - 1; // make max index to offset
@@ -107,6 +125,10 @@ PROCEDURE (delete_array) {
     PROCRETURN
     ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Insert empty item(s) in an array and shift elements accordingly
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (insert_array) {
     int i, hi, from, new, del = 0, todel;
     hi = GETARRAYHI(ARG0) - 1; // make max index to offset
@@ -124,6 +146,10 @@ PROCEDURE (insert_array) {
     PROCRETURN
 ENDPROC
 }
+/* -------------------------------------------------------------------------------------
+ * Copy an entire array or a range of into a target array
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (copy_array) {
     int i, j=0, hi, from, tto,add=0;
     char * val1;
@@ -150,7 +176,32 @@ PROCEDURE (copy_array) {
     PROCRETURN
 ENDPROC
 }
-
+/* -------------------------------------------------------------------------------------
+ * Merge an array into an existing one, both arrays must be sorted
+ * -------------------------------------------------------------------------------------
+ */
+PROCEDURE (merge_array) {
+    int i, j, hi1,hi2;
+    hi1 = GETARRAYHI(ARG0);
+    hi2 = GETARRAYHI(ARG1);
+    for (i = 0, j=0 ; i < hi1+hi2 && j<hi2; ++i) {
+         if (strcmp(GETSARRAY(ARG0, i), GETSARRAY(ARG1, j)) > 0) {
+            INSERTSARRAY(ARG0, i, GETSARRAY(ARG1, j));  // insert at position i a new entry
+            j++;
+        }
+    }
+    hi1=GETARRAYHI(ARG0);
+    for (j = j; j < hi2; ++j,++hi1) {
+        INSERTSARRAY(ARG0, hi1, GETSARRAY(ARG1, j));  // insert at position hi1 a new entry
+    }
+    PROCRETURN;
+    RETURNINT(0);
+    ENDPROC
+}
+/* -------------------------------------------------------------------------------------
+ * list contents of an array
+ * -------------------------------------------------------------------------------------
+ */
 PROCEDURE (list_array)  {
     int i,from,to,hi;
     hi  = GETARRAYHI(ARG0);
@@ -169,8 +220,10 @@ PROCEDURE (list_array)  {
     }
     printf("%d Entries\n",to);
 }
-
-// Functions to be provided to rexx
+/* -------------------------------------------------------------------------------------
+ * Functions to be provided to rexx
+ * -------------------------------------------------------------------------------------
+ */
 LOADFUNCS
 //      C Function, REXX namespace & name,      Option,Return Type, Arguments
 //  !! Do not use "to" in the parm-list, make it for example "tto", else compile fails: "expose a = .string[],from=.int,tto=.int"
@@ -181,5 +234,6 @@ LOADFUNCS
     ADDPROC(reverse_array,"arrays.reverse_array","b",  ".void",     "expose a = .string[]");
     ADDPROC(search_array, "arrays.search_array", "b",  ".int",      "expose a = .string[],needle=.string,startrow=.int");
     ADDPROC(copy_array,   "arrays.copy_array",   "b",  ".int",      "expose a = .string[],b=.string[],from=.int,tto=.int");
+    ADDPROC(merge_array,  "arrays.merge_array",  "b",  ".int",      "expose a = .string[],expose b=.string[]");
     ADDPROC(list_array,   "arrays.list_array",   "b",  ".void",     "expose a = .string[],from=.int,tto=.int");
 ENDLOADFUNCS

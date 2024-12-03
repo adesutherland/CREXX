@@ -84,6 +84,30 @@ say copy_array(array,newarray,11,11)
 call list_array newarray,1,10
 call list_array newarray,imax-10,imax
 
+## Step 10 merge 2 arrays
+imax=100
+xarray.1=''
+marray.1=''
+do i=1 to imax
+   xarray.i  = 'Record 'right(i*2,8,'0')
+end
+j=1
+do i=1 to imax
+   marray.i = 'Record 'right(j,8,'0')'X'
+   j=j+2
+end
+call list_array xarray,1,10
+call list_array xarray,imax-10,imax
+
+call list_array marray,1,10
+call list_array marray,imax-10,imax
+say time('l')' before merge'
+call merge_array xarray,marray
+say time('l')' after merge'
+call list_array xarray,1,10
+call list_array xarray,imax-10,imax
+
+
 exit
 
 

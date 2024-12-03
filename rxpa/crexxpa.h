@@ -121,6 +121,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define GETSARRAY(pnum,index) GETSTRING(GETATTR(pnum, index))
 #define SETSTRING(attr, str) _rxpa_context->setstring((attr),(str))
 #define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
+//  InsertSarray adds a new entry to an array at a certain position, the entry is added prior to the current entry which is shifted beyond
+#define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
+                                       SETSARRAY(pnum,indx,value);};
 #define RETURNSTR(value) _rxpa_context->setstring(RETURN,(value))
 #define SETINT(attr, value) _rxpa_context->setint((attr),(value))
 #define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
