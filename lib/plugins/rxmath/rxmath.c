@@ -6,6 +6,7 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
+#include <stdint.h>
 // #include "windows.h"
 
 /* --------------------------------------------------------------------------------------------
@@ -174,6 +175,98 @@ PROCEDURE(regression) {
     PROCRETURN
     ENDPROC
 }
+PROCEDURE(djb2) {
+ // DJB2-funktion by Daniel J. Bernstein
+    unsigned int hash = 5381;
+    int c;
+    char * str=GETSTRING(ARG0);
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    RETURNINT(hash);
+    PROCRETURN
+ENDPROC
+}
+PROCEDURE(murmur) {                 //   algorithm MurmurHash3
+    char * key= GETSTRING(ARG0);
+    int len=strlen(key);
+    const uint8_t *data = (const uint8_t *) key;
+    const int nblocks = len / 4;
+    const uint32_t const1 = 0xcc9e2d51;
+    const uint32_t const2 = 0x1b873593;
+    uint32_t hash = GETINT(ARG1);
+    uint32_t block;
+    int i;
+
+    // Process 4-byte blocks
+    for (i = 0; i < nblocks; i++) {
+        block = *((uint32_t *) data);
+        data += 4;
+
+        // Mix
+        block *= const1;
+        block = (block << 15) | (block >> (32 - 15));
+        block *= const2;
+
+        hash ^= block;
+        hash = (hash << 13) | (hash >> (32 - 13));
+        hash = hash * 5 + 0xe6546b64;
+    }
+
+    // Process remaining bytes
+    block = 0;
+    switch (len & 3) {
+        case 3:
+            block ^= data[2] << 16;
+        case 2:
+            block ^= data[1] << 8;
+        case 1:
+            block ^= data[0];
+            block *= const1;
+            block = (block << 15) | (block >> (32 - 15));
+            block *= const2;
+            hash ^= block;
+    }
+
+    // Finalize hash
+    hash ^= len;
+    hash = (hash ^ (hash >> 16)) * 0x85ebca6b;
+    hash = (hash ^ (hash >> 13)) * 0xc2b2ae35;
+    hash ^= hash >> 16;
+    RETURNINT(hash);
+    PROCRETURN
+ENDPROC
+}
+
+PROCEDURE(fnv1a) {
+    uint32_t hash = 2166136261u;  // FNV offset basis
+    char * str=GETSTRING(ARG0);
+    while (*str) {
+        hash ^= (uint8_t)(*str++);
+        hash *= 16777619;  // FNV prime
+    }
+    RETURNINT(hash);
+    PROCRETURN
+ENDPROC
+}
+
+// CRC32 Hash function
+PROCEDURE(crc32) {
+    uint32_t hash = 0xFFFFFFFF;
+    int i;
+    char * str= GETSTRING(ARG0);
+    while (*str) {
+        hash ^= (uint8_t)(*str++);
+        for (i = 8; i; i--) {
+            if (hash & 1) hash = (hash >> 1) ^ 0xEDB88320;
+            else hash >>= 1;
+        }
+    }
+    RETURNINT(~hash);
+    PROCRETURN
+    ENDPROC
+}
+
 
 
 // RXMATH function definitions
@@ -217,4 +310,9 @@ LOADFUNCS
     ADDPROC(covar,"rxmath.covar",  "b",  ".float", "expose arg1=.float[],arg2=.float[]");
     ADDPROC(correl,"rxmath.correl","b",  ".float", "expose arg1=.float[],expose arg2=.float[]");
     ADDPROC(regression, "rxmath.regression","b",".float", "expose arg0=.float[],expose arg1=.float[],expose arg2=.float,expose arg3=.float");
+    ADDPROC(djb2,   "rxmath.djb2","b",".int", "arg0=.string");
+    ADDPROC(murmur, "rxmath.murmur","b",".int", "arg0=.string, seed=.int");
+    ADDPROC(fnv1a,  "rxmath.fnv1a", "b",".int", "arg0=.string");
+    ADDPROC(crc32,  "rxmath.crc32", "b",".int", "arg0=.string");
+
 ENDLOADFUNCS

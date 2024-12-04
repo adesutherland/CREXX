@@ -2,6 +2,43 @@
 options levelb
 import rxmath
 import rxfnsb
+
+say "DJB2 Hash"
+say djb2("Hello, world!")
+say djb2("The quick brown fox jumps over the lazy dog")
+say djb2("Waltz, bad nymph, for quick jigs vex")
+say djb2("Glib jocks quiz nymph to vex dwarf")
+say djb2("Sphinx of black quartz, judge my vow")
+say djb2("How quickly daft jumping zebras vex!")
+say djb2("The five boxing wizards jump quickly")
+say djb2("Jackdaws love my big sphinx of quartz")
+say djb2("Pack my box with five dozen liquor jugs")
+say djb2("Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich")
+say djb2("Carthago delenda est, pax, lux, cum quaesivi Romam")
+say djb2("Jupiter ex Urania Phobo vexat cadens lux")
+say djb2("Xenos e filos hedista lambanei charan yper zonis")
+say djb2("Zeus kai Hera, Apollon kai Artemis, Hermes kai Athena phylassousi to chaos")
+say "Murmur Hash"
+say murmur("Hello, world!",42)
+say murmur("The quick brown fox jumps over the lazy dog",4711)
+say murmur("Waltz, bad nymph, for quick jigs vex",4711)
+say murmur("Glib jocks quiz nymph to vex dwarf",4711)
+say murmur("Sphinx of black quartz, judge my vow",4711)
+say murmur("How quickly daft jumping zebras vex!",4711)
+say murmur("The five boxing wizards jump quickly",4711)
+say murmur("Jackdaws love my big sphinx of quartz",4711)
+say murmur("Pack my box with five dozen liquor jugs",4711)
+say murmur("Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich",4711)
+say murmur("Carthago delenda est, pax, lux, cum quaesivi Romam",4711)
+say murmur("Jupiter ex Urania Phobo vexat cadens lux",4711)
+say murmur("Xenos e filos hedista lambanei charan yper zonis",4711)
+say murmur("Zeus kai Hera, Apollon kai Artemis, Hermes kai Athena phylassousi to chaos",4711)
+say "fnv1a"
+say fnv1a("Hello, world!")
+
+say "CRC32"
+say crc32("Hello, world!")
+say "Trigonometry"
 say "ACOS "acos(0)
 say "ASIN "asin(0)
 say "ATAN "atan(90)
