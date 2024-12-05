@@ -195,7 +195,7 @@ PROCEDURE(tcpopen) {
  */
     ENDPROC
 }
-PROCEDURE(TCPSEND) {
+PROCEDURE(tcpsend) {
  /*   SOCKET sockfd = GETINT(ARG0);
     // Send a message to the server
     const char *message = GETSTRING(ARG1);
@@ -204,7 +204,7 @@ PROCEDURE(TCPSEND) {
 */
  ENDPROC
 }
-PROCEDURE(TCPRECEIVE) {
+PROCEDURE(tcpreceive) {
  /*   SOCKET sockfd = GETINT(ARG0);
     char buffer[BUFFER_SIZE];
     int bytes_received = recv(sockfd, buffer, BUFFER_SIZE - 1, 0);
@@ -220,7 +220,7 @@ PROCEDURE(TCPRECEIVE) {
  */
     ENDPROC
 }
-PROCEDURE(TCPCLOSE) {   // Close the socket
+PROCEDURE(tcpclose) {   // Close the socket
  /*   SOCKET sockfd = GETINT(ARG0);
     close(sockfd);
     printf("Connection closed.\n");
