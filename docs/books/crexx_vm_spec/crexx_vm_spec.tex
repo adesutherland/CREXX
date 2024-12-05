@@ -40,10 +40,12 @@
 
 \mainmatter
 \input{about}
-\chapter{Building \crexx{}}
-\input{Building_cRexx.tex}
 \chapter{Low-Level System Information}
 \input{lowlevel}
+\input{rexx-considerations}
+\part{Instructions}
+
+
 \chapter{\crexx{} Virtual Machine Instruction Set}
 Most \crexx{} Virtual machine instructions share the following
 characteristics:
@@ -58,6 +60,7 @@ characteristics:
       the instructions. In \code{.rxbin} modules this data is
       represented in the Constant Pool. 
 \end{itemize}
+
 \input{instruction_chapter}
 \chapter{\crexx{} Assembler}
 \input{REXX-Assembler.tex}
@@ -66,6 +69,10 @@ characteristics:
 \chapter{Platform Considerations}
 
 \chapter{Notices}
+
+\part{Appendices and References}
+\chapter{Building \crexx{}}
+\input{Building_cRexx.tex}
 
 \chapter{Instructions by Mnemonic}
 \begin{longtable}{lll}

@@ -1,4 +1,4 @@
-/* REXX LEVEB B SYSTEM FUNCTIONS */
+/* REXX LEVEL B SYSTEM FUNCTIONS */
 options levelb
 namespace _rxsysb expose _open _close _exit
 #import rxfnsb

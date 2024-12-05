@@ -2,7 +2,12 @@
 \section{\texorpdfstring{Building the \crexx{}
 toolchain}{Building the  toolchain}}\label{building-the-toolchain}}
 
-This paragraph aims to show all you need to know about how to build
+Most users will download and install a binary distribution for
+their platforms and will not need this information. In some cases
+when a binary distribution is unavailable, it will be beneficial to be
+able to build the \crexx{} system using a standard C toolchain.
+
+This chapter aims to show all you need to know about how to build
 cRexx from scratch, and then run it. It will show what you need, what to
 do and when it is build, how to make working programs with it.
 
@@ -121,20 +126,12 @@ change that some test cases fail, but generally these should indicate
 success.
 
 \hypertarget{use-of-rexx-to-build-crexx}{%
-\section{Use of Rexx to build cRexx}\label{use-of-rexx-to-build-crexx}}
+\section{Use of \crexx{} to build \crexx{}}\label{use-of-rexx-to-build-crexx}}
 
-Rexx code is used twice during the build process. The first time is in
-an early stage: as the Rexx VM `machine code' instructions are generated
-from a file, a Rexx script needs to work on these to generate two C
-sources. (The Rexx engine for this needs to be in working order on the
-building system - this is one of the things CMake checks, and it can
-flag down the build if it cannot locate a working `rexx' executable).
-
-The second time Rexx is used, it is already our working cRexx instance:
-the library of built-in functions is written in Rexx (and Rexx
-Assembler) and needs to be compiled (carefully observing the
-dependencies on other Rexx built-in functions) before it is added to the
-library and the cRexx executables.
+\crexx{} is used to build the library of built-in functions that written in Rexx (and Rexx
+Assembler) and need to be compiled (carefully observing the
+dependencies on other Rexx built-in functions) before they are added to the
+library and the cRexx executables in their binary form.
 
 \hypertarget{what-do-we-have-after-a-successful-build-process}{%
 \section{What do we have after a successful build

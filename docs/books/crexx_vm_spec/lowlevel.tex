@@ -1,7 +1,7 @@
 % this is not genereated from Markdown so the edits can be here
 \section{Register based Virtual Machine}
 \crexx{} uses a register based virtual machine.
-A \index{register-based virtual machine} uses registers, which are small, fast, on-chip memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. This approach can provide faster performance because accessing registers is typically faster than accessing memory. In the \emph{rxvm} virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
+A \index{register-based virtual machine} uses registers, which are memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. This approach can provide faster performance because accessing registers is typically faster than accessing memory. In the \emph{rxvm} virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
 
 In contrast, a \index{stack-based virtual machine} uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack. However, the stack-based approach can be slower than the register-based approach because accessing memory is typically slower than accessing registers.
 
@@ -27,10 +27,9 @@ the \emph{rxas} assembler.
 \section{\crexx{} Virtual Machine instructions}
 
 % \section{Machine Interface}
-This section describes the processor-specific information for
-\index{RXVM processors}. The instruction set can be seen as the ISA
-(instruction set architecture) for
-an RXVM processor, of which the microcode is implemented in the C99 language.
+This section describes the processor-specific information for the
+hypothetical rxvm processor. \index{RXVM processor} The instruction set can be seen as the ISA
+(instruction set architecture) for an RXVM processor, of which the microcode is implemented in the C99 language.
 
 % \subsection{Processor Architecture}
 \index{processor architecture}
