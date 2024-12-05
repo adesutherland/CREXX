@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.24)
 project(rxtcp_plugin C)
 
 set(CMAKE_C_STANDARD 90)
-link_libraries(ws2_32 wsock32)
+if(WIN32)
+	link_libraries(ws2_32 wsock32)
+endif()	
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
