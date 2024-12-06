@@ -13,6 +13,7 @@ insert into category VALUES(6,'Time Instructions','Instructions that work with d
 insert into category VALUES(7,'Meta Instructions','Instructions that work on program structure metadata');
 insert into category VALUES(8,'Breakpoint Instructions','Instructions that aid in debugging programs');
 insert into category VALUES(9,'String Instructions','Instructions that work on Strings and Characters');
+insert into category VALUES(10,'Decimal Arithmetic','Instructions that work on Decimal Numbers');
 drop table if exists instruction;
 CREATE TABLE instruction
 ( opcode             char(6) primary key,
