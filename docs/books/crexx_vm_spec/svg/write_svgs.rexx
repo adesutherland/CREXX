@@ -18,7 +18,8 @@ do i=1 to outstem[0]
   istem=''; istem=istem
   istem[0]=1
   instructions=''
-  istem[1]='select opcode, mnemonic, operands, description from instruction where category = 'cat' order by mnemonic;'
+  --istem[1]='select opcode, mnemonic, operands, description from instruction where category = 'cat' order by mnemonic;'
+  istem[1]='select distinct opcode,a.mnemonic, operands, description from instruction as a, inst_cat as b where a.mnemonic = b.mnemonic and b.category = 'cat' order by a.mnemonic;'
   address system 'sqlite3 ../../../instructions/instructionbase.sqb' with -
     input stem istem -
     output stem instructions
@@ -37,6 +38,7 @@ Foo [label=<
   opcode='0xFFFF'
   do j=1 to instructions[0]
     parse instructions[j] opcode '|' mnemonic '|' operands '|' description
+    say '-->' mnemonic
     description=description.changestr('&','\\&')
     description=description.changestr('^','\\^')
     mnemonic=mnemonic.strip()

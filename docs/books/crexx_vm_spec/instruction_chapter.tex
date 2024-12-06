@@ -591,18 +591,13 @@
 \section{Floating Point Arithmetic}
 \begin{description}
 \item[\texttt{FADD}]  - Add Float\\
-\item[\texttt{Syntax}] - variants\\
+\item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/fadd.gv}
 \fontspec{TeX Gyre Pagella}
 \item[\texttt{Operation}]
 \IfFileExists{operation/fadd.operation}{\input{operation/fadd.operation}}{}
 \item[\texttt{}]
-\item[\texttt{0x0024}]\fontspec{IBM Plex Sans Condensed} Float Add (op1=op2+op3) REGREGREG\\
-\fontspec{TeX Gyre Pagella}
-\IfFileExists{../../examples/faddREGREGREG.def}{\input{../../examples/faddREGREGREG.def}}{}
-\IfFileExists{../../examples/faddREGREGREG.rexx}{\splice{rxc ../../examples/faddREGREGREG}}{}
-\IfFileExists{../../examples/faddREGREGREG.rxas}{\lstinputlisting[language=rxas,label=fadd,caption=fadd example.]{../../examples/faddREGREGREG.rxas} \splice{rxas ../../examples/faddREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/faddREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
 \item[\texttt{0x0025}]\fontspec{IBM Plex Sans Condensed} Float Add (op1=op2+op3) REGREGFLOAT\\
 \fontspec{TeX Gyre Pagella}
 \IfFileExists{../../examples/faddREGREGFLOAT.def}{\input{../../examples/faddREGREGFLOAT.def}}{}
@@ -2907,5 +2902,432 @@
 \IfFileExists{../../examples/truncREGREGREG.def}{\input{../../examples/truncREGREGREG.def}}{}
 \IfFileExists{../../examples/truncREGREGREG.rexx}{\splice{rxc ../../examples/truncREGREGREG}}{}
 \IfFileExists{../../examples/truncREGREGREG.rxas}{\lstinputlisting[language=rxas,label=trunc,caption=trunc example.]{../../examples/truncREGREGREG.rxas} \splice{rxas ../../examples/truncREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/truncREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\section{Decimal Arithmetic}
+\begin{description}
+\item[\texttt{DADD}]  - Decimal Add\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dadd.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dadd.operation}{\input{operation/dadd.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0156}]\fontspec{IBM Plex Sans Condensed} Decimal Add (op1=op2-op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/daddREGREGREG.def}{\input{../../examples/daddREGREGREG.def}}{}
+\IfFileExists{../../examples/daddREGREGREG.rexx}{\splice{rxc ../../examples/daddREGREGREG}}{}
+\IfFileExists{../../examples/daddREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dadd,caption=dadd example.]{../../examples/daddREGREGREG.rxas} \splice{rxas ../../examples/daddREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/daddREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0157}]\fontspec{IBM Plex Sans Condensed} Decimal Add (op1=op2-op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/daddREGREGFLOAT.def}{\input{../../examples/daddREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/daddREGREGFLOAT.rexx}{\splice{rxc ../../examples/daddREGREGFLOAT}}{}
+\IfFileExists{../../examples/daddREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dadd,caption=dadd example.]{../../examples/daddREGREGFLOAT.rxas} \splice{rxas ../../examples/daddREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/daddREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DCOPY}]  - Decimal Copy\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dcopy.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dcopy.operation}{\input{operation/dcopy.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0170}]\fontspec{IBM Plex Sans Condensed} Copy Decimal op2 to op1 REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dcopyREGREG.def}{\input{../../examples/dcopyREGREG.def}}{}
+\IfFileExists{../../examples/dcopyREGREG.rexx}{\splice{rxc ../../examples/dcopyREGREG}}{}
+\IfFileExists{../../examples/dcopyREGREG.rxas}{\lstinputlisting[language=rxas,label=dcopy,caption=dcopy example.]{../../examples/dcopyREGREG.rxas} \splice{rxas ../../examples/dcopyREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dcopyREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DDIV}]  - Decimal Divide\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/ddiv.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/ddiv.operation}{\input{operation/ddiv.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x015a}]\fontspec{IBM Plex Sans Condensed} Decimal Divide (op1=op2/op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/ddivREGREGREG.def}{\input{../../examples/ddivREGREGREG.def}}{}
+\IfFileExists{../../examples/ddivREGREGREG.rexx}{\splice{rxc ../../examples/ddivREGREGREG}}{}
+\IfFileExists{../../examples/ddivREGREGREG.rxas}{\lstinputlisting[language=rxas,label=ddiv,caption=ddiv example.]{../../examples/ddivREGREGREG.rxas} \splice{rxas ../../examples/ddivREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/ddivREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x015b}]\fontspec{IBM Plex Sans Condensed} Decimal Divide (op1=op2/op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/ddivREGREGFLOAT.def}{\input{../../examples/ddivREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/ddivREGREGFLOAT.rexx}{\splice{rxc ../../examples/ddivREGREGFLOAT}}{}
+\IfFileExists{../../examples/ddivREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=ddiv,caption=ddiv example.]{../../examples/ddivREGREGFLOAT.rxas} \splice{rxas ../../examples/ddivREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/ddivREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x015c}]\fontspec{IBM Plex Sans Condensed} Decimal Divide (op1=op2/op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/ddivREGFLOATREG.def}{\input{../../examples/ddivREGFLOATREG.def}}{}
+\IfFileExists{../../examples/ddivREGFLOATREG.rexx}{\splice{rxc ../../examples/ddivREGFLOATREG}}{}
+\IfFileExists{../../examples/ddivREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=ddiv,caption=ddiv example.]{../../examples/ddivREGFLOATREG.rxas} \splice{rxas ../../examples/ddivREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/ddivREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DEQ}]  - Decimal Equals\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/deq.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/deq.operation}{\input{operation/deq.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x015d}]\fontspec{IBM Plex Sans Condensed} Decimal Equals op1=(op2==op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/deqREGREGREG.def}{\input{../../examples/deqREGREGREG.def}}{}
+\IfFileExists{../../examples/deqREGREGREG.rexx}{\splice{rxc ../../examples/deqREGREGREG}}{}
+\IfFileExists{../../examples/deqREGREGREG.rxas}{\lstinputlisting[language=rxas,label=deq,caption=deq example.]{../../examples/deqREGREGREG.rxas} \splice{rxas ../../examples/deqREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/deqREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x015e}]\fontspec{IBM Plex Sans Condensed} Decimal Equals op1=(op2==op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/deqREGREGFLOAT.def}{\input{../../examples/deqREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/deqREGREGFLOAT.rexx}{\splice{rxc ../../examples/deqREGREGFLOAT}}{}
+\IfFileExists{../../examples/deqREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=deq,caption=deq example.]{../../examples/deqREGREGFLOAT.rxas} \splice{rxas ../../examples/deqREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/deqREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DEQBR}]  - Decimal Equal If\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/deqbr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/deqbr.operation}{\input{operation/deqbr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x016f}]\fontspec{IBM Plex Sans Condensed} Decimal Equal if (op2=op3) goto op1 IDREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/deqbrIDREGREG.def}{\input{../../examples/deqbrIDREGREG.def}}{}
+\IfFileExists{../../examples/deqbrIDREGREG.rexx}{\splice{rxc ../../examples/deqbrIDREGREG}}{}
+\IfFileExists{../../examples/deqbrIDREGREG.rxas}{\lstinputlisting[language=rxas,label=deqbr,caption=deqbr example.]{../../examples/deqbrIDREGREG.rxas} \splice{rxas ../../examples/deqbrIDREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/deqbrIDREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DFORMAT}]  - Set String from Formatted Decimal\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dformat.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dformat.operation}{\input{operation/dformat.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0171}]\fontspec{IBM Plex Sans Condensed} Set string value from Decimal value using a format string REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dformatREGREGREG.def}{\input{../../examples/dformatREGREGREG.def}}{}
+\IfFileExists{../../examples/dformatREGREGREG.rexx}{\splice{rxc ../../examples/dformatREGREGREG}}{}
+\IfFileExists{../../examples/dformatREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dformat,caption=dformat example.]{../../examples/dformatREGREGREG.rxas} \splice{rxas ../../examples/dformatREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dformatREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DGT}]  - Decimal Greater Than\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dgt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dgt.operation}{\input{operation/dgt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0161}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than op1=(op2>op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgtREGREGREG.def}{\input{../../examples/dgtREGREGREG.def}}{}
+\IfFileExists{../../examples/dgtREGREGREG.rexx}{\splice{rxc ../../examples/dgtREGREGREG}}{}
+\IfFileExists{../../examples/dgtREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dgt,caption=dgt example.]{../../examples/dgtREGREGREG.rxas} \splice{rxas ../../examples/dgtREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgtREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0162}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than op1=(op2>op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgtREGREGFLOAT.def}{\input{../../examples/dgtREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dgtREGREGFLOAT.rexx}{\splice{rxc ../../examples/dgtREGREGFLOAT}}{}
+\IfFileExists{../../examples/dgtREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dgt,caption=dgt example.]{../../examples/dgtREGREGFLOAT.rxas} \splice{rxas ../../examples/dgtREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgtREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0163}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than op1=(op2>op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgtREGFLOATREG.def}{\input{../../examples/dgtREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dgtREGFLOATREG.rexx}{\splice{rxc ../../examples/dgtREGFLOATREG}}{}
+\IfFileExists{../../examples/dgtREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dgt,caption=dgt example.]{../../examples/dgtREGFLOATREG.rxas} \splice{rxas ../../examples/dgtREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgtREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DGTBR}]  - Decimal Greater Than If\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dgtbr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dgtbr.operation}{\input{operation/dgtbr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x016d}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than if (op2>op3) goto op1 IDREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgtbrIDREGREG.def}{\input{../../examples/dgtbrIDREGREG.def}}{}
+\IfFileExists{../../examples/dgtbrIDREGREG.rexx}{\splice{rxc ../../examples/dgtbrIDREGREG}}{}
+\IfFileExists{../../examples/dgtbrIDREGREG.rxas}{\lstinputlisting[language=rxas,label=dgtbr,caption=dgtbr example.]{../../examples/dgtbrIDREGREG.rxas} \splice{rxas ../../examples/dgtbrIDREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgtbrIDREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DGTE}]  - Decimal Greater Than Equals\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dgte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dgte.operation}{\input{operation/dgte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0164}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than equals op1=(op2>=op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgteREGREGREG.def}{\input{../../examples/dgteREGREGREG.def}}{}
+\IfFileExists{../../examples/dgteREGREGREG.rexx}{\splice{rxc ../../examples/dgteREGREGREG}}{}
+\IfFileExists{../../examples/dgteREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dgte,caption=dgte example.]{../../examples/dgteREGREGREG.rxas} \splice{rxas ../../examples/dgteREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgteREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0165}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than equals op1=(op2>=op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgteREGREGFLOAT.def}{\input{../../examples/dgteREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dgteREGREGFLOAT.rexx}{\splice{rxc ../../examples/dgteREGREGFLOAT}}{}
+\IfFileExists{../../examples/dgteREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dgte,caption=dgte example.]{../../examples/dgteREGREGFLOAT.rxas} \splice{rxas ../../examples/dgteREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgteREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0166}]\fontspec{IBM Plex Sans Condensed} Decimal Greater than equals op1=(op2>=op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dgteREGFLOATREG.def}{\input{../../examples/dgteREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dgteREGFLOATREG.rexx}{\splice{rxc ../../examples/dgteREGFLOATREG}}{}
+\IfFileExists{../../examples/dgteREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dgte,caption=dgte example.]{../../examples/dgteREGFLOATREG.rxas} \splice{rxas ../../examples/dgteREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dgteREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DLT}]  - Decimal Less Than\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dlt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dlt.operation}{\input{operation/dlt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0167}]\fontspec{IBM Plex Sans Condensed} Decimal Less than op1=(op2<op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dltREGREGREG.def}{\input{../../examples/dltREGREGREG.def}}{}
+\IfFileExists{../../examples/dltREGREGREG.rexx}{\splice{rxc ../../examples/dltREGREGREG}}{}
+\IfFileExists{../../examples/dltREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dlt,caption=dlt example.]{../../examples/dltREGREGREG.rxas} \splice{rxas ../../examples/dltREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dltREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0168}]\fontspec{IBM Plex Sans Condensed} Decimal Less than op1=(op2<op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dltREGREGFLOAT.def}{\input{../../examples/dltREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dltREGREGFLOAT.rexx}{\splice{rxc ../../examples/dltREGREGFLOAT}}{}
+\IfFileExists{../../examples/dltREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dlt,caption=dlt example.]{../../examples/dltREGREGFLOAT.rxas} \splice{rxas ../../examples/dltREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dltREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0169}]\fontspec{IBM Plex Sans Condensed} Decimal Less than op1=(op2<op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dltREGFLOATREG.def}{\input{../../examples/dltREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dltREGFLOATREG.rexx}{\splice{rxc ../../examples/dltREGFLOATREG}}{}
+\IfFileExists{../../examples/dltREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dlt,caption=dlt example.]{../../examples/dltREGFLOATREG.rxas} \splice{rxas ../../examples/dltREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dltREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DLTBR}]  - Decimal Less Than If\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dltbr.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dltbr.operation}{\input{operation/dltbr.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x016e}]\fontspec{IBM Plex Sans Condensed} Decimal Less than if (op2<op3) goto op1 IDREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dltbrIDREGREG.def}{\input{../../examples/dltbrIDREGREG.def}}{}
+\IfFileExists{../../examples/dltbrIDREGREG.rexx}{\splice{rxc ../../examples/dltbrIDREGREG}}{}
+\IfFileExists{../../examples/dltbrIDREGREG.rxas}{\lstinputlisting[language=rxas,label=dltbr,caption=dltbr example.]{../../examples/dltbrIDREGREG.rxas} \splice{rxas ../../examples/dltbrIDREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dltbrIDREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DLTE}]  - Decimal Less Than Equals\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dlte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dlte.operation}{\input{operation/dlte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x016a}]\fontspec{IBM Plex Sans Condensed} Decimal Less than equals op1=(op2<=op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dlteREGREGREG.def}{\input{../../examples/dlteREGREGREG.def}}{}
+\IfFileExists{../../examples/dlteREGREGREG.rexx}{\splice{rxc ../../examples/dlteREGREGREG}}{}
+\IfFileExists{../../examples/dlteREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dlte,caption=dlte example.]{../../examples/dlteREGREGREG.rxas} \splice{rxas ../../examples/dlteREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dlteREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x016b}]\fontspec{IBM Plex Sans Condensed} Decimal Less than equals op1=(op2<=op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dlteREGREGFLOAT.def}{\input{../../examples/dlteREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dlteREGREGFLOAT.rexx}{\splice{rxc ../../examples/dlteREGREGFLOAT}}{}
+\IfFileExists{../../examples/dlteREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dlte,caption=dlte example.]{../../examples/dlteREGREGFLOAT.rxas} \splice{rxas ../../examples/dlteREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dlteREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x016c}]\fontspec{IBM Plex Sans Condensed} Decimal Less than equals op1=(op2<=op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dlteREGFLOATREG.def}{\input{../../examples/dlteREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dlteREGFLOATREG.rexx}{\splice{rxc ../../examples/dlteREGFLOATREG}}{}
+\IfFileExists{../../examples/dlteREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dlte,caption=dlte example.]{../../examples/dlteREGFLOATREG.rxas} \splice{rxas ../../examples/dlteREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dlteREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DMOD}]  - Decimal Modulo\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dmod.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dmod.operation}{\input{operation/dmod.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0024}]\fontspec{IBM Plex Sans Condensed} Decimal Modulo (op1=op2%op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dmodREGREGREG.def}{\input{../../examples/dmodREGREGREG.def}}{}
+\IfFileExists{../../examples/dmodREGREGREG.rexx}{\splice{rxc ../../examples/dmodREGREGREG}}{}
+\IfFileExists{../../examples/dmodREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dmod,caption=dmod example.]{../../examples/dmodREGREGREG.rxas} \splice{rxas ../../examples/dmodREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dmodREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DMULT}]  - Decimal Multiply\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dmult.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dmult.operation}{\input{operation/dmult.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0158}]\fontspec{IBM Plex Sans Condensed} Decimal Multiply (op1=op2*op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dmultREGREGREG.def}{\input{../../examples/dmultREGREGREG.def}}{}
+\IfFileExists{../../examples/dmultREGREGREG.rexx}{\splice{rxc ../../examples/dmultREGREGREG}}{}
+\IfFileExists{../../examples/dmultREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dmult,caption=dmult example.]{../../examples/dmultREGREGREG.rxas} \splice{rxas ../../examples/dmultREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dmultREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0159}]\fontspec{IBM Plex Sans Condensed} Decimal Multiply (op1=op2*op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dmultREGREGFLOAT.def}{\input{../../examples/dmultREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dmultREGREGFLOAT.rexx}{\splice{rxc ../../examples/dmultREGREGFLOAT}}{}
+\IfFileExists{../../examples/dmultREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dmult,caption=dmult example.]{../../examples/dmultREGREGFLOAT.rxas} \splice{rxas ../../examples/dmultREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dmultREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DNE}]  - Decimal Not Equals\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dne.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dne.operation}{\input{operation/dne.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x015f}]\fontspec{IBM Plex Sans Condensed} Decimal Not equals op1=(op2!=op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dneREGREGREG.def}{\input{../../examples/dneREGREGREG.def}}{}
+\IfFileExists{../../examples/dneREGREGREG.rexx}{\splice{rxc ../../examples/dneREGREGREG}}{}
+\IfFileExists{../../examples/dneREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dne,caption=dne example.]{../../examples/dneREGREGREG.rxas} \splice{rxas ../../examples/dneREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dneREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0160}]\fontspec{IBM Plex Sans Condensed} Decimal Not equals op1=(op2!=op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dneREGREGFLOAT.def}{\input{../../examples/dneREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dneREGREGFLOAT.rexx}{\splice{rxc ../../examples/dneREGREGFLOAT}}{}
+\IfFileExists{../../examples/dneREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dne,caption=dne example.]{../../examples/dneREGREGFLOAT.rxas} \splice{rxas ../../examples/dneREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dneREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DPOW}]  - Decimal Power\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dpow.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dpow.operation}{\input{operation/dpow.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0172}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3 REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dpowREGREGREG.def}{\input{../../examples/dpowREGREGREG.def}}{}
+\IfFileExists{../../examples/dpowREGREGREG.rexx}{\splice{rxc ../../examples/dpowREGREGREG}}{}
+\IfFileExists{../../examples/dpowREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dpow,caption=dpow example.]{../../examples/dpowREGREGREG.rxas} \splice{rxas ../../examples/dpowREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dpowREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0173}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3 REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dpowREGREGFLOAT.def}{\input{../../examples/dpowREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dpowREGREGFLOAT.rexx}{\splice{rxc ../../examples/dpowREGREGFLOAT}}{}
+\IfFileExists{../../examples/dpowREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dpow,caption=dpow example.]{../../examples/dpowREGREGFLOAT.rxas} \splice{rxas ../../examples/dpowREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dpowREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0174}]\fontspec{IBM Plex Sans Condensed} op1=op2**op3 REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dpowREGFLOATREG.def}{\input{../../examples/dpowREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dpowREGFLOATREG.rexx}{\splice{rxc ../../examples/dpowREGFLOATREG}}{}
+\IfFileExists{../../examples/dpowREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dpow,caption=dpow example.]{../../examples/dpowREGFLOATREG.rxas} \splice{rxas ../../examples/dpowREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dpowREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DSEX}]  - Decimal Sign Exchange\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dsex.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dsex.operation}{\input{operation/dsex.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0175}]\fontspec{IBM Plex Sans Condensed} Decimal op1 = -op1 (sign change) REG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dsexREG.def}{\input{../../examples/dsexREG.def}}{}
+\IfFileExists{../../examples/dsexREG.rexx}{\splice{rxc ../../examples/dsexREG}}{}
+\IfFileExists{../../examples/dsexREG.rxas}{\lstinputlisting[language=rxas,label=dsex,caption=dsex example.]{../../examples/dsexREG.rxas} \splice{rxas ../../examples/dsexREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dsexREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DSUB}]  - Decimal Subtract\\
+\item[\texttt{Syntax}] - variants\\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dsub.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dsub.operation}{\input{operation/dsub.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0153}]\fontspec{IBM Plex Sans Condensed} Decimal Subtract (op1=op2-op3) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dsubREGREGREG.def}{\input{../../examples/dsubREGREGREG.def}}{}
+\IfFileExists{../../examples/dsubREGREGREG.rexx}{\splice{rxc ../../examples/dsubREGREGREG}}{}
+\IfFileExists{../../examples/dsubREGREGREG.rxas}{\lstinputlisting[language=rxas,label=dsub,caption=dsub example.]{../../examples/dsubREGREGREG.rxas} \splice{rxas ../../examples/dsubREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dsubREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0154}]\fontspec{IBM Plex Sans Condensed} Decimal Subtract (op1=op2-op3) REGREGFLOAT\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dsubREGREGFLOAT.def}{\input{../../examples/dsubREGREGFLOAT.def}}{}
+\IfFileExists{../../examples/dsubREGREGFLOAT.rexx}{\splice{rxc ../../examples/dsubREGREGFLOAT}}{}
+\IfFileExists{../../examples/dsubREGREGFLOAT.rxas}{\lstinputlisting[language=rxas,label=dsub,caption=dsub example.]{../../examples/dsubREGREGFLOAT.rxas} \splice{rxas ../../examples/dsubREGREGFLOAT} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dsubREGREGFLOAT} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\item[\texttt{0x0155}]\fontspec{IBM Plex Sans Condensed} Decimal Subtract (op1=op2-op3) REGFLOATREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dsubREGFLOATREG.def}{\input{../../examples/dsubREGFLOATREG.def}}{}
+\IfFileExists{../../examples/dsubREGFLOATREG.rexx}{\splice{rxc ../../examples/dsubREGFLOATREG}}{}
+\IfFileExists{../../examples/dsubREGFLOATREG.rxas}{\lstinputlisting[language=rxas,label=dsub,caption=dsub example.]{../../examples/dsubREGFLOATREG.rxas} \splice{rxas ../../examples/dsubREGFLOATREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dsubREGFLOATREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DTOF}]  - Decimal Convert to Float\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dtof.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dtof.operation}{\input{operation/dtof.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0152}]\fontspec{IBM Plex Sans Condensed} Convert Decimal Number to Float op1=f2dec(op2) REG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dtofREG.def}{\input{../../examples/dtofREG.def}}{}
+\IfFileExists{../../examples/dtofREG.rexx}{\splice{rxc ../../examples/dtofREG}}{}
+\IfFileExists{../../examples/dtofREG.rxas}{\lstinputlisting[language=rxas,label=dtof,caption=dtof example.]{../../examples/dtofREG.rxas} \splice{rxas ../../examples/dtofREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dtofREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DTOI}]  - Decimal Convert to Integer\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dtoi.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dtoi.operation}{\input{operation/dtoi.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x014f}]\fontspec{IBM Plex Sans Condensed} Convert Decimal Number to Integer op1=dec2s(op2) REG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dtoiREG.def}{\input{../../examples/dtoiREG.def}}{}
+\IfFileExists{../../examples/dtoiREG.rexx}{\splice{rxc ../../examples/dtoiREG}}{}
+\IfFileExists{../../examples/dtoiREG.rxas}{\lstinputlisting[language=rxas,label=dtoi,caption=dtoi example.]{../../examples/dtoiREG.rxas} \splice{rxas ../../examples/dtoiREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dtoiREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{DTOS}]  - Decimal Convert to String\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/dtos.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/dtos.operation}{\input{operation/dtos.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x014e}]\fontspec{IBM Plex Sans Condensed} Convert Decimal Number to Decimal String op1=dec2s(op2) REG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/dtosREG.def}{\input{../../examples/dtosREG.def}}{}
+\IfFileExists{../../examples/dtosREG.rexx}{\splice{rxc ../../examples/dtosREG}}{}
+\IfFileExists{../../examples/dtosREG.rxas}{\lstinputlisting[language=rxas,label=dtos,caption=dtos example.]{../../examples/dtosREG.rxas} \splice{rxas ../../examples/dtosREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvm ../../examples/dtosREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
 \end{description}
 \clearpage

@@ -69,3 +69,391 @@
 1677283229256:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 strip next /'',''/ next 18-38 next /'',''/ next 39-100 next /'');/ next | cons
 1677283254495:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 strip next /'',''/ next 18-38 next /'',''/ next 39-100 next /'');/ next | > insert_ins.sql
 1677283279154:exit
+1733495773300:* REXX Assembly Instruction List
+1733495773313:0x00c0 acopy      {REG,REG}            Copy status Attributes op2 to op1
+1733495773322:0x0027 addf       {REG,REG,REG}        Convert and Add to Float (op1=op2+op3) (Deprecated)
+1733495773335:0x0028 addf       {REG,REG,FLOAT}      Convert and Add to Float (op1=op2+op3) (Deprecated)
+1733495773342:0x0011 addi       {REG,REG,REG}        Convert and Add to Integer (op1=op2+op3) (Deprecated)
+1733495773350:0x0012 addi       {REG,REG,INT}        Convert and Add to Integer (op1=op2+op3) (Deprecated)
+1733495773357:0x009b and        {REG,REG,REG}        Logical (int) and op1=(op2 && op3)
+1733495773368:0x0056 append     {REG,REG}            String Append (op1=op1||op2)
+1733495773374:0x0053 appendchar {REG,REG}            Append Concat Char op2 (as int) on op1
+1733495773379:0x0137 arr2redir  {REG,REG}            Redirect op1 <- array op2
+1733495773386:0x0102 bcf        {ID,REG}             if op2=0 goto op1(if false) else dec op2
+1733495773392:0x0103 bcf        {ID,REG,REG}         if op2=0 goto op1(if false) else dec op2 and inc op3
+1733495773398:0x00fd bct        {ID,REG}             dec op2; if op2>0; goto op1(if true)
+1733495773403:0x00fe bct        {ID,REG,REG}         dec op2; inc op3, if op2>0; goto op1(if true)
+1733495773408:0x00ff bctnm      {ID,REG}             dec op2; if op2>=0; goto op1(if true)
+1733495773414:0x0100 bctnm      {ID,REG,REG}         dec op2; inc op3, if op2>=0; goto op1(if true)
+1733495773419:0x0101 bctp       {ID,REG}             inc op2; goto op1
+1733495773423:0x010e beq        {ID,REG,REG}         if op2==op3 then goto op1
+1733495773428:0x010f beq        {ID,REG,INT}         if op2==op3 then goto op1
+1733495773432:0x0106 bge        {ID,REG,REG}         if op2>=op3 then goto op1
+1733495773437:0x0107 bge        {ID,REG,INT}         if op2>=op3 then goto op1
+1733495773441:0x0104 bgt        {ID,REG,REG}         if op2>op3 then goto op1
+1733495773446:0x0105 bgt        {ID,REG,INT}         if op2>op3 then goto op1
+1733495773451:0x010a ble        {ID,REG,REG}         if op2<=op3 then goto op1
+1733495773455:0x010b ble        {ID,REG,INT}         if op2<=op3 then goto op1
+1733495773460:0x0108 blt        {ID,REG,REG}         if op2<op3 then goto op1
+1733495773464:0x0109 blt        {ID,REG,INT}         if op2<op3 then goto op1
+1733495773469:0x010c bne        {ID,REG,REG}         if op2!=op3 then goto op1
+1733495773473:0x010d bne        {ID,REG,INT}         if op2!=op3 then goto op1
+1733495773477:0x0002 bpoff      no operand           Disable Breakpoints
+1733495773481:0x0001 bpon       no operand           Enable Breakpoints
+1733495773486:0x00b6 br         {ID}                 Branch to op1
+1733495773490:0x00b8 brf        {ID,REG}             Branch to op1 if op2 false
+1733495773493:0x00b7 brt        {ID,REG}             Branch to op1 if op2 true
+1733495773498:0x00b9 brtf       {ID,ID,REG}          Branch to op1 if op3 true, otherwise branch to op2
+1733495773502:0x011c brtpandt   {ID,REG,INT}         if op2.typeflag && op3 true then goto op1
+1733495773507:0x011b brtpt      {ID,REG}             if op2.typeflag true then goto op1
+1733495773512:0x00e5 btof       {REG}                Set register float value from its boolean value
+1733495773517:0x00e4 btoi       {REG}                Set register integer value from its boolean value
+1733495773522:0x00e6 btos       {REG}                Set register string value from its boolean value
+1733495773527:0x00ad call       {REG,FUNC}           Call procedure (op1=op2())
+1733495773531:0x00ae call       {REG,FUNC,REG}       Call procedure (op1=op2(op3...) )
+1733495773539:0x00ac call       {FUNC}               Call procedure (op1())
+1733495773543:0x00f7 cnop       no operand           no operation
+1733495773548:0x0050 concat     {REG,REG,REG}        String Concat (op1=op2||op3)
+1733495773552:0x0051 concat     {REG,REG,STRING}     String Concat (op1=op2||op3)
+1733495773556:0x0052 concat     {REG,STRING,REG}     String Concat (op1=op2||op3)
+1733495773560:0x0054 concchar   {REG,REG,REG}        Concat Char op1 from op2 position op3
+1733495773564:0x00bc copy       {REG,REG}            Copy op2 to op1
+1733495773568:0x0156 dadd       {REG,REG,REG}        Decimal Add (op1=op2-op3)
+1733495773572:0x0157 dadd       {REG,REG,FLOAT}      Decimal Add (op1=op2-op3)
+1733495773576:0x00af dcall      {REG,REG,REG}        Dynamic call procedure (op1=op2(op3...) )
+1733495773580:0x0170 dcopy      {REG,REG}            Copy Decimal op2 to op1
+1733495773584:0x015a ddiv       {REG,REG,REG}        Decimal Divide (op1=op2/op3)
+1733495773588:0x015b ddiv       {REG,REG,FLOAT}      Decimal Divide (op1=op2/op3)
+1733495773592:0x015c ddiv       {REG,FLOAT,REG}      Decimal Divide (op1=op2/op3)
+1733495773596:0x003a dec        {REG}                Decrement Int (op1--)
+1733495773599:0x003c dec0       no operand           Decrement R0-- Int
+1733495773603:0x003e dec1       no operand           Decrement R1-- Int
+1733495773607:0x0040 dec2       no operand           Decrement R2-- Int
+1733495773613:0x015d deq        {REG,REG,REG}        Decimal Equals op1=(op2==op3)
+1733495773618:0x015e deq        {REG,REG,FLOAT}      Decimal Equals op1=(op2==op3)
+1733495773622:0x016f deqbr      {ID,REG,REG}         Decimal Equal if (op2=op3) goto op1
+1733495773626:0x0171 dformat    {REG,REG,REG}        Set string value from Decimal value using a format string
+1733495773631:0x0161 dgt        {REG,REG,REG}        Decimal Greater than op1=(op2>op3)
+1733495773635:0x0162 dgt        {REG,REG,FLOAT}      Decimal Greater than op1=(op2>op3)
+1733495773639:0x0163 dgt        {REG,FLOAT,REG}      Decimal Greater than op1=(op2>op3)
+1733495773643:0x016d dgtbr      {ID,REG,REG}         Decimal Greater than if (op2>op3) goto op1
+1733495773649:0x0164 dgte       {REG,REG,REG}        Decimal Greater than equals op1=(op2>=op3)
+1733495773654:0x0165 dgte       {REG,REG,FLOAT}      Decimal Greater than equals op1=(op2>=op3)
+1733495773659:0x0166 dgte       {REG,FLOAT,REG}      Decimal Greater than equals op1=(op2>=op3)
+1733495773663:0x0036 divf       {REG,REG,REG}        Convert and Divide to Float (op1=op2/op3) (Deprecated)
+1733495773668:0x0037 divf       {REG,REG,FLOAT}      Convert and Divide to Float (op1=op2/op3) (Deprecated)
+1733495773672:0x0038 divf       {REG,FLOAT,REG}      Convert and Divide to Float (op1=op2/op3) (Deprecated)
+1733495773677:0x001f divi       {REG,REG,REG}        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
+1733495773682:0x0020 divi       {REG,REG,INT}        Convert and Divide to Integer (op1=op2/op3) (Deprecated)
+1733495773687:0x011e dllparms   {REG,REG,REG}        fetches parms for DLL call
+1733495773693:0x0167 dlt        {REG,REG,REG}        Decimal Less than op1=(op2<op3)
+1733495773699:0x0168 dlt        {REG,REG,FLOAT}      Decimal Less than op1=(op2<op3)
+1733495773704:0x0169 dlt        {REG,FLOAT,REG}      Decimal Less than op1=(op2<op3)
+1733495773708:0x016e dltbr      {ID,REG,REG}         Decimal Less than if (op2<op3) goto op1
+1733495773713:0x016a dlte       {REG,REG,REG}        Decimal Less than equals op1=(op2<=op3)
+1733495773718:0x016b dlte       {REG,REG,FLOAT}      Decimal Less than equals op1=(op2<=op3)
+1733495773723:0x016c dlte       {REG,FLOAT,REG}      Decimal Less than equals op1=(op2<=op3)
+1733495773727:0x0024 dmod       {REG,REG,REG}        Decimal Modulo (op1=op2%op3)
+1733495773732:0x0158 dmult      {REG,REG,REG}        Decimal Multiply (op1=op2*op3)
+1733495773736:0x0159 dmult      {REG,REG,FLOAT}      Decimal Multiply (op1=op2*op3)
+1733495773743:0x015f dne        {REG,REG,REG}        Decimal Not equals op1=(op2!=op3)
+1733495773747:0x0160 dne        {REG,REG,FLOAT}      Decimal Not equals op1=(op2!=op3)
+1733495773751:0x0172 dpow       {REG,REG,REG}        op1=op2**op3
+1733495773756:0x0173 dpow       {REG,REG,FLOAT}      op1=op2**op3
+1733495773759:0x0174 dpow       {REG,FLOAT,REG}      op1=op2**op3
+1733495773764:0x00f2 dropchar   {REG,REG,REG}        set op1 from op2 after dropping all chars from op3
+1733495773768:0x0175 dsex       {REG}                Decimal op1 = -op1 (sign change)
+1733495773772:0x0153 dsub       {REG,REG,REG}        Decimal Subtract (op1=op2-op3)
+1733495773778:0x0154 dsub       {REG,REG,FLOAT}      Decimal Subtract (op1=op2-op3)
+1733495773782:0x0155 dsub       {REG,FLOAT,REG}      Decimal Subtract (op1=op2-op3)
+1733495773787:0x0152 dtof       {REG}                Convert Decimal Number to Float op1=f2dec(op2)
+1733495773791:0x014f dtoi       {REG}                Convert Decimal Number to Integer op1=dec2s(op2)
+1733495773795:0x014e dtos       {REG}                Convert Decimal Number to Decimal String op1=dec2s(op2)
+1733495773799:0x014c erase      {REG}                erases register contents
+1733495773806:0x00e1 exit       no operand           Exit
+1733495773810:0x00e2 exit       {REG}                Exit op1
+1733495773813:0x00e3 exit       {INT}                Exit op1
+1733495773817:0x0025 fadd       {REG,REG,REG}        Float Add (op1=op2+op3)
+1733495773820:0x0026 fadd       {REG,REG,FLOAT}      Float Add (op1=op2+op3)
+1733495773824:0x0144 fclearerr  {REG}                clearerr op1 file*(int)
+1733495773827:0x013a fclose     {REG,REG}            op1 rc(int) = fclose op2 file*(int)
+1733495773831:0x00be fcopy      {REG,REG}            Copy Float op2 to op1
+1733495773835:0x0033 fdiv       {REG,REG,REG}        Float Divide (op1=op2/op3)
+1733495773838:0x0034 fdiv       {REG,REG,FLOAT}      Float Divide (op1=op2/op3)
+1733495773842:0x0035 fdiv       {REG,FLOAT,REG}      Float Divide (op1=op2/op3)
+1733495773846:0x0145 feof       {REG,REG}            op1 rc(int) = feof op2 file*(int)
+1733495773849:0x0077 feq        {REG,REG,REG}        Float Equals op1=(op2==op3)
+1733495773853:0x0078 feq        {REG,REG,FLOAT}      Float Equals op1=(op2==op3)
+1733495773857:0x0146 ferror     {REG,REG}            op1 rc(int) = ferror op2 file*(int)
+1733495773860:0x013b fflush     {REG,REG}            op1 rc(int) = fflush op2 file*(int)
+1733495773865:0x00ee fformat    {REG,REG,REG}        Set string value from float value using a format string
+1733495773868:0x007b fgt        {REG,REG,REG}        Float Greater than op1=(op2>op3)
+1733495773872:0x007c fgt        {REG,REG,FLOAT}      Float Greater than op1=(op2>op3)
+1733495773876:0x007d fgt        {REG,FLOAT,REG}      Float Greater than op1=(op2>op3)
+1733495773880:0x0087 fgtbr      {ID,REG,REG}         Float Greater than if (op2>op3) goto op1
+1733495773883:0x007e fgte       {REG,REG,REG}        Float Greater than equals op1=(op2>=op3)
+1733495773888:0x007f fgte       {REG,REG,FLOAT}      Float Greater than equals op1=(op2>=op3)
+1733495773892:0x0080 fgte       {REG,FLOAT,REG}      Float Greater than equals op1=(op2>=op3)
+1733495773896:0x0081 flt        {REG,REG,REG}        Float Less than op1=(op2<op3)
+1733495773900:0x0082 flt        {REG,REG,FLOAT}      Float Less than op1=(op2<op3)
+1733495773904:0x0083 flt        {REG,FLOAT,REG}      Float Less than op1=(op2<op3)
+1733495773909:0x0088 fltbr      {ID,REG,REG}         Float Less than if (op2<op3) goto op1
+1733495773913:0x0084 flte       {REG,REG,REG}        Float Less than equals op1=(op2<=op3)
+1733495773917:0x0085 flte       {REG,REG,FLOAT}      Float Less than equals op1=(op2<=op3)
+1733495773921:0x0086 flte       {REG,FLOAT,REG}      Float Less than equals op1=(op2<=op3)
+1733495773927:0x002f fmult      {REG,REG,REG}        Float Multiply (op1=op2*op3)
+1733495773931:0x0030 fmult      {REG,REG,FLOAT}      Float Multiply (op1=op2*op3)
+1733495773936:0x0110 fndblnk    {REG,REG,REG}        op1 = find next blank in op2[op3] and behind
+1733495773940:0x0111 fndnblnk   {REG,REG,REG}        op1 = find next next non blank in op2[op3] and behind
+1733495773944:0x0079 fne        {REG,REG,REG}        Float Not equals op1=(op2!=op3)
+1733495773949:0x007a fne        {REG,REG,FLOAT}      Float Not equals op1=(op2!=op3)
+1733495773953:0x0139 fopen      {REG,REG,REG}        op1 file*(int) = fopen filename op2(string) mode op3(string)
+1733495773957:0x00fb fpow       {REG,REG,REG}        op1=op2**op3
+1733495773961:0x00fc fpow       {REG,REG,FLOAT}      op1=op2**op3
+1733495773965:0x013c freadb     {REG,REG,REG}        op1(binary) = fread op2 file*(int) op3 bytes(int)
+1733495773969:0x013e freadbyte  {REG,REG}            op1 (int) = read byte op2 file*(int)
+1733495773973:0x013f freadcdpt  {REG,REG}            op1 (string and int) = read codepoint op2 file*(int)
+1733495773977:0x013d freadline  {REG,REG}            op1 (string) = read until newline op2 file*(int)
+1733495773981:0x0113 fsex       {REG}                float op1 = -op1 (sign change)
+1733495773985:0x0029 fsub       {REG,REG,REG}        Float Subtract (op1=op2-op3)
+1733495773988:0x002a fsub       {REG,REG,FLOAT}      Float Subtract (op1=op2-op3)
+1733495773992:0x002b fsub       {REG,FLOAT,REG}      Float Subtract (op1=op2-op3)
+1733495773996:0x00eb ftob       {REG}                Set register boolean (int 1 or 0) value from its float value
+1733495774001:0x0151 ftod       {REG}                Convert Float to Decimal Number op1=f2dec(op2)
+1733495774005:0x00ea ftoi       {REG}                Set register int value from its float value
+1733495774009:0x00e8 ftos       {REG}                Set register string value from its float value
+1733495774013:0x0140 fwrite     {REG,REG}            fwrite to op1 file*(int) from op2(string)
+1733495774017:0x0141 fwriteb    {REG,REG}            fwrite to op1 file*(int) from op2(binary)
+1733495774021:0x0142 fwritebyte {REG,REG}            write byte to op1 file*(int) op2 source(int)
+1733495774025:0x0143 fwritecdpt {REG,REG}            write codepoint to op1 file*(int) op2 source(int)
+1733495774029:0x012b getabufs   {REG,REG}            get attribute buffer size op1 = op2.max_attributes
+1733495774034:0x011a getandtp   {REG,REG,INT}        get the register type flag with mask (op1(int) = op2.typeflag & op3)
+1733495774038:0x0125 getattrs   {REG,REG}            get number attributes op1 = op2.num_attributes
+1733495774042:0x0126 getattrs   {REG,REG,INT}        get number attributes op1 = op2.num_attributes + op3
+1733495774045:0x00f6 getbyte    {REG,REG,REG}        get byte  (op1=op2(op3)
+1733495774049:0x0122 getenv     {REG,REG}            get environment variable, op1=env[op2]
+1733495774052:0x0123 getenv     {REG,STRING}         get environment variable, op1=env[op2]
+1733495774056:0x0063 getstrpos  {REG,REG}            Get String (op2) charpos into op1
+1733495774060:0x0114 gettp      {REG,REG}            gets the register type flag (op1 = op2.typeflag)
+1733495774064:0x00a5 gmap       {REG,REG}            Map op1 to global var name in op2
+1733495774067:0x00a6 gmap       {REG,STRING}         Map op1 to global var name op2
+1733495774071:0x0060 hexchar    {REG,REG,REG}        op1 (as hex) = op2[op3]
+1733495774074:0x000f iadd       {REG,REG,REG}        Integer Add (op1=op2+op3)
+1733495774078:0x0010 iadd       {REG,REG,INT}        Integer Add (op1=op2+op3)
+1733495774082:0x0041 iand       {REG,REG,REG}        bit wise and of 2 integers (op1=op2&op3)
+1733495774086:0x0042 iand       {REG,REG,INT}        bit wise and of 2 integers (op1=op2&op3)
+1733495774089:0x0149 ichkrng    {REG,REG,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+1733495774093:0x0148 ichkrng    {REG,INT,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+1733495774097:0x0147 ichkrng    {REG,INT,INT}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+1733495774100:0x014b ichkrng    {INT,REG,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+1733495774104:0x014a ichkrng    {INT,INT,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+1733495774108:0x00bd icopy      {REG,REG}            Copy Integer op2 to op1
+1733495774111:0x001c idiv       {REG,REG,REG}        Integer Divide (op1=op2/op3)
+1733495774115:0x001d idiv       {REG,REG,INT}        Integer Divide (op1=op2/op3)
+1733495774119:0x001e idiv       {REG,INT,REG}        Integer Divide (op1=op2/op3)
+1733495774122:0x0065 ieq        {REG,REG,REG}        Int Equals op1=(op2==op3)
+1733495774126:0x0066 ieq        {REG,REG,INT}        Int Equals op1=(op2==op3)
+1733495774130:0x0069 igt        {REG,REG,REG}        Int Greater than op1=(op2>op3)
+1733495774134:0x006a igt        {REG,REG,INT}        Int Greater than op1=(op2>op3)
+1733495774137:0x006b igt        {REG,INT,REG}        Int Greater than op1=(op2>op3)
+1733495774141:0x0075 igtbr      {ID,REG,REG}         Int Greater than if (op2>op3) goto op1
+1733495774145:0x006c igte       {REG,REG,REG}        Int Greater than equals op1=(op2>=op3)
+1733495774149:0x006d igte       {REG,REG,INT}        Int Greater than equals op1=(op2>=op3)
+1733495774152:0x006e igte       {REG,INT,REG}        Int Greater than equals op1=(op2>=op3)
+1733495774156:0x006f ilt        {REG,REG,REG}        Int Less than op1=(op2<op3)
+1733495774160:0x0070 ilt        {REG,REG,INT}        Int Less than op1=(op2<op3)
+1733495774163:0x0071 ilt        {REG,INT,REG}        Int Less than op1=(op2<op3)
+1733495774166:0x0076 iltbr      {ID,REG,REG}         Int Less than if (op2<op3) goto op1
+1733495774172:0x0072 ilte       {REG,REG,REG}        Int Less than equals op1=(op2<=op3)
+1733495774176:0x0073 ilte       {REG,REG,INT}        Int Less than equals op1=(op2<=op3)
+1733495774179:0x0074 ilte       {REG,INT,REG}        Int Less than equals op1=(op2<=op3)
+1733495774183:0x0021 imod       {REG,REG,REG}        Integer Modulo (op1=op2%op3)
+1733495774186:0x0022 imod       {REG,REG,INT}        Integer Modulo (op1=op2%op3)
+1733495774190:0x0023 imod       {REG,INT,REG}        Integer Modulo (op1=op2&op3)
+1733495774193:0x0018 imult      {REG,REG,REG}        Integer Multiply (op1=op2*op3)
+1733495774197:0x0019 imult      {REG,REG,INT}        Integer Multiply (op1=op2*op3)
+1733495774201:0x0039 inc        {REG}                Increment Int (op1++)
+1733495774204:0x003b inc0       no operand           Increment R0++ Int
+1733495774208:0x003d inc1       no operand           Increment R1++ Int
+1733495774211:0x003f inc2       no operand           Increment R2++ Int
+1733495774215:0x0067 ine        {REG,REG,REG}        Int Not equals op1=(op2!=op3)
+1733495774218:0x0068 ine        {REG,REG,INT}        Int Not equals op1=(op2!=op3)
+1733495774222:0x004b inot       {REG,REG}            inverts all bits of an integer (op1=~op2)
+1733495774226:0x004c inot       {REG,INT}            inverts all bits of an integer (op1=~op2)
+1733495774230:0x0043 ior        {REG,REG,REG}        bit wise or of 2 integers (op1=op2|op3)
+1733495774233:0x0044 ior        {REG,REG,INT}        bit wise or of 2 integers (op1=op2|op3)
+1733495774237:0x00f8 ipow       {REG,REG,REG}        op1=op2**op3
+1733495774240:0x00f9 ipow       {REG,REG,INT}        op1=op2**op3
+1733495774243:0x00fa ipow       {REG,INT,REG}        op1=op2**op3
+1733495774247:0x011f irand      {REG,REG}            random number random, op1=irand(op2)
+1733495774251:0x0120 irand      {REG,INT}            random number random, op1=irand(op2)
+1733495774255:0x0112 isex       {REG}                dec op1 = -op1 (sign change)
+1733495774259:0x0047 ishl       {REG,REG,REG}        bit wise shift logical left of integer (op1=op2<<op3)
+1733495774263:0x0048 ishl       {REG,REG,INT}        bit wise shift logical left of integer (op1=op2<<op3)
+1733495774267:0x0049 ishr       {REG,REG,REG}        bit wise shift logical right of integer (op1=op2>>op3)
+1733495774271:0x004a ishr       {REG,REG,INT}        bit wise shift logical right of integer (op1=op2>>op3)
+1733495774275:0x0013 isub       {REG,REG,REG}        Integer Subtract (op1=op2-op3)
+1733495774278:0x0014 isub       {REG,REG,INT}        Integer Subtract (op1=op2-op3)
+1733495774281:0x0015 isub       {REG,INT,REG}        Integer Subtract (op1=op2-op3)
+1733495774285:0x0150 itod       {REG}                Convert Integer to Decimal Number op1=s2dec(op2)
+1733495774289:0x00e9 itof       {REG}                Set register float value from its int value
+1733495774292:0x00e7 itos       {REG}                Set register string value from its int value
+1733495774296:0x0045 ixor       {REG,REG,REG}        bit wise exclusive OR of 2 integers (op1=op2^op3)
+1733495774300:0x0046 ixor       {REG,REG,INT}        bit wise exclusive OR of 2 integers (op1=op2^op3)
+1733495774303:0x00cf link       {REG,REG}            Link op2 to op1
+1733495774307:0x00c2 linkarg    {REG,REG,INT}        Link args[op2+op3] to op1
+1733495774311:0x00c1 linkarg    {REG,INT}            Link args[op2] to op1
+1733495774314:0x00c3 linkattr   {REG,REG,REG}        Link attribute op3 of op2 to op1
+1733495774321:0x00c4 linkattr   {REG,REG,INT}        Link attribute op3 of op2 to op1
+1733495774324:0x00c5 linkattr1  {REG,REG,REG}        Link attribute op3 (1 base) of op2 to op1
+1733495774328:0x00c6 linkattr1  {REG,REG,INT}        Link attribute op3 (1 base) of op2 to op1
+1733495774331:0x00c7 linktoattr {REG,REG,REG}        Link op3 to attribute op1 of op2
+1733495774335:0x00c8 linktoattr {INT,REG,REG}        Link op3 to attribute op1 of op2
+1733495774338:0x00c9 linktoattr1 {REG,REG,REG}        Link op3 to attribute op1 (1 base) of op2
+1733495774342:0x00ca linktoattr1 {INT,REG,REG}        Link op3 to attribute op1 (1 base) of op2
+1733495774345:0x00d6 load       {REG,REG}            Load op1 with op2
+1733495774349:0x00d2 load       {REG,INT}            Load op1 with op2
+1733495774352:0x00d3 load       {REG,FLOAT}          Load op1 with op2
+1733495774356:0x00d5 load       {REG,CHAR}           Load op1 with op2
+1733495774359:0x00d4 load       {REG,STRING}         Load op1 with op2
+1733495774362:0x00d8 load       {INT,REG}            Load op1 with op2 (non symbolic registers)
+1733495774366:0x00d7 load       {INT,INT}            Load op1 with op2 (non symbolic registers)
+1733495774370:0x0116 loadsettp  {REG,INT,INT}        load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+1733495774374:0x0117 loadsettp  {REG,FLOAT,INT}      load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+1733495774378:0x0118 loadsettp  {REG,STRING,INT}     load register and sets the register type flag load op1=op2 (op1.typeflag = op3)
+1733495774382:0x00a1 map        {REG,REG}            Map op1 to var name in op2
+1733495774385:0x00a2 map        {REG,STRING}         Map op1 to var name op2
+1733495774389:0x0007 metadecodeinst {REG,REG}            Decode opcode (op1 decoded op2)
+1733495774395:0x000d metalinkpreg {REG,REG}            Link parent-frame-register[op2] to op1
+1733495774399:0x000e metaloadcalleraddr {REG}                Load caller address object to op1
+1733495774403:0x000c metaloaddata {REG,REG,REG}        Load Metadata (op1 = (metadata)op2[op3])
+1733495774409:0x0004 metaloadedmodules {REG}                Loaded Modules (op1 = array loaded modules)
+1733495774413:0x0005 metaloadedprocs {REG,REG}            Loaded Procedures (op1 = array procedures in module op2)
+1733495774417:0x0009 metaloadfoperand {REG,REG,REG}        Load Float Operand (op1 = (float)op2[op3])
+1733495774420:0x0006 metaloadinst {REG,REG,REG}        Load Instruction Code (op1 = (inst)op2[op3])
+1733495774424:0x0008 metaloadioperand {REG,REG,REG}        Load Integer/Index Operand (op1 = (int)op2[op3])
+1733495774428:0x0003 metaloadmodule {REG,REG}            Load Module (op1 = module num of last loaded module in rxbin op2)
+1733495774431:0x000b metaloadpoperand {REG,REG,REG}        Load Procedure Operand (op1 = (proc)op2[op3])
+1733495774435:0x000a metaloadsoperand {REG,REG,REG}        Load String Operand (op1 = (string)op2[op3])
+1733495774439:0x012c minattrs   {REG,REG}            ensure min number attributes op1.num_attributes >= op2
+1733495774443:0x012e minattrs   {REG,REG,INT}        ensure min number attributes op1.num_attributes >= op2 + op3
+1733495774447:0x012d minattrs   {REG,INT}            ensure min number attributes op1.num_attributes >= op2
+1733495774451:0x012f minattrs   {REG,INT,INT}        ensure min number attributes op1.num_attributes >= op2 + op3
+1733495774455:0x00ba move       {REG,REG}            Move op2 to op1
+1733495774459:0x009f mtime      {REG}                Put time in microseconds into op1
+1733495774463:0x0031 multf      {REG,REG,REG}        Convert and Multiply to Float (op1=op2*op3) (Deprecated)
+1733495774467:0x0032 multf      {REG,REG,FLOAT}      Convert and Multiply to Float (op1=op2*op3) (Deprecated)
+1733495774470:0x001a multi      {REG,REG,REG}        Convert and Multiply to Integer (op1=op2*op3) (Deprecated)
+1733495774474:0x001b multi      {REG,REG,INT}        Convert and Multiply to Integer (op1=op2*op3) (Deprecated)
+1733495774478:0x009d not        {REG,REG}            Logical (int) not op1=!op2
+1733495774481:0x00a7 nsmap      {REG,REG,REG}        Map op1 to namespace in op2 var name in op3
+1733495774485:0x00a8 nsmap      {REG,REG,STRING}     Map op1 to namespace in op2 var name op3
+1733495774488:0x00aa nsmap      {REG,STRING,REG}     Map op1 to namespace op2 var name in op3
+1733495774492:0x00a9 nsmap      {REG,STRING,STRING}  Map op1 to namespace op2 var name op3
+1733495774495:0x00d1 null       {REG}                Null op1
+1733495774498:0x0138 nullredir  {REG}                Redirect op1 = to/from null
+1733495774502:0x011d opendll    {REG,REG,REG}        open DLL
+1733495774505:0x009c or         {REG,REG,REG}        Logical (int) or op1=(op2 || op3)
+1733495774509:0x00f5 padstr     {REG,REG,REG}        set op1=op2[repeated op3 times]
+1733495774513:0x00a3 pmap       {REG,REG}            Map op1 to parent var name in op2
+1733495774516:0x00a4 pmap       {REG,STRING}         Map op1 to parent var name op2
+1733495774519:0x0061 poschar    {REG,REG,REG}        op1 = position of op3 in op2
+1733495774522:0x00e0 readline   {REG}                Read Line to op1
+1733495774526:0x0135 redir2arr  {REG,REG}            Redirect op1 -> array op2
+1733495774530:0x0134 redir2str  {REG,REG}            Redirect op1 -> string op2
+1733495774533:0x00b0 ret        no operand           Return VOID
+1733495774537:0x00b1 ret        {REG}                Return op1
+1733495774540:0x00b2 ret        {INT}                Return op1
+1733495774543:0x00b3 ret        {FLOAT}              Return op1
+1733495774547:0x00b4 ret        {CHAR}               Return op1
+1733495774551:0x00b5 ret        {STRING}             Return op1
+1733495774554:0x008b rseq       {REG,REG,REG}        non strict String Equals op1=(op2=op3)
+1733495774558:0x008c rseq       {REG,REG,STRING}     non strict String Equals op1=(op2=op3)
+1733495774561:0x0124 rxhash     {REG,REG,REG}        returns hash value, etc, op1=hash(op2,len(op3))
+1733495774565:0x0121 rxvers     {REG}                get version, op1=version details
+1733495774568:0x0055 sappend    {REG,REG}            String Append with space (op1=op1||op2)
+1733495774571:0x00d9 say        {REG}                Say op1
+1733495774574:0x00dc say        {INT}                Say op1
+1733495774577:0x00dd say        {FLOAT}              Say op1
+1733495774580:0x00df say        {CHAR}               Say op1
+1733495774583:0x00de say        {STRING}             Say op1
+1733495774586:0x00da sayx       {REG}                Say op1 without line feed
+1733495774590:0x00db sayx       {STRING}             Say op1 (as string) without line feed
+1733495774593:0x004d sconcat    {REG,REG,REG}        String Concat with space (op1=op2||op3)
+1733495774597:0x004e sconcat    {REG,REG,STRING}     String Concat with space (op1=op2||op3)
+1733495774600:0x004f sconcat    {REG,STRING,REG}     String Concat with space (op1=op2||op3)
+1733495774603:0x00bf scopy      {REG,REG}            Copy String op2 to op1
+1733495774607:0x0089 seq        {REG,REG,REG}        String Equals op1=(op2==op3)
+1733495774610:0x008a seq        {REG,REG,STRING}     String Equals op1=(op2==op3)
+1733495774614:0x0127 setattrs   {REG,REG}            set number attributes op1.num_attributes = op2
+1733495774617:0x0129 setattrs   {REG,REG,INT}        set number attributes op1.num_attributes = op2 + op3
+1733495774621:0x0128 setattrs   {REG,INT}            set number attributes op1.num_attributes = op2
+1733495774625:0x012a setattrs   {REG,INT,INT}        set number attributes op1.num_attributes = op2 + op3
+1733495774631:0x0119 setortp    {REG,INT}            or the register type flag (op1.typeflag = op1.typeflag | op2)
+1733495774634:0x0062 setstrpos  {REG,REG}            Set String (op1) charpos set to op2
+1733495774638:0x0115 settp      {REG,INT}            sets the register type flag (op1.typeflag = op2)
+1733495774641:0x008f sgt        {REG,REG,REG}        String Greater than op1=(op2>op3)
+1733495774645:0x0090 sgt        {REG,REG,STRING}     String Greater than op1=(op2>op3)
+1733495774648:0x0091 sgt        {REG,STRING,REG}     String Greater than op1=(op2>op3)
+1733495774652:0x0092 sgte       {REG,REG,REG}        String Greater than equals op1=(op2>=op3)
+1733495774655:0x0093 sgte       {REG,REG,STRING}     String Greater than equals op1=(op2>=op3)
+1733495774658:0x0094 sgte       {REG,STRING,REG}     String Greater than equals op1=(op2>=op3)
+1733495774662:0x0130 signal     {STRING}             Signal type op1
+1733495774665:0x0132 signalf    {STRING,REG}         Signal type op1 if op2 false
+1733495774668:0x0131 signalt    {STRING,REG}         Signal type op1 if op2 true
+1733495774671:0x0095 slt        {REG,REG,REG}        String Less than op1=(op2<op3)
+1733495774675:0x0096 slt        {REG,REG,STRING}     String Less than op1=(op2<op3)
+1733495774678:0x0097 slt        {REG,STRING,REG}     String Less than op1=(op2<op3)
+1733495774681:0x0098 slte       {REG,REG,REG}        String Less than equals op1=(op2<=op3)
+1733495774685:0x0099 slte       {REG,REG,STRING}     String Less than equals op1=(op2<=op3)
+1733495774689:0x009a slte       {REG,STRING,REG}     String Less than equals op1=(op2<=op3)
+1733495774692:0x008d sne        {REG,REG,REG}        String Not equals op1=(op2!=op3)
+1733495774695:0x008e sne        {REG,REG,STRING}     String Not equals op1=(op2!=op3)
+1733495774699:0x0133 spawn      {REG,REG,REG}        Spawn Process op1 = exec op2 redirect op3
+1733495774702:0x014d stod       {REG}                Convert Decimal String to Decimal Number op1=s2dec(op2)
+1733495774706:0x00ec stof       {REG}                Set register float value from its string value
+1733495774709:0x00ed stoi       {REG}                Set register int value from its string value
+1733495774713:0x0136 str2redir  {REG,REG}            Redirect op1 <- string op2
+1733495774717:0x005f strchar    {REG,REG}            op1 (as int) = op2[charpos]
+1733495774720:0x005e strchar    {REG,REG,REG}        op1 (as int) = op2[op3]
+1733495774723:0x005d strlen     {REG,REG}            String Length op1 = length(op2)
+1733495774727:0x00ef strlower   {REG,REG}            Set string to lower case value
+1733495774730:0x00f0 strupper   {REG,REG}            Set string to upper case value
+1733495774734:0x002c subf       {REG,REG,REG}        Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+1733495774737:0x002d subf       {REG,REG,FLOAT}      Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+1733495774741:0x002e subf       {REG,FLOAT,REG}      Convert and Subtract to Float (op1=op2-op3) (Deprecated)
+1733495774744:0x0016 subi       {REG,REG,REG}        Convert and Subtract to Integer (op1=op2-op3) (Deprecated)
+1733495774748:0x0017 subi       {REG,REG,INT}        Convert and Subtract to Integer (op1=op2-op3) (Deprecated)
+1733495774752:0x00f4 substcut   {REG,REG}            set op1=substr(op1,,op2) cuts off op1 after position op3
+1733495774756:0x0064 substr     {REG,REG,REG}        op1 = op2[charpos]...op2[charpos+op3-1]
+1733495774759:0x00f3 substring  {REG,REG,REG}        set op1=substr(op2,op3) remaining string
+1733495774762:0x00bb swap       {REG,REG}            Swap op1 and op2
+1733495774766:0x009e time       {REG}                Put time into op1
+1733495774769:0x00f1 transchar  {REG,REG,REG}        replace op1 if it is in op3-list by char in op2-list
+1733495774773:0x0057 triml      {REG,REG}            Trim String (op1) from Left by (op2) Chars
+1733495774776:0x005a triml      {REG,REG,REG}        Trim String (op2) from Left by (op3) Chars into op1
+1733495774780:0x0058 trimr      {REG,REG}            Trim String (op1) from Right by (op2) Chars
+1733495774783:0x005b trimr      {REG,REG,REG}        Trim String (op2) from Right by (op3) Chars into op1
+1733495774787:0x0059 trunc      {REG,REG}            Trunc String (op1) to (op2) Chars
+1733495774790:0x005c trunc      {REG,REG,REG}        Trunc String (op2) to (op3) Chars into op1
+1733495774793:0x00d0 unlink     {REG}                Unlink op1
+1733495774797:0x00cb unlinkattr {REG,REG}            Unlink attribute op1 of op2
+1733495774800:0x00cc unlinkattr {INT,REG}            Unlink attribute op1 of op2
+1733495774803:0x00cd unlinkattr1 {REG,REG}            Unlink attribute op1 (1 base) of op2
+1733495774807:0x00ce unlinkattr1 {INT,REG}            Unlink attribute op1 (1 base) of op2
+1733495774810:0x00ab unmap      {REG}                Unmap op1
+1733495774813:0x00a0 xtime      {REG,STRING}         put special time properties into op1
+1733495843365:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 strip next /'',''/ next 18-38 next /'',''/ next 39-100 next /'');/ next | > insert_ins_dec.sql
+1733495847260:exit
+1733501249966:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | > insertnames_dec.sql
+1733501253946:exit
+1733501636252:ipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733501648430:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733501761648:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | > insert_name_dec.sql
+1733501769860:exit
+1733501928237:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733501945759:pipe < instructions.txt | sort 8 | unique | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733501995230:pipe < instructions.txt | sort 8 | cons | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733502065296:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
+1733502073426:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | > insert_name_dec.sql
+1733502075652:exit
