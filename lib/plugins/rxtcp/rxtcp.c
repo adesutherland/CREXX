@@ -13,102 +13,79 @@
 // #include <arpa/inet.h>    // Linux
    #define wait(ms) usleep(ms*1000)
 #endif
-#define SERVER_IP "127.0.0.1"  // Replace with server IP address
-#define SERVER_PORT 3033       // Replace with the server's port
-#define BUFFER_SIZE 4096
 // ***************** Windows **********************************
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h> // For inet_pton() and other address conversion functions
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
-
 PROCEDURE(tcpopen) {
-    WSADATA wsaData;
+   WSADATA wsaData;
     SOCKET sockfd;
     struct sockaddr_in server_addr;
-    int result;
+    int    result;
     char * ipaddr=GETSTRING(ARG0);
-    int port=GETINT(ARG1);
+    int    port=GETINT(ARG1);
 
     // Initialize Winsock
     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) {
-        printf("WSAStartup failed with error: %d\n", result);
-        RETURNINT(-8);
-        PROCRETURN
-    }
-    printf("Winsock initialized.\n");
+    if (result != 0) RETURNINTX(-8)
+
     // Create a socket
     sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd == INVALID_SOCKET) {
         printf("Socket creation failed with error: %d\n", WSAGetLastError());
         WSACleanup();
-        RETURNINT(-12);
-        PROCRETURN
+        RETURNINTX(-12);
     }
-    printf("Socket created successfully.\n");
     // Configure server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, ipaddr, &server_addr.sin_addr) <= 0) {
-        printf("Invalid address or address not supported.\n");
         closesocket(sockfd);
         WSACleanup();
-        RETURNINT(-16);
-        PROCRETURN
+        RETURNINTX(-16);
     }
     // Connect to the server
     if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        printf("Connection to the server failed with error: %d\n", WSAGetLastError());
         closesocket(sockfd);
         WSACleanup();
-        RETURNINT(-20);
-        PROCRETURN
+        RETURNINTX(-20);
     }
-    printf("Connected to the server: %llu\n",sockfd);
-    RETURNINT(sockfd);
+    RETURNINTX(sockfd);
     ENDPROC
 }
 PROCEDURE(tcpsend) {
-    SOCKET sockfd= GETINT(ARG0);
-    if (sockfd<0) {
-        RETURNINT(-64);
-        PROCRETURN
-    }
+    int socki= GETINT(ARG0);
+    SOCKET sockfd= socki;
+    if (socki<0) RETURNINTX(-64)
     char *message = GETSTRING(ARG1);
  // Send a message to the server
-    if (send(sockfd, message, strlen(message), 0) == SOCKET_ERROR) {
-        printf("Send failed with error: %d\n", WSAGetLastError());
-        RETURNINT(-WSAGetLastError());
-    } else {
-        printf("Message sent to server: %s\n", message);
-        RETURNINT(0);
-    }
+    if (send(sockfd, message, strlen(message), 0) == SOCKET_ERROR) RETURNINTX(-WSAGetLastError())
+    else RETURNINTX(0)
     ENDPROC
 }
 PROCEDURE(tcpreceive) {
-    int buffer_size=8000;
+    int buffer_size=1000;
     int time=GETINT(ARG1);
     char * buffer=malloc(buffer_size);
     char error[80];
-    SOCKET sockfd = GETINT(ARG0);
+    int socki= GETINT(ARG0);
+    SOCKET sockfd= socki;
     struct timeval timeout;
     int bytes_received,total_received=0;
+    u_long remaining_bytes;
 
-    if (sockfd<0) goto nosocket;
-    u_long count;
+    if (socki<0) RETURNINTX(-64);
  // set timeout
     time=max(time,10);                // timeout minimum = 1/100 of a sec
     timeout.tv_sec = time/1000;       // timeout in 1/1000 secs, determine seconds
     timeout.tv_usec = time%1000*1000; // convert remaining part from milli secs to Micro secs
-    printf("timeout %d.%d\n",timeout.tv_sec,timeout.tv_usec);
-    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) < 0)
-        goto settimeout;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof(timeout)) < 0)
+        goto settimeout;  // SO_RCVTIMEO
 
- // Receive a bit to make sure first block is ready to receive
-    wait(10);           // wait 10 ms
-    while (1 == 1) {
+    wait(10);           // wait 10 ms to make sure first block is ready to receive
+    while (1 == 1) {    // now read all data from socket
         bytes_received = recv(sockfd, buffer + total_received, buffer_size - total_received - 1, 0);
         if (bytes_received == SOCKET_ERROR) goto socketerror;
         total_received += bytes_received;
@@ -117,30 +94,22 @@ PROCEDURE(tcpreceive) {
             buffer = realloc(buffer, buffer_size);
             if (buffer == NULL) goto noalloc;    // buffer allocation failed
         }
-        if (bytes_received == 0) break;         // Connection closed by the server
-        ioctlsocket(sockfd, FIONREAD, &count);  // how many bytes are waiting
-        if (count == 0) break;                 // nothing remained
+        if (total_received == 0) break;         // Connection closed by the server
+        ioctlsocket(sockfd, FIONREAD, &remaining_bytes);  // how many bytes are waiting
+        if (remaining_bytes <= 0) break;        // buffer is empty
     }
-    buffer[bytes_received] = '\0';  // Null-terminate the received data
-    printf("Server response: %s -%d\n", buffer,WSAGetLastError());
-    RETURNSTR(buffer);
-    PROCRETURN
-nosocket:
-    RETURNINT(-64);
-    PROCRETURN
+     buffer[total_received] = '\0';  // Null-terminate the received data
+     RETURNSTRX(buffer);
 socketerror:
     sprintf(error, "-%d\n", WSAGetLastError());
-    RETURNSTR(error);
-    PROCRETURN;
+    RETURNSTRX(error);
 settimeout:
-    printf("Failed to set send timeout\n");
-    RETURNSTR("-4");
-    PROCRETURN
+    RETURNSTRX("-4");
 noalloc:
-    RETURNSTR(error);
-    PROCRETURN;
-    ENDPROC
+    RETURNSTRX("-12");
+ENDPROC
 }
+
 /*    in case socket attributes are needed
     fd_set read_set;
     FD_ZERO(&read_set);
@@ -152,14 +121,10 @@ noalloc:
 PROCEDURE(tcpclose) {
     // Close the socket
     SOCKET sockfd = GETINT(ARG0);
-    if (sockfd<0) {
-       RETURNINT(-64);
-       PROCRETURN
-    }
+    if (sockfd<0) RETURNINTX(-64);
     closesocket(sockfd);
     WSACleanup();
-    printf("Connection closed.\n");
-    RETURNINT(0);
+    RETURNINTX(0);
 ENDPROC
 }
 // ***************** others **********************************
@@ -232,8 +197,8 @@ PROCEDURE(tcpclose) {   // Close the socket
 PROCEDURE(waitX) {
     // Close the socket
     wait(GETINT(ARG0));
-    RETURNINT(0);
-    ENDPROC
+    RETURNINTX(0);
+ENDPROC
 }
 // RXTCP function definitions
 LOADFUNCS
@@ -242,4 +207,5 @@ LOADFUNCS
     ADDPROC(tcpreceive,"rxtcp.tcpreceive", "b",".string","socket=.int,timeout=.int");
     ADDPROC(tcpclose,  "rxtcp.tcpclose", "b",".int", "socket=.int");
     ADDPROC(waitX,      "rxtcp.wait", "b",".int", "timeout=.int");
+ //   ADDPROC(tcpserver,  "rxtcp.tcpserver", "b",".int", "port=.int");
 ENDLOADFUNCS
