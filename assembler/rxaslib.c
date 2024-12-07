@@ -121,8 +121,8 @@ int rxasinbf(Assembler_Context *scanner) {
  *   scanner->output_file_name
  *   scanner->location
  *
- *  file_name_includes_type_extension should be set to true if the filename in the Assmebler_Context
- *  already has the ".rxas" extention (otherwise it is added)
+ *  file_name_includes_type_extension should be set to true if the filename in the Assembler_Context
+ *  already has the ".rxas" extension (otherwise it is added)
  */
 int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) {
     FILE *fp;
