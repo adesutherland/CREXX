@@ -110,13 +110,112 @@ noalloc:
 ENDPROC
 }
 
-/*    in case socket attributes are needed
-    fd_set read_set;
-    FD_ZERO(&read_set);
-    FD_SET(sockfd, &read_set);
-    select(sockfd + 1, &read_set, NULL, NULL, &timeout);
-    ioctlsocket(sockfd, FIONREAD, &count);
-*/
+
+#define MAX_CLIENTS 100
+
+PROCEDURE(tcpserver) {
+        WSADATA wsa;
+        SOCKET server;
+        struct sockaddr_in serveraddr;
+        int port= GETINT(ARG0);
+        char ipdetails[128];
+
+        // Winsock initialisieren
+        if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+            RETURNINTX(-1); // printf("Winsock initialization failed. Error Code: %d\n", WSAGetLastError());
+        }
+        printf("Winsock initialized.\n");
+
+        // Server-Socket erstellen
+        if ((server = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+            RETURNINTX(-2);  //   printf("Could not create socket. Error Code: %d\n", WSAGetLastError());
+        }
+        printf("Socket created.\n");
+
+        // Server-Adresse konfigurieren
+        serveraddr.sin_family = AF_INET;
+        serveraddr.sin_addr.s_addr = INADDR_ANY;
+        serveraddr.sin_port = htons(port);
+
+        // Socket binden
+        if (bind(server, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR) {
+            RETURNINTX(-3);  //   printf("Bind failed. Error Code: %d\n", WSAGetLastError());
+        }
+        printf("Bind successful.\n");
+
+        // Auf Verbindungen lauschen
+        if (listen(server, MAX_CLIENTS) == SOCKET_ERROR) {
+            RETURNINTX(-8);  //  printf("Listen failed. Error Code: %d\n", WSAGetLastError());
+        }
+        printf("Listening for incoming connections on port %d...\n", port);
+        sprintf(ipdetails, "%d %s %d",server,inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
+        SETARRAYHI(ARG1,1);    // reset ip address array
+        SETSARRAY(ARG1,0,ipdetails);
+        RETURNINTX(server);
+ ENDPROC
+}
+int checkSocket(void * connections) {
+    int i, num, result, hi=0;
+    fd_set sockCheck;
+    struct timeval timeout;
+    timeout.tv_sec  = 0;
+    timeout.tv_usec = 0;
+
+    for (i = 1; i < GETARRAYHI(connections); i++) {     // start with 1. item, 0. item is server socket
+        char *firstWord = strtok(GETSARRAY(connections, i), " "); // delimeter is blank
+        if (firstWord == NULL) continue;
+        num = atoi(firstWord);
+        FD_ZERO(&sockCheck);
+        FD_SET(num, &sockCheck);
+        result = select(0, &sockCheck, NULL, NULL, &timeout);
+        if (result == 0) {
+            hi=max(hi,num);
+            continue;
+        } else REMOVEATTR(connections, i);    //  printf("Socket invalid %d\n", num);
+    }
+    return hi;
+}
+
+PROCEDURE(tcpwait){
+        SOCKET server_socket=GETINT(ARG0),new_socket;
+        struct sockaddr_in client;
+        int client_len, addrhi;
+
+        fd_set read_fds;
+        int time=GETINT(ARG1);
+        char ipdetails[128];
+
+        struct timeval timeout;
+        time=max(time,10);                // timeout minimum = 1/100 of a sec
+        timeout.tv_sec = time/1000;       // timeout in 1/1000 secs, determine seconds
+        timeout.tv_usec = time%1000*1000; // convert remaining part from milli secs to Micro secs
+
+        addrhi=checkSocket(ARG2);
+
+        while (1) {
+            client_len = sizeof(client);
+            FD_ZERO(&read_fds);
+            FD_SET(server_socket, &read_fds);
+
+            int activity = select(addrhi + 1, &read_fds, NULL, NULL, &timeout);
+            if (activity == 0) {
+               RETURNINTX(-4);  //          printf("Timeout: No incoming connection within 500 ms \n");
+            }
+            new_socket = accept(server_socket, (struct sockaddr *) &client, &client_len);
+            if (new_socket == INVALID_SOCKET) {
+                printf("Accept failed. Error Code: %d\n", WSAGetLastError());
+                continue;
+            }
+            sprintf(ipdetails, "%d %s %d",new_socket,inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+            addrhi= GETARRAYHI(ARG2) + 1;
+            SETARRAYHI(ARG2, addrhi);    // add new client entry to ip array
+            SETSARRAY(ARG2, addrhi - 1, ipdetails);
+            RETURNINTX(new_socket)
+            // Einen freien Slot in der Client-Liste finden
+        }
+ENDPROC
+}
+
 
 PROCEDURE(tcpclose) {
     // Close the socket
@@ -129,73 +228,11 @@ ENDPROC
 }
 // ***************** others **********************************
 #else
-PROCEDURE(tcpopen) {
-    int sockfd;
-/*
-    struct sockaddr_in server_addr;
-    // Create a socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-     // perror("Socket creation failed");
-        RETURNINT(-8);
-        PROCRETURN
-    }
-    printf("Socket created successfully.\n");
-    // Configure server address
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
-     // perror("Invalid address/ Address not supported");
-        RETURNINT(-12);
-        PROCRETURN
-    }
-    // Connect to the server
-    if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-    // perror("Connection to the server failed");
-        close(sockfd);
-        RETURNINT(-16);
-        PROCRETURN
-    }
-    printf("Connected to the server.\n");
- */
-    ENDPROC
-}
-PROCEDURE(tcpsend) {
- /*   SOCKET sockfd = GETINT(ARG0);
-    // Send a message to the server
-    const char *message = GETSTRING(ARG1);
-    send(sockfd, message, strlen(message), 0);
-    printf("Message sent to server: %s\n", message);
-*/
- ENDPROC
-}
-PROCEDURE(tcpreceive) {
- /*   SOCKET sockfd = GETINT(ARG0);
-    char buffer[BUFFER_SIZE];
-    int bytes_received = recv(sockfd, buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_received < 0) {
-        // perror("Failed to receive data");
-        RETURNSTR("-8");
-        PROCRETURN
-    } else {
-        buffer[bytes_received] = '\0';  // Null-terminate the received data
-        printf("Server response: %s\n", buffer);
-        RETURNSTR("-8");
-    }
- */
-    ENDPROC
-}
-PROCEDURE(tcpclose) {   // Close the socket
- /*   SOCKET sockfd = GETINT(ARG0);
-    close(sockfd);
-    printf("Connection closed.\n");
-    RETURNINT(0);
-    PROCRETURN*/
-    ENDPROC
-}
+// Linux/MAC Version
 #endif
 PROCEDURE(waitX) {
     // Close the socket
+
     wait(GETINT(ARG0));
     RETURNINTX(0);
 ENDPROC
@@ -206,6 +243,7 @@ LOADFUNCS
     ADDPROC(tcpsend,   "rxtcp.tcpsend", "b",".int", "socket=.int,message=.string");
     ADDPROC(tcpreceive,"rxtcp.tcpreceive", "b",".string","socket=.int,timeout=.int");
     ADDPROC(tcpclose,  "rxtcp.tcpclose", "b",".int", "socket=.int");
-    ADDPROC(waitX,      "rxtcp.wait", "b",".int", "timeout=.int");
- //   ADDPROC(tcpserver,  "rxtcp.tcpserver", "b",".int", "port=.int");
+    ADDPROC(waitX,     "rxtcp.wait", "b",".int", "timeout=.int");
+    ADDPROC(tcpserver, "rxtcp.tcpserver", "b",".int", "port=.int,expose sockets=.string[]");
+    ADDPROC(tcpwait,   "rxtcp.tcpwait", "b",".int", "server=.int,timeout=.int,expose sockets=.string[]");
 ENDLOADFUNCS

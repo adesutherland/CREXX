@@ -129,7 +129,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define SETINT(attr, value) _rxpa_context->setint((attr),(value))
 #define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
 #define RETURNINT(value) _rxpa_context->setint(RETURN,(value))
-#define RETURNINTX(value) {_rxpa_context->setint(RETURN,(value)); PROCRETURN}
+#define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
 #define GETINT(attr) _rxpa_context->getint((attr))
 #define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
 #define SETFLOAT(attr, value) _rxpa_context->setfloat((attr),(value))
