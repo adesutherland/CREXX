@@ -1,4 +1,4 @@
-/* REXX LEVEB B ADDRESS FUNCTIONS */
+/* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
 namespace _rxsysb expose _address _noredir _redir2array _redir2string _array2redir _string2redir
 # import rxfnsb
