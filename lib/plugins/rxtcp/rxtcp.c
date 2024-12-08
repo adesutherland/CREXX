@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
+int debugFlag;
+#define debug(cmt) if(debugFlag==1) printf("TCP %s\n",cmt)
+#define debugs(cmt,string) if(debugFlag==1) printf("TCP %s %s\n",cmt,string)
+#define debugi(cmt,ivalue) if(debugFlag==1) printf("TCP %s %d\n",cmt,ivalue)
 #ifdef _WIN32
   #define wait(ms) Sleep(ms)
 #else
@@ -34,7 +38,7 @@ PROCEDURE(tcpopen) {
     // Create a socket
     sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sockfd == INVALID_SOCKET) {
-        printf("Socket creation failed with error: %d\n", WSAGetLastError());
+        debugi("Socket creation failed with error:", WSAGetLastError());
         WSACleanup();
         RETURNINTX(-12);
     }
@@ -119,18 +123,22 @@ PROCEDURE(tcpserver) {
         struct sockaddr_in serveraddr;
         int port= GETINT(ARG0);
         char ipdetails[128];
-
+        char * flag= GETSARRAY(ARG1,0);
+        if (strstr(flag,"debug")>0) debugFlag=1;
+        else debugFlag=0;
         // Winsock initialisieren
         if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-            RETURNINTX(-1); // printf("Winsock initialization failed. Error Code: %d\n", WSAGetLastError());
+            debugi("Winsock initialization failed. Error Code:", WSAGetLastError());
+            RETURNINTX(-1);
         }
-        printf("Winsock initialized.\n");
+        debug("Winsock initialized");
 
         // Server-Socket erstellen
         if ((server = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-            RETURNINTX(-2);  //   printf("Could not create socket. Error Code: %d\n", WSAGetLastError());
+            debugi("Could not create socket. Error Code:", WSAGetLastError());
+            RETURNINTX(-2);
         }
-        printf("Socket created.\n");
+        debug("Socket created");
 
         // Server-Adresse konfigurieren
         serveraddr.sin_family = AF_INET;
@@ -139,15 +147,17 @@ PROCEDURE(tcpserver) {
 
         // Socket binden
         if (bind(server, (struct sockaddr *)&serveraddr, sizeof(serveraddr)) == SOCKET_ERROR) {
-            RETURNINTX(-3);  //   printf("Bind failed. Error Code: %d\n", WSAGetLastError());
+            debugi("Bind failed. Error Code:", WSAGetLastError());
+            RETURNINTX(-3);
         }
-        printf("Bind successful.\n");
+        debug("Bind successful");
 
         // Auf Verbindungen lauschen
         if (listen(server, MAX_CLIENTS) == SOCKET_ERROR) {
-            RETURNINTX(-8);  //  printf("Listen failed. Error Code: %d\n", WSAGetLastError());
+            debugi("Listen failed. Error Code:", WSAGetLastError());
+            RETURNINTX(-8);
         }
-        printf("Listening for incoming connections on port %d...\n", port);
+        debugi("Listening for incoming connections on port:",port);
         sprintf(ipdetails, "%d %s %d",server,inet_ntoa(serveraddr.sin_addr), ntohs(serveraddr.sin_port));
         SETARRAYHI(ARG1,1);    // reset ip address array
         SETSARRAY(ARG1,0,ipdetails);
@@ -171,7 +181,10 @@ int checkSocket(void * connections) {
         if (result == 0) {
             hi=max(hi,num);
             continue;
-        } else REMOVEATTR(connections, i);    //  printf("Socket invalid %d\n", num);
+        } else {
+            debugi("Socket invalid:", num);
+            REMOVEATTR(connections, i);
+        }
     }
     return hi;
 }
@@ -199,11 +212,12 @@ PROCEDURE(tcpwait){
 
             int activity = select(addrhi + 1, &read_fds, NULL, NULL, &timeout);
             if (activity == 0) {
-               RETURNINTX(-4);  //          printf("Timeout: No incoming connection within 500 ms \n");
+               debug("Timeout: No incoming connection within 500 ms");
+               RETURNINTX(-4);
             }
             new_socket = accept(server_socket, (struct sockaddr *) &client, &client_len);
             if (new_socket == INVALID_SOCKET) {
-                printf("Accept failed. Error Code: %d\n", WSAGetLastError());
+                debugi("Accept failed. Error Code:", WSAGetLastError());
                 continue;
             }
             sprintf(ipdetails, "%d %s %d",new_socket,inet_ntoa(client.sin_addr), ntohs(client.sin_port));
@@ -211,7 +225,6 @@ PROCEDURE(tcpwait){
             SETARRAYHI(ARG2, addrhi);    // add new client entry to ip array
             SETSARRAY(ARG2, addrhi - 1, ipdetails);
             RETURNINTX(new_socket)
-            // Einen freien Slot in der Client-Liste finden
         }
 ENDPROC
 }
