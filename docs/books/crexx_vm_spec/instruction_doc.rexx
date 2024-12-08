@@ -64,7 +64,7 @@ do i=1 to outstem[0]
     if pos('eprecated',ops[1]) >0 then iterate -- we do not include deprecated instructions
 
     lineout('instruction_chapter.tex','\\begin{description}')
-    lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\\\')
+    lineout('instruction_chapter.tex','\\item[\\texttt{'mnemonic.upper'}] 'description'\\index{'mnemonic.lower()'}\\\\')
 
     if ops[0]==1 then
       do

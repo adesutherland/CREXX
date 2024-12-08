@@ -1,6 +1,4 @@
-\hypertarget{building-the-toolchain}{%
-\section{\texorpdfstring{Building the \crexx{}
-toolchain}{Building the  toolchain}}\label{building-the-toolchain}}
+# Building the \crexx{} Toolchain
 
 Most users will download and install a binary distribution for
 their platforms and will not need this information. In some cases
@@ -156,17 +154,16 @@ rxcpack & cRexx C-generator for native executables \\
 \bottomrule()
 \end{longtable}
 
-You read that right, cRexx already can compile your Rexx script into an
+\crexx{} can compile the Rexx script into an
 executable file, that can be run standalone, for example, on a computer
-that has no cRexx and/or C compiler installed.
+that has no \crexx{} and/or C compiler installed.
 
-Another salient fact from the above table is that `rxdb', the cRexx
-debugger, is entirely written in Rexx and compiled and packaged into an
+The \crexx{} debugging tool `rxdb`, is written in Rexx and compiled and packaged into an
 executable file.
 
-The executables in the above table need to be on the PATH environment
+The executables in the above table need to be on the `PATH` environment
 variable. These are to be found in the compiler, assembler,
 disassembler, debugger and cpacker directories of the crexx-build
 directory we created earlier. It is up to you to add all these
-separately to the PATH environment, or to just collect them all into one
-directory that is already on the PATH.
+separately to the `PATH` environment, or to just collect them all into one
+directory that is already on the `PATH`.
