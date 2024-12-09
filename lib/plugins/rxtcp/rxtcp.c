@@ -372,11 +372,13 @@ PROCEDURE(tcpflags) {
 // RXTCP function definitions
 LOADFUNCS
     ADDPROC(tcpflags,  "rxtcp.tcpflags", "b",".int", "ip=.string");
+    ADDPROC(waitX,     "rxtcp.wait", "b",".int", "timeout=.int");
+#ifdef _WIN32
     ADDPROC(tcpopen,   "rxtcp.tcpopen", "b",".int", "ip=.string,port=.int");
     ADDPROC(tcpsend,   "rxtcp.tcpsend", "b",".int", "socket=.int,message=.string");
     ADDPROC(tcpreceive,"rxtcp.tcpreceive", "b",".string","socket=.int,timeout=.int");
     ADDPROC(tcpclose,  "rxtcp.tcpclose", "b",".int", "socket=.int");
-    ADDPROC(waitX,     "rxtcp.wait", "b",".int", "timeout=.int");
     ADDPROC(tcpserver, "rxtcp.tcpserver", "b",".int", "port=.int,expose sockets=.string[]");
     ADDPROC(tcpwait,   "rxtcp.tcpwait", "b",".int", "server=.int,timeout=.int,expose sockets=.string[]");
+#endif
 ENDLOADFUNCS
