@@ -31,6 +31,7 @@ uintptr_t *Messages=0;
 
 #ifdef _WIN32
   #define wait(ms) Sleep(ms)
+#elif defined(__APPLE__)
 #else
 // #include <arpa/inet.h>    // Linux
    #define wait(ms) usleep(ms*1000)
@@ -45,6 +46,8 @@ uintptr_t *Messages=0;
  * this and that
  * ------------------------------------------------------------------------------------------------
 */
+#if defined(__APPLE__)
+#else
 void toUpperCase(char *str) {
     if (str == NULL) return; // Handle null pointer
     while (*str) {
@@ -88,6 +91,7 @@ int CountWords(const char *str) {
     }
     return wordCount;
 }
+#endif
 /* ------------------------------------------------------------------------------------------------
  * Open a TCP address to access a TCP server
  * ------------------------------------------------------------------------------------------------
