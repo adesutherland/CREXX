@@ -46,8 +46,12 @@ uintptr_t *Messages=0;
  * this and that
  * ------------------------------------------------------------------------------------------------
 */
-#if defined(__APPLE__)
-#else
+
+
+
+/* #if defined(__APPLE__) */
+/* #else */
+
 void toUpperCase(char *str) {
     if (str == NULL) return; // Handle null pointer
     while (*str) {
@@ -55,6 +59,7 @@ void toUpperCase(char *str) {
         str++;
     }
 }
+
 void GetWord(char *result, const char *str, int n) {
     int i = 0, j = 0, wordCount = 0;
 
@@ -78,6 +83,7 @@ void GetWord(char *result, const char *str, int n) {
         strcpy(result, "");
     }
 }
+
 int CountWords(const char *str) {
     int i = 0,wordCount = 0;
 
@@ -91,7 +97,7 @@ int CountWords(const char *str) {
     }
     return wordCount;
 }
-#endif
+/* #endif */
 /* ------------------------------------------------------------------------------------------------
  * Open a TCP address to access a TCP server
  * ------------------------------------------------------------------------------------------------
@@ -356,7 +362,8 @@ ENDPROC
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(waitX) {
-    wait(GETINT(ARG0));
+  int waittime = 10;
+  wait(&waittime);
     RETURNINTX(0);
 ENDPROC
 }
@@ -365,7 +372,11 @@ ENDPROC
  * ------------------------------------------------------------------------------------------------
  */
 PROCEDURE(tcpflags) {
-    char *flags = GETSTRING(ARG0);
+  void toUpperCase(char *str);
+  void GetWord(char *result, const char *str, int n);
+  int  CountWords(const char *str);
+  
+  char *flags = GETSTRING(ARG0);
     char word[32];
     int words = 0,i;
     toUpperCase(flags);
