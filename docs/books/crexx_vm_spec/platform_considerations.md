@@ -11,3 +11,5 @@ The binary file layout containing the VM bytecode instructions is identical over
 ## Native executables
 
 This portability does not hold for native executables. These are `.rxbin` files which are preprocessed by the `rxcpack` command into `.c` source which are then compiled and linked by platform specific compiler toolchains. These are usable on only one instruction set - operating system combination.
+
+The same goes for `.rxplugin` files; these are also native executables.

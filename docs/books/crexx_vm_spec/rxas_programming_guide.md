@@ -72,3 +72,13 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 [^label]: it will not hurt, however, if it does not start in column one. It must be the first word of the line, though.
 [^optim]: optimization is default but can be switched off, for example when debugging.
+
+## Embedded Rexx Assembler
+
+The `assembler` command enables the inclusion of arbitrary assembler instructions within a Rexx program. The compiler validates the instruction mnemonic and arguments, ensuring that variables are converted into the appropriate register number.
+
+This example utilizes the linkarg assembler instruction with two variables and an integer constant.  
+
+`assembler linkarg e,i,5`
+
+

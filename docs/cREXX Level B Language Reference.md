@@ -569,13 +569,6 @@ Returns version information in the form
 
 # 
 
-# Embedded REXX ASSEMBLER {#embedded-rexx-assembler}
-
-The ASSEMBLER command enables the inclusion of arbitrary assembler instructions within the program. The compiler validates the instruction mnemonic and arguments, ensuring that variables are converted into the appropriate register number.
-
-This example utilized the linkarg assembler instruction with two variables and an integer constant.
-
-assembler linkarg e,i,5 
 
 # 
 
