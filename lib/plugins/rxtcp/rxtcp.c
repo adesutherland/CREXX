@@ -6,11 +6,29 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <stdint.h>
 #include <string.h>
-#include <unistd.h>
-int debugFlag;
-#define debug(cmt) if(debugFlag==1) printf("TCP %s\n",cmt)
-#define debugs(cmt,string) if(debugFlag==1) printf("TCP %s %s\n",cmt,string)
-#define debugi(cmt,ivalue) if(debugFlag==1) printf("TCP %s %d\n",cmt,ivalue)
+#include <ctype.h>
+
+/* ------------------------------------------------------------------------------------------------
+ * TCP flags, can be set by TCPFLAGS rexx function
+ * ------------------------------------------------------------------------------------------------
+*/
+//
+int tcp_debug=0;
+tcp_max_clients=10;
+uintptr_t *Messages=0;
+/* ------------------------------------------------------------------------------------------------
+ * +++ End of TCP flags section
+ * ------------------------------------------------------------------------------------------------
+*/
+#define debug(cmt) if(tcp_debug==1) printf("TCP %s\n",cmt)
+#define debugs(cmt,string) if(tcp_debug==1) printf("TCP %s %s\n",cmt,string)
+#define debugi(cmt,ivalue) if(tcp_debug==1) printf("TCP %s %d\n",cmt,ivalue)
+#define DIMI(var,max)    {int dimj; var = malloc((max+1) * sizeof(uintptr_t)); \
+                          var[0]=max; for (dimj = 1; dimj <=max; dimj++) var[dimj] = 0;}
+#define REDIMI(var,newmax)  {uintptr_t *newArr=0; DIMI(newArr,newmax); \
+                              memcpy(newArr, var, var[0]* sizeof(uintptr_t)); \
+                              newArr[0]=newmax;free(var); var=newArr; }  \
+
 #ifdef _WIN32
   #define wait(ms) Sleep(ms)
 #else
@@ -23,6 +41,57 @@ int debugFlag;
 #include <ws2tcpip.h> // For inet_pton() and other address conversion functions
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
+/* ------------------------------------------------------------------------------------------------
+ * this and that
+ * ------------------------------------------------------------------------------------------------
+*/
+void toUpperCase(char *str) {
+    if (str == NULL) return; // Handle null pointer
+    while (*str) {
+        *str = toupper((unsigned char)*str); // Convert current character to uppercase
+        str++;
+    }
+}
+void GetWord(char *result, const char *str, int n) {
+    int i = 0, j = 0, wordCount = 0;
+
+    while (isspace((unsigned char)str[i])) i++;   // Skip leading spaces
+
+    while (str[i] != '\0') {    // Traverse the string
+        if (!isspace((unsigned char)str[i]) &&
+            (i == 0 || isspace((unsigned char)str[i - 1]))) {   // Check if the current character starts a new word
+            wordCount++; // Found a new word
+        }
+        if (wordCount == n) {   // If this is the N-th word, copy it to the buffer
+            while (str[i] != '\0' && !isspace((unsigned char)str[i])) {
+                result[j++] = str[i++];
+            }
+            break;
+        }
+        i++;
+    }
+    result[j] = '\0'; // Null-terminate the result
+    if (wordCount < n) {      // If the N-th word wasn't found, set result to an empty string
+        strcpy(result, "");
+    }
+}
+int CountWords(const char *str) {
+    int i = 0,wordCount = 0;
+
+    while (isspace((unsigned char)str[i]))  i++;  // Skip leading spaces
+    while (str[i] != '\0') {    // Traverse the string
+        if (!isspace((unsigned char)str[i]) &&
+            (i == 0 || isspace((unsigned char)str[i - 1]))) {    // Check if the current character starts a new word
+            wordCount++; // Found a new word
+        }
+        i++;
+    }
+    return wordCount;
+}
+/* ------------------------------------------------------------------------------------------------
+ * Open a TCP address to access a TCP server
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpopen) {
    WSADATA wsaData;
     SOCKET sockfd;
@@ -33,7 +102,10 @@ PROCEDURE(tcpopen) {
 
     // Initialize Winsock
     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) RETURNINTX(-8)
+    if (result != 0) {
+        debug("Socket initialisation faild");
+        RETURNINTX(-8)
+    }
 
     // Create a socket
     sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -48,32 +120,41 @@ PROCEDURE(tcpopen) {
     if (inet_pton(AF_INET, ipaddr, &server_addr.sin_addr) <= 0) {
         closesocket(sockfd);
         WSACleanup();
+        debug("Set up IP:Port failed");
         RETURNINTX(-16);
     }
     // Connect to the server
     if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
         closesocket(sockfd);
+        debug("Connect to server failed");
         WSACleanup();
         RETURNINTX(-20);
     }
     RETURNINTX(sockfd);
     ENDPROC
 }
+/* ------------------------------------------------------------------------------------------------
+ * Sends a message to a TCP server
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpsend) {
     int socki= GETINT(ARG0);
     SOCKET sockfd= socki;
     if (socki<0) RETURNINTX(-64)
     char *message = GETSTRING(ARG1);
- // Send a message to the server
+    debug("Send Message to server/client");
     if (send(sockfd, message, strlen(message), 0) == SOCKET_ERROR) RETURNINTX(-WSAGetLastError())
     else RETURNINTX(0)
     ENDPROC
 }
+/* ------------------------------------------------------------------------------------------------
+ * Recive a message from a TCP server
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpreceive) {
-    int buffer_size=1000;
+    int buffer_size=10000;
     int time=GETINT(ARG1);
     char * buffer=malloc(buffer_size);
-    char error[80];
     int socki= GETINT(ARG0);
     SOCKET sockfd= socki;
     struct timeval timeout;
@@ -105,35 +186,34 @@ PROCEDURE(tcpreceive) {
      buffer[total_received] = '\0';  // Null-terminate the received data
      RETURNSTRX(buffer);
 socketerror:
-    sprintf(error, "-%d\n", WSAGetLastError());
-    RETURNSTRX(error);
+    debugi("Socket error",WSAGetLastError());
+    RETURNSTRX("-8");
 settimeout:
+    debug("Time out occurred");
     RETURNSTRX("-4");
 noalloc:
+    debug("Buffer re-allocation failed");
     RETURNSTRX("-12");
 ENDPROC
 }
-
-
-#define MAX_CLIENTS 100
-
+/* ------------------------------------------------------------------------------------------------
+ * Create a TCP server
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpserver) {
-        WSADATA wsa;
-        SOCKET server;
-        struct sockaddr_in serveraddr;
-        int port= GETINT(ARG0);
-        char ipdetails[128];
-        char * flag= GETSARRAY(ARG1,0);
-        if (strstr(flag,"debug")>0) debugFlag=1;
-        else debugFlag=0;
-        // Winsock initialisieren
-        if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-            debugi("Winsock initialization failed. Error Code:", WSAGetLastError());
-            RETURNINTX(-1);
-        }
-        debug("Winsock initialized");
+    WSADATA wsa;
+    SOCKET server;
+    struct sockaddr_in serveraddr;
+    int i, port = GETINT(ARG0);
+    char ipdetails[128];
+    // Winsock initialisieren
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        debugi("Winsock initialization failed. Error Code:", WSAGetLastError());
+        RETURNINTX(-1);
+    }
+    debug("Winsock initialized");
 
-        // Server-Socket erstellen
+     // Server-Socket erstellen
         if ((server = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
             debugi("Could not create socket. Error Code:", WSAGetLastError());
             RETURNINTX(-2);
@@ -153,7 +233,7 @@ PROCEDURE(tcpserver) {
         debug("Bind successful");
 
         // Auf Verbindungen lauschen
-        if (listen(server, MAX_CLIENTS) == SOCKET_ERROR) {
+        if (listen(server, tcp_max_clients) == SOCKET_ERROR) {
             debugi("Listen failed. Error Code:", WSAGetLastError());
             RETURNINTX(-8);
         }
@@ -188,7 +268,10 @@ int checkSocket(void * connections) {
     }
     return hi;
 }
-
+/* ------------------------------------------------------------------------------------------------
+ * Waits to receive a message from a server (server mode)
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpwait){
         SOCKET server_socket=GETINT(ARG0),new_socket;
         struct sockaddr_in client;
@@ -228,14 +311,17 @@ PROCEDURE(tcpwait){
         }
 ENDPROC
 }
-
-
+/* ------------------------------------------------------------------------------------------------
+ * Close TCP connection
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(tcpclose) {
     // Close the socket
     SOCKET sockfd = GETINT(ARG0);
     if (sockfd<0) RETURNINTX(-64);
     closesocket(sockfd);
     WSACleanup();
+    debugi("Port %d closed",sockfd);
     RETURNINTX(0);
 ENDPROC
 }
@@ -243,15 +329,49 @@ ENDPROC
 #else
 // Linux/MAC Version
 #endif
+/* ------------------------------------------------------------------------------------------------
+ * Wait pauses the execution (in milli seconds)
+ * ------------------------------------------------------------------------------------------------
+ */
 PROCEDURE(waitX) {
-    // Close the socket
-
     wait(GETINT(ARG0));
     RETURNINTX(0);
 ENDPROC
 }
+/* ------------------------------------------------------------------------------------------------
+ * TCP Flags
+ * ------------------------------------------------------------------------------------------------
+ */
+PROCEDURE(tcpflags) {
+    char *flags = GETSTRING(ARG0);
+    char word[32];
+    int words = 0,i;
+    toUpperCase(flags);
+    words = CountWords(flags);
+    printf("Flags before %s %d\n", flags, tcp_debug);
+    if (strstr(flags, "RESET")) {
+        tcp_debug = 0;
+        tcp_max_clients = 10;
+        RETURNINT(0);
+    }
+    for (i = 1; i <= words; i++) {
+        GetWord(word,flags,i);
+        if (strcmp(word, "NDEBUG")==0)     tcp_debug = 0;
+        else if (strcmp(word, "DEBUG")==0) tcp_debug = 1;
+        else if (strcmp(word, "MAXCLIENTS")==0) {
+            i++;
+            GetWord(word,flags,i);
+            tcp_max_clients = atoi(word);
+            if (tcp_max_clients==0) tcp_max_clients=10;
+        }
+    }
+    printf("Flags after   %d\n",tcp_debug);
+    RETURNINTX(0);
+    ENDPROC
+}
 // RXTCP function definitions
 LOADFUNCS
+    ADDPROC(tcpflags,  "rxtcp.tcpflags", "b",".int", "ip=.string");
     ADDPROC(tcpopen,   "rxtcp.tcpopen", "b",".int", "ip=.string,port=.int");
     ADDPROC(tcpsend,   "rxtcp.tcpsend", "b",".int", "socket=.int,message=.string");
     ADDPROC(tcpreceive,"rxtcp.tcpreceive", "b",".string","socket=.int,timeout=.int");
