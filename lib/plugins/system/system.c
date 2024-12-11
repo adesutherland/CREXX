@@ -390,7 +390,7 @@ PROCEDURE(setclipboard) {
 ENDPROC
 }
 
-void getclipboard() {
+PROCEDURE(getclipboardx) {
     #if defined(__APPLE__)
     FILE *clipboard = popen("pbpaste", "r");
     #else
@@ -428,16 +428,6 @@ PROCEDURE(getglobal) {
 ENDPROC
 }
 
-
-/*
-// Get the environment variable (similar to GetEnvironmentVariable in Windows)
-const char *value = getenv("MY_TEMP_VAR");
-if (value) {
-printf("MY_TEMP_VAR: %s\n", value);
-} else {
-printf("Environment variable not found.\n");
-}
-*/
 
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
