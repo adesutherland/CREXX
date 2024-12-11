@@ -6,7 +6,6 @@
 #if defined(__APPLE__)
  #include <sys/stat.h>
 #endif
-
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #ifdef _WIN32
   #include <direct.h>     // For Windows
@@ -22,11 +21,13 @@
     #define MAKE_DIR(path)   _mkdir(path)
     #define TEST_DIR(path)   _access(path, 0)
     #define TEST_FILE(fname) _access(fname, 0)
+    #define RENAME_FILE(source,target) MoveFileEx(source, target,0) //MOVEFILE_REPLACE_EXISTING);
 #else
     #define REMOVE_DIR(path) rmdir(path)
     #define MAKE_DIR(path)   mkdir(path, 0755)
-    #define TEST_DIR(path)    access(path, F_OK)
+    #define TEST_DIR(path)   access(path, F_OK)
     #define TEST_FILE(fname) access(fname, F_OK)
+    #define RENAME_FILE(source,target)  rename(source, target)
 #endif
 
 // replace \ chars by / (needed in Windows)
@@ -144,6 +145,22 @@ PROCEDURE(deletefile) {
     ENDPROC
 }
 /* -------------------------------------------------------------------------------------
+ * Remove file
+ * -------------------------------------------------------------------------------------
+ */
+PROCEDURE(renamefileP) {
+    int rc;
+    searchReplace(GETSTRING(ARG0),'\\','/');
+    searchReplace(GETSTRING(ARG1),'\\','/');
+    if (TEST_FILE(GETSTRING(ARG0)) != 0)    RETURNINT(-4);             // does not exist
+    else {
+        rc=RENAME_FILE(GETSTRING(ARG0),GETSTRING(ARG1));
+        if (rc==0) RETURNINT(0);
+        else RETURNINT(-8);
+    }
+    ENDPROC
+}
+/* -------------------------------------------------------------------------------------
  * Get directory content
  * -------------------------------------------------------------------------------------
  */
@@ -219,6 +236,207 @@ PROCEDURE(writeall) {
     PROCRETURN
     ENDPROC
 }
+
+int nextdel(char * strg,int i, int plen,char pchar) {
+    while (i < plen) {
+      if (strg[i] == pchar) return i;
+      i++;
+    }
+    return INT_MAX;
+}
+void trim(char *str) {
+    char *start = str;  // Pointer auf den Anfang des Strings
+    char *end;
+    while (isspace((unsigned char)*start)) {   // skip leading blanks
+        start++;
+    }
+    if (start != str) {            // shift chars to the beginning
+       memmove(str, start, strlen(start) + 1);
+    }
+    end = str + strlen(str) - 1;   // set new end pointer
+    while (end > str && isspace((unsigned char)*end)) { // skip trailing blanks
+        *end = '\0'; // Nullify
+        end--;
+    }
+}
+
+PROCEDURE(parse) {
+    int patternpos = 0, plen, indx=0;
+    char * stringpos,* stringoffset;
+    int begin, end;
+    char tchar;
+    char *string =  GETSTRING(ARG0);
+    char *pattern = GETSTRING(ARG1);
+    int debug = 0;
+    char patstring[255];
+    char valstring[512];
+    char variable[64];
+    plen = strlen(pattern);
+    if (strstr(GETSTRING(ARG2), "debug") > 0) debug=1;
+
+    RETURNINT(-8);
+    stringoffset=string;
+    while (patternpos < plen) {
+        indx++;
+     // locate first quote, can be a single or a double quote
+        patternpos = min(nextdel(pattern, 0, plen, '"'), nextdel(pattern, patternpos, plen, '\"'));
+        if (patternpos == INT_MAX) break;    // nothing there, 1. iteration to n. iteration
+        tchar = pattern[patternpos];         // save the quote type
+        begin = patternpos;                  // here the pattern begines
+        patternpos = nextdel(pattern, patternpos + 1, plen, tchar);  // search the ending (same quote type)
+        if (patternpos == INT_MAX) patternpos = plen;  // not found assume it lasts to the end of the pattern string
+        end = patternpos;                    // save the end position
+     // Extract string pattern and variable preceding it
+     // ------------------------------------------------
+        memset(patstring, 0, sizeof(patstring));
+        memset(valstring, 0, sizeof(valstring));
+        memset(variable,  0, sizeof(variable));
+
+        strncpy(variable, pattern, begin);
+        trim(variable);
+        strncpy(patstring, pattern + begin, end - begin + 1);
+        if (debug==1) printf("... located pattern : '%s'\n",patstring);
+        if (strlen(variable)>0) {   // first pattern has no preceding variable
+            if (debug==1)  printf("... located variable    : '%s'\n",variable);
+            SETARRAYHI(ARG2, indx);
+            SETSARRAY(ARG2, indx - 1, variable);
+            SETARRAYHI(ARG3, indx);
+            SETSARRAY(ARG3, indx - 1, "");
+        } else printf("... no prior variable assignment\n");
+        pattern = pattern + end + 1;
+     // now find pattern in string
+     // --------------------------
+        stringpos = strstr(stringoffset, patstring);
+        if (stringpos == 0) break;
+        strncpy(valstring, stringoffset, stringpos - stringoffset);
+        stringoffset = stringpos + strlen(patstring);
+        trim(valstring);
+        if (debug==1) printf("... extracted value : '%s' preceeding pattern\n",valstring);
+        if (strlen(variable)>0) {   // first pattern has no preceding variable
+             SETSARRAY(ARG3, indx - 1, valstring);
+        } else indx--;   // there is no variable reset indx by -1
+    }
+ // now handle remaining parts past last pattern
+    memset(valstring, 0, sizeof(valstring));
+    memset(variable, 0, sizeof(variable));
+    sprintf(valstring, "%s",stringoffset);
+    trim(valstring);
+    sprintf(variable, "%s",pattern);
+    trim(variable);
+    SETARRAYHI(ARG2, indx);
+    SETARRAYHI(ARG3,indx);
+    if (strlen(variable)==0) SETSARRAY(ARG2, indx - 1, "not_assigned");
+       else SETSARRAY(ARG2, indx - 1, variable);
+    SETSARRAY(ARG3,indx-1,valstring);
+    RETURNINT(0);
+    PROCRETURN
+    ENDPROC
+}
+#if defined(_WIN32)
+PROCEDURE(setclipboard) {
+    char *text=GETSTRING(ARG0);
+
+    if (!OpenClipboard(NULL)) RETURNINTX(-8);   // Open the clipboard
+    EmptyClipboard();                       // Clear the clipboard
+
+    size_t len = strlen(text) + 1;      // Allocate global memory for the text
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+    if (!hMem) {
+        CloseClipboard();
+        RETURNINTX(-12);
+    }
+    memcpy(GlobalLock(hMem), text, len);  // Copy text into the memory
+    GlobalUnlock(hMem);
+
+    SetClipboardData(CF_TEXT, hMem);  // Set the clipboard data
+
+    CloseClipboard();                         // Close the clipboard
+    RETURNINTX(0);
+    ENDPROC
+}
+PROCEDURE(getclipboard) {
+    // Open the clipboard
+    if (!OpenClipboard(NULL)) {
+       RETURNSTRX("$$$ERROR$$$");
+    }
+    // Get clipboard data
+    HANDLE hData = GetClipboardData(CF_TEXT);
+    if (hData == NULL) {
+        CloseClipboard();
+        RETURNSTRX("");
+    }
+ // Lock the global memory and copy text from it
+    char *text = (char *)GlobalLock(hData);
+    if (text) {
+        GlobalUnlock(hData);
+        RETURNSTRX(text);
+    } else RETURNSTRX("");
+    // Close the clipboard
+    CloseClipboard();
+ENDPROC
+}
+#else
+PROCEDURE(setclipboard) {
+    #if defined(__APPLE__)
+    FILE *clipboard = popen("pbcopy", "w");
+    #else
+    FILE *clipboard = popen("xclip -selection clipboard", "w");
+    #endif
+    if (clipboard == NULL) RETURNINTX(-4);
+   // fprintf(clipboard, "%s", text);
+    pclose(clipboard);
+    RETURNINTX(0);
+ENDPROC
+}
+
+void getclipboard() {
+    #if defined(__APPLE__)
+    FILE *clipboard = popen("pbpaste", "r");
+    #else
+    FILE *clipboard = popen("xclip -selection clipboard -o", "r");
+    #endif
+    if (clipboard == NULL)   RETURNSTRX("$$$ERROR$$$");
+    char buffer[16000];
+    if (fgets(buffer, sizeof(buffer), clipboard) != NULL) {
+        RETURNSTRX(buffer);
+    } else  RETURNSTRX("");
+    pclose(clipboard);
+}
+#endif
+PROCEDURE(setglobal) {
+#if defined(_WIN32)
+    if (_putenv_s(GETSTRING(ARG0), GETSTRING(ARG1)) == 0) {
+#else
+    if (setenv(GETSTRING(ARG0), GETSTRING(ARG1), 1) == 0) {
+#endif
+        RETURNINTX(0);
+    } else {
+        RETURNINTX(-8);
+    }
+ENDPROC
+}
+
+PROCEDURE(getglobal) {
+   char *value = getenv(GETSTRING(ARG0));
+   if (value) {
+        RETURNSTRX(value);
+    } else {
+        RETURNSTRX("");
+    }
+ENDPROC
+}
+
+
+/*
+// Get the environment variable (similar to GetEnvironmentVariable in Windows)
+const char *value = getenv("MY_TEMP_VAR");
+if (value) {
+printf("MY_TEMP_VAR: %s\n", value);
+} else {
+printf("Environment variable not found.\n");
+}
+*/
+
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
  * -------------------------------------------------------------------------------------
@@ -232,8 +450,16 @@ LOADFUNCS
     ADDPROC(createdir,  "system.createdir",   "b",    ".int",    "arg0=.string");
     ADDPROC(removedir,  "system.removedir",   "b",    ".int",    "arg0=.string");
     ADDPROC(deletefile, "system.deletefile",  "b",    ".int",    "arg0=.string");
+    ADDPROC(renamefileP,"system.renamefile",  "b",    ".int",    "arg0=.string,arg1=.string");
     ADDPROC(testfile,   "system.testfile",    "b",    ".int",    "arg0=.string");
     ADDPROC(listdir,    "system.listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
+    ADDPROC(getclipboard,"system.getclipboard","b",    ".string","");
+    ADDPROC(setclipboard,"system.setclipboard","b",    ".int","arg0=.string");
+    ADDPROC(getglobal,"system.getglobal"      ,"b",   ".string","key=.string");
+    ADDPROC(setglobal,"system.setglobal"      ,"b",    ".int",  "key=.string,value=.string");
 
-    ADDPROC(writeall,"system.writeall",   "b",  ".int", "expose array=.string[],file=.string,arg2=.int");
+
+    ADDPROC(writeall,"system.writeall",   "b",   ".int","expose array=.string[],file=.string,arg2=.int");
+    ADDPROC(parse,"system.parse",         "b",   ".int","string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
+
 ENDLOADFUNCS
