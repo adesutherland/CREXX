@@ -3,6 +3,7 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #if defined(__APPLE__)
  #include <sys/stat.h>
 #endif
@@ -369,8 +370,8 @@ PROCEDURE(getclipboard) {
     char *text = (char *)GlobalLock(hData);
     if (text) {
         GlobalUnlock(hData);
-        RETURNSTRX(text);
-    } else RETURNSTRX("");
+        RETURNSTR(text);
+    } else RETURNSTR("");
     // Close the clipboard
     CloseClipboard();
 ENDPROC
@@ -401,6 +402,7 @@ void getclipboard() {
         RETURNSTRX(buffer);
     } else  RETURNSTRX("");
     pclose(clipboard);
+    ENDPROC
 }
 #endif
 PROCEDURE(setglobal) {
