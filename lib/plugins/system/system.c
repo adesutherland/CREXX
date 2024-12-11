@@ -390,7 +390,7 @@ PROCEDURE(setclipboard) {
 ENDPROC
 }
 
-PROCEDURE(getclipboardx) {
+PROCEDURE(getclipboard) {
     #if defined(__APPLE__)
     FILE *clipboard = popen("pbpaste", "r");
     #else
