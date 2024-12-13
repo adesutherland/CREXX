@@ -90,3 +90,6 @@ _deps
 
 * cREXX
 *.rxbin
+
+# emacs backup files
+*~

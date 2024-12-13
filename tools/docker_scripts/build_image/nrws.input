@@ -1,0 +1,3 @@
+-- preload the pipe machinery for good response on first pipe
+pipe literal Pipelines processor loaded. | console
+
