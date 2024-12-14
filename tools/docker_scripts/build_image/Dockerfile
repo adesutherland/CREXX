@@ -46,14 +46,18 @@ RUN cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../crexx-code && ninja
 #EXPOSE 80
 
 # Define environment variable
-ENV CLASSPATH .:/netrexx-code/build/lib/NetRexxF.jar
+#ENV CLASSPATH .:/netrexx-code/build/lib/NetRexxF.jar
+ENV CREXX_HOME=/crexx_release
 ENV PATH $PATH://crexx_release/bin:/crexx_release/compiler:/crexx_release/assembler:/crexx_release/disassembler:/crexx_release/interpreter:/crexx_release/cpacker:/crexx_release/debugger
 
-WORKDIR /crexx-code
+# WORKDIR /crexx-code
 # Run when the container launches
-CMD 'git pull'
+# CMD 'git pull'
 #CMD 'make'
 
-WORKDIR /crexx_release
-# Run when the container launches
-CMD cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../crexx-code && ninja
+# WORKDIR /crexx_release
+# # Run when the container launches
+# CMD cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../crexx-code && ninja
+
+WORKDIR /
+
