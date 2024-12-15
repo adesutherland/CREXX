@@ -7,8 +7,8 @@
  *  arg string1 = .string, count = .int
  */
           .globals=0
-copies()  .locals=5 .expose=rxsysc.copies
-   .meta "rxsysc.copies"="b" ".string" copies() "string1 = .string, count = .int" ""
+copies()  .locals=5 .expose=rxfnsb.copies
+   .meta "rxfnsb.copies"="b" ".string" copies() "string1 = .string, count = .int" ""
           ieq   r1,a0,2 /* copies needs two args */
           brf   wrongargs,r1
           ieq   r1,a2,0
