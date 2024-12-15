@@ -7,9 +7,9 @@ if arg='' then do
 end
 parse arg execName'.'extension
 if extension<>'' then say 'filename extension ignored.'
-'rxc  -i' crexx_home'/lib/rxfns' execName
+'rxc  -i' crexx_home'/lib/rxfnsb' execName
 'rxas' execName 
-'rxcpack' execName crexx_home'/lib/rxfns/library'
+'rxcpack' execName crexx_home'/lib/rxfnsb/library'
 'gcc -o' execName,
 '-lrxvml -lmachine -lavl_tree -lplatform -lm -L',
 crexx_home'/interpreter -L'crexx_home'/machine -L',

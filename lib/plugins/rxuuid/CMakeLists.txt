@@ -12,7 +12,7 @@ add_dynamic_plugin_target(_rxuuid rxuuid.c)
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\"
+        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o uuid_test \"${CMAKE_CURRENT_SOURCE_DIR}/uuid_test\" &&
         ${CMAKE_BINARY_DIR}/assembler/rxas uuid_test
 
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run uuid_test.rxbin with the rxuuid plugin
 add_test(NAME uuid_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm uuid_test rx_rxuuid ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm uuid_test rx_rxuuid ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

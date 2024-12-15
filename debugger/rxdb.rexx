@@ -17,7 +17,7 @@ clear = esc"[2J"
 say green"RXDB Version 0.1.2"
 say ""
 say "Loading CREXX Runtime Library Modules"
-call load_library "../cmake-build-debug/lib/rxfns"
+call load_library "../cmake-build-debug/lib/rxfnsb"
 
 last_loaded_module = ""
 

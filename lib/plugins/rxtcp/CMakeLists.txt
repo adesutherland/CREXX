@@ -14,7 +14,7 @@ add_dynamic_plugin_target(_rxtcp rxtcp.c)
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\"
+        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o tcp_test \"${CMAKE_CURRENT_SOURCE_DIR}/tcp_test\" &&
         ${CMAKE_BINARY_DIR}/assembler/rxas tcp_test
 
@@ -31,6 +31,6 @@ enable_testing()
 
 # Basic test to run tcp_test.rxbin with the rxtcp plugin
 add_test(NAME tcp_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tcp_test rx_rxtcp ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tcp_test rx_rxtcp ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

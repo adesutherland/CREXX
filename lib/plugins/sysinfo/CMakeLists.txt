@@ -12,7 +12,7 @@ add_dynamic_plugin_target(_sysinfo sysinfo.c)
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-            -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\"
+            -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
             -o sysinfo_test \"${CMAKE_CURRENT_SOURCE_DIR}/sysinfo_test\" &&
         ${CMAKE_BINARY_DIR}/assembler/rxas sysinfo_test
 
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run sysinfo_test.rxbin with the sysinfo plugin
 add_test(NAME sysinfo_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

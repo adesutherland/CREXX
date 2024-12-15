@@ -37,10 +37,10 @@ target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 # Packed Library
 add_custom_command(
         OUTPUT library.c
-        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack -o library ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack -o library ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library rxcpack ${CMAKE_BINARY_DIR}/lib/rxfns/library.rxbin
-        COMMENT "C Packing cREXX RXFNS Library ..."
+        DEPENDS library rxcpack ${CMAKE_BINARY_DIR}/lib/rxfnsb/library.rxbin
+        COMMENT "C Packing cREXX RXFNSB Library ..."
 )
 add_custom_target(packed_library ALL DEPENDS library.c)
 

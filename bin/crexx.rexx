@@ -59,7 +59,7 @@ if verbose then say 'using CREXX_HOME:' rxpath
 do i=1 to words(filenames)
   filename=word(filenames,i)
   if verbose then assembler sayx 'Compiling '
-  'rxc -i' rxpath'/lib/rxfns' filename
+  'rxc -i' rxpath'/lib/rxfnsb' filename
   if verbose then say filename ' result =' RC
   if verbose then assembler sayx 'Assembling '
   'rxas' filename
@@ -67,7 +67,7 @@ do i=1 to words(filenames)
   
   if native then do
     if verbose then say 'Packing native executable' filename
-    'rxcpack' filename rxpath'/lib/rxfns/library'
+    'rxcpack' filename rxpath'/lib/rxfnsb/library'
     if verbose then say 'Compiling native executable' filename
     'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lrxpa -lm -L',
     rxpath'/interpreter -L',

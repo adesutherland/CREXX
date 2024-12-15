@@ -12,7 +12,7 @@ add_dynamic_plugin_target(_cipher cipher.c)
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\"
+        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o cipher_test \"${CMAKE_CURRENT_SOURCE_DIR}/cipher_test\" &&
         ${CMAKE_BINARY_DIR}/assembler/rxas cipher_test
 
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run cipher_test.rxbin with the cipher plugin
 add_test(NAME cipher_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm cipher_test rx_cipher ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm cipher_test rx_cipher ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
