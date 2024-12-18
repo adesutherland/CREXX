@@ -12,7 +12,7 @@ add_dynamic_plugin_target(_llist llist.c)
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfns\;${CMAKE_CURRENT_BINARY_DIR}\"
+        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
         -o llist_test \"${CMAKE_CURRENT_SOURCE_DIR}/llist_test\" &&
         ${CMAKE_BINARY_DIR}/assembler/rxas llist_test
 
@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run llist_test.rxbin with the llist plugin
 add_test(NAME llist_test
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm llist_test rx_llist ${CMAKE_BINARY_DIR}/lib/rxfns/library
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm llist_test rx_llist ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )

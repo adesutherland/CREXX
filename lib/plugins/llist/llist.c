@@ -70,52 +70,224 @@ void trim(char *str) {
     }
 }
 
-int2string(char *result, int number){
-   char str[20];
-   sprintf(str, "%d", number); // Convert integer to string
-   trim(str);
-   strcpy(result,str);
-}
-
-
 // Function to create a new node
-struct NodeEntry * createNodeEntry(char * message) {
-    struct NodeEntry* newNode;
-    uintptr_t * nodeADDR= (uintptr_t *) getmain(sizeof(struct NodeEntry) + strlen(message) + 16);
-    if (nodeADDR == NULL) {
-        printf("Memory allocation failed\n");
-        return (struct NodeEntry *) -8;
-    }
-    newNode= (struct NodeEntry *)  nodeADDR;
-    newNode->sSaddr= nodeADDR;
-    strncpy(newNode->String,message,strlen(message));
+struct NodeEntry* createNodeEntry(char *message) {
+    // Calculate the total size required for the NodeEntry structure and the message
+    size_t totalSize = sizeof(struct NodeEntry) + strlen(message) + 1; // +1 for null terminator
 
+    // Allocate memory for the new node and the message
+    uintptr_t *nodeAddr = (uintptr_t *)getmain(totalSize);
+
+    // Check if memory allocation succeeded
+    if (nodeAddr == NULL) {
+        printf("Memory allocation failed\n");
+        return (struct NodeEntry *)-8; // Indicate failure
+    }
+
+    // Initialize the new node
+    struct NodeEntry *newNode = (struct NodeEntry *)nodeAddr;
+    newNode->sSaddr = nodeAddr; // Self-reference for the node
+    strncpy(newNode->String, message, strlen(message)); // Copy the message to the node
+    newNode->String[strlen(message)] = '\0'; // Ensure null termination
+
+    // Initialize the next pointer to NULL
     newNode->sNext = NULL;
-    return newNode;
+
+    return newNode; // Return the created node
 }
 
-// Function to add a node at the end of a list
-PROCEDURE(addnode)  {
-    int    nodeindx = GETINT(ARG0);
+
+int addnode(int mode, int nodeIndx,char * message) {
+
+    struct NodeEntry *newNode = createNodeEntry(message);  // Allocate storage for new entry
+
+    if (llEntryStub[nodeIndx].sStackFirst == NULL) {       // First entry in the stack
+        llEntryStub[nodeIndx].sStackFirst   = (uintptr_t *) newNode;  // Set first element
+        llEntryStub[nodeIndx].sStackCurrent = (uintptr_t *) newNode;  // Set current pointer
+        llEntryStub[nodeIndx].sStackLast    = (uintptr_t *) newNode;  // Set last element
+        llEntryStub[nodeIndx].sStackEntries++;
+        newNode->sSaddr = (uintptr_t *) newNode;           // Self-reference address
+        newNode->sPrev = 0;                                // Initialize backward pointer
+        newNode->sNext = 0;                                // Initialize forward pointer
+        return 0;
+    }
+
+    struct NodeEntry *currentFirst = (struct NodeEntry *) llEntryStub[nodeIndx].sStackFirst;
+    struct NodeEntry *currentLast  = (struct NodeEntry *) llEntryStub[nodeIndx].sStackLast;
+
+    if (mode == 1) {  // APPEND MODE
+        // Add node to the end of the list
+        currentLast->sNext = (uintptr_t *) newNode;    // Forward pointer from last to new node
+        newNode->sPrev = currentLast->sSaddr;         // Backward pointer to last node
+        llEntryStub[nodeIndx].sStackLast = (uintptr_t *) newNode;  // Update last node
+    }
+    else {  // PREPEND MODE
+        // Add node to the beginning of the list
+        currentFirst->sPrev = (uintptr_t *) newNode;   // Backward pointer from first to new node
+        newNode->sNext = currentFirst->sSaddr;        // Forward pointer to first node
+        llEntryStub[nodeIndx].sStackFirst = (uintptr_t *) newNode; // Update first node
+    }
+
+    // Update common fields
+    llEntryStub[nodeIndx].sStackEntries++;
+    newNode->sSaddr = (uintptr_t *) newNode;  // Create self-reference address
+    newNode->sPrev = (mode == 1) ? currentLast->sSaddr : 0;  // Backward pointer
+    newNode->sNext = (mode == 1) ? 0 : currentFirst->sSaddr; // Forward pointer
+}
+
+/**
+ * @brief Appends a new node to the Linked List
+ *
+ * This function appends a Linked List by a new node
+ *
+ * @param linked-list-number The number must be in a range of 0 to 99.
+ * @param buffer, typically a string which is the node's value.
+ * @return 0 if node was successfully added.
+ */
+
+
+PROCEDURE(appendnode) {
+    int    nodeIndx = GETINT(ARG0);
     char * message  = GETSTRING(ARG1);
-    struct NodeEntry *newNode = createNodeEntry(message);            // allocate storage for new entry
+    int rc=addnode(1, nodeIndx, message);
+    RETURNINTX((rc))
+ENDPROC
+}
 
-    if (llEntryStub[nodeindx].sStackFirst== NULL) {                  // it will be the first entry for this stack
-        llEntryStub[nodeindx].sStackFirst  = (uintptr_t *) newNode;  // save pointer to first element
-        llEntryStub[nodeindx].sStackCurrent= (uintptr_t *) newNode;  // set current pointer to first element
-    }
-    struct NodeEntry * last = (struct NodeEntry *) llEntryStub[nodeindx].sStackLast; // address last entry, if any
-    struct NodeEntry * new =  newNode;                                               // address new entry
+PROCEDURE(prependnode) {
+    int    nodeIndx = GETINT(ARG0);
+    char * message  = GETSTRING(ARG1);
+    int rc=addnode(0, nodeIndx, message);
+    RETURNINTX(rc);
+    ENDPROC
+}
 
-    if(last == NULL)   new->sPrev = 0;          // this is the first element, reset pointer to previous one
-    else {                                      // there is already at least one element in queue
-        last->sNext = (uintptr_t *) newNode;    // forward pointer from previous element to the new one
-        new->sPrev=last->sSaddr;                // backward pointer from new to previous one
+PROCEDURE(insertnode) {
+    // Extract input arguments
+    int nodeIndex = GETINT(ARG0);
+    char *message = GETSTRING(ARG1);
+    char *mode = GETSTRING(ARG2);
+    int before = 0;
+
+ // Allocate memory for the new node
+    struct NodeEntry *newNode = createNodeEntry(message);
+
+ // Normalize mode to uppercase
+    toUpperCase(mode);
+    before = (mode[0] == 'B') ? 1 : 0;
+
+ // Handle case where the stack is empty
+    if (llEntryStub[nodeIndex].sStackFirst == NULL) {
+        llEntryStub[nodeIndex].sStackFirst     = (uintptr_t *)newNode;   // Set first node
+        llEntryStub[nodeIndex].sStackCurrent   = (uintptr_t *)newNode;   // Set current node
     }
-    llEntryStub[nodeindx].sStackEntries++;
-    llEntryStub[nodeindx].sStackLast   = (uintptr_t *) newNode;  // set new last entry in stub
-    new->sSaddr= (uintptr_t *) newNode;                          // create self reference address in entry
-    new->sNext=0;                                                // init forward pointer
+ // Prepare pointers for insertion
+    struct NodeEntry *current = (struct NodeEntry *)llEntryStub[nodeIndex].sStackCurrent; // Current node
+    struct NodeEntry *new = newNode;                                                      // New node
+
+ // Insert the new node into an empty list
+    if (current == NULL) {              // First element: reset previous pointer
+        new->sPrev = 0;
+        new->sNext = 0;
+    } else {                            // Queue already contains elements
+        if (before==0) goto addAfter;  // add item after current item  !! use goto to have a readable structure
+        else goto addPrior;            // add item prior current item  !! use goto to have a readable structure
+    }
+inserted: ;
+ // Update stack metadata
+    llEntryStub[nodeIndex].sStackEntries++;
+    new->sSaddr = (uintptr_t *)newNode; // Self-reference for the new node
+    llEntryStub[nodeIndex].sStackCurrent   = (uintptr_t *)newNode;   // Set new current node
+RETURNINTX(0);
+/* ------------------------------------------------------------------------------------------------
+ * add item after current item  !! use goto to have a readable structure
+ * ------------------------------------------------------------------------------------------------
+ */
+ addAfter: {
+    struct NodeEntry *oldNext;
+    uintptr_t oldPrev;
+    oldNext = (struct NodeEntry *) current->sNext;
+    current->sNext = (uintptr_t *) newNode; // Link current to new node
+    if (oldNext > 0) {
+       oldPrev = (uintptr_t) oldNext->sPrev;
+       oldNext->sPrev = (uintptr_t *) newNode; // Link next node back to new node
+       new->sNext = (uintptr_t *) oldNext;     // Link new node forward to old next node
+    } else {
+        new->sNext = 0;                        // set to zero, it's the last item
+    }
+    new->sPrev = (uintptr_t *) oldPrev;       // Link new node back to old previous node
+    goto inserted;
+}
+/* ------------------------------------------------------------------------------------------------
+ * add item prior current item  !! use goto to have a readable structure
+ * ------------------------------------------------------------------------------------------------
+ */
+addPrior: {
+    struct NodeEntry *oldPrev;
+    uintptr_t oldNext;
+    oldPrev = (struct NodeEntry *) current->sPrev;
+    current->sPrev = (uintptr_t *) newNode;     // Link current to new node
+    if (oldPrev > 0) {
+        oldNext = (uintptr_t) oldPrev->sNext;
+        oldPrev->sNext = (uintptr_t *) newNode; // Link next node back to new node
+        new->sPrev = (uintptr_t *) oldPrev;     // Link new node back to old previous node
+        new->sNext = (uintptr_t *) oldNext;     // Link new node forward to old next node
+    } else {                                    // this is a new first entry
+        new->sPrev = 0;                         // set to zero, it's the first item
+        new->sNext = (uintptr_t *) current;
+        llEntryStub[nodeIndex].sStackFirst = (uintptr_t *) newNode;
+    }
+    goto inserted;
+}
+ENDPROC
+}
+
+PROCEDURE(removenode) {
+    int nodeIndex = GETINT(ARG0);
+
+    // Check if the list (stack) is empty
+    if (llEntryStub[nodeIndex].sStackFirst == NULL) {
+        RETURNINTX(-8);  // Stack is empty
+    }
+
+    // Get the current node
+    struct NodeEntry *current = (struct NodeEntry *)llEntryStub[nodeIndex].sStackCurrent;
+
+    // Check if the current node is valid
+    if (current == NULL) {
+        RETURNINTX(-8);  // Invalid current node
+    }
+
+    // Extract neighboring nodes
+    struct NodeEntry *next     = (struct NodeEntry *)current->sNext;
+    struct NodeEntry *previous = (struct NodeEntry *)current->sPrev;
+
+    // Update pointers for the next node
+    if (next != NULL) {
+        next->sPrev = (previous != NULL) ? previous->sSaddr : 0;  // Link next node back to previous
+    } else {
+        // Current is the last node; adjust the "last" pointer
+        llEntryStub[nodeIndex].sStackLast = (uintptr_t *)previous;
+    }
+
+    // Update pointers for the previous node
+    if (previous != NULL) {
+        previous->sNext = (next != NULL) ? next->sSaddr : 0;  // Link previous node forward to next
+        llEntryStub[nodeIndex].sStackCurrent = (uintptr_t *)previous;  // Move current pointer to previous node
+    } else {
+        // Current is the first node; adjust the "first" pointer
+        llEntryStub[nodeIndex].sStackFirst   = (uintptr_t *)next;
+        llEntryStub[nodeIndex].sStackCurrent = (uintptr_t *)next;  // Move current pointer to next node
+    }
+
+    // Free memory associated with the current node
+    freemain(current->sSaddr);
+
+    // Decrement the stack entry count
+    llEntryStub[nodeIndex].sStackEntries--;
+
+    RETURNINTX(0);
+ENDPROC
 }
 
 // Function to display a linked list
@@ -124,7 +296,7 @@ PROCEDURE(listnode) {
     printf("Linked List %d:\n",GETINT(ARG0));
     if (llEntryStub[nodeindx].sStackFirst== NULL) {
         printf("Empty list\n");
-        return;
+        RETURNINTX(0);
     }
     struct NodeEntry * temp = (struct NodeEntry *) llEntryStub[nodeindx].sStackFirst;
     while (temp != NULL) {
@@ -132,88 +304,111 @@ PROCEDURE(listnode) {
         temp = (struct NodeEntry *) temp->sNext;
     }
     printf("NULL\n");
+    RETURNINTX(0);
+ENDPROC
 }
 
 // Function to free memory of a linked list
 PROCEDURE(freellist) {
-    int nodeindx=GETINT(ARG0);
-    if (llEntryStub[nodeindx].sStackFirst== NULL) {
-        printf("Empty list\n");
+    int nodeIndex = GETINT(ARG0);
+
+    // Check if the list is already empty
+    if (llEntryStub[nodeIndex].sStackFirst == NULL) {
+        printf("List is already empty.\n");
         return;
     }
-    struct NodeEntry * temp = (struct NodeEntry *) llEntryStub[nodeindx].sStackFirst;
-    struct NodeEntry * next;
-    while (temp != NULL) {
-        next = (struct NodeEntry *) temp->sNext;
-        freemain(temp);
-        temp = next;
+
+    // Initialize pointers for traversal
+    struct NodeEntry *current = (struct NodeEntry *)llEntryStub[nodeIndex].sStackFirst;
+    struct NodeEntry *nextNode;
+
+    // Traverse and free all nodes
+    while (current != NULL) {
+        nextNode = (struct NodeEntry *)current->sNext;  // Save the next node
+        freemain(current);                              // Free the current node
+        current = nextNode;                             // Move to the next node
     }
+
+    // Reset the list metadata
+    llEntryStub[nodeIndex].sStackFirst   = NULL;
+    llEntryStub[nodeIndex].sStackLast    = NULL;
+    llEntryStub[nodeIndex].sStackCurrent = NULL;
+    llEntryStub[nodeIndex].sStackLastValid = NULL;
+    llEntryStub[nodeIndex].sStackEntries = 0;
+
+    printf("List successfully freed.\n");
 }
 
-/*
-PROCEDURE(insertqueue) {
-    int qname = GETINT(ARG0);
-    char *message = GETSTRING(ARG1);
-    int count = 0, insert = GETINT(ARG2);
-
-    QueueStub[qname].sStackCurrent = (struct NodeEntry *) QueueStub[qname].stackptr;
-    struct NodeEntry *current = (struct NodeEntry *) QueueStub[qname].sStackCurrent;
-    while (current > 0) {
-        if (count == insert) break;
-        current = (struct NodeEntry *) current->sNext;
-        count++;
-    }
-    printf("Entry after %d %d %p\n",count,insert,current);
-    RETURNINT(0);
-    ENDPROC
-}
-*/
 
 PROCEDURE(nextnode) {
     int qname = GETINT(ARG0);
 
-    struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
-    currentEntry= (struct NodeEntry *) currentEntry->sNext;
-    if (currentEntry == 0) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "END-OF-LLIST-",qname);
-        RETURNSTR(EOLL);
-    }else {
-        RETURNSTR(currentEntry->String);
-        if (currentEntry->sNext == 0)  llEntryStub[qname].sStackLastValid= (uintptr_t *) currentEntry;
-        llEntryStub[qname].sStackCurrent= (uintptr_t *) currentEntry;
+    // Retrieve the current node
+    struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
+
+    // Move to the next node
+    currentEntry = (struct NodeEntry *)currentEntry->sNext;
+
+    // Check if we've reached the end of the list
+    if (currentEntry == NULL) {
+        char endOfListMessage[32];
+        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", qname);
+        RETURNSTR(endOfListMessage);
     }
-        ENDPROC
+
+    // Return the string stored in the current node
+    RETURNSTR(currentEntry->String);
+
+    // Update the current node pointer
+    llEntryStub[qname].sStackCurrent = (uintptr_t *)currentEntry;
+
+    // Mark the current node as the last valid node, if applicable
+    if (currentEntry->sNext == NULL) {
+        llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
+    }
 }
+
 
 PROCEDURE(currentnode) {
     int qname = GETINT(ARG0);
 
-    struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
-    if (currentEntry == 0) currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackFirst;
-    if (currentEntry == 0) {
-        char EOLL[16];
-        sprintf(EOLL, "$%s%d$", "EMPTY-LLIST-",qname);
-        RETURNSTR(EOLL);
-    }else {
-        RETURNSTR(currentEntry->String);
-        llEntryStub[qname].sStackLastValid= (uintptr_t *) currentEntry;
+    // Retrieve the current node; default to the first node if current is NULL
+    struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
+    if (currentEntry == NULL) {
+        currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackFirst;
     }
-    ENDPROC
+
+    // Check if the list is empty
+    if (currentEntry == NULL) {
+        char emptyListMsg[32];
+        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", qname);
+        RETURNSTR(emptyListMsg);  // Return empty list marker
+    }
+
+    // Update the last valid node pointer and return the node's string
+    llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
+    RETURNSTR(currentEntry->String);
 }
+
 PROCEDURE(currentnodeaddr) {
     int qname = GETINT(ARG0);
 
-    struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
-    if (currentEntry == 0) currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackFirst;
-    if (currentEntry == 0) {
-       RETURNINT(0);
-    }else {
-        RETURNINT((uintptr_t) currentEntry->sSaddr);
-        llEntryStub[qname].sStackLastValid= (uintptr_t *) currentEntry;
+    // Retrieve the current node; default to the first node if current is NULL
+    struct NodeEntry *currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
+    if (currentEntry == NULL) {
+        currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackFirst;
     }
-    ENDPROC
+
+    // Return 0 if the list is empty
+    if (currentEntry == NULL) {
+        RETURNINT(0);
+    }
+
+    // Update the last valid node pointer and return the address
+    llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
+    RETURNINT((uintptr_t)currentEntry->sSaddr);
 }
+
 
 PROCEDURE(prevnode) {
     int qname = GETINT(ARG0);
@@ -232,76 +427,75 @@ PROCEDURE(prevnode) {
     ENDPROC
 }
 
-void poslist(int qname,char * position){
-    int i,pos,relpos=0;
-    struct NodeEntry *currentEntry;
-    if (strstr(position,"+")>0) relpos=1;
-    else if (strstr(position,"-")>0) relpos=1;
-    pos=atoi(position);
-    if (relpos==1) {
-        currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
-        if (currentEntry == 0)  currentEntry= (struct NodeEntry *) llEntryStub[qname].sStackLastValid;
-        if (pos > 0) { // relative position to current position
-            for (i = 0; i < pos; i++) {
-                if (currentEntry->sNext == 0) break;
-                currentEntry = (struct NodeEntry *) currentEntry->sNext;
-            }
-         } else {
-            for (i = 0; i < -pos; i++) {
-                if (currentEntry->sPrev == 0) break;
-                currentEntry = (struct NodeEntry *) currentEntry->sPrev;
-            }
+uintptr_t *poslist(int qname, char *position) {
+    int i,pos = 0, steps = 0;
+    int isRelative = 0;
+    struct NodeEntry *currentEntry = NULL;
+
+    // Determine if position is relative and convert it to an integer
+    if (strchr(position, '+') || strchr(position, '-')) {
+        isRelative = 1;
+    }
+    pos = atoi(position);
+
+    // Determine the starting point
+    if (isRelative) {
+        currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackCurrent;
+        if (currentEntry == NULL) {
+            currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackLastValid;
         }
     } else {
-        currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackFirst;
-        for (i = 1; i < pos; i++) {
-            if (currentEntry->sNext == 0) break;
-            currentEntry = (struct NodeEntry *) currentEntry->sNext;
+        currentEntry = (struct NodeEntry *)llEntryStub[qname].sStackFirst;
+    }
+
+    // Traverse the list based on position
+    if (currentEntry != NULL) {
+        steps = (pos > 0) ? pos : -pos;
+
+        for (i = 0; i < steps; i++) {
+            if (pos > 0) { // Move forward
+                if (currentEntry->sNext == NULL) break;
+                currentEntry = (struct NodeEntry *)currentEntry->sNext;
+            } else {       // Move backward
+                if (currentEntry->sPrev == NULL) break;
+                currentEntry = (struct NodeEntry *)currentEntry->sPrev;
+            }
         }
     }
-    llEntryStub[qname].sStackCurrent = (uintptr_t *) currentEntry;
+    return (uintptr_t *)currentEntry;
 }
 
 PROCEDURE(setnode) {
-    int pos, qname=GETINT(ARG0);
-    char * position=GETSTRING(ARG1);
-    toUpperCase(position);
-    if(strncmp(position,"FIRST",2)==0) {
-       llEntryStub[qname].sStackCurrent = llEntryStub[qname].sStackFirst;
-    } else if(strncmp(position,"LAST",2)==0) {
-       llEntryStub[qname].sStackCurrent =  llEntryStub[qname].sStackLast;
-    } else {
-        poslist(qname, position);
-    }
-    RETURNINT(0);
-    ENDPROC
-}
-PROCEDURE(setnodeaddr) {
-    int pos, qname=GETINT(ARG0);
-    char * position=GETSTRING(ARG1);
-    toUpperCase(position);
-    if(strncmp(position,"FIRST",2)==0) {
-        llEntryStub[qname].sStackCurrent = llEntryStub[qname].sStackFirst;
-    } else if(strncmp(position,"LAST",2)==0) {
-        llEntryStub[qname].sStackCurrent =  llEntryStub[qname].sStackLast;
-    } else {
-        poslist(qname, position);
-    }
-    RETURNINT(0);
-    ENDPROC
-}
-PROCEDURE(removequeue) {
     int qname = GETINT(ARG0);
-    struct NodeEntry *current = (struct NodeEntry *) llEntryStub[qname].sStackFirst;
-    uintptr_t * next;
-    while (current > 0) {
-       next=current->sNext;
-       freemain(current->sSaddr);
-       current = (struct NodeEntry *) next;
+    char *position = GETSTRING(ARG1);
+    toUpperCase(position);
+
+    uintptr_t *current = NULL;
+
+    // Determine the node position based on the input string
+    if (strncmp(position, "FIRST", 2) == 0) {
+        current = llEntryStub[qname].sStackFirst;
+    } else if (strncmp(position, "LAST", 2) == 0) {
+        current = llEntryStub[qname].sStackLast;
+    } else {
+        current = poslist(qname, position);
     }
-    RETURNINT(0);
-    ENDPROC
+
+    // Update the current node and return its address
+    llEntryStub[qname].sStackCurrent = current;
+    RETURNINT((uintptr_t)current);
 }
+
+PROCEDURE(setnodeaddr) {
+    int qname = GETINT(ARG0);
+    uintptr_t *current = (uintptr_t *)GETINT(ARG1);
+
+    // Set the current node address and return it
+    llEntryStub[qname].sStackCurrent = current;
+    RETURNINT((uintptr_t)current);
+}
+
+
 PROCEDURE(listllist) {
     int qname = GETINT(ARG0);
     struct NodeEntry *current = (struct NodeEntry *) llEntryStub[qname].sStackFirst;
@@ -320,9 +514,16 @@ PROCEDURE(listllist) {
 LOADFUNCS
 //      C Function, REXX namespace & name,      Option,Return Type, Arguments
 //  !! Do not use "to" in the parm-list, make it for example "tto", else compile fails: "expose a = .string[],from=.int,tto=.int"
-ADDPROC(addnode,      "llist.addnode",    "b",  ".int",    "qname=.int,message=.string" );
+ADDPROC(appendnode,   "llist.appendnode", "b",  ".int",    "qname=.int,message=.string" );
+ADDPROC(prependnode,  "llist.prependnode","b",  ".int",    "qname=.int,message=.string" );
+ADDPROC(appendnode,   "llist.appnode",    "b",  ".int",    "qname=.int,message=.string" );
+ADDPROC(prependnode,  "llist.prepnode",   "b",  ".int",    "qname=.int,message=.string" );
+
+ADDPROC(insertnode,   "llist.insertnode", "b",  ".int",    "qname=.int,message=.string,mode=.string" );
+ADDPROC(removenode,   "llist.removenode", "b",  ".int",    "qname=.int");
+
 ADDPROC(currentnode,  "llist.currentnode","b",  ".string", "qname=.int" );
-ADDPROC(currentnodeaddr,"llist.currentnodeaddr","b",".int", "qname=.int" );
+ADDPROC(currentnodeaddr,"llist.currentnodeaddr","b",".int","qname=.int" );
 ADDPROC(nextnode,     "llist.nextnode",   "b",  ".string", "qname=.int" );
 ADDPROC(prevnode,     "llist.prevnode",   "b",  ".string", "qname=.int" );
 
@@ -331,5 +532,5 @@ ADDPROC(setnodeaddr, "llist.setnodeaddr", "b",  ".int", "queue=.int,position=.in
 
 ADDPROC(listnode,     "llist.listnode",   "b",  ".int", "qname=.int" );
 ADDPROC(listllist,    "llist.listllist",  "b",  ".int", "qname=.int" );
-ADDPROC(freellist,    "llist.freellist",   "b",  ".int", "qname=.int" );
+ADDPROC(freellist,    "llist.freellist",  "b",  ".int", "qname=.int" );
 ENDLOADFUNCS
