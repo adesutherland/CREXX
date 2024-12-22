@@ -1,4 +1,7 @@
 /* test CREXX math functions */
+options levelb
+import rxfnsb
+
 call charout, left('fact(108001) = 8.14285997E+496713',40)
 if fact(108001) == 8.14285997E+496713 then say ' ok'; else say 'fail'
 call charout, left('PI(5)        = 3.1418',40)
