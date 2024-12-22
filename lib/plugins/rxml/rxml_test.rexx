@@ -29,8 +29,6 @@ xml = ,
 '  </book>' || ,
 '</bookstore>'
 
-xml=cleanxml(xml)
-say "cleansed "xml
 total_tests = total_tests + 1
 
 /* Parse the XML */
@@ -143,13 +141,13 @@ if xmlparse(list) = 0 then do
     passed_tests = passed_tests + 1
     names[1] = ''
     count = xmlfind('name', names)
-    
+
     call subsection 'Verified Contacts'
     say 'Found' count 'contacts:'
     do i = 1 to count
         say '  ►' names[i]
     end
-    
+
     call subsection 'Phone Numbers'
     phones[1] = ''
     count = xmlfind('phone', phones)
@@ -157,7 +155,7 @@ if xmlparse(list) = 0 then do
     do i = 1 to count
         say '  ►' phones[i]
     end
-    
+
     call summarize 'Complex XML', 'PASSED',''
 end
 else do
@@ -169,9 +167,111 @@ call section 'Test Suite Summary', ,
             'Overall results of the XML processing test suite'
 say 'Total tests run:' total_tests
 say 'Tests passed:  ' passed_tests
-say 'Success rate:  ' format(passed_tests/total_tests * 100, 1, 1)'%'
+
+/* Test attribute handling */
+say "Testing XML Attributes"
+
+say "Test 1: Simple product with attributes"
+xml = '<products>' || ,
+      '<product sku="ABC123" price="29.99" in-stock="true"/>' || ,
+      '<product sku="XYZ789" price="15.50" in-stock="false"/>' || ,
+      '</products>'
+
+if xmlparse(xml) = 0 then say "parsing successful"
+else say "Error parsing XML:" xmlerror()
+
+/* Find products */
+elements1 = ""
+count = xmlfind("product", elements)
+if count = 2 then do
+   sku = ""
+   price = ""
+   stock = ""
+   say "Attribute count "count
+   /* Test first product attributes */
+   sku = xmlgetattr(1, "sku")
+   price = xmlgetattr(1, "price")
+   stock = xmlgetattr(1, "in-stock")
+   say "Product 1: SKU=" sku "Price=" price "In Stock=" stock
+
+   /* Test second product attributes */
+   sku = xmlgetattr(2, "sku")
+   price = xmlgetattr(2, "price")
+   stock = xmlgetattr(2, "in-stock")
+   say "Product 2: SKU=" sku "Price=" price "In Stock=" stock
+
+   /* Test attribute modification */
+   if xmlsetattr(1, "price", "39.99") = 0 then
+   say "Updated price:" xmlgetattr(1, "price")
+   /* Test second product attributes */
+   sku = xmlgetattr(1, "sku")
+   price = xmlgetattr(1, "price")
+   stock = xmlgetattr(1, "in-stock")
+   say "Product 1: SKU=" sku "Price=" price "In Stock=" stock
+
+end
 
 
+say "Test 2: Complex nested elements with attributes"
+xml = '<user id="12345" role="admin">' || ,
+      '<preferences theme="dark" notifications="enabled">' || ,
+      '<setting name="email-alerts" value="true"></setting>' || ,
+      '</preferences>' || ,
+      '</user>'
+
+if xmlparse(xml) \= 0 then
+   say "Error parsing XML:" xmlerror()
+
+elements1 = ""
+count = xmlfind("user", elements)
+if count = 1 then do
+   userid = ""
+   role = ""
+   theme = ""
+   notif = ""
+   attrcount = 0
+
+   /* Test user attributes */
+   userid = xmlgetattr(1, "id")
+   role = xmlgetattr(1, "role")
+   say "User: ID=" userid "Role=" role
+
+   /* Find and test preferences */
+   elements1 = ""
+   prefcount = xmlfind("preferences", elements)
+   if prefcount = 1 then do
+      theme = xmlgetattr(1, "theme")
+      notif = xmlgetattr(1, "notifications")
+      say "Preferences: Theme=" theme "Notifications=" notif
+
+      /* Test attribute removal */
+      if xmlremattr(1, "notifications") = 0 then do
+         attrcount = xmlattrcount(1)
+         say "Attributes after removal:" attrcount
+      end
+   end
+end
+
+say "Test 3: Special characters in attributes"
+xml = '<entry date="2024-03-15" author="O''Neil" note="Quote: ""Hello"""></entry>'
+
+if xmlparse(xml) \= 0 then
+   say "Error parsing XML:" xmlerror()
+
+elements1 = ""
+count = xmlfind("entry", elements)
+if count = 1 then do
+   date = ""
+   author = ""
+   note = ""
+
+   date = xmlgetattr(1, "date")
+   author = xmlgetattr(1, "author")
+   note = xmlgetattr(1, "note")
+   say "Entry: Date=" date "Author=" author "Note=" note
+end
+
+say "Attribute Tests Complete"
 exit 0
 
 /* Helper function for section headers */
@@ -206,15 +306,16 @@ summarize: procedure
     if details \= '' then
         say '  Details:' details
     return
-/* Helper function for cleaning XML */
 
-
-/* Helper function for cleaning XML */
+/* XML Cleaning and Processing */
+/*
 cleanxml: procedure = .string
     arg xmltext = .string
     outxml = ''
     inside_tag = 0
     last_char = ''
+    tag_name = ''
+    collecting_tag = 0
 
    /* Remove XML declaration if present */
         if pos('<?xml', xmltext) = 1 then do
@@ -224,19 +325,42 @@ cleanxml: procedure = .string
 
     do i = 1 to length(xmltext)
         char = substr(xmltext, i, 1)
+
         if char = '<' then do
            inside_tag = 1
+           collecting_tag = 1
+           tag_name = ''
            outxml = outxml || char
+        end
+        else if char = '/' & inside_tag then do
+           if substr(xmltext, i+1, 1) = '>' then do
+              /* Found '/>', replace with '></tag>' */
+              outxml = outxml || '></' || strip(tag_name) || '>'
+              i = i + 1  /* Skip the next '>' */
+              inside_tag = 0
+              collecting_tag = 0
+           end
+           else outxml = outxml || char
         end
         else if char = '>' then do
            inside_tag = 0
+           collecting_tag = 0
            outxml = outxml || char
         end
         else if verify(char, ' ' || '0a0d09'x) = 0 then do
            if \inside_tag & last_char \= '>' then outxml = outxml || ' '
            if inside_tag then outxml = outxml || char
+           collecting_tag = 0
         end
-        else outxml = outxml || char
+        else do
+           outxml = outxml || char
+           if collecting_tag then do
+              if verify(char, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-') = 0 then
+                 tag_name = tag_name || char
+              else if char = ' ' then
+                 collecting_tag = 0
+           end
+        end
 
         if verify(char, ' ' || '0a0d09'x) \= 0 then last_char = char
     end
@@ -244,3 +368,4 @@ cleanxml: procedure = .string
     outxml = space(outxml)
     say "cleansed "outxml
     return outxml
+    */
