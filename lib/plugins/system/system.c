@@ -7,6 +7,20 @@
 #if defined(__APPLE__)
  #include <sys/stat.h>
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
+#define max(a,b)             \
+  ({			     \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b;       \
+  })
+
+#define min(a,b)             \
+  ({			     \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b;       \
+  })
+#endif
 #ifdef _WIN32
   #include <direct.h>     // For Windows
   #include <windows.h>
@@ -29,21 +43,6 @@
     #define TEST_DIR(path)   access(path, F_OK)
     #define TEST_FILE(fname) access(fname, F_OK)
     #define RENAME_FILE(source,target)  rename(source, target)
-#define max(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a > _b ? _a : _b;       \
-})
-
-#define min(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a < _b ? _a : _b;       \
-})
-#endif
-
 #endif
 
 // replace \ chars by / (needed in Windows)
