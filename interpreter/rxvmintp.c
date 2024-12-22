@@ -842,6 +842,7 @@ START_OF_INSTRUCTIONS
             /*     DISPATCH */
 
             /* Say - Print string value of register as a line */
+	      
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
             mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
@@ -852,12 +853,13 @@ START_OF_INSTRUCTIONS
                   (int) op1S->string_len, op1S->string);
             mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH
-
-            /* ------------------------------------------------------------------------------------
-             *  SAYX say statemtnt without line feed                             pej 18. April 2022
-             *  -----------------------------------------------------------------------------------
-             */
-        START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
+	      
+        START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
+            mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
+            DISPATCH
+	      
+	START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
             mprintf("%.*s", (int) op1S->string_len, op1S->string);

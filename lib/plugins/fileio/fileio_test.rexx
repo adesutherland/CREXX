@@ -14,12 +14,15 @@ end
 do i=1 to dirs.0
    say "DIR  "dirs.i
 end
-exit
-/*
+
+
+array.1=""
+
 say readall(array,"c:\temp\test.rexx",11)
 do i=1 to array.0
-   say i array.i
+   say right(i,6) array.i
 end
 say 'now write it'
-say writeall(array,"c:\temp\testrx2",9)
-*/
+say writeall(array,"c:\temp\testrx2.rexx",9)
+say appendall(array,"c:\temp\testrx2.rexx",9)
+say appendall(array,"c:\temp\testrx2.rexx",9)
