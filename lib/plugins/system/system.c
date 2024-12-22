@@ -6,7 +6,6 @@
 #include <limits.h>
 #if defined(__APPLE__)
  #include <sys/stat.h>
-#endif
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #ifdef _WIN32
   #include <direct.h>     // For Windows
@@ -14,6 +13,7 @@
   #define getcwd _getcwd  // Map to Windows-specific version
 #else
   #include <dirent.h>
+  #include <ctype.h>
 #endif
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
@@ -29,6 +29,21 @@
     #define TEST_DIR(path)   access(path, F_OK)
     #define TEST_FILE(fname) access(fname, F_OK)
     #define RENAME_FILE(source,target)  rename(source, target)
+#define max(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b;       \
+})
+
+#define min(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b;       \
+})
+#endif
+
 #endif
 
 // replace \ chars by / (needed in Windows)
