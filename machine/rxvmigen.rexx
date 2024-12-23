@@ -153,10 +153,10 @@ alreadyDefined:
   if found>0 then nop /*call inc_miss ,'// > 'ucmd': // label already defined' */
   else do
     not=not+1
-	call inc_miss '/* ------------------------------------------------------------------------------------'
-    call inc_miss ' *  'ucmd'  'txt'              pej 'date()
-    call inc_miss ' *  -----------------------------------------------------------------------------------'
-    call inc_miss ' */'
+    /* 	call inc_miss '/\* ------------------------------------------------------------------------------------' */
+    /* call inc_miss ' *  'ucmd'  'txt'              pej 'date() */
+    /* call inc_miss ' *  -----------------------------------------------------------------------------------' */
+    /* call inc_miss ' *\/' */
 	call inc_miss 'START_INSTRUCTION('ucmd') // label not yet defined'
 	call inc_miss '  CALC_DISPATCH('numparm');'
     call inc_miss '    DEBUG("TRACE - 'ucmd'\n");'
