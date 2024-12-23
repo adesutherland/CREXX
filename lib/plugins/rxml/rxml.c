@@ -202,15 +202,44 @@ char* xml_get_error(XMLDocument* doc) {
     return doc->error;
 }
 
-int xml_find_elements(XMLDocument* doc, const char* tag, char** results, int max_results) {
-    int i,count = 0;
+static int found_elements[XML_MAX_ELEMENTS];
+static int found_count = 0;
 
+int xml_find_elements(XMLDocument* doc, const char* tag, char** results, int max_results) {
+    int i, j, count = 0;
+    char buffer[XML_MAX_VALUE_LENGTH];
+    XMLElement* elem;
+
+    found_count = 0;  // Reset found elements
+    
     for (i = 0; i < doc->count && count < max_results; i++) {
         if (strcmp(doc->elements[i].tag, tag) == 0) {
-            results[count++] = doc->elements[i].value;
+            elem = &doc->elements[i];
+            found_elements[count] = i;  // Store the element index
+            
+            // Start with tag name
+            snprintf(buffer, sizeof(buffer), "%s", elem->tag);
+            
+            // Add value if present
+            if (elem->value[0] != '\0') {
+                size_t len = strlen(buffer);
+                snprintf(buffer + len, sizeof(buffer) - len, "=%s", elem->value);
+            }
+            
+            // Add attributes if present
+            for (j = 0; j < elem->attr_count; j++) {
+                size_t len = strlen(buffer);
+                snprintf(buffer + len, sizeof(buffer) - len, " %s=%s",
+                        elem->attributes[j].name,
+                        elem->attributes[j].value);
+            }
+            
+            results[count] = strdup(buffer);
+            count++;
         }
     }
-
+    
+    found_count = count;
     return count;
 }
 
@@ -332,11 +361,11 @@ int xml_get_attribute_at(XMLElement* element, int index, char* name, char* value
     return 0;
 }
 
-/* Find element by qualified path (e.g., "product.price") */
-int xml_find_element_by_path(XMLDocument* doc, const char* path) {
+/* Find element and attribute by qualified path (e.g., "product.price") */
+int xml_find_element_by_path(XMLDocument* doc, const char* path, char* attr_name, int instance) {
     char path_copy[XML_MAX_PATH_LENGTH];
-    char *token, *saveptr;
-    int current_index = 0;
+    char *token, *saveptr, *last_token = NULL;
+    int i, current_index = 0;
     
     if (!doc || !path || strlen(path) >= XML_MAX_PATH_LENGTH) {
         return -1;
@@ -345,29 +374,44 @@ int xml_find_element_by_path(XMLDocument* doc, const char* path) {
     strncpy(path_copy, path, XML_MAX_PATH_LENGTH - 1);
     path_copy[XML_MAX_PATH_LENGTH - 1] = '\0';
     
+    // Get first token
     token = strtok_r(path_copy, ".", &saveptr);
+    if (!token) return -1;
+    
+    // Keep track of the last token while processing
     while (token) {
-        int found = 0;
-        // Start search from current_index + 1 if not at root
-        int start_idx = (current_index == 0) ? 0 : current_index + 1;
+        last_token = token;
+        token = strtok_r(NULL, ".", &saveptr);
         
-        for (int i = start_idx; i < doc->count; i++) {
-            // Check if this element is a child of current_index (or root level)
-            if ((current_index == 0 && doc->elements[i].level == 0) ||
-                doc->elements[i].parent_index == current_index) {
-                if (strcmp(doc->elements[i].tag, token) == 0) {
-                    current_index = i;
-                    found = 1;
-                    break;
+        if (token) { // Not the last token, process as element
+            int found = 0;
+            int count = 0;
+            int start_idx = (current_index == 0) ? 0 : current_index + 1;
+            
+            for (i = start_idx; i < doc->count; i++) {
+                if ((current_index == 0 && doc->elements[i].level == 0) ||
+                    doc->elements[i].parent_index == current_index) {
+                    if (strcmp(doc->elements[i].tag, last_token) == 0) {
+                        count++;
+                        if (count == instance) {
+                            current_index = i;
+                            found = 1;
+                            break;
+                        }
+                    }
                 }
             }
+            
+            if (!found) {
+                return -1;
+            }
         }
-        
-        if (!found) {
-            return -1;
-        }
-        
-        token = strtok_r(NULL, ".", &saveptr);
+    }
+    
+    // Copy the last token as the attribute name
+    if (last_token) {
+        strncpy(attr_name, last_token, XML_MAX_ATTR_NAME - 1);
+        attr_name[XML_MAX_ATTR_NAME - 1] = '\0';
     }
     
     return current_index;
@@ -564,11 +608,11 @@ PROCEDURE(xmlparse) {
 /* Find XML elements by tag name */
 PROCEDURE(xmlfind) {
     char *tag = GETSTRING(ARG0);
-    char* results[XML_MAX_ELEMENTS];
-    int i,count;
+    char *results[XML_MAX_ELEMENTS];
+    int i, count;
 
     if (!current_doc) {
-        RETURNINTX(-1);
+        RETURNINTX(0);
     }
 
     count = xml_find_elements(current_doc, tag, results, XML_MAX_ELEMENTS);
@@ -576,6 +620,7 @@ PROCEDURE(xmlfind) {
     SETARRAYHI(ARG1, count);
     for (i = 0; i < count; i++) {
         SETSARRAY(ARG1, i, results[i]);
+        free(results[i]);  // Free the allocated string
     }
 
     RETURNINTX(count);
@@ -617,87 +662,111 @@ void cleanup(void) {
     }
 }
 
+static int validate_xml_state(int instance) {
+    if (!current_doc) {
+        xml_set_error(current_doc, "No XML document loaded");
+        return -1;
+    }
+    
+    if (found_count == 0) {
+        xml_set_error(current_doc, "xmlfind must be called before accessing attributes");
+        return -1;
+    }
+    
+    if (instance < 1 || instance > found_count) {
+        xml_set_error(current_doc, "Invalid instance number");
+        return -1;
+    }
+    
+    return 0;
+}
 
 /* Get attribute value by name */
 PROCEDURE(xmlgetattr) {
-    char *path = GETSTRING(ARG0);
-    char *attr_name = GETSTRING(ARG1);
-    char value[XML_MAX_ATTR_VALUE];
-    int element_index;
+    char *attr_name = GETSTRING(ARG0);
+    int instance = GETINT(ARG1);
+    XMLElement* element;
+    int i;
     
-    if (!current_doc) {
-        RETURN("");
+    if (validate_xml_state(instance) != 0) {
+        RETURNSTRX("");
     }
     
-    element_index = xml_find_element_by_path(current_doc, path);
-    if (element_index < 0 || element_index >= current_doc->count) {
-        RETURN("");
+    element = &current_doc->elements[found_elements[instance - 1]];
+    for (i = 0; i < element->attr_count; i++) {
+        if (strcmp(element->attributes[i].name, attr_name) == 0) {
+            RETURNSTRX(element->attributes[i].value);
+        }
     }
     
-    if (xml_get_attribute(&current_doc->elements[element_index], attr_name, value, XML_MAX_ATTR_VALUE) == 0) {
-        RETURN(value);
-    }
-    
-    RETURN("");
+    RETURNSTRX("");
+    ENDPROC
 }
 
 /* Set attribute value */
 PROCEDURE(xmlsetattr) {
-    int element_index = GETINT(ARG0);
-    char *attr_name = GETSTRING(ARG1);
-    char *attr_value = GETSTRING(ARG2);
-
-    if (!current_doc || element_index < 0 || element_index >= current_doc->count) {
+    char *attr_name = GETSTRING(ARG0);
+    int instance = GETINT(ARG1);
+    char *value = GETSTRING(ARG2);
+    XMLElement* element;
+    
+    if (validate_xml_state(instance) != 0) {
         RETURNINTX(-1);
     }
-
-    RETURNINTX(xml_set_attribute(&current_doc->elements[element_index], attr_name, attr_value));
+    
+    element = &current_doc->elements[found_elements[instance - 1]];
+    RETURNINTX(xml_set_attribute(element, attr_name, value));
     ENDPROC
 }
 
 /* Remove attribute */
 PROCEDURE(xmlremattr) {
-    int element_index = GETINT(ARG0)-1;
-    char *attr_name = GETSTRING(ARG1);
-
-    if (!current_doc || element_index < 0 || element_index >= current_doc->count) {
+    char *attr_name = GETSTRING(ARG0);
+    int instance = GETINT(ARG1);
+    XMLElement* element;
+    
+    if (validate_xml_state(instance) != 0) {
         RETURNINTX(-1);
     }
-
-    RETURNINTX(xml_remove_attribute(&current_doc->elements[element_index], attr_name));
+    
+    element = &current_doc->elements[found_elements[instance - 1]];
+    RETURNINTX(xml_remove_attribute(element, attr_name));
     ENDPROC
 }
 
 /* Get attribute count */
 PROCEDURE(xmlattrcount) {
-    int element_index = GETINT(ARG0)-1;
-
-    if (!current_doc || element_index < 0 || element_index >= current_doc->count) {
+    int instance = GETINT(ARG0);
+    XMLElement* element;
+    
+    if (validate_xml_state(instance) != 0) {
         RETURNINTX(-1);
     }
-
-    RETURNINTX(xml_get_attribute_count(&current_doc->elements[element_index]));
+    
+    element = &current_doc->elements[found_elements[instance - 1]];
+    RETURNINTX(xml_get_attribute_count(element));
     ENDPROC
 }
 
 /* Get attribute at index */
 PROCEDURE(xmlattrat) {
-    int element_index = GETINT(ARG0);
+    int instance = GETINT(ARG0);
     int attr_index = GETINT(ARG1);
-
+    XMLElement* element;
     char name[XML_MAX_ATTR_NAME];
     char value[XML_MAX_ATTR_VALUE];
-
-    if (!current_doc || element_index < 0 || element_index >= current_doc->count) {
+    
+    if (validate_xml_state(instance) != 0) {
         RETURNINTX(-1);
     }
-
-    if (xml_get_attribute_at(&current_doc->elements[element_index], attr_index, name, value, XML_MAX_ATTR_VALUE) == 0) {
-        SETSARRAY(ARG2, 0, name);
-        SETSARRAY(ARG3, 0, value);
+    
+    element = &current_doc->elements[found_elements[instance - 1]];
+    if (xml_get_attribute_at(element, attr_index, name, value, XML_MAX_ATTR_VALUE) == 0) {
+        SETSTRING(ARG2, name);
+        SETSTRING(ARG3, value);
         RETURNINTX(0);
     }
-
+    
     RETURNINTX(-1);
     ENDPROC
 }
@@ -716,14 +785,13 @@ PROCEDURE(xmlclean) {
 LOADFUNCS
     ADDPROC(xmlflags, "rxml.xmlflags",  "b", ".int",    "flags=.string");
     ADDPROC(xmlparse, "rxml.xmlparse",  "b", ".int",    "xml=.string");
-    ADDPROC(xmlfind,  "rxml.xmlfind",   "b", ".int",    "tag=.string,expose results=.string[]");
-    ADDPROC(xmlbuild, "rxml.xmlbuild",  "b", ".string", "root=.string,expose elements=.string[]");
+    ADDPROC(xmlfind,  "rxml.xmlfind",   "b", ".int",    "tag=.string, expose results=.string[]");
+    ADDPROC(xmlbuild, "rxml.xmlbuild",  "b", ".string", "root=.string, expose elements=.string[]");
     ADDPROC(xmlerror, "rxml.xmlerror",  "b", ".string", "");
     // New attribute-related ADDPROC statements
-    ADDPROC(xmlgetattr, "rxml.xmlgetattr", "b", ".string", "path=.string,name=.string");
-    ADDPROC(xmlsetattr, "rxml.xmlsetattr", "b", ".int", "element=.int,name=.string,value=.string");
-    ADDPROC(xmlremattr, "rxml.xmlremattr", "b", ".int", "element=.int,name=.string");
-    ADDPROC(xmlattrcount, "rxml.xmlattrcount", "b", ".int", "element=.int");
-    ADDPROC(xmlattrat, "rxml.xmlattrat", "b", ".int", "element=.int,index=.int,expose name=.string,expose value=.string");
+    ADDPROC(xmlgetattr, "rxml.xmlgetattr", "b", ".string", "attr_name=.string,instance=.int");
+    ADDPROC(xmlsetattr, "rxml.xmlsetattr", "b", ".int", "attr_name=.string,instance=.int,value=.string");
+    ADDPROC(xmlremattr, "rxml.xmlremattr", "b", ".int", "attr_name=.string,instance=.int");
+    ADDPROC(xmlattrcount, "rxml.xmlattrcount", "b", ".int", "instance=.int");
+    ADDPROC(xmlattrat, "rxml.xmlattrat", "b", ".int", "instance=.int,index=.int,expose name=.string,expose value=.string");
 ENDLOADFUNCS
-
