@@ -834,14 +834,6 @@ START_OF_INSTRUCTIONS
 #endif
             }
             DISPATCH
-
-            /* String Say - Deprecated */
-            /* START_INSTRUCTION(SSAY_REG) CALC_DISPATCH(1) */
-            /*     DEBUG("TRACE - SSAY (DEPRICATED) R%lu\n", REG_IDX(1)); */
-            /*     mprintf("%.*s", (int) op1R->string_length, op1R->string_value); */
-            /*     DISPATCH */
-
-            /* Say - Print string value of register as a line */
 	      
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));

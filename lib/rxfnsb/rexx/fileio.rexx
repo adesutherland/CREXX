@@ -7,17 +7,20 @@ import _rxsysb
 
 /* REXX Lineout BIF */
 lineout: procedure = .int
-    arg fname = .string, line = .string
+    arg fname = .string, line = ""
 
     if ?line then do
         /* line specified - open file */
         nl = '0a'x
 
-      /* if length(fname)=0 then do */
-      /* 	/\* no file specified, use stdout *\/ */
-      /* 	assembler sayx line */
-      /* 	return 0 */
-      /* end */
+      say '----> in lineout before'
+      if length(fname)=0 then do
+	/* no file specified, use stdout */
+	assembler sayx line
+	say '----> in lineout before return'
+	return 0
+      end
+      say '----> in lineout after sayx'
       
       fileid = _open(fname, "w")
       if fileid = 0 then say "ERROR lineout() file" fname "could not open"
