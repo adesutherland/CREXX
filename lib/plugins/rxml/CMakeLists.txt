@@ -9,7 +9,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 # Create dynamic plugin module
 add_dynamic_plugin_target(_rxml rxml.c)
 
-# Build Test Rexx
+# Build test2 Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
         -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
@@ -24,7 +24,7 @@ add_custom_target(rxml_test ALL
         DEPENDS rxml_test.rxbin
         )
 
-# Enable testing functionality
+# Enable test2ing functionality
 enable_testing()
 
 # Basic test to run rxml_test.rxbin with the rxml plugin

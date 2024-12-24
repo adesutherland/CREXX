@@ -2,6 +2,7 @@
 options levelb
 import rxml
 import rxfnsb
+
 /* Initialize test suite */
 call section 'XML Processing Test Suite', ,
             'A comprehensive test suite for XML processing functionality'

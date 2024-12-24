@@ -7,8 +7,24 @@
 #include "crexxpa.h"
 #include "rxml.h"
 
+#define XML_ERROR_MALFORMED    "Malformed XML tag"
+#define XML_ERROR_OVERFLOW     "Too many elements"
+#define XML_ERROR_DEPTH        "XML nesting too deep"
+#define XML_ERROR_MISMATCH     "Mismatched closing tag"
+#define XML_ERROR_UNCLOSED     "Unclosed tags"
+#define XML_ERROR_NO_DOC       "No XML document loaded"
+#define XML_ERROR_NO_FIND      "xmlfind must be called before accessing attributes"
+#define XML_ERROR_INVALID_INST "Invalid instance number"
+
+/* XML processing flags and globals */
+static int xml_debug = 0;
+
+#define XML_DEBUG(msg) if(xml_debug) printf("RXML: %s\n", msg)
+
 static void xml_set_error(XMLDocument* doc, const char* error) {
+    if (!doc) return;
     snprintf(doc->error, sizeof(doc->error), "%s", error);
+    XML_DEBUG(error);
 }
 
 static char* xml_trim(char* str) {
@@ -135,14 +151,14 @@ XMLDocument* xml_parse_string(const char* xml) {
             int new_pos = xml_parse_tag(xml, pos, tag, &is_closing, current);
 
             if (new_pos == -1) {
-                xml_set_error(doc, "Malformed XML tag");
+                xml_set_error(doc, XML_ERROR_MALFORMED);
                 return doc;
             }
 
             if (!is_closing) {
                 // Opening tag
                 if (doc->count >= XML_MAX_ELEMENTS) {
-                    xml_set_error(doc, "Too many elements");
+                    xml_set_error(doc, XML_ERROR_OVERFLOW);
                     return doc;
                 }
 
@@ -158,7 +174,7 @@ XMLDocument* xml_parse_string(const char* xml) {
                 }
 
                 if (stack_pos >= XML_MAX_DEPTH) {
-                    xml_set_error(doc, "XML nesting too deep");
+                    xml_set_error(doc, XML_ERROR_DEPTH);
                     return doc;
                 }
                 stack[stack_pos++] = current_element;
@@ -166,7 +182,7 @@ XMLDocument* xml_parse_string(const char* xml) {
             } else {
                 // Closing tag
                 if (stack_pos <= 0 || strcmp(doc->elements[stack[stack_pos - 1]].tag, tag) != 0) {
-                    xml_set_error(doc, "Mismatched closing tag");
+                    xml_set_error(doc, XML_ERROR_MISMATCH);
                     return doc;
                 }
                 stack_pos--;
@@ -188,7 +204,7 @@ XMLDocument* xml_parse_string(const char* xml) {
     }
 
     if (stack_pos != 0) {
-        xml_set_error(doc, "Unclosed tags");
+        xml_set_error(doc, XML_ERROR_UNCLOSED);
     }
 
     return doc;
@@ -561,7 +577,6 @@ char* clean_xml(const char* input, char* output, size_t max_output) {
  */
 
 /* XML processing flags and globals */
-static int xml_debug = 0;
 static XMLDocument* current_doc = NULL;
 
 #define XML_DEBUG(msg) if(xml_debug) printf("RXML: %s\n", msg)
@@ -662,19 +677,19 @@ void cleanup(void) {
     }
 }
 
-static int validate_xml_state(int instance) {
-    if (!current_doc) {
-        xml_set_error(current_doc, "No XML document loaded");
+static int validate_xml_state(XMLDocument* doc, int instance) {
+    if (!doc) {
+        xml_set_error(doc, XML_ERROR_NO_DOC);
         return -1;
     }
     
-    if (found_count == 0) {
-        xml_set_error(current_doc, "xmlfind must be called before accessing attributes");
+    if (doc->count == 0) {
+        xml_set_error(doc, XML_ERROR_NO_FIND);
         return -1;
     }
     
-    if (instance < 1 || instance > found_count) {
-        xml_set_error(current_doc, "Invalid instance number");
+    if (instance < 1 || instance > doc->count) {
+        xml_set_error(doc, XML_ERROR_INVALID_INST);
         return -1;
     }
     
@@ -688,7 +703,7 @@ PROCEDURE(xmlgetattr) {
     XMLElement* element;
     int i;
     
-    if (validate_xml_state(instance) != 0) {
+    if (validate_xml_state(current_doc, instance) == -1) {
         RETURNSTRX("");
     }
     
@@ -710,7 +725,7 @@ PROCEDURE(xmlsetattr) {
     char *value = GETSTRING(ARG2);
     XMLElement* element;
     
-    if (validate_xml_state(instance) != 0) {
+    if (validate_xml_state(current_doc, instance) == -1) {
         RETURNINTX(-1);
     }
     
@@ -725,7 +740,7 @@ PROCEDURE(xmlremattr) {
     int instance = GETINT(ARG1);
     XMLElement* element;
     
-    if (validate_xml_state(instance) != 0) {
+    if (validate_xml_state(current_doc, instance) == -1) {
         RETURNINTX(-1);
     }
     
@@ -739,7 +754,7 @@ PROCEDURE(xmlattrcount) {
     int instance = GETINT(ARG0);
     XMLElement* element;
     
-    if (validate_xml_state(instance) != 0) {
+    if (validate_xml_state(current_doc, instance) == -1) {
         RETURNINTX(-1);
     }
     
@@ -756,7 +771,7 @@ PROCEDURE(xmlattrat) {
     char name[XML_MAX_ATTR_NAME];
     char value[XML_MAX_ATTR_VALUE];
     
-    if (validate_xml_state(instance) != 0) {
+    if (validate_xml_state(current_doc, instance) == -1) {
         RETURNINTX(-1);
     }
     
@@ -788,7 +803,6 @@ LOADFUNCS
     ADDPROC(xmlfind,  "rxml.xmlfind",   "b", ".int",    "tag=.string, expose results=.string[]");
     ADDPROC(xmlbuild, "rxml.xmlbuild",  "b", ".string", "root=.string, expose elements=.string[]");
     ADDPROC(xmlerror, "rxml.xmlerror",  "b", ".string", "");
-    // New attribute-related ADDPROC statements
     ADDPROC(xmlgetattr, "rxml.xmlgetattr", "b", ".string", "attr_name=.string,instance=.int");
     ADDPROC(xmlsetattr, "rxml.xmlsetattr", "b", ".int", "attr_name=.string,instance=.int,value=.string");
     ADDPROC(xmlremattr, "rxml.xmlremattr", "b", ".int", "attr_name=.string,instance=.int");
