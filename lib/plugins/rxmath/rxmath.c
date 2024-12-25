@@ -7,7 +7,7 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
 #include <stdint.h>
-// #include "windows.h"
+#include <time.h>
 
 /* --------------------------------------------------------------------------------------------
  * some internal macros for the RXMATH library, can remain in coding
@@ -268,6 +268,72 @@ PROCEDURE(crc32) {
 }
 
 
+PROCEDURE(uuid) {
+    char uuid[37];
+    int i;
+    uint8_t uuid_bytes[16];
+    // Initialise random numbers
+    srand((unsigned int)time(NULL));
+
+    // Generate 16-Byte (128-Bit) UUID
+    for (i = 0; i < 16; i++) {
+        uuid_bytes[i] = rand() % 256;
+       // CryptGenRandom();
+    }
+
+    uuid_bytes[6] = (uuid_bytes[6] & 0x0F) | 0x40; // Version 4 (random-based UUID)
+    uuid_bytes[8] = (uuid_bytes[8] & 0x3F) | 0x80;  // Setze Variant (RFC 4122 compliant)
+    // convert UUID in string
+    snprintf(uuid, 37,
+             "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+             uuid_bytes[0], uuid_bytes[1], uuid_bytes[2], uuid_bytes[3],
+             uuid_bytes[4], uuid_bytes[5],
+             uuid_bytes[6], uuid_bytes[7],
+             uuid_bytes[8], uuid_bytes[9],
+             uuid_bytes[10], uuid_bytes[11], uuid_bytes[12],
+             uuid_bytes[13], uuid_bytes[14], uuid_bytes[15]);
+    RETURNSTR(uuid);
+    PROCRETURN
+    ENDPROC
+}
+
+PROCEDURE(inlineC) {
+    // The C code to be executed
+    const char *code =
+            "#include <stdio.h>\n"
+            "int main() {\n"
+            "    printf(\"Hello from dynamic C code!\\n\");\n"
+            "    return 0;\n"
+            "}\n";
+
+    // Write the code to a temporary file
+    FILE *fp = fopen("temp_code.c", "w");
+    if (!fp) {
+        perror("Failed to create temporary file");
+        return;
+    }
+    fprintf(fp, "%s", code);
+    fclose(fp);
+
+    // Compile the temporary C file
+    int compile_status = system("gcc temp_code.c -o temp_exec");
+    if (compile_status != 0) {
+        fprintf(stderr, "Compilation failed\n");
+        remove("temp_code.c");
+        return;
+    }
+
+    // Run the compiled executable
+    int run_status = system("temp_exec");
+    if (run_status != 0) {
+        fprintf(stderr, "Execution failed\n");
+    }
+
+    // Clean up
+    remove("temp_code.c");
+    remove("temp_exec");
+}
+
 
 // RXMATH function definitions
 LOADFUNCS
@@ -314,5 +380,6 @@ LOADFUNCS
     ADDPROC(murmur, "rxmath.murmur","b",".int", "arg0=.string, seed=.int");
     ADDPROC(fnv1a,  "rxmath.fnv1a", "b",".int", "arg0=.string");
     ADDPROC(crc32,  "rxmath.crc32", "b",".int", "arg0=.string");
-
+    ADDPROC(uuid,   "rxmath.uuid", "b",".string", "");
+    ADDPROC(inlineC,"rxmath.inlinec", "b",".string", "arg0=.string");
 ENDLOADFUNCS

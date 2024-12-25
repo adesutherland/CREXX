@@ -3,6 +3,10 @@ options levelb
 import rxmath
 import rxfnsb
 
+say "UUID "uuid()
+say inlineC("123")
+
+exit
 say "DJB2 Hash"
 say djb2("Hello, world!")
 say djb2("The quick brown fox jumps over the lazy dog")
