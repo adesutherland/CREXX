@@ -3,10 +3,43 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
+#include <string.h>
+#include <errno.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
-#include <windows.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>   // For POSIX systems (Linux/macOS)
+#endif
+
+
 #define HIGHVALUE ((char *)-1)
+
+// Memory tracking and debugging
+#define MEMORY_MAGIC 0xDEADBEEF
+#define MEMORY_PADDING 16
+#define DEBUG_MEMORY 1
+
+// Memory block header structure
+struct MemoryHeader {
+    unsigned int magic;          // Magic number to detect corruption
+    size_t size;                // Size of allocated block
+    const char* file;           // Source file of allocation
+    int line;                   // Line number of allocation
+    struct MemoryHeader* next;  // Linked list of allocations
+    struct MemoryHeader* prev;  // Previous block
+    unsigned char padding[MEMORY_PADDING]; // Padding to detect buffer overflows
+};
+
+// Global memory tracking
+static struct {
+    size_t total_allocated;
+    size_t peak_allocated;
+    size_t allocation_count;
+    struct MemoryHeader* first_block;
+    struct MemoryHeader* last_block;
+} memory_stats = {0};
 
 struct NodeStub {
     uintptr_t * sStackFirst;
@@ -14,38 +47,162 @@ struct NodeStub {
     uintptr_t * sStackCurrent;
     uintptr_t * sStackLastValid;
     int         sStackEntries;
-    char        stackname[16];
 };
-
-HANDLE hHeap = NULL;
-
 struct NodeStub llEntryStub[99]={0};  // Array of head pointers
 
 struct NodeEntry {
-    uintptr_t * sSaddr;  // self reference Pointer to the stack
+    unsigned int frontFence;    // Memory fence at front
+    uintptr_t * sSaddr;        // self reference Pointer to the stack
     uintptr_t * sNext;
     uintptr_t * sPrev;
-    char String[5];
+    char String[1];
+    // backFence will be placed after the string
 };
 
-uintptr_t getmain(int bytes) {
-    // Allocate memory from the heap
-    if (hHeap == NULL) {
-        hHeap = GetProcessHeap();
+// Memory management functions
+#ifdef _WIN32
+    HANDLE hHeap = NULL;
+    
+    static void* internal_alloc(size_t size, const char* file, int line) {
+        if (hHeap == NULL) {
+            hHeap = GetProcessHeap();
+            if (hHeap == NULL) {
+                fprintf(stderr, "Failed to get process heap: %lu\n", GetLastError());
+                return NULL;
+            }
+        }
+
+        size_t total_size = size + sizeof(struct MemoryHeader);
+        struct MemoryHeader* header = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, total_size);
+        
+        if (header == NULL) {
+            fprintf(stderr, "Memory allocation failed: %lu\n", GetLastError());
+            return NULL;
+        }
+
+        return header;
     }
-    LPVOID pMemory = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, bytes);
-    if (pMemory == NULL) {
-        printf("Heap allocation failed\n");
+
+    static void internal_free(void* ptr) {
+        if (!HeapFree(hHeap, 0, ptr)) {
+            fprintf(stderr, "Memory free failed: %lu\n", GetLastError());
+        }
+    }
+#else
+    static void* internal_alloc(size_t size, const char* file, int line) {
+        size_t total_size = size + sizeof(struct MemoryHeader);
+        struct MemoryHeader* header = calloc(1, total_size);
+        
+        if (header == NULL) {
+            fprintf(stderr, "Memory allocation failed: %s\n", strerror(errno));
+            return NULL;
+        }
+
+        return header;
+    }
+
+    static void internal_free(void* ptr) {
+        free(ptr);
+    }
+#endif
+
+// Enhanced memory allocation function
+#define getmain(size) _getmain(size, __FILE__, __LINE__)
+uintptr_t _getmain(size_t size, const char* file, int line) {
+    struct MemoryHeader* header = internal_alloc(size, file, line);
+    if (header == NULL) {
         return -8;
     }
-    // Use the allocated memory
-    return (uintptr_t) pMemory;
+    // Initialize header
+    header->magic = MEMORY_MAGIC;
+    header->size = size;
+    header->file = file;
+    header->line = line;
+    memset(header->padding, 0xCC, MEMORY_PADDING); // Set padding pattern
+    // Update memory tracking
+    memory_stats.total_allocated += size;
+    memory_stats.allocation_count++;
+    if (memory_stats.total_allocated > memory_stats.peak_allocated) {
+        memory_stats.peak_allocated = memory_stats.total_allocated;
+    }
+    // Add to tracking list
+    header->prev = memory_stats.last_block;
+    header->next = NULL;
+    if (memory_stats.last_block) {
+        memory_stats.last_block->next = header;
+    } else {
+        memory_stats.first_block = header;
+    }
+    memory_stats.last_block = header;
+
+    // Return pointer to usable memory
+    return (uintptr_t)(header + 1);
 }
-int freemain(LPVOID storage ) {
-    if(storage==NULL) return 0;
-    if (!HeapFree(hHeap, 0, storage)) return -8;
+// Enhanced memory free function
+int freemain(void* ptr) {
+    if (ptr == NULL) return 0;
+    int i;
+
+    struct MemoryHeader* header = ((struct MemoryHeader*)ptr) - 1;
+
+    // Validate memory block
+    if (header->magic != MEMORY_MAGIC) {
+        fprintf(stderr, "Memory corruption detected! Invalid magic number at %p\n", ptr);
+        return -8;
+    }
+
+    // Check padding
+    for (i = 0; i < MEMORY_PADDING; i++) {
+        if (header->padding[i] != 0xCC) {
+            fprintf(stderr, "Buffer overflow detected in block allocated at %s:%d\n",
+                    header->file, header->line);
+            break;
+        }
+    }
+
+    // Update tracking list
+    if (header->prev) {
+        header->prev->next = header->next;
+    } else {
+        memory_stats.first_block = header->next;
+    }
+    if (header->next) {
+        header->next->prev = header->prev;
+    } else {
+        memory_stats.last_block = header->prev;
+    }
+
+    // Update statistics
+    memory_stats.total_allocated -= header->size;
+    memory_stats.allocation_count--;
+
+    // Clear magic to catch double-frees
+    header->magic = 0;
+
+    internal_free(header);
     return 0;
 }
+
+// Add these utility functions for memory debugging
+void print_memory_stats(void) {
+    printf("\nMemory Statistics:\n");
+    printf("Current allocations: %zu bytes\n", memory_stats.total_allocated);
+    printf("Peak allocation: %zu bytes\n", memory_stats.peak_allocated);
+    printf("Active allocations: %zu\n", memory_stats.allocation_count);
+}
+
+void check_memory_leaks(void) {
+    if (memory_stats.allocation_count > 0) {
+        fprintf(stderr, "\nMemory Leaks Detected!\n");
+        struct MemoryHeader* current = memory_stats.first_block;
+        while (current) {
+            fprintf(stderr, "Leak: %zu bytes allocated at %s:%d\n",
+                    current->size, current->file, current->line);
+            current = current->next;
+        }
+    }
+}
+
 void toUpperCase(char *str) {
     if (str == NULL) return; // Handle null pointer
     while (*str) {
@@ -70,32 +227,34 @@ void trim(char *str) {
     }
 }
 
-// Function to create a new node
+// Add at the top with other defines
+#define NODE_FENCE_VALUE 0xFE0CEFE
+
+
+// Update createNodeEntry to initialize fences
 struct NodeEntry* createNodeEntry(char *message) {
-    // Calculate the total size required for the NodeEntry structure and the message
-    size_t totalSize = sizeof(struct NodeEntry) + strlen(message) + 1; // +1 for null terminator
-
-    // Allocate memory for the new node and the message
+    size_t messageLen = strlen(message);
+    size_t totalSize = sizeof(struct NodeEntry) + messageLen + 1 + sizeof(unsigned int);
     uintptr_t *nodeAddr = (uintptr_t *)getmain(totalSize);
-
-    // Check if memory allocation succeeded
+    
     if (nodeAddr == NULL) {
         printf("Memory allocation failed\n");
-        return (struct NodeEntry *)-8; // Indicate failure
+        return (struct NodeEntry *)-8;
     }
-
-    // Initialize the new node
+    
     struct NodeEntry *newNode = (struct NodeEntry *)nodeAddr;
-    newNode->sSaddr = nodeAddr; // Self-reference for the node
-    strncpy(newNode->String, message, strlen(message)); // Copy the message to the node
-    newNode->String[strlen(message)] = '\0'; // Ensure null termination
-
-    // Initialize the next pointer to NULL
+    newNode->frontFence = NODE_FENCE_VALUE;
+    newNode->sSaddr = nodeAddr;
+    
+    strncpy(newNode->String, message, messageLen + 1);
     newNode->sNext = NULL;
-
-    return newNode; // Return the created node
+    
+    // Set back fence after string
+    unsigned int *backFence = (unsigned int*)(newNode->String + messageLen + 1);
+    *backFence = NODE_FENCE_VALUE;
+    
+    return newNode;
 }
-
 
 int addnode(int mode, int nodeIndx,char * message) {
 
@@ -133,18 +292,17 @@ int addnode(int mode, int nodeIndx,char * message) {
     newNode->sSaddr = (uintptr_t *) newNode;  // Create self-reference address
     newNode->sPrev = (mode == 1) ? currentLast->sSaddr : 0;  // Backward pointer
     newNode->sNext = (mode == 1) ? 0 : currentFirst->sSaddr; // Forward pointer
+
+    return 0;
 }
 
-/**
- * @brief Appends a new node to the Linked List
- *
- * This function appends a Linked List by a new node
- *
- * @param linked-list-number The number must be in a range of 0 to 99.
- * @param buffer, typically a string which is the node's value.
- * @return 0 if node was successfully added.
- */
-
+// Add this to your cleanup/exit code
+PROCEDURE(cleanup) {
+        print_memory_stats();
+        check_memory_leaks();
+        RETURNINT(0);
+        ENDPROC
+}
 
 PROCEDURE(appendnode) {
     int    nodeIndx = GETINT(ARG0);
@@ -337,6 +495,7 @@ PROCEDURE(freellist) {
     llEntryStub[nodeIndex].sStackEntries = 0;
 
     printf("List successfully freed.\n");
+    RETURNINT(0);
 }
 
 
@@ -414,14 +573,20 @@ PROCEDURE(prevnode) {
     int qname = GETINT(ARG0);
 
     struct NodeEntry *currentEntry = (struct NodeEntry *) llEntryStub[qname].sStackCurrent;
-    currentEntry= (struct NodeEntry *) currentEntry->sPrev;
-    if (currentEntry == 0) {
+    if (currentEntry == NULL) {
         char EOLL[16];
         sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
         RETURNSTR(EOLL);
-    }else {
+    }
+    
+    currentEntry = (struct NodeEntry *) currentEntry->sPrev;
+    if (currentEntry == NULL) {
+        char EOLL[16];
+        sprintf(EOLL, "$%s%d$", "TOP-OF-LLIST-",qname);
+        RETURNSTR(EOLL);
+    } else {
         RETURNSTR(currentEntry->String);
-        if (currentEntry->sPrev == 0)  llEntryStub[qname].sStackLastValid= (uintptr_t *) currentEntry;
+        if (currentEntry->sPrev == NULL)  llEntryStub[qname].sStackLastValid= (uintptr_t *) currentEntry;
         llEntryStub[qname].sStackCurrent= (uintptr_t *) currentEntry;
     }
     ENDPROC
@@ -507,6 +672,64 @@ PROCEDURE(listllist) {
     RETURNINT(0);
     ENDPROC
 }
+
+// Add these functions for detailed memory reporting
+        void print_llist_stats(int nodeIndex) {
+            printf("\nLinked List %d Statistics:\n", nodeIndex);
+            printf("Number of nodes: %d\n", llEntryStub[nodeIndex].sStackEntries);
+            size_t total_memory = 0;
+            struct NodeEntry* current = (struct NodeEntry*)llEntryStub[nodeIndex].sStackFirst;
+
+            while (current) {
+                total_memory += sizeof(struct NodeEntry) + strlen(current->String);
+                current = (struct NodeEntry*)current->sNext;
+            }
+
+            printf("Total memory used: %zu bytes\n", total_memory);
+        }
+
+// Add memory validation function
+        int validate_llist(int nodeIndex) {
+            struct NodeEntry* current = (struct NodeEntry*)llEntryStub[nodeIndex].sStackFirst;
+            int node_count = 0;
+            struct NodeEntry* last = NULL;
+
+            while (current) {
+                // Validate memory header
+                struct MemoryHeader* header = ((struct MemoryHeader*)current) - 1;
+                if (header->magic != MEMORY_MAGIC) {
+                    fprintf(stderr, "Memory corruption detected in node %d!\n", node_count);
+                    return -1;
+                }
+
+                // Validate links
+                if (current->sPrev != (last ? last->sSaddr : 0)) {
+                    fprintf(stderr, "Invalid prev pointer in node %d!\n", node_count);
+                    return -1;
+                }
+
+                last = current;
+                current = (struct NodeEntry*)current->sNext;
+                node_count++;
+            }
+
+            if (node_count != llEntryStub[nodeIndex].sStackEntries) {
+                fprintf(stderr, "Node count mismatch! Expected %d, found %d\n",
+                        llEntryStub[nodeIndex].sStackEntries, node_count);
+                return -1;
+            }
+
+            return 0;
+        }
+
+// Add debug procedure for REXX
+        PROCEDURE(debug_llist) {
+            int nodeIndex = GETINT(ARG0);
+            print_llist_stats(nodeIndex);
+            int rc = validate_llist(nodeIndex);
+            RETURNINT(rc);
+            ENDPROC
+        }
 /* -------------------------------------------------------------------------------------
  * Functions to be provided to rexx
  * -------------------------------------------------------------------------------------
@@ -533,4 +756,6 @@ ADDPROC(setnodeaddr, "llist.setnodeaddr", "b",  ".int", "queue=.int,position=.in
 ADDPROC(listnode,     "llist.listnode",   "b",  ".int", "qname=.int" );
 ADDPROC(listllist,    "llist.listllist",  "b",  ".int", "qname=.int" );
 ADDPROC(freellist,    "llist.freellist",  "b",  ".int", "qname=.int" );
+ADDPROC(debug_llist,   "llist.debug",    "b",  ".int",    "qname=.int" );
+ADDPROC(cleanup,       "llist.cleanup",  "b",  ".int",    "" );
 ENDLOADFUNCS
