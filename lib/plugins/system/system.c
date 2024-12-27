@@ -29,6 +29,15 @@
   #include <dirent.h>
   #include <ctype.h>
 #endif
+
+#ifdef _WIN32
+#define wait(ms) Sleep(ms);
+#elif defined(__APPLE__)
+#else
+// #include <arpa/inet.h>    // Linux
+   #define wait(ms) usleep(ms*1000)
+#endif
+
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
 #if defined(_WIN32)
@@ -59,13 +68,15 @@ void searchReplace(char *str, char search, char replace) {
  * -------------------------------------------------------------------------------------
  */
 PROCEDURE(getEnv) {
-    char *varName = GETSTRING(ARG0);    // Get the environment variable name
-    char *varValue = getenv(varName);   // Get the environment variable value
-    if (varValue == NULL) {             // If the environment variable is not found
-        RETURNSIGNAL(SIGNAL_FAILURE, "Environment not found")
-    } else {
-        RETURNSTR(varValue);
+    char *varName = GETSTRING(ARG0);    
+    if (!varName) {
+        RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument")
     }
+    char *varValue = getenv(varName);   
+    if (varValue == NULL) {             
+        RETURNSIGNAL(SIGNAL_FAILURE, "Environment variable not found")
+    }
+    RETURNSTR(varValue);
 ENDPROC
 }
 /* -------------------------------------------------------------------------------------
@@ -150,19 +161,30 @@ ENDPROC
  * -------------------------------------------------------------------------------------
  */
 PROCEDURE(deletefile) {
-    searchReplace(GETSTRING(ARG0),'\\','/');
-    if (TEST_FILE(GETSTRING(ARG0)) != 0)    RETURNINT(-4);             // does not exist
-    else {
-        printf("File '%s'\n",GETSTRING(ARG0));
-        if (remove(GETSTRING(ARG0)) == 0) RETURNINT(0);
-        else RETURNINT(-8);
+    char *filename = GETSTRING(ARG0);
+    if (!filename) {
+        RETURNINTX(-1);    // Invalid argument
     }
-    ENDPROC
+    searchReplace(filename, '\\', '/');
+    
+    if (TEST_FILE(filename) != 0) {
+        RETURNINT(-4);    // File does not exist
+    }
+    
+    if (remove(filename) != 0) {
+        switch (errno) {
+            case EACCES:
+                RETURNINTX(-3);    // Permission denied
+            case EBUSY:
+                RETURNINTX(-5);    // File is in use
+            default:
+                RETURNINTX(-8);    // Other error
+        }
+    }
+    RETURNINTX(0);
+ENDPROC
 }
-/* -------------------------------------------------------------------------------------
- * Remove file
- * -------------------------------------------------------------------------------------
- */
+
 PROCEDURE(renamefileP) {
     int rc;
     searchReplace(GETSTRING(ARG0),'\\','/');
@@ -189,7 +211,14 @@ PROCEDURE(listdir) {
     sprintf(vname, "%s%s",GETSTRING(ARG0),"/*");
     HANDLE hFind = FindFirstFile(vname, &findFileData);
     if (hFind == INVALID_HANDLE_VALUE) {
-        RETURNINT(-8);
+        switch (GetLastError()) {
+            case ERROR_PATH_NOT_FOUND:
+                RETURNINTX(-4);    // Directory not found
+            case ERROR_ACCESS_DENIED:
+                RETURNINTX(-3);    // Permission denied
+            default:
+                RETURNINTX(-8);    // Other error
+        }
         PROCRETURN;
     }
     SETARRAYHI(ARG1,0);
@@ -207,7 +236,14 @@ PROCEDURE(listdir) {
     struct dirent *entry;
     DIR *dir = opendir(vname);
     if (dir == NULL) {
-        RETURNINT(-8);
+        switch (errno) {
+            case ENOENT:
+                RETURNINTX(-4);    // Directory not found
+            case EACCES:
+                RETURNINTX(-3);    // Permission denied
+            default:
+                RETURNINTX(-8);    // Other error
+        }
         PROCRETURN;
     }
     while ((entry = readdir(dir)) != NULL) {
@@ -347,6 +383,7 @@ PROCEDURE(parse) {
     PROCRETURN
     ENDPROC
 }
+
 #if defined(_WIN32)
 PROCEDURE(setclipboard) {
     char *text=GETSTRING(ARG0);
@@ -405,18 +442,26 @@ ENDPROC
 }
 
 PROCEDURE(getclipboard) {
-    #if defined(__APPLE__)
+#if defined(__APPLE__)
     FILE *clipboard = popen("pbpaste", "r");
-    #else
+#else
     FILE *clipboard = popen("xclip -selection clipboard -o", "r");
-    #endif
-    if (clipboard == NULL)   RETURNSTRX("$$$ERROR$$$");
+#endif
+    if (clipboard == NULL) {
+        RETURNSTRX("$$$ERROR$$$");
+    }
+    
     char buffer[16000];
-    if (fgets(buffer, sizeof(buffer), clipboard) != NULL) {
+    memset(buffer, 0, sizeof(buffer));  // Initialize buffer
+    
+    if (fgets(buffer, sizeof(buffer) - 1, clipboard) != NULL) {
+        pclose(clipboard);
         RETURNSTRX(buffer);
-    } else  RETURNSTRX("");
+    }
+    
     pclose(clipboard);
-    ENDPROC
+    RETURNSTRX("");
+ENDPROC
 }
 #endif
 PROCEDURE(setglobal) {
@@ -442,6 +487,116 @@ PROCEDURE(getglobal) {
 ENDPROC
 }
 
+PROCEDURE(uptime) {
+    // Get system uptime in milliseconds
+    char result[64];
+#if defined(_WIN32)
+    ULONGLONG uptime = GetTickCount64();
+    RETURNINTX(uptime/1000)
+    // Convert uptime to seconds, minutes, hours, and days
+ #elif defined(__linux__)
+    #include <sys/sysinfo.h>
+    struct sysinfo info;
+    if (sysinfo(&info) == 0) {
+        // Convert uptime to seconds, minutes, hours, and days
+        long uptime_seconds = info.uptime;
+        RETURNINTX(uptime_seconds)
+     } else {
+        RETURNINTX(result, "-1");
+    }
+#elif defined(__APPLE__)
+    // Declare a struct to hold boot time information
+    struct timeval boottime;
+    size_t len = sizeof(boottime);
+
+    // Get the boot time from sysctl
+    if (sysctlbyname("kern.boottime", &boottime, &len, NULL, 0) == 0) {
+        // Get the current time
+        struct timeval now;
+        gettimeofday(&now, NULL);
+
+        // Calculate the uptime in seconds
+        long uptime_seconds = now.tv_sec - boottime.tv_sec;
+        RETURNINTX(uptime_seconds);
+    }
+#endif
+    RETURNSTR(result);
+ENDPROC
+}
+/* ------------------------------------------------------------------------------------------------
+ * Wait pauses the execution (in milli seconds)
+ * ------------------------------------------------------------------------------------------------
+ */
+PROCEDURE(waitX) {
+    int waittime = GETINT(ARG0);
+    wait(waittime);
+    RETURNINTX(0);
+    ENDPROC
+}
+/* ------------------------------------------------------------------------------------------------
+ * Beep creates a primitive beep
+ * ------------------------------------------------------------------------------------------------
+ */
+PROCEDURE(beep) {
+    int i;
+//    for(i=0;i<5;i++) {
+//        printf("\a");
+//        wait(5);
+//    }
+    Beep(750, 300); // Frequency: 750 Hz, Duration: 300 ms
+    RETURNINTX(0);
+    ENDPROC
+}
+PROCEDURE(getuser) {
+char username[256];
+DWORD username_len = sizeof(username);
+
+
+#ifdef _WIN32
+    if (GetUserName(username, &username_len)) {
+    RETURNSTRX(username);
+    } else RETURNSTRX("unknown");
+#else
+   RETURNSTRX(getuid());
+#endif
+ENDPROC
+}
+
+PROCEDURE(getcomputer) {
+    char hostname[256];
+#ifdef _WIN32
+    DWORD size = sizeof(hostname);
+    if (GetComputerName(hostname, &size)) {
+        RETURNSTRX(hostname);
+    } else {
+        RETURNSTRX("unknown");
+    }
+#else
+    if (gethostname(hostname, sizeof(hostname)) == 0) {
+       RETURNSTRX(hostname);
+    } else {
+       RETURNSTRX("unknown");
+    }
+#endif
+ENDPROC
+}
+PROCEDURE(opsys) {
+#ifdef _WIN32
+ RETURNSTRX("Windows")
+#elif __linux__
+    RETURNSTRX("Linux")
+#elif __APPLE__
+   RETURNSTRX("macOS")
+#elif __unix__
+   RETURNSTRX("Unix")
+#elif __FreeBSD__
+   RETURNSTRX("FreeBSD")
+#else
+  RETURNSTRX("Unknown");
+#endif
+ENDPROC
+}
+
 
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
@@ -449,23 +604,27 @@ ENDPROC
  */
 LOADFUNCS
 //      C Function, REXX namespace & name, Option, Return Type, Arguments
-    ADDPROC(getEnv,     "system.getenv",      "b",    ".string", "env_name=.string");
-    ADDPROC(getdir,     "system.getdir",      "b",    ".string", "");
-    ADDPROC(setdir,     "system.setdir",      "b",    ".int",    "arg0=.string");
-    ADDPROC(testdir,    "system.testdir",     "b",    ".int",    "arg0=.string");
-    ADDPROC(createdir,  "system.createdir",   "b",    ".int",    "arg0=.string");
-    ADDPROC(removedir,  "system.removedir",   "b",    ".int",    "arg0=.string");
-    ADDPROC(deletefile, "system.deletefile",  "b",    ".int",    "arg0=.string");
-    ADDPROC(renamefileP,"system.renamefile",  "b",    ".int",    "arg0=.string,arg1=.string");
-    ADDPROC(testfile,   "system.testfile",    "b",    ".int",    "arg0=.string");
-    ADDPROC(listdir,    "system.listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
+    ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "env_name=.string");
+    ADDPROC(getdir,      "system.getdir",      "b",    ".string", "");
+    ADDPROC(setdir,      "system.setdir",      "b",    ".int",    "arg0=.string");
+    ADDPROC(testdir,     "system.testdir",     "b",    ".int",    "arg0=.string");
+    ADDPROC(createdir,   "system.createdir",   "b",    ".int",    "arg0=.string");
+    ADDPROC(removedir,   "system.removedir",   "b",    ".int",    "arg0=.string");
+    ADDPROC(deletefile,  "system.deletefile",  "b",    ".int",    "arg0=.string");
+    ADDPROC(renamefileP, "system.renamefile",  "b",    ".int",    "arg0=.string,arg1=.string");
+    ADDPROC(testfile,    "system.testfile",    "b",    ".int",    "arg0=.string");
+    ADDPROC(listdir,     "system.listdir",     "b",    ".int",    "file=.string,expose entries=.string[]");
     ADDPROC(getclipboard,"system.getclipboard","b",    ".string","");
     ADDPROC(setclipboard,"system.setclipboard","b",    ".int","arg0=.string");
-    ADDPROC(getglobal,"system.getglobal"      ,"b",   ".string","key=.string");
-    ADDPROC(setglobal,"system.setglobal"      ,"b",    ".int",  "key=.string,value=.string");
-
-
-    ADDPROC(writeall,"system.writeall",   "b",   ".int","expose array=.string[],file=.string,arg2=.int");
-    ADDPROC(parse,"system.parse",         "b",   ".int","string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
+    ADDPROC(getglobal,   "system.getglobal"   ,"b",    ".string","key=.string");
+    ADDPROC(setglobal,   "system.setglobal"   ,"b",    ".int",  "key=.string,value=.string");
+    ADDPROC(uptime,      "system.uptime"      ,"b",    ".int",  "");
+    ADDPROC(waitX,       "system.wait"        ,"b",    ".int",  "time=.int");
+    ADDPROC(beep,        "system.beep"        ,"b",    ".int",  "");
+    ADDPROC(getuser,     "system.userid"      ,"b",    ".string",  "");
+    ADDPROC(getcomputer, "system.host"        ,"b",    ".string",  "");
+    ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
+    ADDPROC(writeall,    "system.writeall",    "b",    ".int","expose array=.string[],file=.string,arg2=.int");
+    ADDPROC(parse,       "system.parse",       "b",    ".int","string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
 
 ENDLOADFUNCS

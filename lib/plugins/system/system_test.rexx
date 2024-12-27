@@ -1,114 +1,125 @@
-/* System Plugin Test */
+/* REXX */
 options levelb
 import system
 import rxfnsb
 
-say 'GetGlobal  1 'getGlobal("fox")
-say 'GetGlobal  1 'getGlobal("dog")
-say 'SetClipboard 'setclipboard("Hello my dear clipboard")
-say 'GetClipboard 'getclipboard()
-say 'SetClipboard 'setclipboard("The quick brown fox jumps over the lazy dog")
-say 'GetClipboard 'getclipboard()
-say 'SetClipboard 'setclipboard("The quick brown fox jumps over the lazy dog")
-say 'SetGlobal    'setGlobal("fox","The quick brown fox jumps over the lazy dog")
-say 'SetGlobal    'setGlobal("dog","sleeps in the sun")
-say 'GetGlobal  2 'getGlobal("fox")
-say 'GetGlobal  2 'getGlobal("dog")
-exit
-variable.1='debug'
-value.1=''
-call parse '"("in brackets")" ',  ,
-           '"("parm")"  fred',,
-           variable,value
-do i=1 to variable.0
-   say variable.i"='"value.i"'"
-end
-/*
-call parse 'any1"("in brackets")" nobody-knows-value":1:" belongs nowhere ',  ,   ## string to parse  //last comma is continuation char
-           'v1"("parm")"xx',,   ## parse string     //last comma is continuation char
-           variable,value       ## receving array: variable content value
-do i=1 to variable.0
-   say variable.i"='"value.i"'"
-end
-say copies("*",80)
-call parse 'value-for-v1"<"parm-Value">"x-value',  ,   ## string to parse  //last comma is continuation char
-           'v1"<"parm">"xx"="xyz',,   ## parse string     //last comma is continuation char
-           variable,value      # receving array: variable content value
-do i=1 to variable.0
-   say variable.i"='"value.i"'"
-end
-do i=1 to variable.0
-   say variable.i"='"value.i"'"
-end
+/* system_test.rexx - Test suite for system functions */
 
-exit                                 ##0123another-valuenobody-knows-value123another-valuenobody-knows-value123another-value89
-## ----------------------------------------------------
-## Step 1: Create some new directories
-## ----------------------------------------------------
-rc=createdir("c:/Temp/crexxTEST")
-  if rc=0 then say "Directory created"
-  else if rc=-4 then say "Directory already exists"
-  else say "Directory created failed"
-rc=createdir("c:/Temp/crexxTEST/Data")
-  if rc=0 then say "Directory created"
-  else if rc=-4 then say "Directory already exists"
-  else say "Directory created failed"
-rc=createdir("c:/Temp/crexxTEST/Data/etc")
-  if rc=0 then say "Directory created"
-  else if rc=-4 then say "Directory already exists"
-  else say "Directory created failed"
-## ----------------------------------------------------
-## Step 2: add new files
-## ----------------------------------------------------
-do i=1 to 10
-   array.i='record 'i
-end
-say writeall(array,"c:/Temp/crexxTEST/Data/test1.txt",-1)' Records Written'
-say writeall(array,"c:/Temp/crexxTEST/Data/test2.txt",-1)' Records Written'
-say renameFile("c:/Temp/crexxTEST/Data/test1.txt","c:/Temp/crexxTEST/Data/test99.txt")' renamed'
-## ----------------------------------------------------
-## Step 3: List directory content
-## ----------------------------------------------------
-entries.1=''   ## init an array
-call listdir "c:/Temp/crexxTEST/Data",entries
-say 'directory of c:/Temp/crexxTEST/Data'
-do i=1 to entries.0
-  say entries.i
-end
-say 'directory contains 'entries.0' entries'
-say 'prefix meaning'
-say '>    directory entry'
-say '+    file entry'
-## ----------------------------------------------------
-## Step 4: remove content of the directory
-## ----------------------------------------------------
-do i=1 to entries.0
-  entry=substr(entries.i,3)
-  type=substr(entries.i,1,1)
-  if type='>' then say 'Delete RC of "'entry'" 'RemoveDir("c:/Temp/crexxTEST/Data/"entry)
-  if type='+' then say 'Delete RC of "'entry'" 'DeleteFile("c:/Temp/crexxTEST/Data/"entry)
-end
-## ----------------------------------------------------
-## Step 5: now this directory it is empty, delete it
-## ----------------------------------------------------
-say 'Delete RC of then "Data" dir 'RemoveDir("c:/Temp/crexxTEST/Data")
-## ----------------------------------------------------
-## Step 6: List directory content
-## ----------------------------------------------------
-new.1=''   ## init an array
-call listdir "c:/Temp/crexxTEST",new
-say 'directory of c:/Temp/crexxTEST'
-do i=1 to new.0
-  say new.i
-end
-say 'directory contains 'new.0' entries'
+say "=== System Functions Test Suite ==="
+say " start time "time('l')
+say ""
 
-exit
-*/
+/* Test environment variables */
+say "Testing getenv()..."
+home = getenv("HOME")
+path = getenv("PATH")
+say "  HOME:" home
+say "  PATH:" left(path, 50)"..."
+say ""
 
-/* addition functions
-  say "getEnv(PATH) "getEnv("PATH")
-  say "getDIR       "getdir()
-  say "setDIR(C:/temp) "setdir("c:/Temp")
-  say "getDIR       "getdir()
-*/
+/* Test directory operations */
+say "Testing directory operations..."
+current = getdir()
+say "  "time('l')" lCurrent directory:" current
+test_dir = "test_folder"
+say "  "time('l')" Creating directory:" test_dir
+rc = createdir(test_dir)
+if rc = 0 then
+    say "  ✓ Directory created successfully"
+else
+    say "  ✗ Failed to create directory:" rc
+
+say "  "time('l')" Testing directory exists..."
+if testdir(test_dir) = 0 then
+    say "  ✓ Directory exists"
+else
+    say "  ✗ Directory not found"
+
+say "  "time('l')" Changing to test directory..."
+rc = setdir(test_dir)
+if rc = 0 then
+    say "  ✓ Changed directory successfully"
+else
+    say "  ✗ Failed to change directory:" rc
+
+/* Return to original directory */
+call setdir current
+
+say "  "time('l')" Removing test directory..."
+rc = removedir(test_dir)
+if rc = 0 then
+    say "  ✓ Directory removed successfully"
+else
+    say "  ✗ Failed to remove directory:" rc
+say ""
+
+/* Test file operations */
+say "Testing file operations..."
+test_file = "test.txt"
+say "  "time('l')" Creating test file:" test_file
+call lineout test_file, "Test content"
+
+say "  "time('l')" Testing file exists..."
+if testfile(test_file) = 0 then
+    say "  ✓ File exists"
+else
+    say "  ✗ File not found"
+
+new_name = "renamed.txt"
+say "  "time('l')" Renaming file to:" new_name
+rc = renamefile(test_file, new_name)
+if rc = 0 then
+    say "  ✓ File renamed successfully"
+else
+    say "  ✗ Failed to rename file:" rc
+
+say "  "time('l')" Deleting test file..."
+rc = deletefile(new_name)
+if rc = 0 then
+    say "  ✓ File deleted successfully"
+else
+    say "  ✗ Failed to delete file:" rc
+say ""
+
+/* Test clipboard operations */
+say "  "time('l')" Testing clipboard operations..."
+test_text = "Test clipboard text"
+rc = setclipboard(test_text)
+if rc = 0 then do
+    say "  ✓ Text copied to clipboard"
+    clip_content = getclipboard()
+    if clip_content = test_text then
+        say "  ✓ Clipboard content verified"
+    else
+        say "  ✗ Clipboard content mismatch"
+end
+else
+    say "  ✗ Failed to set clipboard:" rc
+say ""
+
+/* Test system information */
+say "  "time('l')" Testing system information..."
+say "  Platform :" opsys()
+say "  Host name:" host()
+say "  User name:" userid()
+say "  Uptime   :" uptime()' seconds'
+say ""
+
+/* Test sleep function */
+say "  "time('l')" Testing sleep()..."
+say "  Sleeping for 1 second (1000 ms) ..."
+call wait 1000
+say time('l')"  ✓ Sleep completed"
+say ""
+
+/* Test beep */
+say "  "time('l')" Testing beep()..."
+rc = beep()
+if rc = 0 then
+    say "  ✓ Beep executed"
+else
+    say "  ✗ Beep failed:" rc
+say ""
+say " end time "time('l')
+say "=== Test Suite Complete ==="
+exit 0
