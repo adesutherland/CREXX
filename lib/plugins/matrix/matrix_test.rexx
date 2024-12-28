@@ -5,29 +5,38 @@ import matrix
 m1=mcreate(24,5,"Data Matrix")
 call matdata m1
 call mprint  m1
-## transpose Data Matrix
-m2=mtranspose(m1,"Transposed Data Matrix")
-call mprint m2
-m3=mmultiply(m2,m1,"Covariance")
-call mprint m3
-m4=mstandard(m1,"XXX")
-call mprint  m4
-## transpose Data Matrix
-m5=mtranspose(m4,"Transposed Data Matrix")
-call mprint m5
-m6=mmultiply(m5,m4,"Correlation Matrix")
-call mprint m6
-m7=mprod(m6,1/23,"Correlation Matrix")
-call mprint m7
-say 'determinante 'mdet(m6)
-mlx=mlu(m6,"L Matrix","U Matrix")
-call mprint mlx
-call mprint mlx+1
+m9=Mcorr(m1,'Correlation')
+call mprint m9
+ma=Mcov(m1,'Covariance')
+call mprint ma
 
-say "FREE m3 "mfree(m3)
-say "FREE m7 "mfree(m7)
-say "FREE m91 "mfree(91)
-call mfree -1
+## lets do the calculation via Matrix operations
+## 1. transpose Data Matrix
+  m2=mtranspose(m1,"Transposed Data Matrix")
+  call mprint m2
+## 2. Standardise Data Matrix (mean=0, stddev=1)
+  m4=mstandard(m1,"Standardised")
+  call mprint  m4
+## 3. transpose standardised Data Matrix
+  m5=mtranspose(m4,"Transposed Data Matrix")
+  call mprint m5
+## 4. multiply Data Matrix with transposed Matrix
+  m6=mmultiply(m5,m4,"close to Correlation Matrix")
+  call mprint m6
+## 5. Almost there, multiply by rows
+  m7=mprod(m6,1/23,"Correlation Matrix")
+  call mprint m7
+## 6. other stuff: determinant
+   say 'determinante 'mdet(m1)
+## 7. other stuff: L and U Matrix
+   mlx=mlu(m6,"L Matrix","U Matrix")
+   call mprint mlx
+   call mprint mlx+1
+
+say "FREE m3 "mfree(m6)  ## free storage of m6
+say "FREE m7 "mfree(m7)  ## free storage of m7
+say "FREE m91 "mfree(91) ## free storage of m91, which is not there
+call mfree -1            ## free all
 exit
 
 

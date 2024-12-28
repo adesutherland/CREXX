@@ -1,54 +1,54 @@
 # Matrix Operations Plugin for CREXX/PA
 
 ## Overview
-This plugin provides matrix operations for the CREXX/PA system. It supports basic matrix operations including multiplication, transposition, inversion, and standardization.
+This plugin provides comprehensive matrix operations for the CREXX/PA system, including linear algebra and statistical functions.
+
+## Memory Management
+- Cross-platform heap storage using MATRIX_ALLOC/MATRIX_FREE macros
+- Windows: HeapAlloc/HeapFree from process heap
+- Unix/Linux/macOS: malloc/free from C standard library
+- Maximum matrices: 100
+- Automatic cleanup on matrix free or plugin unload
 
 ## Functions
 
+### Basic Operations
+- `mmultiply(m0, m1, mid)` - Matrix multiplication (m0 × m1 → mid)
+- `mprod(m0, scalar, mid)` - Scalar multiplication (m0 × scalar → mid)
+- `mtranspose(m0, mid)` - Matrix transpose (m0 → mid)
+- `minvert(m0, mid)` - Matrix inversion (m0 → mid)
+
 ### Matrix Creation and Management
-- **mcreate(rows, cols, id)** → matrix_number
-  - Creates a new matrix with specified dimensions
-  - Parameters:
-    - rows: Number of rows (integer)
-    - cols: Number of columns (integer)
-    - id: Matrix identifier (string)
-  - Returns: Matrix number or error code
-  - Error codes:
-    - -1: Invalid input parameters
-    - -12: No matrix slots available
-    - -16: Unable to allocate matrix structure
-    - -20: Unable to allocate matrix data
+- `mcreate(rows, cols, id)` - Create new matrix
+- `mset(m0, row, col, value)` - Set matrix element
+- `mprint(m0)` - Print matrix
+- `mfree(m0)` - Free matrix (if m0 < 0, frees all)
 
-- **mfree(matrix_number)** → status
-  - Frees a matrix or all matrices if matrix_number < 0
-  - Parameters:
-    - matrix_number: Matrix to free, or -1 to free all
-  - Returns: 0 on success, error code on failure
+### Linear Algebra
+- `mdet(m0)` - Calculate determinant
+- `mlu(m0, L, U)` - LU decomposition
+- `mqr(m0, Q, R)` - QR decomposition
+- `meigen(m0, vec)` - Calculate dominant eigenvalue/vector
+- `mrank(m0)` - Calculate matrix rank
 
-### Matrix Operations
-- **mmultiply(m1, m2, id)** → matrix_number
-  - Multiplies two matrices
-  - Parameters:
-    - m1: First matrix number
-    - m2: Second matrix number
-    - id: Result matrix identifier
-  - Returns: New matrix number or error code
+### Statistical Operations
+- `mcov(m0, mid)` - Covariance matrix
+- `mcorr(m0, mid)` - Correlation matrix
+- `mmean(m0, axis, mid)` - Row/column means (axis: 0=rows, 1=cols)
+- `mstandard(m0, mid)` - Standardize matrix columns
 
-- **mprod(m, scalar, id)** → matrix_number
-  - Multiplies matrix by scalar value
-  - Parameters:
-    - m: Matrix number
-    - scalar: Multiplication factor (float)
-    - id: Result matrix identifier
-  - Returns: New matrix number or error code
+## Performance Features
+- Cache-friendly blocking for matrix operations
+- Block size optimization (MATRIX_BLOCK_SIZE = 64)
+- Loop unrolling for better instruction pipelining
+- Efficient memory access patterns
+- Numerical stability checks
 
-- **minvert(m, id)** → matrix_number
-  - Inverts a square matrix
-  - Parameters:
-    - m: Matrix number
-    - id: Result matrix identifier
-  - Returns: New matrix number or error code
-  - Note: Matrix must be square and non-singular
+## Error Handling
+- Input validation
+- Memory allocation checks
+- Numerical stability checks
+- Detailed error codes
 
 - **mtranspose(m, id)** → matrix_number
   - Transposes a matrix
@@ -91,7 +91,7 @@ This plugin provides matrix operations for the CREXX/PA system. It supports basi
 - MATRIX_CORRUPT (-32): Matrix structure is corrupt
 
 ## Example Usage
-
+```
 / Create and initialize a matrix /
 m1 = mcreate(3, 3, "Test Matrix")
 call mset m1, 1, 1, 1.0
@@ -109,6 +109,17 @@ call mprint m3
 call mfree m1
 call mfree m2
 call mfree m3
+```
+```
+rexx
+/ Create and multiply two matrices /
+m1 = matrix.mcreate(3, 3, "Matrix1")
+m2 = matrix.mcreate(3, 3, "Matrix2")
+matrix.mset(m1, 1, 1, 2.0) / Set element at row 1, col 1 /
+result = matrix.mmultiply(m1, m2, "Result")
+matrix.mprint(result)
+matrix.mfree(result)
+```
 
 ## Implementation Notes
 - Matrix indices are 1-based in REXX calls
@@ -124,3 +135,116 @@ All functions return error codes for invalid operations. Check return values for
 - Invalid dimensions
 - Corrupt matrix structures
 
+## Return Codes
+- 0: Success
+- -1: Invalid parameter
+- -2: Memory allocation failure
+- -3: Singular matrix
+- -4: Dimension mismatch
+- -8: Memory free error
+
+## Notes
+- All indices are 1-based for REXX compatibility
+- Matrices are stored in row-major order
+- Double precision floating point used throughout
+
+## Detailed Error Codes
+
+### Operation Status Codes
+- MATRIX_SUCCESS (0): Operation completed successfully
+- MATRIX_INVALID_PARAM (-1): Invalid input parameters
+  - Matrix dimensions don't match
+  - Invalid matrix number
+  - NULL matrix identifier
+  - Invalid row/column indices
+
+### Memory Related Errors
+- MATRIX_NO_SLOTS (-12): No available matrix slots
+  - Maximum number of matrices (100) reached
+  - Need to free some matrices before creating new ones
+- MATRIX_ALLOC_CB (-16): Control block allocation failed
+  - System memory allocation error
+  - Not enough memory for matrix structure
+- MATRIX_ALLOC_DATA (-20): Data allocation failed
+  - Not enough memory for matrix data
+  - System memory allocation error
+
+### Matrix Validation Errors
+- MATRIX_NULL (-30): Matrix is NULL
+  - Attempting to operate on a NULL matrix
+  - Matrix may have been freed
+- MATRIX_INVALID_INDEX (-31): Invalid matrix index
+  - Matrix number out of range (0-99)
+  - Negative matrix number
+- MATRIX_CORRUPT (-32): Matrix structure is corrupt
+  - Invalid internal pointers
+  - Memory corruption detected
+
+### Operation-Specific Errors
+- MATRIX_SINGULAR (-40): Matrix is singular
+  - Determinant is zero
+  - Matrix cannot be inverted
+- MATRIX_DIM_MISMATCH (-41): Matrix dimensions mismatch
+  - Incompatible dimensions for operation
+  - Example: multiplication of incompatible matrices
+- MATRIX_NOT_SQUARE (-42): Matrix must be square
+  - Operation requires square matrix
+  - Example: LU decomposition
+- MATRIX_NO_CONVERGENCE (-43): Algorithm did not converge
+  - Maximum iterations reached
+  - Example: eigenvalue calculation
+
+### Memory Management Errors
+- MATRIX_FREE_ERROR (-8): Error freeing matrix memory
+  - System memory deallocation error
+  - Invalid memory block
+- MATRIX_FREE_CB_ERROR (-12): Error freeing control block
+  - System memory deallocation error
+  - Invalid control block pointer
+
+
+### Linear Algebra Examples
+rexx
+/ LU Decomposition /
+m = matrix.mcreate(2, 2, "Original")
+matrix.mset(m, 1, 1, 4.0)
+matrix.mset(m, 1, 2, 3.0)
+matrix.mset(m, 2, 1, 6.0)
+matrix.mset(m, 2, 2, 3.0)
+L = matrix.mlu(m, "L", "U") / Returns L, U is L+1 /
+matrix.mprint(L)
+matrix.mprint(L+1)
+/ Matrix Rank /
+rank = matrix.mrank(m)
+say "Matrix rank:" rank
+/ Eigenvalue /
+ev = matrix.meigen(m, "eigenvector")
+matrix.mprint(ev) / First element is eigenvalue, rest is eigenvector /
+
+### Statistical Analysis
+rexx:matrix.md
+/ Create data matrix /
+data = matrix.mcreate(4, 3, "DataSet")
+/ Row 1 /
+matrix.mset(data, 1, 1, 1.2)
+matrix.mset(data, 1, 2, 2.3)
+matrix.mset(data, 1, 3, 3.4)
+/ Row 2 /
+matrix.mset(data, 2, 1, 2.3)
+matrix.mset(data, 2, 2, 3.4)
+matrix.mset(data, 2, 3, 4.5)
+/ Row 3 /
+matrix.mset(data, 3, 1, 3.4)
+matrix.mset(data, 3, 2, 4.5)
+matrix.mset(data, 3, 3, 5.6)
+/ Row 4 /
+matrix.mset(data, 4, 1, 4.5)
+matrix.mset(data, 4, 2, 5.6)
+matrix.mset(data, 4, 3, 6.7)
+/ Calculate statistics /
+means = matrix.mmean(data, 1, "ColumnMeans") / Column means /
+covar = matrix.mcov(data, "CovMatrix") / Covariance matrix /
+corr = matrix.mcorr(data, "CorrMatrix") / Correlation matrix /
+matrix.mprint(means)
+matrix.mprint(covar)
+matrix.mprint(corr)

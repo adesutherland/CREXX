@@ -98,16 +98,18 @@ int validateMatrix(int matnum) {
     return MATRIX_VALID;
 }
 
-void printMatrix(struct Matrix* matrix) {
-    int i, j;
-    if (!matrix) {
-        printf("Error: NULL matrix pointer\n");
+void printMatrix(int matname) {
+    int i, j, status;
+    status = validateMatrix(matname);
+    struct Matrix matrix = *(struct Matrix *) allVectors[matname];
+    if (status != MATRIX_VALID) {
+        printf("Error: Matrix validation error %d for %d\n",MATRIX_VALID,matname);
         return;
     }
-    printf("Matrix %s, dimension: %dx%d\n", matrix->id, matrix->cols, matrix->rows);
-    for (i = 0; i < matrix->rows; ++i) {
-        for (j = 0; j < matrix->cols; ++j) {
-            printf("%10.6f ", matrix->vector[i * matrix->cols + j]);
+    printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.cols, matrix.rows);
+    for (i = 0; i < matrix.rows; ++i) {
+        for (j = 0; j < matrix.cols; ++j) {
+            printf("%10.6f ", matrix.vector[i * matrix.cols + j]);
         }
         printf("\n");
     }
@@ -231,12 +233,10 @@ PROCEDURE(mset) {
 PROCEDURE(mprint) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) {
-        printf("Matrix validation failed: %d\n", status);
+        printf("Matrix validation for %d failed: %d\n",GETINT(ARG0),status);
         RETURNINT(status);
     }
-    
-    struct Matrix cmatrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
-    printMatrix((struct Matrix *) cmatrix.CBselfref);
+    printMatrix(GETINT(ARG0));
     ENDPROC
 }
 
@@ -636,6 +636,308 @@ PROCEDURE(mlu) {
     RETURNINT(L_num);
 }
 
+// QR decomposition using Gram-Schmidt process
+int qr_decomposition(struct Matrix* matrix, struct Matrix* Q, struct Matrix* R) {
+    int m = matrix->rows;
+    int n = matrix->cols;
+    int i, j, k;
+    double norm, dot;
+    
+    // Initialize Q and R
+    for (i = 0; i < m; i++) {
+        for (j = 0; j < n; j++) {
+            matp(Q,i,j) = matp(matrix,i,j);
+            matp(R,i,j) = 0.0;
+        }
+    }
+    
+    // Gram-Schmidt process
+    for (j = 0; j < n; j++) {
+        // Calculate R[j,j]
+        norm = 0.0;
+        for (i = 0; i < m; i++) {
+            norm += matp(Q,i,j) * matp(Q,i,j);
+        }
+        norm = sqrt(norm);
+        
+        if (norm < MATRIX_EPSILON) {
+            return -1;  // Linearly dependent columns
+        }
+        
+        matp(R,j,j) = norm;
+        
+        // Normalize column j of Q
+        for (i = 0; i < m; i++) {
+            matp(Q,i,j) /= norm;
+        }
+        
+        // Calculate R[j,k] and update Q[:,k]
+        for (k = j + 1; k < n; k++) {
+            dot = 0.0;
+            for (i = 0; i < m; i++) {
+                dot += matp(Q,i,j) * matp(Q,i,k);
+            }
+            matp(R,j,k) = dot;
+            
+            for (i = 0; i < m; i++) {
+                matp(Q,i,k) -= dot * matp(Q,i,j);
+            }
+        }
+    }
+    
+    return MATRIX_SUCCESS;
+}
+
+// Power method for dominant eigenvalue/eigenvector
+int power_method(struct Matrix* matrix, double* eigenvalue, double* eigenvector) {
+    int n = matrix->rows;
+    int i, j, iter;
+    double norm, prev_eigenvalue;
+    double* temp;
+    
+    if (n != matrix->cols) return MATRIX_INVALID_PARAM;
+    
+    // Initialize random vector
+    for (i = 0; i < n; i++) {
+        eigenvector[i] = (double)rand() / RAND_MAX;
+    }
+    
+    // Normalize initial vector
+    norm = 0.0;
+    for (i = 0; i < n; i++) {
+        norm += eigenvector[i] * eigenvector[i];
+    }
+    norm = sqrt(norm);
+    for (i = 0; i < n; i++) {
+        eigenvector[i] /= norm;
+    }
+    
+    // Power iteration
+    prev_eigenvalue = 0.0;
+    temp = (double*)MATRIX_ALLOC(n * sizeof(double));
+    if (!temp) return MATRIX_ALLOC_DATA;
+    
+    for (iter = 0; iter < 100; iter++) {  // Max 100 iterations
+        // Matrix-vector multiplication
+        for (i = 0; i < n; i++) {
+            temp[i] = 0.0;
+            for (j = 0; j < n; j++) {
+                temp[i] += matp(matrix,i,j) * eigenvector[j];
+            }
+        }
+        
+        // Calculate eigenvalue (Rayleigh quotient)
+        *eigenvalue = 0.0;
+        for (i = 0; i < n; i++) {
+            *eigenvalue += temp[i] * eigenvector[i];
+        }
+        
+        // Check convergence
+        if (fabs(*eigenvalue - prev_eigenvalue) < MATRIX_EPSILON) {
+            MATRIX_FREE(temp);
+            return MATRIX_SUCCESS;
+        }
+        prev_eigenvalue = *eigenvalue;
+        
+        // Normalize
+        norm = 0.0;
+        for (i = 0; i < n; i++) {
+            norm += temp[i] * temp[i];
+        }
+        norm = sqrt(norm);
+        for (i = 0; i < n; i++) {
+            eigenvector[i] = temp[i] / norm;
+        }
+    }
+    
+    MATRIX_FREE(temp);
+    return MATRIX_SUCCESS;
+}
+
+// Calculate matrix rank using QR decomposition
+int calculate_rank(struct Matrix* matrix) {
+    int m = matrix->rows;
+    int n = matrix->cols;
+    int i, rank = 0;
+    int Q_num, R_num;
+    struct Matrix *Q, *R;
+    
+    // Create temporary matrices for QR decomposition
+    Q_num = matcreate(m, n, "Q_temp");
+    if (Q_num < 0) return -1;
+    
+    R_num = matcreate(n, n, "R_temp");
+    if (R_num < 0) {
+        freeMatrix(Q_num);
+        return -1;
+    }
+    
+    Q = (struct Matrix*)allVectors[Q_num];
+    R = (struct Matrix*)allVectors[R_num];
+    
+    // Perform QR decomposition
+    if (qr_decomposition(matrix, Q, R) != MATRIX_SUCCESS) {
+        freeMatrix(Q_num);
+        freeMatrix(R_num);
+        return -1;
+    }
+    
+    // Count non-zero diagonal elements in R
+    for (i = 0; i < MIN(m,n); i++) {
+        if (fabs(matp(R,i,i)) > MATRIX_EPSILON) {
+            rank++;
+        }
+    }
+    
+    // Clean up temporary matrices
+    freeMatrix(Q_num);
+    freeMatrix(R_num);
+    
+    return rank;
+}
+
+PROCEDURE(mrank) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    int rank = calculate_rank(&matrix);
+    
+    RETURNINT(rank);
+}
+
+// Calculate covariance between two columns
+double calculate_covariance(struct Matrix* matrix, int col1, int col2) {
+    int i;
+    double mean1 = 0.0, mean2 = 0.0, covar = 0.0;
+    
+    // Calculate means
+    for (i = 0; i < matrix->rows; i++) {
+        mean1 += matp(matrix,i,col1);
+        mean2 += matp(matrix,i,col2);
+    }
+    mean1 /= matrix->rows;
+    mean2 /= matrix->rows;
+    
+    // Calculate covariance
+    for (i = 0; i < matrix->rows; i++) {
+        covar += (matp(matrix,i,col1) - mean1) * (matp(matrix,i,col2) - mean2);
+    }
+    return covar / (matrix->rows - 1);  // Using n-1 for sample covariance
+}
+
+// Create covariance matrix
+PROCEDURE(mcov) {
+    int i, j, matnum, status;
+    
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    
+    // Create square matrix for covariance
+    matnum = matcreate(matrix.cols, matrix.cols, GETSTRING(ARG1));
+    if (matnum < 0) RETURNINT(matnum);
+    
+    struct Matrix covar = *(struct Matrix *) allVectors[matnum];
+    
+    // Calculate covariance matrix
+    for (i = 0; i < matrix.cols; i++) {
+        for (j = i; j < matrix.cols; j++) {
+            double cov = calculate_covariance(&matrix, i, j);
+            mat(covar,i,j) = cov;
+            mat(covar,j,i) = cov;  // Covariance matrix is symmetric
+        }
+    }
+    RETURNINT(matnum);
+}
+
+// Calculate correlation matrix
+PROCEDURE(mcorr) {
+    int i, j, matnum, status;
+    double *stdevs;
+    
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    
+    // Create square matrix for correlation
+    matnum = matcreate(matrix.cols, matrix.cols, GETSTRING(ARG1));
+    if (matnum < 0) RETURNINT(matnum);
+    
+    struct Matrix corr = *(struct Matrix *) allVectors[matnum];
+    
+    // Calculate standard deviations for each column
+    stdevs = (double*)MATRIX_ALLOC(matrix.cols * sizeof(double));
+    if (!stdevs) {
+        freeMatrix(matnum);
+        RETURNINT(MATRIX_ALLOC_DATA);
+    }
+    
+    for (i = 0; i < matrix.cols; i++) {
+        double mean = calculate_mean(GETINT(ARG0), i);
+        stdevs[i] = calculate_stdev(GETINT(ARG0), i, mean);
+    }
+    
+    // Calculate correlation matrix
+    for (i = 0; i < matrix.cols; i++) {
+        for (j = i; j < matrix.cols; j++) {
+            if (stdevs[i] < MATRIX_EPSILON || stdevs[j] < MATRIX_EPSILON) {
+                mat(corr,i,j) = (i == j) ? 1.0 : 0.0;
+            } else {
+                double cov = calculate_covariance(&matrix, i, j);
+                double corr_val = cov / (stdevs[i] * stdevs[j]);
+                mat(corr,i,j) = corr_val;
+                mat(corr,j,i) = corr_val;  // Correlation matrix is symmetric
+            }
+        }
+    }
+    
+    MATRIX_FREE(stdevs);
+    RETURNINT(matnum);
+}
+
+// Calculate row/column means
+PROCEDURE(mmean) {
+    int i, j, matnum, status;
+    int axis = GETINT(ARG1);  // 0 for row means, 1 for column means
+    
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    
+    if (axis == 0) {
+        matnum = matcreate(matrix.rows, 1, GETSTRING(ARG2));
+    } else {
+        matnum = matcreate(1, matrix.cols, GETSTRING(ARG2));
+    }
+    if (matnum < 0) RETURNINT(matnum);
+    
+    struct Matrix means = *(struct Matrix *) allVectors[matnum];
+    
+    if (axis == 0) {  // Row means
+        for (i = 0; i < matrix.rows; i++) {
+            double sum = 0.0;
+            for (j = 0; j < matrix.cols; j++) {
+                sum += mat(matrix,i,j);
+            }
+            mat(means,i,0) = sum / matrix.cols;
+        }
+    } else {  // Column means
+        for (j = 0; j < matrix.cols; j++) {
+            double sum = 0.0;
+            for (i = 0; i < matrix.rows; i++) {
+                sum += mat(matrix,i,j);
+            }
+            mat(means,0,j) = sum / matrix.rows;
+        }
+    }
+    
+    RETURNINT(matnum);
+}
+
 /* -------------------------------------------------------------------------------------
  * Functions provided to REXX:
  * mmultiply:  Multiply two matrices (m0 x m1 -> mid)
@@ -661,4 +963,8 @@ LOADFUNCS
     ADDPROC(mfree,     "matrix.mfree",     "b",  ".int", "m0=.int");
     ADDPROC(mdet,      "matrix.mdet",      "b",  ".int", "m0=.int");
     ADDPROC(mlu,       "matrix.mlu",       "b",  ".int", "m0=.int, L=.string, U=.string");
+    ADDPROC(mrank,     "matrix.mrank",     "b",  ".int", "m0=.int");
+    ADDPROC(mcov,      "matrix.mcov",      "b",  ".int", "m0=.int, mid=.string");
+    ADDPROC(mcorr,     "matrix.mcorr",     "b",  ".int", "m0=.int, mid=.string");
+    ADDPROC(mmean,     "matrix.mmean",     "b",  ".int", "m0=.int, axis=.int, mid=.string");
 ENDLOADFUNCS
