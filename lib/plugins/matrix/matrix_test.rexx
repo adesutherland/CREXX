@@ -19,6 +19,11 @@ m6=mmultiply(m5,m4,"Correlation Matrix")
 call mprint m6
 m7=mprod(m6,1/23,"Correlation Matrix")
 call mprint m7
+say 'determinante 'mdet(m6)
+mlx=mlu(m6,"L Matrix","U Matrix")
+call mprint mlx
+call mprint mlx+1
+
 say "FREE m3 "mfree(m3)
 say "FREE m7 "mfree(m7)
 say "FREE m91 "mfree(91)

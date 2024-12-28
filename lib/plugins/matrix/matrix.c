@@ -47,6 +47,7 @@ struct Matrix {
     double * vector;  // Pointer to the matrix data
 };
 #define mat(mptr,row,col) mptr.vector[row * mptr.cols + col]
+#define matp(mptr,row,col) mptr->vector[row * mptr->cols + col]
 // Helper macro for minimum value
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
@@ -501,6 +502,140 @@ PROCEDURE(mfree) {
     ENDPROC
 }
 
+// Calculate determinant using LU decomposition
+double calculate_determinant(struct Matrix* matrix) {
+    int i,j,k, n = matrix->rows;
+    if (n != matrix->cols) return 0.0;
+    
+    double det = 1.0;
+    double* temp = (double*)MATRIX_ALLOC(n * n * sizeof(double));
+    if (!temp) return 0.0;
+    
+    // Copy matrix to temp
+    for (i = 0; i < n * n; i++) {
+        temp[i] = matrix->vector[i];
+    }
+    
+    // Gaussian elimination
+    for (i = 0; i < n; i++) {
+        // Find pivot
+        double pivot = temp[i * n + i];
+        if (fabs(pivot) < MATRIX_EPSILON) {
+            MATRIX_FREE(temp);
+            return 0.0;  // Singular matrix
+        }
+        
+        det *= pivot;
+        
+        // Eliminate column
+        for (j = i + 1; j < n; j++) {
+            double factor = temp[j * n + i] / pivot;
+            for (k = i; k < n; k++) {
+                temp[j * n + k] -= factor * temp[i * n + k];
+            }
+        }
+    }
+    
+    MATRIX_FREE(temp);
+    return det;
+}
+
+PROCEDURE(mdet) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) {
+        RETURNFLOAT(0.0);
+    }
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    double det = calculate_determinant(&matrix);
+    RETURNFLOAT(det);
+}
+
+// LU Decomposition implementation
+int lu_decomposition(struct Matrix* matrix, struct Matrix* L, struct Matrix* U) {
+    int n = matrix->rows;
+    int i, j, k, p;
+    
+    if (n != matrix->cols) return MATRIX_INVALID_PARAM;
+    
+    // Initialize L and U
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (i == j) {
+                matp(L,i,j) = 1.0;  // Diagonal of L is 1
+            } else {
+                matp(L,i,j) = 0.0;
+            }
+            matp(U,i,j) = 0.0;
+        }
+    }
+    
+    // Copy first row of U
+    for (j = 0; j < n; j++) {
+        matp(U,0,j) = matp(matrix,0,j);
+    }
+    
+    // Calculate first column of L
+    for (i = 1; i < n; i++) {
+        if (fabs(matp(U,0,0)) < MATRIX_EPSILON) return -1;  // Singular matrix
+        matp(L,i,0) = matp(matrix,i,0) / matp(U,0,0);
+    }
+    
+    // Calculate rest of L and U
+    for (k = 1; k < n; k++) {
+        // Calculate row k of U
+        for (j = k; j < n; j++) {
+            double sum = 0.0;
+            for (p = 0; p < k; p++) {
+                sum += matp(L,k,p) * matp(U,p,j);
+            }
+            matp(U,k,j) = matp(matrix,k,j) - sum;
+        }
+        
+        // Calculate column k of L
+        for (i = k + 1; i < n; i++) {
+            double sum = 0.0;
+            for (p = 0; p < k; p++) {
+                sum += matp(L,i,p) * matp(U,p,k);
+            }
+            if (fabs(matp(U,k,k)) < MATRIX_EPSILON) return -1;  // Singular matrix
+            matp(L,i,k) = (matp(matrix,i,k) - sum) / matp(U,k,k);
+        }
+    }
+    
+    return MATRIX_SUCCESS;
+}
+
+PROCEDURE(mlu) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    
+    // Create L and U matrices
+    int L_num = matcreate(matrix.rows, matrix.cols, GETSTRING(ARG1));
+    if (L_num < 0) RETURNINT(L_num);
+    
+    int U_num = matcreate(matrix.rows, matrix.cols, GETSTRING(ARG2));
+    if (U_num < 0) {
+        freeMatrix(L_num);
+        RETURNINT(U_num);
+    }
+    
+    struct Matrix L = *(struct Matrix *) allVectors[L_num];
+    struct Matrix U = *(struct Matrix *) allVectors[U_num];
+    
+    status = lu_decomposition(&matrix, &L, &U);
+    if (status != MATRIX_SUCCESS) {
+        freeMatrix(L_num);
+        freeMatrix(U_num);
+        RETURNINT(status);
+    }
+    
+    // Return L matrix number (U matrix number is L_num + 1)
+    RETURNINT(L_num);
+}
+
 /* -------------------------------------------------------------------------------------
  * Functions provided to REXX:
  * mmultiply:  Multiply two matrices (m0 x m1 -> mid)
@@ -524,4 +659,6 @@ LOADFUNCS
     ADDPROC(mset,      "matrix.mset",      "b",  ".int", "m0=.int, row=.int, col=.int,value=.float");
     ADDPROC(mprint,    "matrix.mprint",    "b",  ".int", "m0=.int");
     ADDPROC(mfree,     "matrix.mfree",     "b",  ".int", "m0=.int");
+    ADDPROC(mdet,      "matrix.mdet",      "b",  ".int", "m0=.int");
+    ADDPROC(mlu,       "matrix.mlu",       "b",  ".int", "m0=.int, L=.string, U=.string");
 ENDLOADFUNCS
