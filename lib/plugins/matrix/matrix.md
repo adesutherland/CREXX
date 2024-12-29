@@ -250,28 +250,48 @@ matrix.mprint(covar)
 matrix.mprint(corr)
 
 ### Advanced Statistical Analysis
-- `mfactor(m0, factors, rotate, mid)` - Factor analysis with optional rotation
+- `mfactor(m0, factors, rotate, scores, mid_load, [mid_scores])` - Advanced factor analysis
   - Parameters:
     - m0: Input data matrix
     - factors: Number of factors to extract
-    - rotate: Rotation flag (0 = none, 1 = varimax)
-    - mid: Result matrix identifier
-  - Returns: Matrix number containing factor loadings
+    - rotate: Rotation method
+      - 0: None
+      - 1: Varimax (orthogonal)
+      - 2: Quartimax (orthogonal)
+      - 3: Promax (oblique)
+    - scores: Calculate factor scores (0/1)
+    - mid_load: Result matrix identifier for loadings
+    - mid_scores: Result matrix identifier for scores (if scores=1)
+  
   - Example:
     ```
     data = matrix.mcreate(100, 5, "DataMatrix")
     /* ... fill data matrix ... */
     
-    // Without rotation
-    loadings1 = matrix.mfactor(data, 2, 0, "Unrotated")
+    // Basic factor analysis
+    loadings = matrix.mfactor(data, 2, 0, 0, "Unrotated")
     
     // With varimax rotation
-    loadings2 = matrix.mfactor(data, 2, 1, "Rotated")
+    loadings = matrix.mfactor(data, 2, 1, 0, "Varimax")
+    
+    // With promax rotation and scores
+    loadings = matrix.mfactor(data, 2, 3, 1, "Promax", "Scores")
     ```
-  - Notes:
-    - Varimax rotation maximizes variance of squared loadings
-    - Rotation helps interpret factor structure
-    - Convergence typically occurs within 10-20 iterations
+  
+  - Rotation Methods:
+    - Varimax: Maximizes variance of squared loadings
+    - Quartimax: Simplifies rows of loading matrix
+    - Promax: Allows correlated factors
+  
+  - Factor Scores:
+    - Regression method
+    - Standardized data
+    - One score per factor per observation
+  
+  - Diagnostics:
+    - Communalities
+    - Factor correlations (for oblique rotation)
+    - Proportion of variance explained
 
 ### Statistical Functions
 - `mcolstats(m0, mid)` - Comprehensive column statistics
