@@ -263,3 +263,43 @@ matrix.mprint(corr)
     loadings = matrix.mfactor(data, 2, "Factors")  /* Extract 2 factors */
     matrix.mprint(loadings)  /* Show factor loadings */
     ```
+
+### Statistical Functions
+- `mcolstats(m0, mid)` - Comprehensive column statistics
+  - Returns matrix with 5 rows:
+    1. Means
+    2. Standard deviations
+    3. Medians
+    4. Skewness
+    5. Kurtosis
+  - Example:
+    ```
+    data = matrix.mcreate(100, 4, "Data")  /* 100 observations, 4 variables */
+    /* ... fill data ... */
+    stats = matrix.mcolstats(data, "Statistics")
+    matrix.mprint(stats)
+    ```
+
+### Performance Optimizations
+1. Cache-friendly blocking
+   - Matrix operations use block sizes optimized for L1 cache
+   - Reduces cache misses and improves performance
+   
+2. OpenMP Parallelization
+   - Automatic parallelization for large matrices
+   - Configurable threshold for parallel execution
+   
+3. Memory Access Patterns
+   - Column-major operations optimized for matrix structure
+   - Minimizes cache thrashing
+   
+4. Numerical Stability
+   - Robust handling of small numbers
+   - Stable statistical computations
+   
+### Statistical Measures
+- **Mean**: Arithmetic average
+- **Standard Deviation**: Sample standard deviation (n-1 denominator)
+- **Median**: Middle value (interpolated for even sample sizes)
+- **Skewness**: Measure of distribution asymmetry
+- **Kurtosis**: Measure of tail weight (excess kurtosis, normal = 0)

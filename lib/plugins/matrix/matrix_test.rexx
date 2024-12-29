@@ -32,6 +32,8 @@ call mprint ma
    mlx=mlu(m6,"L Matrix","U Matrix")
    call mprint mlx
    call mprint mlx+1
+stats = mcolstats(m1, "Statistics")
+call mprint(stats)
 
 say "FREE m3 "mfree(m6)  ## free storage of m6
 say "FREE m7 "mfree(m7)  ## free storage of m7
