@@ -115,47 +115,44 @@ void printMatrix(int matname) {
     }
 }
 
-// Function to calculate the mean of the vector
-double calculate_mean(int matname, int col) {
+// Centralized statistical functions
+double calculate_column_mean(struct Matrix* matrix, int col) {
     int i;
-    struct Matrix matrix = *(struct Matrix *) allVectors[matname];
-    if (matrix.rows <= 0) return 0.0;
-    
     double sum = 0.0;
-    for (i = 0; i < matrix.rows; i++) {
-        sum += mat(matrix,i,col);
+    
+    if (matrix->rows <= 0) return 0.0;
+    
+    for (i = 0; i < matrix->rows; i++) {
+        sum += matp(matrix,i,col);
     }
-    return sum / matrix.rows;
+    return sum / matrix->rows;
 }
 
-// Function to calculate the standard deviation of the vector
-double calculate_stdev(int matname, int col, double mean) {
+double calculate_column_stddev(struct Matrix* matrix, int col, double mean) {
     int i;
-    struct Matrix matrix = *(struct Matrix *) allVectors[matname];
-    if (matrix.rows <= 1) return 0.0;  // Need at least 2 points for std dev
-    
     double sum_squared_diff = 0.0;
-    for (i = 0; i < matrix.rows; i++) {
-        double diff = mat(matrix,i,col) - mean;
+    
+    if (matrix->rows <= 1) return 0.0;  // Need at least 2 points for std dev
+    
+    for (i = 0; i < matrix->rows; i++) {
+        double diff = matp(matrix,i,col) - mean;
         sum_squared_diff += diff * diff;
     }
-    return sqrt(sum_squared_diff / (matrix.rows - 1));  // Using n-1 for sample standard deviation
+    return sqrt(sum_squared_diff / (matrix->rows - 1));  // Using n-1 for sample standard deviation
 }
 
-// Function to standardize the vector
-void standardize_vector(int matname, int matnew, int col) {
+// Standardize a single column
+void standardize_column(struct Matrix* matrix, struct Matrix* result, int col) {
     int i;
-    double mean = calculate_mean(matname, col);
-    double stdev = calculate_stdev(matname, col, mean);
-    struct Matrix matrix= *(struct Matrix *) allVectors[matname];
-    struct Matrix matstd= *(struct Matrix *) allVectors[matnew];
-
-    // Standardize each element
-    for (i = 0; i < matrix.rows; i++) {
-        mat(matstd,i,col) = (mat(matrix,i,col)- mean) / stdev;
+    double mean = calculate_column_mean(matrix, col);
+    double stddev = calculate_column_stddev(matrix, col, mean);
+    
+    if (stddev < MATRIX_EPSILON) stddev = 1.0;  // Handle constant columns
+    
+    for (i = 0; i < matrix->rows; i++) {
+        matp(result,i,col) = (matp(matrix,i,col) - mean) / stddev;
     }
- }
-
+}
 
 int matcreate(int rows, int cols, char * matid) {
     if (rows <= 0 || cols <= 0 || matid == NULL) {
@@ -408,35 +405,36 @@ PROCEDURE(mstandard) {
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
-    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
-    
-    if (matrix.rows <= 1) {
+//    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+
+    if (matrix->rows <= 1) {
         RETURNINT(-1);  // Need at least 2 rows for standardization
     }
     
-    matnew = matcreate(matrix.rows, matrix.cols, GETSTRING(ARG1));
+    matnew = matcreate(matrix->rows, matrix->cols, GETSTRING(ARG1));
     if (matnew < 0) {
         RETURNINT(-2);  // Matrix creation failed
     }
-    
+
     struct Matrix matnew_matrix = *(struct Matrix *) allVectors[matnew];
     
     // Standardize each column
-    for (j = 0; j < matrix.cols; j++) {
-        double mean = calculate_mean(GETINT(ARG0), j);
-        double stdev = calculate_stdev(GETINT(ARG0), j, mean);
+    for (j = 0; j < matrix->cols; j++) {
+        double mean = calculate_column_mean( matrix, j);
+        double stdev = calculate_column_stddev(matrix, j, mean);
         
         if (stdev < 1e-10) {  // Check for zero/near-zero standard deviation
             // Copy column as-is if stdev is too small
-            for (i = 0; i < matrix.rows; i++) {
+            for (i = 0; i < matrix->rows; i++) {
                 mat(matnew_matrix, i, j) = 0.0;
             }
             continue;
         }
         
         // Standardize column
-        for (i = 0; i < matrix.rows; i++) {
-            mat(matnew_matrix, i, j) = (mat(matrix, i, j) - mean) / stdev;
+        for (i = 0; i < matrix->rows; i++) {
+            mat(matnew_matrix, i, j) = (matp(matrix, i, j) - mean) / stdev;
         }
     }
     
@@ -855,38 +853,41 @@ PROCEDURE(mcov) {
 // Calculate correlation matrix
 PROCEDURE(mcorr) {
     int i, j, matnum, status;
-    double *stdevs;
+    double *means, *stdevs;
     
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
-    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+    
+    // Create arrays for means and standard deviations
+    means = (double*)MATRIX_ALLOC(matrix->cols * sizeof(double));
+    stdevs = (double*)MATRIX_ALLOC(matrix->cols * sizeof(double));
+    if (!means || !stdevs) {
+        if (means) MATRIX_FREE(means);
+        if (stdevs) MATRIX_FREE(stdevs);
+        RETURNINT(MATRIX_ALLOC_DATA);
+    }
+    
+    // Calculate means and standard deviations
+    for (i = 0; i < matrix->cols; i++) {
+        means[i] = calculate_column_mean(matrix, i);
+        stdevs[i] = calculate_column_stddev(matrix, i, means[i]);
+    }
     
     // Create square matrix for correlation
-    matnum = matcreate(matrix.cols, matrix.cols, GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix corr = *(struct Matrix *) allVectors[matnum];
     
-    // Calculate standard deviations for each column
-    stdevs = (double*)MATRIX_ALLOC(matrix.cols * sizeof(double));
-    if (!stdevs) {
-        freeMatrix(matnum);
-        RETURNINT(MATRIX_ALLOC_DATA);
-    }
-    
-    for (i = 0; i < matrix.cols; i++) {
-        double mean = calculate_mean(GETINT(ARG0), i);
-        stdevs[i] = calculate_stdev(GETINT(ARG0), i, mean);
-    }
-    
     // Calculate correlation matrix
-    for (i = 0; i < matrix.cols; i++) {
-        for (j = i; j < matrix.cols; j++) {
+    for (i = 0; i < matrix->cols; i++) {
+        for (j = i; j < matrix->cols; j++) {
             if (stdevs[i] < MATRIX_EPSILON || stdevs[j] < MATRIX_EPSILON) {
                 mat(corr,i,j) = (i == j) ? 1.0 : 0.0;
             } else {
-                double cov = calculate_covariance(&matrix, i, j);
+                double cov = calculate_covariance(matrix, i, j);
                 double corr_val = cov / (stdevs[i] * stdevs[j]);
                 mat(corr,i,j) = corr_val;
                 mat(corr,j,i) = corr_val;  // Correlation matrix is symmetric
@@ -894,6 +895,7 @@ PROCEDURE(mcorr) {
         }
     }
     
+    MATRIX_FREE(means);
     MATRIX_FREE(stdevs);
     RETURNINT(matnum);
 }
@@ -952,31 +954,15 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
     
-    // Calculate means and std devs
+    // Standardize each column
     for (j = 0; j < cols; j++) {
-        double mean = 0.0, std = 0.0;
-        for (i = 0; i < rows; i++) {
-            mean += matp(data,i,j);
-        }
-        mean /= rows;
-        
-        for (i = 0; i < rows; i++) {
-            double diff = matp(data,i,j) - mean;
-            std += diff * diff;
-        }
-        std = sqrt(std / (rows - 1));
-        
-        if (std < MATRIX_EPSILON) std = 1.0;  // Handle constant columns
-        
-        for (i = 0; i < rows; i++) {
-            matp(std_data,i,j) = (matp(data,i,j) - mean) / std;
-        }
+        standardize_column(data, std_data, j);
     }
     
     // Step 2: Compute correlation matrix
     int corr_num = matcreate(cols, cols, "correlation");
     if (corr_num < 0) {
-        mfree(std_num);
+        freeMatrix(std_num);
         return corr_num;
     }
     struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
@@ -996,8 +982,8 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     for (k = 0; k < factors; k++) {
         double* eigenvector = (double*)MATRIX_ALLOC(cols * sizeof(double));
         if (!eigenvector) {
-            mfree(std_num);
-            mfree(corr_num);
+            freeMatrix(std_num);
+            freeMatrix(corr_num);
             return MATRIX_ALLOC_DATA;
         }
         
@@ -1012,8 +998,8 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
             double* new_vector = (double*)MATRIX_ALLOC(cols * sizeof(double));
             if (!new_vector) {
                 MATRIX_FREE(eigenvector);
-                mfree(std_num);
-                mfree(corr_num);
+                freeMatrix(std_num);
+                freeMatrix(corr_num);
                 return MATRIX_ALLOC_DATA;
             }
             
@@ -1058,8 +1044,8 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
         MATRIX_FREE(eigenvector);
     }
     
-    mfree(std_num);
-    mfree(corr_num);
+    freeMatrix(std_num);
+    freeMatrix(corr_num);
     return MATRIX_SUCCESS;
 }
 
@@ -1078,7 +1064,7 @@ PROCEDURE(mfactor) {
     
     status = factor_analysis(&data, &loadings, factors);
     if (status != MATRIX_SUCCESS) {
-        mfree(loadings_num);
+        freeMatrix(loadings_num);
         RETURNINT(status);
     }
     
