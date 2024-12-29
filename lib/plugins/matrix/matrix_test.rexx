@@ -7,6 +7,14 @@ call matdata m1
 call mprint  m1
 m9=Mcorr(m1,'Correlation')
 call mprint m9
+call mplot m9, "line"
+call mplot m9, "scatter"
+call mplot m9, "bar"
+call mplot m9, "heatmap"
+##  - "line": Line plot
+##  - "scatter": Scatter plot
+##  - "bar": Bar chart
+##  - "heatmap": Heatmap
 ma=Mcov(m1,'Covariance')
 call mprint ma
 

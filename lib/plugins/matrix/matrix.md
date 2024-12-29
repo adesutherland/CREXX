@@ -396,3 +396,124 @@ The procedure automatically checks for:
    - 0.4 is typical significance threshold
    - Consider practical significance
    - Look for simple structure
+
+### Advanced Interpretation and Visualization
+
+#### Scree Plot Data
+- Two-row matrix:
+  1. Factor numbers (1-based)
+  2. Eigenvalues
+- Use for creating scree plot
+- Interpretation:
+  - Look for "elbow" point
+  - Factors before elbow are significant
+  - Example plot command:
+    ```
+    plot matrix.get(scree,1,*) type=line
+    ```
+
+#### Detailed Interpretation Matrix
+- Rows 1 to p: Variables
+  - Columns 1 to m: Factor loadings
+  - Column m+1: Communalities
+  - Column m+2: Complexity (number of significant loadings)
+- Last three rows: Factor statistics
+  - Eigenvalues
+  - Proportion of variance
+  - Cumulative proportion
+
+#### Enhanced Adequacy Checks
+1. **Communality Check**
+   - < 0.3: Poor explanation
+   - 0.3-0.5: Moderate
+   - > 0.5: Good
+
+2. **Variance Explained**
+   - Total > 60%: Adequate
+   - Total > 80%: Strong
+
+3. **Cross-Loading Check**
+   - Variables should load strongly on only one factor
+   - Cross-loading indicates complex structure
+
+4. **Sample Size**
+   - Minimum: 5 cases per variable
+   - Optimal: 10+ cases per variable
+
+5. **Multicollinearity**
+   - Checks for extreme correlations (> 0.9)
+   - May indicate redundant variables
+
+#### Visualization Best Practices
+1. **Scree Plot**
+   - Plot eigenvalues vs. factor number
+   - Look for natural break point
+   - Consider factors before the break
+
+2. **Loading Plot**
+   - Plot loadings for pairs of factors
+   - Look for clusters of variables
+   - Example:
+     ```
+     plot matrix.get(loadings,*,1) matrix.get(loadings,*,2)
+     ```
+
+3. **Heat Map**
+   - Visualize loading patterns
+   - Use color intensity for loading strength
+   - Helps identify structure
+
+#### Interpretation Guidelines
+1. **Simple Structure**
+   - Each variable loads strongly on one factor
+   - Low loadings on other factors
+   - Fewer cross-loadings is better
+
+2. **Factor Naming**
+   - Based on strongly loading variables
+   - Consider theoretical framework
+   - Look for common themes
+
+3. **Factor Retention**
+   - Kaiser criterion (eigenvalues > 1)
+   - Scree plot elbow
+   - Theoretical considerations
+   - Interpretability
+
+4. **Solution Quality**
+   - Check all adequacy measures
+   - Consider theoretical fit
+   - Validate with split sample if possible
+
+### Matrix Plotting
+
+Basic plotting functionality using gnuplot:
+
+```
+matrix.mplot(matrix, plot_type)
+```
+
+Parameters:
+- matrix: Matrix to plot
+- plot_type: String specifying plot type
+  - "line": Line plot
+  - "scatter": Scatter plot
+  - "bar": Bar chart
+  - "heatmap": Heatmap
+
+Examples:
+```
+// Create and plot correlation matrix
+corr = matrix.mcorr(data, "Correlations")
+matrix.mplot(corr, "heatmap")
+
+// Plot factor loadings
+matrix.mplot(loadings, "bar")
+
+// Scree plot
+matrix.mplot(eigenvalues, "line")
+```
+
+Requirements:
+- Gnuplot must be installed and accessible
+- Temporary file access for data transfer
