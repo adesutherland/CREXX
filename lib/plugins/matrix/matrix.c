@@ -160,23 +160,25 @@ void standardize_column(struct Matrix* matrix, struct Matrix* result, int col) {
     }
 }
 
-int matcreate(int rows, int cols, int twoneeded,char * matid) {
+int matcreate(int rows, int cols, int slotsneeded, char * matid) {
     if (rows <= 0 || cols <= 0 || matid == NULL) {
         return MATRIX_INVALID_PARAM;
     }
-    
-    int matrixname;
-    double * matCB;
-    double * matVECTOR;
-    
-    // find empty matrix slot
-    if (twoneeded==1){  // we need 2 consecutive free entry, we take the first by now
-        for (matrixname = 0; matrixname < matrixmax; ++matrixname) {
-            if (allVectors[matrixname] == 0 && allVectors[matrixname+1] == 0) break;
+
+    int i,found, matrixname;
+    double *matCB;
+    double *matVECTOR;
+ // find empty matrix slot
+    for (matrixname = 0; matrixname < matrixmax - (slotsneeded - 1); ++matrixname) {
+        found = 1;
+        for (i = 0; i < slotsneeded; ++i) {
+            if (allVectors[matrixname + i] != 0) {
+                found = 0;
+                break;
+            }
         }
-    } else {     // we just need one Matrix entry
-        for (matrixname = 0; matrixname <= matrixmax; ++matrixname) {
-            if (allVectors[matrixname] == 0) break;
+        if (found) {
+            break; // Found n consecutive slots
         }
     }
     if (matrixname > matrixmax) return MATRIX_NO_SLOTS;
@@ -210,7 +212,7 @@ PROCEDURE(mcreate) {
     rows = GETINT(ARG0);   // rows of matrix
     cols = GETINT(ARG1);   // cols of matrix
     
-    matnum = matcreate(rows, cols, 0,id);
+    matnum = matcreate(rows, cols, 1,id);
     
     // Return codes from matcreate:
     // -1:  Invalid input parameters
@@ -267,7 +269,7 @@ PROCEDURE(mmultiply) {
         RETURNINT(MATRIX_INVALID_PARAM);
     }
     
-    matnum = matcreate(mptr1.rows, mptr2.cols, 0,GETSTRING(ARG2));
+    matnum = matcreate(mptr1.rows, mptr2.cols, 1,GETSTRING(ARG2));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix mptr3 = *(struct Matrix *) allVectors[matnum];
@@ -316,7 +318,7 @@ PROCEDURE(minvert) {
     }
     n = matrix.cols;
     
-    matnum = matcreate(matrix.rows, matrix.cols, 0, GETSTRING(ARG1));
+    matnum = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG1));
     if (matnum < 0) {
         RETURNINT(-2);  // Failed to create result matrix
     }
@@ -390,7 +392,7 @@ PROCEDURE(mtranspose) {
     
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
-    matnum = matcreate(matrix.cols, matrix.rows, 0,GETSTRING(ARG1));
+    matnum = matcreate(matrix.cols, matrix.rows, 1,GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix mtrans = *(struct Matrix *) allVectors[matnum];
@@ -423,7 +425,7 @@ PROCEDURE(mstandard) {
         RETURNINT(-1);  // Need at least 2 rows for standardization
     }
     
-    matnew = matcreate(matrix->rows, matrix->cols, 0,GETSTRING(ARG1));
+    matnew = matcreate(matrix->rows, matrix->cols, 1,GETSTRING(ARG1));
     if (matnew < 0) {
         RETURNINT(-2);  // Matrix creation failed
     }
@@ -445,7 +447,7 @@ PROCEDURE(mprod) {
     
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
-    matprod = matcreate(matrix.rows, matrix.cols, 0, GETSTRING(ARG2));
+    matprod = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG2));
     if (matprod < 0) {
         RETURNINT(-1);  // Matrix creation failed
     }
@@ -608,10 +610,10 @@ PROCEDURE(mlu) {
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
     // Create L and U matrices
-    int L_num = matcreate(matrix.rows, matrix.cols, 1,GETSTRING(ARG1));
+    int L_num = matcreate(matrix.rows, matrix.cols, 2,GETSTRING(ARG1));
     if (L_num < 0) RETURNINT(L_num);
     
-    int U_num = matcreate(matrix.rows, matrix.cols, 0, GETSTRING(ARG2));
+    int U_num = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG2));
     if (U_num < 0) {
         freeMatrix(L_num);
         RETURNINT(U_num);
@@ -758,10 +760,10 @@ int calculate_rank(struct Matrix* matrix) {
     struct Matrix *Q, *R;
     
     // Create temporary matrices for QR decomposition
-    Q_num = matcreate(m, n, 0,"Q_temp");
+    Q_num = matcreate(m, n, 1,"Q_temp");
     if (Q_num < 0) return -1;
     
-    R_num = matcreate(n, n,0, "R_temp");
+    R_num = matcreate(n, n,1, "R_temp");
     if (R_num < 0) {
         freeMatrix(Q_num);
         return -1;
@@ -831,7 +833,7 @@ PROCEDURE(mcov) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     // Create square matrix for covariance
-    matnum = matcreate(matrix->cols, matrix->cols,0, GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols,1, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix* covar = (struct Matrix*)allVectors[matnum];
@@ -873,7 +875,7 @@ PROCEDURE(mcorr) {
     }
     
     // Create square matrix for correlation
-    matnum = matcreate(matrix->cols, matrix->cols, 0,GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols, 1,GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix corr = *(struct Matrix *) allVectors[matnum];
@@ -908,9 +910,9 @@ PROCEDURE(mmean) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     if (axis == 0) {
-        matnum = matcreate(matrix->rows, 1,0, GETSTRING(ARG2));
+        matnum = matcreate(matrix->rows, 1,1, GETSTRING(ARG2));
     } else {
-        matnum = matcreate(1, matrix->cols,0, GETSTRING(ARG2));
+        matnum = matcreate(1, matrix->cols,1, GETSTRING(ARG2));
     }
     if (matnum < 0) RETURNINT(matnum);
     
@@ -943,7 +945,7 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     if (factors > cols) return MATRIX_INVALID_PARAM;
     
     // Step 1: Standardize the data
-    int std_num = matcreate(rows, cols, 0,"std_data");
+    int std_num = matcreate(rows, cols, 1,"std_data");
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
     
@@ -953,7 +955,7 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     }
     
     // Step 2: Compute correlation matrix
-    int corr_num = matcreate(cols, cols, 0, "correlation");
+    int corr_num = matcreate(cols, cols, 1, "correlation");
     if (corr_num < 0) {
         freeMatrix(std_num);
         return corr_num;
@@ -1224,7 +1226,7 @@ int promax_rotation(struct Matrix* loadings, int max_iter) {
     if (status != MATRIX_SUCCESS) return status;
     
     // Create temporary matrices
-    int pattern_num = matcreate(p, m,0, "pattern");
+    int pattern_num = matcreate(p, m,1, "pattern");
     if (pattern_num < 0) return pattern_num;
     struct Matrix* pattern = (struct Matrix*)allVectors[pattern_num];
     
@@ -1264,7 +1266,7 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
     int m = loadings->cols; // Number of factors
     
     // Standardize the data first
-    int std_num = matcreate(n, p, 0,"std_data");
+    int std_num = matcreate(n, p, 1,"std_data");
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
     
@@ -1287,7 +1289,95 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
     return MATRIX_SUCCESS;
 }
 
-// Updated REXX procedure with all options
+// Calculate basic factor analysis diagnostics
+int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, struct Matrix* diag) {
+    int i, j;
+    int p = loadings->rows;    // Number of variables
+    int m = loadings->cols;    // Number of factors
+    double total_variance = 0.0;
+    
+    // Row 0: Communalities
+    // Row 1: Eigenvalues
+    // Row 2: Proportion of variance
+    // Row 3: Cumulative proportion
+    
+    // Calculate communalities and eigenvalues
+    for (i = 0; i < p; i++) {
+        double comm = 0.0;
+        for (j = 0; j < m; j++) {
+            double loading = matp(loadings,i,j);
+            comm += loading * loading;
+        }
+        matp(diag,0,i) = comm;  // Store communality
+    }
+    
+    // Calculate eigenvalues and variance proportions
+    for (j = 0; j < m; j++) {
+        double eigenval = 0.0;
+        for (i = 0; i < p; i++) {
+            double loading = matp(loadings,i,j);
+            eigenval += loading * loading;
+        }
+        matp(diag,1,j) = eigenval;
+        total_variance += eigenval;
+    }
+    
+    // Calculate proportions and cumulative proportions
+    double cumulative = 0.0;
+    for (j = 0; j < m; j++) {
+        double prop = matp(diag,1,j) / p;  // Proportion of variance
+        matp(diag,2,j) = prop;
+        cumulative += prop;
+        matp(diag,3,j) = cumulative;
+    }
+    
+    return MATRIX_SUCCESS;
+}
+
+// Interpretation helpers for factor analysis
+int interpret_loadings(struct Matrix* loadings, struct Matrix* interp, double threshold) {
+    int i, j;
+    int p = loadings->rows;    // Number of variables
+    int m = loadings->cols;    // Number of factors
+    
+    // Create interpretation matrix (same size as loadings)
+    // Values: 1 = significant positive, -1 = significant negative, 0 = not significant
+    for (i = 0; i < p; i++) {
+        for (j = 0; j < m; j++) {
+            double loading = matp(loadings,i,j);
+            if (fabs(loading) >= threshold) {
+                matp(interp,i,j) = (loading > 0) ? 1 : -1;
+            } else {
+                matp(interp,i,j) = 0;
+            }
+        }
+    }
+    
+    return MATRIX_SUCCESS;
+}
+
+// Helper to check adequacy of factor solution
+int check_factor_adequacy(struct Matrix* diag) {
+    int inadequate = 0;
+    int i;
+    
+    // Check communalities (row 0)
+    for (i = 0; i < diag->cols; i++) {
+        if (matp(diag,0,i) < 0.3) {  // Less than 30% variance explained
+            inadequate |= 1;
+            break;
+        }
+    }
+    
+    // Check cumulative variance (row 3)
+    if (matp(diag,3,diag->cols-1) < 0.6) {  // Less than 60% total variance
+        inadequate |= 2;
+    }
+    
+    return inadequate;
+}
+
+// Updated REXX procedure with interpretation
 PROCEDURE(mfactor) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
@@ -1298,7 +1388,7 @@ PROCEDURE(mfactor) {
     int scores = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
     
     // Create matrix for factor loadings
-    int loadings_num = matcreate(data.cols, factors, 1, GETSTRING(ARG4));  // later maybe 2. matrix needed
+    int loadings_num = matcreate(data.cols, factors, 4, GETSTRING(ARG4));  // later maybe 2. matrix needed
     if (loadings_num < 0) RETURNINT(loadings_num);
     
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
@@ -1319,11 +1409,46 @@ PROCEDURE(mfactor) {
         }
     }
     
+    // Calculate diagnostics if requested
+    int diagnostics=2;
+    if (diagnostics>0) {
+        int diag_num = matcreate(4, max(data.cols, factors), 1, "Diagnostics");
+        if (diag_num < 0) {
+            freeMatrix(loadings_num);
+            RETURNINTX(diag_num);
+        }
+        
+        struct Matrix diag = *(struct Matrix *) allVectors[diag_num];
+        status = calculate_basic_diagnostics(&data, &loadings, &diag);
+        if (status != MATRIX_SUCCESS) {
+            freeMatrix(loadings_num);
+            freeMatrix(diag_num);
+            RETURNINTX(status);
+        }
+        
+        // Check adequacy
+        int adequacy = check_factor_adequacy(&diag);
+        if (adequacy) {
+            printf("Warning: Factor solution may be inadequate:\n");
+            if (adequacy & 1) printf("  - Some variables poorly explained (communality < 0.3)\n");
+            if (adequacy & 2) printf("  - Insufficient total variance explained (< 60%%)\n");
+        }
+        
+        // Create interpretation matrix if requested
+        if (diagnostics==2) {
+            int interp_num = matcreate(data.cols, factors, 1, "Diagnostic details");
+            if (interp_num >= 0) {
+                struct Matrix interp = *(struct Matrix *) allVectors[interp_num];
+                interpret_loadings(&loadings, &interp, 0.4);  // 0.4 is typical threshold
+            }
+        }
+    }
+    
     // Calculate factor scores if requested
     if (scores) {
         char scorenote[32];
         sprintf(scorenote,"%s %s","Score:",GETSTRING(ARG4));
-        int scores_num = matcreate(data.rows, factors, 0, scorenote);
+        int scores_num = matcreate(data.rows, factors, 1, scorenote);
         if (scores_num < 0) {
             freeMatrix(loadings_num);
             RETURNINTX(scores_num);
@@ -1422,7 +1547,7 @@ PROCEDURE(mcolstats) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     // Create matrix for stats (5 rows: means, stddevs, medians, skewness, kurtosis)
-    matnum = matcreate(5, matrix->cols, 0, GETSTRING(ARG1));
+    matnum = matcreate(5, matrix->cols, 1, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix* stats = (struct Matrix*)allVectors[matnum];

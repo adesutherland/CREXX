@@ -38,18 +38,26 @@ call mprint(stats)
 loadings1 = mfactor(m1, 2, 0,1, "Unrotated")
 call mprint loadings1
 call mprint loadings1+1
+call mprint loadings1+2
+call mprint loadings1+3
 ## With varimax rotation
 loadings2 = mfactor(m1, 2, 1,1, "Rotated Varimax")
 call mprint loadings2
 call mprint loadings2+1
+call mprint loadings2+2
+call mprint loadings2+3
 ## With varimax rotation
 loadings3 = mfactor(m1, 2, 2,1, "Rotated Quartimax")
 call mprint loadings3
 call mprint loadings3+1
+call mprint loadings3+2
+call mprint loadings3+3
 ## With varimax rotation
 loadings4 = mfactor(m1, 2, 3,1, "Rotated Promax")
 call mprint loadings4
 call mprint loadings4+1
+call mprint loadings4+2
+call mprint loadings4+3
 
 
 say "FREE m3 "mfree(m6)  ## free storage of m6

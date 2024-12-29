@@ -332,3 +332,67 @@ matrix.mprint(corr)
 - **Median**: Middle value (interpolated for even sample sizes)
 - **Skewness**: Measure of distribution asymmetry
 - **Kurtosis**: Measure of tail weight (excess kurtosis, normal = 0)
+
+### Factor Analysis Diagnostics and Interpretation
+
+#### Basic Usage
+```
+data = matrix.mcreate(100, 5, "DataMatrix")
+/* ... fill data matrix ... */
+
+// Factor analysis with diagnostics and interpretation
+loadings = matrix.mfactor(data, 2, 1, 0, "Loadings", "Diagnostics", "Interpretation")
+```
+
+#### Diagnostic Matrix (4 rows)
+1. **Communalities** (Row 0)
+   - Values range from 0 to 1
+   - Represents proportion of variance explained for each variable
+   - Interpretation:
+     - < 0.3: Poor explanation
+     - 0.3-0.5: Moderate explanation
+     - > 0.5: Good explanation
+
+2. **Eigenvalues** (Row 1)
+   - Total variance explained by each factor
+   - Kaiser criterion: Keep factors with eigenvalues > 1
+
+3. **Proportion of Variance** (Row 2)
+   - Percentage of total variance explained by each factor
+   - Higher values indicate more important factors
+
+4. **Cumulative Proportion** (Row 3)
+   - Running total of variance explained
+   - Target: > 60% for adequate solution
+
+#### Interpretation Matrix
+- Values indicate significant loadings:
+  - 1: Strong positive relationship (> 0.4)
+  - -1: Strong negative relationship (< -0.4)
+  - 0: Weak or insignificant relationship
+
+#### Adequacy Checks
+The procedure automatically checks for:
+- Low communalities (< 0.3)
+- Insufficient total variance explained (< 60%)
+- Warnings are printed if these conditions are found
+
+#### Best Practices
+1. **Sample Size**
+   - Minimum: 5 cases per variable
+   - Preferred: 10+ cases per variable
+
+2. **Number of Factors**
+   - Use Kaiser criterion (eigenvalues > 1)
+   - Check scree plot (use eigenvalues)
+   - Consider interpretability
+
+3. **Rotation Selection**
+   - Varimax: When factors should be uncorrelated
+   - Promax: When factors might be correlated
+   - Quartimax: When seeking general factors
+
+4. **Loading Interpretation**
+   - 0.4 is typical significance threshold
+   - Consider practical significance
+   - Look for simple structure
