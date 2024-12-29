@@ -250,19 +250,28 @@ matrix.mprint(covar)
 matrix.mprint(corr)
 
 ### Advanced Statistical Analysis
-- `mfactor(m0, factors, mid)` - Factor analysis
+- `mfactor(m0, factors, rotate, mid)` - Factor analysis with optional rotation
   - Parameters:
     - m0: Input data matrix
     - factors: Number of factors to extract
-    - mid: Result matrix identifier for factor loadings
-  - Returns: Matrix number containing factor loadings or error code
+    - rotate: Rotation flag (0 = none, 1 = varimax)
+    - mid: Result matrix identifier
+  - Returns: Matrix number containing factor loadings
   - Example:
     ```
-    data = matrix.mcreate(100, 5, "DataMatrix")  /* 100 observations, 5 variables */
+    data = matrix.mcreate(100, 5, "DataMatrix")
     /* ... fill data matrix ... */
-    loadings = matrix.mfactor(data, 2, "Factors")  /* Extract 2 factors */
-    matrix.mprint(loadings)  /* Show factor loadings */
+    
+    // Without rotation
+    loadings1 = matrix.mfactor(data, 2, 0, "Unrotated")
+    
+    // With varimax rotation
+    loadings2 = matrix.mfactor(data, 2, 1, "Rotated")
     ```
+  - Notes:
+    - Varimax rotation maximizes variance of squared loadings
+    - Rotation helps interpret factor structure
+    - Convergence typically occurs within 10-20 iterations
 
 ### Statistical Functions
 - `mcolstats(m0, mid)` - Comprehensive column statistics

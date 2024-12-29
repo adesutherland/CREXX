@@ -35,6 +35,12 @@ call mprint ma
 stats = mcolstats(m1, "Statistics")
 call mprint(stats)
 
+loadings1 = mfactor(m1, 2, 0, "Unrotated")
+call mprint loadings1
+## With varimax rotation
+loadings2 = mfactor(m1, 2, 1, "Rotated")
+call mprint loadings2
+
 say "FREE m3 "mfree(m6)  ## free storage of m6
 say "FREE m7 "mfree(m7)  ## free storage of m7
 say "FREE m91 "mfree(91) ## free storage of m91, which is not there

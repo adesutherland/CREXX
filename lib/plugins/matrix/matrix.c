@@ -405,7 +405,6 @@ PROCEDURE(mstandard) {
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
-//    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
 
     if (matrix->rows <= 1) {
@@ -417,25 +416,11 @@ PROCEDURE(mstandard) {
         RETURNINT(-2);  // Matrix creation failed
     }
 
-    struct Matrix matnew_matrix = *(struct Matrix *) allVectors[matnew];
+    struct Matrix* matnew_matrix = (struct Matrix*)allVectors[matnew];
     
     // Standardize each column
     for (j = 0; j < matrix->cols; j++) {
-        double mean = calculate_column_mean( matrix, j);
-        double stdev = calculate_column_stddev(matrix, j, mean);
-        
-        if (stdev < 1e-10) {  // Check for zero/near-zero standard deviation
-            // Copy column as-is if stdev is too small
-            for (i = 0; i < matrix->rows; i++) {
-                mat(matnew_matrix, i, j) = 0.0;
-            }
-            continue;
-        }
-        
-        // Standardize column
-        for (i = 0; i < matrix->rows; i++) {
-            mat(matnew_matrix, i, j) = (matp(matrix, i, j) - mean) / stdev;
-        }
+        standardize_column(matrix, matnew_matrix, j);
     }
     
     RETURNINT(matnew);
@@ -831,20 +816,20 @@ PROCEDURE(mcov) {
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
-    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     // Create square matrix for covariance
-    matnum = matcreate(matrix.cols, matrix.cols, GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
-    struct Matrix covar = *(struct Matrix *) allVectors[matnum];
+    struct Matrix* covar = (struct Matrix*)allVectors[matnum];
     
     // Calculate covariance matrix
-    for (i = 0; i < matrix.cols; i++) {
-        for (j = i; j < matrix.cols; j++) {
-            double cov = calculate_covariance(&matrix, i, j);
-            mat(covar,i,j) = cov;
-            mat(covar,j,i) = cov;  // Covariance matrix is symmetric
+    for (i = 0; i < matrix->cols; i++) {
+        for (j = i; j < matrix->cols; j++) {
+            double cov = calculate_covariance(matrix, i, j);
+            matp(covar,i,j) = cov;
+            matp(covar,j,i) = cov;  // Covariance matrix is symmetric
         }
     }
     RETURNINT(matnum);
@@ -908,32 +893,28 @@ PROCEDURE(mmean) {
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
-    struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     if (axis == 0) {
-        matnum = matcreate(matrix.rows, 1, GETSTRING(ARG2));
+        matnum = matcreate(matrix->rows, 1, GETSTRING(ARG2));
     } else {
-        matnum = matcreate(1, matrix.cols, GETSTRING(ARG2));
+        matnum = matcreate(1, matrix->cols, GETSTRING(ARG2));
     }
     if (matnum < 0) RETURNINT(matnum);
     
-    struct Matrix means = *(struct Matrix *) allVectors[matnum];
+    struct Matrix* means = (struct Matrix*)allVectors[matnum];
     
     if (axis == 0) {  // Row means
-        for (i = 0; i < matrix.rows; i++) {
+        for (i = 0; i < matrix->rows; i++) {
             double sum = 0.0;
-            for (j = 0; j < matrix.cols; j++) {
-                sum += mat(matrix,i,j);
+            for (j = 0; j < matrix->cols; j++) {
+                sum += matp(matrix,i,j);
             }
-            mat(means,i,0) = sum / matrix.cols;
+            matp(means,i,0) = sum / matrix->cols;
         }
     } else {  // Column means
-        for (j = 0; j < matrix.cols; j++) {
-            double sum = 0.0;
-            for (i = 0; i < matrix.rows; i++) {
-                sum += mat(matrix,i,j);
-            }
-            mat(means,0,j) = sum / matrix.rows;
+        for (j = 0; j < matrix->cols; j++) {
+            matp(means,0,j) = calculate_column_mean(matrix, j);
         }
     }
     
@@ -1049,26 +1030,254 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     return MATRIX_SUCCESS;
 }
 
+// Varimax rotation for factor analysis
+int varimax_rotation(struct Matrix* loadings, int max_iter) {
+    int p = loadings->rows;    // Number of variables
+    int m = loadings->cols;    // Number of factors
+    int i, j, k, iter;
+    double* h2 = NULL;         // Communalities
+    double* u = NULL;          // Temporary storage
+    double* v = NULL;          // Temporary storage
+    double* A = NULL;          // Temporary storage
+    double* B = NULL;          // Temporary storage
+    double d = 0.0;
+    
+    // Allocate memory
+    h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
+    u = (double*)MATRIX_ALLOC(p * sizeof(double));
+    v = (double*)MATRIX_ALLOC(p * sizeof(double));
+    A = (double*)MATRIX_ALLOC(p * sizeof(double));
+    B = (double*)MATRIX_ALLOC(p * sizeof(double));
+    
+    if (!h2 || !u || !v || !A || !B) {
+        if (h2) MATRIX_FREE(h2);
+        if (u) MATRIX_FREE(u);
+        if (v) MATRIX_FREE(v);
+        if (A) MATRIX_FREE(A);
+        if (B) MATRIX_FREE(B);
+        return MATRIX_ALLOC_DATA;
+    }
+    
+    // Calculate initial communalities
+    for (i = 0; i < p; i++) {
+        h2[i] = 0.0;
+        for (j = 0; j < m; j++) {
+            h2[i] += matp(loadings,i,j) * matp(loadings,i,j);
+        }
+        if (h2[i] < MATRIX_EPSILON) h2[i] = 1.0;
+    }
+    
+    // Iterative rotation
+    for (iter = 0; iter < max_iter; iter++) {
+        double old_d = d;
+        d = 0.0;
+        
+        // Rotate pairs of factors
+        for (j = 0; j < m - 1; j++) {
+            for (k = j + 1; k < m; k++) {
+                double numerator = 0.0, denominator = 0.0;
+                double s = 0.0, c = 0.0, t = 0.0;
+                
+                // Calculate rotation angle
+                for (i = 0; i < p; i++) {
+                    double x = matp(loadings,i,j);
+                    double y = matp(loadings,i,k);
+                    double u2 = x * x / h2[i];
+                    double v2 = y * y / h2[i];
+                    double uv = x * y / h2[i];
+                    
+                    numerator += 2.0 * uv;
+                    denominator += u2 - v2;
+                }
+                
+                // Calculate rotation
+                if (fabs(denominator) > MATRIX_EPSILON) {
+                    t = numerator / denominator;
+                    s = 1.0 / sqrt(1.0 + t * t);
+                    c = s * t;
+                } else {
+                    c = s = M_SQRT1_2;  // 1/√2
+                }
+                
+                // Apply rotation
+                for (i = 0; i < p; i++) {
+                    double x = matp(loadings,i,j);
+                    double y = matp(loadings,i,k);
+                    matp(loadings,i,j) = x * c + y * s;
+                    matp(loadings,i,k) = -x * s + y * c;
+                }
+                
+                d += fabs(numerator);
+            }
+        }
+        
+        // Check convergence
+        if (fabs(d - old_d) < MATRIX_EPSILON) break;
+    }
+    
+    // Free memory
+    MATRIX_FREE(h2);
+    MATRIX_FREE(u);
+    MATRIX_FREE(v);
+    MATRIX_FREE(A);
+    MATRIX_FREE(B);
+    
+    return MATRIX_SUCCESS;
+}
+
+// Updated factor analysis with rotation
+int factor_analysis_with_rotation(struct Matrix* data, struct Matrix* loadings, int factors) {
+    int status = factor_analysis(data, loadings, factors);
+    if (status != MATRIX_SUCCESS) return status;
+    
+    return varimax_rotation(loadings, 100);  // Max 100 iterations
+}
+
+// Updated REXX procedure
 PROCEDURE(mfactor) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
     
     struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
     int factors = GETINT(ARG1);
+    int rotate = GETINT(ARG2);  // 0 = no rotation, 1 = varimax rotation
     
     // Create matrix for factor loadings
-    int loadings_num = matcreate(data.cols, factors, GETSTRING(ARG2));
+    int loadings_num = matcreate(data.cols, factors, GETSTRING(ARG3));
     if (loadings_num < 0) RETURNINT(loadings_num);
     
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
     
-    status = factor_analysis(&data, &loadings, factors);
+    status = rotate ? 
+        factor_analysis_with_rotation(&data, &loadings, factors) :
+        factor_analysis(&data, &loadings, factors);
+        
     if (status != MATRIX_SUCCESS) {
         freeMatrix(loadings_num);
         RETURNINT(status);
     }
     
     RETURNINT(loadings_num);
+}
+
+// Additional statistical utility functions
+double calculate_column_median(struct Matrix* matrix, int col) {
+    int i,j, mid;
+    double* values = (double*)MATRIX_ALLOC(matrix->rows * sizeof(double));
+    double median;
+    
+    if (!values) return 0.0;
+    
+    // Copy column values
+    for (i = 0; i < matrix->rows; i++) {
+        values[i] = matp(matrix,i,col);
+    }
+    
+    // Simple bubble sort (for small datasets)
+    // TODO: Replace with quickselect for better performance on large datasets
+    for (i = 0; i < matrix->rows - 1; i++) {
+        for (j = 0; j < matrix->rows - i - 1; j++) {
+            if (values[j] > values[j + 1]) {
+                double temp = values[j];
+                values[j] = values[j + 1];
+                values[j + 1] = temp;
+            }
+        }
+    }
+    
+    // Calculate median
+    if (matrix->rows % 2 == 0) {
+        mid = matrix->rows / 2;
+        median = (values[mid-1] + values[mid]) / 2.0;
+    } else {
+        mid = matrix->rows / 2;
+        median = values[mid];
+    }
+    
+    MATRIX_FREE(values);
+    return median;
+}
+
+double calculate_column_skewness(struct Matrix* matrix, int col) {
+    int i;
+    double mean = calculate_column_mean(matrix, col);
+    double stddev = calculate_column_stddev(matrix, col, mean);
+    double sum = 0.0;
+    
+    if (stddev < MATRIX_EPSILON) return 0.0;
+    
+    for (i = 0; i < matrix->rows; i++) {
+        double diff = (matp(matrix,i,col) - mean) / stddev;
+        sum += diff * diff * diff;
+    }
+    
+    return sum / matrix->rows;
+}
+
+double calculate_column_kurtosis(struct Matrix* matrix, int col) {
+    int i;
+    double mean = calculate_column_mean(matrix, col);
+    double stddev = calculate_column_stddev(matrix, col, mean);
+    double sum = 0.0;
+    
+    if (stddev < MATRIX_EPSILON) return 0.0;
+    
+    for (i = 0; i < matrix->rows; i++) {
+        double diff = (matp(matrix,i,col) - mean) / stddev;
+        sum += diff * diff * diff * diff;
+    }
+    
+    return sum / matrix->rows - 3.0;  // Excess kurtosis (normal = 0)
+}
+
+// Enhanced column statistics with more metrics
+PROCEDURE(mcolstats) {
+    int i, matnum, status;
+    
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+    
+    // Create matrix for stats (5 rows: means, stddevs, medians, skewness, kurtosis)
+    matnum = matcreate(5, matrix->cols, GETSTRING(ARG1));
+    if (matnum < 0) RETURNINT(matnum);
+    
+    struct Matrix* stats = (struct Matrix*)allVectors[matnum];
+    
+    #pragma omp parallel for if(matrix->cols >= 4)
+    for (i = 0; i < matrix->cols; i++) {
+        double mean = calculate_column_mean(matrix, i);
+        matp(stats,0,i) = mean;                                    // Mean
+        matp(stats,1,i) = calculate_column_stddev(matrix, i, mean);// StdDev
+        matp(stats,2,i) = calculate_column_median(matrix, i);      // Median
+        matp(stats,3,i) = calculate_column_skewness(matrix, i);    // Skewness
+        matp(stats,4,i) = calculate_column_kurtosis(matrix, i);    // Kurtosis
+    }
+    
+    RETURNINT(matnum);
+}
+
+// Optimized covariance calculation using blocking
+double calculate_covariance_blocked(struct Matrix* matrix, int col1, int col2) {
+    int i, block;
+    double mean1 = calculate_column_mean(matrix, col1);
+    double mean2 = calculate_column_mean(matrix, col2);
+    double sum = 0.0;
+    const int BLOCK_SIZE = 64;  // Cache-friendly block size
+    
+    for (block = 0; block < matrix->rows; block += BLOCK_SIZE) {
+        double local_sum = 0.0;
+        int end = MIN(block + BLOCK_SIZE, matrix->rows);
+        
+        for (i = block; i < end; i++) {
+            local_sum += (matp(matrix,i,col1) - mean1) * 
+                        (matp(matrix,i,col2) - mean2);
+        }
+        sum += local_sum;
+    }
+    
+    return sum / (matrix->rows - 1);
 }
 
 /* -------------------------------------------------------------------------------------
@@ -1100,5 +1309,6 @@ LOADFUNCS
     ADDPROC(mcov,      "matrix.mcov",      "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mcorr,     "matrix.mcorr",     "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mmean,     "matrix.mmean",     "b",  ".int", "m0=.int, axis=.int, mid=.string");
-    ADDPROC(mfactor,    "matrix.mfactor",    "b",  ".int", "m0=.int, factors=.int, mid=.string");
+    ADDPROC(mfactor,    "matrix.mfactor",  "b",  ".int", "m0=.int, factors=.int, rotation=.int, mid=.string");
+    ADDPROC(mcolstats, "matrix.mcolstats", "b",  ".int", "m0=.int, mid=.string");
 ENDLOADFUNCS
