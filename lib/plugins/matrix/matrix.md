@@ -248,3 +248,18 @@ corr = matrix.mcorr(data, "CorrMatrix") / Correlation matrix /
 matrix.mprint(means)
 matrix.mprint(covar)
 matrix.mprint(corr)
+
+### Advanced Statistical Analysis
+- `mfactor(m0, factors, mid)` - Factor analysis
+  - Parameters:
+    - m0: Input data matrix
+    - factors: Number of factors to extract
+    - mid: Result matrix identifier for factor loadings
+  - Returns: Matrix number containing factor loadings or error code
+  - Example:
+    ```
+    data = matrix.mcreate(100, 5, "DataMatrix")  /* 100 observations, 5 variables */
+    /* ... fill data matrix ... */
+    loadings = matrix.mfactor(data, 2, "Factors")  /* Extract 2 factors */
+    matrix.mprint(loadings)  /* Show factor loadings */
+    ```

@@ -938,6 +938,153 @@ PROCEDURE(mmean) {
     RETURNINT(matnum);
 }
 
+// Factor Analysis Implementation
+int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
+    int i, j, k, iter;
+    int rows = data->rows;
+    int cols = data->cols;
+    double eigenval;
+    
+    if (factors > cols) return MATRIX_INVALID_PARAM;
+    
+    // Step 1: Standardize the data
+    int std_num = matcreate(rows, cols, "std_data");
+    if (std_num < 0) return std_num;
+    struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
+    
+    // Calculate means and std devs
+    for (j = 0; j < cols; j++) {
+        double mean = 0.0, std = 0.0;
+        for (i = 0; i < rows; i++) {
+            mean += matp(data,i,j);
+        }
+        mean /= rows;
+        
+        for (i = 0; i < rows; i++) {
+            double diff = matp(data,i,j) - mean;
+            std += diff * diff;
+        }
+        std = sqrt(std / (rows - 1));
+        
+        if (std < MATRIX_EPSILON) std = 1.0;  // Handle constant columns
+        
+        for (i = 0; i < rows; i++) {
+            matp(std_data,i,j) = (matp(data,i,j) - mean) / std;
+        }
+    }
+    
+    // Step 2: Compute correlation matrix
+    int corr_num = matcreate(cols, cols, "correlation");
+    if (corr_num < 0) {
+        mfree(std_num);
+        return corr_num;
+    }
+    struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
+    
+    for (i = 0; i < cols; i++) {
+        for (j = i; j < cols; j++) {
+            double sum = 0.0;
+            for (k = 0; k < rows; k++) {
+                sum += matp(std_data,k,i) * matp(std_data,k,j);
+            }
+            matp(corr,i,j) = sum / (rows - 1);
+            matp(corr,j,i) = matp(corr,i,j);
+        }
+    }
+    
+    // Step 3: Extract factors using power method
+    for (k = 0; k < factors; k++) {
+        double* eigenvector = (double*)MATRIX_ALLOC(cols * sizeof(double));
+        if (!eigenvector) {
+            mfree(std_num);
+            mfree(corr_num);
+            return MATRIX_ALLOC_DATA;
+        }
+        
+        // Initialize eigenvector
+        for (i = 0; i < cols; i++) {
+            eigenvector[i] = 1.0 / sqrt(cols);
+        }
+        
+        // Power iteration
+        for (iter = 0; iter < 100; iter++) {
+            double norm = 0.0;
+            double* new_vector = (double*)MATRIX_ALLOC(cols * sizeof(double));
+            if (!new_vector) {
+                MATRIX_FREE(eigenvector);
+                mfree(std_num);
+                mfree(corr_num);
+                return MATRIX_ALLOC_DATA;
+            }
+            
+            // Matrix-vector multiplication
+            for (i = 0; i < cols; i++) {
+                new_vector[i] = 0.0;
+                for (j = 0; j < cols; j++) {
+                    new_vector[i] += matp(corr,i,j) * eigenvector[j];
+                }
+                norm += new_vector[i] * new_vector[i];
+            }
+            
+            norm = sqrt(norm);
+            
+            // Update eigenvector
+            for (i = 0; i < cols; i++) {
+                eigenvector[i] = new_vector[i] / norm;
+            }
+            
+            MATRIX_FREE(new_vector);
+        }
+        
+        // Store factor loadings
+        for (i = 0; i < cols; i++) {
+            matp(loadings,i,k) = eigenvector[i];
+        }
+        
+        // Deflate correlation matrix
+        eigenval = 0.0;
+        for (i = 0; i < cols; i++) {
+            for (j = 0; j < cols; j++) {
+                eigenval += eigenvector[i] * matp(corr,i,j) * eigenvector[j];
+            }
+        }
+        
+        for (i = 0; i < cols; i++) {
+            for (j = 0; j < cols; j++) {
+                matp(corr,i,j) -= eigenval * eigenvector[i] * eigenvector[j];
+            }
+        }
+        
+        MATRIX_FREE(eigenvector);
+    }
+    
+    mfree(std_num);
+    mfree(corr_num);
+    return MATRIX_SUCCESS;
+}
+
+PROCEDURE(mfactor) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    int factors = GETINT(ARG1);
+    
+    // Create matrix for factor loadings
+    int loadings_num = matcreate(data.cols, factors, GETSTRING(ARG2));
+    if (loadings_num < 0) RETURNINT(loadings_num);
+    
+    struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
+    
+    status = factor_analysis(&data, &loadings, factors);
+    if (status != MATRIX_SUCCESS) {
+        mfree(loadings_num);
+        RETURNINT(status);
+    }
+    
+    RETURNINT(loadings_num);
+}
+
 /* -------------------------------------------------------------------------------------
  * Functions provided to REXX:
  * mmultiply:  Multiply two matrices (m0 x m1 -> mid)
@@ -967,4 +1114,5 @@ LOADFUNCS
     ADDPROC(mcov,      "matrix.mcov",      "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mcorr,     "matrix.mcorr",     "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mmean,     "matrix.mmean",     "b",  ".int", "m0=.int, axis=.int, mid=.string");
+    ADDPROC(mfactor,    "matrix.mfactor",    "b",  ".int", "m0=.int, factors=.int, mid=.string");
 ENDLOADFUNCS
