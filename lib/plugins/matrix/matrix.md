@@ -517,3 +517,54 @@ matrix.mplot(eigenvalues, "line")
 Requirements:
 - Gnuplot must be installed and accessible
 - Temporary file access for data transfer
+
+### Factor Analysis Plots
+
+Specialized plotting functions for factor analysis visualization:
+
+```
+matrix.mfaplot(matrix, plot_type [, scores_matrix])
+```
+
+#### Plot Types:
+
+1. **Screen Plot** (`"screen"`)
+   - Plots eigenvalues against factor numbers
+   - Automatically detects and marks elbow point
+   - Helps determine number of factors to retain
+   ```
+   matrix.mfaplot(eigenvalues, "scree")
+   ```
+
+2. **Loadings Plot** (`"loadings"`)
+   - Plots first two factor loadings
+   - Shows variable clustering
+   - Includes unit circle for reference
+   ```
+   matrix.mfaplot(loadings, "loadings")
+   ```
+
+3. **Biplot** (`"biplot"`)
+   - Combined plot of loadings and scores
+   - Requires both loadings and scores matrices
+   - Shows relationships between variables and observations
+   ```
+   matrix.mfaplot(loadings, "biplot", scores)
+   ```
+
+#### Interpretation:
+
+1. **Screen Plot**
+   - Sharp elbow indicates optimal factor count
+   - Factors before elbow are significant
+   - Gradual slope after elbow suggests noise
+
+2. **Loadings Plot**
+   - Points near circle edge: well-represented variables
+   - Clusters indicate related variables
+   - Opposite positions show negative correlations
+
+3. **Biplot**
+   - Proximity indicates relationship
+   - Angles between loadings suggest correlation
+   - Distance from origin shows importance

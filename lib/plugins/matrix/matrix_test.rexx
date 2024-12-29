@@ -57,6 +57,9 @@ call mprint loadings2+3
 ## With varimax rotation
 loadings3 = mfactor(m1, 2, 2,1, "Rotated Quartimax")
 call mprint loadings3
+call masciiplot m1, "hist"
+call masciiplot m1, "bar"
+call masciiplot m1, "line"
 call mprint loadings3+1
 call mprint loadings3+2
 call mprint loadings3+3

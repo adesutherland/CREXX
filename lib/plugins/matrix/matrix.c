@@ -47,6 +47,16 @@
 #define ROTATE_QUARTIMAX 2
 #define ROTATE_PROMAX   3
 
+// Plot types for factor analysis
+#define PLOT_SCREEN   "screen"
+#define PLOT_LOADINGS "loadings"
+#define PLOT_BIPLOT   "biplot"
+
+// ASCII plot types and constants
+#define ASCII_HIST   1    // Histogram
+#define ASCII_BAR    2    // Bar chart
+#define ASCII_LINE   3    // Line plot
+
 struct Matrix {
     double* CBselfref;     // CB self reference
     char id[32];
@@ -1339,19 +1349,19 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
     return inadequate;
 }
 
-// Create visualization data for scree plot
+// Create visualization data for screenplot
 int create_screen_data(struct Matrix* diag, char* id) {
     int i;
     int matnum = matcreate(2, diag->cols, 1, id);
     if (matnum < 0) return matnum;
     
-    struct Matrix* scree = (struct Matrix*)allVectors[matnum];
+    struct Matrix* screen= (struct Matrix*)allVectors[matnum];
     
     // Row 0: Factor number (1-based)
     // Row 1: Eigenvalues
     for (i = 0; i < diag->cols; i++) {
-        matp(scree,0,i) = i + 1;
-        matp(scree,1,i) = matp(diag,1,i);  // Copy eigenvalues
+        matp(screen,0,i) = i + 1;
+        matp(screen,1,i) = matp(diag,1,i);  // Copy eigenvalues
     }
     
     return matnum;
@@ -1459,7 +1469,7 @@ PROCEDURE(mfactor) {
             if (adequacy & 16) printf("WARNING: Potential multicollinearity detected\n");
         }
         
-        // Create scree plot data if requested
+        // Create screenplot data if requested
         if (diagnostics>=2) {
             create_screen_data(&diag, "Diagnostics details I");
         }
@@ -1695,6 +1705,301 @@ PROCEDURE(mplot) {
     RETURNINT(0);
 }
 
+// Helper function to detect elbow point in screenplot
+int detect_elbow(struct Matrix* eigenvalues) {
+    int i;
+    double max_angle = 0;
+    int elbow_point = 1;
+    
+    // Need at least 3 points to detect elbow
+    if (eigenvalues->rows < 3) return 1;
+    
+    // Calculate angles between consecutive line segments
+    for (i = 1; i < eigenvalues->rows - 1; i++) {
+        double x1 = i - 1;
+        double y1 = matp(eigenvalues,i-1,0);
+        double x2 = i;
+        double y2 = matp(eigenvalues,i,0);
+        double x3 = i + 1;
+        double y3 = matp(eigenvalues,i+1,0);
+        
+        // Calculate vectors
+        double v1x = x2 - x1;
+        double v1y = y2 - y1;
+        double v2x = x3 - x2;
+        double v2y = y3 - y2;
+        
+        // Calculate angle
+        double angle = atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y);
+        if (fabs(angle) > fabs(max_angle)) {
+            max_angle = angle;
+            elbow_point = i;
+        }
+    }
+    
+    return elbow_point;
+}
+
+// Enhanced plotting for factor analysis
+PROCEDURE(mfaplot) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+    char* plot_type = GETSTRING(ARG1);
+    
+    #ifdef _WIN32
+        char cmd[256];
+        snprintf(cmd, sizeof(cmd), "\"\"%s\" -persist\"", GNUPLOT_DEFAULT_PATH);
+        FILE* gnuplot = _popen(cmd, "w");
+    #else
+        FILE* gnuplot = popen("gnuplot -persist", "w");
+    #endif
+    
+    if (!gnuplot) {
+        printf("Error: Could not open gnuplot\n");
+        RETURNINT(-1);
+    }
+    
+    // Create temporary data file
+    FILE* temp = fopen("temp_plot.dat", "w");
+    if (!temp) {
+        pclose(gnuplot);
+        RETURNINT(-2);
+    }
+    
+    if (strcmp(plot_type, PLOT_SCREEN) == 0) {
+        // screenplot with elbow detection
+        int elbow = detect_elbow(matrix);
+        int i;
+        // Write eigenvalues
+        for (i = 0; i < matrix->rows; i++) {
+            fprintf(temp, "%d %g\n", i + 1, matp(matrix,i,0));
+        }
+        fclose(temp);
+        
+        // Set up screenplot
+        fprintf(gnuplot, "set title 'screenPlot with Elbow Point'\n");
+        fprintf(gnuplot, "set xlabel 'Factor Number'\n");
+        fprintf(gnuplot, "set ylabel 'Eigenvalue'\n");
+        fprintf(gnuplot, "set grid\n");
+        fprintf(gnuplot, "set style line 1 lc rgb '#0060ad' lt 1 lw 2 pt 7 ps 1.5\n");
+        fprintf(gnuplot, "set style line 2 lc rgb '#dd181f' lt 1 lw 2 pt 7 ps 2.0\n");
+        fprintf(gnuplot, "plot 'temp_plot.dat' index 0 with linespoints ls 1 notitle, \\\n");
+        fprintf(gnuplot, "     'temp_plot.dat' using 1:($0+1==%d ? $2 : 1/0) with points ls 2 title 'Elbow Point'\n", elbow);
+        
+    } else if (strcmp(plot_type, PLOT_LOADINGS) == 0) {
+        // Factor loadings plot (first two factors)
+        if (matrix->cols < 2) {
+            printf("Error: Need at least 2 factors for loadings plot\n");
+            fclose(temp);
+            pclose(gnuplot);
+            RETURNINT(-3);
+        }
+        int i;
+        // Write loadings
+        for (i = 0; i < matrix->rows; i++) {
+            fprintf(temp, "%g %g\n", matp(matrix,i,0), matp(matrix,i,1));
+        }
+        fclose(temp);
+        
+        // Set up loadings plot
+        fprintf(gnuplot, "set title 'Factor Loadings Plot'\n");
+        fprintf(gnuplot, "set xlabel 'Factor 1'\n");
+        fprintf(gnuplot, "set ylabel 'Factor 2'\n");
+        fprintf(gnuplot, "set grid\n");
+        fprintf(gnuplot, "set size square\n");
+        fprintf(gnuplot, "set xrange [-1:1]\n");
+        fprintf(gnuplot, "set yrange [-1:1]\n");
+        fprintf(gnuplot, "plot 'temp_plot.dat' with points pt 7 ps 1.5 notitle, \\\n");
+        fprintf(gnuplot, "     circle(x,y) = sqrt(1-x**2), \\\n");
+        fprintf(gnuplot, "     '-' with lines lt 0 notitle\n");
+        fprintf(gnuplot, "-1 0\n1 0\n\n0 -1\n0 1\n\ne\n");
+        
+    } else if (strcmp(plot_type, PLOT_BIPLOT) == 0) {
+        // Biplot (requires scores as second matrix)
+/*      if (ARGLEN(2) == 0) {
+            printf("Error: Biplot requires factor scores matrix as second argument\n");
+            fclose(temp);
+            pclose(gnuplot);
+            RETURNINT(-4);
+        }
+*/
+        
+        status = validateMatrix(GETINT(ARG2));
+        if (status != MATRIX_VALID) {
+            fclose(temp);
+            pclose(gnuplot);
+            RETURNINT(status);
+        }
+        
+        struct Matrix* scores = (struct Matrix*)allVectors[GETINT(ARG2)];
+        
+        // Write loadings and scores
+        fprintf(temp, "# Loadings\n");
+        int i;
+        for (i = 0; i < matrix->rows; i++) {
+            fprintf(temp, "%g %g\n", matp(matrix,i,0), matp(matrix,i,1));
+        }
+        fprintf(temp, "\n\n# Scores\n");
+        for (i = 0; i < scores->rows; i++) {
+            fprintf(temp, "%g %g\n", matp(scores,i,0), matp(scores,i,1));
+        }
+        fclose(temp);
+        
+        // Set up biplot
+        fprintf(gnuplot, "set title 'Biplot'\n");
+        fprintf(gnuplot, "set xlabel 'Factor 1'\n");
+        fprintf(gnuplot, "set ylabel 'Factor 2'\n");
+        fprintf(gnuplot, "set grid\n");
+        fprintf(gnuplot, "plot 'temp_plot.dat' index 0 with points pt 7 ps 1.5 title 'Loadings', \\\n");
+        fprintf(gnuplot, "     'temp_plot.dat' index 1 with points pt 6 ps 1.0 title 'Scores'\n");
+    }
+    
+    pclose(gnuplot);
+    remove("temp_plot.dat");
+    
+    RETURNINT(0);
+}
+
+// Helper function to find min/max values
+void get_matrix_range(struct Matrix* matrix, double* min_val, double* max_val) {
+    int i, j;
+    *min_val = *max_val = matp(matrix,0,0);
+    
+    for (i = 0; i < matrix->rows; i++) {
+        for (j = 0; j < matrix->cols; j++) {
+            double val = matp(matrix,i,j);
+            if (val < *min_val) *min_val = val;
+            if (val > *max_val) *max_val = val;
+        }
+    }
+}
+
+// Helper function to get plot type from string
+int get_plot_type(const char* type_str) {
+    if (strcmp(type_str, "hist") == 0) return ASCII_HIST;
+    if (strcmp(type_str, "bar") == 0)  return ASCII_BAR;
+    if (strcmp(type_str, "line") == 0) return ASCII_LINE;
+    return -1;
+}
+
+// ASCII plotting function
+PROCEDURE(masciiplot) {
+    int status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+    
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+    int plot_type = get_plot_type(GETSTRING(ARG1));
+    
+    if (plot_type < 0) {
+        printf("Error: Invalid plot type. Use 'hist', 'bar', or 'line'\n");
+        RETURNINT(-1);
+    }
+    
+    const int WIDTH = 60;   // Plot width in characters
+    const int HEIGHT = 20;  // Plot height in characters
+    double min_val, max_val;
+    get_matrix_range(matrix, &min_val, &max_val);
+    
+    // Ensure we have a reasonable range
+    if (fabs(max_val - min_val) < MATRIX_EPSILON) {
+        max_val = min_val + 1.0;
+    }
+    
+    if (plot_type == ASCII_HIST) {
+        // Simple histogram
+        int bins[60] = {0};  // Use fixed size instead of WIDTH
+        int max_count = 0;
+        int i, j;
+        
+        // Fill bins
+        for (i = 0; i < matrix->rows; i++) {
+            for (j = 0; j < matrix->cols; j++) {
+                int bin = (int)((matp(matrix,i,j) - min_val) * (WIDTH-1) / (max_val - min_val));
+                if (bin >= 0 && bin < WIDTH) {
+                    bins[bin]++;
+                    if (bins[bin] > max_count) max_count = bins[bin];
+                }
+            }
+        }
+        
+        // Print histogram
+        printf("\nHistogram (%g to %g):\n", min_val, max_val);
+        for (i = HEIGHT-1; i >= 0; i--) {
+            for (j = 0; j < WIDTH; j++) {
+                printf("%c", bins[j] * HEIGHT / max_count > i ? '*' : ' ');
+            }
+            printf("\n");
+        }
+        for (i = 0; i < WIDTH; i++) printf("-");
+        printf("\n");
+        
+    } else if (plot_type == ASCII_BAR) {
+        // Bar chart (first row or column)
+        int i,j;
+        int values = matrix->cols > 1 ? matrix->cols : matrix->rows;
+        
+        printf("\nBar Chart:\n");
+        for (i = 0; i < values; i++) {
+            double val = matrix->cols > 1 ? matp(matrix,0,i) : matp(matrix,i,0);
+            int bars = (int)((val - min_val) * WIDTH / (max_val - min_val));
+            printf("%3d |", i+1);
+            for (j = 0; j < bars; j++) printf("#");
+            printf(" %g\n", val);
+        }
+        
+    } else if (plot_type == ASCII_LINE) {
+        // Line plot
+        char plot[20][60];  // Use fixed sizes instead of HEIGHT/WIDTH
+        int i, j;
+        
+        // Initialize plot area
+        for (i = 0; i < HEIGHT; i++) {
+            for (j = 0; j < WIDTH; j++) {
+                plot[i][j] = ' ';
+            }
+        }
+        
+        // Plot points and lines
+        int last_y = -1;
+        for (j = 0; j < matrix->cols; j++) {
+            double val = matp(matrix,0,j);
+            int x = j * (WIDTH-1) / (matrix->cols-1);
+            int y = (int)((val - min_val) * (HEIGHT-1) / (max_val - min_val));
+            y = HEIGHT - 1 - y;  // Invert y for display
+            
+            if (y >= 0 && y < HEIGHT && x >= 0 && x < WIDTH) {
+                plot[y][x] = '*';
+                
+                // Draw connecting lines
+                if (last_y >= 0) {
+                    int start_y = last_y < y ? last_y : y;
+                    int end_y = last_y < y ? y : last_y;
+                    for (i = start_y; i <= end_y; i++) {
+                        plot[i][x-1] = '|';
+                    }
+                }
+                last_y = y;
+            }
+        }
+        
+        // Print plot
+        printf("\nLine Plot:\n");
+        for (i = 0; i < HEIGHT; i++) {
+            printf("%6.2f |", max_val - i * (max_val - min_val) / (HEIGHT-1));
+            for (j = 0; j < WIDTH; j++) {
+                printf("%c", plot[i][j]);
+            }
+            printf("\n");
+        }
+        for (i = 0; i < WIDTH+8; i++) printf("-");
+        printf("\n");
+    }
+    
+    RETURNINT(0);
+}
+
 
 
 /* -------------------------------------------------------------------------------------
@@ -1729,4 +2034,6 @@ LOADFUNCS
     ADDPROC(mfactor,   "matrix.mfactor",   "b",  ".int", "m0=.int, factors=.int, rotation=.int, scores=.int, mid=.string");
     ADDPROC(mcolstats, "matrix.mcolstats", "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mplot,     "matrix.mplot",     "b",  ".int", "m0=.int, plot_type=.string");
+    ADDPROC(mfaplot,   "matrix.mfaplot",   "b",  ".int", "m0=.int, plot_type=.string");
+    ADDPROC(masciiplot, "matrix.masciiplot", "b",  ".int", "m0=.int, plot_type=.string");
 ENDLOADFUNCS
