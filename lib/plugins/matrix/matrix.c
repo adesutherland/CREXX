@@ -56,6 +56,9 @@
 #define ASCII_HIST   1    // Histogram
 #define ASCII_BAR    2    // Bar chart
 #define ASCII_LINE   3    // Line plot
+#define ASCII_HEAT   4    // Heat map
+#define ASCII_SCATTER 5   // Scatter plot
+#define ASCII_BOX    6    // Box plot
 
 struct Matrix {
     double* CBselfref;     // CB self reference
@@ -124,7 +127,7 @@ void printMatrix(int matname) {
         printf("Error: Matrix validation error %d for %d\n",MATRIX_VALID,matname);
         return;
     }
-    printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.cols, matrix.rows);
+    printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.rows, matrix.cols);
     for (i = 0; i < matrix.rows; ++i) {
         for (j = 0; j < matrix.cols; ++j) {
             printf("%10.6f ", matrix.vector[i * matrix.cols + j]);
@@ -132,6 +135,26 @@ void printMatrix(int matname) {
         printf("\n");
     }
 }
+
+// Comparison function for qsort
+static int compare_doubles(const void* a, const void* b) {
+    double diff = *(const double*)a - *(const double*)b;
+    return (diff > 0) - (diff < 0);
+}
+
+// Helper function for box plot calculations
+void calculate_box_stats(double* data, int n, double* min, double* q1, 
+                        double* median, double* q3, double* max) {
+    // Sort data
+    qsort(data, n, sizeof(double), compare_doubles);
+    
+    *min = data[0];
+    *max = data[n-1];
+    *median = n % 2 ? data[n/2] : (data[n/2-1] + data[n/2]) / 2;
+    *q1 = data[n/4];
+    *q3 = data[3*n/4];
+}
+
 
 // Centralized statistical functions
 double calculate_column_mean(struct Matrix* matrix, int col) {
@@ -268,7 +291,7 @@ PROCEDURE(mcreate) {
 
 PROCEDURE(mset) {
     int row, col, status;
-    
+
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) {
         RETURNINT(status);  // Return validation error code
@@ -285,6 +308,26 @@ PROCEDURE(mset) {
     mat(cmatrix,row,col) = GETFLOAT(ARG3);
     RETURNINT(MATRIX_SUCCESS);
 }
+
+PROCEDURE(mget) {
+    int row, col, status;
+
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) {
+        RETURNINT(status);  // Return validation error code
+    }
+
+    struct Matrix cmatrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    row = GETINT(ARG1) - 1;
+    col = GETINT(ARG2) - 1;
+
+    if (row < 0 || row >= cmatrix.rows || col < 0 || col >= cmatrix.cols) {
+        RETURNINT(MATRIX_INVALID_INDEX);
+    }
+
+    RETURNFLOAT(mat(cmatrix,row,col));
+}
+
 PROCEDURE(mprint) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) {
@@ -924,66 +967,157 @@ PROCEDURE(mcorr) {
 // Calculate row/column means
 PROCEDURE(mmean) {
     int i, j, matnum, status;
-    int axis = GETINT(ARG1);  // 0 for row means, 1 for column means
-    
+    int axis = GETINT(ARG1)-1;     // column number
+
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
-    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
-    
-    if (axis == 0) {
-        matnum = matcreate(matrix->rows, 1,1, GETSTRING(ARG2));
-    } else {
-        matnum = matcreate(1, matrix->cols,1, GETSTRING(ARG2));
-    }
-    if (matnum < 0) RETURNINT(matnum);
-    
-    struct Matrix* means = (struct Matrix*)allVectors[matnum];
-    
-    if (axis == 0) {  // Row means
-        for (i = 0; i < matrix->rows; i++) {
-            double sum = 0.0;
-            for (j = 0; j < matrix->cols; j++) {
-                sum += matp(matrix,i,j);
-            }
-            matp(means,i,0) = sum / matrix->cols;
-        }
-    } else {  // Column means
-        for (j = 0; j < matrix->cols; j++) {
-            matp(means,0,j) = calculate_column_mean(matrix, j);
-        }
-    }
-    
-    RETURNINT(matnum);
+
+    struct Matrix *matrix = (struct Matrix *) allVectors[GETINT(ARG0)];
+
+    RETURNFLOATX(calculate_column_mean(matrix, axis));
+ENDPROC
+}
+
+// Calculate standard deviation for matrix rows or columns
+PROCEDURE(mstdev) {
+    int i, j, matnum, status;
+    double mean;
+    int axis = GETINT(ARG1)-1;     // column number
+
+    status = validateMatrix(GETINT(ARG0));
+    if (status != MATRIX_VALID) RETURNINT(status);
+
+    struct Matrix *matrix = (struct Matrix *) allVectors[GETINT(ARG0)];
+    mean=calculate_column_mean(matrix, axis);
+    RETURNFLOATX(calculate_column_stddev(matrix, axis,mean));
+ENDPROC
 }
 
 // Factor Analysis Implementation
 int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
-    int i, j, k;
+    int i, j, k, iter;
     int rows = data->rows;
     int cols = data->cols;
-    
-    // Create correlation matrix
-    int corr_num = matcreate(cols, cols, 1,"temp_corr");
-    if (corr_num < 0) return corr_num;
-    struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
-    
-    // Calculate correlation matrix
-    for (i = 0; i < cols; i++) {
-        matp(corr,i,i) = 1.0;
-        for (j = i + 1; j < cols; j++) {
-            double correlation = calculate_correlation(data, i, j);
-            matp(corr,i,j) = correlation;
-            matp(corr,j,i) = correlation;
+    double eigenval;
+
+    if (factors > cols) return MATRIX_INVALID_PARAM;
+
+    // Step 1: Standardize the data
+    int std_num = matcreate(rows, cols,1, "std_data");
+    if (std_num < 0) return std_num;
+    struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
+
+    // Calculate means and std devs
+    for (j = 0; j < cols; j++) {
+        double mean = 0.0, std = 0.0;
+        for (i = 0; i < rows; i++) {
+            mean += matp(data,i,j);
+        }
+        mean /= rows;
+
+        for (i = 0; i < rows; i++) {
+            double diff = matp(data,i,j) - mean;
+            std += diff * diff;
+        }
+        std = sqrt(std / (rows - 1));
+
+        if (std < MATRIX_EPSILON) std = 1.0;  // Handle constant columns
+
+        for (i = 0; i < rows; i++) {
+            matp(std_data,i,j) = (matp(data,i,j) - mean) / std;
         }
     }
-    
-    // Rest of factor analysis remains the same...
-    // ... (eigenvalue decomposition, etc.)
-    
+
+    // Step 2: Compute correlation matrix
+    int corr_num = matcreate(cols, cols, 1, "correlation");
+    if (corr_num < 0) {
+        freeMatrix(std_num);
+        return corr_num;
+    }
+    struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
+
+    for (i = 0; i < cols; i++) {
+        for (j = i; j < cols; j++) {
+            double sum = 0.0;
+            for (k = 0; k < rows; k++) {
+                sum += matp(std_data,k,i) * matp(std_data,k,j);
+            }
+            matp(corr,i,j) = sum / (rows - 1);
+            matp(corr,j,i) = matp(corr,i,j);
+        }
+    }
+
+    // Step 3: Extract factors using power method
+    for (k = 0; k < factors; k++) {
+        double* eigenvector = (double*)MATRIX_ALLOC(cols * sizeof(double));
+        if (!eigenvector) {
+            freeMatrix(std_num);
+            freeMatrix(corr_num);
+            return MATRIX_ALLOC_DATA;
+        }
+
+        // Initialize eigenvector
+        for (i = 0; i < cols; i++) {
+            eigenvector[i] = 1.0 / sqrt(cols);
+        }
+
+        // Power iteration
+        for (iter = 0; iter < 100; iter++) {
+            double norm = 0.0;
+            double* new_vector = (double*)MATRIX_ALLOC(cols * sizeof(double));
+            if (!new_vector) {
+                MATRIX_FREE(eigenvector);
+                freeMatrix(std_num);
+                freeMatrix(corr_num);
+                return MATRIX_ALLOC_DATA;
+            }
+
+            // Matrix-vector multiplication
+            for (i = 0; i < cols; i++) {
+                new_vector[i] = 0.0;
+                for (j = 0; j < cols; j++) {
+                    new_vector[i] += matp(corr,i,j) * eigenvector[j];
+                }
+                norm += new_vector[i] * new_vector[i];
+            }
+
+            norm = sqrt(norm);
+
+            // Update eigenvector
+            for (i = 0; i < cols; i++) {
+                eigenvector[i] = new_vector[i] / norm;
+            }
+
+            MATRIX_FREE(new_vector);
+        }
+
+        // Store factor loadings
+        for (i = 0; i < cols; i++) {
+            matp(loadings,i,k) = eigenvector[i];
+        }
+
+        // Deflate correlation matrix
+        eigenval = 0.0;
+        for (i = 0; i < cols; i++) {
+            for (j = 0; j < cols; j++) {
+                eigenval += eigenvector[i] * matp(corr,i,j) * eigenvector[j];
+            }
+        }
+
+        for (i = 0; i < cols; i++) {
+            for (j = 0; j < cols; j++) {
+                matp(corr,i,j) -= eigenval * eigenvector[i] * eigenvector[j];
+            }
+        }
+
+        MATRIX_FREE(eigenvector);
+    }
+
+    freeMatrix(std_num);
     freeMatrix(corr_num);
     return MATRIX_SUCCESS;
 }
+
 
 // Varimax rotation for factor analysis
 int varimax_rotation(struct Matrix* loadings, int max_iter) {
@@ -1293,7 +1427,6 @@ int interpret_loadings(struct Matrix* loadings, struct Matrix* interp, double th
             }
         }
     }
-    
     return MATRIX_SUCCESS;
 }
 
@@ -1416,8 +1549,8 @@ PROCEDURE(mfactor) {
     
     struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
     int factors = GETINT(ARG1);
-    int rotate = GETINT(ARG2);  // Rotation method
-    int scores = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
+    int rotate  = GETINT(ARG2);  // Rotation method
+    int scores  = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
     
     // Create matrix for factor loadings
     int loadings_num = matcreate(data.cols, factors, 3, GETSTRING(ARG4));  // later maybe 2. matrix needed
@@ -1601,6 +1734,19 @@ PROCEDURE(mcolstats) {
     RETURNINT(matnum);
 }
 
+PROCEDURE(stats) {
+    int i, status;
+    int matnum=GETINT(ARG0);
+    char * mode=GETSTRING(ARG1);
+
+    status = validateMatrix(matnum);
+    if (status != MATRIX_VALID) RETURNINT(-1);
+
+    struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
+    if(mode[0]=='R' || mode[0] == 'r')  RETURNINT(matrix->rows);
+    else  RETURNINT(matrix->cols);
+}
+
 // Optimized covariance calculation using blocking
 double calculate_covariance_blocked(struct Matrix* matrix, int col1, int col2) {
     int i, block;
@@ -1623,6 +1769,38 @@ double calculate_covariance_blocked(struct Matrix* matrix, int col1, int col2) {
     return sum / (matrix->rows - 1);
 }
 
+
+// Function to create an augmented matrix with an intercept term
+PROCEDURE(mexpand) {
+    int matnum=GETINT(ARG0);
+    int newcols=GETINT(ARG1);
+    double init=GETFLOAT(ARG2);
+    int status = validateMatrix(matnum);
+    if (status != MATRIX_VALID) RETURNINTX(-1);
+    int i,j,k;
+
+    struct Matrix* original = (struct Matrix*)allVectors[matnum];
+   // int Xrows = original->rows;
+   // int Xcols = original->cols;
+
+    // Create the augmented matrix with an additional column for the intercept
+    int matnew = matcreate(original->rows, original->cols + newcols,1, "Augmented Matrix");
+    struct Matrix* augmented= (struct Matrix*)allVectors[matnew];
+    if (augmented == NULL) {
+        RETURNINTX(-2); // Return NULL if matrix creation fails
+    }
+    // Fill the augmented matrix
+    for (i = 0; i < original->rows; i++) {
+        for(k=0;k<newcols;k++) {
+            matp(augmented, i,k) = init; // Set intercept term to 1.0
+        }
+        for (j = 0; j < original->cols; j++) {
+            matp(augmented, i, j + newcols) = matp(original, i, j); // Copy original X values
+        }
+    }
+    RETURNINTX(matnew);   // Return the augmented matrix
+    ENDPROC
+}
 // Basic matrix plotting functions
 PROCEDURE(mplot) {
     int status = validateMatrix(GETINT(ARG0));
@@ -1881,10 +2059,13 @@ int get_plot_type(const char* type_str) {
     if (strcmp(type_str, "hist") == 0) return ASCII_HIST;
     if (strcmp(type_str, "bar") == 0)  return ASCII_BAR;
     if (strcmp(type_str, "line") == 0) return ASCII_LINE;
+    if (strcmp(type_str, "heat") == 0) return ASCII_HEAT;
+    if (strcmp(type_str, "scatter") == 0) return ASCII_SCATTER;
+    if (strcmp(type_str, "box") == 0) return ASCII_BOX;
     return -1;
 }
 
-// ASCII plotting function
+// ASCII plotting function with new plot types
 PROCEDURE(masciiplot) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
@@ -1893,7 +2074,7 @@ PROCEDURE(masciiplot) {
     int plot_type = get_plot_type(GETSTRING(ARG1));
     
     if (plot_type < 0) {
-        printf("Error: Invalid plot type. Use 'hist', 'bar', or 'line'\n");
+        printf("Error: Invalid plot type. Use 'hist', 'bar', 'line', 'heat', 'scatter', or 'box'\n");
         RETURNINT(-1);
     }
     
@@ -1995,11 +2176,123 @@ PROCEDURE(masciiplot) {
         }
         for (i = 0; i < WIDTH+8; i++) printf("-");
         printf("\n");
+    } else if (plot_type == ASCII_HEAT) {
+        // Heat map using ASCII characters
+        printf("\nHeat Map:\n");
+        const char* density = " .:+*#";  // Intensity characters
+        int levels = strlen(density);
+        int i,j;
+        for (i = 0; i < matrix->rows; i++) {
+            printf("%2d |", i);
+            for (j = 0; j < matrix->cols; j++) {
+                double val = (matp(matrix,i,j) - min_val) / (max_val - min_val);
+                int level = (int)(val * (levels - 1));
+                printf("%c", density[level]);
+            }
+            printf("\n");
+        }
+        
+        // Print column numbers
+        printf("    ");
+        for (j = 0; j < matrix->cols; j++) {
+            printf("%d", j % 10);
+        }
+        printf("\n");
+        
+    } else if (plot_type == ASCII_SCATTER) {
+        // Scatter plot (first two columns)
+        if (matrix->cols < 2) {
+            printf("Error: Need at least 2 columns for scatter plot\n");
+            RETURNINT(-1);
+        }
+        
+        char plot[20][60] = {{' '}};  // Initialize with spaces
+        
+        // Find ranges for both columns
+        double min_x = matrix->rows ? matp(matrix,0,0) : 0;
+        double max_x = min_x;
+        double min_y = matrix->rows ? matp(matrix,0,1) : 0;
+        double max_y = min_y;
+        int i,j;
+        for (i = 0; i < matrix->rows; i++) {
+            double x = matp(matrix,i,0);
+            double y = matp(matrix,i,1);
+            if (x < min_x) min_x = x;
+            if (x > max_x) max_x = x;
+            if (y < min_y) min_y = y;
+            if (y > max_y) max_y = y;
+        }
+        // Plot points
+        for (i = 0; i < matrix->rows; i++) {
+            int x = (int)((matp(matrix,i,0) - min_x) * 58 / (max_x - min_x));
+            int y = (int)((matp(matrix,i,1) - min_y) * 18 / (max_y - min_y));
+            y = 19 - y;  // Invert y for display
+            if (x >= 0 && x < 60 && y >= 0 && y < 20) {
+                plot[y][x] = '*';
+            }
+        }
+        
+        // Print plot
+        printf("\nScatter Plot:\n");
+        for (i = 0; i < 20; i++) {
+            printf("%6.2f |", max_y - i * (max_y - min_y) / 19);
+            for (j = 0; j < 60; j++) {
+                printf("%c", plot[i][j]);
+            }
+            printf("\n");
+        }
+        printf("       ");
+        for (i = 0; i < 60; i++) printf("-");
+        printf("\n       %6.2f", min_x);
+        printf("%*s%6.2f\n", 48, "", max_x);
+        
+    } else if (plot_type == ASCII_BOX) {
+        // Box plot
+        double* data = (double*)malloc(matrix->rows * matrix->cols * sizeof(double));
+        if (!data) {
+            printf("Error: Memory allocation failed\n");
+            RETURNINT(-1);
+        }
+        
+        // Copy data to linear array
+        int i,j,n = 0;
+        for (i = 0; i < matrix->rows; i++) {
+            for (j = 0; j < matrix->cols; j++) {
+                data[n++] = matp(matrix,i,j);
+            }
+        }
+        
+        double min, q1, median, q3, max;
+        calculate_box_stats(data, n, &min, &q1, &median, &q3, &max);
+        free(data);
+        
+        // Scale to plot width
+        int p_min = 0;
+        int p_q1 = (int)((q1 - min_val) * 58 / (max_val - min_val));
+        int p_med = (int)((median - min_val) * 58 / (max_val - min_val));
+        int p_q3 = (int)((q3 - min_val) * 58 / (max_val - min_val));
+        int p_max = 58;
+
+        // Print box plot
+        printf("\nBox Plot:\n");
+        printf("      |");
+        for (i = 0; i < 60; i++) {
+            if (i == p_min || i == p_max) printf("|");
+            else if (i == p_med) printf("|");
+            else if (i >= p_q1 && i <= p_q3) printf("#");
+            else if (i > p_min && i < p_max) printf("-");
+            else printf(" ");
+        }
+        printf("\n");
+        
+        // Print values
+        printf("      %6.2f", min_val);
+        printf("%*s%6.2f\n", 48, "", max_val);
+        
     }
     
     RETURNINT(0);
 }
-
 
 
 /* -------------------------------------------------------------------------------------
@@ -2016,13 +2309,15 @@ PROCEDURE(masciiplot) {
  * -------------------------------------------------------------------------------------
  */
 LOADFUNCS
-    ADDPROC(mmultiply, "matrix.mmultiply", "b",  ".int", "m0=.int, m1=.int,mid=.string");
+    ADDPROC(mmultiply, "matrix.mmult",     "b",  ".int", "m0=.int, m1=.int,mid=.string");
     ADDPROC(mprod,     "matrix.mprod",     "b",  ".int", "m0=.int, prod=.float,mid=.string");
     ADDPROC(minvert,   "matrix.minvert",   "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mtranspose,"matrix.mtranspose","b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mstandard, "matrix.mstandard", "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mcreate,   "matrix.mcreate",   "b",  ".int", "rows=.int,cols=.int,id=.string");
     ADDPROC(mset,      "matrix.mset",      "b",  ".int", "m0=.int, row=.int, col=.int,value=.float");
+    ADDPROC(mget,      "matrix.mget",      "b",  ".float","m0=.int, row=.int, col=.int");
+    ADDPROC(mexpand,   "matrix.mexpand",   "b",  ".int", "m0=.int, newrows=.int, init=.float");
     ADDPROC(mprint,    "matrix.mprint",    "b",  ".int", "m0=.int");
     ADDPROC(mfree,     "matrix.mfree",     "b",  ".int", "m0=.int");
     ADDPROC(mdet,      "matrix.mdet",      "b",  ".int", "m0=.int");
@@ -2030,10 +2325,12 @@ LOADFUNCS
     ADDPROC(mrank,     "matrix.mrank",     "b",  ".int", "m0=.int");
     ADDPROC(mcov,      "matrix.mcov",      "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mcorr,     "matrix.mcorr",     "b",  ".int", "m0=.int, mid=.string");
-    ADDPROC(mmean,     "matrix.mmean",     "b",  ".int", "m0=.int, axis=.int, mid=.string");
+    ADDPROC(mmean,     "matrix.mmean",     "b",  ".float", "m0=.int, axis=.int");
+    ADDPROC(mstdev,    "matrix.mstdev",    "b",  ".float", "m0=.int, axis=.int");
     ADDPROC(mfactor,   "matrix.mfactor",   "b",  ".int", "m0=.int, factors=.int, rotation=.int, scores=.int, mid=.string");
     ADDPROC(mcolstats, "matrix.mcolstats", "b",  ".int", "m0=.int, mid=.string");
+    ADDPROC(stats,     "matrix.stats",     "b",  ".int", "m0=.int,mode=.string");
     ADDPROC(mplot,     "matrix.mplot",     "b",  ".int", "m0=.int, plot_type=.string");
     ADDPROC(mfaplot,   "matrix.mfaplot",   "b",  ".int", "m0=.int, plot_type=.string");
-    ADDPROC(masciiplot, "matrix.masciiplot", "b",  ".int", "m0=.int, plot_type=.string");
+    ADDPROC(masciiplot,"matrix.masciiplot", "b",  ".int", "m0=.int, plot_type=.string");
 ENDLOADFUNCS

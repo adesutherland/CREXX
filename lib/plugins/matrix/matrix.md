@@ -1,570 +1,931 @@
-# Matrix Operations Plugin for CREXX/PA
+# Matrix Library Reference
 
-## Overview
-This plugin provides comprehensive matrix operations for the CREXX/PA system, including linear algebra and statistical functions.
+## Quick Reference
 
-## Memory Management
-- Cross-platform heap storage using MATRIX_ALLOC/MATRIX_FREE macros
-- Windows: HeapAlloc/HeapFree from process heap
-- Unix/Linux/macOS: malloc/free from C standard library
-- Maximum matrices: 100
-- Automatic cleanup on matrix free or plugin unload
+### Most Common Operations
+```c
+// Create matrix
+id = mcreate(rows, cols, "name")
 
-## Functions
+// Basic operations
+madd(m1, m2, "result")    // Addition
+mmult(m1, m2, "result")   // Multiplication
+mtrans(m1, "result")      // Transpose
 
-### Basic Operations
-- `mmultiply(m0, m1, mid)` - Matrix multiplication (m0 × m1 → mid)
-- `mprod(m0, scalar, mid)` - Scalar multiplication (m0 × scalar → mid)
-- `mtranspose(m0, mid)` - Matrix transpose (m0 → mid)
-- `minvert(m0, mid)` - Matrix inversion (m0 → mid)
+// Statistical analysis
+mcorr(data, "correlation")     // Correlation matrix
+mfactor(data, n, rot, scores)  // Factor analysis
 
-### Matrix Creation and Management
-- `mcreate(rows, cols, id)` - Create new matrix
-- `mset(m0, row, col, value)` - Set matrix element
-- `mprint(m0)` - Print matrix
-- `mfree(m0)` - Free matrix (if m0 < 0, frees all)
-
-### Linear Algebra
-- `mdet(m0)` - Calculate determinant
-- `mlu(m0, L, U)` - LU decomposition
-- `mqr(m0, Q, R)` - QR decomposition
-- `meigen(m0, vec)` - Calculate dominant eigenvalue/vector
-- `mrank(m0)` - Calculate matrix rank
-
-### Statistical Operations
-- `mcov(m0, mid)` - Covariance matrix
-- `mcorr(m0, mid)` - Correlation matrix
-- `mmean(m0, axis, mid)` - Row/column means (axis: 0=rows, 1=cols)
-- `mstandard(m0, mid)` - Standardize matrix columns
-
-## Performance Features
-- Cache-friendly blocking for matrix operations
-- Block size optimization (MATRIX_BLOCK_SIZE = 64)
-- Loop unrolling for better instruction pipelining
-- Efficient memory access patterns
-- Numerical stability checks
-
-## Error Handling
-- Input validation
-- Memory allocation checks
-- Numerical stability checks
-- Detailed error codes
-
-- **mtranspose(m, id)** → matrix_number
-  - Transposes a matrix
-  - Parameters:
-    - m: Matrix number
-    - id: Result matrix identifier
-  - Returns: New matrix number or error code
-
-- **mstandard(m, id)** → matrix_number
-  - Standardizes matrix columns (z-score transformation)
-  - Parameters:
-    - m: Matrix number
-    - id: Result matrix identifier
-  - Returns: New matrix number or error code
-
-### Matrix Element Access
-- **mset(m, row, col, value)** → status
-  - Sets a matrix element value
-  - Parameters:
-    - m: Matrix number
-    - row: Row number (1-based)
-    - col: Column number (1-based)
-    - value: New value (float)
-  - Returns: 0 on success, error code on failure
-
-- **mprint(m)** → status
-  - Prints matrix contents
-  - Parameters:
-    - m: Matrix number
-  - Returns: 0 on success, error code on failure
-
-## Error Codes
-- MATRIX_SUCCESS (0): Operation successful
-- MATRIX_INVALID_PARAM (-1): Invalid parameters
-- MATRIX_NO_SLOTS (-12): No available matrix slots
-- MATRIX_ALLOC_CB (-16): Control block allocation failed
-- MATRIX_ALLOC_DATA (-20): Data allocation failed
-- MATRIX_NULL (-30): Matrix is NULL
-- MATRIX_INVALID_INDEX (-31): Invalid matrix index
-- MATRIX_CORRUPT (-32): Matrix structure is corrupt
-
-## Example Usage
-```
-/ Create and initialize a matrix /
-m1 = mcreate(3, 3, "Test Matrix")
-call mset m1, 1, 1, 1.0
-call mset m1, 2, 2, 1.0
-call mset m1, 3, 3, 1.0
-/ Print the matrix /
-call mprint m1
-/ Create transpose /
-m2 = mtranspose(m1, "Transposed")
-call mprint m2
-/ Multiply by scalar /
-m3 = mprod(m1, 2.0, "Doubled")
-call mprint m3
-/ Free resources /
-call mfree m1
-call mfree m2
-call mfree m3
-```
-```
-rexx
-/ Create and multiply two matrices /
-m1 = matrix.mcreate(3, 3, "Matrix1")
-m2 = matrix.mcreate(3, 3, "Matrix2")
-matrix.mset(m1, 1, 1, 2.0) / Set element at row 1, col 1 /
-result = matrix.mmultiply(m1, m2, "Result")
-matrix.mprint(result)
-matrix.mfree(result)
+// Visualization
+masciiplot(data, "hist")       // ASCII histogram
+mplot(data, "line")           // Gnuplot line plot
 ```
 
-## Implementation Notes
-- Matrix indices are 1-based in REXX calls
-- All matrices are stored in double precision
-- Maximum number of matrices: 100
-- Memory is managed through Windows HeapAlloc
-- Matrix operations validate inputs before processing
+### Common Parameters
+- `rows`, `cols`: Matrix dimensions
+- `rot`: Rotation type (0=none, 1=varimax, 2=quartimax, 3=promax)
+- `scores`: Calculate factor scores (0/1)
 
-## Error Handling
-All functions return error codes for invalid operations. Check return values for:
-- Invalid matrix numbers
-- Memory allocation failures
-- Invalid dimensions
-- Corrupt matrix structures
+## Detailed Documentation
 
-## Return Codes
-- 0: Success
-- -1: Invalid parameter
-- -2: Memory allocation failure
-- -3: Singular matrix
-- -4: Dimension mismatch
-- -8: Memory free error
+### Matrix Operations
 
-## Notes
-- All indices are 1-based for REXX compatibility
-- Matrices are stored in row-major order
-- Double precision floating point used throughout
+#### Creation and Initialization
+```c
+// Create new matrix
+id = mcreate(rows, cols, "name")
 
-## Detailed Error Codes
+// Initialize matrix
+mset(id, row, col, value)    // Set single element
 
-### Operation Status Codes
-- MATRIX_SUCCESS (0): Operation completed successfully
-- MATRIX_INVALID_PARAM (-1): Invalid input parameters
-  - Matrix dimensions don't match
-  - Invalid matrix number
-  - NULL matrix identifier
-  - Invalid row/column indices
+```
 
-### Memory Related Errors
-- MATRIX_NO_SLOTS (-12): No available matrix slots
-  - Maximum number of matrices (100) reached
-  - Need to free some matrices before creating new ones
-- MATRIX_ALLOC_CB (-16): Control block allocation failed
-  - System memory allocation error
-  - Not enough memory for matrix structure
-- MATRIX_ALLOC_DATA (-20): Data allocation failed
-  - Not enough memory for matrix data
-  - System memory allocation error
+#### Access and Information
+```c
+value = mget(id, row, col)   // Get element
+rows = mrows(id)             // Get row count
+cols = mcols(id)             // Get column count
+name = mname(id)             // Get matrix name
+```
 
-### Matrix Validation Errors
-- MATRIX_NULL (-30): Matrix is NULL
-  - Attempting to operate on a NULL matrix
-  - Matrix may have been freed
-- MATRIX_INVALID_INDEX (-31): Invalid matrix index
-  - Matrix number out of range (0-99)
-  - Negative matrix number
-- MATRIX_CORRUPT (-32): Matrix structure is corrupt
-  - Invalid internal pointers
-  - Memory corruption detected
-
-### Operation-Specific Errors
-- MATRIX_SINGULAR (-40): Matrix is singular
-  - Determinant is zero
-  - Matrix cannot be inverted
-- MATRIX_DIM_MISMATCH (-41): Matrix dimensions mismatch
-  - Incompatible dimensions for operation
-  - Example: multiplication of incompatible matrices
-- MATRIX_NOT_SQUARE (-42): Matrix must be square
-  - Operation requires square matrix
-  - Example: LU decomposition
-- MATRIX_NO_CONVERGENCE (-43): Algorithm did not converge
-  - Maximum iterations reached
-  - Example: eigenvalue calculation
-
-### Memory Management Errors
-- MATRIX_FREE_ERROR (-8): Error freeing matrix memory
-  - System memory deallocation error
-  - Invalid memory block
-- MATRIX_FREE_CB_ERROR (-12): Error freeing control block
-  - System memory deallocation error
-  - Invalid control block pointer
-
-
-### Linear Algebra Examples
-rexx
-/ LU Decomposition /
-m = matrix.mcreate(2, 2, "Original")
-matrix.mset(m, 1, 1, 4.0)
-matrix.mset(m, 1, 2, 3.0)
-matrix.mset(m, 2, 1, 6.0)
-matrix.mset(m, 2, 2, 3.0)
-L = matrix.mlu(m, "L", "U") / Returns L, U is L+1 /
-matrix.mprint(L)
-matrix.mprint(L+1)
-/ Matrix Rank /
-rank = matrix.mrank(m)
-say "Matrix rank:" rank
-/ Eigenvalue /
-ev = matrix.meigen(m, "eigenvector")
-matrix.mprint(ev) / First element is eigenvalue, rest is eigenvector /
-
-### Statistical Analysis
-rexx:matrix.md
-/ Create data matrix /
-data = matrix.mcreate(4, 3, "DataSet")
-/ Row 1 /
-matrix.mset(data, 1, 1, 1.2)
-matrix.mset(data, 1, 2, 2.3)
-matrix.mset(data, 1, 3, 3.4)
-/ Row 2 /
-matrix.mset(data, 2, 1, 2.3)
-matrix.mset(data, 2, 2, 3.4)
-matrix.mset(data, 2, 3, 4.5)
-/ Row 3 /
-matrix.mset(data, 3, 1, 3.4)
-matrix.mset(data, 3, 2, 4.5)
-matrix.mset(data, 3, 3, 5.6)
-/ Row 4 /
-matrix.mset(data, 4, 1, 4.5)
-matrix.mset(data, 4, 2, 5.6)
-matrix.mset(data, 4, 3, 6.7)
-/ Calculate statistics /
-means = matrix.mmean(data, 1, "ColumnMeans") / Column means /
-covar = matrix.mcov(data, "CovMatrix") / Covariance matrix /
-corr = matrix.mcorr(data, "CorrMatrix") / Correlation matrix /
-matrix.mprint(means)
-matrix.mprint(covar)
-matrix.mprint(corr)
-
-### Advanced Statistical Analysis
-- `mfactor(m0, factors, rotate, scores, mid_load, [mid_scores])` - Advanced factor analysis
-  - Parameters:
-    - m0: Input data matrix
-    - factors: Number of factors to extract
-    - rotate: Rotation method
-      - 0: None
-      - 1: Varimax (orthogonal)
-      - 2: Quartimax (orthogonal)
-      - 3: Promax (oblique)
-    - scores: Calculate factor scores (0/1)
-    - mid_load: Result matrix identifier for loadings
-    - mid_scores: Result matrix identifier for scores (if scores=1)
-  
-  - Example:
-    ```
-    data = matrix.mcreate(100, 5, "DataMatrix")
-    /* ... fill data matrix ... */
-    
-    // Basic factor analysis
-    loadings = matrix.mfactor(data, 2, 0, 0, "Unrotated")
-    
-    // With varimax rotation
-    loadings = matrix.mfactor(data, 2, 1, 0, "Varimax")
-    
-    // With promax rotation and scores
-    loadings = matrix.mfactor(data, 2, 3, 1, "Promax", "Scores")
-    ```
-  
-  - Rotation Methods:
-    - Varimax: Maximizes variance of squared loadings
-    - Quartimax: Simplifies rows of loading matrix
-    - Promax: Allows correlated factors
-  
-  - Factor Scores:
-    - Regression method
-    - Standardized data
-    - One score per factor per observation
-  
-  - Diagnostics:
-    - Communalities
-    - Factor correlations (for oblique rotation)
-    - Proportion of variance explained
+#### Memory Management
+```c
+mfree(id)                    // Free matrix
 
 ### Statistical Functions
-- `mcolstats(m0, mid)` - Comprehensive column statistics
-  - Returns matrix with 5 rows:
-    1. Means
-    2. Standard deviations
-    3. Medians
-    4. Skewness
-    5. Kurtosis
-  - Example:
-    ```
-    data = matrix.mcreate(100, 4, "Data")  /* 100 observations, 4 variables */
-    /* ... fill data ... */
-    stats = matrix.mcolstats(data, "Statistics")
-    matrix.mprint(stats)
-    ```
 
-### Performance Optimizations
-1. Cache-friendly blocking
-   - Matrix operations use block sizes optimized for L1 cache
-   - Reduces cache misses and improves performance
-   
-2. OpenMP Parallelization
-   - Automatic parallelization for large matrices
-   - Configurable threshold for parallel execution
-   
-3. Memory Access Patterns
-   - Column-major operations optimized for matrix structure
-   - Minimizes cache thrashing
-   
-4. Numerical Stability
-   - Robust handling of small numbers
-   - Stable statistical computations
-   
-### Statistical Measures
-- **Mean**: Arithmetic average
-- **Standard Deviation**: Sample standard deviation (n-1 denominator)
-- **Median**: Middle value (interpolated for even sample sizes)
-- **Skewness**: Measure of distribution asymmetry
-- **Kurtosis**: Measure of tail weight (excess kurtosis, normal = 0)
-
-### Factor Analysis Diagnostics and Interpretation
-
-#### Basic Usage
-```
-data = matrix.mcreate(100, 5, "DataMatrix")
-/* ... fill data matrix ... */
-
-// Factor analysis with diagnostics and interpretation
-loadings = matrix.mfactor(data, 2, 1, 0, "Loadings", "Diagnostics", "Interpretation")
+#### Basic Statistics
+```c
+mmean(data, "means")         // Column means
+mstdev(data, "stddevs")      // Standard deviations
 ```
 
-#### Diagnostic Matrix (4 rows)
-1. **Communalities** (Row 0)
-   - Values range from 0 to 1
-   - Represents proportion of variance explained for each variable
-   - Interpretation:
-     - < 0.3: Poor explanation
-     - 0.3-0.5: Moderate explanation
-     - > 0.5: Good explanation
+#### Correlation and Covariance
+```c
+mcorr(data, "correlation")   // Correlation matrix
+mcov(data, "covariance")     // Covariance matrix
+```
 
-2. **Eigenvalues** (Row 1)
-   - Total variance explained by each factor
-   - Kaiser criterion: Keep factors with eigenvalues > 1
+#### Distribution Statistics
+```c
+// Box plot statistics
+calculate_box_stats(data, n, &min, &q1, &median, &q3, &max)
+```
 
-3. **Proportion of Variance** (Row 2)
-   - Percentage of total variance explained by each factor
-   - Higher values indicate more important factors
+### Factor Analysis
 
-4. **Cumulative Proportion** (Row 3)
-   - Running total of variance explained
-   - Target: > 60% for adequate solution
-
-#### Interpretation Matrix
-- Values indicate significant loadings:
-  - 1: Strong positive relationship (> 0.4)
-  - -1: Strong negative relationship (< -0.4)
-  - 0: Weak or insignificant relationship
+#### Main Function
+```c
+mfactor(m0, factors, rotate, scores, 'matrix-id-text-load','matrix-id-text-scores','matrix-id-text-diagnose')
+```
+mfactor does a factor analysis, whith an optional rotation. As a result 3 matrices will be created. They are consecutive to the factor-loadings number.   
+#### Parameters
+- `m0`: Input data matrix
+- `factors`: Number of factors to extract
+- `rotate`: Rotation method
+  - 0: None
+  - 1: Varimax (max iterations = 100)
+  - 2: Quartimax (max iterations = 100)
+  - 3: Promax (kappa = 4)
+- `scores`: Calculate factor scores (0/1)
+- `matrix-id-text-load`: factor-loadings matrix name
+- `matrix-id-text-scores`: scores matrix name
+- `matrix-id-text-diagnose`: diagnostics matrix name
 
 #### Adequacy Checks
-The procedure automatically checks for:
-- Low communalities (< 0.3)
-- Insufficient total variance explained (< 60%)
-- Warnings are printed if these conditions are found
-
-#### Best Practices
-1. **Sample Size**
-   - Minimum: 5 cases per variable
-   - Preferred: 10+ cases per variable
-
-2. **Number of Factors**
-   - Use Kaiser criterion (eigenvalues > 1)
-   - Check scree plot (use eigenvalues)
-   - Consider interpretability
-
-3. **Rotation Selection**
-   - Varimax: When factors should be uncorrelated
-   - Promax: When factors might be correlated
-   - Quartimax: When seeking general factors
-
-4. **Loading Interpretation**
-   - 0.4 is typical significance threshold
-   - Consider practical significance
-   - Look for simple structure
-
-### Advanced Interpretation and Visualization
-
-#### Scree Plot Data
-- Two-row matrix:
-  1. Factor numbers (1-based)
-  2. Eigenvalues
-- Use for creating scree plot
-- Interpretation:
-  - Look for "elbow" point
-  - Factors before elbow are significant
-  - Example plot command:
-    ```
-    plot matrix.get(scree,1,*) type=line
-    ```
-
-#### Detailed Interpretation Matrix
-- Rows 1 to p: Variables
-  - Columns 1 to m: Factor loadings
-  - Column m+1: Communalities
-  - Column m+2: Complexity (number of significant loadings)
-- Last three rows: Factor statistics
-  - Eigenvalues
-  - Proportion of variance
-  - Cumulative proportion
-
-#### Enhanced Adequacy Checks
-1. **Communality Check**
-   - < 0.3: Poor explanation
-   - 0.3-0.5: Moderate
-   - > 0.5: Good
-
-2. **Variance Explained**
-   - Total > 60%: Adequate
-   - Total > 80%: Strong
-
-3. **Cross-Loading Check**
-   - Variables should load strongly on only one factor
-   - Cross-loading indicates complex structure
-
-4. **Sample Size**
-   - Minimum: 5 cases per variable
-   - Optimal: 10+ cases per variable
-
-5. **Multicollinearity**
-   - Checks for extreme correlations (> 0.9)
-   - May indicate redundant variables
-
-#### Visualization Best Practices
-1. **Scree Plot**
-   - Plot eigenvalues vs. factor number
-   - Look for natural break point
-   - Consider factors before the break
-
-2. **Loading Plot**
-   - Plot loadings for pairs of factors
-   - Look for clusters of variables
-   - Example:
-     ```
-     plot matrix.get(loadings,*,1) matrix.get(loadings,*,2)
-     ```
-
-3. **Heat Map**
-   - Visualize loading patterns
-   - Use color intensity for loading strength
-   - Helps identify structure
-
-#### Interpretation Guidelines
-1. **Simple Structure**
-   - Each variable loads strongly on one factor
-   - Low loadings on other factors
-   - Fewer cross-loadings is better
-
-2. **Factor Naming**
-   - Based on strongly loading variables
-   - Consider theoretical framework
-   - Look for common themes
-
-3. **Factor Retention**
-   - Kaiser criterion (eigenvalues > 1)
-   - Scree plot elbow
-   - Theoretical considerations
-   - Interpretability
-
-4. **Solution Quality**
-   - Check all adequacy measures
-   - Consider theoretical fit
-   - Validate with split sample if possible
-
-### Matrix Plotting
-
-Basic plotting functionality using gnuplot:
-
-```
-matrix.mplot(matrix, plot_type)
+```c
+// Returned in diagnostics matrix
+1. KMO measure (> 0.6 acceptable)
+2. Bartlett's test
+3. Communalities (> 0.3 acceptable)
+4. Total variance explained (> 60% good)
+5. Sample size check (> 5 * variables)
 ```
 
-Parameters:
-- matrix: Matrix to plot
-- plot_type: String specifying plot type
-  - "line": Line plot
-  - "scatter": Scatter plot
-  - "bar": Bar chart
-  - "heatmap": Heatmap
+#### Rotation Details
+```c
+// Convergence parameters
+ROTATE_MAX_ITER = 100
+ROTATE_CONVERGE = 0.000001
 
-Examples:
-```
-// Create and plot correlation matrix
-corr = matrix.mcorr(data, "Correlations")
-matrix.mplot(corr, "heatmap")
-
-// Plot factor loadings
-matrix.mplot(loadings, "bar")
-
-// Scree plot
-matrix.mplot(eigenvalues, "line")
+// Promax parameters
+PROMAX_POWER = 4
 ```
 
-Requirements:
-- Gnuplot must be installed and accessible
-- Temporary file access for data transfer
+### Visualization
 
-### Factor Analysis Plots
+#### Gnuplot Integration
+```c
+// Path configuration
+#define GNUPLOT_DEFAULT_PATH "C:\\Program Files\\gnuplot\\bin\\gnuplot.exe"
 
-Specialized plotting functions for factor analysis visualization:
+// Plot dimensions
+#define PLOT_WIDTH  60
+#define PLOT_HEIGHT 20
+```
+
+#### Plot Types and Parameters
+
+##### Standard Plots (`mplot`)
+```c
+mplot(data, plot_type)
+
+// Plot types:
+"line"    - Line plot
+"scatter" - Scatter plot
+"bar"     - Bar chart
+"hist"    - Histogram
+```
+
+##### Factor Analysis Plots (`mfaplot`)
+```c
+mfaplot(matrix, plot_type [, scores_matrix])
+
+// Plot types:
+"scree"    - Scree plot with elbow detection
+"loadings" - Factor loadings plot
+"biplot"   - Combined loadings and scores
+```
+
+##### ASCII Plots (`masciiplot`)
+```c
+masciiplot(matrix, plot_type)
+
+// Plot types:
+"hist"    - Histogram (60x20 characters)
+"bar"     - Bar chart
+"line"    - Line plot
+"heat"    - Heat map
+"scatter" - Scatter plot (60x20 characters)
+"box"     - Box plot
+```
+
+#### Return Codes
+```c
+ 0: Success
+-1: Invalid matrix
+-2: Gnuplot not found
+-3: Temporary file error
+-4: Invalid plot type
+-5: Insufficient data
+```
+
+### Error Handling
+
+#### Matrix Validation
+```c
+MATRIX_VALID       0
+MATRIX_INVALID    -1
+MATRIX_NOT_FOUND  -2
+MATRIX_BAD_SIZE   -3
+```
+
+#### Common Errors
+```c
+// Memory errors
+MATRIX_NO_MEMORY  -10
+MATRIX_BAD_ALLOC  -11
+
+// Operation errors
+MATRIX_BAD_OP     -20
+MATRIX_SINGULAR   -21
+MATRIX_NO_CONV    -22  // No convergence
+```
+
+### Best Practices
+
+#### Factor Analysis
+1. Sample size: 5-10 cases per variable
+2. Check communalities (> 0.3)
+3. Examine factor loadings (> 0.4)
+4. Consider theoretical meaning
+
+#### Visualization
+1. Choose appropriate plot type
+2. Check for scaling issues
+3. Consider data density
+4. Use ASCII plots for quick checks
+5. Use Gnuplot for publication quality
+
+#### Memory Management
+- Matrices are stored in row-major order
+- Automatic garbage collection on program exit
+- Manual memory management with `mfree()`
+- Temporary matrices are auto-cleaned
+
+#### Performance
+- BLAS-like optimizations for large matrices
+- In-place operations when possible
+- Efficient memory reuse
+- Parallel processing for large operations
+
+#### Limitations
+- Maximum matrix size: system memory dependent
+- Maximum name length: 32 characters
+- Maximum factors: min(rows, cols)
+- Maximum plot dimensions: 60x20 (ASCII)
+
+### Examples
+
+#### Factor Analysis Workflow
+```c
+// 1. Prepare data
+data = mcreate(100, 5, "MyData")
+// ... load data ...
+
+// 2. Check correlations
+corr = mcorr(data, "Correlations")
+masciiplot(corr, "heat")
+/*
+Heat Map:
+1 | #.+*#
+2 | .#*+.
+3 | +*#+*
+4 | *+#.*
+5 | #.+*.
+*/
+
+// 3. Run factor analysis
+loadings = mfactor(data, 2, 1, 1, "Loadings", "Scores", "Diagnostics")
+
+// 4. Check scree plot
+masciiplot(eigenvalues, "line")
+/*
+5.0 |   *
+4.0 |    *
+3.0 |     *--*--*
+2.0 |
+1.0 |
+    ---------------
+*/
+
+// 5. Examine loadings
+masciiplot(loadings, "bar")
+/*
+Var1 |##### 0.85
+Var2 |### 0.45
+Var3 |###### 0.92
+*/
+
+// 6. Plot factor scores
+masciiplot(scores, "scatter")
+/*
+2.0 |   * *  *
+1.0 |  *   *
+0.0 | *  *  *
+   --------------
+*/
+```
+
+#### Time Series Analysis
+```c
+// 1. Create time series data
+ts = mcreate(100, 1, "TimeSeries")
+// ... load data ...
+
+// 2. Plot trend
+masciiplot(ts, "line")
+/*
+10.0 |    *--*
+ 8.0 |   *    *
+ 6.0 |  *      *
+     -------------
+*/
+
+// 3. Plot both series
+mplot(ts, "line")      // Using gnuplot
+```
+
+#### Correlation Analysis
+```c
+// 1. Create correlation matrix
+corr = mcorr(data, "Correlations")
+
+// 2. Visualize patterns
+masciiplot(corr, "heat")
+/*
+Heat Map:
+1 | #.+*#
+2 | .#*+.
+3 | +*#+*
+*/
 
 ```
-matrix.mfaplot(matrix, plot_type [, scores_matrix])
+
+#### Distribution Analysis
+```c
+// 1. Basic histogram
+masciiplot(data, "hist")
+/*
+    *
+   ***
+  *****
+ *******
+---------
+*/
+
+// 2. Box plot for each variable
+masciiplot(data, "box")
+/*
+Var1: |---[####|####]---|
+Var2: |--[###|###]--|
+Var3: |----[#####|#]---|
+*/
+
+// 3. Compare distributions
+stats = mstats(data, "Statistics")
+/*
+      Mean   SD    Min   Max
+Var1  5.2    1.1   2.1   8.3
+Var2  4.8    0.9   2.5   7.2
+*/
 ```
 
-#### Plot Types:
+#### Matrix Operations
+```c
+// 1. Matrix multiplication with verification
+A = mcreate(3, 2, "A")
+B = mcreate(2, 3, "B")
+// ... fill matrices ...
 
-1. **Screen Plot** (`"screen"`)
-   - Plots eigenvalues against factor numbers
-   - Automatically detects and marks elbow point
-   - Helps determine number of factors to retain
+// Check dimensions
+if(mcols(A) == mrows(B)) {
+    C = mmult(A, B, "C")
+    mprint(C)
+} else {
+    printf("Invalid dimensions for multiplication\n")
+}`
+
+## Operation-Specific Error Codes
+
+### Matrix Creation and Manipulation
+```c
+-10: Invalid row count
+-11: Invalid column count
+-12: Invalid matrix name
+-13: Matrix already exists
+-14: Index out of bounds (mset)
+```
+
+### Statistical Operations
+```c
+-30: Insufficient data
+-31: Zero variance
+-32: Invalid axis parameter
+-33: Non-positive definite matrix
+-34: Convergence failure
+```
+
+### Plotting
+```c
+-50: Invalid plot type
+-51: Gnuplot not found
+-52: Plot file creation error
+-53: Empty matrix
+-54: Plot dimensions error
+```
+
+## Error Handling Examples
+
+### Matrix Creation
+```c
+id = mcreate(rows, cols, "matrix")
+if (id < 0) {
+    switch(id) {
+        case -10: print("Invalid row count")
+        case -11: print("Invalid column count")
+        case -12: print("Invalid matrix name")
+        case -13: print("Matrix already exists")
+        case -5:  print("Memory allocation failed")
+    }
+}
+```
+
+### Matrix Operations
+```c
+result = mmultiply(m1, m2, "result")
+if (result < 0) {
+    switch(result) {
+        case -2:  print("Invalid matrix ID")
+        case -3:  print("Matrix not found")
+        case -20: print("Incompatible dimensions")
+        case -5:  print("Memory allocation failed")
+    }
+}
+```
+
+### Statistical Operations
+```c
+result = mcorr(m0, "correlation")
+if (result < 0) {
+    switch(result) {
+        case -30: print("Insufficient data")
+        case -31: print("Zero variance")
+        case -33: print("Non-positive definite matrix")
+    }
+}
+```
+
+### Factor Analysis
+```c
+result = mfactor(m0, factors, rotation, scores, "loadings")
+if (result < 0) {
+    switch(result) {
+        case -40: print("Too few variables")
+        case -41: print("Too few observations")
+        case -42: print("Invalid number of factors")
+        case -44: print("Rotation did not converge")
+    }
+}
+```
+
+### Plotting
+```c
+result = mplot(m0, "line")
+if (result < 0) {
+    switch(result) {
+        case -50: print("Invalid plot type")
+        case -51: print("Gnuplot not found")
+        case -52: print("Plot file creation error")
+        case -53: print("Empty matrix")
+    }
+}
+```
+
+## Best Practices
+
+1. **Always Check Return Values**
+   ```c
+   result = operation(...)
+   if (result < 0) {
+       // Handle error
+   }
    ```
-   matrix.mfaplot(eigenvalues, "scree")
+
+2. **Memory Management**
+   ```c
+   id = mcreate(...)
+   if (id >= 0) {
+       // Use matrix
+       mfree(id)  // Clean up
+   }
    ```
 
-2. **Loadings Plot** (`"loadings"`)
-   - Plots first two factor loadings
-   - Shows variable clustering
-   - Includes unit circle for reference
-   ```
-   matrix.mfaplot(loadings, "loadings")
-   ```
-
-3. **Biplot** (`"biplot"`)
-   - Combined plot of loadings and scores
-   - Requires both loadings and scores matrices
-   - Shows relationships between variables and observations
-   ```
-   matrix.mfaplot(loadings, "biplot", scores)
+3. **Validation Before Operations**
+   ```c
+   if (mrank(m0) < min_rank) {
+       // Handle insufficient rank
+   }
    ```
 
-#### Interpretation:
+4. **Error Recovery**
+   ```c
+   if (result < 0) {
+       mfree(temp_matrix)  // Clean up temporary matrices
+       return result             // Propagate error
+   }
+   ```
 
-1. **Screen Plot**
-   - Sharp elbow indicates optimal factor count
-   - Factors before elbow are significant
-   - Gradual slope after elbow suggests noise
+## Common Error Patterns
 
-2. **Loadings Plot**
-   - Points near circle edge: well-represented variables
-   - Clusters indicate related variables
-   - Opposite positions show negative correlations
+1. **Dimension Mismatch**
+   - Matrix multiplication
+   - Matrix addition/subtraction
+   - Element-wise operations
 
-3. **Biplot**
-   - Proximity indicates relationship
-   - Angles between loadings suggest correlation
-   - Distance from origin shows importance
+2. **Numerical Issues**
+   - Singular matrices
+   - Zero variance
+   - Convergence failures
+
+3. **Resource Issues**
+   - Memory allocation
+   - File operations
+   - External program access (Gnuplot)
+
+4. **Invalid Parameters**
+   - Matrix indices
+   - Factor counts
+   - Rotation methods
+
+## Complete Example
+```c
+// Create and populate a data matrix
+data_id = mcreate(100, 5, "Data")
+// ... set values ...
+
+// Standardize the data
+std_id = mstandard(data_id, "Standardized")
+
+// Calculate correlation matrix
+corr_id = mcorr(std_id, "Correlations")
+masciiplot(corr_id, "heat")
+
+// Perform factor analysis
+fa_id = mfactor(std_id, 2, 1, 1, "Loadings")
+mfaplot(fa_id, "scree")
+```
+
+#### mset(m0, row, col, value)
+**Description:**  
+Sets a specific value in the 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `row`: Integer, row index (0-based).
+- `col`: Integer, column index (0-based).
+- `value`: Float, value to set.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+mset(id, 1, 2, 3.14);
+```
+
+#### mprint(m0)
+**Description:**  
+Prints the contents of the 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+mprint(id);
+```
+
+#### mfree(m0)
+**Description:**  
+Frees the memory allocated for the matrix number presented. If -1 used all matrices will be freed.
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+mfree(id);
+```
+
+## Matrix Arithmetic
+
+### Matrix Operations
+
+#### mmultiply(m0, m1, 'matrix-identification-text')
+**Description:**  
+Multiplies two matrices.
+
+**Parameters:**
+- `m0`: Integer, first matrix ID.
+- `m1`: Integer, second matrix ID.
+- `matrix-identification-text`: String, result matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+c_id = mmultiply(a_id, b_id, "C");
+```
+
+#### mprod(m0, prod, 'matrix-identification-text')
+**Description:**  
+Performs scalar multiplication on a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `prod`: Float, scalar value.
+- `matrix-identification-text`: String, result matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+scaled_id = mprod(id, 2.5, "Scaled");
+```
+
+#### minvert(m0, 'matrix-identification-text')
+**Description:**  
+Inverts a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `matrix-identification-text`: String, result matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+inv_id = minvert(id, "Inverse");
+```
+
+#### mtranspose(m0, 'matrix-identification-text')
+**Description:**  
+Transposes a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `matrix-identification-text`: String, result matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+trans_id = mtranspose(id, "Transposed");
+```
+
+## Matrix Properties
+
+### Matrix Characteristics
+
+#### mdet(m0)
+**Description:**  
+Calculates the determinant of a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+
+**Returns:** 
+- Float: Determinant value.
+
+**Example:**
+```c
+det = mdet(id);
+```
+
+#### mrank(m0)
+**Description:**  
+Calculates the rank of a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+
+**Returns:** 
+- Integer: Rank of the matrix or error code.
+
+**Example:**
+```c
+rank = mrank(id);
+```
+
+#### mlu(m0, L, U)
+**Description:**  
+Performs LU decomposition on a 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `L`: String, lower triangular matrix identifier.
+- `U`: String, upper triangular matrix identifier.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+status = mlu(id, "L_matrix", "U_matrix");
+```
+
+## Statistical Operations
+
+### Statistical Functions
+
+#### mstandard(m0, 'matrix-identification-text')
+**Description:**  
+Standardizes a matrix (z-scores).
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `matrix-identification-text`: String, standardized matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+std_id = mstandard(id, "Standardized");
+```
+
+#### mcov(m0, 'matrix-identification-text')
+**Description:**  
+Calculates the covariance 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `matrix-identification-text`: String, covariance matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+cov_id = mcov(id, "Covariance");
+```
+
+#### mcorr(m0, 'matrix-identification-text')
+**Description:**  
+Calculates the correlation 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `matrix-identification-text`: String, correlation matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+corr_id = mcorr(id, "Correlation");
+```
+
+#### mmean(m0, axis)
+**Description:**  
+Calculates the mean of the matrix along the specified column.
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `axis`: Integer, 0 for rows, 1 for columns.
+
+**Returns:** 
+- Float: Mean value.
+
+**Example:**
+```c
+col_mean = mmean(id, 1);
+```
+
+#### mstdev(m0, axis)
+**Description:**  
+Calculates the standard deviation of the matrix along the specified column.
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `axis`: Integer, 0 for rows, 1 for columns.
+
+**Returns:** 
+- Float: Standard deviation value.
+
+**Example:**
+```c
+row_sd = mstdev(id, 0);
+```
+
+## Factor Analysis
+
+### Factor Analysis Functions
+
+#### mfactor(m0, factors, rotation, scores, 'matrix-identification-text')
+**Description:**  
+Performs factor analysis on the 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `factors`: Integer, number of factors to extract.
+- `rotation`: Integer, rotation method (0=none, 1=varimax).
+- `scores`: Integer, calculate scores (0/1).
+- `matrix-identification-text`: String, loadings matrix identifier.
+
+**Returns:** 
+- Integer: Result matrix ID or error code.
+
+**Example:**
+```c
+fa_id = mfactor(id, 3, 1, 1, "Loadings");
+```
+
+## Visualization
+
+### Plotting Functions
+
+#### mplot(m0, plot_type)
+**Description:**  
+Creates a plot for the specified 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `plot_type`: String, type of plot.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+mplot(id, "line");
+```
+
+#### mfaplot(m0, plot_type)
+**Description:**  
+Creates a factor analysis plot for the specified 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `plot_type`: String, type of factor analysis plot.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+mfaplot(id, "scree");
+```
+
+#### masciiplot(m0, plot_type)
+**Description:**  
+Creates an ASCII-based plot for the specified 
+
+**Parameters:**
+- `m0`: Integer, matrix ID.
+- `plot_type`: String, type of ASCII plot.
+
+**Returns:** 
+- Integer: 0 for successful completion, else error.
+
+**Example:**
+```c
+masciiplot(id, "hist");
+```
+
+## Error Codes
+
+### General Error Codes
+```
+ 0: Success
+-1: General error
+-2: Invalid matrix ID
+-3: Matrix not found
+-4: Invalid dimensions
+-5: Memory allocation error
+```
+
+### Operation-Specific Error Codes
+
+#### Matrix Creation and Manipulation
+```
+-10: Invalid row count
+-11: Invalid column count
+-12: Invalid matrix name
+-13: Matrix already exists
+-14: Index out of bounds (mset)
+```
+
+#### Matrix Arithmetic
+```
+-20: Incompatible dimensions for multiplication
+-21: Singular matrix (for inversion)
+-22: Non-square matrix (when square required)
+-23: Division by zero
+-24: Overflow error
+```
+
+#### Statistical Operations
+```
+-30: Insufficient data
+-31: Zero variance
+-32: Invalid axis parameter
+-33: Non-positive definite matrix
+-34: Convergence failure
+```
+
+#### Factor Analysis
+```
+-40: Too few variables
+-41: Too few observations
+-42: Invalid number of factors
+-43: Invalid rotation method
+-44: Rotation did not converge
+-45: Insufficient rank
+```
+
+#### Plotting
+```
+-50: Invalid plot type
+-51: Gnuplot not found
+-52: Plot file creation error
+-53: Empty matrix
+-54: Plot dimensions error
+```
+
+### Output of Regression
+The result matrix will typically include:
+- Coefficients for each independent variable.
+- Intercept.
+- R-squared value.
+- Standard error of the coefficients.
+- p-values for hypothesis testing.
+
+### Error Codes for Regression
+- **-60**: Invalid dependent variable ID.
+- **-61**: Invalid independent variables ID.
+- **-62**: Dimension mismatch between dependent and independent variables.
+- **-63**: Insufficient data for regression analysis.
+
+## Conclusion

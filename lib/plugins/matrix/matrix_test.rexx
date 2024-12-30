@@ -1,16 +1,28 @@
 /* GETPI Plugin Test */
 options levelb
+import rxfnsb
 import matrix
+
+rx=regdat()
+ry=regression(rx,rx+1,'Regression')
+call mprint ry
 
 m1=mcreate(24,5,"Data Matrix")
 call matdata m1
+
 call mprint  m1
+say "Mean   COL 1 "mmean(m1,1)
+say "Stddev COL 1 "mstdev(m1,1)
+say "Status M1 "stats(m1,'r')
+say "Status M1 "stats(m1,'c')
+m2=m1
+
 m9=Mcorr(m1,'Correlation')
 call mprint m9
-call mplot m9, "line"
-call mplot m9, "scatter"
-call mplot m9, "bar"
-call mplot m9, "heatmap"
+## call mplot m9, "line"
+## call mplot m9, "scatter"
+## call mplot m9, "bar"
+## call mplot m9, "heatmap"
 ##  - "line": Line plot
 ##  - "scatter": Scatter plot
 ##  - "bar": Bar chart
@@ -22,6 +34,7 @@ call mprint ma
 ## 1. transpose Data Matrix
   m2=mtranspose(m1,"Transposed Data Matrix")
   call mprint m2
+
 ## 2. Standardise Data Matrix (mean=0, stddev=1)
   m4=mstandard(m1,"Standardised")
   call mprint  m4
@@ -29,7 +42,7 @@ call mprint ma
   m5=mtranspose(m4,"Transposed Data Matrix")
   call mprint m5
 ## 4. multiply Data Matrix with transposed Matrix
-  m6=mmultiply(m5,m4,"close to Correlation Matrix")
+  m6=mmult(m5,m4,"close to Correlation Matrix")
   call mprint m6
 ## 5. Almost there, multiply by rows
   m7=mprod(m6,1/23,"Correlation Matrix")
@@ -43,27 +56,34 @@ call mprint ma
 stats = mcolstats(m1, "Statistics")
 call mprint(stats)
 
+say '*** Data Matrix before Factor Analysis ***'
+call mprint m1
+
+say '*** Factor Analysis unrotated ***'
 loadings1 = mfactor(m1, 2, 0,1, "Unrotated")
 call mprint loadings1
 call mprint loadings1+1
 call mprint loadings1+2
 call mprint loadings1+3
-## With varimax rotation
+say '*** Factor Analysis Varimax ***'
 loadings2 = mfactor(m1, 2, 1,1, "Rotated Varimax")
 call mprint loadings2
 call mprint loadings2+1
 call mprint loadings2+2
 call mprint loadings2+3
-## With varimax rotation
+say '*** Factor Analysis Quartimax ***'
 loadings3 = mfactor(m1, 2, 2,1, "Rotated Quartimax")
 call mprint loadings3
-call masciiplot m1, "hist"
-call masciiplot m1, "bar"
-call masciiplot m1, "line"
+## call masciiplot m1, "hist"
+## call masciiplot m1, "bar"
+## call masciiplot m1, "line"
+## call masciiplot m1, "heat"
+## call masciiplot m1, "scatter"
+## call masciiplot m1, "box"
 call mprint loadings3+1
 call mprint loadings3+2
 call mprint loadings3+3
-## With varimax rotation
+say '*** Factor Analysis Promox ***'
 loadings4 = mfactor(m1, 2, 3,1, "Rotated Promax")
 call mprint loadings4
 call mprint loadings4+1
@@ -76,6 +96,35 @@ say "FREE m7 "mfree(m7)  ## free storage of m7
 say "FREE m91 "mfree(91) ## free storage of m91, which is not there
 call mfree -1            ## free all
 exit
+
+## Function to perform linear regression
+regression: procedure=.int
+  arg ind=.int, dep=.int, resultid=.string
+  yrows=stats(ind,'Rows')
+  xrows=stats(dep,'Rows')
+  xcols=stats(ind,'COLs')
+
+  if yrows <> Xrows then return -62; ## Dimension mismatch
+
+ ## Step 1: Add a column of ones to X for the intercept
+    augmented=mexpand(ind,1,1.0)
+    call mprint augmented
+ ## Step 2: calculate ('X*X)
+    Xt  = mtranspose(augmented, "Xt");
+    XtX = mmult(Xt, augmented,  "XtX");
+ ## Step 3: Calculate (X'y)
+    XtY = mmult(Xt, dep, "XtY");
+ ## Step 4: Invert (X'X)
+    XtX_inv = minvert(XtX, "XtX_inverted");
+    if XtX_inv < 0 then return -21;             ## Singular matrix error
+ ## Step 5: Calculate coefficients: result = (X'X)^(-1)(X'y)
+    result = mmult(XtX_inv, XtY, "Regression Coefficients");
+ ## Clean up temporary matrices
+    call mfree(Xt);
+    call mfree(XtX);
+    call mfree(XtY);
+    call mfree(XtX_inv);
+return result
 
 
 matdata: procedure=.int
@@ -201,3 +250,26 @@ rc=mset(m9, 24, 3, 0.18657006)
 rc=mset(m9, 24, 4, 0.89255900)
 rc=mset(m9, 24, 5, 0.53934224)
 return 0
+regdat: procedure=.int
+reg.1='5.1 3.5 1.4 0.2 0.8 10.3'
+reg.2='7.0 3.2 4.7 1.4 1.5 15.8'
+reg.3='6.3 3.3 6.0 2.5 1.7 20.1'
+reg.4='5.8 2.7 5.1 1.9 1.2 17.5'
+reg.5='4.6 3.1 1.5 0.2 0.9 11.0'
+reg.6='6.9 3.1 5.4 2.1 1.8 19.7'
+reg.7='5.0 3.6 1.4 0.2 0.7 10.1'
+reg.8='6.7 3.0 5.2 2.3 1.6 18.5'
+reg.9='4.9 3.1 1.5 0.1 0.8 10.4'
+reg.10='5.7 2.8 4.1 1.3 1.1 14.8'
+r1=mcreate(10,5,'Independant')
+r2=mcreate(10,1,'Dependant')
+
+do i=1 to 10
+   do j=1 to 5
+      val=word(reg.i,j)
+      call mset r1,i,j,val
+   end
+   val=word(reg.i,6)
+   caLL mset r2,i,1,val
+end
+return r1
