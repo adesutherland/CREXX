@@ -139,7 +139,7 @@ void printMatrix(int matname) {
     printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.rows, matrix.cols);
     for (i = 0; i < matrix.rows; ++i) {
         for (j = 0; j < matrix.cols; ++j) {
-            printf("%11.6f ", matrix.vector[i * matrix.cols + j]);
+            printf("%10.4f ", matrix.vector[i * matrix.cols + j]);
         }
         printf("\n");
     }
@@ -275,9 +275,9 @@ void parse_option_parms(const char* options, struct FactorOptions * fOptions) {
                     fOptions->diag = atoi(value);
                 }
             } else { // This is a standalone option
-                if (strcmp("SCORE", token) == 0) {
+                if (strncmp("SCORE", token,3) == 0) {
                     fOptions->score = 1;
-                } else if (strcmp("NSCORE", token) == 0) {
+                } else if (strncmp("NSCORE", token,3) == 0) {
                     fOptions->score = 0;
                 }
             }
@@ -1633,7 +1633,7 @@ PROCEDURE(mfactor) {
     }
 
     // Calculate factor scores if requested
-    if (scores) {
+    if (options.score) {
         char scorenote[32];
         sprintf(scorenote,"%s %s","Score:",GETSTRING(ARG4));
         int scores_num = matcreate(data.rows, factors, 1,scorenote);

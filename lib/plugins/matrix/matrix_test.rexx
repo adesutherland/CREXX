@@ -2,11 +2,11 @@
 options levelb
 import rxfnsb
 import matrix
-
+/*
 rx=regdat()
 ry=regression(rx,rx+1,'Regression')
 call mprint ry
-
+say "************* End of Regression *******************"
 m1=mcreate(24,5,"Data Matrix")
 call matdata m1
 
@@ -19,6 +19,7 @@ m2=m1
 
 m9=Mcorr(m1,'Correlation')
 call mprint m9
+say "************* End of Correltation *******************"
 ## call mplot m9, "line"
 ## call mplot m9, "scatter"
 ## call mplot m9, "bar"
@@ -34,21 +35,25 @@ call mprint ma
 ## 1. transpose Data Matrix
   m2=mtranspose(m1,"Transposed Data Matrix")
   call mprint m2
-
+say "************* End of Transpose I *******************"
 ## 2. Standardise Data Matrix (mean=0, stddev=1)
   m4=mstandard(m1,"Standardised")
   call mprint  m4
 ## 3. transpose standardised Data Matrix
   m5=mtranspose(m4,"Transposed Data Matrix")
   call mprint m5
+  say "************* End of Transpose II *******************"
 ## 4. multiply Data Matrix with transposed Matrix
   m6=mmult(m5,m4,"close to Correlation Matrix")
   call mprint m6
+   say "************* End of Mult II *******************"
 ## 5. Almost there, multiply by rows
   m7=mprod(m6,1/23,"Correlation Matrix")
   call mprint m7
+    say "************* End of scalar Prod *******************"
 ## 6. other stuff: determinant
    say 'determinante 'mdet(m1)
+    say "************* End of Determinante *******************"
 ## 7. other stuff: L and U Matrix
    mlx=mlu(m6,"L Matrix","U Matrix")
    call mprint mlx
@@ -58,54 +63,45 @@ call mprint(stats)
 
 say '*** Data Matrix before Factor Analysis ***'
 call mprint m1
+*/
+
+mfdata=mcreate(20,5,'factorial')
+call factdata mfdata
+mfc=mCorr(mfdata,'Correlation')
+call mprint mfc
+
+say '*** Factor Analysis Varimax ***'
+loadings2 = mfactor(mfdata, 2, "Factor Analysis Varimax","Rotate=Varimax,SCORE")
+call analyseFact loadings2,mfc
 
 say '*** Factor Analysis unrotated ***'
-loadings1 = mfactor(m1, 2, 0,1, "Unrotated")
-call mprint loadings1
-loadings1T=mtranspose(loadings1,"Unrotated T")
-l1mult=Mmult(loadings1,loadings1t,'Generated Correlation')
-call mprint l1Mult
-l1mult=Mmult(loadings1t,loadings1,'Generated Correlation')
-call mprint l1Mult
-call mprint loadings1+1
-call mprint loadings1+2
-call mprint loadings1+3
-say '*** Factor Analysis Varimax ***'
-loadings2 = mfactor(m1, 2, 1,1, "Rotated Varimax")
-loadingsT=mtranspose(loadings2,"Rotated I")
-l1mult=Mmult(loadings2,loadingst,'Generated Correlation')
-call mprint l1Mult
-l1mult=Mmult(loadingst,loadings2,'Generated Correlation')
+loadings1 = mfactor(mfdata, 2, "Factor Analysis unrotated", "Rotate=none,SCORES")
+call analyseFact loadings1,mfc
 
-call mprint loadings2
-call mprint loadings2+1
-call mprint loadings2+2
-call mprint loadings2+3
 say '*** Factor Analysis Quartimax ***'
-loadings3 = mfactor(m1, 2, 2,1, "Rotated Quartimax")
-call mprint loadings3
-## call masciiplot m1, "hist"
-## call masciiplot m1, "bar"
-## call masciiplot m1, "line"
-## call masciiplot m1, "heat"
-## call masciiplot m1, "scatter"
-## call masciiplot m1, "box"
-call mprint loadings3+1
-call mprint loadings3+2
-call mprint loadings3+3
+loadings3 = mfactor(mfdata, 2, "Factor Analysis Quartimax","Rotate=Varimax,SCORE")
+call analyseFact loadings3,mfc
+
 say '*** Factor Analysis Promox ***'
-loadings4 = mfactor(m1, 2, 3,1, "Rotated Promax")
-call mprint loadings4
-call mprint loadings4+1
-call mprint loadings4+2
-call mprint loadings4+3
+loadings4 = mfactor(mfdata, 2, "Factor Analysis Promax", "Rotate=promax,SCORE")
+call analyseFact loadings4,mfc
 
-
-say "FREE m3 "mfree(m6)  ## free storage of m6
-say "FREE m7 "mfree(m7)  ## free storage of m7
-say "FREE m91 "mfree(91) ## free storage of m91, which is not there
 call mfree -1            ## free all
 exit
+
+analyseFact: procedure
+  arg fact=.int,cor=.int
+  call mprint fact
+  factT=mtranspose(fact,"Transposed factorial")
+  factmult=Mmult(fact,factT,'Generated Correlation')
+  call mprint factMult
+  call mprint cor
+  call mprint fact+1
+  call mprint fact+2
+  call mprint fact+3
+return
+
+
 
 ## Function to perform linear regression
 regression: procedure=.int
@@ -124,17 +120,125 @@ regression: procedure=.int
     XtX = mmult(Xt, augmented,  "XtX");
  ## Step 3: Calculate (X'y)
     XtY = mmult(Xt, dep, "XtY");
+    call mprint xty
  ## Step 4: Invert (X'X)
     XtX_inv = minvert(XtX, "XtX_inverted");
     if XtX_inv < 0 then return -21;             ## Singular matrix error
+    call mprint xtx_inv
  ## Step 5: Calculate coefficients: result = (X'X)^(-1)(X'y)
     result = mmult(XtX_inv, XtY, "Regression Coefficients");
+    call mprint result
  ## Clean up temporary matrices
-    call mfree(Xt);
-    call mfree(XtX);
-    call mfree(XtY);
-    call mfree(XtX_inv);
+ say '*************** cleanup *******************'
+    say "FREE XT      "xt  mfree(Xt);
+    say "FREE XTX     "xtx mfree(XtX);
+    say "FREE XTY     "xty mfree(XtY);
+    say "FREE XTX_INV "xtx_inv mfree(XtX_inv);
 return result
+factdata:procedure=.int
+  arg fact=.int
+call mset fact,1,1,4.2
+call mset fact,2,1,3.9
+call mset fact,3,1,4.5
+call mset fact,4,1,4.0
+call mset fact,5,1,4.3
+call mset fact,6,1,4.1
+call mset fact,7,1,4.4
+call mset fact,8,1,3.8
+call mset fact,9,1,4.6
+call mset fact,10,1,4.2
+call mset fact,11,1,4.3
+call mset fact,12,1,4.1
+call mset fact,13,1,4.5
+call mset fact,14,1,3.9
+call mset fact,15,1,4.4
+call mset fact,16,1,4.0
+call mset fact,17,1,4.3
+call mset fact,18,1,4.2
+call mset fact,19,1,4.6
+call mset fact,20,1,3.8
+call mset fact,1,2,3.8
+call mset fact,2,2,4.1
+call mset fact,3,2,3.7
+call mset fact,4,2,4.0
+call mset fact,5,2,3.9
+call mset fact,6,2,4.2
+call mset fact,7,2,3.6
+call mset fact,8,2,4.3
+call mset fact,9,2,3.5
+call mset fact,10,2,4.1
+call mset fact,11,2,3.8
+call mset fact,12,2,4.0
+call mset fact,13,2,3.9
+call mset fact,14,2,4.1
+call mset fact,15,2,3.7
+call mset fact,16,2,4.2
+call mset fact,17,2,3.6
+call mset fact,18,2,4.1
+call mset fact,19,2,3.5
+call mset fact,20,2,4.3
+call mset fact,1,3,6.3
+call mset fact,2,3,5.8
+call mset fact,3,3,6.5
+call mset fact,4,3,5.9
+call mset fact,5,3,6.2
+call mset fact,6,3,6.0
+call mset fact,7,3,6.4
+call mset fact,8,3,5.7
+call mset fact,9,3,6.6
+call mset fact,10,3,6.1
+call mset fact,11,3,6.2
+call mset fact,12,3,6.0
+call mset fact,13,3,6.4
+call mset fact,14,3,5.8
+call mset fact,15,3,6.3
+call mset fact,16,3,5.9
+call mset fact,17,3,6.2
+call mset fact,18,3,6.1
+call mset fact,19,3,6.6
+call mset fact,20,3,5.7
+call mset fact,1,4,6.8
+call mset fact,2,4,6.1
+call mset fact,3,4,6.9
+call mset fact,4,4,6.3
+call mset fact,5,4,6.7
+call mset fact,6,4,6.4
+call mset fact,7,4,6.8
+call mset fact,8,4,6.0
+call mset fact,9,4,7.0
+call mset fact,10,4,6.5
+call mset fact,11,4,6.7
+call mset fact,12,4,6.4
+call mset fact,13,4,6.9
+call mset fact,14,4,6.2
+call mset fact,15,4,6.8
+call mset fact,16,4,6.3
+call mset fact,17,4,6.7
+call mset fact,18,4,6.5
+call mset fact,19,4,7.0
+call mset fact,20,4,6.0
+call mset fact,1,5,5.7
+call mset fact,2,5,5.3
+call mset fact,3,5,5.8
+call mset fact,4,5,5.4
+call mset fact,5,5,5.6
+call mset fact,6,5,5.5
+call mset fact,7,5,5.7
+call mset fact,8,5,5.2
+call mset fact,9,5,5.9
+call mset fact,10,5,5.6
+call mset fact,11,5,5.7
+call mset fact,12,5,5.5
+call mset fact,13,5,5.8
+call mset fact,14,5,5.4
+call mset fact,15,5,5.7
+call mset fact,16,5,5.4
+call mset fact,17,5,5.6
+call mset fact,18,5,5.6
+call mset fact,19,5,5.9
+call mset fact,20,5,5.2
+return 0
+
 
 
 matdata: procedure=.int
