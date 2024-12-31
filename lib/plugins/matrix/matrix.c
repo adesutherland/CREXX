@@ -64,11 +64,10 @@
 #define ASCII_BOX    6    // Box plot
 
 struct Matrix {
-    long double* CBselfref;     // CB self reference
+    double* CBselfref;     // CB self reference
     char id[32];
     int rows;
     int cols;
-    char heap[1];
     double * vector;  // Pointer to the matrix data
 };
 #define mat(mptr,row,col) mptr.vector[row * mptr.cols + col]
@@ -80,16 +79,9 @@ struct Matrix {
 int matrixmax = MATRIX_MAX_COUNT;
 void * allVectors[MATRIX_MAX_COUNT];
 
-uintptr_t getmain(int bytes,int heap) {
+uintptr_t getmain(int bytes) {
     if (bytes <= 0) {
         return MATRIX_INVALID_PARAM;
-    }
-    if (heap==0) {
-        void *pMemory = malloc(bytes);
-        if (pMemory == NULL) {
-            return MATRIX_ALLOC_DATA;
-        }
-        return (uintptr_t)pMemory;
     }
     #ifdef _WIN32
     if (hHeap == NULL) {
@@ -237,7 +229,7 @@ double calculate_correlation(struct Matrix* matrix, int col1, int col2) {
     return covar / (std1 * std2);
 }
 
-int matcreate(int rows, int cols, int slotsneeded, int heap, char * matid) {
+int matcreate(int rows, int cols, int slotsneeded, char * matid) {
     if (rows <= 0 || cols <= 0 || matid == NULL) {
         return MATRIX_INVALID_PARAM;
     }
@@ -260,18 +252,16 @@ int matcreate(int rows, int cols, int slotsneeded, int heap, char * matid) {
     }
     if (matrixname > matrixmax) return MATRIX_NO_SLOTS;
     
-    matCB = (double *) getmain(sizeof(struct Matrix),heap);
+    matCB = (double *) getmain(sizeof(struct Matrix));
     if ((intptr_t)matCB < 0) return MATRIX_ALLOC_CB;
 
     struct Matrix * MATRIX = (struct Matrix *) matCB;
     MATRIX->CBselfref = matCB;     // save self referring CB address
     MATRIX->rows = rows;   // rows of matrix
     MATRIX->cols = cols;   // cols of matrix
-    if (heap==1) MATRIX->heap[0] = 1;
-    else MATRIX->heap[0] = 0;
 
     // allocate vector containing the real matrix
-    matVECTOR = (double *) getmain(rows * cols * sizeof(double),heap);
+    matVECTOR = (double *) getmain(rows * cols * sizeof(double));
     if ((intptr_t)matVECTOR < 0) {
         HeapFree(hHeap, 0, matCB);  // Clean up on failure
         return MATRIX_ALLOC_DATA;
@@ -291,7 +281,7 @@ PROCEDURE(mcreate) {
     rows = GETINT(ARG0);   // rows of matrix
     cols = GETINT(ARG1);   // cols of matrix
     
-    matnum = matcreate(rows, cols, 1,1,id);
+    matnum = matcreate(rows, cols, 1,id);
     
     // Return codes from matcreate:
     // -1:  Invalid input parameters
@@ -368,7 +358,7 @@ PROCEDURE(mmultiply) {
         RETURNINT(MATRIX_INVALID_PARAM);
     }
     
-    matnum = matcreate(mptr1.rows, mptr2.cols, 1,1,GETSTRING(ARG2));
+    matnum = matcreate(mptr1.rows, mptr2.cols, 1,GETSTRING(ARG2));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix mptr3 = *(struct Matrix *) allVectors[matnum];
@@ -417,7 +407,7 @@ PROCEDURE(minvert) {
     }
     n = matrix.cols;
     
-    matnum = matcreate(matrix.rows, matrix.cols, 1, 1,GETSTRING(ARG1));
+    matnum = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG1));
     if (matnum < 0) {
         RETURNINT(-2);  // Failed to create result matrix
     }
@@ -491,7 +481,7 @@ PROCEDURE(mtranspose) {
     
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
-    matnum = matcreate(matrix.cols, matrix.rows, 1,1, GETSTRING(ARG1));
+    matnum = matcreate(matrix.cols, matrix.rows, 1,GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix mtrans = *(struct Matrix *) allVectors[matnum];
@@ -524,7 +514,7 @@ PROCEDURE(mstandard) {
         RETURNINT(-1);  // Need at least 2 rows for standardization
     }
     
-    matnew = matcreate(matrix->rows, matrix->cols, 1,1,GETSTRING(ARG1));
+    matnew = matcreate(matrix->rows, matrix->cols, 1,GETSTRING(ARG1));
     if (matnew < 0) {
         RETURNINT(-2);  // Matrix creation failed
     }
@@ -546,7 +536,7 @@ PROCEDURE(mprod) {
     
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
-    matprod = matcreate(matrix.rows, matrix.cols, 1, 1,GETSTRING(ARG2));
+    matprod = matcreate(matrix.rows, matrix.cols, 1, GETSTRING(ARG2));
     if (matprod < 0) {
         RETURNINT(-1);  // Matrix creation failed
     }
@@ -709,10 +699,10 @@ PROCEDURE(mlu) {
     struct Matrix matrix = *(struct Matrix *) allVectors[GETINT(ARG0)];
     
     // Create L and U matrices
-    int L_num = matcreate(matrix.rows, matrix.cols, 2,1,GETSTRING(ARG1));
+    int L_num = matcreate(matrix.rows, matrix.cols, 2,GETSTRING(ARG1));
     if (L_num < 0) RETURNINT(L_num);
     
-    int U_num = matcreate(matrix.rows, matrix.cols, 1, 1,GETSTRING(ARG2));
+    int U_num = matcreate(matrix.rows, matrix.cols, 1,GETSTRING(ARG2));
     if (U_num < 0) {
         freeMatrix(L_num);
         RETURNINT(U_num);
@@ -859,10 +849,10 @@ int calculate_rank(struct Matrix* matrix) {
     struct Matrix *Q, *R;
     
     // Create temporary matrices for QR decomposition
-    Q_num = matcreate(m, n, 1,1,"Q_temp");
+    Q_num = matcreate(m, n, 1,"Q_temp");
     if (Q_num < 0) return -1;
     
-    R_num = matcreate(n, n,1, 1,"R_temp");
+    R_num = matcreate(n, n,1, "R_temp");
     if (R_num < 0) {
         freeMatrix(Q_num);
         return -1;
@@ -932,7 +922,7 @@ PROCEDURE(mcov) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     // Create square matrix for covariance
-    matnum = matcreate(matrix->cols, matrix->cols,1, 1,GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols,1, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix* covar = (struct Matrix*)allVectors[matnum];
@@ -958,7 +948,7 @@ PROCEDURE(mcorr) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     
     // Create correlation matrix
-    matnum = matcreate(matrix->cols, matrix->cols,1, 1,GETSTRING(ARG1));
+    matnum = matcreate(matrix->cols, matrix->cols,1, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
     
     struct Matrix* corr = (struct Matrix*)allVectors[matnum];
@@ -1052,7 +1042,7 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     if (factors > cols) return MATRIX_INVALID_PARAM;
 
     // Step 1: Standardize the data
-    int std_num = matcreate(rows, cols,1, 1,"std_data");
+    int std_num = matcreate(rows, cols,1,"std_data");
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
 
@@ -1078,7 +1068,7 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     }
 
     // Step 2: Compute correlation matrix
-    int corr_num = matcreate(cols, cols, 1, 1,"correlation");
+    int corr_num = matcreate(cols, cols, 1, "correlation");
     if (corr_num < 0) {
         freeMatrix(std_num);
         return corr_num;
@@ -1339,7 +1329,7 @@ int promax_rotation(struct Matrix* loadings, int max_iter) {
     if (status != MATRIX_SUCCESS) return status;
 
     // Create temporary matrices
-    int pattern_num = matcreate(p, m,1,1, "pattern");
+    int pattern_num = matcreate(p, m,1,"pattern");
     if (pattern_num < 0) return pattern_num;
     struct Matrix* pattern = (struct Matrix*)allVectors[pattern_num];
 
@@ -1394,7 +1384,7 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
     int m = loadings->cols; // Number of factors
 
     // Standardize the data first
-    int std_num = matcreate(n, p, 1,1,"std_data");
+    int std_num = matcreate(n, p, 1,"std_data");
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
 
@@ -1538,7 +1528,7 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
 // Create visualization data for screenplot
 int create_screen_data(struct Matrix* diag, char* id) {
     int i;
-    int matnum = matcreate(2, diag->cols, 1,1, id);
+    int matnum = matcreate(2, diag->cols, 1, id);
     if (matnum < 0) return matnum;
 
     struct Matrix* screen= (struct Matrix*)allVectors[matnum];
@@ -1561,7 +1551,7 @@ int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
     int m = loadings->cols;
 
     // Create interpretation matrix with additional rows for metrics
-    int matnum = matcreate(p + 3, m + 2,1 ,1,id);
+    int matnum = matcreate(p + 3, m + 2,1 ,id);
     if (matnum < 0) return matnum;
 
     struct Matrix* interp = (struct Matrix*)allVectors[matnum];
@@ -1608,7 +1598,7 @@ PROCEDURE(mfactor) {
     int scores  = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
 
     // Create matrix for factor loadings
-    int loadings_num = matcreate(data.cols, factors, 3, 1,GETSTRING(ARG4));  // later maybe 2. matrix needed
+    int loadings_num = matcreate(data.cols, factors, 3,GETSTRING(ARG4));  // later maybe 2. matrix needed
     if (loadings_num < 0) RETURNINT(loadings_num);
 
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
@@ -1632,7 +1622,7 @@ PROCEDURE(mfactor) {
     // Calculate diagnostics if requested
     int diagnostics=3;
     if (diagnostics>0) {
-        int diag_num = matcreate(4, max(data.cols, factors), 1,1, "Diagnostics");
+        int diag_num = matcreate(4, max(data.cols, factors), 1,"Diagnostics");
         if (diag_num < 0) {
             freeMatrix(loadings_num);
             RETURNINTX(diag_num);
@@ -1672,7 +1662,7 @@ PROCEDURE(mfactor) {
     if (scores) {
         char scorenote[32];
         sprintf(scorenote,"%s %s","Score:",GETSTRING(ARG4));
-        int scores_num = matcreate(data.rows, factors, 1, 1,scorenote);
+        int scores_num = matcreate(data.rows, factors, 1,scorenote);
         if (scores_num < 0) {
             freeMatrix(loadings_num);
             RETURNINTX(scores_num);
@@ -1771,7 +1761,7 @@ PROCEDURE(mcolstats) {
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
 
     // Create matrix for stats (5 rows: means, stddevs, medians, skewness, kurtosis)
-    matnum = matcreate(5, matrix->cols, 1,1, GETSTRING(ARG1));
+    matnum = matcreate(5, matrix->cols, 1,GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
 
     struct Matrix* stats = (struct Matrix*)allVectors[matnum];
@@ -1839,7 +1829,7 @@ PROCEDURE(mexpand) {
    // int Xcols = original->cols;
 
     // Create the augmented matrix with an additional column for the intercept
-    int matnew = matcreate(original->rows, original->cols + newcols,1,1, "Augmented Matrix");
+    int matnew = matcreate(original->rows, original->cols + newcols,1, "Augmented Matrix");
     struct Matrix* augmented= (struct Matrix*)allVectors[matnew];
     if (augmented == NULL) {
         RETURNINTX(-2); // Return NULL if matrix creation fails
