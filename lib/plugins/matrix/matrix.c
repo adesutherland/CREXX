@@ -8,16 +8,19 @@
 #include <math.h>
 #ifdef _WIN32
     #include <windows.h>
-    #define MATRIX_ALLOC(size) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
-    #define MATRIX_FREE(ptr) HeapFree(GetProcessHeap(), 0, ptr)
+    #define MATRIX_ALLOC_HEAP(size) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)
+    #define MATRIX_FREE_HEAP(ptr) HeapFree(GetProcessHeap(), 0, ptr)
     HANDLE hHeap = NULL;
     #define GNUPLOT_DEFAULT_PATH "C:\\Program Files\\gnuplot\\bin\\gnuplot.exe"
 #else
     #include <stdlib.h>
-    #define MATRIX_ALLOC(size) calloc(1, size)
-    #define MATRIX_FREE(ptr) free(ptr)
+    #define MATRIX_ALLOC_HEAP(size) calloc(1, size)
+    #define MATRIX_FREE_HEAP(ptr) free(ptr)
     #define GNUPLOT_DEFAULT_PATH "gnuplot"
 #endif
+// for simple storage allocation
+#define MATRIX_ALLOC(size) malloc(size)
+#define MATRIX_FREE(ptr) free(ptr)
 
 // Maximum number of matrices that can be allocated
 #define MATRIX_MAX_COUNT 100
@@ -61,7 +64,7 @@
 #define ASCII_BOX    6    // Box plot
 
 struct Matrix {
-    double* CBselfref;     // CB self reference
+    long double* CBselfref;     // CB self reference
     char id[32];
     int rows;
     int cols;
@@ -97,7 +100,7 @@ uintptr_t getmain(int bytes,int heap) {
     }
     #endif
     
-    void *pMemory = MATRIX_ALLOC(bytes);
+    void *pMemory = MATRIX_ALLOC_HEAP(bytes);
     if (pMemory == NULL) {
         return MATRIX_ALLOC_DATA;
     }
@@ -137,7 +140,7 @@ void printMatrix(int matname) {
     printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.rows, matrix.cols);
     for (i = 0; i < matrix.rows; ++i) {
         for (j = 0; j < matrix.cols; ++j) {
-            printf("%10.6f ", matrix.vector[i * matrix.cols + j]);
+            printf("%11.6f ", matrix.vector[i * matrix.cols + j]);
         }
         printf("\n");
     }
@@ -569,11 +572,11 @@ int freeMatrix(int matnum) {
     
     struct Matrix *matrix = (struct Matrix *)allVectors[matnum];
     
-    if (!MATRIX_FREE(matrix->vector)) {
+    if (!MATRIX_FREE_HEAP(matrix->vector)) {
         return -8;
     }
     
-    if (!MATRIX_FREE(matrix->CBselfref)) {
+    if (!MATRIX_FREE_HEAP(matrix->CBselfref)) {
         return -12;
     }
     
@@ -614,7 +617,7 @@ double calculate_determinant(struct Matrix* matrix) {
         // Find pivot
         double pivot = temp[i * n + i];
         if (fabs(pivot) < MATRIX_EPSILON) {
-            MATRIX_FREE(temp);
+            MATRIX_FREE_HEAP(temp);
             return 0.0;  // Singular matrix
         }
         
@@ -1183,10 +1186,10 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
 
     // Allocate memory
     h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
-    u = (double*)MATRIX_ALLOC(p * sizeof(double));
-    v = (double*)MATRIX_ALLOC(p * sizeof(double));
-    A = (double*)MATRIX_ALLOC(p * sizeof(double));
-    B = (double*)MATRIX_ALLOC(p * sizeof(double));
+    u =  (double*)MATRIX_ALLOC(p * sizeof(double));
+    v =  (double*)MATRIX_ALLOC(p * sizeof(double));
+    A =  (double*)MATRIX_ALLOC(p * sizeof(double));
+    B =  (double*)MATRIX_ALLOC(p * sizeof(double));
 
     if (!h2 || !u || !v || !A || !B) {
         if (h2) MATRIX_FREE(h2);
