@@ -70,11 +70,18 @@ struct Matrix {
     int cols;
     double * vector;  // Pointer to the matrix data
 };
+struct FactorOptions {
+    int score;
+    int rotate;
+    int diag;
+    char option1[16];
+    char option2[16];
+};
+
 #define mat(mptr,row,col) mptr.vector[row * mptr.cols + col]
 #define matp(mptr,row,col) mptr->vector[row * mptr->cols + col]
 // Helper macro for minimum value
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
-
 
 int matrixmax = MATRIX_MAX_COUNT;
 void * allVectors[MATRIX_MAX_COUNT];
@@ -228,6 +235,56 @@ double calculate_correlation(struct Matrix* matrix, int col1, int col2) {
     
     return covar / (std1 * std2);
 }
+/*
+int score;
+int rotate;
+int diagnostics;
+char option1[16];
+char option2[16];
+*/
+void to_uppercase(char str[]) {
+    int i;
+    for (i = 0; str[i] != '\0'; i++) {
+        str[i] = toupper((unsigned char)str[i]); // Convert each character to uppercase
+    }
+}
+void parse_option_parms(const char* options, struct FactorOptions * fOptions) {
+    char* options_copy = strdup(options); // Create a copy of the string
+    to_uppercase(options_copy);
+    char* working_copy = options_copy;    // Keep a pointer to the start for freeing later
+        char* token;
+        while ((token = strtok_r(working_copy, ",", &working_copy)) != NULL) {
+         // Check if this token contains an '='
+            char* equals_pos = strchr(token, '=');
+            if (equals_pos != NULL) {
+                // This is a key-value pair
+                *equals_pos = '\0';  // Split the string at '='
+                char* key = token;
+                char* value = equals_pos + 1;
+                if (strcmp("ROTATE", key) == 0) {
+                    if (strncmp("PROMAX", value, 3) == 0) {
+                        fOptions->rotate = ROTATE_PROMAX;
+                    } else if (strncmp("VARIMAX", value, 3) == 0) {
+                        fOptions->rotate = ROTATE_VARIMAX;
+                    } else if (strncmp("QUARTIMAX", value, 3) == 0) {
+                        fOptions->rotate = ROTATE_QUARTIMAX;
+                    } else if (strncmp("NONE", value, 2) == 0) {
+                        fOptions->rotate = ROTATE_NONE;
+                    }
+                } else if (strcmp("DIAG", key) == 0) {
+                    fOptions->diag = atoi(value);
+                }
+            } else { // This is a standalone option
+                if (strcmp("SCORE", token) == 0) {
+                    fOptions->score = 1;
+                } else if (strcmp("NSCORE", token) == 0) {
+                    fOptions->score = 0;
+                }
+            }
+        }
+
+        free(options_copy);
+    }
 
 int matcreate(int rows, int cols, int slotsneeded, char * matid) {
     if (rows <= 0 || cols <= 0 || matid == NULL) {
@@ -774,70 +831,51 @@ int qr_decomposition(struct Matrix* matrix, struct Matrix* Q, struct Matrix* R) 
     return MATRIX_SUCCESS;
 }
 
-// Power method for dominant eigenvalue/eigenvector
-int power_method(struct Matrix* matrix, double* eigenvalue, double* eigenvector) {
-    int n = matrix->rows;
-    int i, j, iter;
-    double norm, prev_eigenvalue;
-    double* temp;
-    
-    if (n != matrix->cols) return MATRIX_INVALID_PARAM;
-    
-    // Initialize random vector
-    for (i = 0; i < n; i++) {
-        eigenvector[i] = (double)rand() / RAND_MAX;
-    }
-    
-    // Normalize initial vector
-    norm = 0.0;
-    for (i = 0; i < n; i++) {
-        norm += eigenvector[i] * eigenvector[i];
-    }
-    norm = sqrt(norm);
-    for (i = 0; i < n; i++) {
-        eigenvector[i] /= norm;
-    }
-    
-    // Power iteration
-    prev_eigenvalue = 0.0;
-    temp = (double*)MATRIX_ALLOC(n * sizeof(double));
-    if (!temp) return MATRIX_ALLOC_DATA;
-    
-    for (iter = 0; iter < 100; iter++) {  // Max 100 iterations
-        // Matrix-vector multiplication
+double power_method(struct Matrix* A, double* vector, int n, int max_iter, double tolerance) {
+    double* temp = (double*)malloc(n * sizeof(double));
+    int i,j,iter;
+    if (temp == NULL) return 0.0;
+
+    double eigenvalue = 0.0;
+    double prev_eigenvalue = 0.0;
+
+    for (iter = 0; iter < max_iter; iter++) {
+        // Multiply matrix A with vector
         for (i = 0; i < n; i++) {
             temp[i] = 0.0;
             for (j = 0; j < n; j++) {
-                temp[i] += matp(matrix,i,j) * eigenvector[j];
+                temp[i] += matp(A, i, j) * vector[j];
             }
         }
-        
+
         // Calculate eigenvalue (Rayleigh quotient)
-        *eigenvalue = 0.0;
+        double numerator = 0.0;
+        double denominator = 0.0;
         for (i = 0; i < n; i++) {
-            *eigenvalue += temp[i] * eigenvector[i];
+            numerator += temp[i] * vector[i];
+            denominator += vector[i] * vector[i];
         }
-        
-        // Check convergence
-        if (fabs(*eigenvalue - prev_eigenvalue) < MATRIX_EPSILON) {
-            MATRIX_FREE(temp);
-            return MATRIX_SUCCESS;
-        }
-        prev_eigenvalue = *eigenvalue;
-        
-        // Normalize
-        norm = 0.0;
+        eigenvalue = numerator / denominator;
+
+        // Normalize the vector
+        double norm = 0.0;
         for (i = 0; i < n; i++) {
             norm += temp[i] * temp[i];
         }
         norm = sqrt(norm);
         for (i = 0; i < n; i++) {
-            eigenvector[i] = temp[i] / norm;
+            vector[i] = temp[i] / norm;
         }
+
+        // Check for convergence
+        if (fabs(eigenvalue - prev_eigenvalue) < tolerance) {
+            break;
+        }
+        prev_eigenvalue = eigenvalue;
     }
-    
-    MATRIX_FREE(temp);
-    return MATRIX_SUCCESS;
+
+    free(temp);
+    return eigenvalue;
 }
 
 // Calculate matrix rank using QR decomposition
@@ -1034,131 +1072,66 @@ void validate_factor_analysis(struct Matrix* loadings, int factors, struct Matri
 
 // Function to perform factor analysis
 int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
-    int i, j, k, iter;
+    int i, j, k;
     int rows = data->rows;
     int cols = data->cols;
-    double eigenval;
-
-    if (factors > cols) return MATRIX_INVALID_PARAM;
-
-    // Step 1: Standardize the data
-    int std_num = matcreate(rows, cols,1,"std_data");
-    if (std_num < 0) return std_num;
-    struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
-
-    // Calculate means and std devs
-    for (j = 0; j < cols; j++) {
-        double mean = 0.0, std = 0.0;
-        for (i = 0; i < rows; i++) {
-            mean += matp(data,i,j);
-        }
-        mean /= rows;
-
-        for (i = 0; i < rows; i++) {
-            double diff = matp(data,i,j) - mean;
-            std += diff * diff;
-        }
-        std = sqrt(std / (rows - 1));
-
-        if (std < MATRIX_EPSILON) std = 1.0;  // Handle constant columns
-
-        for (i = 0; i < rows; i++) {
-            matp(std_data,i,j) = (matp(data,i,j) - mean) / std;
-        }
-    }
-
-    // Step 2: Compute correlation matrix
-    int corr_num = matcreate(cols, cols, 1, "correlation");
-    if (corr_num < 0) {
-        freeMatrix(std_num);
-        return corr_num;
-    }
+    
+    // Create correlation matrix
+    int corr_num = matcreate(cols, cols, 1, "temp_corr");
+    if (corr_num < 0) return corr_num;
     struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
-
+    
+    // Calculate correlation matrix
     for (i = 0; i < cols; i++) {
-        for (j = i; j < cols; j++) {
-            double sum = 0.0;
-            for (k = 0; k < rows; k++) {
-                sum += matp(std_data,k,i) * matp(std_data,k,j);
+        matp(corr, i, i) = 1.0;
+        for (j = i + 1; j < cols; j++) {
+            double correlation = calculate_correlation(data, i, j);
+            matp(corr, i, j) = correlation;
+            matp(corr, j, i) = correlation;
+        }
+    }
+    
+    // Allocate memory for eigenvalues and temporary vectors
+    double* eigenvalues = (double*)malloc(factors * sizeof(double));
+    double* eigenvector = (double*)malloc(cols * sizeof(double));
+    
+    if (eigenvalues == NULL || eigenvector == NULL) {
+        freeMatrix(corr_num);
+        free(eigenvalues);
+        free(eigenvector);
+        return -1;
+    }
+
+    // Extract factors using power method
+    for (i = 0; i < factors; i++) {
+        // Initialize random eigenvector
+        for (j = 0; j < cols; j++) {
+            eigenvector[j] = (double)rand() / RAND_MAX;
+        }
+
+        // Apply power method
+        double eigenvalue = power_method(corr, eigenvector, cols, 100, 1e-6);
+        eigenvalues[i] = eigenvalue;
+
+        // Store eigenvector in loadings matrix
+        for (j = 0; j < cols; j++) {
+            matp(loadings, j, i) = eigenvector[j];
+        }
+
+        // Deflate the correlation matrix
+        for (j = 0; j < cols; j++) {
+            for (k = 0; k < cols; k++) {
+                matp(corr, j, k) -= eigenvalue * eigenvector[j] * eigenvector[k];
             }
-            matp(corr,i,j) = sum / (rows - 1);
-            matp(corr,j,i) = matp(corr,i,j);
         }
     }
 
-    // Step 3: Extract factors using power method
-    for (k = 0; k < factors; k++) {
-        double* eigenvector = (double*)MATRIX_ALLOC(cols * sizeof(double));
-        if (!eigenvector) {
-            freeMatrix(std_num);
-            freeMatrix(corr_num);
-            return MATRIX_ALLOC_DATA;
-        }
-
-        // Initialize eigenvector
-        for (i = 0; i < cols; i++) {
-            eigenvector[i] = 1.0 / sqrt(cols);
-        }
-
-        // Power iteration
-        for (iter = 0; iter < 100; iter++) {
-            double norm = 0.0;
-            double* new_vector = (double*)MATRIX_ALLOC(cols * sizeof(double));
-            if (!new_vector) {
-                MATRIX_FREE(eigenvector);
-                freeMatrix(std_num);
-                freeMatrix(corr_num);
-                return MATRIX_ALLOC_DATA;
-            }
-
-            // Matrix-vector multiplication
-            for (i = 0; i < cols; i++) {
-                new_vector[i] = 0.0;
-                for (j = 0; j < cols; j++) {
-                    new_vector[i] += matp(corr,i,j) * eigenvector[j];
-                }
-                norm += new_vector[i] * new_vector[i];
-            }
-
-            norm = sqrt(norm);
-
-            // Update eigenvector
-            for (i = 0; i < cols; i++) {
-                eigenvector[i] = new_vector[i] / norm;
-            }
-
-            MATRIX_FREE(new_vector);
-        }
-
-        // Store factor loadings
-        for (i = 0; i < cols; i++) {
-            matp(loadings,i,k) = eigenvector[i];
-        }
-
-        // Deflate correlation matrix
-        eigenval = 0.0;
-        for (i = 0; i < cols; i++) {
-            for (j = 0; j < cols; j++) {
-                eigenval += eigenvector[i] * matp(corr,i,j) * eigenvector[j];
-            }
-        }
-
-        for (i = 0; i < cols; i++) {
-            for (j = 0; j < cols; j++) {
-                matp(corr,i,j) -= eigenval * eigenvector[i] * eigenvector[j];
-            }
-        }
-
-        MATRIX_FREE(eigenvector);
-    }
-
-    // After calculating the factors and setting the loadings
-    validate_factor_analysis(loadings, factors, data);
-
-    // Clean up and return
-    freeMatrix(std_num);
+    // Clean up
+    free(eigenvalues);
+    free(eigenvector);
     freeMatrix(corr_num);
-    return MATRIX_SUCCESS; // Indicate success
+    
+    return MATRIX_SUCCESS;
 }
 
 
@@ -1586,19 +1559,20 @@ int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
 }
 
 
-
 // Updated REXX procedure
 PROCEDURE(mfactor) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-
+    struct FactorOptions options={0};
     struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
+    char * parse=GETSTRING(ARG3);
     int factors = GETINT(ARG1);
-    int rotate  = GETINT(ARG2);  // Rotation method
-    int scores  = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
-
+    int rotate  = 0;  // Rotation method
+    int scores  = 0;  // 0 = no scores, 1 = calculate scores
+    printf("parse %s\n",parse);
+    parse_option_parms(parse, &options);
     // Create matrix for factor loadings
-    int loadings_num = matcreate(data.cols, factors, 3,GETSTRING(ARG4));  // later maybe 2. matrix needed
+    int loadings_num = matcreate(data.cols, factors, 3,GETSTRING(ARG2));  // later maybe 2. matrix needed
     if (loadings_num < 0) RETURNINT(loadings_num);
 
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
@@ -1611,8 +1585,8 @@ PROCEDURE(mfactor) {
     }
 
     // Apply rotation if requested
-    if (rotate != ROTATE_NONE) {
-        status = factor_rotation(&loadings, rotate, 100);
+    if (options.rotate != ROTATE_NONE) {
+        status = factor_rotation(&loadings, options.rotate, 100);
         if (status != MATRIX_SUCCESS) {
             freeMatrix(loadings_num);
             RETURNINTX(status);
@@ -2370,12 +2344,13 @@ LOADFUNCS
     ADDPROC(mrank,     "matrix.mrank",     "b",  ".int", "m0=.int");
     ADDPROC(mcov,      "matrix.mcov",      "b",  ".int", "m0=.int, mid=.string");
     ADDPROC(mcorr,     "matrix.mcorr",     "b",  ".int", "m0=.int, mid=.string");
-    ADDPROC(mmean,     "matrix.mmean",     "b",  ".float", "m0=.int, axis=.int");
-    ADDPROC(mstdev,    "matrix.mstdev",    "b",  ".float", "m0=.int, axis=.int");
-    ADDPROC(mfactor,   "matrix.mfactor",   "b",  ".int", "m0=.int, factors=.int, rotation=.int, scores=.int, mid=.string");
-    ADDPROC(mcolstats, "matrix.mcolstats", "b",  ".int", "m0=.int, mid=.string");
-    ADDPROC(stats,     "matrix.stats",     "b",  ".int", "m0=.int,mode=.string");
-    ADDPROC(mplot,     "matrix.mplot",     "b",  ".int", "m0=.int, plot_type=.string");
-    ADDPROC(mfaplot,   "matrix.mfaplot",   "b",  ".int", "m0=.int, plot_type=.string");
+    ADDPROC(mmean,     "matrix.mmean",     "b",  ".float","m0=.int, axis=.int");
+    ADDPROC(mstdev,    "matrix.mstdev",    "b",  ".float","m0=.int, axis=.int");
+    ADDPROC(mfactor,   "matrix.mfactor",   "b",  ".int",  "m0=.int, factors=.int, mid=.string, parms=.string");
+    ADDPROC(mcolstats, "matrix.mcolstats", "b",  ".int",  "m0=.int, mid=.string");
+    ADDPROC(stats,     "matrix.stats",     "b",  ".int",  "m0=.int, mode=.string");
+    ADDPROC(mplot,     "matrix.mplot",     "b",  ".int",  "m0=.int, plot_type=.string");
+    ADDPROC(mfaplot,   "matrix.mfaplot",   "b",  ".int",  "m0=.int, plot_type=.string");
     ADDPROC(masciiplot,"matrix.masciiplot", "b",  ".int", "m0=.int, plot_type=.string");
 ENDLOADFUNCS
+
