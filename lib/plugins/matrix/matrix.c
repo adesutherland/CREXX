@@ -993,7 +993,44 @@ PROCEDURE(mstdev) {
 ENDPROC
 }
 
-// Factor Analysis Implementation
+// Function to validate the quality of factor analysis
+void validate_factor_analysis(struct Matrix* loadings, int factors, struct Matrix* data) {
+    int i, j;
+    int cols = data->cols;
+
+    // Check communalities
+    printf("Communalities:\n");
+    for (i = 0; i < cols; i++) {
+        double communality = 0.0;
+        for (j = 0; j < factors; j++) {
+            communality += pow(matp(loadings, i, j), 2); // Sum of squared loadings
+        }
+        printf("Variable %d: Communality = %.4f\n", i + 1, communality);
+    }
+
+    // Check factor loadings
+    printf("\nFactor Loadings:\n");
+    for (i = 0; i < cols; i++) {
+        for (j = 0; j < factors; j++) {
+            double loading = matp(loadings, i, j);
+            printf("Variable %d, Factor %d: Loading = %.4f\n", i + 1, j + 1, loading);
+            if (fabs(loading) < 0.4) {
+                printf("Warning: Low loading for Variable %d on Factor %d\n", i + 1, j + 1);
+            }
+        }
+    }
+
+    // Calculate total variance explained
+    double total_variance = 0.0;
+    for (j = 0; j < factors; j++) {
+        double eigenvalue = 0.0; // Assume you have a way to get eigenvalues
+        // eigenvalue = get_eigenvalue(j); // Implement this function
+        total_variance += eigenvalue;
+    }
+    printf("\nTotal Variance Explained by Factors: %.4f\n", total_variance);
+}
+
+// Function to perform factor analysis
 int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     int i, j, k, iter;
     int rows = data->rows;
@@ -1113,9 +1150,13 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
         MATRIX_FREE(eigenvector);
     }
 
+    // After calculating the factors and setting the loadings
+    validate_factor_analysis(loadings, factors, data);
+
+    // Clean up and return
     freeMatrix(std_num);
     freeMatrix(corr_num);
-    return MATRIX_SUCCESS;
+    return MATRIX_SUCCESS; // Indicate success
 }
 
 
@@ -1130,14 +1171,14 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
     double* A = NULL;          // Temporary storage
     double* B = NULL;          // Temporary storage
     double d = 0.0;
-    
+
     // Allocate memory
     h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
     u = (double*)MATRIX_ALLOC(p * sizeof(double));
     v = (double*)MATRIX_ALLOC(p * sizeof(double));
     A = (double*)MATRIX_ALLOC(p * sizeof(double));
     B = (double*)MATRIX_ALLOC(p * sizeof(double));
-    
+
     if (!h2 || !u || !v || !A || !B) {
         if (h2) MATRIX_FREE(h2);
         if (u) MATRIX_FREE(u);
@@ -1146,7 +1187,7 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
         if (B) MATRIX_FREE(B);
         return MATRIX_ALLOC_DATA;
     }
-    
+
     // Calculate initial communalities
     for (i = 0; i < p; i++) {
         h2[i] = 0.0;
@@ -1155,18 +1196,18 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
         }
         if (h2[i] < MATRIX_EPSILON) h2[i] = 1.0;
     }
-    
+
     // Iterative rotation
     for (iter = 0; iter < max_iter; iter++) {
         double old_d = d;
         d = 0.0;
-        
+
         // Rotate pairs of factors
         for (j = 0; j < m - 1; j++) {
             for (k = j + 1; k < m; k++) {
                 double numerator = 0.0, denominator = 0.0;
                 double s = 0.0, c = 0.0, t = 0.0;
-                
+
                 // Calculate rotation angle
                 for (i = 0; i < p; i++) {
                     double x = matp(loadings,i,j);
@@ -1174,11 +1215,11 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
                     double u2 = x * x / h2[i];
                     double v2 = y * y / h2[i];
                     double uv = x * y / h2[i];
-                    
+
                     numerator += 2.0 * uv;
                     denominator += u2 - v2;
                 }
-                
+
                 // Calculate rotation
                 if (fabs(denominator) > MATRIX_EPSILON) {
                     t = numerator / denominator;
@@ -1187,7 +1228,7 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
                 } else {
                     c = s = M_SQRT1_2;  // 1/√2
                 }
-                
+
                 // Apply rotation
                 for (i = 0; i < p; i++) {
                     double x = matp(loadings,i,j);
@@ -1195,22 +1236,126 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
                     matp(loadings,i,j) = x * c + y * s;
                     matp(loadings,i,k) = -x * s + y * c;
                 }
-                
+
                 d += fabs(numerator);
             }
         }
-        
+
         // Check convergence
         if (fabs(d - old_d) < MATRIX_EPSILON) break;
     }
-    
+
     // Free memory
     MATRIX_FREE(h2);
     MATRIX_FREE(u);
     MATRIX_FREE(v);
     MATRIX_FREE(A);
     MATRIX_FREE(B);
-    
+
+    return MATRIX_SUCCESS;
+}
+// Quartimax rotation
+int quartimax_rotation(struct Matrix* loadings, int max_iter) {
+    int p = loadings->rows;    // Number of variables
+    int m = loadings->cols;    // Number of factors
+    int i, j, k, iter;
+    double* h2 = NULL;         // Communalities
+    double d = 0.0;
+
+    // Allocate memory
+    h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
+    if (!h2) return MATRIX_ALLOC_DATA;
+
+    // Calculate communalities
+    for (i = 0; i < p; i++) {
+        h2[i] = 0.0;
+        for (j = 0; j < m; j++) {
+            h2[i] += matp(loadings,i,j) * matp(loadings,i,j);
+        }
+        if (h2[i] < MATRIX_EPSILON) h2[i] = 1.0;
+    }
+
+    // Iterative rotation
+    for (iter = 0; iter < max_iter; iter++) {
+        double old_d = d;
+        d = 0.0;
+
+        for (j = 0; j < m - 1; j++) {
+            for (k = j + 1; k < m; k++) {
+                double num = 0.0, den = 0.0;
+
+                for (i = 0; i < p; i++) {
+                    double x = matp(loadings,i,j);
+                    double y = matp(loadings,i,k);
+                    num += x * x * x * y - x * y * y * y;
+                    den += x * x * y * y;
+                }
+
+                if (fabs(den) > MATRIX_EPSILON) {
+                    double angle = atan2(2.0 * num, den) / 4.0;
+                    double c = cos(angle);
+                    double s = sin(angle);
+
+                    for (i = 0; i < p; i++) {
+                        double x = matp(loadings,i,j);
+                        double y = matp(loadings,i,k);
+                        matp(loadings,i,j) = x * c + y * s;
+                        matp(loadings,i,k) = -x * s + y * c;
+                    }
+
+                    d += fabs(num / den);
+                }
+            }
+        }
+
+        if (fabs(d - old_d) < MATRIX_EPSILON) break;
+    }
+
+    MATRIX_FREE(h2);
+    return MATRIX_SUCCESS;
+}
+
+// Promax rotation (k typically = 4)
+int promax_rotation(struct Matrix* loadings, int max_iter) {
+    int p = loadings->rows;
+    int m = loadings->cols;
+    int i, j;
+    double k = 4.0;  // Typical value for k
+
+    // First do Varimax rotation
+    int status = varimax_rotation(loadings, max_iter);
+    if (status != MATRIX_SUCCESS) return status;
+
+    // Create temporary matrices
+    int pattern_num = matcreate(p, m,1, "pattern");
+    if (pattern_num < 0) return pattern_num;
+    struct Matrix* pattern = (struct Matrix*)allVectors[pattern_num];
+
+    // Calculate pattern matrix
+    for (i = 0; i < p; i++) {
+        for (j = 0; j < m; j++) {
+            double load = matp(loadings,i,j);
+            matp(pattern,i,j) = copysign(pow(fabs(load), k), load);
+        }
+    }
+
+    // Solve for transformation matrix and apply it
+    // Note: This is a simplified version. Full Promax would involve
+    // solving a regression problem for the transformation matrix.
+    for (i = 0; i < p; i++) {
+        double row_sum = 0.0;
+        for (j = 0; j < m; j++) {
+            row_sum += matp(pattern,i,j) * matp(pattern,i,j);
+        }
+        row_sum = sqrt(row_sum);
+        if (row_sum > MATRIX_EPSILON) {
+            for (j = 0; j < m; j++) {
+                matp(loadings,i,j) = matp(pattern,i,j) / row_sum;
+            }
+        }
+    }
+
+    freeMatrix(pattern_num);
     return MATRIX_SUCCESS;
 }
 
@@ -1228,110 +1373,6 @@ int factor_rotation(struct Matrix* loadings, int method, int max_iter) {
     }
 }
 
-// Quartimax rotation
-int quartimax_rotation(struct Matrix* loadings, int max_iter) {
-    int p = loadings->rows;    // Number of variables
-    int m = loadings->cols;    // Number of factors
-    int i, j, k, iter;
-    double* h2 = NULL;         // Communalities
-    double d = 0.0;
-    
-    // Allocate memory
-    h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
-    if (!h2) return MATRIX_ALLOC_DATA;
-    
-    // Calculate communalities
-    for (i = 0; i < p; i++) {
-        h2[i] = 0.0;
-        for (j = 0; j < m; j++) {
-            h2[i] += matp(loadings,i,j) * matp(loadings,i,j);
-        }
-        if (h2[i] < MATRIX_EPSILON) h2[i] = 1.0;
-    }
-    
-    // Iterative rotation
-    for (iter = 0; iter < max_iter; iter++) {
-        double old_d = d;
-        d = 0.0;
-        
-        for (j = 0; j < m - 1; j++) {
-            for (k = j + 1; k < m; k++) {
-                double num = 0.0, den = 0.0;
-                
-                for (i = 0; i < p; i++) {
-                    double x = matp(loadings,i,j);
-                    double y = matp(loadings,i,k);
-                    num += x * x * x * y - x * y * y * y;
-                    den += x * x * y * y;
-                }
-                
-                if (fabs(den) > MATRIX_EPSILON) {
-                    double angle = atan2(2.0 * num, den) / 4.0;
-                    double c = cos(angle);
-                    double s = sin(angle);
-                    
-                    for (i = 0; i < p; i++) {
-                        double x = matp(loadings,i,j);
-                        double y = matp(loadings,i,k);
-                        matp(loadings,i,j) = x * c + y * s;
-                        matp(loadings,i,k) = -x * s + y * c;
-                    }
-                    
-                    d += fabs(num / den);
-                }
-            }
-        }
-        
-        if (fabs(d - old_d) < MATRIX_EPSILON) break;
-    }
-    
-    MATRIX_FREE(h2);
-    return MATRIX_SUCCESS;
-}
-
-// Promax rotation (k typically = 4)
-int promax_rotation(struct Matrix* loadings, int max_iter) {
-    int p = loadings->rows;
-    int m = loadings->cols;
-    int i, j;
-    double k = 4.0;  // Typical value for k
-    
-    // First do Varimax rotation
-    int status = varimax_rotation(loadings, max_iter);
-    if (status != MATRIX_SUCCESS) return status;
-    
-    // Create temporary matrices
-    int pattern_num = matcreate(p, m,1, "pattern");
-    if (pattern_num < 0) return pattern_num;
-    struct Matrix* pattern = (struct Matrix*)allVectors[pattern_num];
-    
-    // Calculate pattern matrix
-    for (i = 0; i < p; i++) {
-        for (j = 0; j < m; j++) {
-            double load = matp(loadings,i,j);
-            matp(pattern,i,j) = copysign(pow(fabs(load), k), load);
-        }
-    }
-    
-    // Solve for transformation matrix and apply it
-    // Note: This is a simplified version. Full Promax would involve
-    // solving a regression problem for the transformation matrix.
-    for (i = 0; i < p; i++) {
-        double row_sum = 0.0;
-        for (j = 0; j < m; j++) {
-            row_sum += matp(pattern,i,j) * matp(pattern,i,j);
-        }
-        row_sum = sqrt(row_sum);
-        if (row_sum > MATRIX_EPSILON) {
-            for (j = 0; j < m; j++) {
-                matp(loadings,i,j) = matp(pattern,i,j) / row_sum;
-            }
-        }
-    }
-    
-    freeMatrix(pattern_num);
-    return MATRIX_SUCCESS;
-}
 
 // Calculate factor scores
 int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct Matrix* scores) {
@@ -1339,16 +1380,16 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
     int n = data->rows;    // Number of observations
     int p = data->cols;    // Number of variables
     int m = loadings->cols; // Number of factors
-    
+
     // Standardize the data first
     int std_num = matcreate(n, p, 1,"std_data");
     if (std_num < 0) return std_num;
     struct Matrix* std_data = (struct Matrix*)allVectors[std_num];
-    
+
     for (j = 0; j < p; j++) {
         standardize_column(data, std_data, j);
     }
-    
+
     // Calculate factor scores using regression method
     for (i = 0; i < n; i++) {
         for (j = 0; j < m; j++) {
@@ -1359,7 +1400,7 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
             matp(scores,i,j) = score;
         }
     }
-    
+
     freeMatrix(std_num);
     return MATRIX_SUCCESS;
 }
@@ -1370,12 +1411,12 @@ int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, st
     int p = loadings->rows;    // Number of variables
     int m = loadings->cols;    // Number of factors
     double total_variance = 0.0;
-    
+
     // Row 0: Communalities
     // Row 1: Eigenvalues
     // Row 2: Proportion of variance
     // Row 3: Cumulative proportion
-    
+
     // Calculate communalities and eigenvalues
     for (i = 0; i < p; i++) {
         double comm = 0.0;
@@ -1385,7 +1426,7 @@ int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, st
         }
         matp(diag,0,i) = comm;  // Store communality
     }
-    
+
     // Calculate eigenvalues and variance proportions
     for (j = 0; j < m; j++) {
         double eigenval = 0.0;
@@ -1396,7 +1437,7 @@ int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, st
         matp(diag,1,j) = eigenval;
         total_variance += eigenval;
     }
-    
+
     // Calculate proportions and cumulative proportions
     double cumulative = 0.0;
     for (j = 0; j < m; j++) {
@@ -1405,7 +1446,7 @@ int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, st
         cumulative += prop;
         matp(diag,3,j) = cumulative;
     }
-    
+
     return MATRIX_SUCCESS;
 }
 
@@ -1414,7 +1455,7 @@ int interpret_loadings(struct Matrix* loadings, struct Matrix* interp, double th
     int i, j;
     int p = loadings->rows;    // Number of variables
     int m = loadings->cols;    // Number of factors
-    
+
     // Create interpretation matrix (same size as loadings)
     // Values: 1 = significant positive, -1 = significant negative, 0 = not significant
     for (i = 0; i < p; i++) {
@@ -1434,7 +1475,7 @@ int interpret_loadings(struct Matrix* loadings, struct Matrix* interp, double th
 int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matrix* loadings) {
     int inadequate = 0;
     int i, j;
-    
+
     // Check communalities (row 0)
     for (i = 0; i < diag->cols; i++) {
         if (matp(diag,0,i) < 0.3) {
@@ -1442,12 +1483,12 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
             break;
         }
     }
-    
+
     // Check cumulative variance (row 3)
     if (matp(diag,3,diag->cols-1) < 0.6) {
         inadequate |= 2;
     }
-    
+
     // Check for cross-loadings
     for (i = 0; i < loadings->rows; i++) {
         int significant_loadings = 0;
@@ -1461,12 +1502,12 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
             break;
         }
     }
-    
+
     // Check sample size adequacy
     if (data->rows < 5 * data->cols) {
         inadequate |= 8;  // Less than 5 cases per variable
     }
-    
+
     // Check for extreme correlations using calculate_correlation
     for (i = 0; i < data->cols; i++) {
         for (j = i + 1; j < data->cols; j++) {
@@ -1478,7 +1519,7 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
         }
         if (inadequate & 16) break;
     }
-    
+
     return inadequate;
 }
 
@@ -1487,32 +1528,32 @@ int create_screen_data(struct Matrix* diag, char* id) {
     int i;
     int matnum = matcreate(2, diag->cols, 1, id);
     if (matnum < 0) return matnum;
-    
+
     struct Matrix* screen= (struct Matrix*)allVectors[matnum];
-    
+
     // Row 0: Factor number (1-based)
     // Row 1: Eigenvalues
     for (i = 0; i < diag->cols; i++) {
         matp(screen,0,i) = i + 1;
         matp(screen,1,i) = matp(diag,1,i);  // Copy eigenvalues
     }
-    
+
     return matnum;
 }
 
 // Enhanced interpretation with more details
-int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag, 
+int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
                                 char* id) {
     int i, j;
     int p = loadings->rows;
     int m = loadings->cols;
-    
+
     // Create interpretation matrix with additional rows for metrics
     int matnum = matcreate(p + 3, m + 2,1 ,id);
     if (matnum < 0) return matnum;
-    
+
     struct Matrix* interp = (struct Matrix*)allVectors[matnum];
-    
+
     // Variable loadings and metrics
     for (i = 0; i < p; i++) {
         // Loadings
@@ -1520,10 +1561,10 @@ int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
             double loading = matp(loadings,i,j);
             matp(interp,i,j) = loading;
         }
-        
+
         // Communality
         matp(interp,i,m) = matp(diag,0,i);
-        
+
         // Complexity (number of significant loadings)
         int complexity = 0;
         for (j = 0; j < m; j++) {
@@ -1531,40 +1572,42 @@ int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
         }
         matp(interp,i,m+1) = complexity;
     }
-    
+
     // Factor statistics
     for (j = 0; j < m; j++) {
         matp(interp,p,j) = matp(diag,1,j);      // Eigenvalues
         matp(interp,p+1,j) = matp(diag,2,j);    // Proportion
         matp(interp,p+2,j) = matp(diag,3,j);    // Cumulative
     }
-    
+
     return matnum;
 }
+
+
 
 // Updated REXX procedure
 PROCEDURE(mfactor) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
+
     struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
     int factors = GETINT(ARG1);
     int rotate  = GETINT(ARG2);  // Rotation method
     int scores  = GETINT(ARG3);  // 0 = no scores, 1 = calculate scores
-    
+
     // Create matrix for factor loadings
     int loadings_num = matcreate(data.cols, factors, 3, GETSTRING(ARG4));  // later maybe 2. matrix needed
     if (loadings_num < 0) RETURNINT(loadings_num);
-    
+
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
-    
+
     // Perform factor analysis
     status = factor_analysis(&data, &loadings, factors);
     if (status != MATRIX_SUCCESS) {
         freeMatrix(loadings_num);
         RETURNINTX(status);
     }
-    
+
     // Apply rotation if requested
     if (rotate != ROTATE_NONE) {
         status = factor_rotation(&loadings, rotate, 100);
@@ -1573,7 +1616,7 @@ PROCEDURE(mfactor) {
             RETURNINTX(status);
         }
     }
-    
+
     // Calculate diagnostics if requested
     int diagnostics=3;
     if (diagnostics>0) {
@@ -1582,7 +1625,7 @@ PROCEDURE(mfactor) {
             freeMatrix(loadings_num);
             RETURNINTX(diag_num);
         }
-        
+
         struct Matrix diag = *(struct Matrix *) allVectors[diag_num];
         status = calculate_basic_diagnostics(&data, &loadings, &diag);
         if (status != MATRIX_SUCCESS) {
@@ -1590,7 +1633,7 @@ PROCEDURE(mfactor) {
             freeMatrix(diag_num);
             RETURNINTX(status);
         }
-        
+
         // Check adequacy with enhanced checks
         int adequacy = check_factor_adequacy(&diag, &data, &loadings);
         if (adequacy) {
@@ -1601,18 +1644,18 @@ PROCEDURE(mfactor) {
             if (adequacy & 8) printf("WARNING: Sample size may be inadequate (< 5 cases per variable)\n");
             if (adequacy & 16) printf("WARNING: Potential multicollinearity detected\n");
         }
-        
+
         // Create screenplot data if requested
         if (diagnostics>=2) {
             create_screen_data(&diag, "Diagnostics details I");
         }
-        
+
         // Create detailed interpretation if requested
         if (diagnostics>=3) {
             create_detailed_interpretation(&loadings, &diag, "Diagnostics details II");
         }
     }
-    
+
     // Calculate factor scores if requested
     if (scores) {
         char scorenote[32];
@@ -1622,7 +1665,7 @@ PROCEDURE(mfactor) {
             freeMatrix(loadings_num);
             RETURNINTX(scores_num);
         }
-        
+
         struct Matrix scores_mat = *(struct Matrix *) allVectors[scores_num];
         status = calculate_factor_scores(&data, &loadings, &scores_mat);
         if (status != MATRIX_SUCCESS) {
@@ -1631,7 +1674,7 @@ PROCEDURE(mfactor) {
             RETURNINTX(status);
         }
     }
-    
+
     RETURNINT(loadings_num);
 ENDPROC
 }
@@ -1641,14 +1684,14 @@ double calculate_column_median(struct Matrix* matrix, int col) {
     int i,j, mid;
     double* values = (double*)MATRIX_ALLOC(matrix->rows * sizeof(double));
     double median;
-    
+
     if (!values) return 0.0;
-    
+
     // Copy column values
     for (i = 0; i < matrix->rows; i++) {
         values[i] = matp(matrix,i,col);
     }
-    
+
     // Simple bubble sort (for small datasets)
     // TODO: Replace with quickselect for better performance on large datasets
     for (i = 0; i < matrix->rows - 1; i++) {
@@ -1660,7 +1703,7 @@ double calculate_column_median(struct Matrix* matrix, int col) {
             }
         }
     }
-    
+
     // Calculate median
     if (matrix->rows % 2 == 0) {
         mid = matrix->rows / 2;
@@ -1669,7 +1712,7 @@ double calculate_column_median(struct Matrix* matrix, int col) {
         mid = matrix->rows / 2;
         median = values[mid];
     }
-    
+
     MATRIX_FREE(values);
     return median;
 }
@@ -1679,14 +1722,14 @@ double calculate_column_skewness(struct Matrix* matrix, int col) {
     double mean = calculate_column_mean(matrix, col);
     double stddev = calculate_column_stddev(matrix, col, mean);
     double sum = 0.0;
-    
+
     if (stddev < MATRIX_EPSILON) return 0.0;
-    
+
     for (i = 0; i < matrix->rows; i++) {
         double diff = (matp(matrix,i,col) - mean) / stddev;
         sum += diff * diff * diff;
     }
-    
+
     return sum / matrix->rows;
 }
 
@@ -1695,32 +1738,32 @@ double calculate_column_kurtosis(struct Matrix* matrix, int col) {
     double mean = calculate_column_mean(matrix, col);
     double stddev = calculate_column_stddev(matrix, col, mean);
     double sum = 0.0;
-    
+
     if (stddev < MATRIX_EPSILON) return 0.0;
-    
+
     for (i = 0; i < matrix->rows; i++) {
         double diff = (matp(matrix,i,col) - mean) / stddev;
         sum += diff * diff * diff * diff;
     }
-    
+
     return sum / matrix->rows - 3.0;  // Excess kurtosis (normal = 0)
 }
 
 // Enhanced column statistics with more metrics
 PROCEDURE(mcolstats) {
     int i, matnum, status;
-    
+
     status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
+
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
-    
+
     // Create matrix for stats (5 rows: means, stddevs, medians, skewness, kurtosis)
     matnum = matcreate(5, matrix->cols, 1, GETSTRING(ARG1));
     if (matnum < 0) RETURNINT(matnum);
-    
+
     struct Matrix* stats = (struct Matrix*)allVectors[matnum];
-    
+
     #pragma omp parallel for if(matrix->cols >= 4)
     for (i = 0; i < matrix->cols; i++) {
         double mean = calculate_column_mean(matrix, i);
@@ -1730,7 +1773,7 @@ PROCEDURE(mcolstats) {
         matp(stats,3,i) = calculate_column_skewness(matrix, i);    // Skewness
         matp(stats,4,i) = calculate_column_kurtosis(matrix, i);    // Kurtosis
     }
-    
+
     RETURNINT(matnum);
 }
 
@@ -1754,18 +1797,18 @@ double calculate_covariance_blocked(struct Matrix* matrix, int col1, int col2) {
     double mean2 = calculate_column_mean(matrix, col2);
     double sum = 0.0;
     const int BLOCK_SIZE = 64;  // Cache-friendly block size
-    
+
     for (block = 0; block < matrix->rows; block += BLOCK_SIZE) {
         double local_sum = 0.0;
         int end = MIN(block + BLOCK_SIZE, matrix->rows);
-        
+
         for (i = block; i < end; i++) {
-            local_sum += (matp(matrix,i,col1) - mean1) * 
+            local_sum += (matp(matrix,i,col1) - mean1) *
                         (matp(matrix,i,col2) - mean2);
         }
         sum += local_sum;
     }
-    
+
     return sum / (matrix->rows - 1);
 }
 
@@ -1805,10 +1848,10 @@ PROCEDURE(mexpand) {
 PROCEDURE(mplot) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
+
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     char* plot_type = GETSTRING(ARG1);
-    
+
     // Construct gnuplot command with full path
     char cmd[256];
     #ifdef _WIN32
@@ -1818,13 +1861,13 @@ PROCEDURE(mplot) {
         snprintf(cmd, sizeof(cmd), "%s -persist", GNUPLOT_DEFAULT_PATH);
         FILE* gnuplot = popen(cmd, "w");
     #endif
-    
+
     if (!gnuplot) {
         printf("Error: Could not open gnuplot at: %s\n", GNUPLOT_DEFAULT_PATH);
         printf("Please check if gnuplot is installed at this location.\n");
         RETURNINT(-1);
     }
-    
+
     // Create temporary data file
     FILE* temp = fopen("temp_plot.dat", "w");
     if (!temp) {
@@ -1832,9 +1875,9 @@ PROCEDURE(mplot) {
         printf("Error: Could not create temporary file\n");
         RETURNINT(-2);
     }
-    
+
     int i, j;
-    
+
     // Write data to temporary file
     if (strcmp(plot_type, "heatmap") == 0) {
         // Heatmap format: x y value
@@ -1854,7 +1897,7 @@ PROCEDURE(mplot) {
         }
     }
     fclose(temp);
-    
+
     // Set up gnuplot commands
     if (strcmp(plot_type, "heatmap") == 0) {
         fprintf(gnuplot, "set view map\n");
@@ -1865,7 +1908,7 @@ PROCEDURE(mplot) {
         for (i = 0; i < matrix->rows; i++) {
             if (i > 0) fprintf(gnuplot, ", ");
             fprintf(gnuplot, "'temp_plot.dat' index %d ", i);
-            
+
             if (strcmp(plot_type, "line") == 0) {
                 fprintf(gnuplot, "with lines");
             } else if (strcmp(plot_type, "scatter") == 0) {
@@ -1876,10 +1919,10 @@ PROCEDURE(mplot) {
         }
         fprintf(gnuplot, "\n");
     }
-    
+
     pclose(gnuplot);
     remove("temp_plot.dat");
-    
+
     RETURNINT(0);
 }
 
@@ -1888,10 +1931,10 @@ int detect_elbow(struct Matrix* eigenvalues) {
     int i;
     double max_angle = 0;
     int elbow_point = 1;
-    
+
     // Need at least 3 points to detect elbow
     if (eigenvalues->rows < 3) return 1;
-    
+
     // Calculate angles between consecutive line segments
     for (i = 1; i < eigenvalues->rows - 1; i++) {
         double x1 = i - 1;
@@ -1900,13 +1943,13 @@ int detect_elbow(struct Matrix* eigenvalues) {
         double y2 = matp(eigenvalues,i,0);
         double x3 = i + 1;
         double y3 = matp(eigenvalues,i+1,0);
-        
+
         // Calculate vectors
         double v1x = x2 - x1;
         double v1y = y2 - y1;
         double v2x = x3 - x2;
         double v2y = y3 - y2;
-        
+
         // Calculate angle
         double angle = atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y);
         if (fabs(angle) > fabs(max_angle)) {
@@ -1914,7 +1957,7 @@ int detect_elbow(struct Matrix* eigenvalues) {
             elbow_point = i;
         }
     }
-    
+
     return elbow_point;
 }
 
@@ -1922,10 +1965,10 @@ int detect_elbow(struct Matrix* eigenvalues) {
 PROCEDURE(mfaplot) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
+
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     char* plot_type = GETSTRING(ARG1);
-    
+
     #ifdef _WIN32
         char cmd[256];
         snprintf(cmd, sizeof(cmd), "\"\"%s\" -persist\"", GNUPLOT_DEFAULT_PATH);
@@ -1933,19 +1976,19 @@ PROCEDURE(mfaplot) {
     #else
         FILE* gnuplot = popen("gnuplot -persist", "w");
     #endif
-    
+
     if (!gnuplot) {
         printf("Error: Could not open gnuplot\n");
         RETURNINT(-1);
     }
-    
+
     // Create temporary data file
     FILE* temp = fopen("temp_plot.dat", "w");
     if (!temp) {
         pclose(gnuplot);
         RETURNINT(-2);
     }
-    
+
     if (strcmp(plot_type, PLOT_SCREEN) == 0) {
         // screenplot with elbow detection
         int elbow = detect_elbow(matrix);
@@ -1955,7 +1998,7 @@ PROCEDURE(mfaplot) {
             fprintf(temp, "%d %g\n", i + 1, matp(matrix,i,0));
         }
         fclose(temp);
-        
+
         // Set up screenplot
         fprintf(gnuplot, "set title 'screenPlot with Elbow Point'\n");
         fprintf(gnuplot, "set xlabel 'Factor Number'\n");
@@ -1965,7 +2008,7 @@ PROCEDURE(mfaplot) {
         fprintf(gnuplot, "set style line 2 lc rgb '#dd181f' lt 1 lw 2 pt 7 ps 2.0\n");
         fprintf(gnuplot, "plot 'temp_plot.dat' index 0 with linespoints ls 1 notitle, \\\n");
         fprintf(gnuplot, "     'temp_plot.dat' using 1:($0+1==%d ? $2 : 1/0) with points ls 2 title 'Elbow Point'\n", elbow);
-        
+
     } else if (strcmp(plot_type, PLOT_LOADINGS) == 0) {
         // Factor loadings plot (first two factors)
         if (matrix->cols < 2) {
@@ -1980,7 +2023,7 @@ PROCEDURE(mfaplot) {
             fprintf(temp, "%g %g\n", matp(matrix,i,0), matp(matrix,i,1));
         }
         fclose(temp);
-        
+
         // Set up loadings plot
         fprintf(gnuplot, "set title 'Factor Loadings Plot'\n");
         fprintf(gnuplot, "set xlabel 'Factor 1'\n");
@@ -1993,7 +2036,7 @@ PROCEDURE(mfaplot) {
         fprintf(gnuplot, "     circle(x,y) = sqrt(1-x**2), \\\n");
         fprintf(gnuplot, "     '-' with lines lt 0 notitle\n");
         fprintf(gnuplot, "-1 0\n1 0\n\n0 -1\n0 1\n\ne\n");
-        
+
     } else if (strcmp(plot_type, PLOT_BIPLOT) == 0) {
         // Biplot (requires scores as second matrix)
 /*      if (ARGLEN(2) == 0) {
@@ -2003,16 +2046,16 @@ PROCEDURE(mfaplot) {
             RETURNINT(-4);
         }
 */
-        
+
         status = validateMatrix(GETINT(ARG2));
         if (status != MATRIX_VALID) {
             fclose(temp);
             pclose(gnuplot);
             RETURNINT(status);
         }
-        
+
         struct Matrix* scores = (struct Matrix*)allVectors[GETINT(ARG2)];
-        
+
         // Write loadings and scores
         fprintf(temp, "# Loadings\n");
         int i;
@@ -2024,7 +2067,7 @@ PROCEDURE(mfaplot) {
             fprintf(temp, "%g %g\n", matp(scores,i,0), matp(scores,i,1));
         }
         fclose(temp);
-        
+
         // Set up biplot
         fprintf(gnuplot, "set title 'Biplot'\n");
         fprintf(gnuplot, "set xlabel 'Factor 1'\n");
@@ -2033,10 +2076,10 @@ PROCEDURE(mfaplot) {
         fprintf(gnuplot, "plot 'temp_plot.dat' index 0 with points pt 7 ps 1.5 title 'Loadings', \\\n");
         fprintf(gnuplot, "     'temp_plot.dat' index 1 with points pt 6 ps 1.0 title 'Scores'\n");
     }
-    
+
     pclose(gnuplot);
     remove("temp_plot.dat");
-    
+
     RETURNINT(0);
 }
 
@@ -2044,7 +2087,7 @@ PROCEDURE(mfaplot) {
 void get_matrix_range(struct Matrix* matrix, double* min_val, double* max_val) {
     int i, j;
     *min_val = *max_val = matp(matrix,0,0);
-    
+
     for (i = 0; i < matrix->rows; i++) {
         for (j = 0; j < matrix->cols; j++) {
             double val = matp(matrix,i,j);
@@ -2069,31 +2112,31 @@ int get_plot_type(const char* type_str) {
 PROCEDURE(masciiplot) {
     int status = validateMatrix(GETINT(ARG0));
     if (status != MATRIX_VALID) RETURNINT(status);
-    
+
     struct Matrix* matrix = (struct Matrix*)allVectors[GETINT(ARG0)];
     int plot_type = get_plot_type(GETSTRING(ARG1));
-    
+
     if (plot_type < 0) {
         printf("Error: Invalid plot type. Use 'hist', 'bar', 'line', 'heat', 'scatter', or 'box'\n");
         RETURNINT(-1);
     }
-    
+
     const int WIDTH = 60;   // Plot width in characters
     const int HEIGHT = 20;  // Plot height in characters
     double min_val, max_val;
     get_matrix_range(matrix, &min_val, &max_val);
-    
+
     // Ensure we have a reasonable range
     if (fabs(max_val - min_val) < MATRIX_EPSILON) {
         max_val = min_val + 1.0;
     }
-    
+
     if (plot_type == ASCII_HIST) {
         // Simple histogram
         int bins[60] = {0};  // Use fixed size instead of WIDTH
         int max_count = 0;
         int i, j;
-        
+
         // Fill bins
         for (i = 0; i < matrix->rows; i++) {
             for (j = 0; j < matrix->cols; j++) {
@@ -2104,7 +2147,7 @@ PROCEDURE(masciiplot) {
                 }
             }
         }
-        
+
         // Print histogram
         printf("\nHistogram (%g to %g):\n", min_val, max_val);
         for (i = HEIGHT-1; i >= 0; i--) {
@@ -2115,12 +2158,12 @@ PROCEDURE(masciiplot) {
         }
         for (i = 0; i < WIDTH; i++) printf("-");
         printf("\n");
-        
+
     } else if (plot_type == ASCII_BAR) {
         // Bar chart (first row or column)
         int i,j;
         int values = matrix->cols > 1 ? matrix->cols : matrix->rows;
-        
+
         printf("\nBar Chart:\n");
         for (i = 0; i < values; i++) {
             double val = matrix->cols > 1 ? matp(matrix,0,i) : matp(matrix,i,0);
@@ -2129,19 +2172,19 @@ PROCEDURE(masciiplot) {
             for (j = 0; j < bars; j++) printf("#");
             printf(" %g\n", val);
         }
-        
+
     } else if (plot_type == ASCII_LINE) {
         // Line plot
         char plot[20][60];  // Use fixed sizes instead of HEIGHT/WIDTH
         int i, j;
-        
+
         // Initialize plot area
         for (i = 0; i < HEIGHT; i++) {
             for (j = 0; j < WIDTH; j++) {
                 plot[i][j] = ' ';
             }
         }
-        
+
         // Plot points and lines
         int last_y = -1;
         for (j = 0; j < matrix->cols; j++) {
@@ -2149,10 +2192,10 @@ PROCEDURE(masciiplot) {
             int x = j * (WIDTH-1) / (matrix->cols-1);
             int y = (int)((val - min_val) * (HEIGHT-1) / (max_val - min_val));
             y = HEIGHT - 1 - y;  // Invert y for display
-            
+
             if (y >= 0 && y < HEIGHT && x >= 0 && x < WIDTH) {
                 plot[y][x] = '*';
-                
+
                 // Draw connecting lines
                 if (last_y >= 0) {
                     int start_y = last_y < y ? last_y : y;
@@ -2164,7 +2207,7 @@ PROCEDURE(masciiplot) {
                 last_y = y;
             }
         }
-        
+
         // Print plot
         printf("\nLine Plot:\n");
         for (i = 0; i < HEIGHT; i++) {
@@ -2191,23 +2234,23 @@ PROCEDURE(masciiplot) {
             }
             printf("\n");
         }
-        
+
         // Print column numbers
         printf("    ");
         for (j = 0; j < matrix->cols; j++) {
             printf("%d", j % 10);
         }
         printf("\n");
-        
+
     } else if (plot_type == ASCII_SCATTER) {
         // Scatter plot (first two columns)
         if (matrix->cols < 2) {
             printf("Error: Need at least 2 columns for scatter plot\n");
             RETURNINT(-1);
         }
-        
+
         char plot[20][60] = {{' '}};  // Initialize with spaces
-        
+
         // Find ranges for both columns
         double min_x = matrix->rows ? matp(matrix,0,0) : 0;
         double max_x = min_x;
@@ -2231,7 +2274,7 @@ PROCEDURE(masciiplot) {
                 plot[y][x] = '*';
             }
         }
-        
+
         // Print plot
         printf("\nScatter Plot:\n");
         for (i = 0; i < 20; i++) {
@@ -2245,7 +2288,7 @@ PROCEDURE(masciiplot) {
         for (i = 0; i < 60; i++) printf("-");
         printf("\n       %6.2f", min_x);
         printf("%*s%6.2f\n", 48, "", max_x);
-        
+
     } else if (plot_type == ASCII_BOX) {
         // Box plot
         double* data = (double*)malloc(matrix->rows * matrix->cols * sizeof(double));
@@ -2253,7 +2296,7 @@ PROCEDURE(masciiplot) {
             printf("Error: Memory allocation failed\n");
             RETURNINT(-1);
         }
-        
+
         // Copy data to linear array
         int i,j,n = 0;
         for (i = 0; i < matrix->rows; i++) {
@@ -2261,11 +2304,11 @@ PROCEDURE(masciiplot) {
                 data[n++] = matp(matrix,i,j);
             }
         }
-        
+
         double min, q1, median, q3, max;
         calculate_box_stats(data, n, &min, &q1, &median, &q3, &max);
         free(data);
-        
+
         // Scale to plot width
         int p_min = 0;
         int p_q1 = (int)((q1 - min_val) * 58 / (max_val - min_val));
@@ -2284,13 +2327,13 @@ PROCEDURE(masciiplot) {
             else printf(" ");
         }
         printf("\n");
-        
+
         // Print values
         printf("      %6.2f", min_val);
         printf("%*s%6.2f\n", 48, "", max_val);
-        
+
     }
-    
+
     RETURNINT(0);
 }
 

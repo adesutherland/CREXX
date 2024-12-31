@@ -62,11 +62,21 @@ call mprint m1
 say '*** Factor Analysis unrotated ***'
 loadings1 = mfactor(m1, 2, 0,1, "Unrotated")
 call mprint loadings1
+loadings1T=mtranspose(loadings1,"Unrotated T")
+l1mult=Mmult(loadings1,loadings1t,'Generated Correlation')
+call mprint l1Mult
+l1mult=Mmult(loadings1t,loadings1,'Generated Correlation')
+call mprint l1Mult
 call mprint loadings1+1
 call mprint loadings1+2
 call mprint loadings1+3
 say '*** Factor Analysis Varimax ***'
 loadings2 = mfactor(m1, 2, 1,1, "Rotated Varimax")
+loadingsT=mtranspose(loadings2,"Rotated I")
+l1mult=Mmult(loadings2,loadingst,'Generated Correlation')
+call mprint l1Mult
+l1mult=Mmult(loadingst,loadings2,'Generated Correlation')
+
 call mprint loadings2
 call mprint loadings2+1
 call mprint loadings2+2
