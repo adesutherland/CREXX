@@ -1076,55 +1076,109 @@ int factor_analysis(struct Matrix* data, struct Matrix* loadings, int factors) {
     int rows = data->rows;
     int cols = data->cols;
     
+    // Validate input dimensions
+    if (factors <= 0 || factors > cols) {
+        printf("Invalid number of factors requested: %d\n", factors);
+        return -1;
+    }
+    
     // Create correlation matrix
     int corr_num = matcreate(cols, cols, 1, "temp_corr");
     if (corr_num < 0) return corr_num;
     struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
     
-    // Calculate correlation matrix
+    // Calculate correlation matrix with validation
     for (i = 0; i < cols; i++) {
         matp(corr, i, i) = 1.0;
         for (j = i + 1; j < cols; j++) {
             double correlation = calculate_correlation(data, i, j);
+            if (isnan(correlation)) {
+                printf("Warning: NaN correlation detected at (%d,%d)\n", i, j);
+                correlation = 0.0;
+            }
             matp(corr, i, j) = correlation;
             matp(corr, j, i) = correlation;
         }
     }
     
-    // Allocate memory for eigenvalues and temporary vectors
-    double* eigenvalues = (double*)malloc(factors * sizeof(double));
-    double* eigenvector = (double*)malloc(cols * sizeof(double));
+    // Allocate memory
+    double* eigenvalues = (double*)calloc(factors, sizeof(double));
+    double* eigenvector = (double*)calloc(cols, sizeof(double));
     
     if (eigenvalues == NULL || eigenvector == NULL) {
+        printf("Memory allocation failed\n");
         freeMatrix(corr_num);
         free(eigenvalues);
         free(eigenvector);
         return -1;
     }
 
-    // Extract factors using power method
+    // Initialize loadings matrix to zero
+    for (i = 0; i < loadings->rows; i++) {
+        for (j = 0; j < loadings->cols; j++) {
+            matp(loadings, i, j) = 0.0;
+        }
+    }
+
+    // Extract factors
     for (i = 0; i < factors; i++) {
-        // Initialize random eigenvector
+        // Initialize eigenvector
+        double norm = 0.0;
         for (j = 0; j < cols; j++) {
-            eigenvector[j] = (double)rand() / RAND_MAX;
+            eigenvector[j] = 1.0 / sqrt(cols); // Start with uniform values
+            norm += eigenvector[j] * eigenvector[j];
+        }
+        norm = sqrt(norm);
+        for (j = 0; j < cols; j++) {
+            eigenvector[j] /= norm;
         }
 
-        // Apply power method
-        double eigenvalue = power_method(corr, eigenvector, cols, 100, 1e-6);
+        // Apply power method with validation
+        double eigenvalue = power_method(corr, eigenvector, cols, 1000, 1e-10);
+        
+        // Validate eigenvalue
+        if (isnan(eigenvalue) || eigenvalue < 1e-10) {
+            printf("Warning: Invalid eigenvalue %f for factor %d\n", eigenvalue, i);
+            continue;
+        }
+        
         eigenvalues[i] = eigenvalue;
 
-        // Store eigenvector in loadings matrix
+        // Store loadings with validation
         for (j = 0; j < cols; j++) {
-            matp(loadings, j, i) = eigenvector[j];
+            double loading = eigenvector[j] * sqrt(fabs(eigenvalue));
+            if (!isnan(loading)) {
+                matp(loadings, j, i) = loading;
+            } else {
+                printf("Warning: NaN loading detected at (%d,%d)\n", j, i);
+                matp(loadings, j, i) = 0.0;
+            }
         }
 
-        // Deflate the correlation matrix
+        // Deflate correlation matrix
         for (j = 0; j < cols; j++) {
             for (k = 0; k < cols; k++) {
-                matp(corr, j, k) -= eigenvalue * eigenvector[j] * eigenvector[k];
+                double deflation = eigenvalue * eigenvector[j] * eigenvector[k];
+                if (!isnan(deflation)) {
+                    matp(corr, j, k) -= deflation;
+                }
+            }
+        }
+
+        // Regularize diagonal
+        for (j = 0; j < cols; j++) {
+            if (matp(corr, j, j) < 1e-10) {
+                matp(corr, j, j) = 1e-10;
             }
         }
     }
+
+    // Verify results
+    printf("Eigenvalues: ");
+    for (i = 0; i < factors; i++) {
+        printf("%f ", eigenvalues[i]);
+    }
+    printf("\n");
 
     // Clean up
     free(eigenvalues);
