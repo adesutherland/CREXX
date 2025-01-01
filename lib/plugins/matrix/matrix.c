@@ -65,7 +65,7 @@
 
 struct Matrix {
     double* CBselfref;     // CB self reference
-    char id[32];
+    char id[64];
     int rows;
     int cols;
     double * vector;  // Pointer to the matrix data
@@ -127,22 +127,48 @@ int validateMatrix(int matnum) {
 
     return MATRIX_VALID;
 }
+#define printdel(hyphen,num) {int ipi; for (ipi = 0; ipi < num; ipi++) {putchar(hyphen);} putchar('\n');}
 
-void printMatrix(int matname) {
+void centerString(const char *str, int width) {
+    int len = strlen(str);  // Length of the string
+    if (len >= width) {   // If the string is wider than the width, print it as is
+        printf("%s\n", str);
+        return;
+    }
+    int padding = (width - len) / 2;  // Calculate spaces for centering
+    int extra = (width - len) % 2;   // Handle odd width
+    // Print left padding, the string, and right padding
+    printf("%*s%s%*s\n", padding, "", str, padding + extra, "");
+}
+
+void printMatrix(int matname, char * header) {
     int i, j, status;
     status = validateMatrix(matname);
-    struct Matrix matrix = *(struct Matrix *) allVectors[matname];
     if (status != MATRIX_VALID) {
         printf("Error: Matrix validation error %d for %d\n",MATRIX_VALID,matname);
         return;
     }
-    printf("Matrix %d: %s, dimension: %dx%d\n",matname, matrix.id, matrix.rows, matrix.cols);
+    char matstring[128];
+    struct Matrix matrix = *(struct Matrix *) allVectors[matname];
+    if (strlen((const char *) header) == 0) sprintf(matstring, "Matrix %d: %s, dimension: %dx%d", matname, matrix.id, matrix.rows, matrix.cols);
+    else sprintf(matstring, "Matrix %d: %s, dimension: %dx%d", matname, header, matrix.rows, matrix.cols);
+    centerString(matstring,(matrix.cols)*11+5);
+    printdel('-',(matrix.cols)*11+5);
+    printf("Rows/Cols   1");
+    for (j = 1; j < matrix.cols; ++j) {
+        printf("%11d", j+1);
+    }
+    printf("\n");
+    printdel('-',(matrix.cols)*11+5);
+
     for (i = 0; i < matrix.rows; ++i) {
+        printf("%4d: ",i+1);
         for (j = 0; j < matrix.cols; ++j) {
             printf("%10.4f ", matrix.vector[i * matrix.cols + j]);
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 // Comparison function for qsort
@@ -393,7 +419,7 @@ PROCEDURE(mprint) {
         printf("Matrix validation for %d failed: %d\n",GETINT(ARG0),status);
         RETURNINT(status);
     }
-    printMatrix(GETINT(ARG0));
+    printMatrix(GETINT(ARG0),"");
     ENDPROC
 }
 
@@ -1216,7 +1242,7 @@ int varimax_rotation(struct Matrix* loadings, int max_iter) {
         if (B) MATRIX_FREE(B);
         return MATRIX_ALLOC_DATA;
     }
-
+    printf("Factor Analysis Rotation: Varimax\n");
     // Calculate initial communalities
     for (i = 0; i < p; i++) {
         h2[i] = 0.0;
@@ -1294,7 +1320,7 @@ int quartimax_rotation(struct Matrix* loadings, int max_iter) {
     // Allocate memory
     h2 = (double*)MATRIX_ALLOC(p * sizeof(double));
     if (!h2) return MATRIX_ALLOC_DATA;
-
+    printf("Factor Analysis Rotation: Quartimax\n");
     // Calculate communalities
     for (i = 0; i < p; i++) {
         h2[i] = 0.0;
@@ -1359,7 +1385,7 @@ int promax_rotation(struct Matrix* loadings, int max_iter) {
     int pattern_num = matcreate(p, m,1,"pattern");
     if (pattern_num < 0) return pattern_num;
     struct Matrix* pattern = (struct Matrix*)allVectors[pattern_num];
-
+    printf("Factor Analysis Rotation: Promax\n");
     // Calculate pattern matrix
     for (i = 0; i < p; i++) {
         for (j = 0; j < m; j++) {
@@ -1435,16 +1461,11 @@ int calculate_factor_scores(struct Matrix* data, struct Matrix* loadings, struct
 }
 
 // Calculate basic factor analysis diagnostics
-int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, struct Matrix* diag) {
+int calculate_basic_diagnostics(struct Matrix* datax, int diagnum, struct Matrix* loadings, struct Matrix* diag) {
     int i, j;
     int p = loadings->rows;    // Number of variables
     int m = loadings->cols;    // Number of factors
     double total_variance = 0.0;
-
-    // Row 0: Communalities
-    // Row 1: Eigenvalues
-    // Row 2: Proportion of variance
-    // Row 3: Cumulative proportion
 
     // Calculate communalities and eigenvalues
     for (i = 0; i < p; i++) {
@@ -1475,7 +1496,6 @@ int calculate_basic_diagnostics(struct Matrix* data, struct Matrix* loadings, st
         cumulative += prop;
         matp(diag,3,j) = cumulative;
     }
-
     return MATRIX_SUCCESS;
 }
 
@@ -1566,50 +1586,9 @@ int create_screen_data(struct Matrix* diag, char* id) {
         matp(screen,0,i) = i + 1;
         matp(screen,1,i) = matp(diag,1,i);  // Copy eigenvalues
     }
-
-    return matnum;
-}
-
-// Enhanced interpretation with more details
-int create_detailed_interpretation(struct Matrix* loadings, struct Matrix* diag,
-                                char* id) {
-    int i, j;
-    int p = loadings->rows;
-    int m = loadings->cols;
-
-    // Create interpretation matrix with additional rows for metrics
-    int matnum = matcreate(p + 3, m + 2,1 ,id);
-    if (matnum < 0) return matnum;
-
-    struct Matrix* interp = (struct Matrix*)allVectors[matnum];
-
-    // Variable loadings and metrics
-    for (i = 0; i < p; i++) {
-        // Loadings
-        for (j = 0; j < m; j++) {
-            double loading = matp(loadings,i,j);
-            matp(interp,i,j) = loading;
-        }
-
-        // Communality
-        matp(interp,i,m) = matp(diag,0,i);
-
-        // Complexity (number of significant loadings)
-        int complexity = 0;
-        for (j = 0; j < m; j++) {
-            if (fabs(matp(loadings,i,j)) > 0.4) complexity++;
-        }
-        matp(interp,i,m+1) = complexity;
-    }
-
-    // Factor statistics
-    for (j = 0; j < m; j++) {
-        matp(interp,p,j) = matp(diag,1,j);      // Eigenvalues
-        matp(interp,p+1,j) = matp(diag,2,j);    // Proportion
-        matp(interp,p+2,j) = matp(diag,3,j);    // Cumulative
-    }
-
-    return matnum;
+    printMatrix(matnum,"Ellbow Point");
+    freeMatrix(matnum);
+    return 0;
 }
 
 
@@ -1621,49 +1600,50 @@ PROCEDURE(mfactor) {
     struct Matrix data = *(struct Matrix *) allVectors[GETINT(ARG0)];
     char * parse=GETSTRING(ARG3);
     int factors = GETINT(ARG1);
-    int rotate  = 0;  // Rotation method
-    int scores  = 0;  // 0 = no scores, 1 = calculate scores
-    printf("parse %s\n",parse);
+
     parse_option_parms(parse, &options);
     // Create matrix for factor loadings
     int loadings_num = matcreate(data.cols, factors, 3,GETSTRING(ARG2));  // later maybe 2. matrix needed
     if (loadings_num < 0) RETURNINT(loadings_num);
 
     struct Matrix loadings = *(struct Matrix *) allVectors[loadings_num];
-
+    printf(" \n");
+    printf("--- Factor Analysis started ---\n");
+    printf("Number of factors: %d\n",factors);
+    printf("Requested options: %s\n",parse);
     // Perform factor analysis
     status = factor_analysis(&data, &loadings, factors);
     if (status != MATRIX_SUCCESS) {
         freeMatrix(loadings_num);
         RETURNINTX(status);
     }
-
+     printMatrix(loadings_num,"Factor Matrix prior rotation");
     // Apply rotation if requested
-    if (options.rotate != ROTATE_NONE) {
+    if (options.rotate == ROTATE_NONE)  printf(" Factor Analysis Rotation: none\n");
+    else {
         status = factor_rotation(&loadings, options.rotate, 100);
         if (status != MATRIX_SUCCESS) {
             freeMatrix(loadings_num);
             RETURNINTX(status);
         }
+        printMatrix(loadings_num,"Factor Matrix after rotation");
     }
 
     // Calculate diagnostics if requested
-    int diagnostics=3;
-    if (diagnostics>0) {
-        int diag_num = matcreate(4, max(data.cols, factors), 1,"Diagnostics");
+    if (options.diag>0) {    // any diagnostics >0, means start with 1
+        int diag_num = matcreate(4, max(data.cols, factors), 1,"Basic Diagnostics");
         if (diag_num < 0) {
             freeMatrix(loadings_num);
             RETURNINTX(diag_num);
         }
 
         struct Matrix diag = *(struct Matrix *) allVectors[diag_num];
-        status = calculate_basic_diagnostics(&data, &loadings, &diag);
+        status = calculate_basic_diagnostics(&data, diag_num,&loadings, &diag);
         if (status != MATRIX_SUCCESS) {
             freeMatrix(loadings_num);
             freeMatrix(diag_num);
             RETURNINTX(status);
         }
-
         // Check adequacy with enhanced checks
         int adequacy = check_factor_adequacy(&diag, &data, &loadings);
         if (adequacy) {
@@ -1674,22 +1654,23 @@ PROCEDURE(mfactor) {
             if (adequacy & 8) printf("WARNING: Sample size may be inadequate (< 5 cases per variable)\n");
             if (adequacy & 16) printf("WARNING: Potential multicollinearity detected\n");
         }
-
+        printf("--- Diagnostics stored in Matrix %d\n",diag_num);
+        printf("Row 1: Communalities\n");
+        printf("Row 2: Eigenvalues\n");
+        printf("Row 3: Proportion of variance\n");
+        printf("Row 4: Cumulative proportion\n");
+        printMatrix(diag_num,"");
         // Create screenplot data if requested
-        if (diagnostics>=2) {
-            create_screen_data(&diag, "Diagnostics details I");
+        if (options.diag>=2) {
+            create_screen_data(&diag, "Data Plot");
         }
-
-        // Create detailed interpretation if requested
-        if (diagnostics>=3) {
-            create_detailed_interpretation(&loadings, &diag, "Diagnostics details II");
-        }
+        freeMatrix(diag_num);
     }
 
     // Calculate factor scores if requested
     if (options.score) {
         char scorenote[32];
-        sprintf(scorenote,"%s %s","Score:",GETSTRING(ARG4));
+        sprintf(scorenote,"%s %s","Scores:",GETSTRING(ARG4));
         int scores_num = matcreate(data.rows, factors, 1,scorenote);
         if (scores_num < 0) {
             freeMatrix(loadings_num);
@@ -1703,10 +1684,14 @@ PROCEDURE(mfactor) {
             freeMatrix(scores_num);
             RETURNINTX(status);
         }
+        printMatrix(scores_num,"");
+        freeMatrix(scores_num);
     }
 
     RETURNINT(loadings_num);
-ENDPROC
+ ENDPROC
+    printf("--- Factor Analysis ended ---\n");
+    printf(" \n");
 }
 
 // Additional statistical utility functions
