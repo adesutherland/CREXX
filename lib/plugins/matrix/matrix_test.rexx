@@ -67,23 +67,23 @@ call mprint m1
 
 mfdata=mcreate(20,5,'factorial')
 call factdata mfdata
+call mprint mfdata
 mfc=mCorr(mfdata,'Correlation')
 call mprint mfc
 
-say '*** Factor Analysis Varimax ***'
-loadings2 = mfactor(mfdata, 2, "Factor Analysis Varimax","Rotate=Varimax,SCORE")
+loadings2 = mfactor(mfdata, 2, "Factor Analysis Varimax","Rotate=Varimax,SCORE,diag=3")
 call analyseFact loadings2,mfc
+loadings2a = mfactor(mfdata, 1, "Factor Analysis Varimax","Rotate=Varimax,SCORE,diag=3")
+call analyseFact loadings2a,mfc
 
-say '*** Factor Analysis unrotated ***'
-loadings1 = mfactor(mfdata, 2, "Factor Analysis unrotated", "Rotate=none,SCORES")
+
+loadings1 = mfactor(mfdata, 2, "Factor Analysis unrotated", "Rotate=none,SCORES,diag=3")
 call analyseFact loadings1,mfc
 
-say '*** Factor Analysis Quartimax ***'
-loadings3 = mfactor(mfdata, 2, "Factor Analysis Quartimax","Rotate=Varimax,SCORE")
+loadings3 = mfactor(mfdata, 2, "Factor Analysis Quartimax","diag=3")
 call analyseFact loadings3,mfc
 
-say '*** Factor Analysis Promox ***'
-loadings4 = mfactor(mfdata, 2, "Factor Analysis Promax", "Rotate=promax,SCORE")
+loadings4 = mfactor(mfdata, 2, "Factor Analysis Promax", "Rotate=promax,SCORE,DIAG=5")
 call analyseFact loadings4,mfc
 
 call mfree -1            ## free all
@@ -91,14 +91,23 @@ exit
 
 analyseFact: procedure
   arg fact=.int,cor=.int
+  say '*** Factors are *** '
   call mprint fact
   factT=mtranspose(fact,"Transposed factorial")
   factmult=Mmult(fact,factT,'Generated Correlation')
   call mprint factMult
   call mprint cor
-  call mprint fact+1
-  call mprint fact+2
-  call mprint fact+3
+  mdif=mcreate(5,5,'Difference FCorrell and Correll')
+  maxdif=0.0
+  do i=1 to 5
+     do j=1 to 5
+        diff=mget(cor,i,j)-mget(factmult,i,j)
+        call mset mdif,i,j,diff
+        maxdif=maxdif+abs(diff)
+     end
+  end
+  say "cumulated differences "maxdif
+  call mprint mdif
 return
 
 

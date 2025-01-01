@@ -1465,37 +1465,80 @@ int calculate_basic_diagnostics(struct Matrix* datax, int diagnum, struct Matrix
     int i, j;
     int p = loadings->rows;    // Number of variables
     int m = loadings->cols;    // Number of factors
-    double total_variance = 0.0;
 
-    // Calculate communalities and eigenvalues
+    // Create correlation matrix
+    int corr_num = matcreate(p, p, 1, "temp_corr");
+    if (corr_num < 0) return corr_num;
+    struct Matrix* corr = (struct Matrix*)allVectors[corr_num];
+    
+    // Calculate correlation matrix once
     for (i = 0; i < p; i++) {
-        double comm = 0.0;
-        for (j = 0; j < m; j++) {
-            double loading = matp(loadings,i,j);
-            comm += loading * loading;
+        matp(corr, i, i) = 1.0;
+        for (j = i + 1; j < p; j++) {
+            double correlation = calculate_correlation(datax, i, j);
+            matp(corr, i, j) = correlation;
+            matp(corr, j, i) = correlation;
         }
-        matp(diag,0,i) = comm;  // Store communality
     }
 
-    // Calculate eigenvalues and variance proportions
-    for (j = 0; j < m; j++) {
-        double eigenval = 0.0;
+    // Allocate memory for eigenvalue calculation
+    double* eigenvalues = (double*)calloc(p, sizeof(double));
+    double* eigenvector = (double*)calloc(p, sizeof(double));
+    
+    if (eigenvalues == NULL || eigenvector == NULL) {
+        freeMatrix(corr_num);
+        free(eigenvalues);
+        free(eigenvector);
+        return -1;
+    }
+
+    // Calculate all eigenvalues in one pass
+    struct Matrix* work_matrix = corr;
+    double total_variance = 0.0;
+    
+    for (j = 0; j < p; j++) {
+        // Initialize eigenvector
         for (i = 0; i < p; i++) {
-            double loading = matp(loadings,i,j);
-            eigenval += loading * loading;
+            eigenvector[i] = 1.0 / sqrt(p);
         }
-        matp(diag,1,j) = eigenval;
-        total_variance += eigenval;
+
+        // Calculate eigenvalue
+        eigenvalues[j] = power_method(work_matrix, eigenvector, p, 1000, 1e-10);
+        matp(diag,1,j) = eigenvalues[j];
+        total_variance += eigenvalues[j];
+
+        // Deflate matrix for next eigenvalue
+        int r,c;
+        for (r = 0; r < p; r++) {
+            for (c = 0; c < p; c++) {
+                matp(work_matrix,r,c) -= eigenvalues[j] * eigenvector[r] * eigenvector[c];
+            }
+        }
     }
 
-    // Calculate proportions and cumulative proportions
+    // Calculate communalities and proportions in one pass
     double cumulative = 0.0;
-    for (j = 0; j < m; j++) {
-        double prop = matp(diag,1,j) / p;  // Proportion of variance
+    for (j = 0; j < p; j++) {
+        // Calculate communalities (only for factors used)
+        if (j < m) {
+            for (i = 0; i < p; i++) {
+                double loading = matp(loadings,i,j);
+                matp(diag,0,i) += loading * loading;  // Accumulate communalities
+            }
+        }
+
+        // Calculate proportion and cumulative proportion
+        double prop = eigenvalues[j] / total_variance;
         matp(diag,2,j) = prop;
         cumulative += prop;
         matp(diag,3,j) = cumulative;
     }
+
+    // Clean up
+    free(eigenvalues);
+    free(eigenvector);
+    freeMatrix(corr_num);
+    
     return MATRIX_SUCCESS;
 }
 
@@ -1572,25 +1615,34 @@ int check_factor_adequacy(struct Matrix* diag, struct Matrix* data, struct Matri
     return inadequate;
 }
 
-// Create visualization data for screenplot
-int create_screen_data(struct Matrix* diag, char* id) {
-    int i;
-    int matnum = matcreate(2, diag->cols, 1, id);
-    if (matnum < 0) return matnum;
+int find_elbow_point(double eigenvalues[], int n) {
+    double max_drop = 0.0;
+    int i, elbow_point = 0;
 
-    struct Matrix* screen= (struct Matrix*)allVectors[matnum];
-
-    // Row 0: Factor number (1-based)
-    // Row 1: Eigenvalues
-    for (i = 0; i < diag->cols; i++) {
-        matp(screen,0,i) = i + 1;
-        matp(screen,1,i) = matp(diag,1,i);  // Copy eigenvalues
+    for (i = 0; i < n - 1; i++) {
+        double drop = eigenvalues[i] - eigenvalues[i + 1];
+        if (drop > max_drop) {
+            max_drop = drop;
+            elbow_point = i + 1; // Factor numbers are 1-based
+        }
     }
-    printMatrix(matnum,"Ellbow Point");
-    freeMatrix(matnum);
-    return 0;
+    return elbow_point;
 }
 
+// Create visualization data for screenplot
+int create_screen_data(struct Matrix* diag) {
+    int i;
+    double eigenvalues[diag->cols];
+    // Row 0: Factor number (1-based)
+    // Row 1: Eigenvalues
+     for (i = 0; i < diag->cols; i++) {
+         eigenvalues[i] = matp(diag,1,i);
+     }
+    int elbow_point = find_elbow_point(eigenvalues, diag->cols);
+    // Output the elbow point
+    printf(">>> the elbow point is at Factor %d.\n", elbow_point);
+    return 0;
+}
 
 // Updated REXX procedure
 PROCEDURE(mfactor) {
@@ -1662,7 +1714,7 @@ PROCEDURE(mfactor) {
         printMatrix(diag_num,"");
         // Create screenplot data if requested
         if (options.diag>=2) {
-            create_screen_data(&diag, "Data Plot");
+            create_screen_data(&diag);  // find the elbow point: the minimum number of factors
         }
         freeMatrix(diag_num);
     }
