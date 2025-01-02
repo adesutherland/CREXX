@@ -419,7 +419,7 @@ PROCEDURE(mprint) {
         printf("Matrix validation for %d failed: %d\n",GETINT(ARG0),status);
         RETURNINT(status);
     }
-    printMatrix(GETINT(ARG0),"");
+    printMatrix(GETINT(ARG0),GETSTRING(ARG1));
     ENDPROC
 }
 
@@ -2428,7 +2428,7 @@ LOADFUNCS
     ADDPROC(mset,      "matrix.mset",      "b",  ".int", "m0=.int, row=.int, col=.int,value=.float");
     ADDPROC(mget,      "matrix.mget",      "b",  ".float","m0=.int, row=.int, col=.int");
     ADDPROC(mexpand,   "matrix.mexpand",   "b",  ".int", "m0=.int, newrows=.int, init=.float");
-    ADDPROC(mprint,    "matrix.mprint",    "b",  ".int", "m0=.int");
+    ADDPROC(mprint,    "matrix.mprint",    "b",  ".int", "m0=.int,hdr=.string");
     ADDPROC(mfree,     "matrix.mfree",     "b",  ".int", "m0=.int");
     ADDPROC(mdet,      "matrix.mdet",      "b",  ".int", "m0=.int");
     ADDPROC(mlu,       "matrix.mlu",       "b",  ".int", "m0=.int, L=.string, U=.string");

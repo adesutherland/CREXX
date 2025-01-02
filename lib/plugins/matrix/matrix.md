@@ -20,10 +20,7 @@ This library provides:
 - **Error Handling**: Comprehensive mechanisms to handle common matrix errors, ensuring robust and fail-safe operations.
 - **Performance Optimization**: Features for parallel processing, memory optimization, and numerical stability.
 
-The library is structured with best practices for memory management, error recovery, and performance tuning, making it suitable for both small-scale and high-performance computing environments. With its extensibility for advanced features like sparse matrices and system limits, the **Matrix Operations Library** delivers a powerful and flexible solution for handling complex matrix workflows.
-
 ---
-
 
 ## Basic Matrix Functions
 
@@ -46,7 +43,7 @@ id = mcreate(3, 3, "myMatrix");
     - `m0`: First input matrix (int)
     - `m1`: Second input matrix (int)
     - `mid`: Result matrix identifier (string)
-- **Returns**: Matrix handle (int)
+- **Returns**: new Matrix handle (int)
 
 ### Scalar Multiplication (`mprod`,'description')
 - **Purpose**: Multiplies a matrix by a scalar: \( B = A * scalar \)
@@ -54,7 +51,7 @@ id = mcreate(3, 3, "myMatrix");
     - `m0`: Input matrix (int)
     - `prod`: Scalar value (float)
     - `mid`: Result matrix identifier (string)
-- **Returns**: Matrix handle (int)
+- **Returns**: new Matrix handle (int)
 
 
 ### Matrix Inversion (`minvert`,'description')
@@ -62,7 +59,7 @@ id = mcreate(3, 3, "myMatrix");
 - **Parameters**:
     - `m0`: Input matrix (int)
     - `mid`: Result matrix identifier (string)
-- **Returns**: Matrix handle (int)
+- **Returns**: new Matrix handle (int)
 
 ### Matrix Transposition (`mtranspose`,'description')
 - **Purpose**: Computes the transpose of a matrix: \( B = A^T \)
@@ -82,22 +79,22 @@ mtrans(m1, "result"); // Transpose
 ### `mdet`
 - **Purpose**: Calculate matrix determinant
 - **Parameters**:
-  - m0: Input matrix (.int)
-- **Returns**: Success status (.int)
+  - m0: Input matrix (matrix-handle)
+- **Returns**: Success status (integer)
 
 ### `mrank`
 - **Purpose**: Calculate matrix rank
 - **Parameters**:
-  - m0: Input matrix (.int)
-- **Returns**: Matrix rank (.int)
+  - m0: Input matrix (matrix-handle)
+- **Returns**: Matrix rank (integer)
 ### `mlu`
 - **LU Decomposition**: `mlu(m0, L, U)` — Performs LU decomposition, returning lower (`L`) and upper (`U`) triangular matrices.
-- m0: Input matrix (.int)
+- m0: Input matrix (matrix-handle)
 ### `mprint`
 - **Purpose**: Print matrix to output
 - **Parameters**:
-  - m0: Matrix to print (.int,"alternative-heading") - if empty Matrix heading defined with MCREATE is used
-- **Returns**: Success status (.int)
+  - m0: Matrix to print (matrix-handle,"alternative-heading") - if empty Matrix heading defined with MCREATE is used
+- **Returns**: Success status (integer)
 
 ---
 
@@ -149,14 +146,14 @@ A smaller standard deviation indicates that data points are closer to the mean, 
 ### `mmean(m0, row)`
 - **Purpose**: Calculate mean along specified columns
 - **Parameters**:
-  - m0: Input matrix (.int)
+  - m0: Input matrix (matrix-handle)
   - column number
 - **Returns**: Mean value (.float)
  
 ### `mstdev(m0, row)`
 - **Purpose**: Calculates standard deviation along specified columns
 - **Parameters**:
-  - m0: Input matrix (.int)
+  - m0: Input matrix (matrix-handle)
   - column number
 - **Returns**: standard deviation value (.float)
 
@@ -168,7 +165,7 @@ stddev = mstdev(id, 2); // Row 2 standard deviation
 ### `colstats`
 - **Purpose**: General statistical analysis
 - **Parameters**:
-  - m0: Input matrix (.int)
+  - m0: Input matrix (matrix-handle)
   - mode: row number 
   - **Returns**: Vector - Matrix(4,1)  with input matrix details
 ```
@@ -339,14 +336,6 @@ mfaplot(loadings, "scree");
    - Memory pool for small matrices
    
 
-3. **Error Handling**
-   ```c
-   #define MATRIX_SUCCESS       0
-   #define MATRIX_MALLOC_ERROR -1
-   #define MATRIX_DIM_ERROR   -2
-   #define MATRIX_SING_ERROR  -3
-   ```
-
 ### Performance Considerations
 1. **Algorithm Selection**
    - Size-based optimization
@@ -373,28 +362,23 @@ mfaplot(loadings, "scree");
   - Convergence verification
   - Error bounds calculation
 
-[Add to Statistical Functions]
-
-
 #### `matrix.stats`
 - **Purpose**: General statistical analysis
 - **Parameters**:
-  - m0: Input matrix (.int)
-  - mode: Analysis mode (.string) - ROW or COL
+  - m0: Input matrix (matrix-handle)
+  - mode: Analysis mode (string) - ROW or COL
 - **Returns**: returns matrix dimension either column or row number 
-
-[Add to Visualization]
 
 #### `matrix.mplot`
 - **Purpose**: Create matrix plot
 - **Parameters**:
-  - m0: Input matrix (.int)
-  - plot_type: Type of plot (.string)
-- **Returns**: Success status (.int)
+  - m0: Input matrix (matrix-handle)
+  - plot_type: Type of plot (string)
+- **Returns**: Success status (integer)
 
 #### `masciiplot`
 - **Purpose**: Create ASCII visualization
 - **Parameters**:
-  - m0: Input matrix (.int)
-  - plot_type: Plot type (.string)
-- **Returns**: Success status (.int)
+  - m0: Input matrix (matrix-handle)
+  - plot_type: Plot type (string)
+- **Returns**: Success status (integer)

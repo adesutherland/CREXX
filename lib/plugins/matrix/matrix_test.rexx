@@ -1,113 +1,114 @@
-/* GETPI Plugin Test */
+/* Matrix Plugin Test */
 options levelb
 import rxfnsb
 import matrix
-/*
+
+say '*** Regression Test ***'
 rx=regdat()
 ry=regression(rx,rx+1,'Regression')
-call mprint ry
-say "************* End of Regression *******************"
+call mprint ry,""
+say '*** End of Regression Test ***'
+
+say '*** loading new data, some basic statistical tests ***'
 m1=mcreate(24,5,"Data Matrix")
 call matdata m1
 
-call mprint  m1
+call mprint  m1,""
 say "Mean   COL 1 "mmean(m1,1)
 say "Stddev COL 1 "mstdev(m1,1)
-say "Status M1 "stats(m1,'r')
-say "Status M1 "stats(m1,'c')
+say "Rows of M1 "stats(m1,'r')
+say "Cols of M1 "stats(m1,'c')
 m2=m1
+say '*** end of basic tests ***'
 
+say '*** Create Correlation Matrix ***'
 m9=Mcorr(m1,'Correlation')
-call mprint m9
-say "************* End of Correltation *******************"
-## call mplot m9, "line"
-## call mplot m9, "scatter"
-## call mplot m9, "bar"
-## call mplot m9, "heatmap"
-##  - "line": Line plot
-##  - "scatter": Scatter plot
-##  - "bar": Bar chart
-##  - "heatmap": Heatmap
-ma=Mcov(m1,'Covariance')
-call mprint ma
+call mprint m9,""
+say '*** end of correlation ***'
 
+say '*** Create Covariance Matrix ***'
+ma=Mcov(m1,'Covariance')
+call mprint ma,""
+say '*** end of covariance ***'
+
+say '*** Create Correlation Matrix by Matrix operations ***'
 ## lets do the calculation via Matrix operations
 ## 1. transpose Data Matrix
   m2=mtranspose(m1,"Transposed Data Matrix")
-  call mprint m2
+  call mprint m2,""
 say "************* End of Transpose I *******************"
 ## 2. Standardise Data Matrix (mean=0, stddev=1)
   m4=mstandard(m1,"Standardised")
-  call mprint  m4
+  call mprint  m4,""
 ## 3. transpose standardised Data Matrix
   m5=mtranspose(m4,"Transposed Data Matrix")
-  call mprint m5
+  call mprint m5,""
   say "************* End of Transpose II *******************"
 ## 4. multiply Data Matrix with transposed Matrix
   m6=mmult(m5,m4,"close to Correlation Matrix")
-  call mprint m6
+  call mprint m6,""
    say "************* End of Mult II *******************"
 ## 5. Almost there, multiply by rows
   m7=mprod(m6,1/23,"Correlation Matrix")
-  call mprint m7
-    say "************* End of scalar Prod *******************"
-## 6. other stuff: determinant
+  call mprint m7,""
+ say '*** end of correlation ***'
+
+say '*** other functions ***'
    say 'determinante 'mdet(m1)
-    say "************* End of Determinante *******************"
 ## 7. other stuff: L and U Matrix
    mlx=mlu(m6,"L Matrix","U Matrix")
-   call mprint mlx
-   call mprint mlx+1
-stats = mcolstats(m1, "Statistics")
-call mprint(stats)
-
+   call mprint mlx,""
+   call mprint mlx+1,""
+   stats = mcolstats(m1, "Statistics")
+   call mprint stats,""
+say copies('-',72)
+say 'Factor Analysis'
+say copies('-',72)
 say '*** Data Matrix before Factor Analysis ***'
-call mprint m1
-*/
 
 mfdata=mcreate(20,5,'factorial')
-call factdata mfdata
-call mprint mfdata
+call factdata mfdata    ## load new data
+
+call mprint mfdata,""      ##print it
 mfc=mCorr(mfdata,'Correlation')
-call mprint mfc
-
+call mprint mfc,'Correlation of loaded data'
+## now do some different facto analysis
 loadings2 = mfactor(mfdata, 2, "Factor Analysis Varimax","Rotate=Varimax,SCORE,diag=3")
-call analyseFact loadings2,mfc
+  call analyseFact loadings2,mfc
 loadings2a = mfactor(mfdata, 1, "Factor Analysis Varimax","Rotate=Varimax,SCORE,diag=3")
-call analyseFact loadings2a,mfc
-
-
+  call analyseFact loadings2a,mfc
 loadings1 = mfactor(mfdata, 2, "Factor Analysis unrotated", "Rotate=none,SCORES,diag=3")
-call analyseFact loadings1,mfc
-
+  call analyseFact loadings1,mfc
 loadings3 = mfactor(mfdata, 2, "Factor Analysis Quartimax","diag=3")
-call analyseFact loadings3,mfc
-
+  call analyseFact loadings3,mfc
 loadings4 = mfactor(mfdata, 2, "Factor Analysis Promax", "Rotate=promax,SCORE,DIAG=5")
-call analyseFact loadings4,mfc
-
+  call analyseFact loadings4,mfc
 call mfree -1            ## free all
 exit
 
 analyseFact: procedure
   arg fact=.int,cor=.int
   say '*** Factors are *** '
-  call mprint fact
+  call mprint fact,""
   factT=mtranspose(fact,"Transposed factorial")
   factmult=Mmult(fact,factT,'Generated Correlation')
-  call mprint factMult
-  call mprint cor
+  call mprint factMult,""
+  call mprint cor,""
+##  call checkCorr cor
   mdif=mcreate(5,5,'Difference FCorrell and Correll')
+
+  rows=stats(cor,'Rows')
+  cols=stats(cor,'cols')
   maxdif=0.0
-  do i=1 to 5
-     do j=1 to 5
+  do i=1 to  rows
+     do j=i+1 to cols
         diff=mget(cor,i,j)-mget(factmult,i,j)
         call mset mdif,i,j,diff
         maxdif=maxdif+abs(diff)
      end
   end
   say "cumulated differences "maxdif
-  call mprint mdif
+##  call mprint mdif,""
 return
 
 
@@ -123,20 +124,20 @@ regression: procedure=.int
 
  ## Step 1: Add a column of ones to X for the intercept
     augmented=mexpand(ind,1,1.0)
-    call mprint augmented
+    call mprint augmented,""
  ## Step 2: calculate ('X*X)
     Xt  = mtranspose(augmented, "Xt");
     XtX = mmult(Xt, augmented,  "XtX");
  ## Step 3: Calculate (X'y)
     XtY = mmult(Xt, dep, "XtY");
-    call mprint xty
+    call mprint xty,""
  ## Step 4: Invert (X'X)
     XtX_inv = minvert(XtX, "XtX_inverted");
     if XtX_inv < 0 then return -21;             ## Singular matrix error
-    call mprint xtx_inv
+    call mprint xtx_inv,""
  ## Step 5: Calculate coefficients: result = (X'X)^(-1)(X'y)
     result = mmult(XtX_inv, XtY, "Regression Coefficients");
-    call mprint result
+    call mprint result,""
  ## Clean up temporary matrices
  say '*************** cleanup *******************'
     say "FREE XT      "xt  mfree(Xt);
@@ -144,6 +145,33 @@ regression: procedure=.int
     say "FREE XTY     "xty mfree(XtY);
     say "FREE XTX_INV "xtx_inv mfree(XtX_inv);
 return result
+
+/* Define thresholds for categorization */
+checkCorr: procedure
+  arg cor=.int
+  strong_threshold = 0.7
+  moderate_threshold = 0.3
+
+  rows=stats(cor,'Rows')
+  cols=stats(cor,'COLs')
+
+/* Interpret the matrix */
+do row = 1 to rows
+    do col = 1 to cols
+        if row = col then iterate
+        corr_value = mget(cor,row,col)
+        if corr_value > strong_threshold then  ,
+           say "Variables "row" and " col "have a strong positive correlation of "corr_value
+        else if corr_value < -strong_threshold then  ,
+           say "Variables "row" and " col "have a strong negative correlation of "corr_value
+        else if corr_value > moderate_threshold then  ,
+           say "Variables "row" and " col "have a moderate positive correlation of "corr_value
+        else if corr_value < -moderate_threshold then  ,
+             say "Variables "row" and " col "have a moderate negative correlation of "corr_value
+    end
+end
+return
+
 factdata:procedure=.int
   arg fact=.int
 call mset fact,1,1,4.2
