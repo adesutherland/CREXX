@@ -57,6 +57,8 @@ typedef struct op_map {
    Assembler_Token *reg_token[MAX_OP_MAP];
    Assembler_Token *integer_token[MAX_OP_MAP];
    Assembler_Token *string_token[MAX_OP_MAP];
+   Assembler_Token *binary_token[MAX_OP_MAP];
+   Assembler_Token *decimal_token[MAX_OP_MAP];
    Assembler_Token *character_token[MAX_OP_MAP];
    Assembler_Token *real_token[MAX_OP_MAP];
    Assembler_Token *branch_token[MAX_OP_MAP];
@@ -90,7 +92,8 @@ typedef struct op_map {
  * output 2 *
  * input    *  {END_OF_RULE},  ...
  *
- *  op1/op2/op3 are the parameter types of the instruction, r: register, l: label, b: branch, ...
+ *  op1/op2/op3 are the parameter types of the instruction, r: register, l: label, b: branch, s: string, d: decimal,
+ *                                                          h: hex (binary), c: character, f: float
  *  v1/v2/v3 is the temporary variable number in which the parameter content is kept, for the optimising statement.
  *     0:    parameter is not kept
  *     1-10: parameter is kept in the specified variable
@@ -451,7 +454,7 @@ static int is_hazardous(enum queue_item_type type, Assembler_Token *instrToken, 
 }
 
 /*
- * Return 1 if the instrToken is relevant
+ * Return 1 if the instrToken is relevant.
  * Relevant means it uses a mapped register
  */
 static int is_relevant(op_map *map, Assembler_Token *opToken) {
@@ -506,7 +509,23 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
         case 's': /* String */
             if (opToken->token_type != STRING ) return 0; /* Wrong Type */
             if (map->string_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string)
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+                    return 0; /* Wrong value */
+            }
+            return 1;
+
+        case 'h': /* Hex (Binary) */
+            if (opToken->token_type != HEX ) return 0; /* Wrong Type */
+            if (map->binary_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+                    return 0; /* Wrong value */
+            }
+            return 1;
+
+        case 'd': /* Decimal */
+            if (opToken->token_type != DECIMAL ) return 0; /* Wrong Type */
+            if (map->decimal_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             return 1;
@@ -615,11 +634,35 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
         case 's': /* String */
             if (opToken->token_type != STRING ) return 0; /* Wrong Type */
             if (map->string_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string)
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
                 map->string_token[op_num] = opToken;
+                map->string[op_num] = opToken->token_value.string;
+            }
+            return 1;
+
+        case 'h': /* Hex (Binary) */
+            if (opToken->token_type != HEX ) return 0; /* Wrong Type */
+            if (map->binary_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->binary_token[op_num] = opToken;
+                map->string[op_num] = opToken->token_value.string;
+            }
+            return 1;
+
+        case 'd': /* Decimal */
+            if (opToken->token_type != DECIMAL ) return 0; /* Wrong Type */
+            if (map->decimal_token[op_num]) { /* Already Mapped - checked consistent */
+                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+                    return 0; /* Wrong value */
+            }
+            else { /* Not mapped yet - map it */
+                map->decimal_token[op_num] = opToken;
                 map->string[op_num] = opToken->token_value.string;
             }
             return 1;
@@ -790,6 +833,12 @@ static Assembler_Token* mapped_token(Assembler_Context *context, op_map *map, ch
 
         case 's': /* String */
             return map->string_token[op_num];
+
+        case 'h': /* Hex (Binary) */
+            return map->binary_token[op_num];
+
+        case 'd': /* Decimal */
+            return map->decimal_token[op_num];
 
         case 'c': /* Char */
             return map->character_token[op_num];
@@ -1137,6 +1186,8 @@ void rxasque0(Assembler_Context *context, Assembler_Token *instrToken) {
 
 /* Queue opcode  */
 void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
+    // Convert any FLOATS to DECIMALS
+    promote_floats_to_decimals(instrToken, operand1Token, 0, 0);
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, 0, 0, 0, 0);
     }
@@ -1146,6 +1197,8 @@ void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 /* Queue opcode  */
 void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token) {
+    // Convert any FLOATS to DECIMALS
+    promote_floats_to_decimals(instrToken, operand1Token, operand2Token, 0);
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, 0, 0, 0);
     }
@@ -1155,6 +1208,8 @@ void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 /* Queue opcode  */
 void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+    // Convert any FLOATS to DECIMALS
+    promote_floats_to_decimals(instrToken, operand1Token, operand2Token, operand3Token);
     if (context->optimise) {
         queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, operand3Token, 0, 0);
     }

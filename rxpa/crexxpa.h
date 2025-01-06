@@ -49,8 +49,10 @@ typedef enum rxsignal {
     SIGNAL_FAILURE = 7,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
     SIGNAL_HALT = 8,                 /* Triggered when the REXX program receives an external request to halt its execution */
     SIGNAL_NOTREADY = 9,             /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
-    SIGNAL_INVALID_ARGUMENTS = 10,    /* Triggered when invalid arguments are passed to a function or subroutine */
-    SIGNAL_OTHER = 99               /* Triggered when an unknown error occurs */
+    SIGNAL_INVALID_ARGUMENTS = 10,   /* Triggered when invalid arguments are passed to a function or subroutine */
+    SIGNAL_DIVISION_BY_ZERO = 11,    /* Triggered when the REXX program attempts to divide by zero */
+    SIGNAL_UNICODE_ERROR = 12,       /* Triggered when an unicode error occurs */
+    SIGNAL_OTHER = 99                /* Triggered when an unknown error occurs */
 } rxsignal;
 
 // Plugin Helper Functions

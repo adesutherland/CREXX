@@ -56,6 +56,8 @@ typedef struct Assembler_Context {
     int meta_head;
     int meta_tail;
     struct avl_tree_node *string_constants_tree;
+    struct avl_tree_node *decimal_constants_tree;
+    struct avl_tree_node *binary_constants_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
@@ -79,7 +81,7 @@ struct Assembler_Token {
     char optimised;
     union {
         rxinteger integer;
-        unsigned char string[1];
+        unsigned char string[1]; // Stores the string, binary (as hex) or decimal (as a string)
         unsigned char character;
         double real;
         void *pointer;
@@ -193,5 +195,9 @@ int rxasoutf(Assembler_Context *scanner);
 
 /* Clear and Free Assembler Context */
 void rxasclrc(Assembler_Context *scanner);
+
+/* Convert FLOAT tokens to a DECIMAL tokens as defined by the instruction types */
+void promote_floats_to_decimals(Assembler_Token *instrToken,
+                                Assembler_Token *operand1Token, Assembler_Token *operand2Token, Assembler_Token *operand3Token);
 
 #endif //CREXX_RXSA_H

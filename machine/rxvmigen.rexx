@@ -191,6 +191,12 @@ addCode:
 	else if word(instr,cnum+1)='STRING' then do
        call inc_miss '    s'cnum' = CONSTSTRING_OP('cnum');'
 	end
+	else if word(instr,cnum+1)='DECIMAL' then do
+       call inc_miss '    d'cnum' = DECIMAL_OP('cnum');'
+    end
+    else if word(instr,cnum+1)='BINARY' then do
+       call inc_miss '    b'cnum' = BINARY_OP('cnum');'
+    end
 return
 
 /* -------------------------------------------------------------------------------

@@ -18,11 +18,13 @@
 typedef intmax_t rxinteger;
 #else
 #ifdef __32BIT__
-typedef long rxinteger;
+typedef long rxinteger;    // Legacy C90
 #else
-typedef long long rxinteger;
+#include <stdint.h>
+typedef int64_t rxinteger; // C99+
 #endif
 #endif
+#define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
 #endif //RXINTEGER_T
 
 typedef struct value value;
@@ -46,8 +48,9 @@ struct value {
     /* Value */
     rxinteger int_value;
     double float_value;
-    void *decimal_value;
-    size_t decimal_value_length;
+    void *decimal_value; // Must be malloced
+    size_t decimal_value_length; // decimal_value length
+    size_t decimal_buffer_length; // decimal_value buffer length
     char *string_value;
     size_t string_length;
     size_t string_buffer_length;
@@ -56,8 +59,9 @@ struct value {
     size_t string_chars;
     size_t string_char_pos;
 #endif
-    char *binary_value;
-    size_t binary_length;
+    char *binary_value; // Must be malloced
+    size_t binary_length; // binary_value length
+    size_t binary_buffer_length; // binary_value buffer length
     value **attributes;
     value **unlinked_attributes;
     value **attribute_buffers;

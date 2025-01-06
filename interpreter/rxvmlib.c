@@ -8,6 +8,7 @@
 #include <windows.h>
 #endif
 #include "rxvmintp.h"
+#include "rxvmplugin_framework.h"
 
 /* Program Buffer */
 extern char rx__pg[];
@@ -148,6 +149,18 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "ERROR reading linked plugins\n");
         exit(-1);
     }
+
+    /*
+     * Load VM RXAS Plugin(s)
+     * Note in general the last plugin loaded has priority.
+     * In future versions this will be extebded to allow dynamic (via RXAS instructins) selection of the
+     * RXAS plugin to use on a procedure-by-procedure basis
+     *
+     * CURRENTLY THIS EMBEDDED VM DOES NOT SUPPORT DYNAMIC LOADING OF RXAS PLUGINS
+     */
+    // First - the linker "magic" will take care of initializing static linked plugins with auto-initializers
+    // Secondly - we manually initialize the plugins that are statically linked with manual initializers (hardcoded)
+    CALL_PLUGIN_INITIALIZER(dbnumber);
 
     /* Run the program */
 #ifndef NDEBUG

@@ -4,6 +4,10 @@ function(add_dynamic_plugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
     set(sources ${ARGN})
 
+    if(NOT sources)
+        message(FATAL_ERROR "No source files provided for dynamic rxpa plugin ${plugin_name}")
+    endif()
+
     # Create the plugin module
     add_library(${plugin_name} MODULE ${sources})
     target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
@@ -18,6 +22,10 @@ function(add_decl_plugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
     set(sources ${ARGN})
 
+    if(NOT sources)
+        message(FATAL_ERROR "No source files provided for static rxpa plugin decl ${plugin_name}")
+    endif()
+
     # Create a static library version of the plugin declaration
     add_library(${plugin_name}_decl STATIC ${sources})
     target_include_directories(${plugin_name}_decl PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
@@ -30,6 +38,10 @@ endfunction()
 function(add_static_plugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
     set(sources ${ARGN})
+
+    if(NOT sources)
+        message(FATAL_ERROR "No source files provided for static rxpa plugin ${plugin_name}")
+    endif()
 
     # Create a static library version of the plugin
     add_library(${plugin_name}_static STATIC ${sources})

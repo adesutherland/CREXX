@@ -92,6 +92,8 @@ int rxasinbf(Assembler_Context *scanner) {
     memset(scanner->binary.const_pool,0,scanner->const_buffer_size);
 
     scanner->string_constants_tree = 0;
+    scanner->decimal_constants_tree = 0;
+    scanner->binary_constants_tree = 0;
     scanner->proc_constants_tree = 0;
     scanner->label_constants_tree = 0;
     scanner->extern_constants_tree = 0;

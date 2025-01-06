@@ -21,6 +21,9 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
         case ID:
         case FUNC:
         case STRING:
+        case HEX:
+        case DECIMAL:
+        case FLOAT: // FLOAT could be a DECIMAL - therefore, we store the float value and the string
             extra_for_value = (int)(context->cursor - context->top - sizeof(((Assembler_Token*)0)->token_value) + 1);
             if (extra_for_value < 0) extra_for_value = 0;
             break;
@@ -69,12 +72,9 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
             free(buffer);
             break;
         case FLOAT:
-            /* Need to null terminate */
-            buffer = malloc(token->length + 1);
-            memcpy(buffer, token->token_source, token->length);
-            buffer[token->length] = 0;
-            token->token_value.real = atof(buffer); // NOLINT
-            free(buffer);
+            memcpy(token->token_value.string, token->token_source, token->length);
+            token->token_value.string[token->length] = 0;
+            token->token_value.real = atof(token->token_value.string); // NOLINT
             break;
         case LABEL:
             memcpy(token->token_value.string, token->token_source, token->length);
@@ -112,6 +112,14 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
             memcpy(token->token_value.string, token->token_source + 1, token->length - 2);
             token->token_value.string[token->length-2] = 0;
             break;
+        case DECIMAL: // 'd' is removed
+            memcpy(token->token_value.string, token->token_source, token->length - 1);
+            token->token_value.string[token->length - 1] = 0;
+            break;
+        case HEX:
+            memcpy(token->token_value.string, token->token_source, token->length);
+            token->token_value.string[token->length] = 0;
+            break;
         default:
             token->token_value.integer = 0;
     }
@@ -123,7 +131,7 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
 
 /* Create an optimised ID token which is not in the source input
  * If from_token if specified the source position (e.g. line number) is taken
- * from the from_token position, otherwise position is set to zero.
+ * from the from_token position, otherwise the position is set to zero.
  * Returns a new token with value as the new_id */
 Assembler_Token* rxas_tid(Assembler_Context* context, Assembler_Token *from_token, char* new_id) {
     int extra_for_value;
@@ -196,6 +204,8 @@ void rxasp_t(Assembler_Token* token) {
         case ID:
         case FUNC:
         case STRING:
+        case HEX:
+        case DECIMAL:
             printf("[%s] ", token->token_value.string);
             break;
         default:

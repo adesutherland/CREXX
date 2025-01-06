@@ -14,14 +14,14 @@
 #include <math.h>
 #include <ctype.h>
 #include <errno.h>
+#include <float.h>
 
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
     v->status.all_type_flags = 0;
     v->int_value = 0;
     v->float_value = 0;
-    v->decimal_value = 0;
-    v->string_length = 0;
+    v->string_length = 0; // Lazy Free String - just zero the used length
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_chars = 0;
@@ -29,9 +29,10 @@ RX_INLINE void value_zero(value *v) {
 #endif
     v->num_attributes = 0;
 
-    /* Free binary */
-    if (v->binary_value) free(v->binary_value);
-    v->binary_value = 0;
+    /* Lazy Free Decimal - just zero the used length */
+    v->decimal_value_length = 0;
+
+    /* Lazy Free binary - just zero the used length */
     v->binary_length = 0;
 }
 
@@ -45,7 +46,9 @@ RX_INLINE void value_init(value *v) {
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
     v->binary_value = 0;
-    v->binary_length = 0;
+    v->binary_buffer_length = 0;
+    v->decimal_value = 0;
+    v->decimal_buffer_length = 0;
     value_zero(v);
 }
 
@@ -94,7 +97,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         if (v->attribute_buffers) v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * v->num_attribute_buffers);
         else v->attribute_buffers = malloc(sizeof(value*) * v->num_attribute_buffers);
 
-        /* Create new buffer */
+        /* Create a new buffer */
         v->attribute_buffers[v->num_attribute_buffers - 1] =
                 malloc(sizeof(value) * (num - v->max_num_attributes));
 
@@ -181,10 +184,17 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     /* Free strings */
     if (v->string_value != v->small_string_buffer) free(v->string_value);
 
+    /* Free decimal */
+    if (v->decimal_value) free(v->decimal_value);
+    v->decimal_value = 0;
+    v->decimal_value_length = 0;
+    v->decimal_buffer_length = 0;
+
     /* Free binary */
     if (v->binary_value) free(v->binary_value);
     v->binary_value = 0;
     v->binary_length = 0;
+    v->binary_buffer_length = 0;
 }
 
 /* Int Flag */
@@ -339,7 +349,18 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
-    dest->decimal_value = source->decimal_value;
+
+    /* Copy Decimal Value */
+    if (source->decimal_value_length) {
+        dest->decimal_value_length = source->decimal_value_length;
+        dest->decimal_buffer_length = dest->decimal_value_length;
+        if (dest->decimal_value) dest->decimal_value = realloc(dest->decimal_value, dest->decimal_value_length);
+        else dest->decimal_value = malloc(dest->decimal_value_length);
+        memcpy(dest->decimal_value, source->decimal_value, dest->decimal_value_length);
+    }
+    else {
+        dest->decimal_value_length = 0;
+    }
 
     /* Copy Strings */
     if (source->string_length) {
@@ -362,13 +383,15 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     }
 
     /* Copy Binary */
-    if (dest->binary_value) free(dest->binary_value);
-    dest->binary_value = 0;
-    dest->binary_length = 0;
-    if (source->binary_value) {
+    if (source->binary_length) {
         dest->binary_length = source->binary_length;
-        dest->binary_value = malloc(dest->binary_length);
+        dest->binary_buffer_length = dest->binary_length;
+        if (dest->binary_value) dest->binary_value = realloc(dest->binary_value, dest->binary_length);
+        else dest->binary_value = malloc(dest->binary_length);
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+    }
+    else {
+        dest->binary_length = 0;
     }
 
     /* Copy Attributes */
@@ -389,7 +412,16 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->status.all_type_flags = source->status.all_type_flags;
     dest->int_value = source->int_value;
     dest->float_value = source->float_value;
-    dest->decimal_value = source->decimal_value;
+
+    /* Move Decimal Value */
+    if (source->decimal_value_length) {
+        dest->decimal_value_length = source->decimal_value_length;
+        dest->decimal_value = source->decimal_value;
+        dest->decimal_buffer_length = source->decimal_buffer_length;
+        source->decimal_value = 0;
+        source->decimal_value_length = 0;
+        source->decimal_buffer_length = 0;
+    }
 
     /* Move String */
     if (source->string_length) {
@@ -425,14 +457,13 @@ RX_INLINE void move_value(value *dest, value *source) {
     }
 
     /* Move Binary */
-    if (dest->binary_value) free(dest->binary_value);
-    dest->binary_value = 0;
-    dest->binary_length = 0;
     if (source->binary_value) {
         dest->binary_length = source->binary_length;
         dest->binary_value = source->binary_value;
+        dest->binary_buffer_length = source->binary_buffer_length;
         source->binary_value = 0;
         source->binary_length = 0;
+        source->binary_buffer_length = 0;
     }
 
     /* Move Attributes */
@@ -837,9 +868,9 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
 RX_INLINE void string_from_int(value *v) {
     prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
 #ifdef __32BIT__
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",v->int_value);
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)v->int_value);
 #else
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",v->int_value);
+    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)v->int_value);
 #endif
     v->string_pos = 0;
 #ifndef NUTF8
@@ -952,6 +983,89 @@ RX_INLINE int string2float(double *out, char *string, size_t length) {
     end_string2float:
     free(buffer);
     return rc;
+}
+
+// Static function to trim trailing zeros from a number format and including possibly the decimal point
+static void trim_numeric_trailing_zeros(char *str) {
+    size_t len = strlen(str);
+    if (len == 0)
+        return;
+
+    // Find the decimal point
+    char *dot = strchr(str, '.');
+    if (!dot)
+        return; // No decimal point, nothing to trim
+
+    // Start from the end of the string
+    char *end = str + len - 1;
+
+    // Remove trailing zeros
+    while (end > dot && *end == '0') {
+        *end = '\0';
+        end--;
+    }
+
+    // If the last character is a decimal point, remove it
+    if (end == dot) {
+        *end = '\0';
+    }
+}
+
+// Function to extract decimal components from a double
+// - coefficient (string) will be set to the coefficient string (or nan, inf, -inf)
+// - exponent (integer) will be set to the exponent
+static void extract_double_decimal(value *coefficient, value *exponent, double value) {
+    // Set Buffer Size in Coefficient Value
+    prep_string_buffer(coefficient, 32);
+    exponent->int_value = 0;
+
+    // Handle special cases
+    if (isnan(value)) {
+        strcpy(coefficient->string_value, "nan");
+        coefficient->string_length = 3;
+        return;
+    }
+    if (isinf(value)) {
+        strcpy(coefficient->string_value, signbit(value) ? "-inf" : "inf");
+        coefficient->string_length = signbit(value) ? 4 : 3;
+        return;
+    }
+
+    if (value == 0.0) {
+        // Handle zero
+        strcpy(coefficient->string_value, "0");
+        coefficient->string_length = 1;
+        return;
+    }
+
+    // Determine if negative
+    int is_negative = value < 0.0;
+    double abs_value = fabs(value);
+
+    // Calculate decimal exponent
+    int64_t exp = (int64_t)floor(log10(abs_value));
+
+    // Normalize the coefficient to [1.0, 10.0)
+    double coeff = abs_value / pow(10.0, (double)exp);
+
+    // Adjust if coeff is exactly 10.0 due to floating-point inaccuracies
+    if (coeff >= 10.0) {
+        coeff /= 10.0;
+        exp += 1;
+    }
+    // Adjust if coeff is smaller than 1 due to floating-point inaccuracies
+    if (coeff < 1.0) {
+        coeff *= 10.0;
+        exp -= 1;
+    }
+
+    exponent->int_value = exp;
+
+    // Format the coefficient string with precision upto DBL_DIG-1 fractional digits
+    snprintf(coefficient->string_value, 32, is_negative ? "-%.*lf" : "%.*lf", DBL_DIG-1, coeff);
+
+    trim_numeric_trailing_zeros(coefficient->string_value);
+    coefficient->string_length = strlen(coefficient->string_value);
 }
 
 #endif //CREXX_RXVMVARS_H

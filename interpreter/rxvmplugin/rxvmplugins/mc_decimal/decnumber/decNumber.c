@@ -334,10 +334,10 @@ static void decDumpAr(char, const Unit *, Int);
 decNumber * decNumberFromInt32(decNumber *dn, Int in) {
   uInt unsig;
   if (in>=0) unsig=in;
-   else {                               // negative (possibly BADINT)
-    if (in==BADINT) unsig=(uInt)1073741824*2; // special case
+  else {                               // negative (possibly BADINT)
+     if (in==BADINT) unsig=(uInt)1073741824*2; // special case
      else unsig=-in;                    // invert
-    }
+  }
   // in is now positive
   decNumberFromUInt32(dn, unsig);
   if (in<0) dn->bits=DECNEG;            // sign needed
@@ -357,6 +357,137 @@ decNumber * decNumberFromUInt32(decNumber *dn, uInt uin) {
   } // decNumberFromUInt32
 
 /* ------------------------------------------------------------------ */
+/* from-int64 -- conversion from int64_t or uint64_t                  */
+/*                                                                    */
+/* Added to the library by Adrian Sutherland - Dec 2024               */
+/*                                                                    */
+/*  dn is the decNumber to receive the integer                        */
+/*  in or uin is the integer to be converted                          */
+/*  returns dn                                                        */
+/*                                                                    */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+decNumber * decNumberFromInt64(decNumber *dn, int64_t in) {
+  uint64_t unsig;
+  if (in >= 0) {
+    unsig = (uint64_t)in;
+  } else {                               // Negative value
+    if (in == INT64_MIN) {
+      // Special case: INT64_MIN cannot be negated in two's complement
+      unsig = ((uint64_t)1) << 63;
+    } else {
+      unsig = (uint64_t)(-in);           // Convert to positive
+    }
+  }
+  // Now unsig holds the absolute value of in
+  decNumberFromUInt64(dn, unsig);
+  if (in < 0) dn->bits = DECNEG;         // Set the negative sign
+  return dn;
+} // decNumberFromInt64
+
+/* ------------------------------------------------------------------ */
+/* from-uint64 -- conversion from uint64_t                            */
+/*                                                                    */
+/* Added to the library by Adrian Sutherland - Dec 2024               */
+/*                                                                    */
+/*  dn is the decNumber to receive the integer                        */
+/*  uin is the uint64_t integer to be converted                       */
+/*  returns dn                                                        */
+/*                                                                    */
+/* No error is possible.                                              */
+/* ------------------------------------------------------------------ */
+decNumber * decNumberFromUInt64(decNumber *dn, uint64_t uin) {
+  Unit *up;                              // Pointer to Units
+  decNumberZero(dn);                     // Initialize dn to zero
+  if (uin == 0) return dn;               // If uin is zero, dn is zero
+
+  up = dn->lsu;                          // Start with the least significant Unit
+  while (uin > 0) {
+    // Extract the least significant digits that fit in one Unit
+    *up = (Unit)(uin % (DECDPUNMAX + 1));
+    uin = uin / (DECDPUNMAX + 1);
+    up++;
+  }
+  dn->digits = decGetDigits(dn->lsu, (int32_t)(up - dn->lsu)); // Compute the number of digits
+  return dn;
+} // decNumberFromUInt64
+
+
+static int isIntegerGivenExponentAndDigits(const decNumber *dn) {
+  int digits = dn->digits;
+  int exponent = dn->exponent;
+
+  // Handle special cases (NaN, Infinity) -- these are not integers
+  if (dn->bits & DECSPECIAL) {
+    return 0;
+  }
+
+  // If the number is zero, it is always an integer, regardless of exponent
+  if (ISZERO(dn)) {
+    return 1;
+  }
+
+  // If exponent == 0, it's already an integer
+  if (exponent == 0) {
+    return 1;
+  }
+
+  // If exponent > 0, it's value * 10^(exponent), still an integer
+  if (exponent > 0) {
+    return 1;
+  }
+
+  // Now handle exponent < 0
+  // Negative exponent means we have a potential fractional part.
+  // fractionDigits = -exponent is how many digits are to the right of the decimal point.
+  int fractionDigits = -exponent;
+
+  // Case 1: fractionDigits >= digits means the number is of form 0.xyz or similar.
+  // e.g. digits=3, exponent=-5 => fractionDigits=5, which is greater than digits=3.
+  // If not zero, it's a fraction. If zero, it's still 0, which is an integer (already handled above).
+  if (fractionDigits >= digits) {
+    // Non-zero number but fractionDigits >= digits implies something like 123e-5 = 0.00123 non-integer
+    return 0;
+  }
+
+  // fractionDigits < digits means there are enough digits to form an integer part, but we must ensure
+  // that the last fractionDigits are all zero to have a whole integer.
+  // Example: 100e-2 = 1.00 => integer
+  //          2500e-3 = 2.500 = 2.5 => not integer
+
+  // Check that the lowest 'fractionDigits' digits are all zero.
+  const Unit *up = dn->lsu;
+  int remaining = fractionDigits;
+
+  while (remaining > 0) {
+    // Each Unit contains DECDPUN decimal digits.
+    // Extract up to DECDPUN digits from *up
+    // If any of these digits are non-zero, not an integer.
+    Unit unitVal = *up;
+    // We'll check digits from this unit.
+    // If remaining >= DECDPUN, we must check all digits in this unit.
+    // If less, we must only check 'remaining' digits.
+    int digitsToCheck = (remaining >= DECDPUN) ? DECDPUN : remaining;
+
+    // Check the least significant 'digitsToCheck' digits of unitVal
+    // Repeatedly check unitVal % 10
+    for (int i=0; i<digitsToCheck; i++) {
+      if ((unitVal % 10) != 0) {
+        // Found a non-zero fractional digit
+        return 0;
+      }
+      unitVal /= 10;
+    }
+
+    remaining -= DECDPUN;
+    up++;
+  }
+
+  // If we get here, all fractional digits are zero, so it's an integer.
+  return 1;
+}
+
+/* ------------------------------------------------------------------ */
 /* to-int32 -- conversion to Int or uInt                              */
 /*                                                                    */
 /*  dn is the decNumber to convert                                    */
@@ -372,11 +503,11 @@ Int decNumberToInt32(const decNumber *dn, decContext *set) {
   #endif
 
   // special or too many digits, or bad exponent
-  if (dn->bits&DECSPECIAL || dn->digits>10 || dn->exponent!=0) ; // bad
+  if (isIntegerGivenExponentAndDigits(dn) == 0 || dn->digits>10) {} // bad
    else { // is a finite integer with 10 or fewer digits
     Int d;                         // work
     const Unit *up;                // ..
-    uInt hi=0, lo;                 // ..
+    uint64_t hi=0, lo;                 // ..
     up=dn->lsu;                    // -> lsu
     lo=*up;                        // get 1 to 9 digits
     #if DECDPUN>1                  // split to higher
@@ -387,32 +518,65 @@ Int decNumberToInt32(const decNumber *dn, decContext *set) {
     // collect remaining Units, if any, into hi
     for (d=DECDPUN; d<dn->digits; up++, d+=DECDPUN) hi+=*up*powers[d-1];
     // now low has the lsd, hi the remainder
-    if (hi>214748364 || (hi==214748364 && lo>7)) { // out of range?
-      // most-negative is a reprieve
-      if (dn->bits&DECNEG && hi==214748364 && lo==8) return 0x80000000;
-      // bad -- drop through
+    uint64_t total = X10(hi)+lo;
+
+    // Handle Exponents
+    int exponent = dn->exponent;
+    if (exponent != 0) {
+       if (exponent > 0) {
+         // Positive exponent -> multiply by 10^exponent
+         uint32_t factor = powers[exponent];
+         if (total > INT32_MAX / factor) {
+           // Overflow
+           decContextSetStatus(set, DEC_Invalid_operation);
+           return 0;
+         }
+         total *= factor;
+       } else {
+         // Negative exponent -> divide by 10^(-exponent)
+         int negExp = -exponent;
+         uint32_t factor = powers[negExp];
+
+         // Check exact divisibility
+         if (total % factor != 0) {
+           // Not an integer after all
+           decContextSetStatus(set, DEC_Invalid_operation);
+           return 0;
+         }
+         total /= factor;
+       }
+    }
+    if (dn->bits&DECNEG) {
+      if (total > -INT32_MIN) {
+        // Underflow
+        decContextSetStatus(set, DEC_Invalid_operation);
+        return 0;
       }
-     else { // in-range always
-      Int i=X10(hi)+lo;
-      if (dn->bits&DECNEG) return -i;
-      return i;
+      return (int32_t)(-total);
+    }
+    else {
+      if (total > INT32_MAX) {
+        // Overflow
+        decContextSetStatus(set, DEC_Invalid_operation);
+        return 0;
       }
-    } // integer
+      return (int32_t)total;
+    }
+  } // integer
   decContextSetStatus(set, DEC_Invalid_operation); // [may not return]
   return 0;
-  } // decNumberToInt32
+} // decNumberToInt32
 
 uInt decNumberToUInt32(const decNumber *dn, decContext *set) {
   #if DECCHECK
   if (decCheckOperands(DECUNRESU, DECUNUSED, dn, set)) return 0;
   #endif
   // special or too many digits, or bad exponent, or negative (<0)
-  if (dn->bits&DECSPECIAL || dn->digits>10 || dn->exponent!=0
-    || (dn->bits&DECNEG && !ISZERO(dn)));                   // bad
-   else { // is a finite integer with 10 or fewer digits
+  if (isIntegerGivenExponentAndDigits(dn) == 0 || dn->digits>10 || (dn->bits&DECNEG && !ISZERO(dn))) {}                   // bad
+  else { // is a finite integer with 10 or fewer digits
     Int d;                         // work
     const Unit *up;                // ..
-    uInt hi=0, lo;                 // ..
+    uint64_t hi=0, lo;             // ..
     up=dn->lsu;                    // -> lsu
     lo=*up;                        // get 1 to 9 digits
     #if DECDPUN>1                  // split to higher
@@ -424,12 +588,238 @@ uInt decNumberToUInt32(const decNumber *dn, decContext *set) {
     for (d=DECDPUN; d<dn->digits; up++, d+=DECDPUN) hi+=*up*powers[d-1];
 
     // now low has the lsd, hi the remainder
-    if (hi>429496729 || (hi==429496729 && lo>5)) ; // no reprieve possible
-     else return X10(hi)+lo;
-    } // integer
+    uint64_t total = X10(hi)+lo;
+
+    // Handle Exponents
+    int exponent = dn->exponent;
+    if (exponent != 0) {
+       if (exponent > 0) {
+         // Positive exponent -> multiply by 10^exponent
+         uint32_t factor = powers[exponent];
+         if (total > UINT32_MAX / factor) {
+           // Overflow
+           decContextSetStatus(set, DEC_Invalid_operation);
+           return 0;
+         }
+         total *= factor;
+       } else {
+         // Negative exponent -> divide by 10^(-exponent)
+         int negExp = -exponent;
+         uint32_t factor = powers[negExp];
+
+         // Check exact divisibility
+         if (total % factor != 0) {
+           // Not an integer after all
+           decContextSetStatus(set, DEC_Invalid_operation);
+           return 0;
+         }
+
+         total /= factor;
+       }
+     }
+     if (total > UINT32_MAX) {
+       // Overflow
+       decContextSetStatus(set, DEC_Invalid_operation);
+       return 0;
+     }
+     return (uint32_t)total;
+  } // integer
   decContextSetStatus(set, DEC_Invalid_operation); // [may not return]
   return 0;
-  } // decNumberToUInt32
+} // decNumberToUInt32
+
+const uint64_t powers64[20] = {
+  1ULL, 10ULL, 100ULL, 1000ULL, 10000ULL, 100000ULL, 1000000ULL,
+  10000000ULL, 100000000ULL, 1000000000ULL, 10000000000ULL,
+  100000000000ULL, 1000000000000ULL, 10000000000000ULL,
+  100000000000000ULL, 1000000000000000ULL, 10000000000000000ULL,
+  100000000000000000ULL, 1000000000000000000ULL,
+  10000000000000000000ULL
+};
+
+/* ------------------------------------------------------------------ */
+/* to-int64 -- conversion to int64_t                                  */
+/*                                                                    */
+/* Added to the library by Adrian Sutherland - Dec 2024               */
+/*                                                                    */
+/*  dn is the decNumber to convert                                    */
+/*  set is the context for reporting errors                           */
+/*  returns the converted integer, or 0 if Invalid is set             */
+/*                                                                    */
+/* Invalid is set if the decNumber does not have exponent==0 or if    */
+/* it is a NaN, Infinite, or out-of-range.                            */
+/* ------------------------------------------------------------------ */
+int64_t decNumberToInt64(const decNumber *dn, decContext *set) {
+#if DECCHECK
+  if (decCheckOperands(DECUNRESU, DECUNUSED, dn, set)) return 0;
+#endif
+
+  // Check for special, out-of-range, or non-integer conditions
+  if (isIntegerGivenExponentAndDigits(dn) == 0 || dn->digits > 19) {
+    decContextSetStatus(set, DEC_Invalid_operation);
+    return 0;
+  }
+
+  const Unit *up = dn->lsu;
+  uint64_t hi = 0, lo = *up; // Get up to 8 digits from the lsu
+#if DECDPUN > 1
+  hi = lo / 10;
+  lo = lo % 10;
+#endif
+  up++;
+
+  // Accumulate remaining Units
+  // Similar to original code: for (d=DECDPUN; d<dn->digits; up++, d+=DECDPUN) hi += *up * powers[d-1];
+  int d;
+  for (d = DECDPUN; d < dn->digits; up++, d += DECDPUN) {
+    // Here we use powers64[d-1]
+    hi += ((uint64_t)*up) * powers64[d-1];
+  }
+
+  // Combine hi and lo
+  uint64_t total = hi * 10 + lo;
+
+  // Check range for int64
+  if (total > (uint64_t)INT64_MAX) {
+    // Most-negative check
+    if ((dn->bits & DECNEG) && total == (uint64_t)INT64_MAX + 1) {
+      return INT64_MIN;
+    }
+    decContextSetStatus(set, DEC_Invalid_operation);
+    return 0;
+  }
+
+  // Handle Exponents
+  int exponent = dn->exponent;
+  if (exponent != 0) {
+
+    if (exponent > 0) {
+      // Positive exponent -> multiply by 10^exponent
+      uint64_t factor = powers64[exponent];
+      if (total > UINT64_MAX / factor) {
+        // Overflow
+        decContextSetStatus(set, DEC_Invalid_operation);
+        return 0;
+      }
+      total *= factor;
+    } else {
+      // Negative exponent -> divide by 10^(-exponent)
+      int negExp = -exponent;
+      uint64_t factor = powers64[negExp];
+
+      // Check exact divisibility
+      if (total % factor != 0) {
+        // Not an integer after all
+        decContextSetStatus(set, DEC_Invalid_operation);
+        return 0;
+      }
+
+      total /= factor;
+    }
+  }
+
+  // Handle Negatives and check ranges for int64
+  if (dn->bits & DECNEG) {
+    // Negative number
+    if (total > (uint64_t)INT64_MAX + 1ULL) {
+      decContextSetStatus(set, DEC_Invalid_operation);
+      return 0;
+    }
+    if (total == (uint64_t)INT64_MAX + 1ULL) {
+      return INT64_MIN;
+    }
+    return -(int64_t)total;
+  } else {
+    // Positive number
+    if (total > (uint64_t)INT64_MAX) {
+      decContextSetStatus(set, DEC_Invalid_operation);
+      return 0;
+    }
+    return (int64_t)total;
+  }
+} // decNumberToInt64
+
+/* ------------------------------------------------------------------ */
+/* to-uint64 -- conversion to uint64_t                                */
+/*                                                                    */
+/* Added to the library by Adrian Sutherland - Dec 2024               */
+/*                                                                    */
+/*  dn is the decNumber to convert                                    */
+/*  set is the context for reporting errors                           */
+/*  returns the converted integer, or 0 if Invalid is set             */
+/*                                                                    */
+/* Invalid is set if the decNumber does not have exponent==0 or if    */
+/* it is a NaN, Infinite, negative, or out-of-range.                  */
+/* ------------------------------------------------------------------ */
+uint64_t decNumberToUInt64(const decNumber *dn, decContext *set) {
+#if DECCHECK
+  if (decCheckOperands(DECUNRESU, DECUNUSED, dn, set)) return 0;
+#endif
+
+
+  if (isIntegerGivenExponentAndDigits(dn) == 0 || dn->digits > 20 ||
+      ((dn->bits & DECNEG) && !ISZERO(dn))) {
+    decContextSetStatus(set, DEC_Invalid_operation);
+    return 0;
+  }
+
+  const Unit *up = dn->lsu;
+  uint64_t hi = 0, lo = *up; // Get up to 8 digits from the lsu
+#if DECDPUN > 1
+  hi = lo / 10;
+  lo = lo % 10;
+#endif
+  up++;
+
+  // Accumulate remaining Units
+  int d;
+  for (d = DECDPUN; d < dn->digits; up++, d += DECDPUN) {
+    hi += ((uint64_t)*up) * powers64[d-1];
+  }
+
+  // Combine hi and lo
+  uint64_t total = hi * 10 + lo;
+
+  // Check range for uint64
+  // If total > UINT64_MAX, we would have overflowed earlier, but let's be consistent:
+  if (total < hi || (hi > UINT64_MAX / 10) || (hi * 10 > UINT64_MAX - lo)) {
+    // This check is just a safety net; if from-int code ensures correctness, it may never trigger.
+    decContextSetStatus(set, DEC_Invalid_operation);
+    return 0;
+  }
+
+  // Handle Exponent
+  int exponent = dn->exponent;
+  if (exponent == 0) {
+    return total; // No scaling needed
+  }
+
+  if (exponent > 0) {
+    // Positive exponent -> multiply by 10^exponent
+    uint64_t factor = powers64[exponent];
+    if (total > UINT64_MAX / factor) {
+      // Overflow
+      decContextSetStatus(set, DEC_Invalid_operation);
+      return 0;
+    }
+    total *= factor;
+  } else {
+    // Negative exponent -> divide by 10^(-exponent)
+    int negExp = -exponent;
+    uint64_t factor = powers64[negExp];
+
+    // Check exact divisibility
+    if (total % factor != 0) {
+      // Not an integer after all
+      decContextSetStatus(set, DEC_Invalid_operation);
+      return 0;
+    }
+
+    total /= factor;
+  }
+
+  return total;
+} // decNumberToUInt64
 
 /* ------------------------------------------------------------------ */
 /* to-scientific-string -- conversion to numeric string               */
@@ -6210,9 +6600,7 @@ static Int decCompare(const decNumber *lhs, const decNumber *rhs,
   if (compare!=BADINT) compare*=result;      // comparison succeeded
   return compare;
   } // decCompare
-int decCrexxCompare(const decNumber *lhs, const decNumber *rhs,Flag abs) {
-    return decCompare(lhs, rhs, abs);     // sign matters
-}
+
 /* ------------------------------------------------------------------ */
 /* decUnitCompare -- compare two >=0 integers in Unit arrays          */
 /*                                                                    */

@@ -93,6 +93,26 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
 #undef ADD_CHAR_TO_BUFFER
 }
 
+/* Encodes a binary array to a hex string buffer. Like snprintf() it returns the number of characters
+ * that would have been written */
+static size_t encode_binary_to_hex(char* buffer, size_t buffer_len, char* binary, size_t length) {
+    size_t out_len = 0;
+
+    out_len++; if (buffer_len) { *(buffer++) = '0'; buffer_len--; }
+    out_len++; if (buffer_len) { *(buffer++) = 'x'; buffer_len--; }
+
+    while (length) {
+        snprintf(buffer, buffer_len, "%02x", *binary);
+        buffer += 2;
+        binary++;
+        length--;
+        out_len += 2;
+        buffer_len -= 2;
+    }
+    if (buffer_len) *buffer = 0;
+    return out_len;
+}
+
 /* Get the constant string
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
@@ -149,6 +169,8 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
 
     size_t out_len;
     size_t ix;
+    char *c;
+    size_t sz;
     int r;
 
     switch(type) {
@@ -179,6 +201,18 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
         case OP_STRING:
             ix = pgm->binary[index].index;
             out_len = get_const_string(pgm, buffer, buffer_len, ix);
+            break;
+        case OP_DECIMAL:
+            ix = pgm->binary[index].index;
+            c = ((string_constant *)(pgm->const_pool + ix))->string;
+            sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+            out_len = snprintf(buffer, buffer_len, "%.*s", (int)sz, c);
+            break;
+        case OP_BINARY:
+            ix = pgm->binary[index].index;
+            c = ((string_constant *)(pgm->const_pool + ix))->string;
+            sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+            out_len = encode_binary_to_hex(buffer, buffer_len, c, sz);
             break;
         default:
             out_len = snprintf(buffer, buffer_len, "*INTERNAL_ERROR*");
@@ -632,8 +666,18 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         entry = (chameleon_constant *)(pgm->const_pool + i);
         switch(entry->type) {
             case STRING_CONST:
+            case DECIMAL_CONST:
                 if (print_all_constant_pool) {
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, i);
+                    fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
+                }
+                break;
+            case BINARY_CONST:
+                if (print_all_constant_pool) {
+                    size_t ix = pgm->binary[i].index;
+                    char* c = ((string_constant *)(pgm->const_pool + ix))->string;
+                    size_t sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+                    encode_binary_to_hex(line_buffer, MAX_LINE_SIZE, c, sz);
                     fprintf(stream, "* 0x%.6lx STRING %s\n", i, line_buffer);
                 }
                 break;

@@ -169,3 +169,5 @@ operand ::= INT.
 operand ::= FLOAT.
 operand ::= CHAR.
 operand ::= STRING.
+operand ::= HEX.
+operand ::= DECIMAL.

@@ -1,0 +1,820 @@
+/*
+ * Decimal Plugin Sanity Tests for Assembler Instructions
+ */
+
+.globals=0
+
+/*
+ * r1 = number of errors
+ * r2 = number of tests
+ */
+main() .locals=6
+    load r1,0
+    load r2,0
+    say "Decimal Plugin Sanity Tests for Assembler Instructions"
+
+    /* Test DECPLNM_REG_REG_REG */
+    say ""
+    sayx "Test 0 (DECPLNM_REG_REG_REG)"
+    inc r2
+    decplnm r3,r4,r5
+    load r0," Name="
+    concat r0,r0,r3
+    concat r0,r0," Description="
+    concat r0,r0,r4
+    concat r0,r0," Version="
+    concat r0,r0,r5
+    say r0
+
+    /* Test load */
+    sayx "Test 1 (load)"
+    inc r2
+    load r3,1.23456e3d
+    dtos r3
+    seq r0,r3,"1234.56"
+    brt test1end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test1end:
+
+    /* Test stod and dtos - convert string to/from decimal */
+    say ""
+    sayx "Test 2 (stod and dtos)"
+    inc r2
+    load r3,"1e3"
+    stod r3
+    dtos r3
+    seq r0,r3,"1000"
+    brt test2end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test2end:
+
+    /* Test itod */
+    say ""
+    sayx "Test 3 (itod)"
+    inc r2
+    load r3,1001
+    itod r3
+    dtos r3
+    seq r0,r3,"1001"
+    brt test3end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test3end:
+
+    /* Test ftod */
+    say ""
+    sayx "Test 4 (ftod)"
+    inc r2
+    load r3,1001.1
+    ftod r3
+    dtos r3
+    seq r0,r3,"1001.1"
+    brt test4end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test4end:
+
+    /* Test dtoi - todo test conversion error signal when we can trap signals */
+    say ""
+    sayx "Test 5 (dtoi)"
+    inc r2
+    load r3,1234d
+    dtoi r3
+    itos r3
+    seq r0,r3,"1234"
+    brt test5end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test5end:
+
+    /* Test dtof */
+    say ""
+    sayx "Test 6 (dtof)"
+    inc r2
+    load r3,1.23456e3d
+    dtof r3
+    ftos r3
+    seq r0,r3,"1234.56"
+    brt test6end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test6end:
+
+    /* Test dadd (reg, reg, reg) */
+    say ""
+    sayx "Test 7 (dadd - reg,reg,reg)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,5.4321e3d
+    dadd r5,r3,r4
+    dtos r5
+    seq r0,r5,"6666.66"
+    brt test7end,r0
+    inc r1
+    sayx " - failed "
+    say r5
+test7end:
+
+    /* Test dadd (reg, reg, decimal) */
+    say ""
+    sayx "Test 8 (dadd - reg,reg,decimal)"
+    inc r2
+    load r3,1.23456e3d
+    dadd r4,r3,1e3
+    dtos r4
+    seq r0,r4,"2234.56"
+    brt test8end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test8end:
+
+    /* Test dsub (reg, reg, reg) */
+    say ""
+    sayx "Test 9 (dsub - reg,reg,reg)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,5.4321e3d
+    dsub r5,r3,r4
+    dtos r5
+    seq r0,r5,"-4197.54"
+    brt test9end,r0
+    inc r1
+    sayx " - failed "
+    say r5
+test9end:
+
+    /* Test dsub (reg, reg, decimal) */
+    say ""
+    sayx "Test 10 (dsub - reg,reg,decimal)"
+    inc r2
+    load r3,1.23456e3d
+    dsub r4,r3,1e3
+    dtos r4
+    seq r0,r4,"234.56"
+    brt test10end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test10end:
+
+    /* Test dsub (reg, decimal, reg) */
+    say ""
+    sayx "Test 11 (dsub - reg,decimal,reg)"
+    inc r2
+    load r3,1.23456e3d
+    dsub r4,1e3,r3
+    dtos r4
+    seq r0,r4,"-234.56"
+    brt test11end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test11end:
+
+    /* Test dmult (reg, reg, reg) */
+    say ""
+    sayx "Test 12 (dmult - reg,reg,reg)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,5.4321e3d
+    dmult r5,r3,r4
+    dtos r5
+    seq r0,r5,"6706253.376"
+    brt test12end,r0
+    inc r1
+    sayx " - failed "
+    say r5
+test12end:
+
+    /* Test dmult (reg, reg, decimal) */
+    say ""
+    sayx "Test 13 (dmult - reg,reg,decimal)"
+    inc r2
+    load r3,1.23456e3d
+    dmult r4,r3,2d
+    dtos r4
+    seq r0,r4,"2469.12"
+    brt test13end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test13end:
+
+    /* Test ddiv (reg, reg, reg) */
+    say ""
+    sayx "Test 14 (ddiv - reg,reg,reg)"
+    inc r2
+    load r3,1.234567e3d
+    load r4,2d
+    ddiv r5,r3,r4
+    dtos r5
+    seq r0,r5,"617.2835"
+    brt test14end,r0
+    inc r1
+    sayx " - failed "
+    say r5
+test14end:
+
+    /* Test ddiv (reg, reg, decimal) */
+    say ""
+    sayx "Test 15 (ddiv - reg,reg,decimal)"
+    inc r2
+    load r3,1.23456e3d
+    ddiv r4,r3,2d
+    dtos r4
+    seq r0,r4,"617.28"
+    brt test15end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test15end:
+
+    /* Test ddiv (reg, decimal, reg) */
+    say ""
+    sayx "Test 16 (ddiv - reg,decimal,reg)"
+    inc r2
+    load r3,3d
+    ddiv r4,9d,r3
+    dtos r4
+    seq r0,r4,"3"
+    brt test16end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test16end:
+
+    /* todo: test ddiv with division by zero when we can trap signals */
+
+    /* Test DEQ_REG_REG_REG */
+    say ""
+    sayx "Test 17 (DEQ_REG_REG_REG)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23456e3d
+    deq r5,r3,r4
+    brt test17end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test17end:
+
+    /* Test DNE_REG_REG_REG */
+    say ""
+    sayx "Test 18 (DNE_REG_REG_REG)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    dne r5,r3,r4
+    brt test18end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test18end:
+
+   /* Test DGT_REG_REG_REG */
+    say ""
+    sayx "Test 19 (DGT_REG_REG_REG)"
+    inc r2
+    load r3,1.23457e3d
+    load r4,1.23456e3d
+    dgt r5,r3,r4
+    brt test19end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test19end:
+
+    /* Test DGTE_REG_REG_REG */
+    say ""
+    sayx "Test 20 (DGTE_REG_REG_REG) - test equals"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23456e3d
+    dgte r5,r3,r4
+    brt test20end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test20end:
+
+    /* Test DGTE_REG_REG_REG */
+    say ""
+    sayx "Test 21 (DGTE_REG_REG_REG) - test greater"
+    inc r2
+    load r3,1.23457e3d
+    load r4,1.23456e3d
+    dgte r5,r3,r4
+    brt test21end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test21end:
+
+    /* Test DLT_REG_REG_REG */
+    say ""
+    sayx "Test 22 (DLT_REG_REG_REG)"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    dlt r5,r3,r4
+    brt test22end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test22end:
+
+    /* Test DLTE_REG_REG_REG */
+    say ""
+    sayx "Test 23 (DLTE_REG_REG_REG) - test equals"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23456e3d
+    dlte r5,r3,r4
+    brt test23end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test23end:
+
+    /* Test DLTE_REG_REG_REG */
+    say ""
+    sayx "Test 24 (DLTE_REG_REG_REG) - test less"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    dlte r5,r3,r4
+    brt test24end,r5
+    inc r1
+    sayx " - failed "
+    itos r5
+    say r5
+test24end:
+
+    /* Test DEQ_REG_REG_DECIMAL */
+    say ""
+    sayx "Test 25 (DEQ_REG_REG_DECIMAL)"
+    inc r2
+    load r3,1.23456e3d
+    deq r4,r3,1234.56d
+    brt test25end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test25end:
+
+    /* Test DLTBR_ID_REG_REG - True */
+    say ""
+    sayx "Test 26 (DLTBR_ID_REG_REG) - test true"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    dltbr test26_true,r3,r4
+    inc r1
+    sayx " - failed "
+test26_true:
+
+    /* Test DLTBR_ID_REG_REG - False */
+    say ""
+    sayx "Test 27 (DLTBR_ID_REG_REG) - test false"
+    inc r2
+    load r3,1.23457e3d
+    load r4,1.23456e3d
+    dltbr test27_true,r3,r4
+    br test27_end
+test27_true:
+    inc r1
+    sayx " - failed "
+test27_end:
+
+    /* Test DGTBR_ID_REG_REG - True */
+    say ""
+    sayx "Test 28 (DGTBR_ID_REG_REG) - test true"
+    inc r2
+    load r3,1.23457e3d
+    load r4,1.23456e3d
+    dgtbr test28_true,r3,r4
+    inc r1
+    sayx " - failed "
+test28_true:
+
+    /* Test DGTBR_ID_REG_REG - False */
+    say ""
+    sayx "Test 29 (DGTBR_ID_REG_REG) - test false"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    dgtbr test29_true,r3,r4
+    br test29_end
+test29_true:
+    inc r1
+    sayx " - failed "
+test29_end:
+
+    /* Test DEQBR_ID_REG_REG - True */
+    say ""
+    sayx "Test 30 (DEQBR_ID_REG_REG) - test true"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23456e3d
+    deqbr test30_true,r3,r4
+    inc r1
+    sayx " - failed "
+test30_true:
+
+    /* Test DEQBR_ID_REG_REG - False */
+    say ""
+    sayx "Test 31 (DEQBR_ID_REG_REG) - test false"
+    inc r2
+    load r3,1.23456e3d
+    load r4,1.23457e3d
+    deqbr test31_true,r3,r4
+    br test31_end
+test31_true:
+    inc r1
+    sayx " - failed "
+test31_end:
+
+    /* Test DNE_REG_REG_DECIMAL - true */
+    say ""
+    sayx "Test 32 (DNE_REG_REG_DECIMAL) - test true"
+    inc r2
+    load r3,1.23456e3d
+    dne r4,r3,1234.57d
+    brt test32end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test32end:
+
+    /* Test DNE_REG_REG_DECIMAL - false */
+    say ""
+    sayx "Test 33 (DNE_REG_REG_DECIMAL) - test false"
+    inc r2
+    load r3,1.23456e3d
+    dne r4,r3,1234.56d
+    brf test33end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test33end:
+
+    /* Test DGT_REG_REG_DECIMAL - true */
+    say ""
+    sayx "Test 34 (DGT_REG_REG_DECIMAL) - test true"
+    inc r2
+    load r3,1.23457e3d
+    dgt r4,r3,1234.56d
+    brt test34end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test34end:
+
+    /* Test DGT_REG_REG_DECIMAL - false */
+    say ""
+    sayx "Test 35 (DGT_REG_REG_DECIMAL) - test false"
+    inc r2
+    load r3,1.23456e3d
+    dgt r4,r3,1234.56d
+    brf test35end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test35end:
+
+    /* Test DGT_REG_DECIMAL_REG - true */
+    say ""
+    sayx "Test 36 (DGT_REG_DECIMAL_REG) - test true"
+    inc r2
+    load r3,1234.56d
+    dgt r4,1234.57d,r3
+    brt test36end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test36end:
+
+    /* Test DGT_REG_DECIMAL_REG - false */
+    say ""
+    sayx "Test 37 (DGT_REG_DECIMAL_REG) - test false"
+    inc r2
+    load r3,1234.56d
+    dgt r4,1234.56d,r3
+    brf test37end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test37end:
+
+    /* Test DGTE_REG_REG_DECIMAL - true */
+    say ""
+    sayx "Test 38 (DGTE_REG_REG_DECIMAL) - test true"
+    inc r2
+    load r3,1.23456e3d
+    dgte r4,r3,1234.56d
+    brt test38end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test38end:
+
+    /* Test DGTE_REG_REG_DECIMAL - false */
+    say ""
+    sayx "Test 39 (DGTE_REG_REG_DECIMAL) - test false"
+    inc r2
+    load r3,1.23456e3d
+    dgte r4,r3,1234.57d
+    brf test39end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test39end:
+
+    /* Test DGTE_REG_DECIMAL_REG - true */
+    say ""
+    sayx "Test 40 (DGTE_REG_DECIMAL_REG) - test true"
+    inc r2
+    load r3,1234.56d
+    dgte r4,1234.56d,r3
+    brt test40end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test40end:
+
+    /* Test DGTE_REG_DECIMAL_REG - false */
+    say ""
+    sayx "Test 41 (DGTE_REG_DECIMAL_REG) - test false"
+    inc r2
+    load r3,1234.57d
+    dgte r4,1234.56d,r3
+    brf test41end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test41end:
+
+/* Test DLT_REG_REG_DECIMAL - true */
+    say ""
+    sayx "Test 42 (DLT_REG_REG_DECIMAL) - test true"
+    inc r2
+    load r3,1.23456e3d
+    dlt r4,r3,1234.57d
+    brt test42end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test42end:
+
+    /* Test DLT_REG_REG_DECIMAL - false */
+    say ""
+    sayx "Test 43 (DLT_REG_REG_DECIMAL) - test false"
+    inc r2
+    load r3,1.23457e3d
+    dlt r4,r3,1234.56d
+    brf test43end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test43end:
+
+    /* Test DLT_REG_DECIMAL_REG - true */
+    say ""
+    sayx "Test 44 (DLT_REG_DECIMAL_REG) - test true"
+    inc r2
+    load r3,1234.57d
+    dlt r4,1234.56d,r3
+    brt test44end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test44end:
+
+    /* Test DLT_REG_DECIMAL_REG - false */
+    say ""
+    sayx "Test 45 (DLT_REG_DECIMAL_REG) - test false"
+    inc r2
+    load r3,1234.56d
+    dlt r4,1234.56d,r3
+    brf test45end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test45end:
+
+    /* Test DLTE_REG_REG_DECIMAL - true */
+    say ""
+    sayx "Test 46 (DLTE_REG_REG_DECIMAL) - test true"
+    inc r2
+    load r3,1.23456e3d
+    dlte r4,r3,1234.56d
+    brt test46end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test46end:
+
+    /* Test DLTE_REG_REG_DECIMAL - false */
+    say ""
+    sayx "Test 47 (DLTE_REG_REG_DECIMAL) - test false"
+    inc r2
+    load r3,1.23457e3d
+    dlte r4,r3,1234.56d
+    brf test47end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test47end:
+
+    /* Test DLTE_REG_DECIMAL_REG - true */
+    say ""
+    sayx "Test 48 (DLTE_REG_DECIMAL_REG) - test true"
+    inc r2
+    load r3,1234.56d
+    dlte r4,1234.56d,r3
+    brt test48end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test48end:
+
+    /* Test DLTE_REG_DECIMAL_REG - false */
+    say ""
+    sayx "Test 49 (DLTE_REG_DECIMAL_REG) - test false"
+    inc r2
+    load r3,1234.56d
+    dlte r4,1234.57d,r3
+    brf test49end,r4
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test49end:
+
+    /* Test DCOPY_REG_REG */
+    say ""
+    sayx "Test 50 (DCOPY_REG_REG)"
+    inc r2
+    load r3,1.23456e3d
+    dcopy r4,r3
+    dtos r4
+    seq r0,r4,"1234.56"
+    brt test50end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test50end:
+
+    /* Test DSEX_REG */
+    say ""
+    sayx "Test 51 (DSEX_REG)"
+    inc r2
+    load r3,1.23456e3d
+    dsex r3
+    dtos r3
+    seq r0,r3,"-1234.56"
+    brt test51end,r0
+    inc r1
+    sayx " - failed "
+    say r3
+test51end:
+
+    /* Test DPOW_REG_REG_REG */
+    say ""
+    sayx "Test 52 (DPOW_REG_REG_REG)"
+    inc r2
+    load r3,2d
+    load r4,3d
+    dpow r5,r3,r4
+    dtos r5
+    seq r0,r5,"8"
+    brt test52end,r0
+    inc r1
+    sayx " - failed "
+    say r5
+test52end:
+
+    /* Test DPOW_REG_REG_DECIMAL */
+    say ""
+    sayx "Test 53 (DPOW_REG_REG_DECIMAL)"
+    inc r2
+    load r3,2d
+    dpow r4,r3,3d
+    dtos r4
+    seq r0,r4,"8"
+    brt test53end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test53end:
+
+    /* Test DPOW_REG_DECIMAL_REG */
+    say ""
+    sayx "Test 54 (DPOW_REG_DECIMAL_REG)"
+    inc r2
+    load r3,3d
+    dpow r4,2d,r3
+    dtos r4
+    seq r0,r4,"8"
+    brt test54end,r0
+    inc r1
+    sayx " - failed "
+    say r4
+test54end:
+
+    /* Test DEXTR_REG_REG_REG */
+    say ""
+    sayx "Test 55 (DEXTR_REG_REG_REG)"
+    inc r2
+    load r5,1234.56789d /* Input Decimal */
+    dextr r3,r4,r5
+    /* Check r3 - should be "1.23456789" */
+    seq r0,r3,"1.23456789"
+    brt test55part2,r0
+    inc r1
+    sayx " - failed coeficient "
+    say r3
+test55part2:
+    /* Check r4 - should be 3 */
+    ieq r0,r4,3
+    brt test55end,r0
+    inc r1
+    sayx " - failed exponent "
+    itos r4
+    say r4
+test55end:
+
+    /* Test SETDGTS_REG & GETDGTS_REG */
+    say ""
+    sayx "Test 56 (SETDGTS_REG & GETDGTS_REG)"
+    inc r2
+    load r3,5
+    setdgts r3
+    getdgts r4
+    ieq r0,r4,5
+    brt test56end,r0
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test56end:
+
+    /* Test SETDGTS_INT & GETDGTS_REG */
+    say ""
+    sayx "Test 57 (SETDGTS_INT & GETDGTS_REG)"
+    inc r2
+    setdgts 10
+    getdgts r4
+    ieq r0,r4,10
+    brt test57end,r0
+    inc r1
+    sayx " - failed "
+    itos r4
+    say r4
+test57end:
+
+   /* Print and return results */
+   say ""
+   sayx "Tests Run: "
+   itos r2
+   say r2
+
+   sayx "Error Count: "
+   itos r1
+   say r1
+
+   ret r1

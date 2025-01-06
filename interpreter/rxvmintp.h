@@ -5,7 +5,6 @@
 #include "rxbin.h"
 #include "rxpa.h"
 #include "rxvalue.h"
-#include "../decnumber/decNumber.h"
 
 #define rxversion "crexx-F0049"
 
@@ -38,6 +37,10 @@ struct stack_frame {
     size_t nominal_number_locals;
     size_t number_args;
     char interrupt_mask;
+    struct decplugin *decimal;
+    char decimal_loaded_here;
+    struct uniplugin *unicode;
+    char unicode_loaded_here;
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;   /* Locals pointer mapping (after swaps / links */
 };

@@ -36,6 +36,9 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     fexp = [eE] [+-]? digit+;
     float = [-+]? (fsig fexp? | digit+ fexp);
 
+    // hex literals
+    hex =  ("0x" | "OX")[0-9a-fA-F][0-9a-fA-F]([0-9a-fA-F][0-9a-fA-F])*;
+
     integer = [-+]? digit+;
     rreg = 'r' digit+;
     greg = 'g' digit+;
@@ -59,8 +62,11 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
 
     "*" [^\r\n]* { goto regular; }
 
+    float "d" {return(DECIMAL);}
     float {return(FLOAT);}
+    integer "d" {return(DECIMAL);}
     integer {return(INT);}
+    hex {return(HEX);}
     slit {return(STRING);}
     clit {return(CHAR);}
     rreg {return(RREG);}

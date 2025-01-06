@@ -29,6 +29,8 @@ struct backpatching_references {
 /* Frees Assembler Work Data */
 void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
+    if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
+    if (context->binary_constants_tree) free_tree(&context->binary_constants_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
     if (context->extern_constants_tree) free_tree(&context->extern_constants_tree);
@@ -394,6 +396,77 @@ static size_t add_string_to_pool(Assembler_Context *context, char* string) {
     return entry_index;
 }
 
+static size_t add_decimal_to_pool(Assembler_Context *context, char* decimal) {
+    string_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
+
+    /* Search if the constant already exists */
+    if (!src_node(context->decimal_constants_tree,decimal,&entry_index)) {
+        /* No it doesn't create one */
+        entry_size = sizeof(string_constant) + strlen(decimal);
+        entry_index = reserve_in_const_pool(context, entry_size,DECIMAL_CONST);
+
+        sentry = (string_constant *) (context->binary.const_pool + entry_index);
+        sentry-> string_len = strlen( decimal );
+        memcpy(sentry->string, decimal, sentry->string_len);
+        sentry->string[sentry->string_len] = 0; /* Add a null */
+#ifndef NUTF8
+        sentry->string_chars = sentry->string_len; // ASCII only
+#endif
+        /* Save it in the tree */
+        add_node(&context->decimal_constants_tree, decimal,entry_index);
+    }
+    return entry_index;
+}
+
+static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
+    string_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
+    hex += 2; // Skip the 0x prefix
+    size_t hex_len = strlen(hex);
+    size_t bin_len = (hex_len / 2);  // 2 chars per byte
+
+    /* Search if the constant already exists */
+    if (!src_node(context->binary_constants_tree,hex,&entry_index)) {
+        /* No it doesn't create one */
+        entry_size = sizeof(string_constant) + bin_len;
+        entry_index = reserve_in_const_pool(context, entry_size,BINARY_CONST);
+        sentry = (string_constant *) (context->binary.const_pool + entry_index);
+        sentry->string_len = bin_len;
+
+        // Convert the hex string to binary
+        unsigned char *b = sentry->string;
+        char *h = hex;
+        while (*h) {
+            int val = hexchar2int(*h);
+            if (val == -1) {
+                fprintf(stderr, "PANIC: Invalid hex character in binary constant\n");
+                exit(-1);
+            }
+            *b = val << 4;
+            h++;
+            val = hexchar2int(*h);
+            if (val == -1) {
+                fprintf(stderr, "PANIC: Invalid hex character in binary constant\n");
+                exit(-1);
+            }
+            *b |= val;
+            b++;
+            h++;
+        }
+        *b = 0; // Null terminate the binary string (for safety)
+
+#ifndef NUTF8
+        sentry->string_chars = bin_len; // Byte stream only
+#endif
+        /* Save it in the tree */
+        add_node(&context->binary_constants_tree, hex,entry_index);
+    }
+    return entry_index;
+}
+
 static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* token) {
     size_t entry_index;
     size_t entry_size;
@@ -541,7 +614,14 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
             s_index = add_string_to_pool(context, (char*)operandToken->token_value.string);;
             context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
-
+        case DECIMAL:
+            s_index = add_decimal_to_pool(context, (char*)operandToken->token_value.string);
+            context->binary.binary[context->binary.inst_size++].index = s_index;
+            return;
+        case HEX:
+            s_index = add_binary_to_pool(context, (char*)operandToken->token_value.string);
+            context->binary.binary[context->binary.inst_size++].index = s_index;
+            return;
         default:
             printf("**gen_operand() error**\n");
             return;
@@ -561,7 +641,72 @@ static OperandType token_to_operand_type(int token_type) {
         case FLOAT: return OP_FLOAT;
         case CHAR: return OP_CHAR;
         case STRING: return OP_STRING;
+        case DECIMAL: return OP_DECIMAL;
+        case HEX: return OP_BINARY;
         default: return OP_NONE;
+    }
+}
+
+static void convert_float_to_decimal(Assembler_Token *token) {
+    token->token_type = DECIMAL;
+    memcpy(token->token_value.string, token->token_source, token->length);
+    token->token_value.string[token->length] = 0;
+}
+
+/* Convert FLOAT tokens to DECIMAL tokens as defined by the instruction types */
+void promote_floats_to_decimals(Assembler_Token *instrToken,
+                                Assembler_Token *operand1Token, Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+
+    OperandType t1, t2, t3;
+    char* inst = (char*)instrToken->token_value.string;
+
+    t1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
+    t2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
+    t3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+
+    // If none of the operands are FLOATs, then we can't promote them
+    if (t1 != OP_FLOAT && t2 != OP_FLOAT && t3 != OP_FLOAT) return;
+
+    // If the instruction is valid, there is no need to promote the operands
+    if (src_inst(inst, t1, t2, t3)) return;
+
+    // Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs
+    int i;
+    for (i = 1; i < 8; i++) {
+        int try = 0;
+        if (i & 1) {
+            if (t1 == OP_FLOAT) {
+                t1 = OP_DECIMAL;
+                try = 1;
+            }
+        }
+        if (i & 2) {
+            if (t2 == OP_FLOAT) {
+                t2 = OP_DECIMAL;
+                try = 1;
+            }
+        }
+        if (i & 4) {
+            if (t3 == OP_FLOAT) {
+                t3 = OP_DECIMAL;
+                try = 1;
+            }
+        }
+
+        if (try) {
+            if (src_inst(inst, t1, t2, t3)) {
+                // Found a valid instruction - promote the operands
+                if (t1 == OP_DECIMAL) convert_float_to_decimal(operand1Token);
+                if (t2 == OP_DECIMAL) convert_float_to_decimal(operand2Token);
+                if (t3 == OP_DECIMAL) convert_float_to_decimal(operand3Token);
+                return;
+            }
+            // Reset the types for the next try
+            if (t1 == OP_DECIMAL) t1 = OP_FLOAT;
+            if (t2 == OP_DECIMAL) t2 = OP_FLOAT;
+            if (t3 == OP_DECIMAL) t3 = OP_FLOAT;
+            try = 0;
+        }
     }
 }
 

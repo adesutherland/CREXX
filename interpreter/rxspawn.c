@@ -293,6 +293,7 @@ void nullredr(value* redirect_reg) {
     value_zero(redirect_reg);
     redirect_reg->binary_length = sizeof(REDIRECT);
     redirect_reg->binary_value = malloc(redirect_reg->binary_length);
+    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
     redirect = (REDIRECT *) redirect_reg->binary_value;
 
     redirect->errorCode = 0;
@@ -353,6 +354,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     value_zero(redirect_reg);
     redirect_reg->binary_length = sizeof(REDIRECT);
     redirect_reg->binary_value = malloc(redirect_reg->binary_length);
+    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
     redirect = (REDIRECT*)redirect_reg->binary_value;
 
     redirect->errorCode = 0;
@@ -584,6 +586,7 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     value_zero(redirect_reg);
     redirect_reg->binary_length = sizeof(REDIRECT);
     redirect_reg->binary_value = malloc(redirect_reg->binary_length);
+    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
     redirect = (REDIRECT*)redirect_reg->binary_value;
     redirect->errorCode = 0;
     redirect->has_thread = 0;

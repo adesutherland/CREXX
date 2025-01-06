@@ -1,7 +1,6 @@
 //
 // Created by Adrian Sutherland on 16/09/2024.
 //
-// Decimal Test 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +13,7 @@ int main(int argc, char *argv[]) {
 #ifdef DYNAMIC
     // Load the plugin
     printf("Loading Dynamic Plugin\n");
-    if (load_rxvmplugin(".", "rxvm_mc_decimal_dyn") != 0) {
+    if (load_rxvmplugin(".", "rxvm_mc_decimal") != 0) {
         printf("Unable to load the rxvmplugin plugin\n");
         return 1;
     }
@@ -31,12 +30,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    rxvm_plugin_factory plugin_factory = get_rxvmplugin_factory(RXVM_PLUGIN_DECIMAL);
-    if (!plugin_factory) {
+    decplugin *plugin = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
+    if (!plugin) {
         printf("No default rxvmplugin plugin\n");
         return 1;
     }
-    decplugin *plugin = (decplugin*)plugin_factory();
 
     // Set the number of digits in the rxvmplugin context
     plugin->setDigits(plugin, atoi(argv[1]));
@@ -49,27 +47,27 @@ int main(int argc, char *argv[]) {
     result.decimal_value = NULL;
 
     // Convert the arguments to rxvmplugin numbers
-    plugin->decFloatFromString(plugin, &a, argv[2]);
-    plugin->decFloatFromString(plugin, &b, argv[3]);
+    plugin->decimalFromString(plugin, &a, argv[2]);
+    plugin->decimalFromString(plugin, &b, argv[3]);
 
     // Add the numbers and print the result
-    plugin->decFloatAdd(plugin, &result, &a, &b);
-    plugin->decFloatToString(plugin, &result, string);
+    plugin->decimalAdd(plugin, &result, &a, &b);
+    plugin->decimalToString(plugin, &result, string);
     printf("ADD:%s:\n", string);
 
     // Subtract the numbers and print the result
-    plugin->decFloatSub(plugin, &result, &a, &b);
-    plugin->decFloatToString(plugin, &result, string);
+    plugin->decimalSub(plugin, &result, &a, &b);
+    plugin->decimalToString(plugin, &result, string);
     printf("SUB:%s:\n", string);
 
     // Multiply the numbers and print the result
-    plugin->decFloatMul(plugin, &result, &a, &b);
-    plugin->decFloatToString(plugin, &result, string);
+    plugin->decimalMul(plugin, &result, &a, &b);
+    plugin->decimalToString(plugin, &result, string);
     printf("MUL:%s:\n", string);
 
     // Divide the numbers and print the result
-    plugin->decFloatDiv(plugin, &result, &a, &b);
-    plugin->decFloatToString(plugin, &result, string);
+    plugin->decimalDiv(plugin, &result, &a, &b);
+    plugin->decimalToString(plugin, &result, string);
     printf("DIV:%s:\n", string);
 
     // Free the memory

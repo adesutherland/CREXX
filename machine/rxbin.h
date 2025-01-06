@@ -51,7 +51,7 @@ struct bin_space {
 #pragma pack(pop)
 
 enum const_pool_type {
-    STRING_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
+    STRING_CONST, BINARY_CONST, DECIMAL_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
     META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR
 };
 
@@ -63,14 +63,14 @@ typedef struct chameleon_constant {
     enum const_pool_type type;
 } chameleon_constant;
 
-/* cREXX String entry in the constant pool */
+/* cREXX String entry in the constant pool - this is for STRING_CONST, BINARY_CONST or DECIMAL_CONST */
 typedef struct string_constant {
     chameleon_constant base;
     size_t string_len;
 #ifndef NUTF8
     size_t string_chars;
 #endif
-    char string[1]; /* Must be last member */
+    char string[1]; /* Must be the last member */
 } string_constant;
 
 typedef struct stack_frame stack_frame;

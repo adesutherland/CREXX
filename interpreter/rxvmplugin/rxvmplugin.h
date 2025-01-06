@@ -19,6 +19,22 @@ typedef enum rxvm_plugin_type {
     RXVM_PLUGIN_MAX = 3 // Maximum value for the enum
 } rxvm_plugin_type;
 
+// Signal Codes - These need to be synced with the rxsigal enum in crexxpa.h */
+#define RXVM_SIGNAL_NONE 0
+#define RXVM_SIGNAL_ERROR 1                /* Triggered when a syntax error occurs during the execution of a REXX program */
+#define RXVM_SIGNAL_OVERFLOW_UNDERFLOW 2   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
+#define RXVM_SIGNAL_CONVERSION_ERROR 3     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
+#define RXVM_SIGNAL_UNKNOWN_INSTRUCTION 4  /* Triggered when the REXX program attempts to execute an unknown RSAS instruction */
+#define RXVM_SIGNAL_FUNCTION_NOT_FOUND 5   /* Triggered when the REXX program attempts to execute an unknown function */
+#define RXVM_SIGNAL_OUT_OF_RANGE 6         /* Triggered when the REXX program attempts to access an array element that is out of range */
+#define RXVM_SIGNAL_FAILURE 7              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
+#define RXVM_SIGNAL_HALT 8                 /* Triggered when the REXX program receives an external request to halt its execution */
+#define RXVM_SIGNAL_NOTREADY 9             /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
+#define RXVM_SIGNAL_INVALID_ARGUMENTS 10   /* Triggered when invalid arguments are passed to a function or subroutine */
+#define RXVM_SIGNAL_DIVISION_BY_ZERO 11    /* Triggered when the REXX program attempts to divide by zero */
+#define RXVM_SIGNAL_UNICODE_ERROR 12       /* Triggered when an unicode error occurs */
+#define RXVM_SIGNAL_OTHER 99
+
 /* Base information block for all rxvm plugins - this is extended for each plugin type */
 typedef struct rxvm_plugin rxvm_plugin;
 struct rxvm_plugin {
@@ -27,6 +43,9 @@ struct rxvm_plugin {
     char *version; // Version of the plugin
     char *description; // Description of the plugin
 
+    int signal_number; // Signal number of last operation
+    char *signal_string; // Signal string (this is a pointer to a static buffer or NULL)
+
     void *private_context; // Private context for the plugin
     void (*free)(rxvm_plugin *plugin); // Function to free the plugin
     int (*set_option)(rxvm_plugin *plugin, char *option, char *value); // Function to set an option for the plugin
@@ -34,26 +53,40 @@ struct rxvm_plugin {
 };
 
 /* Information block for rxvmplugin plugins with all the function pointers for rxvmplugin maths operations  */
-typedef struct decpugin decplugin;
-struct decpugin {
+typedef struct decplugin decplugin;
+struct decplugin {
     rxvm_plugin base; // Base plugin information
 
+    // Functions provided by the framework
+    // Function number_to_simple_format as defined in rxvmplugin_framework.h
+    void (*number_to_simple_format)(const char *input, char *output);
+
+    // Functions provided by the plugin
     size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context
     void (*setDigits)(decplugin *plugin, size_t digits); // Set the number of digits in the rxvmplugin context
 
     size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
-    void (*decFloatFromString)(decplugin *plugin, value *result, const char *string); // Convert a string to a rxvmplugin number
-    void (*decFloatToString)(decplugin *plugin, const value *number, char *string); // Convert a rxvmplugin number to a string
+    void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
+    void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string
+    void (*decimalFromInt)(decplugin *plugin, value *result, const rxinteger input); // Convert an int to a rxvmplugin number
+    void (*decimalToInt)(decplugin *plugin, const value *input, rxinteger *result); // Convert a rxvmplugin number to an int
+    void (*decimalFromDouble)(decplugin *plugin, value *result, const double input); // Convert a double to a rxvmplugin number
+    void (*decimalToDouble)(decplugin *plugin, const value *input, double *result); // Convert a rxvmplugin number to a double
+    void (*decimalExtract)(decplugin *plugin, char *coefficient, rxinteger *exponent, value *decimal); // Extract the decimal components from a float
 
-    void (*decFloatAdd)(decplugin *plugin, value *result, const value *op1, const value *op2); // Add two rxvmplugin numbers
-    void (*decFloatSub)(decplugin *plugin, value *result, const value *op1, const value *op2); // Subtract two rxvmplugin numbers
-    void (*decFloatMul)(decplugin *plugin, value *result, const value *op1, const value *op2); // Multiply two rxvmplugin numbers
-    void (*decFloatDiv)(decplugin *plugin, value *result, const value *op1, const value *op2); // Divide two rxvmplugin numbers
+    void (*decimalAdd)(decplugin *plugin, value *result, const value *op1, const value *op2); // Add two rxvmplugin numbers
+    void (*decimalSub)(decplugin *plugin, value *result, const value *op1, const value *op2); // Subtract two rxvmplugin numbers
+    void (*decimalMul)(decplugin *plugin, value *result, const value *op1, const value *op2); // Multiply two rxvmplugin numbers
+    void (*decimalDiv)(decplugin *plugin, value *result, const value *op1, const value *op2); // Divide two rxvmplugin numbers
+    void (*decimalPow)(decplugin *plugin, value *result, const value *op1, const value *op2); // Raise one rxvmplugin number to the power of another
+    void (*decimalNeg)(decplugin *plugin, value *result, const value *op1); // Negate a rxvmplugin number
+    int (*decimalCompare)(decplugin *plugin, const value *op1, const value *op2); // Compare two rxvmplugin numbers
+    int (*decimalCompareString)(decplugin *plugin, const value *op1, const char *op2); // Compare an rxvmplugin number to a string representation of a number
 };
 
 /* Information block for unicode plugins */
-typedef struct unipugin uniplugin;
-struct unipugin {
+typedef struct uniplugin uniplugin;
+struct uniplugin {
     rxvm_plugin base; // Base plugin information
 
     /* Break functions */
@@ -99,7 +132,7 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory);
 #define STRINGIFY(x) #x
 #define EXPAND_AND_STRINGIFY(x) STRINGIFY(x)
 // Create a function name starting with _register_rxvm_plugin
-#define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _register_rxvm_plugin)
+#define UNIQUE_VMINIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _register_rxvm_plugin)
 
 // tyoedef for an initializer function - void f(void)
 typedef void (*initializer_function)();
@@ -108,8 +141,8 @@ typedef void (*initializer_function)();
 // This is used to manually call the initializer for a statically linked plugin without
 // the need for linker 'magic'
 #define CALL_PLUGIN_INITIALIZER(plugin_id) \
-    void UNIQUE_INIT_FUNCTION_NAME(plugin_id)(void); \
-    UNIQUE_INIT_FUNCTION_NAME(plugin_id)();
+    void UNIQUE_VMINIT_FUNCTION_NAME(plugin_id)(void); \
+    UNIQUE_VMINIT_FUNCTION_NAME(plugin_id)();
 
 // RXVM_PLUGIN must have a value if we are building a plugin
 #ifdef RXVM_PLUGIN
@@ -177,9 +210,9 @@ typedef void (*initializer_function)();
 #endif // MANUAL_INIT
 
 // Define the REGISTER_PLUGIN macro
-#define REGISTER_PLUGIN(factory) INITIALIZER(factory, UNIQUE_INIT_FUNCTION_NAME(RXVM_PLUGIN),EXPAND_AND_STRINGIFY(RXVM_PLUGIN))
+#define REGISTER_PLUGIN(factory) INITIALIZER(factory, UNIQUE_VMINIT_FUNCTION_NAME(RXVM_PLUGIN),EXPAND_AND_STRINGIFY(RXVM_PLUGIN))
 
 #endif // BUILD_DLL
 #endif // RXVM_PLUGIN
 
-#endif //CREXX_RXVMPLUGIN_FRAMEWORK_H
+#endif // CREXX_RXVMPLUGIN_H

@@ -1,0 +1,91 @@
+/*
+ * CREXX Interpreter Sanity Tests for Assembler Instructions
+ */
+
+.globals=0
+
+/*
+ * r1 = number of errors
+ * r2 = number of tests
+ */
+main() .locals=6
+    load r1,0
+    load r2,0
+    say "Interpreter Sanity Tests for Assembler Instructions"
+
+    /* Test FEXTR_REG_REG_REG */
+    say ""
+    sayx "Test 1 (FEXTR_REG_REG_REG)"
+    inc r2
+    load r5,1234.56 /* Input Float */
+    fextr r3,r4,r5
+    /* Check r3 - should be "1.23456" */
+    seq r0,r3,"1.23456"
+    brt test1part2,r0
+    inc r1
+    sayx " - failed coefficient "
+    say r3
+test1part2:
+    /* Check r4 - should be 3 */
+    ieq r0,r4,3
+    brt test1end,r0
+    inc r1
+    sayx " - failed exponent "
+    itos r4
+    say r4
+test1end:
+
+/* Test FEXTR_REG_REG_REG with a 15 digit float number */
+    say ""
+    sayx "Test 2 (FEXTR_REG_REG_REG with a 15 digit float number)"
+    inc r2
+    load r5,12345678901234.5 /* Input Float */
+    fextr r3,r4,r5
+    /* Check r3 - should be "1.23456789012345" */
+    seq r0,r3,"1.23456789012345"
+    brt test2part2,r0
+    inc r1
+    sayx " - failed coefficient "
+    say r3
+test2part2:
+    /* Check r4 - should be 13 */
+    ieq r0,r4,13
+    brt test2end,r0
+    inc r1
+    sayx " - failed exponent "
+    itos r4
+    say r4
+test2end:
+
+/* Test FEXTR_REG_REG_REG with a 15 digit float number - all 9's */
+    say ""
+    sayx "Test 3 (FEXTR_REG_REG_REG with a 15 digit float number - all 9's)"
+    inc r2
+    load r5,9999999999.9999 /* Input Float */
+    fextr r3,r4,r5
+    /* Check r3 - should be "9.9999999999999" */
+    seq r0,r3,"9.9999999999999"
+    brt test3part2,r0
+    inc r1
+    sayx " - failed coefficient "
+    say r3
+test3part2:
+    /* Check r4 - should be 9 */
+    ieq r0,r4,9
+    brt test3end,r0
+    inc r1
+    sayx " - failed exponent "
+    itos r4
+    say r4
+test3end:
+
+   /* Print and return results */
+   say ""
+   sayx "Tests Run: "
+   itos r2
+   say r2
+   sayx "Error Count: "
+   itos r1
+   say r1
+
+   ret r1

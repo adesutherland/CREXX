@@ -8,6 +8,7 @@
 #include <windows.h>
 #endif
 #include "rxvmintp.h"
+#include "rxvmplugin_framework.h"
 
 /* Library Buffer */
 #ifdef LINK_CREXX_LIB
@@ -27,12 +28,17 @@ static void help() {
             "Usage   : rxvm [options] binary_file [binary_file_2 ...] -a args ... \n"
             "Options :\n"
             "  -h              Prints help message\n"
+            "  -p plugin       Load VM Plugin*\n"
             "  -c              Prints Copyright & License Details\n"
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
 #endif
             "  -l location     Working Location (directory)\n"
-            "  -v              Prints Version\n";
+            "  -v              Prints Version\n"
+            "\n*   VM Extension Plugin are specified by the full file name without the extension\n"
+            "    Multiple plugins can be loaded by specifying multiple -p options\n"
+            "    E.g. -p myplugin1 -p dir/myplugin2\n"
+            "    *** Defining plugin location to be improved in release version ***\n"; // todo
 
     printf("%s",helpMessage);
 }
@@ -96,6 +102,20 @@ int main(int argc, char *argv[]) {
     /* Init Context */
     rxinimod(&context);
 
+    /*
+     * Load VM RXAS Plugin(s)
+     * Note in general the last plugin loaded has priority.
+     * In future versions this will be extended to allow dynamic (via RXAS instructions) selection of the
+     * RXAS plugin to use on a procedure-by-procedure basis
+     */
+
+    // First - the linker "magic" will take care of initializing static linked plugins with auto-initializers
+
+    // Secondly - we manually initialize the plugins that are statically linked with manual initializers (hardcoded)
+    CALL_PLUGIN_INITIALIZER(dbnumber);
+
+    // Finally - we manually load the dynamic plugins as we process the command line arguments (-p)
+
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
         if (strlen(argv[i]) > 2) {
@@ -111,6 +131,17 @@ int main(int argc, char *argv[]) {
                     error_and_exit("Missing location after -l");
                 }
                 context.location = argv[i];
+                break;
+
+            case 'P': /* Load Plugin */
+                i++;
+                if (i >= argc) {
+                    error_and_exit("Missing plugin after -p");
+                }
+                if (load_rxvmplugin(0, argv[i]) != 0) {
+                    fprintf(stderr, "ERROR loading plugin %s\n", argv[i]);
+                    exit(-1);
+                }
                 break;
 
             case 'V': /* Version */

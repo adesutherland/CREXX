@@ -11,6 +11,7 @@ add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack rxdb globals ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         DEPENDS rxas rxc rxdb.rexx globals.rxas library rxcpack
         OUTPUT rxdb.c
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rxdb.rexx ${CMAKE_CURRENT_SOURCE_DIR}/globals.rxas
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble and package rxdb ..."
 )
@@ -19,4 +20,4 @@ add_executable(rxdb rxdb.c)
 
 target_link_libraries(rxdb rxvml machine avl_tree rxpa platform m)
 
-add_dependencies(rxdb rxvml machine avl_tree rxpa platform)
+add_dependencies(rxdb rxc rxas rxcpack library)

@@ -4,9 +4,13 @@ function(add_dynamic_rxvmplugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
     set(sources ${ARGN})
 
+    if(NOT sources)
+        message(FATAL_ERROR "No source files provided for dynamic plugin ${plugin_name}")
+    endif()
+
     # Create the plugin module
     add_library(${plugin_name} MODULE ${sources})
-    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/rxvmplugin)
+    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
     target_compile_definitions(${plugin_name} PRIVATE BUILD_DLL)
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rxvm_")
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxvmplugin")
@@ -17,9 +21,14 @@ function(add_static_rxvmplugin_target plugin_name)
     # Assuming the rest of the source files are passed as additional arguments
     set(sources ${ARGN})
 
+    # Check if sources are provided
+    if(NOT sources)
+        message(FATAL_ERROR "No source files provided for static plugin ${plugin_name}")
+    endif()
+
     # Create a static library version of the plugin
     add_library(${plugin_name} STATIC ${sources})
-    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/rxvmplugin)
+    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rxvm_")
 endfunction()
 
@@ -27,6 +36,7 @@ endfunction()
 function(configure_linker_for_static_rxvmplugin target pluginId)
     if(MSVC)
         # For Visual Studio Compiler
+        target_link_libraries(${target} "${CMAKE_CURRENT_BINARY_DIR}/rxvm_${pluginId}.lib")
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_register_rxvm_plugin")
     elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
         # For GCC

@@ -16,7 +16,9 @@ typedef enum OperandType
     OP_INT = 4,
     OP_FLOAT = 5,
     OP_CHAR = 6,
-    OP_STRING = 7
+    OP_STRING = 7,
+    OP_DECIMAL = 8,
+    OP_BINARY = 9
 } OperandType;
 
 typedef struct Instruction
