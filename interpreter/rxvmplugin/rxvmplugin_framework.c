@@ -261,7 +261,8 @@ void number_to_simple_format(const char *input, char *output) {
     if (dotPos) {
         dotIndex = (int)(dotPos - mantissa);
         // Remove the dot by shifting chars left
-        for (char *m = dotPos; *m; m++) {
+        char *m;
+        for (m = dotPos; *m; m++) {
             *m = *(m+1);
         }
         mantissaLenNoDot = (int)strlen(mantissa);
@@ -334,7 +335,8 @@ void number_to_simple_format(const char *input, char *output) {
             *o++ = '.';
         }
         // put leading zeros: (-newDotPos) = leadingZeros
-        for (int i = 0; i < leadingZeros; i++) {
+        int i;
+        for (i = 0; i < leadingZeros; i++) {
             *o++ = '0';
         }
         // then digits
@@ -345,7 +347,8 @@ void number_to_simple_format(const char *input, char *output) {
         memcpy(o, mantissa, (size_t)digitsCount);
         o += digitsCount;
         // trailing zeros
-        for (int i = 0; i < trailingZeros; i++) {
+        int i;
+        for (i = 0; i < trailingZeros; i++) {
             *o++ = '0';
         }
         // no decimal point needed at the end
@@ -383,7 +386,8 @@ void number_to_simple_format(const char *input, char *output) {
     // If all digits are zeros, replace with just "0" (or "-0" if sign was set)
     const char *check = output + (sign ? 1 : 0);
     int allZero = 1;
-    for (const char *c = check; *c; c++) {
+    const char *c;
+    for (c = check; *c; c++) {
         if (*c != '0') {
             allZero = 0;
             break;

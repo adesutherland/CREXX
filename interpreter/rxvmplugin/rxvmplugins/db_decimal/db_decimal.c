@@ -12,7 +12,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mach/port.h>
 
 #include "rxvmplugin.h"
 

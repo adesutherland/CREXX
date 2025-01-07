@@ -471,7 +471,8 @@ static int isIntegerGivenExponentAndDigits(const decNumber *dn) {
 
     // Check the least significant 'digitsToCheck' digits of unitVal
     // Repeatedly check unitVal % 10
-    for (int i=0; i<digitsToCheck; i++) {
+    int i;
+    for (i=0; i<digitsToCheck; i++) {
       if ((unitVal % 10) != 0) {
         // Found a non-zero fractional digit
         return 0;
@@ -547,7 +548,7 @@ Int decNumberToInt32(const decNumber *dn, decContext *set) {
        }
     }
     if (dn->bits&DECNEG) {
-      if (total > -INT32_MIN) {
+      if (-total < INT32_MIN) {
         // Underflow
         decContextSetStatus(set, DEC_Invalid_operation);
         return 0;

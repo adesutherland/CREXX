@@ -4304,7 +4304,7 @@ START_OF_INSTRUCTIONS
             hash = hash ^ (ch);          // xor next byte into the bottom of the hash
             hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
         }
-        sprintf(str, "%llu", hash);
+        sprintf(str, "%lu", hash);
         set_null_string(op1R, str);
      }
 

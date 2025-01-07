@@ -11,6 +11,9 @@ add_library(decnumber STATIC
 )
 target_include_directories(decnumber PUBLIC decnumber)
 
+# Set position-independent code for the static library
+set_target_properties(decnumber PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # Add the test executable for the decnumber library (changed to use the decnumber library)
 add_executable(decnumber_test
         decnumber_test.c
