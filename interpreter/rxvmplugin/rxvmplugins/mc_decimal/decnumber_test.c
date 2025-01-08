@@ -135,7 +135,7 @@ int test_decNumberFromInt64() {
     return errors;
 }
 
-static int do_decNumberFromUInt64_test(char* test, u_int64_t value) {
+static int do_decNumberFromUInt64_test(char* test, uint64_t value) {
     int digits = 30;
     char expected[digits + 14];
     char buffer[digits + 14];
@@ -350,7 +350,7 @@ int test_decNumberToInt64() {
     return errors;
 }
 
-static int do_decNumberToUInt64_test(char* test, u_int64_t value) {
+static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     int digits = 30;
     char expected[digits + 14];
     int error = 0;
@@ -368,7 +368,7 @@ static int do_decNumberToUInt64_test(char* test, u_int64_t value) {
 
     printf("%s",test);
     decNumberFromUInt64(dn, value);
-    u_int64_t result = decNumberToUInt64(dn, context);
+    uint64_t result = decNumberToUInt64(dn, context);
     if (result != value) {
         error = 1;
         printf("- ERROR - Expected: %llu - Got: %llu", value, result);
@@ -447,7 +447,7 @@ int test_decNumberToUInt64() {
     decNumberFromString(dn, "18446744073709551616", context);
     // Clear the context flags
     context->status = 0;
-    u_int64_t result = decNumberToUInt64(dn, context);
+    uint64_t result = decNumberToUInt64(dn, context);
     // Check Context flags
     if (context->status & DEC_Invalid_operation) {
         printf("Test decNumberToUInt64 with UINT64_MAX + 1 - Got the expected Invalid_operation\n");
@@ -624,7 +624,7 @@ int test_decNumberToInt32() {
     return errors;
 }
 
-static int do_decNumberToUInt32_test(char* test, u_int32_t value) {
+static int do_decNumberToUInt32_test(char* test, uint32_t value) {
     int digits = 30;
     char expected[digits + 14];
     int error = 0;
@@ -642,7 +642,7 @@ static int do_decNumberToUInt32_test(char* test, u_int32_t value) {
 
     printf("%s",test);
     decNumberFromUInt32(dn, value);
-    u_int32_t result = decNumberToUInt32(dn, context);
+    uint32_t result = decNumberToUInt32(dn, context);
     if (result != value) {
         error = 1;
         printf("- ERROR - Expected: %u - Got: %u", value, result);
@@ -685,10 +685,10 @@ int test_decNumberToUInt32() {
     errors += do_decNumberToUInt32_test("Test decNumberToUInt32 with 1", 1);
 
     // Boundary Conditions Around Limits - Near UINT32_MAX - one less than UINT32_MAX - 4294967294
-    errors += do_decNumberToUInt32_test("Test decNumberToUInt32 Boundary Conditions Around Limits - Near UINT32_MAX Test 4294967294 (one less than UINT32_MAX)", 4294967294);
+    errors += do_decNumberToUInt32_test("Test decNumberToUInt32 Boundary Conditions Around Limits - Near UINT32_MAX Test 4294967294 (one less than UINT32_MAX)", 4294967294u);
 
     // Boundary Conditions Around Limits - Near UINT32_MAX Test (close to UINT32_MAX but with trailing zeros) - 4294967290
-    errors += do_decNumberToUInt32_test("Test decNumberToUInt32 Boundary Conditions Around Limits - Near UINT32_MAX Test 4294967290 (close to UINT32_MAX but with trailing zeros)", 4294967290);
+    errors += do_decNumberToUInt32_test("Test decNumberToUInt32 Boundary Conditions Around Limits - Near UINT32_MAX Test 4294967290 (close to UINT32_MAX but with trailing zeros)", 4294967290u);
 
     // Mid-Range Large Values: Unsigned Positive: 1234567890
     errors += do_decNumberToUInt32_test("Test decNumberToUInt32 Mid-Range Large Values: Positive: 1234567890", 1234567890);
@@ -721,7 +721,7 @@ int test_decNumberToUInt32() {
     decNumberFromString(dn, "4294967296", context);
     // Clear the context flags
     context->status = 0;
-    u_int32_t result = decNumberToUInt32(dn, context);
+    uint32_t result = decNumberToUInt32(dn, context);
     // Check Context flags
     if (context->status & DEC_Invalid_operation) {
         printf("Test decNumberToUInt32 with UINT32_MAX + 1 - Got the expected Invalid_operation\n");

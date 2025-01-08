@@ -92,10 +92,10 @@ static int test_int_tofrom_conversions() {
     errors += aTestFromToInt("-1", -1);
 
     // Test with a positive number between 32 and 64 bits
-    errors += aTestFromToInt("4294967295", 4294967295);
+    errors += aTestFromToInt("4294967295", 4294967295ll);
 
     // Test with a negative number between 32 and 64 bits
-    errors += aTestFromToInt("-4294967295", -4294967295);
+    errors += aTestFromToInt("-4294967295", -4294967295ll);
 
     // Test with a positive number less than 32 bits
     errors += aTestFromToInt("255", 255);

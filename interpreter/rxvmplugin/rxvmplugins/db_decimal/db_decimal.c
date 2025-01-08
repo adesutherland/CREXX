@@ -333,7 +333,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
     long double decimalValue = *(long double*)number->decimal_value;
     *int_value = 0;
     char is_neg = 0;
-    u_int64_t uvalue = 0;
+    uint64_t uvalue = 0;
 
     // Handle special cases
     if (isnan(decimalValue)) {
@@ -385,7 +385,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
         // Note we are using unsigned ints here because of a edge case where INT64_MAX is exceeded because of rounding
         uvalue *= int_powers_of_10[exponent];
         if (is_neg) {
-            if (uvalue > -INT64_MIN) {
+            if (-uvalue < INT64_MIN) {
                 plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
                 plugin->base.signal_string = "Overflow/Underflow";
             }
