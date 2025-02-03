@@ -137,7 +137,7 @@ regression: procedure=.int
     call mprint xtx_inv,""
  ## Step 5: Calculate coefficients: result = (X'X)^(-1)(X'y)
     result = mmult(XtX_inv, XtY, "Regression Coefficients");
-    call mprint result,""
+    call mprint result,"Regression Coefficients, intercept (element 1), coefficients (elements 2-n)"
  ## Clean up temporary matrices
  say '*************** cleanup *******************'
     say "FREE XT      "xt  mfree(Xt);

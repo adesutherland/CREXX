@@ -15,6 +15,7 @@ This library provides:
 - **Basic Matrix Functions**: Includes creation, multiplication, inversion, transposition, and arithmetic operations.
 - **Matrix Characteristics**: Tools for calculating determinants, ranks, and decompositions (e.g., LU, QR, and SVD).
 - **Statistical Analysis**: Functions for covariance, correlation, mean, standard deviation, and advanced metrics like skewness and kurtosis.
+- **Regression**: Regression analysis is a statistical method used to examine the relationship between one or more dependent variable
 - **Factor Analysis**: Includes support for rotation methods (Varimax, Promax) and factor score calculations.
 - **Visualization Tools**: Enables matrix data visualization through line plots, scatterplots, and ASCII-based heatmaps.
 - **Error Handling**: Comprehensive mechanisms to handle common matrix errors, ensuring robust and fail-safe operations.
@@ -174,7 +175,97 @@ stddev = mstdev(id, 2); // Row 2 standard deviation
     row 3: skewness
     row 4: kurtosis 
 ```
- 
+### Regression Analysis 
+Regression analysis is a statistical method used to examine the relationship between one dependent variable (often referred to as the outcome or response variable) and one or more independent variables (predictors or explanatory variables). It is a fundamental tool in data analysis and modeling, commonly used in fields such as economics, biology, engineering, and social sciences.
+The model for linear regression is expressed as: y=Xβ+ϵ
+To find the best-fitting coefficients (
+𝛽
+β), the Ordinary Least Squares (OLS) method minimizes the sum of squared residuals:
+
+Minimize: 
+∥
+𝑦
+−
+𝑋
+𝛽
+∥
+2
+Minimize: ∥y−Xβ∥
+2
+
+The closed-form solution for
+𝛽
+β is:
+
+𝛽
+=
+(
+𝑋
+⊤
+𝑋
+)
+−
+1
+𝑋
+⊤
+𝑦
+β=(X
+⊤
+X)
+−1
+X
+⊤
+y
+Where:
+
+𝑋
+⊤
+X
+⊤
+is the transpose of the matrix
+𝑋
+X.
+(
+𝑋
+⊤
+𝑋
+)
+−
+1
+(X
+⊤
+X)
+−1
+is the inverse of the matrix
+𝑋
+⊤
+𝑋
+X
+⊤
+X.
+
+- **Purpose**: Performs regression analysis to model the relationship between one dependent variable and one or more independent variables. The result is a vector of coefficients representing the best-fitted linear factors of the independent variables.
+- **Parameters**:
+    - `ry`: Vector of the independent variable 
+    - `rx`: Matrix of the dependent variable
+    - `description`: Result Vector description
+- **Returns**: Matrix handle (int) of the coefficient vector, containing the intercept (element 1) and the coefficients (elements 2-n)
+```c 
+rc=mreg(ry,rx,'Regression Coefficients')
+call mprint(rc)
+
+ Matrix 7: Regression Coefficients, dimension: 6x1
+  122: ----------------
+  122: Rows/Cols   1
+  122: ----------------
+  122:    1:    10.6461
+  122:    2:    -0.7562
+  122:    3:    -0.2558
+  122:    4:     0.6285
+  122:    5:     1.9792
+  122:    6:     3.8568
+```
+
 ### Factor Analysis
 Factor Analysis is a statistical method designed to uncover the underlying structure in a dataset by reducing observed variables into a smaller set of latent variables, called factors. These factors represent shared variance among the observed variables and are used to simplify data interpretation while retaining essential information. The technique is widely applied in psychology, social sciences, finance, and other fields for tasks such as dimensionality reduction and identifying relationships among variables.
 Identify and group correlated variables into factors.

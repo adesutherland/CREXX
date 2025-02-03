@@ -1040,7 +1040,7 @@ PROCEDURE(mmean) {
 
     struct Matrix *matrix = (struct Matrix *) allVectors[GETINT(ARG0)];
 
-    RETURNFLOATX(calculate_column_mean(matrix, axis));
+    RETURNFLOAT(calculate_column_mean(matrix, axis));
 ENDPROC
 }
 
@@ -1055,7 +1055,7 @@ PROCEDURE(mstdev) {
 
     struct Matrix *matrix = (struct Matrix *) allVectors[GETINT(ARG0)];
     mean=calculate_column_mean(matrix, axis);
-    RETURNFLOATX(calculate_column_stddev(matrix, axis,mean));
+    RETURNFLOAT(calculate_column_stddev(matrix, axis,mean));
 ENDPROC
 }
 
