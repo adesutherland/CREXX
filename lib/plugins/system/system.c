@@ -50,7 +50,7 @@
     #define REMOVE_DIR(path) rmdir(path)
     #define MAKE_DIR(path)   mkdir(path, 0755)
     #define TEST_DIR(path)   access(path, F_OK)
-    #define TEST_FILE(fname) access(fname, F_OK)
+    #define TEST_FILE(fname) access(path, F_OK)
     #define RENAME_FILE(source,target)  rename(source, target)
 #endif
 
@@ -384,6 +384,173 @@ PROCEDURE(parse) {
     ENDPROC
 }
 
+// Function to check if a format specifier is valid
+int count_valid_format_specifiers(char *format) {
+    int count = 0;  // Counter for valid formats
+    char *informat = format;
+    char *xformat;
+
+    while (*format) {
+        if (*format == '&') {
+            xformat = format;
+            format++;  // Move past '&'
+            
+            if (*format == 'v') {
+                format++;  // Move past 'v'
+                if (*format == '[') {
+                    // Handle &v[...] case
+                    *xformat = '%';  // Replace '&' with '%'
+                    memmove(xformat + 1, format, strlen(format) + 1);  // Move [...] right after %
+                    format = xformat + 1;  // Adjust format pointer
+                    // Skip to end of brackets
+                    while (*format && *format != ']') {
+                        format++;
+                    }
+                    if (*format == ']') {
+                        count++;
+                        format++;  // Move past ']'
+                    } else {
+                        printf("Invalid format specifier: unterminated [...]\n");
+                        format = informat;
+                        return -1;
+                    }
+                } else {
+                    // Handle simple &v case
+                    *xformat = '%';
+                    *(xformat + 1) = 's';  // Place 's' right after '%'
+                    memmove(xformat + 2, format, strlen(format));  // Move rest of string
+                    format = xformat + 2;  // Move past "%s"
+                    count++;
+                }
+            } else if (isdigit(*format)) {
+                // Handle &nnnv case
+                char *numStart = format;
+                while (isdigit(*format)) format++;
+                if (*format == 'v') {
+                    *xformat = '%';
+                    memmove(xformat + 1, numStart, format - numStart);  // Copy the digits
+                    *(xformat + 1 + (format - numStart)) = 's';  // Add 's' after the digits
+                    memmove(xformat + 2 + (format - numStart), format + 1, strlen(format));  // Move rest of string
+                    format = xformat + 2 + (format - numStart);  // Move past "%nums"
+                    count++;
+                } else {
+                    printf("Invalid format specifier: digits not followed by v\n");
+                    format = informat;
+                    return -1;
+                }
+            } else {
+                printf("Invalid format specifier after &\n");
+                format = informat;
+                return -1;
+            }
+        } else {
+            format++;
+        }
+    }
+    format = informat;
+    return count;
+}
+
+/*
+int main() {
+    const char *valid_format1 = "%s %32s %d";
+    const char *valid_format2 = "%d %f";
+    const char *valid_format3 = "%[abc] %[^abc]";
+    const char *invalid_format1 = "%a %d %32s";
+    const char *invalid_format2 = "%b";
+    const char *invalid_format3 = "%[abc";  // Missing closing ']'
+
+    // Test with valid format string
+    printf("Test 1: %s\n", valid_format1);
+    if (is_valid_format_specifier(valid_format1)) {
+        printf("Valid format\n");
+    } else {
+        printf("Invalid format\n");
+    }
+
+    // Test with another valid format string
+    printf("\nTest 2: %s\n", valid_format2);
+    if (is_valid_format_specifier(valid_format2)) {
+        printf("Valid format\n");
+    } else {
+        printf("Invalid format\n");
+    }
+
+    // Test with valid %[...] format string
+    printf("\nTest 3: %s\n", valid_format3);
+    if (is_valid_format_specifier(valid_format3)) {
+        printf("Valid format\n");
+    } else {
+        printf("Invalid format\n");
+    }
+
+    // Test with invalid format string (invalid specifier %a)
+    printf("\nTest 4: %s\n", invalid_format1);
+    if (is_valid_format_specifier(invalid_format1)) {
+        printf("Valid format\n");
+    } else {
+        printf("Invalid format\n");
+    }
+
+    // Test with invalid format string (invalid specifi
+*/
+
+
+// Add these constants near the top of the file, after the includes
+#define MAX_FORMAT_VARS 64    // Maximum number of variables supported by sscanf
+#define MAX_VAR_SIZE 255      // Maximum size of each variable
+#define MIN_VAR_SIZE 1        // Minimum size for unused variables
+
+PROCEDURE(parsex) {
+    char *input = GETSTRING(ARG0);
+    char *format = GETSTRING(ARG1);
+    int numvars, i;
+    numvars = count_valid_format_specifiers(format);
+    if (numvars<0) RETURNINTX(-8);
+
+ // Dynamically pass variables to sscanf - allocate all possible vars
+    char **vars = malloc(MAX_FORMAT_VARS * sizeof(char *));
+    // Allocate and initialize all buffers
+    for (i = 0; i < MAX_FORMAT_VARS; i++) {
+        if (i < numvars) {
+            vars[i] = malloc(MAX_VAR_SIZE * sizeof(char));
+            memset(vars[i], 0, MAX_VAR_SIZE * sizeof(char));  // Initialize to zeros
+        } else {
+            vars[i] = malloc(MIN_VAR_SIZE * sizeof(char));
+            vars[i][0] = '\0';
+        }
+    }
+
+    // Use sscanf directly with the array of pointers
+    if (numvars > MAX_FORMAT_VARS) {
+        printf("Warning: Number of variables (%d) exceeds maximum supported formats (%d)\n", numvars, MAX_FORMAT_VARS);
+        RETURNINTX(-8);
+    }
+    printf("SSCANF input '%s' format '%s'\n",input,format);
+    int result = sscanf(input, format,
+        vars[0],  vars[1],  vars[2],  vars[3],  vars[4],  vars[5],  vars[6],  vars[7],  vars[8],  vars[9],
+        vars[10], vars[11], vars[12], vars[13], vars[14], vars[15], vars[16], vars[17], vars[18], vars[19],
+        vars[20], vars[21], vars[22], vars[23], vars[24], vars[25], vars[26], vars[27], vars[28], vars[29],
+        vars[30], vars[31], vars[32], vars[33], vars[34], vars[35], vars[36], vars[37], vars[38], vars[39],
+        vars[40], vars[41], vars[42], vars[43], vars[44], vars[45], vars[46], vars[47], vars[48], vars[49],
+        vars[50], vars[51], vars[52], vars[53], vars[54], vars[55], vars[56], vars[57], vars[58], vars[59],
+        vars[60], vars[61], vars[62], vars[63]);
+
+     // Copy results to output array and print
+    SETARRAYHI(ARG2,numvars);
+    for (i = 0; i < numvars; i++) {
+        printf("Variable %d: '%s'\n", i + 1, vars[i]);
+        SETSARRAY(ARG2, i, vars[i]);
+    }
+
+    // Free all allocated memory
+    for (i = 0; i < MAX_FORMAT_VARS; i++) {
+        free(vars[i]);
+    }
+    free(vars);
+    ENDPROC
+}
+
 #if defined(_WIN32)
 PROCEDURE(setclipboard) {
     char *text=GETSTRING(ARG0);
@@ -597,7 +764,6 @@ PROCEDURE(opsys) {
 ENDPROC
 }
 
-
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
  * -------------------------------------------------------------------------------------
@@ -625,6 +791,7 @@ LOADFUNCS
     ADDPROC(getcomputer, "system.host"        ,"b",    ".string",  "");
     ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
     ADDPROC(writeall,    "system.writeall",    "b",    ".int","expose array=.string[],file=.string,arg2=.int");
-    ADDPROC(parse,       "system.parse",       "b",    ".int","string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
-
+    ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
+    ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
 ENDLOADFUNCS
+
