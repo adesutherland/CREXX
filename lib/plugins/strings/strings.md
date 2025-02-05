@@ -234,6 +234,105 @@ isAbbrev = XABBREV("Hel", "Hello", 3, " "); // isAbbrev = 1
 
 ---
 
+## Expression Evaluator Functions
+
+The Evaluator is designed to process and evaluate mathematical and logical expressions. It operates using a **Stack-based Expression Evaluator**, implementing a variation of **Operator Precedence Parsing** with a stack-based approach.
+
+The parsing process combines two key techniques:
+- **Recursive Descent Parsing** – Handles parentheses and nested expressions.
+- **Stack-based Evaluation** – Manages operator precedence during expression evaluation.
+
+Expressions in this format follow **Infix Notation**, where operators are placed between operands (e.g., `"3 + 4"`). The parser reads the infix notation and evaluates it using a stack.
+
+**Supported Operators:**
+1. Arithmetic Operators:
+   - `+` Addition
+   - `-` Subtraction
+   - `*` Multiplication
+   - `/` Division
+   - `%` Modulo
+   - `**` Power
+
+2. Comparison Operators:
+   - `>` Greater than
+   - `>=` Greater than or equal
+   - `<` Less than
+   - `<=` Less than or equal
+   - `==` Equal to
+   - `!=` Not equal to
+
+3. Logical/Bitwise Operators:
+   - `&` AND
+   - `|` OR
+   - `^` XOR
+   - `!` NOT
+
+4. Other Features:
+   - `()` Parentheses for grouping
+   - `0x` Hex number prefix (e.g., `0xFF`)
+   - Variables (e.g., `a1`, `a2`)
+
+### 1. `EVAL(expression)`
+
+**Description:**
+Evaluates mathematical and logical expressions, supporting various operators and hex numbers.
+
+**Parameters:**
+- `expression`: A string containing the expression to evaluate. If you need to use REXX variables in an expression string, place them outside the string. This ensures that the variable name is correctly resolved to its value.
+- Example: 
+```c
+result=EVAL(a'>5')
+result=EVAL(a'>='b)
+result=EVAL('5>'b'&'a'==7')
+```
+**Returns:**
+- Returns the result of the evaluated expression as an integer.
+
+**Examples:**
+```rexx
+result = eval('2 + 3')          /* Returns 5 */
+result = eval('4 * 3')          /* Returns 12 */
+result = eval('7 % 3')          /* Returns 1 */
+result = eval('2 ** 3')         /* Returns 8 */
+result = eval('5 > 3')          /* Returns 1 (true) */
+result = eval('4 >= 4')         /* Returns 1 (true) */
+result = eval('5 == 5')         /* Returns 1 (true) */
+result = eval('1 & 1')          /* Returns 1 */
+result = eval('1 | 0')          /* Returns 1 */
+result = eval('!0')             /* Returns 1 */
+result = eval('0xFF')           /* Returns 255 */
+result = eval('(2 + 3) * 4')    /* Returns 20 */
+```
+
+### 2. `IFF(expression, true_value, false_value)`
+
+**Description:**
+Evaluates an expression and returns one of two values based on the result.
+
+**Parameters:**
+- `expression`: A string containing the expression to evaluate
+- `true_value`: Value to return if the expression evaluates to non-zero
+- `false_value`: Value to return if the expression evaluates to zero
+
+**Returns:**
+- Returns `true_value` if the expression evaluates to non-zero
+- Returns `false_value` if the expression evaluates to zero
+
+**Examples:**
+```rexx
+vtrue = 'Condition is true'
+vfalse = 'Condition is false'
+result = iff('5 > 3', vtrue, vfalse)          /* Returns 'Condition is true' */
+result = iff('2 > 4', vtrue, vfalse)          /* Returns 'Condition is false' */
+result = iff('2**3', vtrue, vfalse)           /* Returns 'Condition is true' */
+result = iff('!(5<3)', vtrue, vfalse)         /* Returns 'Condition is true' */
+```
+
+**Notes:**
+- All comparison operators return 1 for true and 0 for false
+- Logical operators can be combined with arithmetic operations
+- Division by zero is handled safely
+- Hex numbers must be prefixed with '0x' or '0X'
 
 ## Usage Example
 
@@ -246,5 +345,5 @@ position = XWORDINDEX("Hello world! This is a test.", 3, " "); // position = 14
 ```
 
 ## Notes
-- All functions are case-sensitive and treat different cases as distinct characters.
+- All functions are case-insensitive and treat different cases as distinct characters.
 - Ensure that the input strings are properly formatted to avoid unexpected results.

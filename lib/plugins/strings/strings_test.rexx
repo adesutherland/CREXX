@@ -3,6 +3,61 @@ options levelb
 import strings
 import rxfnsb
 
+## IFF version
+vtrue='Condition is true'
+vfalse='Condition is not true'
+
+say iff('(5>3) & (2>4)',vtrue,vfalse)
+say iff('(5>3) | (2>4)',vtrue,vfalse)
+say iff('(5>3) ^ (2>4)',vtrue,vfalse)
+say iff('!((5>3) | (2>4))',vtrue,vfalse)
+say iff('2**3',vtrue,vfalse)
+say iff('!2**3',vtrue,vfalse)
+do i=1 to 16
+   say 'Modulo 'i iff(i'%'3,vtrue,vfalse)
+end
+## EVAL function
+a1=123
+a2=124
+say evaluate('('a1'+4)*7',(a1+4)*7)
+
+say evaluate(a2'+31',a2+31)
+say evaluate(a1'>='a2,a1>=a2)
+say evaluate(a1'<'a2,a1<a2)
+say evaluate('7*(13+1)',7*(13+1))
+
+say evaluate('4*(1+2*(3+4))',4*(1+2*(3+4)))
+say evaluate('(5>3) & (2<4)',1)     ## Returns 1 (both conditions true)
+say evaluate('(5>3) | (2>4)',1)     ## Returns 1 (at least one condition true)
+say evaluate('(5>3) ^ (2<4)',0)     ## Returns 0 (both true, XOR gives false)
+
+
+say evaluate('3 & 5',3 & 5)             ## Returns 1 (bitwise AND: 011 & 101 = 001)
+say evaluate('3 | 5',3 | 5)             ## Returns 7 (bitwise OR: 011 | 101 = 111)
+say evaluate('3 ^ 5',6)             ## Returns 6 (bitwise XOR: 011 ^ 101 = 110)
+say evaluate('0xFF',255)              ## Returns 255 (hex number)
+say evaluate('15==15',1)           ## Returns 1 (equality)
+say evaluate('15!=14',1)           ## Returns 1 (inequality)
+say evaluate('!0',1)               ## Returns 1 (logical NOT)
+say evaluate('15%4',3)             ## Returns 3 (modulo)
+say evaluate('2**3',8)             ## Returns 8 (power)
+say evaluate('!(5<3)',1)           ## Returns 1 (NOT with parentheses)
+say evaluate('(15%4)==3',1)        ## Returns 1 (combining operators)
+say evaluate('2**3*2',16)           ## Returns 16 (power and multiply)
+
+exit
+evaluate: procedure=.int
+  arg expression=.string, mustbe=.int
+  result=eval(expression)
+  if result=mustbe then return 0
+  say 'Evaluate 'expression
+  say '  result 'result
+  say ' must be 'mustbe
+  if result=mustbe then say '--- ok'
+ else say '+++ not ok '
+return 0
+
+/*
 /* strings_test.rexx */
 
 /* Test for xwords function */
@@ -159,14 +214,14 @@ if xstrip3 \= "  Hello" then say "*** xstrip does not match"
 
 /* Test for xabbrev function */
 say "Test Case 28: xabbrev"
-say "Function: xabbrev('Hel', 'Hello', 3)"
-xabbrev1 = xabbrev("Hel", "Hello", 3)
+say "Function: xabbrev( 'Hello','Hel', 3)"
+xabbrev1 = xabbrev("Hello",'Hel', 3)
 say "Expected: 1, Got:" xabbrev1
 if xabbrev1 \= 1 then say "*** xabbrev does not match"
 
 say "Test Case 29: xabbrev"
-say "Function: xabbrev('Hel', 'Hello', 4)"
-xabbrev2 = xabbrev("Hel", "Hello", 4)
+say "Function: xabbrev('Hello','Hel', 4)"
+xabbrev2 = xabbrev("Hello",'Hel', 4)
 say "Expected: 0, Got:" xabbrev2
 if xabbrev2 \= 0 then say "*** xabbrev does not match"
 
@@ -262,33 +317,4 @@ say "Function: xwordlen('', 1)"
 xwordlen5 = xwordlen("", 1,"")
 say "Expected: 0, Got:" xwordlen5
 if xwordlen5 \= 0 then say "*** xwordlen does not match"
-
-/*
-string= "Hello, world! This is a test."
-say xxxxpos("Hello",string,1)
-say xxxxpos("Hello",string,2)
-say "xxxwords "xxxxwords(string,"")
-say "xxxwordloc "xxxxwordloc(string,10,"")
-say "xxxwordloc "xxxxwordloc(string,14,"")
-say "last xxxword '"xxxxlastword(string,' ')"'"
-do j=1 to 7
-   say "xxxwordINDEX "j xxxxwordindex(string,j,' ')
-end
-
-do j=1 to 12
-   say j "'"xxxxword(string,j,' ')"'"
-end
-say time('l')
-do i=1 to 1000000              ## 0.307219
-   wrd=xxxxword(string,6,' ')
-end
-say time('l')
-say "xxxword 7 '"wrd"'"
-say time('l')
-do i=1 to 1000000             ## 1,192109
-   wrd=xxxword(string,6)
-end
-say time('l')
-say "xxxword 7O '"wrd"'"
-exit
 */

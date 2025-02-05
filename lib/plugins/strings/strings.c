@@ -1,13 +1,10 @@
-//
-// System Information Plugin for crexx/pa - Plugin Architecture
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include <math.h>
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
-#include <string.h>
 
 // New words function to count words
 PROCEDURE(words) {
@@ -269,8 +266,9 @@ PROCEDURE(delstr) {
 
 // New ABBREV function to check if target is an abbreviation of source
 PROCEDURE(ABBREV) {
-    char *target = GETSTRING(ARG0); // Get the target string
-    char *source = GETSTRING(ARG1); // Get the source string
+    char *source = GETSTRING(ARG0); // Get the source string
+    char *target = GETSTRING(ARG1); // Get the target string
+
     int min = GETINT(ARG2);          // Get the minimum number of characters
 
     // Check for NULL input
@@ -395,6 +393,227 @@ PROCEDURE(WORDLEN) {
     RETURNINT(0); // Return 0 if the word number is out of range
 ENDPROC
 }
+#define MAX_STACK_SIZE 100
+
+// Function prototypes
+int evaluate(const char **expr);
+int parse_expression(const char **expr);
+
+// Function to parse a hexadecimal number
+int parse_hex_number(const char **expr) {
+    int num = 0;
+    (*expr) += 2;  // Skip '0x'
+    while (isxdigit(**expr)) {
+        num = num * 16 + (**expr >= 'a' ? **expr - 'a' + 10 : 
+                         **expr >= 'A' ? **expr - 'A' + 10 : 
+                         **expr - '0');
+        (*expr)++;
+    }
+    return num;
+}
+
+// Function to parse a decimal number
+int parse_decimal_number(const char **expr) {
+    int num = 0;
+    while (isdigit(**expr)) {
+        num = num * 10 + (**expr - '0');
+        (*expr)++;
+    }
+    return num;
+}
+
+// Function to parse any number (hex or decimal)
+int parse_number(const char **expr) {
+    if (**expr == '0' && (*(*expr+1) == 'x' || *(*expr+1) == 'X')) {
+        return parse_hex_number(expr);
+    }
+    return parse_decimal_number(expr);
+}
+
+// Function to parse and evaluate the expression
+int evaluate(const char **expression) {
+    int result = parse_expression(expression); // Parse and evaluate the expression
+    return result; // Return the result
+}
+
+// Updated parse_expression function
+int parse_expression(const char **expr) {
+    int num = 0;
+    int stack[MAX_STACK_SIZE];
+    int top = -1;
+    int sign = 1;
+
+    while (**expr) {
+        switch (**expr) {
+            case '0': case '1': case '2': case '3': case '4':
+            case '5': case '6': case '7': case '8': case '9':
+                num = parse_number(expr);
+                stack[++top] = sign * num;
+                sign = 1;  // Reset sign after using it
+                break;
+            
+            case '+':
+                if (top >= 0 && *((*expr) + 1) != '\0') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] += num;
+                } else {
+                    sign = 1;
+                    (*expr)++;
+                }
+                break;
+            
+            case '-':
+                if (top >= 0 && *((*expr) + 1) != '\0') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] -= num;
+                } else {
+                    sign = -1;
+                    (*expr)++;
+                }
+                break;
+            
+            case '*':
+                (*expr)++;
+                if (**expr == '*') {
+                    // Handle power operator
+                    (*expr)++;
+                    num = parse_number(expr);  // Get the exponent directly
+                    stack[top] = (int)pow(stack[top], num);
+                } else {
+                    // Handle multiplication
+                    num = evaluate(expr);
+                    stack[top] *= num;
+                }
+                break;
+            
+            case '(':
+                (*expr)++;
+                num = parse_expression(expr);
+                stack[++top] = sign * num;
+                sign = 1;
+                break;
+            
+            case ')':
+                (*expr)++;
+                goto end_parse;
+            
+            case '>':
+                (*expr)++;
+                if (**expr == '=') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] >= num) ? 1 : 0;
+                } else {
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] > num) ? 1 : 0;
+                }
+                break;
+            
+            case '<':
+                (*expr)++;
+                if (**expr == '=') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] <= num) ? 1 : 0;
+                } else {
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] < num) ? 1 : 0;
+                }
+                break;
+
+            case '=':
+                (*expr)++;
+                if (**expr == '=') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] == num) ? 1 : 0;
+                }
+                break;
+
+            case '!':
+                (*expr)++;
+                if (**expr == '=') {
+                    (*expr)++;
+                    num = evaluate(expr);
+                    stack[top] = (stack[top] != num) ? 1 : 0;
+                } else {
+                    // Get the value to negate
+                    if (**expr == '(') {
+                        (*expr)++;  // Skip '('
+                        num = parse_expression(expr);
+                    } else {
+                        num = evaluate(expr);
+                    }
+                    // Push the negated value onto the stack
+                    if (top < 0) {
+                        stack[++top] = (num == 0) ? 1 : 0;  // Push new result if stack empty
+                    } else {
+                        stack[top] = (num == 0) ? 1 : 0;    // Update existing top if not
+                    }
+                }
+                break;
+            
+            case '&':
+                (*expr)++;
+                num = evaluate(expr);
+                stack[top] = ((stack[top] != 0) && (num != 0)) ? 1 : 0;  // Logical AND
+                break;
+                
+            case '|':
+                (*expr)++;
+                num = evaluate(expr);
+                stack[top] = ((stack[top] != 0) || (num != 0)) ? 1 : 0;  // Logical OR
+                break;
+                
+            case '%':
+                (*expr)++;
+                num = evaluate(expr);
+                if (num != 0) {
+                    stack[top] = stack[top] % num;  // Modulo
+                }
+                break;
+            
+            case '^':
+                (*expr)++;
+                num = evaluate(expr);
+                stack[top] = stack[top] ^ num;  // Bitwise XOR (not logical)
+                break;
+            
+            default:
+                (*expr)++;
+                break;
+        }
+    }
+
+end_parse: ;
+    // Sum up all numbers in the stack
+    int result = stack[0];  // Start with first number
+    for (int i = 1; i <= top; i++) {
+        result += stack[i];
+    }
+    return result;
+}
+
+PROCEDURE(eval) {
+    char *expression = GETSTRING(ARG0);
+    const char *orig_expr = expression;  // Save original expression for display
+    int result = evaluate((const char **) &expression);
+    printf("EVAL: %s = %d\n", orig_expr, result);  // Use original expression
+    RETURNINTX(result);
+ENDPROC;
+}
+
+PROCEDURE(iff) {
+    char *expression = GETSTRING(ARG0);
+    const char *orig_expr = expression;  // Save original expression for display
+    int result = evaluate((const char **) &expression);
+    printf("IFF: %s = %d\n", orig_expr, result);  // Use original expression
+    if(result==0) RETURNSTRX(GETSTRING(ARG2));  // if result = 0 then interpret as not true
+    RETURNSTRX(GETSTRING(ARG1));                // anything else is true
+ENDPROC;
+}
 
 // Linked List definitions
 LOADFUNCS
@@ -410,4 +629,6 @@ LOADFUNCS
    ADDPROC(WORDPOS, "strings.xwordpos", "i",  ".int","searchWord=.string,phrase=.string");
    ADDPROC(SUBWORD, "strings.xsubword", "b",  ".string","string = .string,position=.int,numberOfWords=.int,delim=.string");
    ADDPROC(WORDLEN, "strings.xwordlen", "i",  ".int","string = .string,wordNumber=.int,delim=.string");
+   ADDPROC(eval, "strings.eval", "b", ".int", "expression=.string");
+   ADDPROC(iff, "strings.iff", "b", ".string", "expression=.string,true=.string,false=.string");
 ENDLOADFUNCS
