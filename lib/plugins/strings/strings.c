@@ -508,6 +508,7 @@ long long parse_expression(const char **expr) {
                     // Handle power operator
                     (*expr)++;
                     num = evaluate(expr);  // Changed from parse_number to evaluate
+                //    num=parse_number(expr);
                     double base = stack[top];
                     double result = pow(base, num);
                     stack[top] = (int)result;  // Cast back to int after pow
@@ -641,17 +642,11 @@ end_parse: ;
     return result;
 }
 
-// Macro definitions
-#define EVAL_NEXT_NUM() do { \
-    (*expr)++; \
-    num = evaluate(expr); \
-} while(0)
-
 PROCEDURE(eval) {
     char *expression = GETSTRING(ARG0);
     const char *orig_expr = expression;  // Save original expression for display
     int result = evaluate((const char **) &expression);
-    printf("EVAL: %s = %d\n", orig_expr, result);  // Use original expression
+  //  printf("EVAL: %s = %d\n", orig_expr, result);  // Use original expression
     RETURNINTX(result);
 ENDPROC;
 }

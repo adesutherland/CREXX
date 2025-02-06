@@ -3,10 +3,29 @@ options levelb
 import strings
 import rxfnsb
 
+## string evaluation
+/* Test for string comparison */
+say "Test Case 1: String Comparison"
+result = evaluate('-"aaa" == "aaa"',1)
+
+say "Expected: 1, Got:" result
+result = evaluate("'aaa' == 'aaa'",1)
+say "Expected: 1, Got:" result
+
+result = evaluate('"aaa" == "bbb"',0)
+say "Expected: 0, Got:" result
+
+result = evaluate('"Hello" == "Hello"',1)
+say "Expected: 1, Got:" result
+
+result = evaluate('"Hello" != "World"',1)
+say "Expected: 1, Got:" result
+
 ## IFF version
 vtrue='Condition is true'
 vfalse='Condition is not true'
 
+say "Test Case 2: IFF Logical Operations"
 say iff('(5>3) & (2>4)',vtrue,vfalse)
 say iff('(5>3) | (2>4)',vtrue,vfalse)
 say iff('(5>3) ^ (2>4)',vtrue,vfalse)
@@ -16,22 +35,26 @@ say iff('!2**3',vtrue,vfalse)
 do i=1 to 16
    say 'Modulo 'i iff(i'%'3,vtrue,vfalse)
 end
+
 ## EVAL function
 a1=123
 a2=124
+say "Test Case 3: Basic Logical Operations"
+say evaluate('(5>3) & (2>4)',0)
+say evaluate('(5>3) | (2>4)',1)
+say evaluate('(5>3) ^ (2>4)',1)
+say evaluate('!((5>3) | (2>4))',0)
+say evaluate('2**3',8)
+say evaluate('!2**3',0)
 say evaluate('('a1'+4)*7',(a1+4)*7)
-
 say evaluate(a2'+31',a2+31)
 say evaluate(a1'>='a2,a1>=a2)
 say evaluate(a1'<'a2,a1<a2)
 say evaluate('7*(13+1)',7*(13+1))
-
 say evaluate('4*(1+2*(3+4))',4*(1+2*(3+4)))
 say evaluate('(5>3) & (2<4)',1)     ## Returns 1 (both conditions true)
 say evaluate('(5>3) | (2>4)',1)     ## Returns 1 (at least one condition true)
 say evaluate('(5>3) ^ (2<4)',0)     ## Returns 0 (both true, XOR gives false)
-
-
 say evaluate('3 & 5',3 & 5)             ## Returns 1 (bitwise AND: 011 & 101 = 001)
 say evaluate('3 | 5',3 | 5)             ## Returns 7 (bitwise OR: 011 | 101 = 111)
 say evaluate('3 ^ 5',6)             ## Returns 6 (bitwise XOR: 011 ^ 101 = 110)
@@ -43,19 +66,94 @@ say evaluate('15%4',3)             ## Returns 3 (modulo)
 say evaluate('2**3',8)             ## Returns 8 (power)
 say evaluate('!(5<3)',1)           ## Returns 1 (NOT with parentheses)
 say evaluate('(15%4)==3',1)        ## Returns 1 (combining operators)
-say evaluate('2**3*2',16)           ## Returns 16 (power and multiply)
+say evaluate('2**3*2',64)           ## Returns 64 (power and multiply)
+say evaluate('(2**3)*2',16)           ## Returns 16 (power and multiply)
+
+/* Additional Test Cases for Expression Evaluator */
+
+## Test basic arithmetic operations
+say "Test Case 4: Basic Arithmetic Operations"
+say evaluate('1 + 1', 2)                ## Addition
+say evaluate('5 - 3', 2)                ## Subtraction
+say evaluate('4 * 2', 8)                ## Multiplication
+say evaluate('8 / 2', 4)                ## Division
+say evaluate('10 % 3', 1)               ## Modulo
+say evaluate('2 ** 3', 8)               ## Power
+
+## Test complex expressions
+say "Test Case 5: Complex Expressions"
+say evaluate('1 + 2 * 3', 7)            ## Mixed operations
+say evaluate('(1 + 2) * 3', 9)          ## Parentheses
+say evaluate('2 * (3 + 4)', 14)         ## Parentheses with addition
+say evaluate('10 / (2 + 3)', 2)         ## Division with parentheses
+
+## Test comparisons
+say "Test Case 6: Comparisons"
+say evaluate('10 >= 10', 1)             ## Greater than or equal
+say evaluate('10 > 5', 1)                ## Greater than
+say evaluate('5 <= 10', 1)              ## Less than or equal
+say evaluate('5 < 10', 1)               ## Less than
+say evaluate('5 == 5', 1)               ## Equal to
+say evaluate('5 != 4', 1)               ## Not equal to
+
+## Test logical operations
+say "Test Case 7: Logical Operations"
+say evaluate('1 & 1', 1)                ## Logical AND
+say evaluate('1 | 0', 1)                ## Logical OR
+say evaluate('1 ^ 0', 1)                ## Logical XOR
+say evaluate('0 & 1', 0)                ## Logical AND with false
+say evaluate('0 | 0', 0)                ## Logical OR with false
+say evaluate('!(5 < 3)', 1)             ## Logical NOT
+
+## Test nested expressions
+say "Test Case 8: Nested Expressions"
+say evaluate('!(5 > 3) & (2 < 4)', 0)   ## Nested logical AND
+say evaluate('!(5 > 3) | (2 < 4)', 1)   ## Nested logical OR
+say evaluate('((5 > 3) & (2 < 4)) | (1 == 1)', 1) ## Nested with equality
+
+## Test hexadecimal and binary
+say "Test Case 9: Hexadecimal and Binary"
+say evaluate('0xFF', 255)               ## Hexadecimal
+say evaluate('0b1010', 10)              ## Binary (if supported)
+
+## Test edge cases
+say "Test Case 10: Edge Cases"
+say evaluate('0', 0)                     ## Zero
+say evaluate('1 + 0', 1)                 ## Addition with zero
+say evaluate('1 - 1', 0)                 ## Subtraction to zero
+say evaluate('2 * 0', 0)                 ## Multiplication by zero
+say evaluate('0 / 1', 2147483647)        ## Division by zero returns highest integer value
+## more edge tests
+say "**** more edge tests "
+/* Test for numeric edge conditions */
+say "Test Case 11: Large Number Handling"
+result = evaluate('40000000000 == 40000000000',1)
+say "Expected: 1, Got:" result
+
+say "Test Case 12: Zero Comparison"
+result = evaluate('0 == 0',1)
+say "Expected: 1, Got:" result
+
+say "Test Case 13: Negative Number Comparison"
+result = evaluate('-100 == -100',1)
+say "Expected: 1, Got:" result
+
+say "Test Case 14: Division by Zero"
+result = evaluate('10 / 0','-99')
+say "Expected: Error, Got:" result
 
 exit
 evaluate: procedure=.int
   arg expression=.string, mustbe=.int
   result=eval(expression)
-  if result=mustbe then return 0
   say 'Evaluate 'expression
+  if result=mustbe then return result
   say '  result 'result
   say ' must be 'mustbe
   if result=mustbe then say '--- ok'
  else say '+++ not ok '
 return 0
+
 
 /*
 /* strings_test.rexx */
@@ -317,4 +415,5 @@ say "Function: xwordlen('', 1)"
 xwordlen5 = xwordlen("", 1,"")
 say "Expected: 0, Got:" xwordlen5
 if xwordlen5 \= 0 then say "*** xwordlen does not match"
+exit
 */

@@ -238,39 +238,74 @@ isAbbrev = XABBREV("Hel", "Hello", 3, " "); // isAbbrev = 1
 
 The Evaluator is designed to process and evaluate mathematical and logical expressions. It operates using a **Stack-based Expression Evaluator**, implementing a variation of **Operator Precedence Parsing** with a stack-based approach.
 
-The parsing process combines two key techniques:
-- **Recursive Descent Parsing** – Handles parentheses and nested expressions.
-- **Stack-based Evaluation** – Manages operator precedence during expression evaluation.
-
 Expressions in this format follow **Infix Notation**, where operators are placed between operands (e.g., `"3 + 4"`). The parser reads the infix notation and evaluates it using a stack.
 
-**Supported Operators:**
-1. Arithmetic Operators:
-   - `+` Addition
-   - `-` Subtraction
-   - `*` Multiplication
-   - `/` Division
-   - `%` Modulo
-   - `**` Power
+### Supported Operations
 
-2. Comparison Operators:
-   - `>` Greater than
-   - `>=` Greater than or equal
-   - `<` Less than
-   - `<=` Less than or equal
-   - `==` Equal to
-   - `!=` Not equal to
+The evaluator supports a variety of operations, including arithmetic, bitwise, and hexadecimal manipulations. Here's a detailed breakdown:
 
-3. Logical/Bitwise Operators:
-   - `&` AND
-   - `|` OR
-   - `^` XOR
-   - `!` NOT
+#### 1. Standard Arithmetic Operations
 
-4. Other Features:
-   - `()` Parentheses for grouping
-   - `0x` Hex number prefix (e.g., `0xFF`)
-   - Variables (e.g., `a1`, `a2`)
+These are the basic arithmetic operations supported by the evaluator:
+
+- `+` Addition
+- `-` Subtraction
+- `*` Multiplication
+- `/` Division
+- `%` Modulo
+- `**` Power
+
+#### 2. Binary (Bitwise) Operations
+
+The evaluator supports binary numbers prefixed with `0b`. You can perform bitwise operations on these binary numbers, allowing for manipulation of individual bits:
+
+- **Binary Number Prefix**: `0b` (e.g., `0b1010` for binary representation of 10)
+- **Supported Bitwise Operations**:
+  - `&` AND
+  - `|` OR
+  - `^` XOR
+  - `!` NOT
+
+**Examples**:
+- `0b1010 & 0b1100` evaluates to `0b1000` (bitwise AND).
+- `0b1010 | 0b1100` evaluates to `0b1110` (bitwise OR).
+- `0b1010 ^ 0b1100` evaluates to `0b0110` (bitwise XOR).
+- `!0b1010` evaluates to the bitwise NOT of `0b1010`.
+
+By using these operators, you can perform complex bitwise manipulations directly within your expressions.
+
+#### 3. Hexadecimal Numbers
+
+The evaluator supports hexadecimal numbers prefixed with `0x`. These numbers can be used in arithmetic and bitwise operations, allowing for easy manipulation of values in hexadecimal format:
+
+- **Hexadecimal Number Prefix**: `0x` (e.g., `0xFF` for hexadecimal representation of 255)
+
+**Examples**:
+- `0xFF + 1` evaluates to `256` (adding 1 to 255).
+- `0xFF & 0x0F` evaluates to `0x0F` (bitwise AND).
+- `0xFF | 0x0F` evaluates to `0xFF` (bitwise OR).
+- `0xFF ^ 0x0F` evaluates to `0xF0` (bitwise XOR).
+
+#### 4. Other Features
+
+- **Parentheses**: `()` for grouping expressions to control the order of operations.
+- **REXX Variables**: Can be used but must be placed outside delimiters to allow REXX to resolve them into values.
+
+#### 5. Power Operator (`**`) Behavior
+
+The power operator (`**`) is used to raise a number to the power of another number. To keep simplicity of the evaluator it applies to the entire numeric term that follows it, unless explicitly limited by parentheses:
+
+- `2**3*2` evaluates as `2**(3 * 2)`, resulting in `64`.
+
+#### 6. Using Parentheses
+
+Parentheses are crucial for controlling the order of operations in expressions. When using the power operator, parentheses can be used to ensure that only the intended part of the expression is included in the power calculation.
+
+**Examples**:
+- `2**(3*2)` evaluates as `2**6`, resulting in `64`.
+- `(2**3)*2` evaluates as `(8) * 2`, resulting in `16`.
+
+By using parentheses, you can control how expressions are evaluated, ensuring that operations are performed in the desired order.
 
 ### 1. `EVAL(expression)`
 
@@ -279,14 +314,6 @@ Evaluates mathematical and logical expressions, supporting various operators and
 
 **Parameters:**
 - `expression`: A string containing the expression to evaluate. If you need to use REXX variables in an expression string, place them outside the string. This ensures that the variable name is correctly resolved to its value.
-- Example: 
-```c
-result=EVAL(a'>5')
-result=EVAL(a'>='b)
-result=EVAL('5>'b'&'a'==7')
-```
-**Returns:**
-- Returns the result of the evaluated expression as an integer.
 
 **Examples:**
 ```rexx
@@ -314,10 +341,6 @@ Evaluates an expression and returns one of two values based on the result.
 - `true_value`: Value to return if the expression evaluates to non-zero
 - `false_value`: Value to return if the expression evaluates to zero
 
-**Returns:**
-- Returns `true_value` if the expression evaluates to non-zero
-- Returns `false_value` if the expression evaluates to zero
-
 **Examples:**
 ```rexx
 vtrue = 'Condition is true'
@@ -333,6 +356,49 @@ result = iff('!(5<3)', vtrue, vfalse)         /* Returns 'Condition is true' */
 - Logical operators can be combined with arithmetic operations
 - Division by zero is handled safely
 - Hex numbers must be prefixed with '0x' or '0X'
+
+## String Comparison
+
+The `evaluate` function in the `strings.c` module has been enhanced to support string comparisons. This functionality allows the comparison of string literals within expressions, using the `==` and `!=` operators.
+
+### Usage
+
+String literals should be enclosed in double quotes (`"`) for comparison. The comparison operators supported are:
+
+- `==`: Returns `1` if the strings are equal, `0` otherwise.
+- `!=`: Returns `1` if the strings are not equal, `0` otherwise.
+
+### Examples
+
+```c
+result = evaluate('"hello" == "hello"');  // Returns 1
+result = evaluate('"hello" == "world"');  // Returns 0
+result = evaluate('"hello" != "world"');  // Returns 1
+```
+
+### Implementation Details
+
+The string comparison is implemented by pushing the string literals onto a stack as they are parsed. When a comparison operator is encountered, the strings are popped from the stack, compared, and the result of the comparison is pushed back onto the stack.
+
+Memory management is carefully handled to ensure that strings are freed after comparison to prevent memory leaks. Debugging output is included to trace the comparison process and memory management.
+
+### Debugging Output
+
+Debugging statements are included to help trace the operations:
+
+- When strings are pushed onto the stack.
+- When comparisons are made.
+- When memory is freed.
+
+These outputs can be very useful for debugging and verifying the correct operation of the string comparison functionality.
+
+### Error Handling
+
+Errors such as memory allocation failures or misuse of operators are handled gracefully, providing clear error messages and preventing the application from crashing.
+
+### Enhancements
+
+Future enhancements could include support for more complex string operations and optimizations for memory management and performance.
 
 ## Usage Example
 
