@@ -6,6 +6,11 @@
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+// Function prototypes
+long long evaluate(const char **expr);
+long long parse_expression(const char **expr);
+int parse_binary_number(const char **expr);
+
 // New words function to count words
 PROCEDURE(words) {
     char *wordstring = GETSTRING(ARG0); // Get the input string
@@ -395,10 +400,6 @@ ENDPROC
 }
 #define MAX_STACK_SIZE 100
 
-// Function prototypes
-int evaluate(const char **expr);
-int parse_expression(const char **expr);
-
 // Function to parse a hexadecimal number
 int parse_hex_number(const char **expr) {
     int num = 0;
@@ -422,24 +423,48 @@ int parse_decimal_number(const char **expr) {
     return num;
 }
 
-// Function to parse any number (hex or decimal)
+// Function to parse any number (hex, decimal, or binary)
 int parse_number(const char **expr) {
-    if (**expr == '0' && (*(*expr+1) == 'x' || *(*expr+1) == 'X')) {
-        return parse_hex_number(expr);
+    if (**expr == '0') {
+        if (*(*expr + 1) == 'b' || *(*expr + 1) == 'B') {
+            (*expr) += 2;  // Skip '0b' or '0B'
+            return parse_binary_number(expr);  // Call a new function to parse binary
+        } else if (*(*expr + 1) == 'x' || *(*expr + 1) == 'X') {
+            return parse_hex_number(expr);  // Call hex parser
+        }
     }
-    return parse_decimal_number(expr);
+    return parse_decimal_number(expr);  // Default to decimal parsing
+}
+
+// Function to parse a binary number
+int parse_binary_number(const char **expr) {
+    int num = 0;
+    while (**expr == '0' || **expr == '1') {
+        num = (num << 1) | (**expr - '0');  // Shift left and add the new bit
+        (*expr)++;
+    }
+    return num;
 }
 
 // Function to parse and evaluate the expression
-int evaluate(const char **expression) {
-    int result = parse_expression(expression); // Parse and evaluate the expression
+long long evaluate(const char **expression) {
+    long long result = parse_expression(expression); // Parse and evaluate the expression
     return result; // Return the result
 }
+uint64_t fnv1a_hash(const void *data, size_t len) {
+    uint64_t hash = 0xcbf29ce484222325;  // FNV offset basis
+    const uint8_t *ptr = (const uint8_t *)data;
 
+    for (size_t i = 0; i < len; i++) {
+        hash ^= ptr[i];
+        hash *= 0x100000001b3;  // FNV prime
+    }
+    return hash;
+}
 // Updated parse_expression function
-int parse_expression(const char **expr) {
-    int num = 0;
-    int stack[MAX_STACK_SIZE];
+long long parse_expression(const char **expr) {
+    long long num = 0;
+    long long stack[MAX_STACK_SIZE];
     int top = -1;
     int sign = 1;
 
@@ -453,41 +478,45 @@ int parse_expression(const char **expr) {
                 break;
             
             case '+':
-                if (top >= 0 && *((*expr) + 1) != '\0') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] += num;
-                } else {
-                    sign = 1;
-                    (*expr)++;
-                }
+                (*expr)++;
+                num = evaluate(expr);
+                stack[top] += num;
                 break;
             
             case '-':
-                if (top >= 0 && *((*expr) + 1) != '\0') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] -= num;
+                (*expr)++;
+                // Check if the next character starts a string literal
+                if (**expr == '"' || **expr == '\'') {
+                    // It's a string, ignore the minus and just parse the string
+                    continue;
                 } else {
-                    sign = -1;
-                    (*expr)++;
+                    // It's not a string, handle as a normal minus operation
+                    num = evaluate(expr);  // Correctly evaluate the next expression
+                    stack[top] -= num;     // Subtract the evaluated number from the top of the stack
                 }
                 break;
-            
+            case '/':
+                (*expr)++;
+                // Handle division
+                num = evaluate(expr);
+                if (num==0) stack[top]= INT_MAX;
+                else stack[top] /= num;
+                break;
             case '*':
                 (*expr)++;
                 if (**expr == '*') {
                     // Handle power operator
                     (*expr)++;
-                    num = parse_number(expr);  // Get the exponent directly
-                    stack[top] = (int)pow(stack[top], num);
+                    num = evaluate(expr);  // Changed from parse_number to evaluate
+                    double base = stack[top];
+                    double result = pow(base, num);
+                    stack[top] = (int)result;  // Cast back to int after pow
                 } else {
                     // Handle multiplication
                     num = evaluate(expr);
                     stack[top] *= num;
                 }
                 break;
-            
             case '(':
                 (*expr)++;
                 num = parse_expression(expr);
@@ -539,32 +568,31 @@ int parse_expression(const char **expr) {
                     num = evaluate(expr);
                     stack[top] = (stack[top] != num) ? 1 : 0;
                 } else {
-                    // Get the value to negate
-                    if (**expr == '(') {
-                        (*expr)++;  // Skip '('
-                        num = parse_expression(expr);
+                    // Only evaluate until the next operator
+                    char *next_op = strpbrk(*expr, "+-*/%|&^<>=!");
+                    if (next_op) {
+                        char saved = *next_op;
+                        *next_op = '\0';  // Temporarily terminate string
+                        num = evaluate(expr);
+                        *next_op = saved;  // Restore the operator
+                        *expr = next_op;   // Move pointer to next operator
                     } else {
                         num = evaluate(expr);
                     }
-                    // Push the negated value onto the stack
-                    if (top < 0) {
-                        stack[++top] = (num == 0) ? 1 : 0;  // Push new result if stack empty
-                    } else {
-                        stack[top] = (num == 0) ? 1 : 0;    // Update existing top if not
-                    }
+                    stack[++top] = !num;
                 }
                 break;
             
             case '&':
                 (*expr)++;
                 num = evaluate(expr);
-                stack[top] = ((stack[top] != 0) && (num != 0)) ? 1 : 0;  // Logical AND
+                stack[top] = (stack[top] && num) ? 1 : 0;  // Logical AND
                 break;
                 
             case '|':
                 (*expr)++;
                 num = evaluate(expr);
-                stack[top] = ((stack[top] != 0) || (num != 0)) ? 1 : 0;  // Logical OR
+                stack[top] = (stack[top] || num) ? 1 : 0;
                 break;
                 
             case '%':
@@ -578,10 +606,27 @@ int parse_expression(const char **expr) {
             case '^':
                 (*expr)++;
                 num = evaluate(expr);
-                stack[top] = stack[top] ^ num;  // Bitwise XOR (not logical)
+                stack[top] = stack[top] ^ num;  // Bitwise XOR
                 break;
-            
-            default:
+            case '"':  // Start of a string literal double quote
+            case '\'': // Start of a string literal single quote
+                {
+                    char quote = **expr;
+                    (*expr)++; // Skip the opening quote
+                    char str_buffer[256]; // Buffer for the string
+                    int i = 0;
+                    while (**expr != quote && **expr != '\0' && i < sizeof(str_buffer) - 1) {
+                        str_buffer[i++] = **expr; // Copy characters to buffer
+                        (*expr)++;
+                    }
+                    str_buffer[i] = '\0'; // Null-terminate the string
+                    if (**expr == quote) (*expr)++; // Skip the closing quote
+
+                    // Push the string hash onto the stack
+                    stack[++top] = fnv1a_hash(str_buffer, i);
+                }
+                break;
+              default:
                 (*expr)++;
                 break;
         }
@@ -589,12 +634,18 @@ int parse_expression(const char **expr) {
 
 end_parse: ;
     // Sum up all numbers in the stack
-    int result = stack[0];  // Start with first number
+    long long result = stack[0];  // Start with first number
     for (int i = 1; i <= top; i++) {
         result += stack[i];
     }
     return result;
 }
+
+// Macro definitions
+#define EVAL_NEXT_NUM() do { \
+    (*expr)++; \
+    num = evaluate(expr); \
+} while(0)
 
 PROCEDURE(eval) {
     char *expression = GETSTRING(ARG0);
