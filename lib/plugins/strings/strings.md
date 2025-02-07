@@ -236,7 +236,8 @@ isAbbrev = XABBREV("Hel", "Hello", 3, " "); // isAbbrev = 1
 
 ## Expression Evaluator Functions
 
-The Evaluator is designed to process and evaluate mathematical and logical expressions. It operates using a **Stack-based Expression Evaluator**, implementing a variation of **Operator Precedence Parsing** with a stack-based approach.
+The Evaluator is designed to process and evaluate expressions. It supports a variety of operations, including arithmetic, bitwise, and logical operations. It also handles unary minus operations, allowing for expressions with negative numbers.
+It operates using a **Stack-based Expression Evaluator**, implementing a variation of **Operator Precedence Parsing** with a stack-based approach.
 
 Expressions in this format follow **Infix Notation**, where operators are placed between operands (e.g., `"3 + 4"`). The parser reads the infix notation and evaluates it using a stack.
 
@@ -255,7 +256,18 @@ These are the basic arithmetic operations supported by the evaluator:
 - `%` Modulo
 - `**` Power
 
-#### 2. Binary (Bitwise) Operations
+#### 2. Comparison Operators
+
+These operators are used to compare two values:
+
+- `>` Greater than
+- `>=` Greater than or equal
+- `<` Less than
+- `<=` Less than or equal
+- `==` Equal to: Returns `1` if the values are equal, `0` otherwise.
+- `!=` Not equal to: Returns `1` if the values are not equal, `0` otherwise.
+
+#### 3. Binary (Bitwise) Operations
 
 The evaluator supports binary numbers prefixed with `0b`. You can perform bitwise operations on these binary numbers, allowing for manipulation of individual bits:
 
@@ -274,7 +286,7 @@ The evaluator supports binary numbers prefixed with `0b`. You can perform bitwis
 
 By using these operators, you can perform complex bitwise manipulations directly within your expressions.
 
-#### 3. Hexadecimal Numbers
+#### 4. Hexadecimal Numbers
 
 The evaluator supports hexadecimal numbers prefixed with `0x`. These numbers can be used in arithmetic and bitwise operations, allowing for easy manipulation of values in hexadecimal format:
 
@@ -286,18 +298,18 @@ The evaluator supports hexadecimal numbers prefixed with `0x`. These numbers can
 - `0xFF | 0x0F` evaluates to `0xFF` (bitwise OR).
 - `0xFF ^ 0x0F` evaluates to `0xF0` (bitwise XOR).
 
-#### 4. Other Features
+#### 5. Other Features
 
 - **Parentheses**: `()` for grouping expressions to control the order of operations.
 - **REXX Variables**: Can be used but must be placed outside delimiters to allow REXX to resolve them into values.
 
-#### 5. Power Operator (`**`) Behavior
+#### 6. Power Operator (`**`) Behavior
 
 The power operator (`**`) is used to raise a number to the power of another number. To keep simplicity of the evaluator it applies to the entire numeric term that follows it, unless explicitly limited by parentheses:
 
 - `2**3*2` evaluates as `2**(3 * 2)`, resulting in `64`.
 
-#### 6. Using Parentheses
+#### 7. Using Parentheses
 
 Parentheses are crucial for controlling the order of operations in expressions. When using the power operator, parentheses can be used to ensure that only the intended part of the expression is included in the power calculation.
 
@@ -378,9 +390,8 @@ result = evaluate('"hello" != "world"');  // Returns 1
 
 ### Implementation Details
 
-The string comparison is implemented by pushing the string literals onto a stack as they are parsed. When a comparison operator is encountered, the strings are popped from the stack, compared, and the result of the comparison is pushed back onto the stack.
-
-Memory management is carefully handled to ensure that strings are freed after comparison to prevent memory leaks. Debugging output is included to trace the comparison process and memory management.
+Strings are converted into numerical values using the FNV-1a hash algorithm and pushed onto the stack. These values are treated as numbers for subsequent operations.
+When a comparison operator is encountered, the numeric representations of the strings are popped from the stack, compared, and the result of the comparison is pushed back onto the stack.
 
 ### Debugging Output
 
@@ -400,15 +411,6 @@ Errors such as memory allocation failures or misuse of operators are handled gra
 
 Future enhancements could include support for more complex string operations and optimizations for memory management and performance.
 
-## Usage Example
-
-```c
-// Example usage of the functions
-count = XWORDS("Hello world! This is a test.", " "); // count = 6
-secondWord = XWORD("Hello world! This is a test.", 2, " "); // secondWord = "world!"
-lastWord = XLASTWORD("Hello world! This is a test.", " "); // lastWord = "test."
-position = XWORDINDEX("Hello world! This is a test.", 3, " "); // position = 14
-```
 
 ## Notes
 - All functions are case-insensitive and treat different cases as distinct characters.

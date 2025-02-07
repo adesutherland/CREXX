@@ -478,168 +478,285 @@ long long parse_expression(const char **expr) {
                 break;
             
             case '+':
-                (*expr)++;
-                num = evaluate(expr);
-                stack[top] += num;
-                break;
-            
+                goto case_plus;
+
             case '-':
-                (*expr)++;
-                // Check if the next character starts a string literal
-                if (**expr == '"' || **expr == '\'') {
-                    // It's a string, ignore the minus and just parse the string
-                    continue;
-                } else {
-                    // It's not a string, handle as a normal minus operation
-                    num = evaluate(expr);  // Correctly evaluate the next expression
-                    stack[top] -= num;     // Subtract the evaluated number from the top of the stack
-                }
-                break;
+                // Check if this is a unary minus
+                goto case_minus;
+
             case '/':
-                (*expr)++;
-                // Handle division
-                num = evaluate(expr);
-                if (num==0) stack[top]= INT_MAX;
-                else stack[top] /= num;
-                break;
+                goto case_divide;
+
             case '*':
-                (*expr)++;
-                if (**expr == '*') {
-                    // Handle power operator
-                    (*expr)++;
-                    num = evaluate(expr);  // Changed from parse_number to evaluate
-                //    num=parse_number(expr);
-                    double base = stack[top];
-                    double result = pow(base, num);
-                    stack[top] = (int)result;  // Cast back to int after pow
-                } else {
-                    // Handle multiplication
-                    num = evaluate(expr);
-                    stack[top] *= num;
-                }
-                break;
+                goto case_multiply;
+
             case '(':
-                (*expr)++;
-                num = parse_expression(expr);
-                stack[++top] = sign * num;
-                sign = 1;
-                break;
-            
+                goto case_open_paren;
+
             case ')':
-                (*expr)++;
-                goto end_parse;
-            
+                goto case_close_paren;
+
             case '>':
-                (*expr)++;
-                if (**expr == '=') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] >= num) ? 1 : 0;
-                } else {
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] > num) ? 1 : 0;
-                }
-                break;
-            
+                goto case_greater;
+
             case '<':
-                (*expr)++;
-                if (**expr == '=') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] <= num) ? 1 : 0;
-                } else {
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] < num) ? 1 : 0;
-                }
-                break;
+                goto case_less;
 
             case '=':
-                (*expr)++;
-                if (**expr == '=') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] == num) ? 1 : 0;
-                }
-                break;
+                goto case_equal;
 
             case '!':
-                (*expr)++;
-                if (**expr == '=') {
-                    (*expr)++;
-                    num = evaluate(expr);
-                    stack[top] = (stack[top] != num) ? 1 : 0;
-                } else {
-                    // Only evaluate until the next operator
-                    char *next_op = strpbrk(*expr, "+-*/%|&^<>=!");
-                    if (next_op) {
-                        char saved = *next_op;
-                        *next_op = '\0';  // Temporarily terminate string
-                        num = evaluate(expr);
-                        *next_op = saved;  // Restore the operator
-                        *expr = next_op;   // Move pointer to next operator
-                    } else {
-                        num = evaluate(expr);
-                    }
-                    stack[++top] = !num;
-                }
-                break;
-            
+                goto case_not;
+
             case '&':
-                (*expr)++;
-                num = evaluate(expr);
-                stack[top] = (stack[top] && num) ? 1 : 0;  // Logical AND
-                break;
-                
+                goto case_and;
+
             case '|':
-                (*expr)++;
-                num = evaluate(expr);
-                stack[top] = (stack[top] || num) ? 1 : 0;
-                break;
-                
+                goto case_or;
+
             case '%':
-                (*expr)++;
-                num = evaluate(expr);
-                if (num != 0) {
-                    stack[top] = stack[top] % num;  // Modulo
-                }
-                break;
-            
+                goto case_modulo;
+
             case '^':
-                (*expr)++;
-                num = evaluate(expr);
-                stack[top] = stack[top] ^ num;  // Bitwise XOR
-                break;
-            case '"':  // Start of a string literal double quote
-            case '\'': // Start of a string literal single quote
-                {
-                    char quote = **expr;
-                    (*expr)++; // Skip the opening quote
-                    char str_buffer[256]; // Buffer for the string
-                    int i = 0;
-                    while (**expr != quote && **expr != '\0' && i < sizeof(str_buffer) - 1) {
-                        str_buffer[i++] = **expr; // Copy characters to buffer
-                        (*expr)++;
-                    }
-                    str_buffer[i] = '\0'; // Null-terminate the string
-                    if (**expr == quote) (*expr)++; // Skip the closing quote
+                goto case_xor;
 
-                    // Push the string hash onto the stack
-                    stack[++top] = fnv1a_hash(str_buffer, i);
-                }
-                break;
-              default:
+            case '"':
+                goto case_double_quote;
+
+            case '\'':
+                goto case_single_quote;
+
+            default:
                 (*expr)++;
                 break;
+            continue_case:
         }
+        break_case:;
     }
-
-end_parse: ;
+end_while: ;
     // Sum up all numbers in the stack
     long long result = stack[0];  // Start with first number
     for (int i = 1; i <= top; i++) {
         result += stack[i];
     }
     return result;
+
+/* -------------------------------------------------------------------------
+ * Handle addition in expressions
+ * -------------------------------------------------------------------------
+ */
+case_plus:
+    (*expr)++;
+    num = evaluate(expr);
+    stack[top] += num;
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle subtraction in expressions
+ * -------------------------------------------------------------------------
+ */
+case_minus:
+    if (top == -1 || (*expr)[-1] == '(') {
+        sign = -1;  // Set sign to -1 for unary minus
+        (*expr)++;
+        goto break_case;
+    }
+    (*expr)++;
+    // Check if the next character starts a string literal
+    if (**expr == '"' || **expr == '\'') {
+        // It's a string, ignore the minus and just parse the string
+        goto continue_case;
+    } else {
+        // It's not a string, handle as a normal minus operation
+        num = evaluate(expr);  // Correctly evaluate the next expression
+        stack[top] -= num;     // Subtract the evaluated number from the top of the stack
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle multiplication in expressions
+ * -------------------------------------------------------------------------
+ */
+case_multiply:
+    (*expr)++;
+    if (**expr == '*') {
+        // Handle power operator
+        (*expr)++;
+        num = evaluate(expr);  // Changed from parse_number to evaluate
+        double base = stack[top];
+        double result = pow(base, num);
+        stack[top] = (int)result;  // Cast back to int after pow
+    } else {
+        // Handle multiplication
+        num = evaluate(expr);
+        stack[top] *= num;
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle division in expressions
+ * -------------------------------------------------------------------------
+ */
+case_divide:
+    (*expr)++;
+    // Handle division
+    num = evaluate(expr);
+    if (num == 0) stack[top] = INT_MAX;
+    else stack[top] /= num;
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle opening a parenthesis
+ * -------------------------------------------------------------------------
+ */
+case_open_paren:
+    (*expr)++;
+    num = parse_expression(expr);
+    stack[++top] = sign * num;
+    sign = 1;
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle closing a parenthesis
+ * -------------------------------------------------------------------------
+ */
+case_close_paren:
+    (*expr)++;
+    goto end_while;
+
+/* -------------------------------------------------------------------------
+ * Handle greater or equal than in expressions
+ * -------------------------------------------------------------------------
+ */
+case_greater:
+    (*expr)++;
+    if (**expr == '=') {
+        (*expr)++;
+        num = evaluate(expr);
+        stack[top] = (stack[top] >= num) ? 1 : 0;
+    } else {
+        num = evaluate(expr);
+        stack[top] = (stack[top] > num) ? 1 : 0;
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle less or equal than in expressions
+ * -------------------------------------------------------------------------
+ */
+case_less:
+    (*expr)++;
+    if (**expr == '=') {
+        (*expr)++;
+        num = evaluate(expr);
+        stack[top] = (stack[top] <= num) ? 1 : 0;
+    } else {
+        num = evaluate(expr);
+        stack[top] = (stack[top] < num) ? 1 : 0;
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle equal comparison expressions
+ * -------------------------------------------------------------------------
+ */
+case_equal:
+    (*expr)++;
+    if (**expr == '=') {
+        (*expr)++;
+        num = evaluate(expr);
+        stack[top] = (stack[top] == num) ? 1 : 0;
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle NOT equal expressions
+ * -------------------------------------------------------------------------
+ */
+case_not:
+    (*expr)++;
+    if (**expr == '=') {
+        (*expr)++;
+        num = evaluate(expr);
+        stack[top] = (stack[top] != num) ? 1 : 0;
+    } else {
+        // Only evaluate until the next operator
+        char *next_op = strpbrk(*expr, "+-*/%|&^<>=!");
+        if (next_op) {
+            char saved = *next_op;
+            *next_op = '\0';  // Temporarily terminate string
+            num = evaluate(expr);
+            *next_op = saved;  // Restore the operator
+            *expr = next_op;   // Move pointer to next operator
+        } else {
+            num = evaluate(expr);
+        }
+        stack[++top] = !num;
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle AND in expressions
+ * -------------------------------------------------------------------------
+ */
+case_and:
+    (*expr)++;
+    num = evaluate(expr);
+    stack[top] = (stack[top] && num) ? 1 : 0;  // Logical AND
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle OR in expressions
+ * -------------------------------------------------------------------------
+ */
+case_or:
+    (*expr)++;
+    num = evaluate(expr);
+    stack[top] = (stack[top] || num) ? 1 : 0;
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle modulo division in expressions
+ * -------------------------------------------------------------------------
+ */
+case_modulo:
+    (*expr)++;
+    num = evaluate(expr);
+    if (num != 0) {
+        stack[top] = stack[top] % num;  // Modulo
+    }
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle XOR in expressions
+ * -------------------------------------------------------------------------
+ */
+case_xor:
+    (*expr)++;
+    num = evaluate(expr);
+    stack[top] = stack[top] ^ num;  // Bitwise XOR
+    goto break_case;
+
+/* -------------------------------------------------------------------------
+ * Handle quoted strings
+ * -------------------------------------------------------------------------
+ */
+case_double_quote:
+case_single_quote: {
+    char quote = **expr;
+    (*expr)++; // Skip the opening quote
+    char str_buffer[256]; // Buffer for the string
+    int i = 0;
+    while (**expr != quote && **expr != '\0' && i < sizeof(str_buffer) - 1) {
+        str_buffer[i++] = **expr; // Copy characters to buffer
+        (*expr)++;
+    }
+    str_buffer[i] = '\0'; // Null-terminate the string
+    if (**expr == quote) (*expr)++; // Skip the closing quote
+    // Push the string hash onto the stack
+    stack[++top] = fnv1a_hash(str_buffer, i);
+  }
+  goto break_case;
 }
 
 PROCEDURE(eval) {

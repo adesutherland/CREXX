@@ -2,6 +2,8 @@
 options levelb
 import strings
 import rxfnsb
+result = evaluate('-47 * 3',-141)
+
 
 ## string evaluation
 /* Test for string comparison */
