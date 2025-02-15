@@ -3,8 +3,9 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>   // Include this for INT_MAX
 #include <unistd.h>   // For POSIX systems (Linux/macOS)
-#include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
+#include "crexxpa.h"  // crexx/pa - Plugin Architecture header file
 
 // Function prototypes
 long long evaluate(const char **expr);
