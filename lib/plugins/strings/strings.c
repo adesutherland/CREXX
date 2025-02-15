@@ -10,6 +10,18 @@
 long long evaluate(const char **expr);
 long long parse_expression(const char **expr);
 int parse_binary_number(const char **expr);
+// remove white spaces on both sides
+char *trim(char *str) {
+    while (isspace((unsigned char)*str)) str++; // Skip leading spaces
+
+    if (*str == '\0') return str; // If string is all spaces, return empty
+
+    char *end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--; // Trim trailing spaces
+
+    *(end + 1) = '\0'; // Null-terminate the trimmed string
+    return str;
+}
 
 // New words function to count words
 PROCEDURE(words) {
@@ -778,6 +790,58 @@ PROCEDURE(iff) {
 ENDPROC;
 }
 
+void trim_brackets(char *str) {
+    // Check for leading '['
+    char * start=str;
+    while (*start == ' ') {    // trim leading blanks
+        start++; // Move the pointer forward
+    }
+    if (*start == '[') start++; // Move the pointer forward, if it is coded
+
+    // Check for trailing ']'
+    char *end = str + strlen(str) - 1; // Point to the last character
+    while (end > start && *end == ' ') {  // trim succeeding blanks
+        end--; // Move the pointer backward
+    }
+    if (*end == ']') end--; // drop it
+ // Null-terminate the string after the last valid character
+    *(end + 1) = '\0'; // Set the character after the last valid character to null
+
+    // If the string is empty after trimming, reset it to an empty string
+    if (str == end + 1) {
+        str[0] = '\0'; // Set the string to empty
+    } else {
+      strcpy(str,start)  ;
+    }
+
+}
+// Funktion zum Hinzufügen von Elementen zu einem Zielarray
+PROCEDURE(add_items) {
+    char *items_string = GETSTRING(ARG1); // String mit den Elementen
+    SETARRAYHI(ARG0, 0); // Initialize target array
+
+    // Check length of input string
+    if (items_string == NULL) {
+        RETURNINTX(0); // nothing found
+    }
+
+    // Trim brackets from the start and end of the string
+    trim_brackets(items_string);
+
+    // Tokenize the string and add items to the target array
+    char *token = strtok(items_string, ","); // Tokenize using comma as delimiter
+    int j = 0;
+    while (token != NULL) {
+        j++;
+        // Append the token to the target array
+        SETARRAYHI(ARG0, j); // Initialize target array
+        SETSARRAY(ARG0, j-1,trim(token));
+        token = strtok(NULL, ","); // Get the next token
+    }
+    RETURNINTX(j); // Return the count of items added
+ENDPROC
+}
+
 // Linked List definitions
 LOADFUNCS
    ADDPROC(words, "strings.xwords", "b",  ".int","string = .string,delim=.string");
@@ -794,4 +858,5 @@ LOADFUNCS
    ADDPROC(WORDLEN, "strings.xwordlen", "i",  ".int","string = .string,wordNumber=.int,delim=.string");
    ADDPROC(eval, "strings.eval", "b", ".int", "expression=.string");
    ADDPROC(iff, "strings.iff", "b", ".string", "expression=.string,true=.string,false=.string");
+   ADDPROC(add_items, "strings.set_items", "b", ".int", "expose target_array=.string[],items_string=.string");
 ENDLOADFUNCS

@@ -2,8 +2,18 @@
 options levelb
 import strings
 import rxfnsb
-result = evaluate('-47 * 3',-141)
 
+## Set Array in Python format
+myarray.1=""
+items = '        [CEO, HR, IT, HR Manager, HR Staff, IT Manager, Developers  ]  '
+num= set_items(myArray, items)
+do i=1 to num
+   say i "'"myarray.i"'"
+end
+say 'Number of entries 'num   /* Returns number of items */
+
+## Evaluate und IFF tests
+result = evaluate('-47 * 3',-141)
 
 ## string evaluation
 /* Test for string comparison */
