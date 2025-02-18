@@ -2,36 +2,233 @@
 
 ## Table of Contents
 1. [Overview](#overview)
-2. [Installation Instructions](#installation-instructions)
+2. [Quick Start Guide](#quick-start-guide)
+   - [Basic Window Creation](#basic-window-creation)
+   - [Adding Common Widgets](#adding-common-widgets)
+   - [Complete Working Example](#complete-working-example)
+3. [Installation Instructions](#installation-instructions)
    - [For Linux](#for-linux)
    - [For Windows](#for-windows)
-3. [CREXX GUI Documentation](#crexx-gui-documentation)
-   - [Overview](#overview-1)
-   - [Available CREXX Functions](#available-crexx-functions)
-     - [INIT_WINDOW](#init_window)
-     - [ADD_BUTTON](#add_button)
-     - [ADD_TEXT](#add_text)
-     - [ADD_COMBO](#add_combo)
-     - [ADD_LIST](#add_list)
-     - [ADD_EDIT](#add_edit)
-     - [LIST_ADD_ITEM](#list_add_item)
-     - [LIST_GET_SELECTED](#list_get_selected)
-     - [LIST_GET_SELECTED_ITEM](#list_get_selected_item)
-     - [LIST_SET_HEADER](#list_set_header)
-     - [CLEANUP_GUI](#cleanup_gui)
-     - [GET_WIDGET_ADDRESS](#get_widget_address)
-     - [RGB_TO_HEX](#rgb_to_hex)
-4. [Error Handling](#error-handling)
-5. [CREXX Example Documentation](#crexx-example-documentation)
-   - [Overview](#overview-2)
-   - [Example Usage](#example-usage)
-6. [Notes](#notes)
-7. [Appendix: X11 Colours](#appendix-x11-colours)
+4. [CREXX GUI Documentation](#crexx-gui-documentation)
+   - [Function Quick Reference](#function-quick-reference)
+   - [Window and Widget Functions](#window-and-widget-functions)
+   - [Dialog and Picker Services](#dialog-and-picker-services)
+5. [Common Patterns and Best Practices](#common-patterns-and-best-practices)
+   - [GUI Layout Guidelines](#gui-layout-guidelines)
+   - [Error Handling Strategies](#error-handling-strategies)
+   - [Common Usage Patterns](#common-usage-patterns)
+   - [Performance Tips](#performance-tips)
+6. [Real-World Examples](#real-world-examples)
+   - [Form Application](#form-application)
+   - [File Processing Application](#file-processing-application)
+   - [Configuration Dialog](#configuration-dialog)
+7. [Troubleshooting](#troubleshooting)
+   - [Common Issues](#common-issues)
+   - [Debugging Tips](#debugging-tips)
+   - [Known Limitations](#known-limitations)
+8. [Appendix](#appendix)
+   - [Function Index](#function-index)
+   - [X11 Colours](#x11-colours)
 
 ## Overview
 
 This documentation provides an overview of a lightweight graphical user interface (GUI) for CREXX, focusing on the most essential widgets. 
 It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.rexx`, which demonstrates how to use the procedures defined in `gui.c`.
+
+---
+
+## Quick Start Guide
+
+### Basic Window Creation
+
+Creating a basic window is the first step in building a GUI application. Here's a minimal example:
+
+```rexx
+/* Initialize the window */
+call init_window "My First GUI", 400, 300  /* title, width, height */
+
+/* Show the window */
+call show_window
+
+/* Process events */
+do forever
+    event = process_events(500)  /* Check events every 500ms */
+    if event < 0 then leave      /* Exit if window is closed */
+end
+```
+
+### Adding Common Widgets
+
+Here's how to add basic widgets to your window:
+
+```rexx
+/* Add a label */
+text1 = add_text("Enter your name:", 10, 10)
+
+/* Add an input field */
+input1 = add_edit(10, 40, 200)
+
+/* Add a button */
+button1 = add_button("Submit", 10, 70)
+
+/* Add a list */
+list1 = add_list(10, 100, 200, 100)  /* x, y, width, height */
+call list_add_item list1, "Item 1", "lightblue"
+call list_add_item list1, "Item 2", "lightgreen"
+
+/* Add a combo box */
+items.1 = "Option 1"
+items.2 = "Option 2"
+items.3 = "Option 3"
+combo1 = add_combo(items, 10, 220)
+```
+
+### Complete Working Example
+
+Here's a complete example that demonstrates common GUI patterns:
+
+```rexx
+/* Initialize GUI */
+call init_window "Contact Form", 300, 400
+
+/* Add form fields */
+call add_text "Name:", 10, 10
+name_field = add_edit(10, 30, "")
+
+call add_text "Email:", 10, 70
+email_field = add_edit(10, 90, "")
+
+call add_text "Type:", 10, 130
+type.1 = "Personal"
+type.2 = "Business"
+type.3 = "Other"
+type_combo = add_combo(type, 10, 150)
+
+/* Add buttons */
+submit = add_button("Submit", 10, 200)
+clear = add_button("Clear", 120, 200)
+
+/* Add status area */
+status = add_text("Ready", 10, 350)
+
+/* Show window */
+call show_window
+
+/* Main event loop */
+do forever
+    event = process_events(500)
+    
+    if event < 0 then leave              /* Window closed */
+    else if event = submit then do       /* Submit button clicked */
+        name = get_widget_address(name_field)
+        email = get_widget_address(email_field)
+        if name = "" | email = "" then
+            call set_text status, "Please fill all fields"
+        else
+            call set_text status, "Form submitted!"
+    end
+    else if event = clear then do        /* Clear button clicked */
+        call set_text name_field, ""
+        call set_text email_field, ""
+        call set_text status, "Form cleared"
+    end
+end
+```
+
+### Common Patterns and Best Practices
+
+#### GUI Layout Guidelines
+
+1. **Widget Spacing**
+   - Leave 10-20 pixels between widgets
+   - Group related widgets together
+   - Align widgets for visual consistency
+
+2. **Layout Organization**
+   - Place important controls at the top
+   - Group related controls together
+   - Use consistent spacing and alignment
+   - Consider tab order for input fields
+
+3. **Size Guidelines**
+   - Make clickable elements at least 25x25 pixels
+   - Leave enough space for text in labels
+   - Consider window resizing behavior
+
+#### Error Handling Strategies
+
+1. **Input Validation**
+```rexx
+/* Validate required fields */
+if input_text = "" then do
+    call set_status status_bar, "Please fill required field"
+    call set_sensitive submit_button, 0
+    return
+end
+```
+
+2. **Widget Creation**
+```rexx
+button = add_button("Click Me", 10, 10)
+if button < 0 then do
+    call notify_pick "Error", "Failed to create button", "error"
+    return
+end
+```
+
+3. **File Operations**
+```rexx
+rc = copy_file(source, target)
+if rc \= 0 then do
+    call notify_pick "Error", "Failed to copy file", "error"
+    return
+end
+```
+
+#### Common Usage Patterns
+
+1. **Enable/Disable Controls**
+```rexx
+/* Disable submit until valid */
+call set_sensitive submit_button, 0
+
+/* Enable when valid */
+if valid_input then
+    call set_sensitive submit_button, 1
+```
+
+2. **Status Updates**
+```rexx
+/* Show operation status */
+call set_status status_bar, "Processing..."
+/* ... do work ... */
+call set_status status_bar, "Complete"
+```
+
+3. **Progress Feedback**
+```rexx
+/* Show splash during long operation */
+call splash_pick "Working", "Please wait...", 0, 300, 100
+/* ... do work ... */
+call cleanup_gui
+```
+
+#### Performance Tips
+
+1. **Event Processing**
+   - Use appropriate timeout values in process_events
+   - Avoid lengthy operations in event loop
+   - Consider using background processing for long tasks
+
+2. **Memory Management**
+   - Clean up resources when no longer needed
+   - Use cleanup_gui when closing application
+   - Free any allocated memory
+
+3. **Widget Updates**
+   - Batch multiple updates together
+   - Avoid unnecessary widget refreshes
+   - Use efficient data structures
 
 ---
 
@@ -74,11 +271,9 @@ To set up the environment for running the GUI application, follow these steps:
 
 ## CREXX GUI Documentation
 
-### Overview
+### Function Quick Reference
 
-`gui.c` is a source file for a GTK-based GUI application designed for the crexx/pa plugin architecture. It provides various procedures to create and manage GUI components such as buttons, labels, combo boxes, lists, and editable text fields. The file also includes functionality to handle user events and manage widget addresses. At present, the size of most of the widgets is fixed at 100x25 pixels, but this might be changed in the future.
-
-### Available CREXX Functions 
+### Window and Widget Functions
 
 #### INIT_WINDOW
 
@@ -292,94 +487,726 @@ rgb_to_hex(r, g, b)
   hex_color = rgb_to_hex(255, 0, 0)  // Returns "#FF0000"
   ```
 
+#### SET_SENSITIVE
+
+```
+set_sensitive(widget_index, sensitive)
+```
+
+- **Description**: Enables or disables a widget while keeping it visible.
+- **Parameters**:
+  - `widget_index`: Index of the widget to modify.
+  - `sensitive`: 1 to enable the widget, 0 to disable it.
+- **Returns**: 
+  - `0` on success
+  - `-1` if the widget index is invalid
+- **Example**:
+  ```rexx
+  /* Disable a widget */
+  call set_sensitive button_index, 0
+  
+  /* Enable a widget */
+  call set_sensitive button_index, 1
+  ```
+
+#### COPY_FILE
+
+```
+copy_file(source_path, destination_path)
+```
+
+- **Description**: Copies a file from the source path to the destination path.
+- **Parameters**:
+  - `source_path`: Path to the source file.
+  - `destination_path`: Path where the file should be copied to.
+- **Returns**: 
+  - `0` on success
+  - `-8` on failure
+- **Example**:
+  ```rexx
+  rc = copy_file("C:\source\file.txt", "C:\destination\file.txt")
+  if rc = 0 then
+      say "File copied successfully"
+  else
+      say "Error copying file"
+  ```
+
+### Dialog and Picker Services
+
+#### FILE_PICK
+
+```
+file_pick(title, initial_dir, save_dialog, pattern)
+```
+
+- **Description**: Opens a file picker dialog to select or save a file.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `initial_dir`: Initial directory to open.
+  - `save_dialog`: 0 for open dialog, 1 for save dialog.
+  - `pattern`: File pattern to filter (e.g., "*.txt", "*.rexx").
+- **Returns**: Selected file path as string, or empty string if cancelled.
+- **Examples**:
+  ```rexx
+  /* Basic file selection */
+  filepath = file_pick("Select a File", "C:\Documents", 0, "*.rexx")
+  
+  /* Save dialog with specific extension */
+  savepath = file_pick("Save As", "C:\Documents", 1, "*.txt")
+  
+  /* Multiple file patterns */
+  files = file_pick("Select Document", "C:\Docs", 0, "*.doc;*.docx;*.txt")
+  
+  /* All files */
+  anyfile = file_pick("Select Any File", "C:\Files", 0, "*.*")
+  ```
+- **Error Handling**:
+  ```rexx
+  filepath = file_pick("Select File", initial_dir, 0, "*.rexx")
+  if filepath = "" then do
+      say "User cancelled file selection or an error occurred"
+      return
+  end
+  ```
+- **Tips**:
+  - Always provide an initial directory for better user experience
+  - Use clear, descriptive titles
+  - Specify file patterns to help users find relevant files
+  - Handle empty returns (user cancellation)
+
+#### PATH_PICK
+
+```
+path_pick(title, initial_dir)
+```
+
+- **Description**: Opens a directory picker dialog to select a folder.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `initial_dir`: Initial directory to open.
+- **Returns**: Selected directory path as string, or empty string if cancelled.
+- **Examples**:
+  ```rexx
+  /* Basic directory selection */
+  dirpath = path_pick("Select Folder", "C:\Documents")
+  
+  /* Project directory selection with validation */
+  projectDir = path_pick("Select Project Directory", "C:\Projects")
+  if projectDir \= "" then do
+      if directory_exists(projectDir) then
+          say "Selected directory:" projectDir
+      else
+          say "Invalid directory selection"
+  end
+  ```
+- **Error Handling**:
+  ```rexx
+  dirpath = path_pick("Select Directory", initial_dir)
+  if dirpath = "" then do
+      say "User cancelled directory selection or an error occurred"
+      return
+  end
+  ```
+- **Tips**:
+  - Use for selecting output directories
+  - Validate directory existence after selection
+  - Consider combining with FILE_PICK for complete file operations
+
+#### DATE_PICK
+
+```
+date_pick(title, show_time, format)
+```
+
+- **Description**: Opens a calendar dialog to select a date and optionally time.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `show_time`: 1 to include time selection, 0 for date only.
+  - `format`: Date/time format string.
+- **Returns**: Selected date/time as formatted string, or empty string if cancelled.
+- **Format Strings**:
+  - `YYYY`: Four-digit year
+  - `MM`: Two-digit month (01-12)
+  - `DD`: Two-digit day (01-31)
+  - `HH`: Hours (00-23)
+  - `mm`: Minutes (00-59)
+  - `ss`: Seconds (00-59)
+- **Examples**:
+  ```rexx
+  /* Date only selection */
+  date = date_pick("Select Date", 0, "YYYY-MM-DD")
+  
+  /* Date and time selection */
+  datetime = date_pick("Select Date and Time", 1, "YYYY-MM-DD HH:mm:ss")
+  
+  /* Custom format */
+  custom = date_pick("Select Date", 0, "DD/MM/YYYY")
+  
+  /* With validation */
+  selected_date = date_pick("Select Delivery Date", 1, "YYYY-MM-DD HH:mm")
+  if selected_date \= "" then do
+      if validate_future_date(selected_date) then
+          say "Valid future date selected:" selected_date
+      else
+          say "Please select a future date"
+  end
+  ```
+- **Error Handling**:
+  ```rexx
+  date = date_pick("Select Date", 0, "YYYY-MM-DD")
+  if date = "" then do
+      say "User cancelled date selection or an error occurred"
+      return
+  end
+  ```
+- **Tips**:
+  - Use clear format strings for your locale
+  - Consider time zones when using time selection
+  - Validate dates for specific requirements (future dates, working days, etc.)
+  - Use consistent date formats throughout your application
+
+#### LIST_PICK
+
+```
+list_pick(title, items, multi_select, message)
+```
+
+- **Description**: Opens a dialog with a list of items to select from.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `items`: Array of items to display in the list.
+  - `multi_select`: 1 to allow multiple selections, 0 for single selection.
+  - `message`: Optional message to display above the list.
+- **Returns**: Selected item(s) as string (comma-separated if multiple), or empty string if cancelled.
+- **Examples**:
+  ```rexx
+  /* Single selection */
+  options = ["Small", "Medium", "Large"]
+  size = list_pick("Select Size", options, 0, "Choose your preferred size:")
+  
+  /* Multiple selection */
+  toppings = ["Cheese", "Pepperoni", "Mushrooms", "Olives", "Onions"]
+  selected = list_pick("Select Toppings", toppings, 1, "Choose your toppings:")
+  
+  /* With validation */
+  if selected \= "" then do
+      parse var selected first ',' rest
+      say "Primary selection:" first
+      if rest \= "" then
+          say "Additional selections:" rest
+  end
+  ```
+- **Error Handling**:
+  ```rexx
+  /* Check for empty selection */
+  result = list_pick("Select Items", items, 1, "Please select:")
+  if result = "" then do
+      say "No selection made"
+      return
+  end
+  
+  /* Handle multiple selections */
+  if pos(',', result) > 0 then do
+      say "Multiple items selected"
+      do while result \= ""
+          parse var result item ',' result
+          say "Selected:" item
+      end
+  end
+  ```
+- **Tips**:
+  - Keep lists reasonably sized (consider scrolling for long lists)
+  - Provide clear instructions in the message parameter
+  - Consider sorting items alphabetically
+  - Use meaningful item names
+  - Handle both single and multiple selection cases
+
+#### COMBO_PICK
+
+```
+combo_pick(title, message, items)
+```
+
+- **Description**: Shows a dialog with a combo box for selection.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the combo box.
+  - `items`: Array of items to display in the combo box.
+- **Returns**: Selected item as string, or empty string if cancelled.
+- **Example**:
+  ```rexx
+  items = ["Option 1", "Option 2", "Option 3"]
+  selected = combo_pick("Choose Option", "Please select:", items)
+  ```
+
+#### TREE_PICK
+
+```
+tree_pick(title, message, items, parents, multi_select)
+```
+
+- **Description**: Shows a tree view dialog for hierarchical selection.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the tree.
+  - `items`: Array of items to display in the tree.
+  - `parents`: Array indicating parent-child relationships.
+  - `multi_select`: 1 to allow multiple selections, 0 for single selection.
+- **Returns**: Selected item(s) as string (comma-separated if multiple), or empty string if cancelled.
+- **Examples**:
+  ```rexx
+  /* Basic tree structure */
+  items.1 = "Root"
+  items.2 = "Child1"
+  items.3 = "Child2"
+  items.4 = "Subchild1"
+  parents.1 = ""
+  parents.2 = "Root"
+  parents.3 = "Root"
+  parents.4 = "Child1"
+  selected = tree_pick("Select Items", "Choose from tree:", items, parents, 0)
+  
+  /* File system example */
+  items.1 = "Documents"
+  items.2 = "Work"
+  items.3 = "Personal"
+  items.4 = "Reports"
+  items.5 = "Letters"
+  parents.1 = ""
+  parents.2 = "Documents"
+  parents.3 = "Documents"
+  parents.4 = "Work"
+  parents.5 = "Personal"
+  files = tree_pick("File Browser", "Select files:", items, parents, 1)
+  
+  /* Organization chart */
+  items.1 = "CEO"
+  items.2 = "HR"
+  items.3 = "IT"
+  items.4 = "HR Manager"
+  items.5 = "HR Staff"
+  items.6 = "IT Manager"
+  items.7 = "Developers"
+  parents.1 = ""
+  parents.2 = "CEO"
+  parents.3 = "CEO"
+  parents.4 = "HR"
+  parents.5 = "HR"
+  parents.6 = "IT"
+  parents.7 = "IT"
+  positions = tree_pick("Organization", "Select department:", items, parents, 0)
+  ```
+- **Error Handling**:
+  ```rexx
+  if selected = "" then do
+      say "No selection made or dialog cancelled"
+      return
+  end
+  
+  /* Handle multiple selections */
+  do while selected \= ""
+      parse var selected item ',' selected
+      say "Processing:" item
+  end
+  ```
+- **Tips**:
+  - Keep tree depth reasonable (3-4 levels maximum for usability)
+  - Use clear parent-child relationships
+  - Consider using icons for different types of nodes
+  - Provide clear hierarchy in item names
+  - Handle both single and multiple selection modes appropriately
+
+#### INPUT_PICK
+
+```
+input_pick(title, message, default_value, password_mode)
+```
+
+- **Description**: Shows an input dialog for text entry.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the input field.
+  - `default_value`: Default text in the input field.
+  - `password_mode`: 1 to mask input (for passwords), 0 for normal text.
+- **Returns**: Entered text as string, or empty string if cancelled.
+- **Example**:
+  ```rexx
+  /* Normal input */
+  name = input_pick("Name Entry", "Enter your name:", "", 0)
+  
+  /* Password input */
+  password = input_pick("Password", "Enter password:", "", 1)
+  ```
+
+#### FORM_PICK
+
+```
+form_pick(title, message, labels, defaults)
+```
+
+- **Description**: Shows a form dialog with multiple input fields.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the form.
+  - `labels`: Array of labels for each input field.
+  - `defaults`: Array of default values for each input field.
+- **Returns**: Comma-separated string of entered values, or empty string if cancelled.
+- **Example**:
+  ```rexx
+  labels = ["Name:", "Email:", "Phone:"]
+  defaults = ["John Doe", "john@example.com", ""]
+  result = form_pick("User Information", "Please enter your details:", labels, defaults)
+  ```
+
+#### PAGE_PICK
+
+```
+page_pick(title, pages, labels, defaults)
+```
+
+- **Description**: Shows a multi-page form dialog.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `pages`: Array of page titles.
+  - `labels`: Array of labels for input fields on each page.
+  - `defaults`: Array of default values for input fields.
+- **Returns**: Comma-separated string of entered values, or empty string if cancelled.
+- **Example**:
+  ```rexx
+  pages = ["Personal", "Contact", "Preferences"]
+  labels = ["Name,Age", "Email,Phone", "Theme,Language"]
+  defaults = ["John Doe,30", "john@example.com,555-0123", "Dark,English"]
+  result = page_pick("User Profile", pages, labels, defaults)
+  ```
+
+#### DIALOG_PICK
+
+```
+dialog_pick(title, message, buttons)
+```
+
+- **Description**: Shows a message dialog with custom buttons.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display.
+  - `buttons`: Array of button labels.
+- **Returns**: Index of clicked button (1-based), or 0 if cancelled.
+- **Example**:
+  ```rexx
+  buttons = ["Yes", "No", "Cancel"]
+  response = dialog_pick("Confirm", "Do you want to save?", buttons)
+  ```
+
+#### NOTIFY_PICK
+
+```
+notify_pick(title, message, type)
+```
+
+- **Description**: Shows a notification/message dialog.
+- **Parameters**:
+  - `title`: Title of the notification.
+  - `message`: Message to display.
+  - `type`: Type of notification ("info", "warning", "error", "question").
+- **Returns**: Empty string.
+- **Example**:
+  ```rexx
+  call notify_pick "Success", "Operation completed successfully", "info"
+  call notify_pick "Warning", "Low disk space", "warning"
+  ```
+
+#### SPLASH_PICK
+
+```
+splash_pick(title, message, duration, width, height, image_path)
+```
+
+- **Description**: Shows a splash screen with optional image.
+- **Parameters**:
+  - `title`: Title of the splash window.
+  - `message`: Message to display.
+  - `duration`: Display duration in seconds (0 for manual close).
+  - `width`: Width of the splash window.
+  - `height`: Height of the splash window.
+  - `image_path`: Path to an image file to display (optional).
+- **Returns**: Empty string.
+- **Example**:
+  ```rexx
+  /* Show splash screen for 3 seconds */
+  call splash_pick "Welcome", "Loading...", 3, 400, 300, "logo.png"
+  ```
+
+#### TEXT_DISPLAY
+
+```
+text_display(title, message, item_text)
+```
+
+- **Description**: Shows a simple text display dialog.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the text.
+  - `item_text`: Text content to display (can include newlines).
+- **Returns**: Empty string.
+- **Example**:
+  ```rexx
+  text = "First line\nSecond line\nThird line"
+  call text_display "Document", "Content:", text
+  ```
+
+#### TEXT_DISPLAY_PICK
+
+```
+text_display_pick(title, message, item_texts)
+```
+
+- **Description**: Shows a dialog with formatted text display.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the text.
+  - `item_texts`: Array of text items to display.
+- **Returns**: Empty string.
+- **Example**:
+  ```rexx
+  texts = ["First paragraph", "Second paragraph", "Third paragraph"]
+  call text_display_pick "Document", "Preview:", texts
+  ```
+
+#### COLOR_PICK
+
+```
+color_pick(title, message, default_color)
+```
+
+- **Description**: Shows a color picker dialog.
+- **Parameters**:
+  - `title`: Title of the dialog window.
+  - `message`: Message to display above the color picker.
+  - `default_color`: Initial color (in hex format or X11 color name).
+- **Returns**: Selected color in hex format (#RRGGBB), or empty string if cancelled.
+- **Example**:
+  ```rexx
+  color = color_pick("Choose Color", "Select background color:", "#FF0000")
+  ```
+
+#### TREE_DIAGRAM
+
+```
+tree_diagram(items, parents)
+```
+
+- **Description**: Shows a graphical tree diagram.
+- **Parameters**:
+  - `items`: Array of items to display in the diagram.
+  - `parents`: Array indicating parent-child relationships.
+- **Returns**: Empty string.
+- **Example**:
+  ```rexx
+  items = ["CEO", "Manager1", "Manager2", "Employee1", "Employee2"]
+  parents = ["", "CEO", "CEO", "Manager1", "Manager2"]
+  call tree_diagram items, parents
+  ```
+
 --- 
 
-## Error Handling
+## Common Patterns and Best Practices
 
-When using the functions in this GUI, it's important to handle potential errors gracefully. Here are some common error scenarios and how to handle them:
+### GUI Layout Guidelines
 
-1. **Initialization Errors**: 
-   - If `init_window` fails, it returns `0`. Always check the return value before proceeding.
-   ```rexx
-   if init_window("My App", 400, 300) = 0 then
-       say "Error: Could not initialize the window."
-   ```
+### Error Handling Strategies
 
-2. **Widget Creation Errors**:
-   - Functions like `add_button`, `add_text`, and others return `-1` if they fail to create a widget. Check the return value to ensure the widget was created successfully.
-   ```rexx
-   button_index = add_button("Click Me", 10, 10)
-   if button_index < 0 then
-       say "Error: Could not add button."
-   ```
+### Common Usage Patterns
 
-3. **List Operations**:
-   - When adding items to a list or retrieving selected items, ensure that the list index is valid. If the index is out of bounds, handle it appropriately.
-   ```rexx
-   if list_index < 0 or list_index >= MAX_WIDGETS then
-       say "Error: Invalid list index."
-   ```
-
-4. **General Error Handling**:
-   - Implement a general error handling mechanism in your REXX scripts to catch and respond to unexpected issues.
+### Performance Tips
 
 ---
 
-## CREXX Example Documentation
+## Real-World Examples
 
-### Overview
+### Form Application
 
-`gui_test.rexx` is a REXX script that demonstrates how to use the procedures defined in `gui.c`. It initializes the GUI, adds various widgets, and interacts with them.
+### File Processing Application
 
-### Example Usage
+### Configuration Dialog
 
+Here's an example of a settings/configuration dialog:
+
+```rexx
+/* Initialize GUI */
+call init_window "Application Settings", 500, 600
+
+/* Create tabs or sections */
+call add_text "General Settings", 10, 10
+
+/* Theme Selection */
+call add_text "Theme:", 10, 40
+themes.1 = "Light"
+themes.2 = "Dark"
+themes.3 = "System Default"
+theme_combo = add_combo(themes, 10, 60)
+
+/* Language Selection */
+call add_text "Language:", 10, 100
+langs.1 = "English"
+langs.2 = "Spanish"
+langs.3 = "French"
+lang_combo = add_combo(langs, 10, 120)
+
+/* File Paths */
+call add_text "Default Save Location:", 10, 160
+path_field = add_edit(10, 180, 380)
+path_btn = add_button("Browse", 400, 180)
+
+/* Preferences */
+call add_text "Preferences", 10, 220
+auto_save = add_checkbox("Auto-save files", 10, 250)
+show_toolbar = add_checkbox("Show toolbar", 10, 280)
+enable_logging = add_checkbox("Enable logging", 10, 310)
+
+/* Advanced Settings */
+call add_text "Advanced", 10, 350
+buffer_size = add_edit(10, 380, 100)
+call add_text "Buffer Size (KB)", 120, 385
+
+/* Action Buttons */
+save_btn = add_button("Save Settings", 10, 500)
+cancel_btn = add_button("Cancel", 120, 500)
+default_btn = add_button("Restore Defaults", 230, 500)
+
+/* Status Bar */
+status_bar = add_status_bar()
+
+/* Show window */
+call show_window
+
+/* Main event loop */
+do forever
+    event = process_events(500)
+    if event < 0 then leave
+    
+    else if event = path_btn then do
+        new_path = path_pick("Select Default Save Location", "C:\")
+        if new_path \= "" then
+            call set_text path_field, new_path
+    end
+    
+    else if event = save_btn then do
+        /* Validate settings */
+        buffer = get_widget_address(buffer_size)
+        if \datatype(buffer, 'W') | buffer < 1 then do
+            call notify_pick "Error", "Invalid buffer size", "error"
+            iterate
+        end
+        
+        /* Save settings */
+        if save_config() then do
+            call set_status status_bar, "Settings saved successfully"
+            call notify_pick "Success", "Settings have been saved", "info"
+            leave
+        end
+    end
+    
+    else if event = default_btn then do
+        if dialog_pick("Confirm", "Restore default settings?", ["Yes", "No"]) = 1 then
+            call restore_defaults
+    end
+    
+    else if event = cancel_btn then
+        leave
+end
+
+/* Helper function to save configuration */
+save_config: procedure
+    /* Implementation of save logic */
+return 1
+
+/* Helper function to restore defaults */
+restore_defaults: procedure
+    call set_text buffer_size, "1024"
+    call set_sensitive auto_save, 1
+    call set_sensitive show_toolbar, 1
+    call set_sensitive enable_logging, 0
+return
 ```
-/* Initialize the GUI */
-init_window("My Application", 400, 300)
 
-/* Add widgets */
-button_index = add_button("Click Me", 10, 10)  /* Get index of the button */
-say "Button Index:" button_index
+## Troubleshooting
 
-label_index = add_text("Hello World", 10, 50)  /* Get index of the label */
-say "Label Index:" label_index
+### Common Issues
 
-edit_index = add_edit(10, 100, "Type here...")  /* Get index of the edit field */
-say "Edit Index:" edit_index
+1. **Window Not Showing**
+   - Check if `show_window` was called
+   - Verify window dimensions are reasonable
+   - Ensure GTK is properly initialized
 
-/* Add a list and items */
-list_index = add_list(10, 150, 200, 100)  /* Get index of the list */
-call list_add_item(list_index, "Item 1", "lightblue")  /* Use X11 colour */
-call list_add_item(list_index, "Item 2", "lightgreen")  /* Use X11 colour */
+2. **Widget Creation Failures**
+   ```rexx
+   button = add_button("Click Me", 10, 10)
+   if button < 0 then do
+       call notify_pick "Error", "Failed to create button", "error"
+       return
+   end
+   ```
 
-/* Get the selected item from the list */
-selected_text = list_get_selected_item(list_index)  /* Get the text of the selected item */
-say "Selected Item:" selected_text
+3. **Event Processing Issues**
+   - Ensure event loop is properly implemented
+   - Check event token values
+   - Verify widget indices
 
-/* Convert RGB to Hex */
-hex_color = rgb_to_hex(255, 0, 0)  /* Should return "#FF0000" */
-say "Hex Color:" hex_color
-```
+4. **Memory Issues**
+   - Call `cleanup_gui` when closing
+   - Don't exceed maximum widget count (128)
+   - Free resources properly
 
-### Notes
+### Debugging Tips
 
-- Ensure that the maximum number of widgets does not exceed `128` to avoid overflow.
-- The procedures are designed to be called from REXX scripts, allowing for dynamic GUI creation and management.
-- Both X11 colour names and RGB colours in hexadecimal notation (e.g., `#RRGGBB`) are supported for colour parameters. For example:
-  - `#FF0000` for red
-  - `#00FF00` for green
-  - `#0000FF` for blue
-  - `#FFFF00` for yellow
-  - `#FFFFFF` for white
-  - `#000000` for black
-- You can also use the `RGB()` function to specify colours, such as:
-  - `RGB(255, 0, 0)` for red
-  - `RGB(0, 255, 0)` for green
-  - `RGB(0, 0, 255)` for blue
+1. **Event Debugging**
+   ```rexx
+   /* Add debug output */
+   do forever
+       event = process_events(500)
+       say "Event Token:" event
+       if event < 0 then leave
+   end
+   ```
 
---- 
+2. **Widget State Verification**
+   ```rexx
+   /* Check widget status */
+   widget_addr = get_widget_address(widget_index)
+   if widget_addr = 0 then
+       say "Widget not found or invalid"
+   ```
 
-## Appendix: X11 Colours
+3. **Status Updates**
+   ```rexx
+   /* Add status messages */
+   call set_status status_bar, "Processing event:" event
+   ```
+
+### Known Limitations
+
+1. **Widget Limits**
+   - Maximum 128 widgets per window
+   - Fixed widget sizes (100x25 pixels for most widgets)
+   - Limited layout options (fixed positioning only)
+
+2. **Event Handling**
+   - Single event loop per window
+   - No asynchronous event processing
+   - Limited event types
+
+3. **Platform Specific**
+   - Some features may work differently on different platforms
+   - Font and color rendering may vary
+   - File paths need platform-specific handling
+
+---
+
+## Appendix
+
+### Function Index
+
+### X11 Colours
 
 This section provides a list of commonly used X11 colours that you can use in your GTK application. You can specify these colours by name or use their RGB values in hexadecimal notation (e.g., `#RRGGBB`).
 
@@ -399,61 +1226,4 @@ This section provides a list of commonly used X11 colours that you can use in yo
 - **`darkgray`**: A darker shade of gray.
 - **`dimgray`**: A dimmer shade of gray.
 - **`slategray`**: A bluish-gray color.
-- **`light slate gray`**: A lighter version of slate gray.
-
-### Reds
-- **`lightcoral`**: A light shade of coral red.
-- **`salmon`**: A pinkish-red color.
-- **`darksalmon`**: A darker shade of salmon.
-- **`crimson`**: A strong red color.
-- **`firebrick`**: A dark red color.
-- **`indianred`**: A medium red color with a hint of brown.
-
-### Greens
-- **`lightgreen`**: A light shade of green.
-- **`mediumseagreen`**: A medium shade of sea green.
-- **`seagreen`**: A bluish-green color.
-- **`forestgreen`**: A dark green color.
-- **`darkgreen`**: A very dark shade of green.
-- **`limegreen`**: A bright green color.
-
-### Blues
-- **`lightblue`**: A light shade of blue.
-- **`skyblue`**: A light blue color resembling the sky.
-- **`deepskyblue`**: A bright blue color.
-- **`dodgerblue`**: A vibrant blue color.
-- **`steelblue`**: A bluish-gray color.
-- **`royalblue`**: A deep blue color.
-- **`navy`**: A very dark shade of blue.
-
-### Yellows
-- **`lightyellow`**: A pale shade of yellow.
-- **`khaki`**: A light brownish-yellow color.
-- **`gold`**: A bright yellow color resembling gold.
-- **`goldenrod`**: A darker shade of yellow.
-
-### Purples
-- **`plum`**: A medium purple color.
-- **`violet`**: A light purple color.
-- **`orchid`**: A light purple color with pinkish tones.
-- **`purple`**: A standard purple color.
-- **`mediumpurple`**: A medium shade of purple.
-- **`darkviolet`**: A darker shade of violet.
-
-### Others
-- **`orange`**: A bright orange color.
-- **`tan`**: A light brown color.
-- **`peachpuff`**: A light peach color.
-- **`lightpink`**: A light shade of pink.
-- **`hotpink`**: A bright pink color.
-- **`palevioletred`**: A pale shade of violet-red.
-
-### Usage
-You can use these colour names in your GTK application to set widget colours. For example:
-```c
-set_widget_background(my_button, "lightblue");
-```
-Or using RGB in hexadecimal notation:
-```c
-set_widget_background(my_button, "#ADD8E6"); // Light blue
-```
+- **`light slate gray`
