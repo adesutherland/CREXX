@@ -843,6 +843,96 @@ PROCEDURE(add_items) {
 ENDPROC
 }
 
+// New PARSE function to extract variables from a template and input string
+PROCEDURE(PARSE) {
+    char *input_string   = GETSTRING(ARG0);  // Get the input string
+    char *parse_template = GETSTRING(ARG1);  // Get the parse template
+    char *delimiters[512];                   // Array to hold delimiters
+    int  count = 0;                          // Counter for the number of variables
+    int  is_variable = 1;                    // Flag to track if we're processing a variable or delimiter
+
+    // Initialize output arrays
+    SETARRAYHI(ARG2, 0);
+    SETARRAYHI(ARG3, 0);
+
+    // Check for NULL input
+    if (parse_template == NULL || input_string == NULL) {
+        SETARRAYHI(ARG2, 1);
+        SETSARRAY(ARG2, 0, input_string ? input_string : "");
+        RETURNINT(0);
+    }
+
+    // First pass: collect variable names and delimiters
+    char *template_copy = strdup(parse_template);  // Create a copy for tokenization
+    char *token = strtok(template_copy, "'");      // Split by single quote
+
+    while (token != NULL && count < 512) {
+        if (strlen(token) > 0) {
+            if (is_variable) {
+                // Store variable name (trimmed)
+                SETARRAYHI(ARG2, count + 1);
+                SETSARRAY(ARG2, count, trim(token));
+                count++;
+            } else {
+                // Store delimiter
+                delimiters[count-1] = strdup(token);
+            }
+        }
+        is_variable = !is_variable;
+        token = strtok(NULL, "'");
+    }
+    free(template_copy);  // Free the template copy
+
+    // Second pass: parse input string using delimiters
+    char *current_pos = input_string;
+    char *value = NULL;
+    
+    for (int i = 0; i < count; i++) {
+        char *next_delim = (i < count-1) ? strstr(current_pos, delimiters[i]) : NULL;
+        
+        if (next_delim != NULL) {
+            int length = next_delim - current_pos;
+            value = (char *)malloc(length + 1);
+            strncpy(value, current_pos, length);
+            value[length] = '\0';
+            
+            SETARRAYHI(ARG3, i + 1);
+            SETSARRAY(ARG3, i, value);  // Store trimmed value
+            free(value);
+            
+            current_pos = next_delim + strlen(delimiters[i]);
+        } else if (i == count-1) {
+            // Last variable gets the rest of the string
+            SETARRAYHI(ARG3, i + 1);
+            SETSARRAY(ARG3, i, current_pos);
+        }
+    }
+
+    // Clean up delimiters
+    for (int i = 0; i < count-1; i++) {
+        free(delimiters[i]);
+    }
+
+    // Remove empty entries
+    int writeIndex = 0;
+    for (int readIndex = 0; readIndex < count; readIndex++) {
+        char *varname = GETSARRAY(ARG2, readIndex);
+        if (varname != NULL && varname[0] != '\0' && varname[0] != '.') {
+            if (writeIndex != readIndex) {
+                SETSARRAY(ARG2, writeIndex, GETSARRAY(ARG2, readIndex));
+                SETSARRAY(ARG3, writeIndex, GETSARRAY(ARG3, readIndex));
+            }
+            writeIndex++;
+        }
+    }
+
+    // Update array sizes
+    SETARRAYHI(ARG2, writeIndex);
+    SETARRAYHI(ARG3, writeIndex);
+
+    RETURNINT(writeIndex);
+ENDPROC;
+}
 // Linked List definitions
 LOADFUNCS
    ADDPROC(words, "strings.xwords", "b",  ".int","string = .string,delim=.string");
@@ -860,4 +950,6 @@ LOADFUNCS
    ADDPROC(eval, "strings.eval", "b", ".int", "expression=.string");
    ADDPROC(iff, "strings.iff", "b", ".string", "expression=.string,true=.string,false=.string");
    ADDPROC(add_items, "strings.set_items", "b", ".int", "expose target_array=.string[],items_string=.string");
+   ADDPROC(PARSE, "strings.parse", "b", ".int", "input_string=.string, parse_template=.string, expose varnames=.string[], expose varvalues=.string[]");
 ENDLOADFUNCS
+
