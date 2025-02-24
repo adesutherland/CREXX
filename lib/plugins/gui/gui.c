@@ -8,6 +8,8 @@
 #include <gtk/gtk.h>
 #include <glib.h>     // Add this for g_main_context functions
 #include <gio/gio.h>
+#include <math.h>
+#include <cairo.h> // Ensure you include the necessary headers
 
 // Function prototype for copy_file
 gboolean copy_file(const char *source_path, const char *destination_path, GError **error);
@@ -558,10 +560,10 @@ PROCEDURE(list_get_selected)
     GtkListBox *list = GTK_LIST_BOX(widgets[index]);
     GtkListBoxRow *row = gtk_list_box_get_selected_row(list);
     if (!row) {
-        RETURNINT(-1);  // No selection
+        RETURNINTX(-1);  // No selection
     }
     
-    RETURNINT(gtk_list_box_row_get_index(row));
+    RETURNINTX(gtk_list_box_row_get_index(row));
 ENDPROC
 }
 
@@ -2118,13 +2120,13 @@ PROCEDURE(tree_pick)
                 gchar *index;
                 gtk_tree_model_get(GTK_TREE_MODEL(store), &tree_iter, 1, &index, -1);
 
-                if (result[0]) strcat(result, "|");
+            if (result[0]) strcat(result, "|");
                 strcat(result, index);
                 g_free(index);
-            }
+        }
 
             gtk_tree_path_free(path);
-        }
+    }
 
         g_list_free(selected_rows);
     }
@@ -2478,7 +2480,7 @@ PROCEDURE(splash_pick)
         gtk_main_iteration();
 
     RETURNSTRX("");  // Add explicit return
- ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_checkbox)
@@ -2580,7 +2582,7 @@ PROCEDURE(set_edit) {
     }
     
     RETURNINT(-1);  // Not found or not an entry
-ENDPROC
+    ENDPROC
 }
 
 
@@ -2736,6 +2738,300 @@ gboolean copy_file(const char *source_path, const char *destination_path, GError
     // Copy the file
     return g_file_copy(source_file, destination_file, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, error);
 }
+/* Add this with the other function prototypes at the top */
+static gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data);
+
+#define drawxtick(cr,xpos,yzero,tlen) {cairo_move_to(cr, xpos, yzero - tlen);  \
+                                       cairo_line_to(cr, xpos, yzero + tlen); \
+                                       cairo_stroke(cr);}  // Ensure to stroke the line to make it visible
+#define drawytick(cr,xzero,ypos,tlen) {cairo_move_to(cr, xzero-tlen, ypos);   \
+                                       cairo_line_to(cr, xzero+tlen, ypos);   \
+                                       cairo_stroke(cr);}  // Ensure to stroke the line to make it visible
+
+
+#define drawxnumber(cr,xpos,yzero,num) {char number[10]; snprintf(number, sizeof(num), "%g", num);  \
+                                      cairo_move_to(cr, xpos - 8, yzero + 15);  \
+                                      cairo_show_text(cr, number);}
+
+#define drawynumber(cr,xzero,ypos,num) {char number[10]; snprintf(number, sizeof(num), "%g", num);  \
+                                      cairo_move_to(cr, xzero +10, ypos + 4);  \
+                                      cairo_show_text(cr, number);}
+#define drawdot(cr,px,py,size)  cairo_new_path(cr); \
+                                cairo_arc(cr, px, py, size,0, 2 * G_PI);  \
+                                cairo_close_path(cr); \
+                                cairo_fill(cr);
+
+// Function to find the "nice" step size
+double find_tick_step(double min_val, double max_val, int num_ticks) {
+    double range = max_val - min_val;
+    double raw_step = range / num_ticks; // Initial step estimate
+
+    // Get the base power of 10 (10^x) closest to raw_step
+    double power = pow(10, floor(log10(raw_step)));
+
+    // Adjust to nearest 1, 2, or 5 times the power of 10
+    if (raw_step / power >= 5) {
+        return 5 * power;
+    } else if (raw_step / power >= 2) {
+        return 2 * power;
+    } else {
+        return power;
+    }
+}
+
+typedef struct GraphDetails_w {
+    GtkWidget *drawing_area;
+    cairo_t *graph;
+    double  width;
+    double  height;
+    double  x_zero_pos;
+    double  y_zero_pos;
+    double  x_range;
+    double  y_range;
+    double  scale_x;
+    double  scale_y;
+    double  step_x;
+    double  step_y;
+} graphs;
+
+/* Add this with the other procedures */
+
+graphs graphArray[64];
+
+int granges(void *xarray,void *yarray, int width,int height) {
+
+    int xhi = GETARRAYHI(xarray);
+    if (xhi <= 0) return FALSE; // No data to plot
+
+    double x_min = GETFARRAY(xarray, 0);
+    double x_max = x_min;
+    double y_min = GETFARRAY(yarray, 0);
+    double y_max = y_min;
+
+// Step 1: Find actual min/max values for x and y
+    for (int i = 1; i < xhi; i++) {
+        double x = GETFARRAY(xarray, i);
+        double y = GETFARRAY(yarray, i);
+        x_min = fmin(x_min, x);
+        x_max = fmax(x_max, x);
+        y_min = fmin(y_min, y);
+        y_max = fmax(y_max, y);
+    }
+
+// Adjust axis limits for padding
+    x_min = (x_min > 0) ? 0 : x_min - 0.5;
+    x_max += 0.5;
+    y_min = (y_min > 0) ? 0 : y_min - 0.5;
+    y_max += 0.5;
+
+    int num_ticks = 5;   // ticks without numbers between numbered ticks
+    int steps = 5;
+    double step_x = find_tick_step(x_min, x_max, num_ticks) / steps;
+    double step_y = find_tick_step(y_min, y_max, num_ticks) / steps;
+
+// Calculate ranges and scales
+    double x_range = fmax(fabs(x_max), fabs(x_min));
+    double y_range = fmax(fabs(y_max), fabs(y_min));
+
+    double scale_x = (width - 15) / (x_range * 2);
+    double scale_y = (height - 15) / (y_range * 2);
+
+// Set zero positions based on the center
+    double x_zero_pos = width / 2;
+    double y_zero_pos = height / 2;
+    graphArray[0].graph = 0;
+    graphArray[0].scale_x = scale_x;
+    graphArray[0].scale_y = scale_y;
+    graphArray[0].y_zero_pos = y_zero_pos;
+    graphArray[0].x_zero_pos = x_zero_pos;
+    graphArray[0].width = width;
+    graphArray[0].height = height;
+    graphArray[0].x_range = x_range;
+    graphArray[0].y_range = y_range;
+    graphArray[0].step_x = step_x;
+    graphArray[0].step_y = step_y;
+
+}
+
+
+// Function to add a new graph to the existing graph widget
+
+PROCEDURE(add_graph) {
+    int x = GETINT(ARG0);
+    int y = GETINT(ARG1);
+    int width = GETINT(ARG2);
+    int height = GETINT(ARG3);
+    int function_type = GETINT(ARG4);
+
+    granges(ARG5,ARG6, width, height);
+    GtkWidget *drawing_area = gtk_drawing_area_new();
+    gtk_widget_set_size_request(drawing_area, width, height);
+    
+    // Store array arguments in widget data
+    g_object_set_data(G_OBJECT(drawing_area), "xarray", ARG5);
+    g_object_set_data(G_OBJECT(drawing_area), "yarray", ARG6);
+    
+    g_signal_connect(G_OBJECT(drawing_area), "draw",
+                    G_CALLBACK(draw_graph), GINT_TO_POINTER(function_type));
+    
+    gtk_fixed_put(GTK_FIXED(main_fixed), drawing_area, x, y);
+    gtk_widget_show(drawing_area);
+
+    widgets[widget_count] = drawing_area;
+    graphArray[0].drawing_area = drawing_area;
+ //   graphArray[widget_count]=graphArray[0];    // not yet set!
+
+    printf("drawing %d %d\n",widget_count, drawing_area);
+    widget_count++;
+    RETURNINT(widget_count);
+}
+
+#define xcheck(var) printf(#var" %g=%g\n",var,graphArray[0].var);
+
+gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data) {
+ //   int width = gtk_widget_get_allocated_width(widget);
+ //   int height = gtk_widget_get_allocated_height(widget);
+    int function_type = GPOINTER_TO_INT(data);
+
+    void *xarray = g_object_get_data(G_OBJECT(widget), "xarray");
+    void *yarray = g_object_get_data(G_OBJECT(widget), "yarray");
+
+    int xhi = GETARRAYHI(xarray);
+    if (xhi <= 0) return FALSE; // No data to plot
+/*
+    double x_min = GETFARRAY(xarray, 0);
+    double x_max = x_min;
+    double y_min = GETFARRAY(yarray, 0);
+    double y_max = y_min;
+
+    // Step 1: Find actual min/max values for x and y
+    for (int i = 1; i < xhi; i++) {
+        double x = GETFARRAY(xarray, i);
+        double y = GETFARRAY(yarray, i);
+        x_min = fmin(x_min, x);
+        x_max = fmax(x_max, x);
+        y_min = fmin(y_min, y);
+        y_max = fmax(y_max, y);
+    }
+
+    // Adjust axis limits for padding
+    x_min = (x_min > 0) ? 0 : x_min - 0.5;
+    x_max += 0.5;
+    y_min = (y_min > 0) ? 0 : y_min - 0.5;
+    y_max += 0.5;
+
+    int num_ticks = 5;   // ticks without numbers between numbered ticks
+    int steps = 5;
+    double step_x = find_tick_step(x_min, x_max, num_ticks) / steps;
+    double step_y = find_tick_step(y_min, y_max, num_ticks) / steps;
+
+    // Calculate ranges and scales
+    double x_range = fmax(fabs(x_max), fabs(x_min));
+    double y_range = fmax(fabs(y_max), fabs(y_min));
+
+    double scale_x = (width - 15) / (x_range * 2);
+    double scale_y = (height - 15) / (y_range * 2);
+
+    // Set zero positions based on the center
+    double x_zero_pos = width / 2;
+    double y_zero_pos = height / 2;
+*/
+    double scale_x=graphArray[0].scale_x;
+    double scale_y=graphArray[0].scale_y;
+    double y_zero_pos=graphArray[0].y_zero_pos;
+    double x_zero_pos=graphArray[0].x_zero_pos;
+    int width=graphArray[0].width;
+    int height=graphArray[0].height;
+    double  x_range=graphArray[0].x_range;
+    double y_range=graphArray[0].y_range;
+    double step_x=graphArray[0].step_x;
+    double  step_y=graphArray[0].step_y;
+
+     // Draw axes
+    cairo_set_line_width(cr, 1);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+
+    // X-axis
+    cairo_move_to(cr, 0, y_zero_pos);
+    cairo_line_to(cr, width, y_zero_pos);
+    cairo_stroke(cr);
+
+    // Y-axis
+    cairo_move_to(cr, x_zero_pos, 0);
+    cairo_line_to(cr, x_zero_pos, height);
+    cairo_stroke(cr);
+
+    // Draw X-axis markers
+    int j = 0;
+    for (double i = -x_range; i <= x_range + step_x; i += step_x) {
+        double x_pos = x_zero_pos + (i * scale_x);
+        if (x_pos > width) break;
+        if (x_pos >= 0) {
+            if (j % 5 == 0) {
+                drawxtick(cr, x_pos, y_zero_pos, 5); // Major tick
+                drawxnumber(cr, x_pos, y_zero_pos, i);
+            } else {
+                drawxtick(cr, x_pos, y_zero_pos, 2); // Minor tick
+            }
+            j++;
+        }
+    }
+
+    // Draw Y-axis markers
+    j = 0;
+    for (double i = -y_range; i <= y_range + step_y; i += step_y) {
+        double y_pos = y_zero_pos - (i * scale_y);
+        if (y_pos > height) break;
+        if (y_pos <= 0) continue;
+        if (j % 5 == 0) {
+            drawytick(cr, x_zero_pos, y_pos, 5); // Major tick
+            drawynumber(cr, x_zero_pos, y_pos, i);
+        } else {
+            drawytick(cr, x_zero_pos, y_pos, 2); // Minor tick
+        }
+        j++;
+    }
+
+    // Draw the actual graph
+    cairo_set_source_rgb(cr, 0, 0, 1);
+
+    if (function_type == 2) { // Points-only mode
+        for (int i = 0; i < xhi; i++) {
+            double x = GETFARRAY(xarray, i);
+            double y = GETFARRAY(yarray, i);
+            double px = x_zero_pos + (x * scale_x);
+            double py = height / 2 - (y * scale_y);
+            drawdot(cr, px, py, 1);
+            printf("add %g %g\n",px,py);
+        }
+    } else { // Connected line mode
+        double x0 = GETFARRAY(xarray, 0);
+        double y0 = GETFARRAY(yarray, 0);
+        double px0 = x_zero_pos + (x0 * scale_x);
+        double py0 = height / 2 - (y0 * scale_y);
+        cairo_move_to(cr, px0, py0);
+
+        for (int i = 1; i < xhi; i++) {
+            double x = GETFARRAY(xarray, i);
+            double y = GETFARRAY(yarray, i);
+            cairo_line_to(cr, x_zero_pos + (x * scale_x), height / 2 - (y * scale_y));
+        }
+        cairo_stroke(cr);
+    }
+
+    // Draw origin tick marks
+    cairo_move_to(cr, x_zero_pos, y_zero_pos - 5);
+    cairo_line_to(cr, x_zero_pos, y_zero_pos + 5);
+    cairo_stroke(cr);
+
+    cairo_move_to(cr, x_zero_pos - 5, y_zero_pos);
+    cairo_line_to(cr, x_zero_pos + 5, graphArray[0].y_zero_pos);
+    cairo_stroke(cr);
+
+    return FALSE;
+}
+
+
 LOADFUNCS
     ADDPROC(init_window, "gui.init_window", "b", ".int", "title=.string, width=.int,height=.int");
     ADDPROC(add_button, "gui.add_button", "b", ".int", "button_text=.string,x=.int,y=.int");
@@ -2787,4 +3083,5 @@ LOADFUNCS
     ADDPROC(run_external_program_sync, "gui.run_sync", "b", ".string", "command=.string,parm=.string,wdir=.string");
     ADDPROC(set_sensitive, "gui.set_sensitive", "b", ".int", "index=.int,sensitive=.int");
     ADDPROC(copy_file_procedure, "gui.copy_file", "b", ".int", "source_path=.string,destination_path=.string");
-ENDLOADFUNCS
+    ADDPROC(add_graph, "gui.add_graph", "b", ".int", "x=.int,y=.int,width=.int,height=.int,function_type=.int,x_values=.float[],y_values=.float[]");
+ ENDLOADFUNCS
