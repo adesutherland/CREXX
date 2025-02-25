@@ -11,6 +11,8 @@
 #include <math.h>
 #include <cairo.h> // Ensure you include the necessary headers
 
+
+
 // Function prototype for copy_file
 gboolean copy_file(const char *source_path, const char *destination_path, GError **error);
 
@@ -43,6 +45,12 @@ static GdkDisplay *gdk_display = NULL;
 #define MAX_WIDGETS 128  // Define a maximum number of widgets
 static GtkWidget *widgets[MAX_WIDGETS] = {NULL};  // Array to store widget addresses
 static int widget_count = 0;  // Keep track of how many widgets have been added
+static int graph_count = 0;   // Keep track of how many graphs have been inserted in the window
+
+static void debug_log(const char *msg,int num) {
+    fprintf(stderr, "DEBUG: %s %d\n", msg,num);
+    fflush(stderr);
+}
 
 // Declare the TextView and TextBuffer globally or in the relevant function
 GtkWidget *output_text_view;
@@ -2779,9 +2787,16 @@ double find_tick_step(double min_val, double max_val, int num_ticks) {
     }
 }
 
+typedef struct attr_g {
+    char    update;
+    int     lwidth;
+    char    color[16];
+    char    ftype;
+} attr;
+
 typedef struct GraphDetails_w {
+    int     widget_owner;
     GtkWidget *drawing_area;
-    cairo_t *graph;
     double  width;
     double  height;
     double  x_zero_pos;
@@ -2792,11 +2807,16 @@ typedef struct GraphDetails_w {
     double  scale_y;
     double  step_x;
     double  step_y;
-} graphs;
+    attr details[3];
+ } graphs;
 
 /* Add this with the other procedures */
-
 graphs graphArray[64];
+int current_graph_widget=-1;
+
+void set_cairo_color(cairo_t *cr, GdkRGBA *color) {
+    cairo_set_source_rgba(cr, color->red, color->green, color->blue, color->alpha);
+}
 
 int granges(void *xarray,void *yarray, int width,int height) {
 
@@ -2819,9 +2839,9 @@ int granges(void *xarray,void *yarray, int width,int height) {
     }
 
 // Adjust axis limits for padding
-    x_min = (x_min > 0) ? 0 : x_min - 0.5;
+    x_min = (x_min > 0) ? 0 : x_min- 0.5;
     x_max += 0.5;
-    y_min = (y_min > 0) ? 0 : y_min - 0.5;
+    y_min = (y_min > 0) ? 0 : y_min- 0.5;
     y_max += 0.5;
 
     int num_ticks = 5;   // ticks without numbers between numbered ticks
@@ -2833,203 +2853,207 @@ int granges(void *xarray,void *yarray, int width,int height) {
     double x_range = fmax(fabs(x_max), fabs(x_min));
     double y_range = fmax(fabs(y_max), fabs(y_min));
 
-    double scale_x = (width - 15) / (x_range * 2);
-    double scale_y = (height - 15) / (y_range * 2);
+    double scale_x = (width) / (x_range * 2);
+    double scale_y = (height) / (y_range * 2);
 
 // Set zero positions based on the center
     double x_zero_pos = width / 2;
     double y_zero_pos = height / 2;
-    graphArray[0].graph = 0;
-    graphArray[0].scale_x = scale_x;
-    graphArray[0].scale_y = scale_y;
-    graphArray[0].y_zero_pos = y_zero_pos;
-    graphArray[0].x_zero_pos = x_zero_pos;
-    graphArray[0].width = width;
-    graphArray[0].height = height;
-    graphArray[0].x_range = x_range;
-    graphArray[0].y_range = y_range;
-    graphArray[0].step_x = step_x;
-    graphArray[0].step_y = step_y;
+    graphArray[graph_count].scale_x = scale_x;
+    graphArray[graph_count].scale_y = scale_y;
+    graphArray[graph_count].y_zero_pos = y_zero_pos;
+    graphArray[graph_count].x_zero_pos = x_zero_pos;
+    graphArray[graph_count].width = width;
+    graphArray[graph_count].height = height;
+    graphArray[graph_count].x_range = x_range;
+    graphArray[graph_count].y_range = y_range;
+    graphArray[graph_count].step_x = step_x;
+    graphArray[graph_count].step_y = step_y;
+    for(int i=0;i<3;i++) {    // init all potential sub graphs
+        graphArray[graph_count].details[i].ftype = 0;
+        graphArray[graph_count].details[i].lwidth = 0;
+        strcpy(graphArray[graph_count].details[i].color, "black");
+    }
+ }
 
+void draw_x_axis(cairo_t *cr) {
+    int j = 0;
+    cairo_set_line_width(cr, 1);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_move_to(cr, 0, graphArray[current_graph_widget].y_zero_pos);
+    cairo_line_to(cr, graphArray[current_graph_widget].width, graphArray[current_graph_widget].y_zero_pos);
+    cairo_stroke(cr);
+
+    for (double i = -graphArray[current_graph_widget].x_range; i <= graphArray[current_graph_widget].x_range + graphArray[current_graph_widget].step_x; i += graphArray[current_graph_widget].step_x) {
+        double x_pos = graphArray[current_graph_widget].x_zero_pos + (i * graphArray[current_graph_widget].scale_x);
+        if (x_pos > graphArray[current_graph_widget].width) break;
+        if (x_pos >= 0) {
+            if (j % 5 == 0) {
+                drawxtick(cr, x_pos, graphArray[current_graph_widget].y_zero_pos, 5); // Major tick
+                drawxnumber(cr, x_pos, graphArray[current_graph_widget].y_zero_pos, i);
+            } else {
+                drawxtick(cr, x_pos, graphArray[current_graph_widget].y_zero_pos, 2); // Minor tick
+            }
+            j++;
+        }
+    }
+}
+void draw_y_axis(cairo_t *cr) {
+    int j = 0;
+    cairo_set_line_width(cr, 1);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_move_to(cr, graphArray[current_graph_widget].x_zero_pos, 0);
+    cairo_line_to(cr, graphArray[current_graph_widget].x_zero_pos, graphArray[current_graph_widget].height);
+    cairo_stroke(cr);
+
+    for (double i = -graphArray[current_graph_widget].y_range; i <= graphArray[current_graph_widget].y_range + graphArray[current_graph_widget].step_y; i += graphArray[current_graph_widget].step_y) {
+        double y_pos = graphArray[current_graph_widget].y_zero_pos - (i * graphArray[current_graph_widget].scale_y);
+        if (y_pos > graphArray[current_graph_widget].height) break;
+        if (y_pos <= 0) continue;
+        if (j % 5 == 0) {
+            drawytick(cr, graphArray[current_graph_widget].x_zero_pos, y_pos, 5); // Major tick
+            drawynumber(cr, graphArray[current_graph_widget].x_zero_pos, y_pos, i);
+        } else {
+            drawytick(cr, graphArray[current_graph_widget].x_zero_pos, y_pos, 2); // Minor tick
+        }
+        j++;
+    }
 }
 
-
 // Function to add a new graph to the existing graph widget
+void draw_dotted_func(cairo_t *cr,void *xarray,void *yarray,int graphnum) {
+    int xhi = GETARRAYHI(xarray);
+    GdkRGBA color;
+    if (gdk_rgba_parse(&color, graphArray[current_graph_widget].details[graphnum].color)) {
+        set_cairo_color(cr, &color);    // Apply color to Cairo
+    }
+    for (int i = 0; i < xhi; i++) {
+        double x = GETFARRAY(xarray, i);
+        double y = GETFARRAY(yarray, i);
+        double px = graphArray[current_graph_widget].x_zero_pos + (x * graphArray[current_graph_widget].scale_x);
+        double py = graphArray[current_graph_widget].height / 2 - (y * graphArray[current_graph_widget].scale_y);
+        drawdot(cr, px, py, graphArray[current_graph_widget].details[graphnum].lwidth);
+    }
+    cairo_stroke(cr);
+}
+void draw_line_func(cairo_t *cr,void *xarray,void *yarray,int graphnum) {
+    debug_log("Cairo ", (int) cr);
+    debug_log("Current Widget",current_graph_widget);
+    cairo_set_line_width(cr, graphArray[current_graph_widget].details[graphnum].lwidth);
+    GdkRGBA color;
+    if (gdk_rgba_parse(&color, graphArray[current_graph_widget].details[graphnum].color)) {
+        set_cairo_color(cr, &color);    // Apply color to Cairo
+    }
+    int xhi = GETARRAYHI(xarray);
+    double x0 = GETFARRAY(xarray, 0);
+    double y0 = GETFARRAY(yarray, 0);
+    double px0 = graphArray[current_graph_widget].x_zero_pos + (x0 * graphArray[current_graph_widget].scale_x);
+    double py0 = graphArray[current_graph_widget].height / 2 - (y0 * graphArray[current_graph_widget].scale_y);
+    cairo_move_to(cr, px0, py0);
+
+    for (int i = 1; i < xhi; i++) {
+        double x = GETFARRAY(xarray, i);
+        double y = GETFARRAY(yarray, i);
+        cairo_line_to(cr, graphArray[current_graph_widget].x_zero_pos + (x * graphArray[current_graph_widget].scale_x), graphArray[current_graph_widget].height / 2 - (y * graphArray[current_graph_widget].scale_y));
+    }
+    cairo_stroke(cr);
+}
+/* ----------------------------------------------------------------------------------------
+ * updates the graph(s) of a widget and make them visible if the first time called
+ * setting the function type to 0 (ftype) means graph is invisible
+ * ----------------------------------------------------------------------------------------
+ */
+PROCEDURE(update_graph) {
+    int i;
+    int widget=GETINT(ARG0)-1;
+    int gnum=GETINT(ARG1);     // 0: not yet used, maybe later for the axis, 1 first graph, 2 second graph, 3 third graph
+    if (gnum>3) gnum=3;
+    int ftype=GETINT(ARG2);
+    char const * x11[]={"Dark Red", "Light Green", "Dark Blue","Deep Pink","Gold","Orange Red","Royal Blue","Slate Gray", "Sea Green","Dark Orchid"};
+    GtkWidget *drawing_area=widgets[widget];
+    current_graph_widget=0;
+    for(int i=0;i<sizeof(graphArray)/sizeof(graphArray[current_graph_widget]);i++) {
+        if(graphArray[i].widget_owner==widget) {
+            current_graph_widget=i;
+            break;
+        }
+    }
+    graphArray[current_graph_widget].details[gnum].ftype=ftype;
+    graphArray[current_graph_widget].details[gnum].lwidth=GETINT(ARG3);
+    strcpy(graphArray[current_graph_widget].details[gnum].color,GETSTRING(ARG4));
+    gtk_widget_queue_draw(drawing_area);  // Request redraw
+    debug_log("drawing ", (int) drawing_area);
+    while (gtk_events_pending())
+        gtk_main_iteration();
+    RETURNINT(0);  // Return TRUE to keep the timer running
+}
+
 
 PROCEDURE(add_graph) {
     int x = GETINT(ARG0);
     int y = GETINT(ARG1);
     int width = GETINT(ARG2);
     int height = GETINT(ARG3);
-    int function_type = GETINT(ARG4);
+    int lwidth=0;
 
-    granges(ARG5,ARG6, width, height);
+    granges(ARG4,ARG5, width, height);
     GtkWidget *drawing_area = gtk_drawing_area_new();
     gtk_widget_set_size_request(drawing_area, width, height);
     
     // Store array arguments in widget data
-    g_object_set_data(G_OBJECT(drawing_area), "xarray", ARG5);
-    g_object_set_data(G_OBJECT(drawing_area), "yarray", ARG6);
-    
+    g_object_set_data(G_OBJECT(drawing_area), "x1", ARG4);
+    g_object_set_data(G_OBJECT(drawing_area), "y1", ARG5);
+    g_object_set_data(G_OBJECT(drawing_area), "x2", ARG6);
+    g_object_set_data(G_OBJECT(drawing_area), "y2", ARG7);
+    g_object_set_data(G_OBJECT(drawing_area), "x3", ARG8);
+    g_object_set_data(G_OBJECT(drawing_area), "y3", ARG9);
+
     g_signal_connect(G_OBJECT(drawing_area), "draw",
-                    G_CALLBACK(draw_graph), GINT_TO_POINTER(function_type));
+                    G_CALLBACK(draw_graph), GINT_TO_POINTER(0));
     
     gtk_fixed_put(GTK_FIXED(main_fixed), drawing_area, x, y);
     gtk_widget_show(drawing_area);
 
     widgets[widget_count] = drawing_area;
-    graphArray[0].drawing_area = drawing_area;
- //   graphArray[widget_count]=graphArray[0];    // not yet set!
-
-    printf("drawing %d %d\n",widget_count, drawing_area);
+    graphArray[graph_count].widget_owner=widget_count;
+    graphArray[graph_count].drawing_area = drawing_area;
+    graph_count++;
     widget_count++;
     RETURNINT(widget_count);
 }
 
-#define xcheck(var) printf(#var" %g=%g\n",var,graphArray[0].var);
 
 gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data) {
- //   int width = gtk_widget_get_allocated_width(widget);
- //   int height = gtk_widget_get_allocated_height(widget);
-    int function_type = GPOINTER_TO_INT(data);
+  //  int graphnum = GPOINTER_TO_INT(data);
+    int *xarray[5]={0};
+    int *yarray[5]={0};
 
-    void *xarray = g_object_get_data(G_OBJECT(widget), "xarray");
-    void *yarray = g_object_get_data(G_OBJECT(widget), "yarray");
+    xarray[0] = g_object_get_data(G_OBJECT(widget), "x1");
+    yarray[0] = g_object_get_data(G_OBJECT(widget), "y1");
+    xarray[1] = g_object_get_data(G_OBJECT(widget), "x2");
+    yarray[1] = g_object_get_data(G_OBJECT(widget), "y2");
+    xarray[2] = g_object_get_data(G_OBJECT(widget), "x3");
+    yarray[2] = g_object_get_data(G_OBJECT(widget), "y3");
 
-    int xhi = GETARRAYHI(xarray);
-    if (xhi <= 0) return FALSE; // No data to plot
-/*
-    double x_min = GETFARRAY(xarray, 0);
-    double x_max = x_min;
-    double y_min = GETFARRAY(yarray, 0);
-    double y_max = y_min;
-
-    // Step 1: Find actual min/max values for x and y
-    for (int i = 1; i < xhi; i++) {
-        double x = GETFARRAY(xarray, i);
-        double y = GETFARRAY(yarray, i);
-        x_min = fmin(x_min, x);
-        x_max = fmax(x_max, x);
-        y_min = fmin(y_min, y);
-        y_max = fmax(y_max, y);
-    }
-
-    // Adjust axis limits for padding
-    x_min = (x_min > 0) ? 0 : x_min - 0.5;
-    x_max += 0.5;
-    y_min = (y_min > 0) ? 0 : y_min - 0.5;
-    y_max += 0.5;
-
-    int num_ticks = 5;   // ticks without numbers between numbered ticks
-    int steps = 5;
-    double step_x = find_tick_step(x_min, x_max, num_ticks) / steps;
-    double step_y = find_tick_step(y_min, y_max, num_ticks) / steps;
-
-    // Calculate ranges and scales
-    double x_range = fmax(fabs(x_max), fabs(x_min));
-    double y_range = fmax(fabs(y_max), fabs(y_min));
-
-    double scale_x = (width - 15) / (x_range * 2);
-    double scale_y = (height - 15) / (y_range * 2);
-
-    // Set zero positions based on the center
-    double x_zero_pos = width / 2;
-    double y_zero_pos = height / 2;
-*/
-    double scale_x=graphArray[0].scale_x;
-    double scale_y=graphArray[0].scale_y;
-    double y_zero_pos=graphArray[0].y_zero_pos;
-    double x_zero_pos=graphArray[0].x_zero_pos;
-    int width=graphArray[0].width;
-    int height=graphArray[0].height;
-    double  x_range=graphArray[0].x_range;
-    double y_range=graphArray[0].y_range;
-    double step_x=graphArray[0].step_x;
-    double  step_y=graphArray[0].step_y;
-
-     // Draw axes
-    cairo_set_line_width(cr, 1);
-    cairo_set_source_rgb(cr, 0, 0, 0);
-
-    // X-axis
-    cairo_move_to(cr, 0, y_zero_pos);
-    cairo_line_to(cr, width, y_zero_pos);
-    cairo_stroke(cr);
-
-    // Y-axis
-    cairo_move_to(cr, x_zero_pos, 0);
-    cairo_line_to(cr, x_zero_pos, height);
-    cairo_stroke(cr);
-
-    // Draw X-axis markers
-    int j = 0;
-    for (double i = -x_range; i <= x_range + step_x; i += step_x) {
-        double x_pos = x_zero_pos + (i * scale_x);
-        if (x_pos > width) break;
-        if (x_pos >= 0) {
-            if (j % 5 == 0) {
-                drawxtick(cr, x_pos, y_zero_pos, 5); // Major tick
-                drawxnumber(cr, x_pos, y_zero_pos, i);
-            } else {
-                drawxtick(cr, x_pos, y_zero_pos, 2); // Minor tick
-            }
-            j++;
-        }
-    }
-
-    // Draw Y-axis markers
-    j = 0;
-    for (double i = -y_range; i <= y_range + step_y; i += step_y) {
-        double y_pos = y_zero_pos - (i * scale_y);
-        if (y_pos > height) break;
-        if (y_pos <= 0) continue;
-        if (j % 5 == 0) {
-            drawytick(cr, x_zero_pos, y_pos, 5); // Major tick
-            drawynumber(cr, x_zero_pos, y_pos, i);
-        } else {
-            drawytick(cr, x_zero_pos, y_pos, 2); // Minor tick
-        }
-        j++;
-    }
-
-    // Draw the actual graph
+    draw_x_axis(cr);
+    draw_y_axis(cr);
     cairo_set_source_rgb(cr, 0, 0, 1);
-
-    if (function_type == 2) { // Points-only mode
-        for (int i = 0; i < xhi; i++) {
-            double x = GETFARRAY(xarray, i);
-            double y = GETFARRAY(yarray, i);
-            double px = x_zero_pos + (x * scale_x);
-            double py = height / 2 - (y * scale_y);
-            drawdot(cr, px, py, 1);
-            printf("add %g %g\n",px,py);
-        }
-    } else { // Connected line mode
-        double x0 = GETFARRAY(xarray, 0);
-        double y0 = GETFARRAY(yarray, 0);
-        double px0 = x_zero_pos + (x0 * scale_x);
-        double py0 = height / 2 - (y0 * scale_y);
-        cairo_move_to(cr, px0, py0);
-
-        for (int i = 1; i < xhi; i++) {
-            double x = GETFARRAY(xarray, i);
-            double y = GETFARRAY(yarray, i);
-            cairo_line_to(cr, x_zero_pos + (x * scale_x), height / 2 - (y * scale_y));
+    for (int i=0;i<3;i++) {
+        if(xarray[i]==0) continue;
+        int xhi = GETARRAYHI(xarray[i]);
+        if(xhi<=0) continue;
+        int function_type=graphArray[current_graph_widget].details[i+1].ftype;
+        if (function_type == 2) { // Points-only mode
+             draw_dotted_func(cr, xarray[i], yarray[i],i);
+        } else  if (function_type == 1){ // Connected line mode
+            draw_line_func(cr, xarray[i], yarray[i],i+1);
+        } else  { // Connected line mode
+            draw_line_func(cr, xarray[i], yarray[i],i+1);
         }
         cairo_stroke(cr);
     }
-
-    // Draw origin tick marks
-    cairo_move_to(cr, x_zero_pos, y_zero_pos - 5);
-    cairo_line_to(cr, x_zero_pos, y_zero_pos + 5);
-    cairo_stroke(cr);
-
-    cairo_move_to(cr, x_zero_pos - 5, y_zero_pos);
-    cairo_line_to(cr, x_zero_pos + 5, graphArray[0].y_zero_pos);
-    cairo_stroke(cr);
-
     return FALSE;
-}
+ }
 
 
 LOADFUNCS
@@ -3083,5 +3107,7 @@ LOADFUNCS
     ADDPROC(run_external_program_sync, "gui.run_sync", "b", ".string", "command=.string,parm=.string,wdir=.string");
     ADDPROC(set_sensitive, "gui.set_sensitive", "b", ".int", "index=.int,sensitive=.int");
     ADDPROC(copy_file_procedure, "gui.copy_file", "b", ".int", "source_path=.string,destination_path=.string");
-    ADDPROC(add_graph, "gui.add_graph", "b", ".int", "x=.int,y=.int,width=.int,height=.int,function_type=.int,x_values=.float[],y_values=.float[]");
- ENDLOADFUNCS
+    ADDPROC(add_graph, "gui.add_graph", "b", ".int", "x=.int,y=.int,width=.int,height=.int,x1=.float[],y1=.float[],x2=.float[],y2=.float[],x3=.float[],y3=.float[]");
+    ADDPROC(update_graph, "gui.update_graph", "b", ".int", "widget=.int,gnum=.int,ftype=.int,lwidth=.int,color=.string");
+
+ENDLOADFUNCS
