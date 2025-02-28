@@ -1007,6 +1007,108 @@ tree_diagram(items, parents)
   call tree_diagram items, parents
   ```
 
+#### ADD_GRAPH
+
+```
+add_graph(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
+```
+
+- **Description**: Creates a widget to display mathematical functions and graphs.
+- **Parameters**:
+  - `x`: X-coordinate for graph placement.
+  - `y`: Y-coordinate for graph placement.
+  - `width`: Width of the graph area.
+  - `height`: Height of the graph area.
+  - `x1:`  x-value-1.
+  - `y1:`  y-value related to x-value-1.
+  - `x2:`  x-value-2.
+  - `y2:`  y-value related to x-value-2.
+  - `x3:`  x-value-3.
+  - `y3:`  y-value related to x-value-3.
+  A maximum of three individual graph elements can be added to a single graph widget. By default, these graphs are hidden and must be triggered using the upd_graph function to be displayed.
+    The passed x/y values must be float arrays. The sizing of the x/y axes is determined by the x1/y1 arrays. Therefore, it is essential that the ranges of x2/y2 and x3/y3 align properly.
+
+- **Returns**: The index of the graph widget in the global widgets array.
+- **Example**:
+  ```rexx
+  graph1 = add_graph(10, 10, 300, 200,x1,y1,x2,y2,x3,y3)
+   ```
+- **Tips**:
+  - Use appropriate size for visibility (recommended minimum 200x200)
+  - Consider window size when placing graphs
+  - Multiple graphs can be added to the same window
+
+#### ADD_R2CHART
+```
+add_r2chart(x, y, width, height, function_type,x1,y1,x2,y2,x3,y3)
+```
+
+- **Description**: Creates a widget to display ℝ²⁺ Chart – Specifies only the first quadrant (non-negative real numbers). Can display up to three graphs in the same widget.
+- **Parameters**:
+  - `x`: X-coordinate for graph placement.
+  - `y`: Y-coordinate for graph placement.
+  - `width`: Width of the graph area.
+  - `height`: Height of the graph area.
+  - `x1`: Array of x coordinates for the first graph.
+  - `y1`: Array of y coordinates for the first graph.
+  - `x2`: Array of x coordinates for the second graph (optional).
+  - `y2`: Array of y coordinates for the second graph (optional).
+  - `x3`: Array of x coordinates for the third graph (optional).
+  - `y3`: Array of y coordinates for the third graph (optional).
+- **Returns**: The index of the graph widget in the global widgets array.
+- **Example**:
+  ```rexx
+  /* Create arrays for the graphs */
+  j=1
+  do i=-20 to 20
+     x.j=i/10
+     y.j=x.j*x.j    /* Quadratic function */
+     j=j+1
+  end
+
+  /* Create graph widget with two functions */
+  graph = add_r2chart(10, 30, 570, 550, x, y, a, b)
+  
+  /* Update graph colors */
+  call update_graph graph, 1, 1, 3, "yellow"  /* First graph */
+  call update_graph graph, 2, 1, 3, "blue"    /* Second graph */
+  ```
+
+
+### UPDATE_GRAPH
+```
+update_graph(graph_index, graph_num, line_type, line_width, color)
+```
+
+- **Description**: Updates the appearance of a specific graph within a graph widget. Since there may be more than one graph in the widget, this function only prepares the appearance of the specified graph. This is because the drawing function operates on the entire widget, which contains all the graphs. To complete the drawing process, you can use a value of -1 for the graphnum parameter.
+- **Parameters**:
+    - `graph_index`: Index of the graph widget.
+    - `graph_num`: Which graph to update (1-3) or -1 to perform the draw process.
+    - `line_type`: Type of line (1=solid, 2=dots).
+    - `line_width`: Width of the line/dots in pixels.
+    - `color`: Color name (X11 color) or hex value.
+- **Returns**: None.
+- **Example**:
+  ```rexx
+  /* Update first graph to yellow solid line */
+  call update_graph graph, 1, 1, 3, "yellow"
+  
+  /* Update second graph to blue dashed line */
+  call update_graph graph, 2, 2, 1, "blue"
+  ```
+
+### Common Issues with Graphs
+
+1. **Graph Not Updating**: Ensure that the correct graph index is being used in `update_graph`. Each graph should maintain its own state.
+2. **Graphs Overlapping**: Make sure to set proper coordinates and sizes for each graph to avoid overlap.
+
+### Debugging Tips
+
+1. **Debug Output**: Use debug logging to trace function calls and variable states.
+2. **Event Processing**: Ensure the event loop is running to allow for updates and redraws.
+3. **Widget States**: Verify that widget states are being managed correctly, especially when updating or redrawing.
+
+
 --- 
 
 ## Common Patterns and Best Practices

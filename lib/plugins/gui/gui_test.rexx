@@ -1,6 +1,7 @@
-/* GETPI Plugin Test */
+/* GUI Sample */
 options levelb
 import gui
+import pick
 import rxfnsb
 
 call init_window "Pandora's Box",350,400
@@ -106,3 +107,45 @@ lightpink
 hotpink
 palevioletred
 */
+
+/* Initialize the GUI */
+call init_window "Sample Application", 400, 300
+
+/* Add a label */
+label_index = add_text("Click the button!", 20, 20)
+
+/* Add a button */
+button_index = add_button("Click Me", 20, 60)
+
+/* Add a combo box with options */
+combo_index = add_combo(["Option 1", "Option 2", "Option 3"], 20, 100)
+
+/* Add a list to display selected items */
+list_index = add_list(20, 150, 200, 100)
+
+/* Show the window */
+call show_window
+
+/* Main event loop */
+do forever
+    event_token = process_events(500)  /* Wait for events with a timeout of 500ms */
+    
+    if event_token = button_index then do
+        /* Update label text when button is clicked */
+        call set_text label_index, "Button clicked!"
+    end
+    
+    if event_token = combo_index then do
+        /* Get selected item from combo box */
+        selected_index = get_combo_index(combo_index)
+        selected_text = "Selected: " || selected_index
+        
+        /* Add selected item to the list */
+        call list_add_item list_index, selected_text, "lightyellow"
+    end
+    
+    if event_token = 0 then leave  /* Exit loop on timeout */
+end
+
+/* Clean up the GUI */
+call cleanup_gui
