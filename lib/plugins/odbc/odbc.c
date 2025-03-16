@@ -17,18 +17,63 @@ static SQLHENV henv = NULL;
 static SQLHDBC hdbc = NULL;
 static SQLHSTMT hstmt = NULL;
 
-// Connect to ODBC
+/* // Connect to ODBC */
+/* PROCEDURE(odbc_connect) { */
+/*     char *dsn = GETSTRING(ARG0); */
+/*     char *user = GETSTRING(ARG1); */
+/*     char *password = GETSTRING(ARG2); */
+
+/*     if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv) != SQL_SUCCESS) RETURNINTX(-1); */
+/*     SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0); */
+/*     if (SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc) != SQL_SUCCESS) { SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-2); } */
+
+/*     SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS); */
+/*     if (!SQL_SUCCEEDED(ret)) { SQLFreeHandle(SQL_HANDLE_DBC, hdbc); SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-3); } */
+/*     RETURNINTX(0); */
+/*     ENDPROC */
+/* } */
+
 PROCEDURE(odbc_connect) {
     char *dsn = GETSTRING(ARG0);
     char *user = GETSTRING(ARG1);
     char *password = GETSTRING(ARG2);
 
+#ifdef __APPLE__
+    // Default to DuckDB on macOS if no DSN is provided
+    if (strcmp(dsn, "") == 0) {
+        dsn = "DuckDB";
+    }
+#endif
+
     if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv) != SQL_SUCCESS) RETURNINTX(-1);
     SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-    if (SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc) != SQL_SUCCESS) { SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-2); }
 
-    SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
-    if (!SQL_SUCCEEDED(ret)) { SQLFreeHandle(SQL_HANDLE_DBC, hdbc); SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-3); }
+    if (SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc) != SQL_SUCCESS) {
+        SQLFreeHandle(SQL_HANDLE_ENV, henv);
+        RETURNINTX(-2);
+    }
+
+#ifdef __APPLE__
+    // Default DuckDB connection on macOS
+    if (strcmp(dsn, "DuckDB") == 0) {
+        SQLRETURN ret = SQLDriverConnect(hdbc, NULL, (SQLCHAR*)"DSN=DuckDB;Database=inventory;", SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT);
+        if (!SQL_SUCCEEDED(ret)) {
+            SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+            SQLFreeHandle(SQL_HANDLE_ENV, henv);
+            RETURNINTX(-3);
+        }
+    } else {
+#endif
+        SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
+        if (!SQL_SUCCEEDED(ret)) {
+            SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+            SQLFreeHandle(SQL_HANDLE_ENV, henv);
+            RETURNINTX(-3);
+        }
+#ifdef __APPLE__
+    }
+#endif
+
     RETURNINTX(0);
     ENDPROC
 }
