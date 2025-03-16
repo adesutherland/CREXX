@@ -17,21 +17,6 @@ static SQLHENV henv = NULL;
 static SQLHDBC hdbc = NULL;
 static SQLHSTMT hstmt = NULL;
 
-/* // Connect to ODBC */
-/* PROCEDURE(odbc_connect) { */
-/*     char *dsn = GETSTRING(ARG0); */
-/*     char *user = GETSTRING(ARG1); */
-/*     char *password = GETSTRING(ARG2); */
-
-/*     if (SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &henv) != SQL_SUCCESS) RETURNINTX(-1); */
-/*     SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0); */
-/*     if (SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc) != SQL_SUCCESS) { SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-2); } */
-
-/*     SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS); */
-/*     if (!SQL_SUCCEEDED(ret)) { SQLFreeHandle(SQL_HANDLE_DBC, hdbc); SQLFreeHandle(SQL_HANDLE_ENV, henv); RETURNINTX(-3); } */
-/*     RETURNINTX(0); */
-/*     ENDPROC */
-/* } */
 
 PROCEDURE(odbc_connect) {
     char *dsn = GETSTRING(ARG0);
@@ -45,7 +30,69 @@ PROCEDURE(odbc_connect) {
         SQLFreeHandle(SQL_HANDLE_ENV, henv);
         RETURNINTX(-2);
     }
+    
+#ifdef _WIN32
+       // Check if this is a CSV connection (empty username and password)
+    if (username[0] == '\0' && password[0] == '\0') {
+        char connStrOut[1024];
+        SQLSMALLINT connStrOutLen;
 
+        // Use the exact driver name we found
+        snprintf(connStr, sizeof(connStr),
+                "Driver={Microsoft Access Text Driver (*.txt, *.csv)};"
+                "DefaultDir=%s;"
+                "Extensions=CSV;"
+                "Format=Delimited(;);"
+                "CharacterSet=ANSI;"
+                "ReadOnly=True;"
+                "IMEX=1;"
+                "FirstRowHasNames=0;"
+                "MaxScanRows=0;"
+                "TextDelimiter=;;"
+                "ColumnDelimiter=;;"
+                "Separators=;",
+                dsn);
+
+        ret = SQLDriverConnect(hdbc,
+                             NULL,
+                             (SQLCHAR*)connStr,
+                             SQL_NTS,
+                             (SQLCHAR*)connStrOut,
+                             sizeof(connStrOut),
+                             &connStrOutLen,
+                             SQL_DRIVER_NOPROMPT);
+
+        if (!SQL_SUCCEEDED(ret)) {
+            // If first attempt fails, try with Excel driver as backup
+            snprintf(connStr, sizeof(connStr),
+                    "Driver={Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)};"
+                    "DefaultDir=%s;"
+                    "Extensions=CSV;"
+                    "FirstRowHasNames=0;"
+                    "Format=Delimited;"
+                    "ColNameHeader=True;"
+                    "Delimited=;;"
+                    "CharacterSet=ANSI;",
+                    dsn);
+
+            ret = SQLDriverConnect(hdbc,
+                                 NULL,
+                                 (SQLCHAR*)connStr,
+                                 SQL_NTS,
+                                 (SQLCHAR*)connStrOut,
+                                 sizeof(connStrOut),
+                                 &connStrOutLen,
+                                 SQL_DRIVER_NOPROMPT);
+        }
+    } else {
+        // Regular database connection
+        ret = SQLConnect(hdbc,
+                        (SQLCHAR*)dsn, SQL_NTS,
+                        (SQLCHAR*)username, SQL_NTS,
+                        (SQLCHAR*)password, SQL_NTS);
+    }
+#endif
+    
     SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
     if (!SQL_SUCCEEDED(ret)) {
       SQLFreeHandle(SQL_HANDLE_DBC, hdbc);

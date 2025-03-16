@@ -12,6 +12,8 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 endif ()
 
+option(ENABLE_ODBC "Enable ODBC support" OFF)
+
 include(CTest)
 add_subdirectory(re2c)
 add_subdirectory(lemon)

@@ -9,7 +9,13 @@ add_subdirectory(stack)
 add_subdirectory(cipher)
 add_subdirectory(rxuuid)
 add_subdirectory(strings)
-add_subdirectory(odbc)
+
+if(ENABLE_ODBC)
+    add_subdirectory(odbc)
+    message(STATUS "Building with ODBC support enabled.")
+else()
+    message(STATUS "ODBC support is disabled, skipping subdirectory.")
+endif()
 
 # if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 #
