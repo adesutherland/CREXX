@@ -47,18 +47,15 @@ set_target_properties(_odbc PROPERTIES
 
 # Build Test Rexx
 add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i "${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}"
-        -o odbc_test "${CMAKE_CURRENT_SOURCE_DIR}/odbc_test" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas odbc_test
-
-        DEPENDS rxas rxc library _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
-        OUTPUT odbc_test.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    OUTPUT odbc_test.rxbin
+    COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
+            -i "${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}"
+            -o odbc_test "${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx"
+    COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas odbc_test
+    DEPENDS _odbc ${CMAKE_CURRENT_SOURCE_DIR}/odbc_test.rexx
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_custom_target(odbc_test ALL
-        DEPENDS odbc_test.rxbin
-        )
+add_custom_target(odbc_test ALL DEPENDS odbc_test.rxbin)
 
 # Enable testing functionality
 enable_testing()
