@@ -273,7 +273,7 @@ PROCEDURE (list_array)  {
  */
 static void quicksort_recursive(void *array, int low, int high, int offset) {
     if (low < high) {
-        // Use middle element as pivot to avoid worst case on sorted arrays
+        // Use middle element as pivot to avoid worst case on sorted arrays, !! later to be chosen?
         int pivot_idx = low + (high - low) / 2;
         char *pivot = GETSARRAY(array, pivot_idx);
         
