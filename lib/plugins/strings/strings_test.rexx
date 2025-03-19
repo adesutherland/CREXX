@@ -3,6 +3,14 @@ options levelb
 import strings
 import rxfnsb
 
+vars.1=''
+vals.1=''
+say parse( "17##February--  ?? 2025      ","day'##'.'--' '??'year  '??'",vars,vals)
+do i=1 to vals.0
+   say i "'"vars.i"'='"vals.i"'"
+end
+exit
+
 ## Set Array in Python format
 myarray.1=""
 items = '        [CEO, HR, IT, HR Manager, HR Staff, IT Manager, Developers  ]  '

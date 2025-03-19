@@ -847,10 +847,9 @@ ENDPROC
 PROCEDURE(PARSE) {
     char *input_string   = GETSTRING(ARG0);  // Get the input string
     char *parse_template = GETSTRING(ARG1);  // Get the parse template
-    char *delimiters[512];                   // Array to hold delimiters
     int  count = 0;                          // Counter for the number of variables
-    int  is_variable = 1;                    // Flag to track if we're processing a variable or delimiter
-
+    char *current_pos = input_string;        // Current position in input string
+    
     // Initialize output arrays
     SETARRAYHI(ARG2, 0);
     SETARRAYHI(ARG3, 0);
@@ -862,75 +861,58 @@ PROCEDURE(PARSE) {
         RETURNINT(0);
     }
 
-    // First pass: collect variable names and delimiters
-    char *template_copy = strdup(parse_template);  // Create a copy for tokenization
-    char *token = strtok(template_copy, "'");      // Split by single quote
-
+    // Handle delimiter-based parsing
+    char *template_copy = strdup(parse_template);
+    char *token = strtok(template_copy, "'");
+    int is_delimiter = 0;  // Toggle between variable names and delimiters
+    
     while (token != NULL && count < 512) {
+        token = trim(token);  // Remove whitespace
+        
         if (strlen(token) > 0) {
-            if (is_variable) {
-                // Store variable name (trimmed)
+            if (!is_delimiter) {
+                // Store variable name
                 SETARRAYHI(ARG2, count + 1);
-                SETSARRAY(ARG2, count, trim(token));
+                SETSARRAY(ARG2, count, token);
+                
+                // Get next token (delimiter)
+                token = strtok(NULL, "'");
+                if (token != NULL) {
+                    token = trim(token);
+                    // Find this delimiter in input string
+                    char *next_delim = strstr(current_pos, token);
+                    
+                    if (next_delim != NULL) {
+                        // Extract value up to delimiter
+                        int length = next_delim - current_pos;
+                        char *value = (char *)malloc(length + 1);
+                        strncpy(value, current_pos, length);
+                        value[length] = '\0';
+                        
+                        SETARRAYHI(ARG3, count + 1);
+                        SETSARRAY(ARG3, count, trim(value));
+                        free(value);
+                        
+                        current_pos = next_delim + strlen(token);
+                    } else {
+                        // Last variable gets rest of string
+                        SETARRAYHI(ARG3, count + 1);
+                        SETSARRAY(ARG3, count, trim(current_pos));
+                    }
+                } else {
+                    // No delimiter after variable - take rest of string
+                    SETARRAYHI(ARG3, count + 1);
+                    SETSARRAY(ARG3, count, trim(current_pos));
+                }
                 count++;
-            } else {
-                // Store delimiter
-                delimiters[count-1] = strdup(token);
             }
+            is_delimiter = !is_delimiter;
         }
-        is_variable = !is_variable;
         token = strtok(NULL, "'");
     }
-    free(template_copy);  // Free the template copy
-
-    // Second pass: parse input string using delimiters
-    char *current_pos = input_string;
-    char *value = NULL;
     
-    for (int i = 0; i < count; i++) {
-        char *next_delim = (i < count-1) ? strstr(current_pos, delimiters[i]) : NULL;
-        
-        if (next_delim != NULL) {
-            int length = next_delim - current_pos;
-            value = (char *)malloc(length + 1);
-            strncpy(value, current_pos, length);
-            value[length] = '\0';
-            
-            SETARRAYHI(ARG3, i + 1);
-            SETSARRAY(ARG3, i, value);  // Store trimmed value
-            free(value);
-            
-            current_pos = next_delim + strlen(delimiters[i]);
-        } else if (i == count-1) {
-            // Last variable gets the rest of the string
-            SETARRAYHI(ARG3, i + 1);
-            SETSARRAY(ARG3, i, current_pos);
-        }
-    }
-
-    // Clean up delimiters
-    for (int i = 0; i < count-1; i++) {
-        free(delimiters[i]);
-    }
-
-    // Remove empty entries
-    int writeIndex = 0;
-    for (int readIndex = 0; readIndex < count; readIndex++) {
-        char *varname = GETSARRAY(ARG2, readIndex);
-        if (varname != NULL && varname[0] != '\0' && varname[0] != '.') {
-            if (writeIndex != readIndex) {
-                SETSARRAY(ARG2, writeIndex, GETSARRAY(ARG2, readIndex));
-                SETSARRAY(ARG3, writeIndex, GETSARRAY(ARG3, readIndex));
-            }
-            writeIndex++;
-        }
-    }
-
-    // Update array sizes
-    SETARRAYHI(ARG2, writeIndex);
-    SETARRAYHI(ARG3, writeIndex);
-
-    RETURNINT(writeIndex);
+    free(template_copy);
+    RETURNINT(count);
 ENDPROC;
 }
 // Linked List definitions
