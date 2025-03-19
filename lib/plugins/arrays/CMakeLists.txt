@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(arrays_plugin C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
 
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
