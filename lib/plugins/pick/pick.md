@@ -1,6 +1,6 @@
 The project is based on GTK 3.0, which theoretically runs on all operating systems. I have successfully installed it on Windows and adapted it in the CMake file. However, I am uncertain how to commit these changes to Git without interfering with the existing Git-based build process. Someone may have a suggestion.
 
-# CREXX Pick Dialogs Documentation
+# CREXX Picker Dialog Services
 
 ## Table of Contents
 - [File pick](#file-pick)
@@ -16,6 +16,7 @@ The project is based on GTK 3.0, which theoretically runs on all operating syste
 - [Tree pick](#tree-pick)
 - [Text Display](#text-display)
 - [Tree Diagram](#tree-diagram)
+- [Splash Screen](#splash-screen)
 
 ## File pick
 
@@ -595,6 +596,38 @@ Electronics
 - Empty parent string indicates root level item
 - Parent relationships must be valid (parent index must exist)
 - Items are displayed in the order they appear in the array
+
+## Splash Screen
+
+Opens a centered splash screen window for a specified duration.
+
+### Function
+splash_pick(title, message, duration)
+
+### Parameters
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| title | string | Window title |
+| message | string | Message to display |
+| duration | int | Duration in seconds to show splash screen |
+
+### Features
+- Centered on screen
+- No window decorations
+- Auto-closes after specified duration
+- Message wrapping
+- Modal behavior
+
+### Example
+```rexx
+/* Show splash screen for 3 seconds */
+rc = splash_pick("Welcome", "Loading application...", 3)
+```
+
+### Notes
+- Duration is in seconds
+- Window appears centered on screen
+- Message automatically wraps if too long
 
 ---
 *Note: All dialogs are modal and will wait for user input before returning.*

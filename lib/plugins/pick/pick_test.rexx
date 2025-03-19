@@ -4,31 +4,6 @@ import pick
 import rxfnsb
 
 
-/* Define items */
-items.1 = "Electronics"
-items.2 = "Computers"
-items.3 = "Laptops"
-items.4 = "Desktops"
-items.5 = "Phones"
-items.6 = "Smartphones"
-items.7 = "Basic Phones"
-items.8 = "PC Phones"
-
-/* Define parent relationships */
-parents.1 = ""        /* Electronics (root) */
-parents.2 = "1"       /* Computers under Electronics */
-parents.3 = "2"       /* Laptops under Computers */
-parents.4 = "2"       /* Desktops under Computers */
-parents.5 = "1"       /* Phones under Electronics */
-parents.6 = "5"       /* Smartphones under Phones */
-parents.7 = "5"       /* Basic Phones under Phones */
-parents.8 = "5"       /* Basic Phones under Phones */
-
-tree = tree_diagram(items, parents)
-say tree
-rc=text_display("Tree","Tree Structure",tree)
-exit
-
 rc=notify_pick("This is a Notify Pick", "Let's see customised dialogs", "info")
 name = file_pick('Open File', 'C:\TEMP\CREXX\', 0)
 rc=notify_pick("This is a Notification", "We have selected file: "name, "info")
@@ -99,8 +74,6 @@ say notify_pick("This is a Notify Pick", "We entered a password "pwd, "info")
 email = input_pick("Email", "Enter your email:", "user@example.com", 0)
 say email
 */
-
-
 
 /* Show a dialog with custom buttons */
 result = dialog_pick("This is a multiple choice dialog", "Do you want to proceed?", "Yes|No|Cancel|Maybe")

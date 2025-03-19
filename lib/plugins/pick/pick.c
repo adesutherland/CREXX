@@ -872,6 +872,28 @@ PROCEDURE(notify_pick)
     GtkWidget *image = gtk_image_new_from_icon_name(icon_name, GTK_ICON_SIZE_DIALOG);
     gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
     
+    // Create separate CSS provider for notification
+    GtkCssProvider *notify_provider = gtk_css_provider_new();
+    
+    // Set color based on type
+    const char *color;
+    if (strcasecmp(type, "warning") == 0) {
+        color = "#f0a500";  // Orange
+    } else if (strcasecmp(type, "error") == 0) {
+        color = "#cc0000";  // Red
+    } else if (strcasecmp(type, "success") == 0) {
+        color = "#00aa00";  // Green
+    } else {
+        color = "#0066cc";  // Blue (info)
+    }
+    
+    char css_data[256];
+    snprintf(css_data, sizeof(css_data),
+            "label { color: %s; font-weight: bold; font-size: 12pt; }",
+            color);
+    
+    gtk_css_provider_load_from_data(notify_provider, css_data, -1, NULL);
+    
     // Add message with proper styling
     char *safe_message = sanitize_utf8(message);
     GtkWidget *label = gtk_label_new(safe_message);
@@ -884,30 +906,10 @@ PROCEDURE(notify_pick)
     
     // Apply CSS styling based on type
     GtkStyleContext *context = gtk_widget_get_style_context(label);
-    GtkCssProvider *provider = gtk_css_provider_new();
-    
-    char css_data[256];
-    const char *color;
-    
-    if (strcasecmp(type, "warning") == 0) {
-        color = "#f0a500";  // Orange
-    } else if (strcasecmp(type, "error") == 0) {
-        color = "#cc0000";  // Red
-    } else if (strcasecmp(type, "success") == 0) {
-        color = "#00aa00";  // Green
-    } else {
-        color = "#0066cc";  // Blue (info)
-    }
-    
-    snprintf(css_data, sizeof(css_data),
-            "label { color: %s; font-weight: bold; font-size: 12pt; }",
-            color);
-    
-    gtk_css_provider_load_from_data(provider, css_data, -1, NULL);
     gtk_style_context_add_provider(context,
-                                 GTK_STYLE_PROVIDER(provider),
+                                 GTK_STYLE_PROVIDER(notify_provider),
                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    g_object_unref(provider);
+    gtk_style_context_add_class(context, "message");  // Add message class
     
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
     
@@ -924,12 +926,15 @@ PROCEDURE(notify_pick)
     gtk_widget_destroy(dialog);
     g_object_unref(temp_parent);
     
+    // Clean up notify provider
+    g_object_unref(notify_provider);
+
     while (gtk_events_pending()) {
         gtk_main_iteration_do(FALSE);
     }
     
-    RETURNSTRX("1");  // Always return "1" since it's just an OK dialog
-ENDPROC
+    RETURNSTR("1");  // Add explicit return
+ ENDPROC
 }
 
 PROCEDURE(combo_pick)
@@ -1527,6 +1532,132 @@ PROCEDURE(tree_diagram)
 ENDPROC
 }
 
+PROCEDURE(splash_pick)
+{
+    static int gtk_initialized = 0;
+
+    if (!gtk_initialized) {
+        if (!gtk_init_check(NULL, NULL)) {
+            RETURNSTRX("");
+        }
+        gtk_initialized = 1;
+    }
+
+    const char *title = GETSTRING(ARG0);
+    const char *message = GETSTRING(ARG1);
+    int duration = GETINT(ARG2);
+    const char *image_path = GETSTRING(ARG3);
+
+    // Create a window for the splash screen
+    GtkWidget *splash_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(splash_window), title);
+    gtk_window_set_decorated(GTK_WINDOW(splash_window), FALSE);
+    gtk_window_set_position(GTK_WINDOW(splash_window), GTK_WIN_POS_CENTER);
+    gtk_window_set_default_size(GTK_WINDOW(splash_window), 500, 500);
+
+    // Create an overlay to stack widgets
+    GtkWidget *overlay = gtk_overlay_new();
+    gtk_container_add(GTK_CONTAINER(splash_window), overlay);
+
+    // Create and scale background image
+    GdkPixbuf *original_pixbuf = gdk_pixbuf_new_from_file(image_path, NULL);
+    if (original_pixbuf) {
+        // Scale the image to window size (500x500)
+        GdkPixbuf *scaled_pixbuf = gdk_pixbuf_scale_simple(
+            original_pixbuf,
+            500,  // width
+            500,  // height
+            GDK_INTERP_BILINEAR
+        );
+        g_object_unref(original_pixbuf);
+
+        GtkWidget *background = gtk_image_new_from_pixbuf(scaled_pixbuf);
+        gtk_container_add(GTK_CONTAINER(overlay), background);
+        g_object_unref(scaled_pixbuf);
+    } else {
+        GtkWidget *background = gtk_image_new();
+        gtk_container_add(GTK_CONTAINER(overlay), background);
+    }
+
+    // Create CSS provider specifically for splash screen
+    GtkCssProvider *splash_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(splash_provider,
+        "label { color: white; }"
+        ".title { font-size: 24px; font-weight: bold; }"
+        ".message { font-size: 20px; font-weight: normal; }",
+        -1, NULL);
+    
+    GtkStyleContext *context;
+
+    // Create main vertical box
+    GtkWidget *main_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), main_vbox);
+
+    // Add title at the top
+    GtkWidget *title_label = gtk_label_new(title);
+    context = gtk_widget_get_style_context(title_label);
+    gtk_style_context_add_provider(context,
+        GTK_STYLE_PROVIDER(splash_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_style_context_add_class(context, "title");
+    gtk_widget_set_margin_top(title_label, 20);
+    gtk_box_pack_start(GTK_BOX(main_vbox), title_label, FALSE, FALSE, 0);
+
+    // Create bottom box for message and progress bar
+    GtkWidget *bottom_vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_margin_start(bottom_vbox, 20);
+    gtk_widget_set_margin_end(bottom_vbox, 20);
+    gtk_widget_set_margin_bottom(bottom_vbox, 20);
+    gtk_box_pack_end(GTK_BOX(main_vbox), bottom_vbox, FALSE, FALSE, 0);
+
+    // Add message label with larger text
+    GtkWidget *label = gtk_label_new(message);
+    gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+    context = gtk_widget_get_style_context(label);
+    gtk_style_context_add_provider(context,
+        GTK_STYLE_PROVIDER(splash_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_style_context_add_class(context, "message");  // Add message class
+    gtk_box_pack_start(GTK_BOX(bottom_vbox), label, FALSE, FALSE, 0);
+
+    // Add progress bar
+    GtkWidget *progress = gtk_progress_bar_new();
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(progress), TRUE);
+    gtk_box_pack_start(GTK_BOX(bottom_vbox), progress, FALSE, FALSE, 0);
+
+    g_object_unref(splash_provider);
+
+    gtk_widget_show_all(splash_window);
+
+    // Update progress bar in steps
+    int steps = 20;
+    int step_duration = (duration * 1000000) / steps;
+
+    for (int i = 0; i <= steps; i++) {
+        gdouble fraction = (gdouble)i / steps;
+        char progress_text[32];
+        g_snprintf(progress_text, sizeof(progress_text), "%d%%", (int)(fraction * 100));
+        
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress), fraction);
+        gtk_progress_bar_set_text(GTK_PROGRESS_BAR(progress), progress_text);
+        
+        while (gtk_events_pending())
+            gtk_main_iteration();
+            
+        g_usleep(step_duration);
+    }
+
+    // Destroy the splash window
+    gtk_widget_destroy(splash_window);
+
+    // Process any remaining events
+    while (gtk_events_pending())
+        gtk_main_iteration();
+
+    RETURNSTR("");  // Add explicit return
+    ENDPROC
+}
+
 LOADFUNCS
     ADDPROC(file_pick, "pick.file_pick", "b", ".string", "title=.string,initial_dir=.string,save_dialog=.int");
     ADDPROC(path_pick, "pick.path_pick", "b", ".string", "title=.string,initial_dir=.string");
@@ -1542,4 +1673,5 @@ LOADFUNCS
     ADDPROC(text_display_pick, "pick.text_display_pick", "b", ".string", "title=.string,message=.string,expose item_texts=.string[]");
     ADDPROC(text_display, "pick.text_display", "b", ".string", "title=.string,message=.string,item_texts=.string");
     ADDPROC(tree_diagram, "pick.tree_diagram", "b", ".string", "expose items=.string[],expose parents=.string[]");
+    ADDPROC(splash_pick, "pick.splash_pick", "b", ".string", "title=.string,message=.string,duration=.int,image_path=.string");
 ENDLOADFUNCS;
