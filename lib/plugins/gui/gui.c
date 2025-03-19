@@ -95,7 +95,7 @@ static void combo_changed_callback(GtkComboBox *widget, gpointer data) {
 
 static void list_row_selected(GtkListBox *box, GtkListBoxRow *row, gpointer data) {
     if (!row) return;  // No selection
-    
+
     int token = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "list-token"));
     user_event_occurred = TRUE;
     last_event_token = token;
@@ -103,7 +103,7 @@ static void list_row_selected(GtkListBox *box, GtkListBoxRow *row, gpointer data
 
 static void set_widget_background(GtkWidget *widget, const char *color_name) {
     GdkRGBA color;
-    
+
     if (gdk_rgba_parse(&color, color_name)) {
         gtk_widget_override_background_color(widget, GTK_STATE_FLAG_NORMAL, &color);
     }
@@ -115,14 +115,14 @@ PROCEDURE(rgb_to_hex) {
     int g=GETINT(ARG1);
     int b=GETINT(ARG2);
     char hex_color[1+6+1];
-  // Ensure RGB values are within the valid range
-        if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-            RETURNSTRX(""); // Return NULL for invalid input
-        }
-  // Format the RGB values into a hexadecimal string
-        snprintf(hex_color, sizeof(hex_color), "#%02X%02X%02X", r, g, b);
+    // Ensure RGB values are within the valid range
+    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+        RETURNSTRX(""); // Return NULL for invalid input
+    }
+    // Format the RGB values into a hexadecimal string
+    snprintf(hex_color, sizeof(hex_color), "#%02X%02X%02X", r, g, b);
     RETURNSTRX(hex_color); // Return the hexadecimal color string
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(init_window)
@@ -134,61 +134,61 @@ PROCEDURE(init_window)
     if (!gtk_init_check(NULL, NULL)) {
         RETURNINT(0);  // GTK initialization failed
     }
-    
+
     // Store display reference
     gdk_display = gdk_display_get_default();
     if (!gdk_display) {
         RETURNINT(0);
     }
-    
+
     // Store settings reference
     gtk_settings = gtk_settings_get_default();
     if (!gtk_settings) {
         RETURNINT(0);
     }
-    
+
     // Hold references to prevent cleanup
     g_object_ref(gdk_display);
     g_object_ref(gtk_settings);
-    
+
     // Create the CSS provider with error handling
     GtkCssProvider *css_provider = gtk_css_provider_new();
     if (css_provider) {
         GError *error = NULL;
-        const char *css_data = 
-            ".title { font-size: 24px; font-weight: bold; }"
-            ".message { font-size: 20px; }";
-            
+        const char *css_data =
+                ".title { font-size: 24px; font-weight: bold; }"
+                ".message { font-size: 20px; }";
+
         gtk_css_provider_load_from_data(css_provider, css_data, -1, &error);
-        
+
         if (error == NULL) {
             // Apply the CSS provider to the default screen
             GdkScreen *screen = gdk_screen_get_default();
             if (screen) {
                 gtk_style_context_add_provider_for_screen(screen,
-                    GTK_STYLE_PROVIDER(css_provider),
-                    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                                                          GTK_STYLE_PROVIDER(css_provider),
+                                                          GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
             }
         } else {
             g_error_free(error);
         }
-        
+
         g_object_unref(css_provider);  // Release our reference
     }
-    
+
     // Create main window
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(main_window), GETSTRING(ARG0));
     gtk_window_set_default_size(GTK_WINDOW(main_window), GETINT(ARG1), GETINT(ARG2));
-    
+
     // Create a vertical box
     GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(main_window), vbox);
-    
+
     // Create a fixed container and add it to the box
     main_fixed = gtk_fixed_new();
     gtk_box_pack_start(GTK_BOX(vbox), main_fixed, TRUE, TRUE, 0);
-    
+
     // Connect delete-event signal
     g_signal_connect(main_window, "delete-event", G_CALLBACK(window_close_callback), NULL);
 
@@ -196,9 +196,9 @@ PROCEDURE(init_window)
     while (gtk_events_pending()) {
         gtk_main_iteration_do(FALSE);
     }
-    
+
     RETURNINT(1);  // Success
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_button)
@@ -206,29 +206,29 @@ PROCEDURE(add_button)
     if (widget_count >= MAX_WIDGETS) {
         RETURNINTX(-1);  // Handle error - too many buttons
     }
-    
+
     const char *button_text = GETSTRING(ARG0);
     int x = GETINT(ARG1);
     int y = GETINT(ARG2);
-    
+
     // Create the button and show it immediately
     widgets[widget_count] = gtk_button_new_with_label(button_text);
     gtk_fixed_put(GTK_FIXED(main_fixed), widgets[widget_count], x, y);
-    
+
     // Store the current token before incrementing
     int current_token = next_event_token;
-    
+
     // Store the token with the button
     g_object_set_data(G_OBJECT(widgets[widget_count]), "button-token", GINT_TO_POINTER(current_token));
-    
+
     g_signal_connect(widgets[widget_count], "clicked", G_CALLBACK(button_clicked), NULL);
     gtk_widget_show(widgets[widget_count]);
-    
+
     widget_count++;
     next_event_token++;  // Increment for the next button
-    
+
     RETURNINT(widget_count);  // Return the current count of widgets
- ENDPROC
+    ENDPROC
 
 }
 
@@ -240,19 +240,19 @@ PROCEDURE(add_text) {
     const char *label_text = GETSTRING(ARG0);
     int x = GETINT(ARG1);
     int y = GETINT(ARG2);
-    
+
     // Create the label and show it immediately
     widgets[widget_count] = gtk_label_new(label_text);
     gtk_fixed_put(GTK_FIXED(main_fixed), widgets[widget_count], x, y);
     gtk_widget_show(widgets[widget_count]);  // Show the label immediately
-    
+
     // Store the current token before incrementing
     int current_token = next_event_token;
     widget_count++;
     next_event_token++;
 
     RETURNINT(current_token);  // Return the token that will be used in events
-ENDPROC
+    ENDPROC
 }
 
 
@@ -284,7 +284,7 @@ PROCEDURE(show_window) {
 
         // Show the fixed container first
         // gtk_widget_show(main_fixed);
-        
+
         // Show all stored widgets
         for (int i = 0; i < widget_count; i++) {
             if (widgets[i]) {
@@ -294,7 +294,7 @@ PROCEDURE(show_window) {
 
         // Show the main window and all its children
         gtk_widget_show(main_window);
-        
+
         // Make sure everything is visible
         gtk_widget_show_all(main_window);
     }
@@ -327,7 +327,7 @@ PROCEDURE(process_events) {
     }
 
     RETURNINTX(0); // Timeout occurred (using 0 as no button)
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_combo)
@@ -340,17 +340,17 @@ PROCEDURE(add_combo)
     // Get parameters
     int x = GETINT(ARG1);
     int y = GETINT(ARG2);
-    
+
     // Create combo box
     GtkWidget *combo = gtk_combo_box_text_new();
-    
+
     // Store token with the combo
-     g_object_set_data(G_OBJECT(combo), "combo-token", GINT_TO_POINTER(widget_count + 1));
-    
+    g_object_set_data(G_OBJECT(combo), "combo-token", GINT_TO_POINTER(widget_count + 1));
+
     // Connect changed signal
     g_signal_connect(combo, "changed", G_CALLBACK(combo_changed_callback), NULL);
-    
- // Add items from the comma-separated list in ARG0
+
+    // Add items from the comma-separated list in ARG0
     int items=GETARRAYHI(ARG0);
     for(int i=0;i<items;i++) {
         char * item = GETSARRAY(ARG0, i);
@@ -367,7 +367,7 @@ PROCEDURE(add_combo)
         widgets[widget_count++] = combo;
     }
     RETURNINT(widget_count);  // Return the index+1 (to have number >0)  of the widget in the widgets array
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(combo_add_item)
@@ -382,7 +382,7 @@ PROCEDURE(combo_add_item)
 
     gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(widgets[index]), text);
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(combo_remove_item)
@@ -397,7 +397,7 @@ PROCEDURE(combo_remove_item)
 
     gtk_combo_box_text_remove(GTK_COMBO_BOX_TEXT(widgets[index]), position);
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(combo_clear)
@@ -411,7 +411,7 @@ PROCEDURE(combo_clear)
 
     gtk_combo_box_text_remove_all(GTK_COMBO_BOX_TEXT(widgets[index]));
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(get_combo_index)
@@ -425,7 +425,7 @@ PROCEDURE(get_combo_index)
 
     int active = gtk_combo_box_get_active(GTK_COMBO_BOX(widgets[index]));
     RETURNINT(active);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(cleanup_gui)
@@ -435,7 +435,7 @@ PROCEDURE(cleanup_gui)
         gtk_widget_destroy(main_window);
         main_window = NULL;
     }
-    
+
     // Clean up stored widgets
     for (int i = 0; i < widget_count; i++) {
         widgets[i] = NULL;
@@ -451,7 +451,7 @@ PROCEDURE(cleanup_gui)
         gdk_display = NULL;
     }
     widget_count=0;
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_list)
@@ -466,36 +466,36 @@ PROCEDURE(add_list)
     int y = GETINT(ARG1);
     int width = GETINT(ARG2);
     int height = GETINT(ARG3);
-    
+
     // Create scrolled window container
     GtkWidget *scrolled = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(scrolled, width, height);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
-                                 GTK_POLICY_AUTOMATIC,
-                                 GTK_POLICY_AUTOMATIC);
-    
+                                   GTK_POLICY_AUTOMATIC,
+                                   GTK_POLICY_AUTOMATIC);
+
     // Create list box
     GtkWidget *list = gtk_list_box_new();
-    
+
     // Store token with the list
     g_object_set_data(G_OBJECT(list), "list-token", GINT_TO_POINTER(widget_count + 1));
-    
+
     // Connect selection signal
     g_signal_connect(list, "row-selected", G_CALLBACK(list_row_selected), NULL);
-    
+
     // Add list to scrolled window
     gtk_container_add(GTK_CONTAINER(scrolled), list);
-    
+
     // Add to fixed container
     gtk_fixed_put(GTK_FIXED(main_fixed), scrolled, x, y);
     gtk_widget_show_all(scrolled);
-    
+
     if (widget_count < MAX_WIDGETS) {
         widgets[widget_count++] = list;
     }
 
     RETURNINT(widget_count);  // Return the index+1 (to have number >0)  of the widget in the widgets array
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_add_item)
@@ -503,45 +503,45 @@ PROCEDURE(list_add_item)
     int index = GETINT(ARG0) - 1;
     const char *text = GETSTRING(ARG1);
     const char *bg_color = GETSTRING(ARG2);  // New background color parameter
-    
+
     if (index < 0 || index >= widget_count) {
         RETURNINT(0);  // Invalid index
     }
-    
+
     GtkWidget *label = gtk_label_new(text);
     gtk_widget_set_halign(label, GTK_ALIGN_START);
-    
+
     // Create a new row
     GtkWidget *row = gtk_list_box_row_new();
     gtk_container_add(GTK_CONTAINER(row), label);
-    
+
     // Set background color if provided
     set_widget_background(row, bg_color);
-    
+
     // Insert the row into the list
     gtk_list_box_insert(GTK_LIST_BOX(widgets[index]), row, -1);
     gtk_widget_show_all(row);
-    
+
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_clear)
 {
     int index = GETINT(ARG0) - 1;
-    
+
     if (index < 0 || index >= widget_count) {
         RETURNINT(0);  // Invalid index
     }
-    
+
     GtkListBox *list = GTK_LIST_BOX(widgets[index]);
     GtkListBoxRow *row;
     while ((row = gtk_list_box_get_row_at_index(list, 0)) != NULL) {
         gtk_container_remove(GTK_CONTAINER(list), GTK_WIDGET(row));
     }
-    
+
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_get_selected)
@@ -551,15 +551,15 @@ PROCEDURE(list_get_selected)
     if (index < 0 || index >= widget_count) {
         RETURNINT(-1);  // Invalid index
     }
-    
+
     GtkListBox *list = GTK_LIST_BOX(widgets[index]);
     GtkListBoxRow *row = gtk_list_box_get_selected_row(list);
     if (!row) {
         RETURNINTX(-1);  // No selection
     }
-    
+
     RETURNINTX(gtk_list_box_row_get_index(row));
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_get_selected_item) {
@@ -579,7 +579,7 @@ PROCEDURE(list_get_selected_item) {
     }
 
     RETURNSTRX("");  // No item selected
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_set_header)
@@ -588,43 +588,43 @@ PROCEDURE(list_set_header)
     const char *header_text = GETSTRING(ARG1);
     const char *text_color = GETSTRING(ARG2);
     const char *bg_color = GETSTRING(ARG3);  // New background color parameter
-    
+
     if (index < 0 || index >= widget_count) {
         RETURNINT(0);  // Invalid index
     }
-    
+
     // Create header row
     GtkWidget *header_label = gtk_label_new(NULL);
-    
+
     // Create markup with text color
     char *markup;
     if (text_color && *text_color) {
-        markup = g_markup_printf_escaped("<span color='%s'><b>%s</b></span>", 
-                                       text_color, header_text);
+        markup = g_markup_printf_escaped("<span color='%s'><b>%s</b></span>",
+                                         text_color, header_text);
     } else {
         markup = g_markup_printf_escaped("<b>%s</b>", header_text);
     }
-    
+
     gtk_label_set_markup(GTK_LABEL(header_label), markup);
     g_free(markup);
-    
+
     gtk_widget_set_halign(header_label, GTK_ALIGN_START);
-    
+
     GtkWidget *header_row = gtk_list_box_row_new();
     gtk_container_add(GTK_CONTAINER(header_row), header_label);
-    
+
     // Set background color if provided
     set_widget_background(header_row, bg_color);
-    
+
     // Make header non-selectable
     gtk_list_box_row_set_selectable(GTK_LIST_BOX_ROW(header_row), FALSE);
-    
+
     // Add header as first row
     gtk_list_box_insert(GTK_LIST_BOX(widgets[index]), header_row, 0);
     gtk_widget_show_all(header_row);
-    
+
     RETURNINT(1);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_edit) {
@@ -647,33 +647,33 @@ PROCEDURE(add_edit) {
     }
 
     RETURNINT(widget_count);  // Indicate success
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(get_widget_address)
 {
     int index = GETINT(ARG0) - 1;  // Convert to zero-based index
-    
+
     if (index < 0 || index >= widget_count) {
         RETURNINT(0);  // Invalid index
     }
-    
+
     // Return the address of the widget
     RETURNINT((intptr_t)widgets[index]);  // Cast widget pointer to integer
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(set_text) {
     int index = GETINT(ARG0)-1;
     const char *text = GETSTRING(ARG1);
-    
+
     // Find the widget with this token
     if (widgets[index] && GTK_IS_LABEL(widgets[index])) {
         gtk_label_set_text(GTK_LABEL(widgets[index]), text);
         RETURNINTX(1);
     }
     RETURNINT(-1);  // Not found or not a label
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_message_area) {
@@ -703,7 +703,7 @@ PROCEDURE(add_message_area) {
     gtk_widget_show(scrolled_window);
 
     RETURNINT(current_widget);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(append_message) {
@@ -718,11 +718,11 @@ PROCEDURE(append_message) {
 
     // Get the buffer
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
-    
+
     // Get end iterator
     GtkTextIter end;
     gtk_text_buffer_get_end_iter(buffer, &end);
-    
+
     // Insert the text at the end
     gtk_text_buffer_insert(buffer, &end, message, -1);
     gtk_text_buffer_insert(buffer, &end, "\n", -1);  // Add newline
@@ -731,60 +731,60 @@ PROCEDURE(append_message) {
     gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(text_view), &end, 0.0, FALSE, 0.0, 0.0);
 
     RETURNINT(0);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(add_status_bar) {
     if (widget_count >= MAX_WIDGETS) {
         RETURNINTX(-1);
     }
-    
+
     // Create a frame for the status bar
     GtkWidget *frame = gtk_frame_new(NULL);
     gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_ETCHED_IN);
-    
+
     // Create status bar
     GtkWidget *status_bar = gtk_statusbar_new();
-    
+
     // Remove internal padding of the status bar
     gtk_widget_set_margin_top(status_bar, 0);
     gtk_widget_set_margin_bottom(status_bar, 0);
     gtk_widget_set_margin_start(status_bar, 2);
     gtk_widget_set_margin_end(status_bar, 2);
-    
+
     // Set size request for the status bar
     gtk_widget_set_size_request(status_bar, -1, 15);  // Try 15 pixels height
-    
+
     // Add status bar to frame
     gtk_container_add(GTK_CONTAINER(frame), status_bar);
-    
+
     // Add frame to main window (not to fixed container)
-    gtk_box_pack_end(GTK_BOX(gtk_bin_get_child(GTK_BIN(main_window))), 
-                     frame, 
+    gtk_box_pack_end(GTK_BOX(gtk_bin_get_child(GTK_BIN(main_window))),
+                     frame,
                      FALSE, FALSE, 0);  // Changed to FALSE, FALSE and 0 padding
-    
+
     // Show all widgets
     gtk_widget_show_all(frame);
-    
+
     // Store the status bar widget (not the frame)
     widgets[widget_count] = status_bar;
-    
+
     // Store the current token before incrementing
     int current_token = next_event_token;
     widget_count++;
     next_event_token++;
-    
+
     // Push an initial empty message to create the space
     gtk_statusbar_push(GTK_STATUSBAR(status_bar), 0, "");
-    
+
     RETURNINT(current_token);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(set_status) {
     int index = GETINT(ARG0);
     const char *message = GETSTRING(ARG1);
-    
+
     // Find the status bar widget
     for (int i = 0; i < widget_count; i++) {
         if (widgets[i] && GTK_IS_STATUSBAR(widgets[i])) {
@@ -793,9 +793,9 @@ PROCEDURE(set_status) {
             RETURNINT(1);
         }
     }
-    
+
     RETURNINT(0);
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(list_get_count) {
@@ -816,7 +816,7 @@ PROCEDURE(list_get_count) {
     g_list_free(children);  // Free the list of children
 
     RETURNINT(row_count);  // Return the number of items in the list
-ENDPROC
+    ENDPROC
 }
 
 // =================================================================================================================
@@ -2115,13 +2115,13 @@ PROCEDURE(tree_pick)
                 gchar *index;
                 gtk_tree_model_get(GTK_TREE_MODEL(store), &tree_iter, 1, &index, -1);
 
-            if (result[0]) strcat(result, "|");
+                if (result[0]) strcat(result, "|");
                 strcat(result, index);
                 g_free(index);
-        }
+            }
 
             gtk_tree_path_free(path);
-    }
+        }
 
         g_list_free(selected_rows);
     }
@@ -2499,7 +2499,7 @@ PROCEDURE(add_checkbox)
     }
 
     RETURNINT(widget_count);  // Return the index+1 (to have number >0) of the widget in the widgets array
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(hide_widget) {
@@ -2512,7 +2512,7 @@ PROCEDURE(hide_widget) {
     // Hide the specified widget
     gtk_widget_hide(widgets[index]);
     RETURNINT(1);  // Success
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(report_widgets) {
@@ -2544,13 +2544,13 @@ PROCEDURE(report_widgets) {
             }
             widget_type=g_type_name(G_OBJECT_TYPE(widgets[i]));
             // Append widget information to the report
-            length += snprintf(report + length, sizeof(report) - length, 
+            length += snprintf(report + length, sizeof(report) - length,
                                "Widget %d: %s", i + 1, widget_type+3);
             if (widget_text) {
-                length += snprintf(report + length, sizeof(report) - length, 
+                length += snprintf(report + length, sizeof(report) - length,
                                    " (Text: %s)\n", widget_text);
             } else {
-                length += snprintf(report + length, sizeof(report) - length, 
+                length += snprintf(report + length, sizeof(report) - length,
                                    " (Text: None)\n");
             }
         }
@@ -2564,18 +2564,18 @@ PROCEDURE(report_widgets) {
 PROCEDURE(set_edit) {
     int index = GETINT(ARG0) - 1;  // Convert to zero-based index
     const char *text = GETSTRING(ARG1);
-    
+
     // Check if the index is valid
     if (index < 0 || index >= widget_count) {
         RETURNINT(-1);  // Invalid index
     }
-    
+
     // Check if the widget is an entry
     if (widgets[index] && GTK_IS_ENTRY(widgets[index])) {
         gtk_entry_set_text(GTK_ENTRY(widgets[index]), text);  // Set the text of the entry
         RETURNINT(1);  // Success
     }
-    
+
     RETURNINT(-1);  // Not found or not an entry
     ENDPROC
 }
@@ -2591,7 +2591,7 @@ PROCEDURE(show_widget) {
     // Show the specified widget
     gtk_widget_show(widgets[index]);
     RETURNINT(1);  // Success
-ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(run_external_program) {
@@ -2751,6 +2751,10 @@ static gboolean draw_graph_first_quadrant(GtkWidget *widget, cairo_t *cr, gpoint
 #define drawynumber(cr,xzero,ypos,num) {char number[10]; snprintf(number, sizeof(number), "%g", num);  \
                                       cairo_move_to(cr, xzero +10, ypos + 4);  \
                                       cairo_show_text(cr, number);}
+#define drawynumberL(cr,xzero,ypos,num) {char number[10]; snprintf(number, sizeof(number), "%g", num);  \
+                                      cairo_move_to(cr, xzero -22, ypos + 4);  \
+                                      cairo_show_text(cr, number);}
+
 #define drawdot(cr,px,py,size)  cairo_new_path(cr); \
                                 cairo_arc(cr, px, py, size,0, 2 * G_PI);  \
                                 cairo_close_path(cr); \
@@ -2796,7 +2800,7 @@ typedef struct GraphDetails_w {
     double  step_x;
     double  step_y;
     attr details[4];
- } graphs;
+} graphs;
 
 /* Add this with the other procedures */
 graphs graphArray[64];
@@ -2836,12 +2840,12 @@ int granges(void *xarray,void *yarray, int width,int height,int r2chart) {
     if (graphArray[graph_count].q1_only != 1) {
         step_x = find_tick_step(x_min, x_max, num_ticks) / steps;
         step_y = find_tick_step(y_min, y_max, num_ticks) / steps;
-     // Calculate ranges and scales
+        // Calculate ranges and scales
         x_range = fmax(fabs(x_max), fabs(x_min));
         y_range = fmax(fabs(y_max), fabs(y_min));
-        scale_x = (width) / (x_range * 2);
-        scale_y = (height) / (y_range * 2);
-     // Set zero positions based on the center
+        scale_x = (width-20) / (x_range * 2);
+        scale_y = (height-20) / (y_range * 2);
+        // Set zero positions based on the center
         x_zero_pos = width / 2;
         y_zero_pos = height / 2;
     }  else {
@@ -2850,12 +2854,12 @@ int granges(void *xarray,void *yarray, int width,int height,int r2chart) {
         // Calculate ranges and scales
         x_range = x_max;
         y_range = y_max;
-     // Set zero positions based on the center
+        // Set zero positions based on the center
         x_zero_pos = 20;
         y_zero_pos = height - 20;
-        scale_x = width/x_range;  // Double the scale to fit full width in Q1
-        scale_y = height/y_range;  // Double the scale to fit full height in Q1
-     }
+        scale_x = (width-30)/x_range;  // Double the scale to fit full width in Q1
+        scale_y = (height-30)/y_range;  // Double the scale to fit full height in Q1
+    }
     graphArray[graph_count].scale_x = scale_x;
     graphArray[graph_count].scale_y = scale_y;
     graphArray[graph_count].y_zero_pos = y_zero_pos;
@@ -2873,6 +2877,39 @@ int granges(void *xarray,void *yarray, int width,int height,int r2chart) {
     }
 }
 
+double round_nicely(double value) {
+    double scales_small[] = {0.1, 0.2, 0.5, 1.0};  // For values < 1
+    double scales_medium[] = {1.0, 2.0, 5.0, 10.0, 20.0, 50.0};  // For values between 1 and 100
+    double scales_large[] = {100.0, 200.0, 500.0, 1000.0};  // For values > 100
+
+    double magnitude = pow(10, floor(log10(fabs(value))));  // Get the order of magnitude
+
+    // Select the appropriate scale set based on the magnitude of the value
+    double *scales;
+    int num_scales;
+    if(fabs(value)<0.0001) return 0.0;
+    if (magnitude < 1) {
+        scales = scales_small;
+        num_scales = sizeof(scales_small) / sizeof(scales_small[0]);
+    } else if (magnitude >= 1 && magnitude <= 100) {
+        scales = scales_medium;
+        num_scales = sizeof(scales_medium) / sizeof(scales_medium[0]);
+    } else {
+        scales = scales_large;
+        num_scales = sizeof(scales_large) / sizeof(scales_large[0]);
+    }
+
+    // Round to the nearest "nice" number in the selected scale
+    for (int i = 0; i < num_scales; i++) {
+        double rounded = round(value / (scales[i] * magnitude)) * (scales[i] * magnitude);
+        if (fabs(rounded - value) / value < 0.1) {  // Ensure small rounding error
+            return rounded;
+        }
+    }
+
+    return round(value);  // Fallback to standard rounding if no better match
+}
+
 void draw_x_axis(cairo_t *cr,int graph_widget) {
     int j = 0;
     cairo_set_line_width(cr, 1);
@@ -2884,10 +2921,15 @@ void draw_x_axis(cairo_t *cr,int graph_widget) {
     for (double i = -graphArray[graph_widget].x_range; i <= graphArray[graph_widget].x_range + graphArray[graph_widget].step_x; i += graphArray[graph_widget].step_x) {
         double x_pos = graphArray[graph_widget].x_zero_pos + (i * graphArray[graph_widget].scale_x);
         if (x_pos > graphArray[graph_widget].width) break;
+        if (graphArray[graph_widget].q1_only == 1 && i<0) continue;
         if (x_pos >= 0) {
             if (j % 5 == 0) {
                 drawxtick(cr, x_pos, graphArray[graph_widget].y_zero_pos, 5); // Major tick
-                float rounded_i = round(i/ graphArray[graph_widget].step_x) *graphArray[graph_widget].step_x;
+                if(i==-2) {
+                    i=i;
+                }
+                float rounded_i = round_nicely(i/ graphArray[graph_widget].step_x *graphArray[graph_widget].step_x);
+                printf("rounded %g %g\n",i,rounded_i);
                 drawxnumber(cr, x_pos, graphArray[graph_widget].y_zero_pos, rounded_i);
             } else {
                 drawxtick(cr, x_pos, graphArray[graph_widget].y_zero_pos, 2); // Minor tick
@@ -2904,20 +2946,21 @@ void draw_y_axis(cairo_t *cr,int graph_widget) {
     cairo_line_to(cr, graphArray[graph_widget].x_zero_pos, graphArray[graph_widget].height);
     cairo_stroke(cr);
 
-//    for (double i = -graphArray[graph_widget].y_range; i <= graphArray[graph_widget].y_range + graphArray[graph_widget].step_y; i += graphArray[graph_widget].step_y) {
-      for (double i = 0; i <= graphArray[graph_widget].y_range + graphArray[graph_widget].step_y; i += graphArray[graph_widget].step_y) {
-
-            double y_pos = graphArray[graph_widget].y_zero_pos - (i * graphArray[graph_widget].scale_y);
-        if (y_pos > graphArray[graph_widget].height) break;
-        if (y_pos <= 0) continue;
-        if (j % 5 == 0) {
-            drawytick(cr, graphArray[graph_widget].x_zero_pos, y_pos, 5); // Major tick
-            float rounded_i = round(i/ graphArray[graph_widget].step_y) *graphArray[graph_widget].step_y;
-            drawynumber(cr, graphArray[graph_widget].x_zero_pos, y_pos, rounded_i);
-        } else {
-            drawytick(cr, graphArray[graph_widget].x_zero_pos, y_pos, 2); // Minor tick
+    for (double i = -graphArray[graph_widget].y_range; i <= graphArray[graph_widget].y_range + graphArray[graph_widget].step_y; i += graphArray[graph_widget].step_y) {
+        double y_pos = graphArray[graph_widget].y_zero_pos - (i * graphArray[graph_widget].scale_y);
+        if (y_pos > graphArray[graph_widget].height) continue;
+        if (graphArray[graph_widget].q1_only == 1 && i<0) continue;
+        if (y_pos >= 0) {
+            if (j % 5 == 0) {
+                drawytick(cr, graphArray[graph_widget].x_zero_pos, y_pos, 5); // Major tick
+                float rounded_i = round_nicely(i / graphArray[graph_widget].step_y * graphArray[graph_widget].step_y);
+                drawynumber(cr, graphArray[graph_widget].x_zero_pos, y_pos, rounded_i);
+                //   drawynumberL(cr, graphArray[graph_widget].x_zero_pos, y_pos, rounded_i/10);
+            } else {
+                drawytick(cr, graphArray[graph_widget].x_zero_pos, y_pos, 2); // Minor tick
+            }
+            j++;
         }
-        j++;
     }
 }
 
@@ -2948,7 +2991,7 @@ void draw_dotted_func(cairo_t *cr,void *xarray,void *yarray,int graph_widget, in
         double x = GETFARRAY(xarray, i);
         double y = GETFARRAY(yarray, i);
         double px = graphArray[graph_widget].x_zero_pos + (x * graphArray[graph_widget].scale_x);
-        double py = graphArray[graph_widget].height / 2 - (y * graphArray[graph_widget].scale_y);
+        double py = graphArray[graph_widget].y_zero_pos - (y * graphArray[graph_widget].scale_y);
         if (graphArray[graph_widget].q1_only==1) {
             if (x < 0.0 || y < 0.0) continue;
         }
@@ -2985,12 +3028,11 @@ void draw_line_func(cairo_t *cr,void *xarray,void *yarray,int graph_widget,int g
         double py = graphArray[graph_widget].y_zero_pos - (y * graphArray[graph_widget].scale_y);
         if (graphArray[graph_widget].q1_only==1) {
             if(x<0.0 || y<0.0) continue;
-               if(cairoset==0){
-                  cairo_move_to(cr,px ,py);
-                  cairoset=1;
-           //       printf("x.0 = %g/%g\n",x,y);
-                  continue;
-               }
+            if(cairoset==0){
+                cairo_move_to(cr,px ,py);
+                cairoset=1;
+                continue;
+            }
         }
         if(testrange(graph_widget,px,py)<0) continue;
         cairo_line_to(cr, px,py);
@@ -3015,21 +3057,21 @@ PROCEDURE(update_graph) {
     int graph_widget=0;
     for(int i=0;i<sizeof(graphArray)/sizeof(graphArray[graph_widget]);i++) {
         if(graphArray[i].drawing_area==drawing_area) {
-           graph_widget=i;
-           break;
+            graph_widget=i;
+            break;
         }
     }
     graphArray[graph_widget].details[gnum].ftype=ftype;
     graphArray[graph_widget].details[gnum].lwidth=GETINT(ARG3);
     strcpy(graphArray[graph_widget].details[gnum].color,GETSTRING(ARG4));
     if (GETINT(ARG1)<10) RETURNINTX(0)
-drawit:
+    drawit:
     gtk_widget_queue_draw(drawing_area);  // Request redraw
     debug_log("drawing ", (int) drawing_area);
     while (gtk_events_pending())
         gtk_main_iteration();
     RETURNINT(0);  // Return TRUE to keep the timer running
-ENDPROC
+    ENDPROC
 }
 
 
@@ -3081,7 +3123,7 @@ PROCEDURE(add_r2chart) {
 }
 
 gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data) {
-  //  int graphnum = GPOINTER_TO_INT(data);
+    //  int graphnum = GPOINTER_TO_INT(data);
     int *xarray[5]={0};
     int *yarray[5]={0};
 
@@ -3106,26 +3148,22 @@ gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data) {
     draw_y_axis(cr,graph_widget);
     cairo_set_source_rgb(cr, 0, 0, 1);
     for (int i=0;i<3;i++) {
-        if(i==1){
-            int dbg=1;
-        }
         if(xarray[i]==0) continue;
         int xhi = GETARRAYHI(xarray[i]);
         if(xhi<=0) continue;
         int function_type=graphArray[graph_widget].details[i+1].ftype;
         if (function_type == 2) { // Points-only mode
-             draw_dotted_func(cr, xarray[i], yarray[i],graph_widget,i+1);
+            draw_dotted_func(cr, xarray[i], yarray[i],graph_widget,i+1);
         } else  if (function_type == 1){ // Connected line mode
             draw_line_func(cr, xarray[i], yarray[i],graph_widget,i+1);
         } else  if (function_type == 0) ;  // ommit graph
         else  { // Connected line mode
-          draw_line_func(cr, xarray[i], yarray[i],graph_widget,i+1);
+            draw_line_func(cr, xarray[i], yarray[i],graph_widget,i+1);
         }
         cairo_stroke(cr);
     }
-
     return FALSE;
- }
+}
 
 
 LOADFUNCS
@@ -3182,4 +3220,4 @@ LOADFUNCS
     ADDPROC(add_graph, "gui.add_graph", "b", ".int", "x=.int,y=.int,width=.int,height=.int,x1=.float[],y1=.float[],x2=.float[],y2=.float[],x3=.float[],y3=.float[]");
     ADDPROC(add_r2chart, "gui.add_r2chart", "b", ".int", "x=.int,y=.int,width=.int,height=.int,x1=.float[],y1=.float[],x2=.float[],y2=.float[],x3=.float[],y3=.float[]");
     ADDPROC(update_graph, "gui.update_graph", "b", ".int", "widget=.int,gnum=.int,ftype=.int,lwidth=.int,color=.string");
- ENDLOADFUNCS
+ENDLOADFUNCS

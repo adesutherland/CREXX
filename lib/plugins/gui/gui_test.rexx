@@ -1,151 +1,94 @@
-/* GUI Sample */
 options levelb
 import gui
-import pick
 import rxfnsb
 
-call init_window "Pandora's Box",350,400
-b1=add_button("Should I", 50, 50)
-b2=add_button(  "Shouldn't I", 150, 50)
-b3=add_button(  "Open It", 100, 100)
-t1=add_text("Open Pandora's box, and you'll be troubleshooting forever", 10, 10)
-item.1='Fred'
-item.2='Mary'
-item.3='Mike'
-b5=add_combo(item, 170, 150)
 
-say "edit "add_edit(200,200,"default")
-
-say b1 b2 b3 b4 b5
-
-list = add_list(10,200, 200, 150)  /* x, y, width, height */
-say "List "list
-
-rc=list_header(list,"My Item List","gold","black")
-
-do i=1 to 10 by 2
-   rc=list_add_item(list, "Item "i,"gold")   ## "darkgoldenrod")
-   rc=list_add_item(list, "Item "i+1,"deepskyblue")   ## "darkgoldenrod")
-end
-
-/* In your event loop, check for LIST_SELECTED_TOKEN (-3) */
-
-call show_window
-say time('l')" SHOW"
-/* Main loop - can do other things while window is open */
-j=0
-DO forever
-    /* Process GTK events */
-    rc=process_events(250)
-    say time('l') rc
-    if rc= list then do
-       selected = list_get_selected(list)
-       say 'List Select 'list selected
-       selectedT = list_get_item(list)
-       say 'List Select 'list selectedT
-    end
-    if rc<0 then leave
-END
-
-/*
-Common X11 Colors
-Basic Colors
-black
-white
-red
-green
-blue
-yellow
-cyan
-magenta
-Shades of Gray
-gray
-lightgray
-darkgray
-dimgray
-slategray
-light slate gray
-Reds
-lightcoral
-salmon
-darksalmon
-crimson
-firebrick
-indianred
-Greens
-lightgreen
-mediumseagreen
-seagreen
-forestgreen
-darkgreen
-limegreen
-Blues
-lightblue
-skyblue
-deepskyblue
-dodgerblue
-steelblue
-royalblue
-navy
-Yellows
-lightyellow
-khaki
-gold
-goldenrod
-Purples
-plum
-violet
-orchid
-purple
-mediumpurple
-darkviolet
-Others
-orange
-tan
-peachpuff
-lightpink
-hotpink
-palevioletred
-*/
-
+home="C:\Users\PeterJ\CLionProjects\CREXX\CREXX\f0049B\"
+home="C:\Users\PeterJ\CLionProjects\CREXX\250319\"
+say Substr("GETPI Test",3,4)
+pluginhome=home"\lib\plugins\"
+/* ----------------------------------------------------------------------------------------
+ * Initialize splash screen and store return value
+ * ----------------------------------------------------------------------------------------
+ */
+  splash_rc = splash_pick("Let's do the Time Warp again!", ,
+                       "it's a jump to the left and then a step to the right", ,
+                       3, 500,500, ,
+                       "CREXX.png")
 /* Initialize the GUI */
-call init_window "Sample Application", 400, 300
-
-/* Add a label */
-label_index = add_text("Click the button!", 20, 20)
-
-/* Add a button */
-button_index = add_button("Click Me", 20, 60)
-
-/* Add a combo box with options */
-combo_index = add_combo(["Option 1", "Option 2", "Option 3"], 20, 100)
-
-/* Add a list to display selected items */
-list_index = add_list(20, 150, 200, 100)
-
+  call init_window "Process CREXX File", 600, 430
+/* Add a label for the input field */
+  label_index = add_text("Select a CREXX File ", 10, 10)
+/* Add an entry field for input */
+  input_field_index = add_edit(10, 30,515)
+/* Add a small button next to the input field */
+  select = add_button("Dir", 530, 30)
+  update = add_button("Edit  ", 530,70)
+/* Add checkboxes */
+  checkbox1_index = add_checkbox("Compile", 10, 70)
+  checkbox2_index = add_checkbox("Assembly 2", 10, 90)
+  checkbox3_index = add_checkbox("Run", 10, 110)
+  submit = add_button("Submit", 10, 140)
+  message_area = add_message_area(10, 190, 580, 200)  /* x, y, width, height */
+  status_bar = add_status_bar()
 /* Show the window */
-call show_window
-
-/* Main event loop */
+  call show_window -1,-1
+## hidemsg=hide_widget(submit)
+  call set_sensitive submit,0
+  call set_sensitive update,0
+/* ----------------------------------------------------------------------------------------
+ * Event Handler
+ * ----------------------------------------------------------------------------------------
+ */
 do forever
     event_token = process_events(500)  /* Wait for events with a timeout of 500ms */
-    
-    if event_token = button_index then do
-        /* Update label text when button is clicked */
-        call set_text label_index, "Button clicked!"
+    if event_token < 0 then leave      /* Exit loop on timeout */
+    else if event_token = select then do
+       input_rexx = file_pick('Select REXX File', pluginhome,0,"*.rexx")
+       if input_rexx <> "" then do     /* Check if the input text is not empty */
+          call set_edit input_field_index, input_rexx
+          call set_status status_bar, "Selected: "input_rexx
+          ## call show_widget(submit)
+          call set_sensitive submit,1
+          call set_sensitive update,1
+       end
     end
-    
-    if event_token = combo_index then do
-        /* Get selected item from combo box */
-        selected_index = get_combo_index(combo_index)
-        selected_text = "Selected: " || selected_index
-        
-        /* Add selected item to the list */
-        call list_add_item list_index, selected_text, "lightyellow"
+    else if event_token = submit then do
+       call submitit input_rexx,home,message_area
     end
-    
-    if event_token = 0 then leave  /* Exit loop on timeout */
+    else if event_token = update then do
+       call run_sync "C:\Program Files\Notepad++\Notepad++.exe",input_rexx,""
+    end
 end
+exit 0
+/* ----------------------------------------------------------------------------------------
+ * Event Handler
+ * ----------------------------------------------------------------------------------------
+ */
+submitit: procedure=.int
+arg isrexx=.string,home=.string,msg=.int
+  getfile=translate(isrexx,,'/\')
+  fpos=words(getfile)
+  member=translate(word(getfile,fpos),,'.')
+  member=word(member,1)
+  xdir=word(getfile,fpos-1)
 
-/* Clean up the GUI */
-call cleanup_gui
+  build=home"\cmake-build-debug"
+
+  plugindir=build"\lib\plugins\"xdir
+  plugindir2=home"\lib\plugins\"xdir
+  rxc=build"\compiler\rxc.exe"
+  rxas=build"\assembler\rxas.exe"
+  rxvm=build"\interpreter\rxvme.exe"
+
+  ms1="Compile  "member": "run_sync(rxc, "-i "build"\rxfns\rxas;"plugindir" -l "plugindir2" -o "member member,"")
+  say "rxc, " "-i "build"\rxfns\rxas;"plugindir" -l "plugindir2" -o "member member
+  ms2="Assembly "member": "run_sync(rxas,"-l "plugindir2" -o "member member,"")
+## rxbin member must be copied into the BUILD part
+  crx=copy_file(plugindir2"\"member".rxbin",plugindir"\"member".rxbin")
+  ms3="Execute  "member": "run_sync(rxvm,member" rx_"xdir,plugindir)
+  /* Append messages to it */
+  call append_message msg,ms1
+  call append_message msg,ms2
+  call append_message msg,ms3
+return 0
