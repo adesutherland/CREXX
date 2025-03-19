@@ -2,6 +2,123 @@ options levelb
 import regex
 import rxfnsb
 
+/* regex_test.rexx */
+
+/* Define constants for error codes */
+RX_SUCCESS = 0
+RX_ERROR_PARAM = -1
+RX_ERROR_MEMORY = -2
+RX_ERROR_COMPILE = -3
+RX_ERROR_EXEC = -4
+RX_ICASE = 2
+RX_EXTENDED = 1
+
+/* Test 1: Valid Pattern */
+pattern = "^[A-Za-z0-9]+$"
+say "*** Test 1: Valid Pattern: "pattern
+flags = RX_EXTENDED
+handle = rxcompile(pattern, flags)
+say "Test 1: Valid Pattern: "pattern
+if handle > 0 then
+    say "Passed: Valid handle returned."
+else
+    say "Failed: " handle
+
+/* Test 2: Invalid Pattern */
+pattern = "[A-Z"
+say "*** Test 2: Invalid Pattern: "pattern
+flags = RX_EXTENDED
+result = rxcompile(pattern, flags)
+say "Test 2: Invalid Pattern: "pattern
+if result = RX_ERROR_COMPILE then
+    say "Passed: Compilation error detected."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 3: Null Pattern */
+pattern = ""
+say "*** Test 3: Null Pattern: '"pattern"'"
+flags = RX_EXTENDED
+result = rxcompile(pattern, flags)
+say "Test 3: Null Pattern"
+if result = RX_ERROR_PARAM then
+    say "Passed: Invalid parameter detected."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 4: Empty Pattern */
+pattern = ""
+say "*** Test 4: Empty Pattern: '"pattern"'"
+flags = RX_EXTENDED
+handle = rxcompile(pattern, flags)
+say "Test 4: Empty Pattern"
+if handle > 0 then
+    say "Passed: Valid handle returned for empty pattern."
+else
+    say "Failed: " handle
+
+/* Test 5: Valid Match */
+pattern = "^[A-Za-z0-9]+$"
+say "*** Test 5: Valid Match, Pattern: '"pattern"'"
+flags = RX_EXTENDED
+handle = rxcompile(pattern, flags)
+test_str = "Test123"
+result = rxmatch(handle, test_str, 0)
+say "Test 5: Valid Match: "pattern
+if result = 1 then
+    say "Passed: Match found."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 6: Invalid Match */
+pattern = "^[A-Za-z0-9]+$"
+test_str = "1234"
+say "*** Test 6: Invalid Match, Pattern - String : '"pattern"' - "test_str
+flags = RX_EXTENDED
+handle = rxcompile(pattern, flags)
+result = rxmatch(handle, test_str, 0)
+say "Test 6: Invalid Match: "pattern
+if result = 0 then
+    say "Passed: No match found."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 7: Null Handle */
+test_str = "Test123"
+say "*** Test 3: Null Handle "
+result = rxmatch(0, test_str, 0)  /* Assuming 0 is an invalid handle */
+say "Test 7: Null Handle"
+if result = RX_ERROR_PARAM then
+    say "Passed: Invalid parameter detected."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 8: Null String */
+pattern = "^[A-Za-z0-9]+$"
+say "*** Test 8: Invalid Match, Pattern - String : '"pattern"' - 0x"
+
+flags = RX_EXTENDED
+handle = rxcompile(pattern, flags)
+result = rxmatch(handle, "", 0)  /* Testing with a NULL string */
+say "Test 8: Null String"
+if result = RX_ERROR_PARAM then
+    say "Passed: Invalid parameter detected."
+else
+    say "Failed: Unexpected result " result
+
+/* Test 9: Match with Flags */
+pattern = "^[A-Za-z0-9]+$"
+flags = RX_ICASE
+test_str = "test123"
+say "*** Test 9: Match with flags, Pattern - Flags - String : '"pattern"' - "flags" - "test_str
+handle = rxcompile(pattern, flags)
+result = rxmatch(handle, test_str, RX_ICASE)
+say "Test 9: Match with Flags"
+if result = 1 then
+    say "Passed: Match found due to case insensitivity."
+else
+    say "Failed: Unexpected result " result
+
 
 levenshtein_cases.1 = "kitten sitting"
 levenshtein_cases.2 = "hello hallo"

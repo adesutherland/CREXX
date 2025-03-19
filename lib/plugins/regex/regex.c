@@ -104,7 +104,8 @@ PROCEDURE(compile_pattern) {
     int ret;
     int regflags = 0;
 
-    if (!pattern) {
+    // Check for NULL or empty pattern
+    if (!pattern || strlen(pattern) == 0) {
         RETURNINTX(RX_ERROR_PARAM);
     }
 
@@ -135,7 +136,7 @@ PROCEDURE(compile_pattern) {
     }
 
     // Compile the pattern
-     ret = regcomp(&handle->regex, pattern, regflags);
+    ret = regcomp(&handle->regex, pattern, regflags);
     if (ret) {
         regerror(ret, &handle->regex, handle->error_msg, sizeof(handle->error_msg));
         printf("Compile error: %s\n", handle->error_msg);
@@ -143,9 +144,9 @@ PROCEDURE(compile_pattern) {
         free(handle);
         RETURNINTX(RX_ERROR_COMPILE);
     }
-// Return handle as positive integer
+    // Return handle as positive integer
     RETURNINTX((intptr_t)handle);
-   ENDPROC
+    ENDPROC
 }
 
 PROCEDURE(match_pattern) {
@@ -155,9 +156,11 @@ PROCEDURE(match_pattern) {
     int ret;
     int regflags = 0;
 
+    // Check for NULL handle or NULL test string
     if (!handle || !test_str) {
         RETURNINTX(RX_ERROR_PARAM);
     }
+
     // Convert match flags
     if (flags & RX_NOTBOL) regflags |= REG_NOTBOL;
     if (flags & RX_NOTEOL) regflags |= REG_NOTEOL;
