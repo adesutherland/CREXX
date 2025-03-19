@@ -43,23 +43,27 @@ say "*** SELECT * FROM "table"..."
  * Query all tables in a database and its primary keys
  * -----------------------------------------------------------------
  */
-tables = odbc_tables()
-  if tables = "Error executing SQLTables" | ,
-     tables = "Error fetching table names" | ,
-     tables = "Failed to allocate statement handle" then call error_exit "Failed to get tables: "odbc_error_message(), "Full diagnostics: "odbc_get_diagnostics()
-  if tables = '' then call error_exit "No tables found in database",""
+  tables = odbc_tables()
+  if substr(tables,1,1) <>'0' then call error_exit "Failed to get tables: "odbc_error_message(), "Full diagnostics: "odbc_get_diagnostics()
   /* Process table list */
   say "*** processing tables..."
+  tables=substr(tables,2)
   tabcount=words(tables)
+  if tabcount = 0 then call error_exit "No tables found in database",""
   do i=1 to tabcount
      table=word(tables,i)
      /* Get primary keys for this table */
      keys = odbc_primary_keys(table)
-     keycount=words(keys)
-     do j=1 to keycount
-        say "  Primary key:" word(keys,j)
+     say 111 keys
+     if substr(keys,1,1) <>'0' then say substr(keys,2)
+     else do
+       keys=substr(keys,2)
+       keycount=words(keys)
+       if keycount=0 then say "  No primary keys found"
+       else do j=1 to keycount
+          say "  Primary key:" word(keys,j)
+       end
      end
-     if keycount=0 then say "  No primary keys found"
   end
 /* -----------------------------------------------------------------
  * Execute SELECT * FROM table and retrieve column information

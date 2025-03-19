@@ -30,10 +30,18 @@ PROCEDURE(odbc_connect) {
         SQLFreeHandle(SQL_HANDLE_ENV, henv);
         RETURNINTX(-2);
     }
-    
+    SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
+    if (!SQL_SUCCEEDED(ret)) {
+        SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
+        SQLFreeHandle(SQL_HANDLE_ENV, henv);
+        RETURNINTX(-3);
+    }
+
+
 #ifdef _WIN32
        // Check if this is a CSV connection (empty username and password)
-    if (username[0] == '\0' && password[0] == '\0') {
+    char connStr[1024];
+    if (user[0] == '\0' && password[0] == '\0') {
         char connStrOut[1024];
         SQLSMALLINT connStrOutLen;
 
@@ -88,18 +96,11 @@ PROCEDURE(odbc_connect) {
         // Regular database connection
         ret = SQLConnect(hdbc,
                         (SQLCHAR*)dsn, SQL_NTS,
-                        (SQLCHAR*)username, SQL_NTS,
+                        (SQLCHAR*)user, SQL_NTS,
                         (SQLCHAR*)password, SQL_NTS);
     }
 #endif
     
-    SQLRETURN ret = SQLConnect(hdbc, (SQLCHAR *)dsn, SQL_NTS, (SQLCHAR *)user, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
-    if (!SQL_SUCCEEDED(ret)) {
-      SQLFreeHandle(SQL_HANDLE_DBC, hdbc);
-      SQLFreeHandle(SQL_HANDLE_ENV, henv);
-      RETURNINTX(-3);
-    }
-
     RETURNINTX(0);
     ENDPROC
 }
@@ -210,18 +211,113 @@ PROCEDURE(odbc_get_diagnostics) {
     ENDPROC
 }
 
-// Get table list
-PROCEDURE(odbc_tables) {
-    SQLRETURN ret = SQLTables(hstmt, NULL, 0, NULL, 0, NULL, 0, NULL, 0);
-    RETURNINTX(SQL_SUCCEEDED(ret) ? 0 : -1);
+PROCEDURE(odbc_tables)
+{
+    SQLCHAR table[256];
+    SQLLEN length;
+    char result[4096] = "";
+    SQLRETURN ret;
+
+    // Free the existing statement handle if any
+    if (hstmt != NULL) {
+        SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+        hstmt = NULL;
+    }
+
+    // Allocate a new statement handle
+    ret = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+    if (ret != SQL_SUCCESS && ret != SQL_SUCCESS_WITH_INFO) {
+        RETURNSTRX("8Failed to allocate statement handle");
+    }
+
+    // Get the current database name
+    ret = SQLExecDirect(hstmt, (SQLCHAR*)"SELECT DATABASE()", SQL_NTS);
+    if (SQL_SUCCEEDED(ret) && SQL_SUCCEEDED(SQLFetch(hstmt))) {
+        SQLCHAR dbname[256];
+        SQLGetData(hstmt, 1, SQL_C_CHAR, dbname, sizeof(dbname), &length);
+        printf("Current database: %s\n", dbname);
+
+        // If no database selected, return an error
+        if (strlen((char*)dbname) == 0) {
+            SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+            RETURNSTRX("8No database selected");
+        }
+    }
+
+    // Free statement and create new one for table list
+    SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+    ret = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+
+    // Try MySQL-specific SHOW TABLES
+    ret = SQLExecDirect(hstmt, (SQLCHAR*)"SHOW TABLES", SQL_NTS);
+    if (!SQL_SUCCEEDED(ret)) {
+        SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+        RETURNSTRX("8Error executing table query");
+    }
+    result[0]='0';   // preset rc=0 as first char
+    // Get table names from result set
+    while (SQL_SUCCEEDED(SQLFetch(hstmt))) {
+        ret = SQLGetData(hstmt, 1, SQL_C_CHAR, table, sizeof(table), &length);
+        if (SQL_SUCCEEDED(ret)) {
+            if (table[0] != '\0') {
+                strcat(result, " ");
+            }
+            strcat(result, (char*)table);
+        }
+    }
+
+    SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+    hstmt = NULL;
+
+    if (result[0] == '\0') {
+        RETURNSTRX("8No tables found in database");
+    }
+
+    RETURNSTRX(result);
     ENDPROC
 }
-
 // Get primary keys
-PROCEDURE(odbc_primary_keys) {
+PROCEDURE(odbc_primary_keys)
+{
     char *table = GETSTRING(ARG0);
-    SQLRETURN ret = SQLPrimaryKeys(hstmt, NULL, 0, NULL, 0, (SQLCHAR*)table, SQL_NTS);
-    RETURNINTX(SQL_SUCCEEDED(ret) ? 0 : -1);
+    SQLCHAR column[256];
+    SQLLEN length;
+    char result[4096] = "";
+    SQLRETURN ret;
+
+    // Free existing statement handle if any
+    if (hstmt != NULL) {
+        SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+        hstmt = NULL;
+    }
+
+    // Allocate new statement handle
+    ret = SQLAllocHandle(SQL_HANDLE_STMT, hdbc, &hstmt);
+    if (!SQL_SUCCEEDED(ret)) {
+        RETURNSTRX("8Error allocating statement handle");
+    }
+
+    // Get primary keys
+    ret = SQLPrimaryKeys(hstmt, NULL, 0, NULL, 0, (SQLCHAR*)table, SQL_NTS);
+    if (!SQL_SUCCEEDED(ret)) {
+        SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+        hstmt = NULL;
+        RETURNSTRX("8Error getting primary keys");
+    }
+    result[0]='0';
+    // Fetch primary key columns
+    while (SQLFetch(hstmt) == SQL_SUCCESS) {
+        SQLGetData(hstmt, 4, SQL_C_CHAR, column, sizeof(column), &length);
+        if (column[0] != '\0') {
+            strcat(result, " ");  // Use space as delimiter for words()
+        }
+        strcat(result, (char*)column);
+    }
+
+    SQLFreeHandle(SQL_HANDLE_STMT, hstmt);
+    hstmt = NULL;
+
+    RETURNSTRX(result);
     ENDPROC
 }
 
