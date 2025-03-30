@@ -31,7 +31,7 @@ static int is_constant(ASTNode* node) {
     switch (node->node_type) {
         case CONSTANT: /* This is what the optimiser changes all constants to */
         case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */
-        case STRING: /* This and following will exist if the optimiser has not been run */
+        case STRING: /* This and the following will exist if the optimiser has not been run */
         case FLOAT:
         case INTEGER:
             if (node->value_type == node->target_type)
@@ -524,9 +524,9 @@ static walker_result register_walker(walker_direction direction,
                 /*
                 * Constants do not need a register
                 */
-                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
-                if (child2 && is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
-                if (child3 && is_constant(child3)) child3->register_num = DONT_ASSIGN_REGISTER;
+                if (child1 && (child1->node_type == FUNC_SYMBOL || is_constant(child1))) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child2 && (child2->node_type == FUNC_SYMBOL || is_constant(child2))) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (child3 && (child3->node_type == FUNC_SYMBOL || is_constant(child3))) child3->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
                 /* The order of the operands of these instructions are not order
@@ -2965,12 +2965,15 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* We will build the assembler instruction */
                 /* First the command */
-                char* inst = mprintf("   %.*s ",
+                char* inst = mprintf("   %.*s",
                                      node->node_string_length, node->node_string);
 
                 /* Argument 1 */
                 if (child1) {
-                    if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                    if (child1->node_type == FUNC_SYMBOL) {
+                        arg1 = mprintf("%.*s()", child1->node_string_length, child1->node_string);
+                    }
+                    else if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg1 = format_constant(child1->target_type, child1);
                     } else { /* A register */
                         output_concat(node->output, child1->output);
@@ -2982,7 +2985,10 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Argument 2 */
                 if (child2) {
-                    if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                    if (child2->node_type == FUNC_SYMBOL) {
+                        arg2 = mprintf("%.*s()", child2->node_string_length, child2->node_string);
+                    }
+                    else if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg2 = format_constant(child2->target_type, child2);
                     } else { /* A register */
                         output_concat(node->output, child2->output);
@@ -2994,7 +3000,10 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Argument 3 */
                 if (child3) {
-                    if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
+                    if (child3->node_type == FUNC_SYMBOL) {
+                        arg3 = mprintf("%.*s()", child3->node_string_length, child3->node_string);
+                    }
+                    else if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg3 = format_constant(child3->target_type, child3);
                     } else { /* A register */
                         output_concat(node->output, child3->output);

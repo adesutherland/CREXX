@@ -1,50 +1,33 @@
 cmake_minimum_required(VERSION 3.24)
+project(levelb_tests C)
 
-project(tests C)
+set(TESTS
+        concatenation
+)
 
-set(CMAKE_C_STANDARD 90)
+foreach (BIF ${TESTS})
+  set(REXXBINS ${REXXBINS} ${BIF}.rxbin)
+  set(REXXSRC ${REXXSRC} ${BIF}.rexx)
+endforeach ()
 
-enable_testing()
-find_program(CTEST ctest)
-
-#set(ASMTESTBINS ascommon.rxbin asutf.rxbin)
-set(REXXTESTBINS concatenation.rxbin)
-
-add_custom_target(levelbtests ALL
-        DEPENDS ${REXXTESTBINS})
-#	DEPENDS ${ASMTESTBINS} ${REXXTESTBINS})							
-
-# foreach(_binfile ${ASMTESTBINS})
-#   get_filename_component(_basename ${_binfile} NAME_WE)
-#   add_custom_command(
-#         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-#         #COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
-#         COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile} ${CMAKE_CURRENT_BINARY_DIR}/${_binfile}
-#         COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_binfile}
-#         #
-#         COMMAND ${CTEST} -R ${_basename} --output-on-failure
-#         DEPENDS ${_basename}.rxas rxas rxvm rxbvm lib_rexx lib_rxas
-#         OUTPUT ${_binfile}
-#         COMMENT "cREXX Assemble Test ${_basename} ..."
-#   )
-#   add_test(NAME ${_basename} COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-#   add_test(NAME ${_basename}-bytecode COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-# endforeach()
-
-foreach(_binfile ${REXXTESTBINS})
+unset(_prev_target)
+foreach(_binfile ${REXXBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
-          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -l ${CMAKE_CURRENT_SOURCE_DIR} ${_basename}
-          #COMMAND mv ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-          COMMAND ${CMAKE_COMMAND} -E copy   ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rxas
-          COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxas
-          #
-          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -l ${CMAKE_CURRENT_BINARY_DIR} ${_basename}
-#         COMMAND ${CTEST} -R ${_basename} --output-on-failure
-          DEPENDS ${_basename}.rexx rxas rxc rxvm rxbvm library
+          COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+          COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
+          DEPENDS rxas rxc ${REXXSRC} ${_prev_target}
           OUTPUT ${_binfile}
-          COMMENT "cREXX Assemble Test ${_basename} ..."
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+          COMMENT "cREXX compile and assemble ${_basename} ..."
   )
-  add_test(NAME ${_basename}-rxvm COMMAND rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+  # "Virtual target" for the .rxbin
+  add_custom_target(${_basename}_artifact ALL DEPENDS ${_binfile})
+
+  # Add the tests (rxvm and rxbvm)
+  add_test(NAME test-${_basename}-rxvm COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test(NAME test-${_basename}-rxbvm COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+  set(_prev_target ${_binfile})
 endforeach()

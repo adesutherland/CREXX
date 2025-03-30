@@ -908,6 +908,8 @@ const char *ast_ndtp(NodeType type) {
             return "UNTIL";
         case FUNCTION:
             return "FUNCTION";
+        case FUNC_SYMBOL:
+            return "FUNC_SYMBOL";
         case IF:
             return "IF";
         case IMPORT:
@@ -1686,6 +1688,7 @@ walker_result pdot_walker_handler(walker_direction direction,
                 break;
 
             case FUNCTION:
+            case FUNC_SYMBOL:
             case PROCEDURE:
                 attributes = "color=pink";
                 break;

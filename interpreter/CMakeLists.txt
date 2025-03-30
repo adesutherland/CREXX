@@ -87,6 +87,29 @@ target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 # Enable testing
 enable_testing()
 
+# Instruction Sanity Tests - Raise uncaptured signal
+add_custom_command(
+		OUTPUT raisesignaltest.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o raisesignaltest ${CMAKE_CURRENT_SOURCE_DIR}/raisesignaltest
+		DEPENDS raisesignaltest.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Instruction Tests (raise uncaptured signal) ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_raisesignaltest ALL DEPENDS raisesignaltest.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasraisesignaltest
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm raisesignaltest
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+set_tests_properties(rxasraisesignaltest PROPERTIES
+		PASS_REGULAR_EXPRESSION "PANIC:"
+)
+
 # Instruction Sanity Tests
 add_custom_command(
 		OUTPUT instructiontests.rxbin

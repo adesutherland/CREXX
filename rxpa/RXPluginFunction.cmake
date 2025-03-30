@@ -15,6 +15,9 @@ function(add_dynamic_plugin_target plugin_name)
     target_compile_definitions(${plugin_name} PRIVATE "PLUGIN_ID=rx${plugin_name}")
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rx")
     set_target_properties(${plugin_name} PROPERTIES SUFFIX ".rxplugin")
+
+    # Virtual target rx{plugin_name} to rx{plugin_name}.rxplugin
+    # add_custom_target(rx${plugin_name} ALL DEPENDS ${plugin_name})
 endfunction()
 
 # Create a static link module - declaration only

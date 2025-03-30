@@ -12,9 +12,9 @@ void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* si
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
     rxpa_attribute_value signal_value = (rxpa_attribute_value)signal;
     native_function(args, arg_values, return_value, signal_value);
- }
+}
 
- /* Function to get signal text from a signal code  */
+/* Function to get signal text from a signal code  */
 char* rxpa_getsignaltext(rxsignal signal) {
      switch (signal) {
          case SIGNAL_NONE:

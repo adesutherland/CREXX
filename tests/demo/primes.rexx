@@ -3,7 +3,7 @@
 options levelb
 import rxfnsb
 
-generate_primes = 100000
+generate_primes = 10
 
 prime = .int[]
 

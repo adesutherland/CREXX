@@ -22,22 +22,6 @@ static int no_instructions = 0;
 void init_ops() {
     if (instructions) return; /* Stops double initialising */
     /* STARTINSTRUCTION */
-    instr_f("bpon", "Enable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
-    instr_f("bpoff", "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
-
-    instr_f("metaloadmodule", "Load Module (op1 = module num of last loaded module in rxbin op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadedmodules", "Loaded Modules (op1 = array loaded modules)", OP_REG, OP_NONE, OP_NONE);
-    instr_f("metaloadedprocs", "Loaded Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = (int)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metaloadfoperand", "Load Float Operand (op1 = (float)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metaloadsoperand", "Load String Operand (op1 = (string)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metaloaddata", "Load Metadata (op1 = (metadata)op2[op3])", OP_REG, OP_REG, OP_REG);
-    instr_f("metalinkpreg", "Link parent-frame-register[op2] to op1", OP_REG, OP_REG, OP_NONE);
-    instr_f("metaloadcalleraddr", "Load caller address object to op1", OP_REG, OP_NONE, OP_NONE);
-
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("iadd", "Integer Add (op1=op2+op3)", OP_REG, OP_REG, OP_INT);
     instr_f("addi", "Convert and Add to Integer (op1=op2+op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
@@ -385,10 +369,9 @@ void init_ops() {
     instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_REG,OP_INT);
     instr_f("minattrs", "ensure min number attributes op1.num_attributes >= op2 + op3", OP_REG, OP_INT,OP_INT);
 
-    instr_f("signal", "Signal type op1", OP_STRING, OP_NONE, OP_NONE);
-    instr_f("signalt", "Signal type op1 if op2 true", OP_STRING, OP_REG, OP_NONE);
-    instr_f("signalf", "Signal type op1 if op2 false", OP_STRING, OP_REG, OP_NONE);
+    instr_f("erase", "erases register contents", OP_REG, OP_NONE, OP_NONE);
 
+    // IO Instructions
     instr_f("spawn", "Spawn Process op1 = exec op2 redirect op3", OP_REG, OP_REG, OP_REG);
     instr_f("redir2str", "Redirect op1 -> string op2", OP_REG, OP_REG, OP_NONE);
     instr_f("redir2arr", "Redirect op1 -> array op2", OP_REG, OP_REG, OP_NONE);
@@ -411,13 +394,32 @@ void init_ops() {
     instr_f("feof", "op1 rc(int) = feof op2 file*(int)", OP_REG, OP_REG, OP_NONE);
     instr_f("ferror", "op1 rc(int) = ferror op2 file*(int)", OP_REG, OP_REG, OP_NONE);
 
+    // Signal Instructions
+    instr_f("signal",  "Signal type op1", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("signalt", "Signal type op1 if op2 true", OP_STRING, OP_REG, OP_NONE);
+    instr_f("signalf", "Signal type op1 if op2 false", OP_STRING, OP_REG, OP_NONE);
+    instr_f("signal",  "Signal type op1 (message op2)", OP_STRING, OP_STRING, OP_NONE);
+    instr_f("signal",  "Signal type op1 (payload op2)", OP_STRING, OP_REG, OP_NONE);
+    instr_f("signalt", "Signal type op1 (message op2) if op3 true", OP_STRING, OP_STRING, OP_REG);
+    instr_f("signalf", "Signal type op1 (message op2) if op3 false", OP_STRING, OP_STRING, OP_REG);
+
+    instr_f("bpon",    "Enable Breakpoints with op1 handler", OP_FUNC, OP_NONE, OP_NONE);
+    instr_f("bpon",    "Enable Breakpoints with existing handler", OP_NONE, OP_NONE, OP_NONE);
+    instr_f("bpoff",   "Disable Breakpoints", OP_NONE, OP_NONE, OP_NONE);
+
+    instr_f("sigignore", "Set Signal op1 Handle to Ignore", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("sighalt",   "Set Signal op1 Handle to Halt", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("sigshalt",  "Set Signal op1 Handle to Silent Halt", OP_STRING, OP_NONE, OP_NONE);
+    instr_f("sigbr",     "Set Signal op2 Handle to Branch to op1", OP_ID, OP_STRING, OP_NONE);
+    instr_f("sigcall",   "Set Signal op2 Handle to Call op1", OP_FUNC, OP_STRING, OP_NONE);
+    instr_f("sigcallbr", "Set Signal op3 Handle to Call op2 returning to op1", OP_ID, OP_FUNC, OP_STRING);
+    instr_f("sigret",    "Set Signal op1 Handle to Return", OP_STRING, OP_NONE, OP_NONE);
+
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_INT, OP_INT);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_INT, OP_REG);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_REG, OP_REG, OP_REG);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_INT, OP_REG);
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_REG, OP_REG);
-
-    instr_f("erase", "erases register contents", OP_REG, OP_NONE, OP_NONE);
 
     // -------------------------------------------------------------------------
     // Decimal Plugin Library Instructions
@@ -470,6 +472,21 @@ void init_ops() {
     // ---------------------------------------------------------------------------------------
     // end of decimal instructions
     // ---------------------------------------------------------------------------------------
+
+    // META Instructions to support the RXVM Metadata
+    instr_f("metaloadmodule", "Load Module (op1 = module num of last loaded module in rxbin op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadedmodules", "Loaded Modules (op1 = array loaded modules)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("metaloadedprocs", "Loaded Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadedeprocs", "Loaded Exposed Procedures (op1 = array procedures in module op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadinst", "Load Instruction Code (op1 = (inst)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metadecodeinst", "Decode opcode (op1 decoded op2)", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadioperand", "Load Integer/Index Operand (op1 = (int)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadfoperand", "Load Float Operand (op1 = (float)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadsoperand", "Load String Operand (op1 = (string)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloadpoperand", "Load Procedure Operand (op1 = (proc)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metaloaddata", "Load Metadata (op1 = (metadata)op2[op3])", OP_REG, OP_REG, OP_REG);
+    instr_f("metalinkpreg", "Link parent-frame-register[op2] to op1", OP_REG, OP_REG, OP_NONE);
+    instr_f("metaloadcalleraddr", "Load caller address object to op1", OP_REG, OP_NONE, OP_NONE);
 
     /* ENDINSTRUCTIONS */
 

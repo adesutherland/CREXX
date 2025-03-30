@@ -280,7 +280,9 @@ int rxldmod(rxvm_context *context, char *file_name) {
             file_module_section = 0;
             switch (loaded_rc = read_module(&file_module_section, fp)) {
                 case 0: /* Success */
+                    DEBUG("Module Read\n");
                     n = prep_and_link_module(context, file_module_section);
+                    DEBUG("Module Prep and linked\n");
                     modules_processed++;
                     break;
 

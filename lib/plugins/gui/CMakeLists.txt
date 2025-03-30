@@ -36,7 +36,7 @@ add_custom_command(
 )
 add_custom_target(gui_test ALL
         DEPENDS gui_test.rxbin
-        )
+)
 
 # Enable testing functionality
 enable_testing()

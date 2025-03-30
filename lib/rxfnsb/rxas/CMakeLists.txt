@@ -18,15 +18,17 @@ set(RXASBINS
         words.rxbin
 )
 
+unset(_prev_target)
 foreach(_binfile ${RXASBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
   add_custom_command(
           COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
-          DEPENDS rxas ${_basename}.rxas
+          DEPENDS rxas ${_basename}.rxas ${_prev_target}
           OUTPUT ${_binfile}
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
           COMMENT "cREXX assemble ${_basename} ..."
   )
+  set(_prev_target ${_binfile})
 endforeach()
 
 add_custom_command(

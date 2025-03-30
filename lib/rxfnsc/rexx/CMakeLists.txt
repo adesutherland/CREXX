@@ -67,17 +67,20 @@ foreach (BIF ${BIFS})
 	set(REXXSRC ${REXXSRC} ${BIF}.rexx)
 endforeach ()
 
+unset(_prev_dependency) # Clear the previous dependency
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	add_custom_command(
 		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-		  DEPENDS rxas rxc ../rxas/libraryc-rxas.rxbin ${REXXSRC}
-		  OUTPUT ${_binfile}
+		  DEPENDS rxas rxc ../rxas/libraryc-rxas.rxbin ${REXXSRC} ${_prev_dependency}
+		  OUTPUT ${_binfile} $(_binfile).rxbin
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."
 	)
+	set(_prev_dependency ${_basename}.rxbin)
 endforeach()
+unset(_prev_dependency) # Clear the previous dependency
 
 add_custom_command(
  		OUTPUT libraryc-rexx.rxbin

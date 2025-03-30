@@ -11,9 +11,9 @@
 /* Module Structure */
 typedef struct module {
     bin_space segment;         /* Binary and Constant Pool */
-    char *name;                   /* Module Name */
+    char *name;                /* Module Name */
     char *description;         /* Module Description */
-    unsigned char native;    /* Native Module */
+    unsigned char native;      /* Native Module */
     value **globals;           /* Globals registers array */
     int proc_head;             /* Offset to the head of the procs in the constant pool */
     int expose_head;           /* Offset to the head of the exposed procs in the constant pool */
@@ -25,24 +25,71 @@ typedef struct module {
     module_file *file;         /* File section the module was loaded from */
 } module;
 
+/* Interrupt / Signal Codes */
+#define RXSIGNAL_NONE                 0  /* No Signal */
+#define RXSIGNAL_KILL                 1  /* Unmaskable Kill */
+#define RXSIGNAL_FAILURE              2  /* Error in an external function or subroutine */
+#define RXSIGNAL_ERROR                3  /* Syntax error */
+#define RXSIGNAL_OVERFLOW_UNDERFLOW   4  /* Numeric overflow or underflow */
+#define RXSIGNAL_DIVISION_BY_ZERO     5  /* Divide by zero */
+#define RXSIGNAL_CONVERSION_ERROR     6  /* Conversion error between types */
+#define RXSIGNAL_INVALID_ARGUMENTS    7  /* Invalid arguments passed to a function or subroutine */
+#define RXSIGNAL_OUT_OF_RANGE         8  /* Access a child element out of range */
+#define RXSIGNAL_UNICODE_ERROR        9  /* Unicode error */
+
+#define RXSIGNAL_UNKNOWN_INSTRUCTION  10 /* An unknown RXAS instruction - interpreter mode only */
+#define RXSIGNAL_FUNCTION_NOT_FOUND   11 /* An unknown function */
+#define RXSIGNAL_NOT_IMPLEMENTED      12 /* Instruction not implemented */
+#define RXSIGNAL_INVALID_SIGNAL_CODE  13 /* Invalid signal code */
+
+#define RXSIGNAL_NOTREADY             15 /* Input/output error, e.g., file not ready (POSIX SIGPIPE) */
+
+#define RXSIGNAL_TERM                 20 /* Request to halt execution (POSIX SIGTERM) */
+#define RXSIGNAL_POSIX_INT            21 /* POSIX SIGINT (user interrupt) */
+#define RXSIGNAL_POSIX_HUP            22 /* POSIX SIGHUP (reload configuration) */
+#define RXSIGNAL_POSIX_USR1           23 /* POSIX SIGUSR1 (user-defined signal 1) */
+#define RXSIGNAL_POSIX_USR2           24 /* POSIX SIGUSR2 (user-defined signal 2) */
+#define RXSIGNAL_POSIX_CHLD           25 /* POSIX SIGCHLD (child process terminated) */
+
+#define RXSIGNAL_OTHER                30 /* Other Interrupt */
+#define RXSIGNAL_BREAKPOINT           31 /* Breakpoint (called after each instruction if enabled) */
+#define RXSIGNAL_MAX                  32 /* Maximum Interrupt Code */
+
+/* Interrupt Response Codes */
+typedef enum interrupt_response {
+    RXSIGNAL_RESPONSE_IGNORE = 0,   /* Ignore the interrupt */
+    RXSIGNAL_RESPONSE_RETURN,       /* Return to the stack frame - the stack is unwound to the frame */
+    RXSIGNAL_RESPONSE_BRANCH,       /* Branch to an address in a stack frame - the stack is unwound to the frame */
+    RXSIGNAL_RESPONSE_CALL,         /* Call a function - will return to the current instruction */
+    RXSIGNAL_RESPONSE_CALL_BRANCH,  /* Call a function - will return to the BRANCH address (the stack is unwound to the frame) */
+    RXSIGNAL_RESPONSE_HALT,         /* Unmasked Interrupt, halt the interpreter with an error message and return interrupt code */
+    RXSIGNAL_RESPONSE_SILENT_HALT   /* Halt the interpreter without any message - return 0 */
+} interrupt_response;
+
+/* Interrupt Table Entry */
+typedef struct interrupt_entry {
+    interrupt_response response;    /* Response to the interrupt */
+    proc_constant *function;        /* Address of the function to call */
+    size_t jump;                    /* Address to jump to */
+} interrupt_entry;
+
 struct stack_frame {
     stack_frame *prev_free;
     stack_frame *parent;
     proc_constant *procedure;
-    void *return_inst;
     bin_code *return_pc;
-    char is_interrupt;
     value *return_reg;
     size_t number_locals;
     size_t nominal_number_locals;
     size_t number_args;
-    char interrupt_mask;
+    unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
+    interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
     struct decplugin *decimal;
     char decimal_loaded_here;
     struct uniplugin *unicode;
     char unicode_loaded_here;
     value **baselocals; /* Initial / base / fixed local pointers */
-    value **locals;   /* Locals pointer mapping (after swaps / links */
+    value **locals;     /* Locals pointer mapping (after swaps / links) */
 };
 
 #ifdef NDEBUG  // RELEASE
@@ -59,24 +106,25 @@ struct stack_frame {
 #ifdef NTHREADED
 
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
-#define END_OF_INSTRUCTIONS default: goto UNKNOWN_INSTRUCTION; }
+#define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH }
 #define START_INSTRUCTION(inst) case INST_ ## inst:
-#define START_BREAKPOINT BREAKPOINT:
-#define END_BREAKPOINT goto CASE_START;
+#define START_INTERRUPT INTERRUPT:
+#define END_INTERRUPT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
 #define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:&&CASE_START; }
+#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:&&CASE_START; }
 
 #else
 
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
 #define START_INSTRUCTION(inst) inst:
-#define START_BREAKPOINT BREAKPOINT:
-#define END_BREAKPOINT goto *next_inst;
+#define START_INTERRUPT INTERRUPT:
+#define END_INTERRUPT goto *next_inst;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = (next_pc)->impl_address; }
 #define CALC_DISPATCH_MANUAL       { next_inst = (next_pc)->impl_address; }
-#define DISPATCH                   { pc = next_pc; goto *(current_frame->interrupt_mask)?&&BREAKPOINT:next_inst; }
+#define DISPATCH                   { pc = next_pc; goto *(interrupts && !current_frame->is_interrupt)?&&INTERRUPT:next_inst; }
+
 #endif
 
 #define REG_OP(n)                    current_frame->locals[(pc+(n))->index]

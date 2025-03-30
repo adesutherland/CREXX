@@ -20,9 +20,7 @@ add_custom_command(
         OUTPUT strings_test.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_custom_target(strings_test ALL
-        DEPENDS strings_test.rxbin
-        )
+add_custom_target(strings_test ALL)
 
 # Enable testing functionality
 enable_testing()

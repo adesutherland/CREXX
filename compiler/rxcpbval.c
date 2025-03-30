@@ -16,6 +16,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
         case INTEGER: return OP_INT;
         case FLOAT: return OP_FLOAT;
         case STRING: return OP_STRING;
+        case FUNC_SYMBOL: return OP_FUNC;
         default: return OP_REG;
     }
 }
@@ -521,7 +522,7 @@ static walker_result initial_checks_walker(walker_direction direction,
             if (node->node_type == VAR_REFERENCE) {
                 node->token_start = node->token_start->token_prev;
             }
-            else if (node->node_type == FUNCTION) {
+            else if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
                 /* Function brackets */
                 left = node->token_start->token_next; /* I.e. after the function name */
                 right = node->token_end->token_next;
@@ -1346,7 +1347,7 @@ static walker_result resolve_functions_walker(walker_direction direction,
         /* IN - TOP DOWN */
     }
     else {
-        if (node->node_type == FUNCTION) {
+        if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             if (node->symbolNode) return result_normal; /* Already Processed */
             if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
 

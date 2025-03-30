@@ -21,6 +21,9 @@
 #include "rxvminst.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
+
+// #include <complex.h>
+
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
 
@@ -162,13 +165,91 @@ RX_INLINE rxinteger ipow(rxinteger base, rxinteger exp_int) {
     }
 }
 
+/* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
+const char *interrupt_to_string(unsigned char interrupt) {
+    switch (interrupt) {
+        case RXSIGNAL_KILL:
+            return "KILL";
+        case RXSIGNAL_ERROR:
+            return "ERROR";
+        case RXSIGNAL_OVERFLOW_UNDERFLOW:
+            return"OVERFLOW_UNDERFLOW";
+        case RXSIGNAL_CONVERSION_ERROR:
+            return "CONVERSION_ERROR";
+        case RXSIGNAL_UNKNOWN_INSTRUCTION:
+            return "UNKNOWN_INSTRUCTION";
+        case RXSIGNAL_FUNCTION_NOT_FOUND:
+            return "FUNCTION_NOT_FOUND";
+        case RXSIGNAL_NOT_IMPLEMENTED:
+            return "NOT_IMPLEMENTED";
+        case RXSIGNAL_INVALID_SIGNAL_CODE:
+            return "INVALID_SIGNAL_CODE";
+        case RXSIGNAL_OUT_OF_RANGE:
+            return "OUT_OF_RANGE";
+        case RXSIGNAL_FAILURE:
+            return "FAILURE";
+        case RXSIGNAL_TERM:
+            return "TERM";
+        case RXSIGNAL_NOTREADY:
+            return "NOTREADY";
+        case RXSIGNAL_INVALID_ARGUMENTS:
+            return "INVALID_ARGUMENTS";
+        case RXSIGNAL_DIVISION_BY_ZERO:
+            return "DIVISION_BY_ZERO";
+        case RXSIGNAL_UNICODE_ERROR:
+            return "UNICODE_ERROR";
+        case RXSIGNAL_POSIX_HUP:
+            return "POSIX_HUP";
+        case RXSIGNAL_POSIX_INT:
+            return "POSIX_INT";
+        case RXSIGNAL_POSIX_USR1:
+            return "POSIX_USR1";
+        case RXSIGNAL_POSIX_USR2:
+            return "POSIX_USR2";;
+        case RXSIGNAL_POSIX_CHLD:
+            return "POSIX_CHLD";
+        case RXSIGNAL_BREAKPOINT:
+            return "BREAKPOINT";
+        case RXSIGNAL_OTHER:
+            return "OTHER";
+        default:
+            return 0; // Invalid Signal Code
+    }
+}
+
+/* Function to convert a string to an interrupt: Code Description Massage -> interrupt_entry */
+unsigned char string_to_interrupt(const char *interrupt) {
+    if (strcmp(interrupt, "KILL") == 0) return RXSIGNAL_KILL;
+    if (strcmp(interrupt, "ERROR") == 0) return RXSIGNAL_ERROR;
+    if (strcmp(interrupt, "OVERFLOW_UNDERFLOW") == 0) return RXSIGNAL_OVERFLOW_UNDERFLOW;
+    if (strcmp(interrupt, "CONVERSION_ERROR") == 0) return RXSIGNAL_CONVERSION_ERROR;
+    if (strcmp(interrupt, "UNKNOWN_INSTRUCTION") == 0) return RXSIGNAL_UNKNOWN_INSTRUCTION;
+    if (strcmp(interrupt, "FUNCTION_NOT_FOUND") == 0) return RXSIGNAL_FUNCTION_NOT_FOUND;
+    if (strcmp(interrupt, "NOT_IMPLEMENTED") == 0) return RXSIGNAL_NOT_IMPLEMENTED;
+    if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
+    if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
+    if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
+    if (strcmp(interrupt, "TERM") == 0) return RXSIGNAL_TERM;
+    if (strcmp(interrupt, "NOTREADY") == 0) return RXSIGNAL_NOTREADY;
+    if (strcmp(interrupt, "INVALID_ARGUMENTS") == 0) return RXSIGNAL_INVALID_ARGUMENTS;
+    if (strcmp(interrupt, "DIVISION_BY_ZERO") == 0) return RXSIGNAL_DIVISION_BY_ZERO;
+    if (strcmp(interrupt, "UNICODE_ERROR") == 0) return RXSIGNAL_UNICODE_ERROR;
+    if (strcmp(interrupt, "POSIX_HUP") == 0) return RXSIGNAL_POSIX_HUP;
+    if (strcmp(interrupt, "POSIX_INT") == 0) return RXSIGNAL_POSIX_INT;
+    if (strcmp(interrupt, "POSIX_USR1") == 0) return RXSIGNAL_POSIX_USR1;
+    if (strcmp(interrupt, "POSIX_USR2") == 0) return RXSIGNAL_POSIX_USR2;
+    if (strcmp(interrupt, "POSIX_CHLD") == 0) return RXSIGNAL_POSIX_CHLD;
+    if (strcmp(interrupt, "BREAKPOINT") == 0) return RXSIGNAL_BREAKPOINT;
+    if (strcmp(interrupt, "OTHER") == 0) return RXSIGNAL_OTHER;
+    return RXSIGNAL_MAX; // Invalid Signal Code
+}
+
 /* Stack Frame Factory */
 RX_INLINE stack_frame *frame_f(
                     proc_constant *procedure,
                     int no_args,
                     stack_frame *parent,
                     bin_code *return_pc,
-                    void *return_inst,
                     value *return_reg) {
     stack_frame *this;
     int num_locals;
@@ -243,24 +324,50 @@ RX_INLINE stack_frame *frame_f(
     }
     this->parent = parent;
     if (parent) {
-        this->interrupt_mask = parent->interrupt_mask;
+        /* Set the interrupt mask based on parent settings */
+        memcpy(this->interrupt_table, parent->interrupt_table, sizeof(interrupt_entry) * (RXSIGNAL_MAX));
+        this->is_interrupt = parent->is_interrupt;
+
+        /* VM Plugins */
         this->unicode = parent->unicode;
         this->decimal = parent->decimal;
     }
     else {
-        this->interrupt_mask = 0;
+        /* Set up the default interrupt mask */
+        this->interrupt_table[RXSIGNAL_KILL-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_OVERFLOW_UNDERFLOW-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_CONVERSION_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_UNKNOWN_INSTRUCTION-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_NOT_IMPLEMENTED-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_TERM-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_NOTREADY-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_INVALID_ARGUMENTS-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_DIVISION_BY_ZERO-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_UNICODE_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_POSIX_HUP-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_POSIX_INT-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_POSIX_USR1-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_POSIX_USR2-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_POSIX_CHLD-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_IGNORE;
+        this->interrupt_table[RXSIGNAL_OTHER-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->is_interrupt = 0; // No signals pending
+
+        /* VM Plugins */
         this->unicode = 0;
         this->decimal = 0;
     }
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
-    this->return_inst = return_inst;
     this->return_pc = return_pc;
     this->number_locals = num_locals;
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
-    this->is_interrupt = 0;
 
     return this;
 }
@@ -289,12 +396,54 @@ RX_INLINE void clear_frame(stack_frame *frame) {
     }
 }
 
-// Macro to detect and throw a signal if a decimal error is present
-#define SIGNAL_IF_DECIMAL_ERROR(decimal) \
-if ((decimal)->base.signal_number) { \
-set_null_string(signal_value, (decimal)->base.signal_string); \
-signal_value->int_value = (decimal)->base.signal_number; \
-goto SIGNAL; \
+// Macro to detect and throw a signal if a RXVM plugin-raised error is present
+#define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
+if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
+interrupts |= 1 << ((signal)->base.signal_number - 1); \
+value_zero(interrupt_object[(signal)->base.signal_number]); \
+set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
+}
+
+// Macro to throw a signal
+#define SET_SIGNAL(signal) \
+{interrupts |= 1 << ((signal) - 1); \
+value_zero(interrupt_object[(signal)]);}
+
+// Macro to throw a signal with a message
+#define SET_SIGNAL_MSG(signal, message) \
+{interrupts |= 1 << ((signal) - 1); \
+value_zero(interrupt_object[(signal)]); \
+set_null_string(interrupt_object[(signal)], (message));}
+
+// Macro to throw a signal with a payload
+#define SET_SIGNAL_PAYLOAD(signal, payload) \
+{interrupts |= 1 << ((signal) - 1); \
+copy_value(interrupt_object[(signal)], (payload));}
+
+// Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
+#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) interrupt_from_rxpa_signal(signal,&interrupts,interrupt_object);
+
+void interrupt_from_rxpa_signal(value *signal, size_t *interrupts, value* interrupt_object[RXSIGNAL_MAX]) {
+    size_t int_num;
+
+    if (signal->int_value < 1 || signal->int_value >= RXSIGNAL_MAX) {
+        null_terminate_string_buffer(signal);
+        int_num = string_to_interrupt(signal->string_value);
+        if (int_num == RXSIGNAL_MAX) {
+            int_num = RXSIGNAL_OTHER;
+            value_zero(interrupt_object[int_num]);
+            set_null_string(interrupt_object[int_num], signal->string_value);
+        }
+        else {
+            value_zero(interrupt_object[int_num]);
+        }
+    } else {
+        int_num = signal->int_value;
+        value_zero(interrupt_object[int_num]);
+    }
+
+    // Set the interrupt
+    *interrupts |= 1 << (int_num - 1);
 }
 
 /* Interpreter */
@@ -308,15 +457,31 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     int mod_index;
     value *interrupt_arg;
     value *signal_value = value_f();
-    int signal_code = 0;
-    value *arguments_array; /* note that the needs mallocing / freeing */
+    unsigned char signal_code = 0;
+    value *arguments_array;                /* note that the needs mallocing / freeing */
+    size_t interrupts = 0;                 /* Bit field of raised interrupts */
+    unsigned char last_interrupt = 0; /* Interrupt being handled */
+    /* Array of objects attached to raised interrupts */
+    value *interrupt_object[RXSIGNAL_MAX];
+    /* Array of addresses that were last interrupted by interrupt number */
+    rxinteger last_interrupted_address[RXSIGNAL_MAX] = {0};
+    /* Array of modules that were last interrupted by interrupt number */
+    rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
+    stack_frame *current_frame = 0, *temp_frame;
+
+    /* Set up the interrupt object array */
+    {
+        size_t i;
+        for (i = 0; i < RXSIGNAL_MAX; i++) {
+            interrupt_object[i] = value_f();
+        }
+    }
 
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
     void *next_inst = &&IUNKNOWN;
 #endif
-    stack_frame *current_frame = 0, *temp_frame;
 
     /*
      * Instruction database - loaded from a generated header file
@@ -343,23 +508,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
 #endif
 
-    /* Find handlers */
-    DEBUG("Find program interrupt handlers\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            step_handler =
-                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
-                                       i);
-            if (step_handler->base.type == PROC_CONST &&
-                strcmp(step_handler->name, "stephandler") == 0)
-                break;
-            i = step_handler->next;
-            step_handler = 0;
-        }
-        if (step_handler) break;
-    }
-
     /* Find the program's entry point */
     DEBUG("Find program entry point\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
@@ -383,7 +531,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, 1, 0, 0, 0, 0);
+    current_frame = frame_f(procedure, 1, 0, 0, 0);
     /* Arguments (passed in an array) */
     /* a0 is already set by frame_f() */
     /* a1 is the array  */
@@ -405,17 +553,17 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     current_frame->decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
     if (!current_frame->decimal) {
         printf("PANIC - No default decimal plugin\n");
-        exit(1);
+        exit(999); // Documented 999 is for missing decimal plugin
     }
     current_frame->decimal_loaded_here = 1;
 
     // Set the number of digits in the rxvmplugin context
-    current_frame->decimal->setDigits(current_frame->decimal, 20);
+    current_frame->decimal->setDigits(current_frame->decimal, 18); // 18 is the max significant digits for the default plugin
 
     /* Start */
-    DEBUG("Starting inst# %s-0x%x\n",
-          procedure->binarySpace->module->name, (int) procedure->start);
+    DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
     next_pc = &(current_frame->procedure->binarySpace->binary[procedure->start]);
+
     CALC_DISPATCH_MANUAL
     DISPATCH
 
@@ -447,41 +595,163 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * ----------------------------------------------------------------------------
      */
 
-    /* Breakpoint Support - this is only used/called when check_breakpoint is set */
-    START_BREAKPOINT;
-    DEBUG("BREAKPOINT CHECK\n");
-    if (step_handler) {
-        rxinteger mod_no = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
-        rxinteger addr = (rxinteger) (pc - current_frame->procedure->binarySpace->binary);
+    /* Signal Interrupt Support - this is only used/called when interrupts are pending */
+    START_INTERRUPT;
+    DEBUG("TRACE - SIGNAL FIRED - CHECK HANDLER\n");
 
-        current_frame = frame_f(step_handler, 1, current_frame, pc,
-                                next_inst, 0);
-
-        /* Prepare dispatch to procedure as early as possible */
-        next_pc =
-                &(current_frame->procedure->binarySpace
-                        ->binary[step_handler->start]);
-        CALC_DISPATCH_MANUAL
-
-        /* Disable Interrupts */
-        current_frame->is_interrupt = 1;
-        current_frame->interrupt_mask = 0;
-
-        /* Argument */
-        size_t arg_index = step_handler->binarySpace->globals + step_handler->locals + 1;
-        current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
-
-        /* Populate the interrupt_arg object */
-        value_zero(interrupt_arg);
-        set_num_attributes(interrupt_arg, 2);
-        interrupt_arg->attributes[0]->int_value = mod_no;
-        interrupt_arg->attributes[1]->int_value = addr;
-
-        /* This gotos the start of the interrupt handler  */
-        DISPATCH
-    } else {
-        END_BREAKPOINT
+    /* Also clear any pending signals that are ignored and also find the first signal which */
+    /* is masked and pending - the first one is the highest priority */
+    last_interrupt = 0;
+    for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
+        if (interrupts & (1 << signal_code)) {
+            last_interrupted_module[signal_code + 1] = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
+            last_interrupted_address[signal_code + 1] = (rxinteger) (pc - current_frame->procedure->binarySpace->binary);
+            if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
+                DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
+                interrupts &= ~(1 << signal_code);
+            } else {
+                last_interrupt = signal_code + 1;
+                break;
+            }
+        }
     }
+
+    if (!last_interrupt || last_interrupt >= RXSIGNAL_MAX) {
+        /* No un-ignored interrupts pending */
+        END_INTERRUPT
+    }
+
+    // Clear the interrupt
+    if (last_interrupt != RXSIGNAL_BREAKPOINT) {
+        // Breakpoints are not cleared
+        interrupts &= ~(1 << (last_interrupt - 1));
+    }
+
+    // Handle the interrupt
+    switch (current_frame->interrupt_table[last_interrupt - 1].response) {
+
+        case RXSIGNAL_RESPONSE_HALT:
+            /* Halt */
+            DEBUG("TRACE - INTR HANDLER -> HALT %s\n", interrupt_to_string(last_interrupt));
+            /* Print error message to stderr */
+            if (interrupt_object[last_interrupt]->string_length) {
+                fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
+            } else {
+                fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
+            }
+            rc = (int)last_interrupt;
+            goto interprt_finished;
+
+        case RXSIGNAL_RESPONSE_SILENT_HALT:
+            /* Silent Halt */
+            DEBUG("TRACE - INTR HANDLER -> SILENT HALT %s\n", interrupt_to_string(last_interrupt));
+            rc = 0;
+            goto interprt_finished;
+
+        case RXSIGNAL_RESPONSE_CALL_BRANCH:
+            DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
+            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1 ].jump;
+            pc = next_pc;
+            // Fall through to CALL
+
+        case RXSIGNAL_RESPONSE_CALL: {
+            /* Call */
+            proc_constant *intr_function = current_frame->interrupt_table[last_interrupt-1].function;
+            DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
+
+            if (intr_function->start == SIZE_MAX) {
+                SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, "Exception handler not exposed/linked")
+                DISPATCH
+            }
+
+            /* Populate the interrupt argument object */
+            value_zero(interrupt_arg);
+            set_num_attributes(interrupt_arg, 5);
+            interrupt_arg->attributes[0]->int_value = (rxinteger)last_interrupt;
+            interrupt_arg->attributes[1]->int_value = last_interrupted_module[last_interrupt];
+            interrupt_arg->attributes[2]->int_value = last_interrupted_address[last_interrupt];
+            // Copy the signal name to the 4th attribute
+            set_null_string(interrupt_arg->attributes[3], interrupt_to_string(last_interrupt));
+            // Move the object to the 5th attribute
+            move_value(interrupt_arg->attributes[4], interrupt_object[last_interrupt]);
+
+            if (intr_function->binarySpace == 0) {
+                /* This is a native plugin function */
+                rxpa_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
+                    if (signal_value->string_length) {
+                        SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
+                    } else {
+                        SET_SIGNAL(signal_value->int_value)
+                    }
+                }
+                DISPATCH
+            } else {
+                /* A CREXX Procedure */
+                current_frame = frame_f(intr_function, 1, current_frame, pc, 0);
+
+                /* Prepare dispatch to procedure as early as possible */
+                next_pc = &(current_frame->procedure->binarySpace->binary[intr_function->start]);
+                CALC_DISPATCH_MANUAL
+
+                /* Interrupt being handled */
+                current_frame->is_interrupt = last_interrupt;
+
+                /* Argument */
+                size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
+                current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
+
+                /* DISPATCH goes the interrupt handler */
+                DISPATCH
+            }
+        }
+
+        case RXSIGNAL_RESPONSE_BRANCH:
+            DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
+            next_pc = current_frame->procedure->binarySpace->binary + current_frame->interrupt_table[last_interrupt -1].jump;
+            CALC_DISPATCH_MANUAL
+            DISPATCH
+
+        case RXSIGNAL_RESPONSE_RETURN:
+            DEBUG("TRACE - INTR HANDLER -> RET %s\n", interrupt_to_string(last_interrupt));
+            {
+                /* Where we return to */
+                next_pc = current_frame->return_pc;
+                CALC_DISPATCH_MANUAL
+                // Note that current_frame->is_interrupt cannot be set as a signal triggers us
+                /* back to the parent's stack frame */
+                temp_frame = current_frame;
+                current_frame = current_frame->parent;
+                if (!current_frame) {
+                    DEBUG("TRACE - INTR RETURNING FROM MAIN()\n");
+                    /* Free Argument Values a1... */
+                    int i, j;
+                    /* a0 is the number of args */
+                    int num_args = (int)temp_frame->baselocals[temp_frame->procedure->binarySpace->globals +
+                                                               temp_frame->procedure->locals]->int_value;
+                    for (i = 0, j = temp_frame->procedure->binarySpace->globals + temp_frame->procedure->locals + 1;
+                         i < num_args;
+                         i++, j++) {
+                        clear_value(temp_frame->baselocals[j]);
+                        free(temp_frame->baselocals[j]);
+                         }
+                    rc = 0;
+                    free_frame(temp_frame);
+                    arguments_array = 0; /* We have freed it in the loop above */
+                    goto interprt_finished;
+                }
+                free_frame(temp_frame);
+                DISPATCH
+            }
+
+        case RXSIGNAL_RESPONSE_IGNORE:
+            /* Ignore - Should never get here */
+            DEBUG("*ERROR* TRACE INTR HANDLER -> IGNORE (SHOULD NOT GET HERE) %s\n", interrupt_to_string(last_interrupt));
+            END_INTERRUPT
+    }
+
+    /* Should never get here */
+    END_INTERRUPT
 
 START_OF_INSTRUCTIONS
 
@@ -490,18 +760,184 @@ START_OF_INSTRUCTIONS
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) CALC_DISPATCH(0)
             DEBUG("TRACE - BPON\n");
-            current_frame->interrupt_mask = 1;
+            interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
             DISPATCH
 
-            /* Enable Breakpoints */
+        /* Enable Breakpoints with op1 handler */
+        START_INSTRUCTION(BPON_FUNC) CALC_DISPATCH(1)
+            {
+                proc_constant *signal_function = PROC_OP(1);
+                DEBUG("TRACE - BPON %s()\n", signal_function->name);
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
+                current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
+                interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
+            }
+            DISPATCH
+
+        /* Disable Breakpoints */
         START_INSTRUCTION(BPOFF) CALC_DISPATCH(0)
             DEBUG("TRACE - BPOFF\n");
-            current_frame->interrupt_mask = 0;
+            interrupts &= ~(1 << (RXSIGNAL_BREAKPOINT - 1));
             DISPATCH
 
-            /* Meta Instructions */
+        /* Set Signal op1 Handle to Ignore */
+        START_INSTRUCTION(SIGIGNORE_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGIGNORE \"%.*s\"\n", (int) op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
+                }
+            }
+            DISPATCH
 
-            /* Load Module (op1 = module num of loaded op2) */
+        /* Set Signal op1 Handle to Halt */
+        START_INSTRUCTION(SIGHALT_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX) { // Kill can be set to halt
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op1 Handle to Silent Halt */
+        START_INSTRUCTION(SIGSHALT_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGSHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX) { // KILL can be set to silent halt
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op2 Handle to Branch to op1 */
+        START_INSTRUCTION(SIGBR_ID_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGBR 0x%x,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)op2S->string_len, op2S->string);
+            {
+                size_t sig = string_to_interrupt(op2S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
+                    current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op2 Handle to Call op1 */
+        START_INSTRUCTION(SIGCALL_FUNC_STRING) CALC_DISPATCH(2)
+            {
+                proc_constant *signal_function = PROC_OP(1);
+                DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
+
+                size_t sig = string_to_interrupt(op2S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
+                    current_frame->interrupt_table[sig-1].function = signal_function;
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op3 Handle to Call op2 returning to op1 */
+        START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) CALC_DISPATCH(3)
+            DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
+            {
+                proc_constant *signal_function = PROC_OP(2);
+                size_t sig = string_to_interrupt(op3S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
+                    current_frame->interrupt_table[sig-1].function = signal_function;
+                    current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                }
+            }
+            DISPATCH
+
+        /* Set Signal op1 Handle to Return */
+        START_INSTRUCTION(SIGRET_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGRET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            {
+                size_t sig = string_to_interrupt(op1S->string);
+                if (sig == RXSIGNAL_MAX || sig == RXSIGNAL_KILL) { // KILL cannot be masked
+                    SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
+                }
+                else {
+                    current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
+                }
+            }
+            DISPATCH
+
+        /* RXSIGNAL_STRING Signal type op1 */
+        START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
+            DEBUG("TRACE - SIGNAL \"%.*s\"\n", (int)op1S->string_len, op1S->string);
+            SET_SIGNAL(string_to_interrupt(op1S->string));
+            DISPATCH
+
+        /* SIGNALT_STRING_REG Signal type op1 if op2 true */
+        START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
+            if (op2RI) {
+                SET_SIGNAL(string_to_interrupt(op1S->string));
+            }
+            DISPATCH
+
+        /* SIGNALF_STRING_REG Signal type op1 if op2 true */
+        START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
+            if (!op2RI) {
+                SET_SIGNAL(string_to_interrupt(op1S->string));
+            }
+            DISPATCH
+
+        /* SIGNAL_STRING_STRING Signal type op1 (message op2) */
+        START_INSTRUCTION(SIGNAL_STRING_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNAL \"%.*s\",\"%.*s\"\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string);
+            SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+            DISPATCH
+
+        /* SIGNAL_STRING_REG Signal type op1 (payload op2) */
+        START_INSTRUCTION(SIGNAL_STRING_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SIGNAL \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
+            SET_SIGNAL_PAYLOAD(string_to_interrupt(op1S->string), op2R);
+            DISPATCH
+
+        /* SIGNALT_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
+        START_INSTRUCTION(SIGNALT_STRING_STRING_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SIGNALT \"%.*s\",\"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
+            if (op3RI) {
+                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+            }
+            DISPATCH
+
+        /* SIGNALF_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
+        START_INSTRUCTION(SIGNALF_STRING_STRING_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - SIGNALF \"%.*s\",\"%.*s\"\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
+            if (!op3RI) {
+                SET_SIGNAL_MSG(string_to_interrupt(op1S->string), op2S->string);
+            }
+            DISPATCH
+
+        /* Meta Instructions */
+
+        /* Load Module (op1 = module num of loaded op2) */
         START_INSTRUCTION(METALOADMODULE_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
             {
@@ -566,9 +1002,9 @@ START_OF_INSTRUCTIONS
             }
             DISPATCH
 
-            /* Loaded Procedures (op1 = array procedures in module op2) */
-        START_INSTRUCTION(METALOADEDPROCS_REG_REG) CALC_DISPATCH(2)
-            DEBUG("TRACE - METALOADEDPROCS R%d\n", (int) REG_IDX(1));
+        /* Loaded Exposed Procedures (op1 = array procedures in module op2) */
+        START_INSTRUCTION(METALOADEDEPROCS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - METALOADEDEPROCS R%d\n", (int) REG_IDX(1));
             {
                 chameleon_constant *c_entry;
                 proc_constant *p_entry;
@@ -580,10 +1016,10 @@ START_OF_INSTRUCTIONS
                 /* Module to be listed */
                 size_t mod = op2R->int_value - 1;
 
-                /* op1R will become an array of procedures names and pointers */
+                /* op1R will become an array of procedure names and pointers */
                 value_zero(op1R);
 
-                /* How many entries are needed */
+                /* How many entries are needed? */
                 i = context->modules[mod]->expose_head;
                 entries = 0;
                 while (i != -1) {
@@ -620,6 +1056,56 @@ START_OF_INSTRUCTIONS
                         }
                     }
                     i = e_entry->next;
+                }
+            }
+            DISPATCH
+
+        /* Loaded Procedures (op1 = array procedures in module op2) */
+        START_INSTRUCTION(METALOADEDPROCS_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - METALOADEDPROCS R%d\n", (int) REG_IDX(1));
+            {
+                chameleon_constant *c_entry;
+                proc_constant *p_entry;
+                int i;
+                size_t entries;
+                value *entry;
+
+                /* Module to be listed */
+                size_t mod = op2R->int_value - 1;
+
+                /* op1R will become an array of procedure names and pointers */
+                value_zero(op1R);
+
+                /* How many entries are needed? */
+                i = context->modules[mod]->proc_head;
+                entries = 0;
+                while (i != -1) {
+                    c_entry = (chameleon_constant *) (context->modules[mod]->segment.const_pool + i);
+                    if (c_entry->type == PROC_CONST) {
+                        entries++;
+                    }
+                    i = ((proc_constant *) c_entry)->next;
+                }
+
+                /* Set up array */
+                set_num_attributes(op1R, entries);
+                op1R->int_value = (rxinteger) entries; /* The cREXX convention for arrays */
+
+                /* Populate array */
+                i = context->modules[mod]->proc_head;
+                entries = 0;
+                while (i != -1) {
+                    c_entry = (chameleon_constant *) (context->modules[mod]->segment.const_pool + i);
+                    if (c_entry->type == PROC_CONST) {
+                        /* Exposed Procedure */
+                        p_entry = (proc_constant *) c_entry;
+                        entry = op1R->attributes[entries];
+                        set_num_attributes(entry, 2);
+                        set_null_string(entry->attributes[0], p_entry->name);
+                        entry->attributes[1]->int_value = (rxinteger) p_entry;
+                        entries++;
+                    }
+                    i = p_entry->next;
                 }
             }
             DISPATCH
@@ -1016,7 +1502,7 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(LOAD_REG_DECIMAL) CALC_DISPATCH(2)
     DEBUG("TRACE - LOAD R%d,%s\n",(int)REG_IDX(1),op2S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert decimal string to Decimal                              added August 2024 pej
@@ -1029,7 +1515,7 @@ START_OF_INSTRUCTIONS
     null_terminate_string_buffer(op1R);
     // Convert
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op1R->string_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert Integer to Decimal                                     added August 2024 pej
@@ -1040,7 +1526,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - ITOD R%lu\n", REG_IDX(1));
     // Convert
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert Float to Decimal                                       added August 2024 pej
@@ -1050,7 +1536,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1)
     DEBUG("TRACE - FTOD R%lu\n",REG_IDX(1));
     current_frame->decimal->decimalFromDouble(current_frame->decimal, op1R, op1R->float_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to string                                        17. August 2024 pej
@@ -1066,7 +1552,7 @@ START_OF_INSTRUCTIONS
     /* Convert */
     current_frame->decimal->decimalToString(current_frame->decimal, op1R, op1R->string_value);
     op1R->string_length = strlen(op1R->string_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to integer                                       17. August 2024 pej
@@ -1076,7 +1562,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOI R%lu\n", REG_IDX(1));
     current_frame->decimal->decimalToInt(current_frame->decimal, op1R, &op1R->int_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DTOF_REG  Convert Decimal Number to Float op1=f2dec(op2)              pej 19 Aug 2024
@@ -1086,7 +1572,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1);
     DEBUG("TRACE - DTOF_REG\n");
     current_frame->decimal->decimalToDouble(current_frame->decimal, op1R, &op1R->float_value);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Decimal addition                                               added August 2024 pej
@@ -1096,7 +1582,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3)
     DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DADD_REG_REG_DECIMAL  Decimal Add (op1=op2+op3)              pej 17 Aug 2024
@@ -1108,7 +1594,7 @@ START_OF_INSTRUCTIONS
     // Convert the string to a decimal
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
     current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op1R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Decimal subtraction                                            added August 2024 pej
@@ -1118,7 +1604,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3)
     DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DSUB_REG_REG_DECIMAL  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
@@ -1129,7 +1615,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DSUB R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
     current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DSUB_REG_REG_DECIMAL  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
@@ -1140,7 +1626,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DSUB R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
     current_frame->decimal->decimalSub(current_frame->decimal, op1R, op1R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1151,7 +1637,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3)
     DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DMULT_REG_REG_DECIMAL Decimal Multiply (op1=op2*op3)              pej 17 Aug 2024
@@ -1162,7 +1648,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DMULT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
     current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op1R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * Decimal division                                               added August 2024 pej
@@ -1172,7 +1658,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3)
     DEBUG("TRACE - DDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DDIV_REG_DECIMAL_REG  Decimal Divide  (op1=op2/op3)                   pej 17 Aug 2024
@@ -1183,7 +1669,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
     current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op1R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DDIV_REG_REG_DECIMAL  Decimal Divide (op1=op2/op3)                   pej 17 Aug 2024
@@ -1194,7 +1680,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
     current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op1R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DEQ_REG_REG_REG  Decimal Equals op1=(op2==op3)              pej 17 Aug 2024
@@ -1204,7 +1690,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) == 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DNE_REG_REG_REG  Decimal Not equals op1=(op2!=op3)              pej 17 Aug 2024
@@ -1214,7 +1700,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DNE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) != 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_REG_REG  Decimal Greater than op1=(op2>op3)              pej 17 Aug 2024
@@ -1224,7 +1710,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) > 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_REG_REG  Decimal Greater than equals op1=(op2>=op3)              pej 17 Aug 2024
@@ -1234,7 +1720,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) >= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_REG_REG  Decimal Less than op1=(op2<op3)              pej 17 Aug 2024
@@ -1244,7 +1730,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) < 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_REG_REG  Decimal Less than equals op1=(op2<=op3)              pej 17 Aug 2024
@@ -1254,7 +1740,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) <= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DEQ_REG_REG_DECIMAL  Decimal Equals op1=(op2==op3)              pej 19 Aug 2024
@@ -1264,7 +1750,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) == 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLTBR_ID_REG_REG  Decimal Less than if (op2<op3) goto op1              pej 17 Aug 2024
@@ -1277,7 +1763,7 @@ START_OF_INSTRUCTIONS
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGTBR_ID_REG_REG  Decimal Greater than if (op2>op3) goto op1              pej 17 Aug 2024
@@ -1290,7 +1776,7 @@ START_OF_INSTRUCTIONS
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DEQBR_ID_REG_REG  Decimal Equal if (op2=op3) goto op1              pej 19 Aug 2024
@@ -1303,7 +1789,7 @@ START_OF_INSTRUCTIONS
         next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
         CALC_DISPATCH_MANUAL
     }
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DNE_REG_REG_DECIMAL  Decimal Not equals op1=(op2!=op3)              pej 19 Aug 2024
@@ -1313,7 +1799,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DNE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) != 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_REG_DECIMAL  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
@@ -1323,7 +1809,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) > 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_DECIMAL_REG  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
@@ -1333,7 +1819,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGT R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) < 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_REG_DECIMAL  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
@@ -1343,7 +1829,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGTE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) >= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_DECIMAL_REG  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
@@ -1353,7 +1839,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DGTE R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) <= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_REG_DECIMAL  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
@@ -1363,7 +1849,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) < 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_DECIMAL_REG  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
@@ -1373,7 +1859,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLT R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) > 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_REG_DECIMAL  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
@@ -1383,7 +1869,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) <= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_DECIMAL_REG  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
@@ -1393,7 +1879,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DLTE R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) >= 0);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DCOPY_REG_REG  Copy Decimal op2 to op1              pej 17 Aug 2024
@@ -1404,9 +1890,8 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     if (op2R->decimal_value == NULL) {
         // Signal error
-        set_null_string(signal_value, "No Source Decimal Value");
-        signal_value->int_value = SIGNAL_INVALID_ARGUMENTS;
-        goto _signal;
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
+        DISPATCH
     }
     if (op1R == op2R) {
         // NOP
@@ -1434,9 +1919,8 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DSEX R%lu\n", REG_IDX(1));
     if (op1R->decimal_value == NULL) {
         // Signal error
-        set_null_string(signal_value, "No Source Decimal Value");
-        signal_value->int_value = SIGNAL_INVALID_ARGUMENTS;
-        goto _signal;
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
+        DISPATCH
     }
     current_frame->decimal->decimalNeg(current_frame->decimal, op1R, op1R);
     DISPATCH
@@ -1448,7 +1932,7 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(3);
     DEBUG("TRACE - DPOW R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DPOW_REG_REG_DECIMAL  op1=op2**op3              pej 19 Aug 2024
@@ -1459,7 +1943,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DPOW R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
     current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op1R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  DPOW_REG_DECIMAL_REG  op1=op2**op3              pej 19 Aug 2024
@@ -1470,7 +1954,7 @@ START_OF_INSTRUCTIONS
     DEBUG("TRACE - DPOW R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
     current_frame->decimal->decimalPow(current_frame->decimal, op1R, op1R, op3R);
-    SIGNAL_IF_DECIMAL_ERROR(current_frame->decimal)
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
  * DEXTR_REG_REG_REG Extract decimal to string coefficient and decimal exponent integer
@@ -1497,17 +1981,17 @@ START_OF_INSTRUCTIONS
             {
                 proc_constant *called_function = PROC_OP(1);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
-                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
+                if (called_function->start == SIZE_MAX) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name)
+                    DISPATCH
+                }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
                     rxpa_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
-                    if (signal_value->int_value) goto SIGNAL;
-                    if (signal_value->string_length) goto SIGNAL;
+                    INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc,
-                                            next_inst, 0);
-
+                    current_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
                     /* Prepare dispatch to procedure as early as possible */
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
@@ -1524,18 +2008,19 @@ START_OF_INSTRUCTIONS
                 proc_constant *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
 
-                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
+                if (called_function->start == SIZE_MAX) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
+                    DISPATCH
+                }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
                     rxpa_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
-                    if (signal_value->int_value) goto SIGNAL;
-                    if (signal_value->string_length) goto SIGNAL;
+                    INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    /* New stackframe - grabbing procedure object from the caller frame */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc,
-                                            next_inst, op1R);
+                    /* New stackframe - grabbing a procedure object from the caller frame */
+                    current_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
@@ -1549,22 +2034,20 @@ START_OF_INSTRUCTIONS
             {
                 proc_constant *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
-                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
+                if (called_function->start == SIZE_MAX) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
+                    DISPATCH
+                }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
                     rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
-                    if (signal_value->int_value) goto SIGNAL;
-                    if (signal_value->string_length) goto SIGNAL;
+                    INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    /* New stackframe - grabbing procedure object from the caller frame */
-                    current_frame =
-                            frame_f(called_function, (int) op3R->int_value,
-                                    current_frame,
-                                    next_pc, next_inst, op1R);
-
+                    /* New stackframe - grabbing a procedure object from the caller frame */
+                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     /* Prepare dispatch to procedure as early as possible */
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
                     CALC_DISPATCH_MANUAL
@@ -1589,20 +2072,19 @@ START_OF_INSTRUCTIONS
                 /* Function pointer is in register 2 */
                 proc_constant *called_function = (proc_constant *) op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-                if (called_function->start == SIZE_MAX) goto FUNCTION_NOT_FOUND;
+                if (called_function->start == SIZE_MAX) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
+                    DISPATCH
+                }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
                     rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
-                    if (signal_value->int_value) goto SIGNAL;
-                    if (signal_value->string_length) goto SIGNAL;
+                    INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame =
-                            frame_f(called_function, (int) op3R->int_value,
-                                    current_frame,
-                                    next_pc, next_inst, op1R);
+                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
 
                     /* Prepare dispatch to procedure as early as possible */
                     next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
@@ -1628,13 +2110,12 @@ START_OF_INSTRUCTIONS
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                next_inst = current_frame->return_inst;
-                char is_interrupt = current_frame->is_interrupt;
-                /* back to the parents stack frame */
+                unsigned char is_interrupt = current_frame->is_interrupt;
+                /* back to the parent's stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
-                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -1652,9 +2133,10 @@ START_OF_INSTRUCTIONS
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                if (is_interrupt) {
+                CALC_DISPATCH_MANUAL
+                if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
-                    END_BREAKPOINT
+                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
                 }
                 DISPATCH
             }
@@ -1664,8 +2146,7 @@ START_OF_INSTRUCTIONS
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                next_inst = current_frame->return_inst;
-                char is_interrupt = current_frame->is_interrupt;
+                unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg) {
                     if (REG_IDX(1) >= current_frame->procedure->locals)
@@ -1683,7 +2164,7 @@ START_OF_INSTRUCTIONS
                                                     ->index])
                                                     ->int_value; /* Exiting - grab the int rc */
                 if (!current_frame) {
-                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -1703,9 +2184,10 @@ START_OF_INSTRUCTIONS
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                if (is_interrupt) {
+                CALC_DISPATCH_MANUAL
+                if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
-                    END_BREAKPOINT
+                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
                 }
                 DISPATCH
             }
@@ -1715,8 +2197,7 @@ START_OF_INSTRUCTIONS
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                next_inst = current_frame->return_inst;
-                char is_interrupt = current_frame->is_interrupt;
+                unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg)
                     current_frame->return_reg->int_value = op1I;
@@ -1724,7 +2205,7 @@ START_OF_INSTRUCTIONS
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
-                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -1745,9 +2226,10 @@ START_OF_INSTRUCTIONS
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                if (is_interrupt) {
+                CALC_DISPATCH_MANUAL
+                if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
-                    END_BREAKPOINT
+                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
                 }
                 DISPATCH
             }
@@ -1760,8 +2242,7 @@ START_OF_INSTRUCTIONS
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                next_inst = current_frame->return_inst;
-                char is_interrupt = current_frame->is_interrupt;
+                unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg)
                     current_frame->return_reg->float_value = op1F;
@@ -1769,7 +2250,7 @@ START_OF_INSTRUCTIONS
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
-                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -1788,9 +2269,10 @@ START_OF_INSTRUCTIONS
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                if (is_interrupt) {
+                CALC_DISPATCH_MANUAL
+                if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
-                    END_BREAKPOINT
+                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
                 }
                 DISPATCH
             }
@@ -1804,8 +2286,7 @@ START_OF_INSTRUCTIONS
             {
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
-                next_inst = current_frame->return_inst;
-                char is_interrupt = current_frame->is_interrupt;
+                unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
@@ -1813,7 +2294,7 @@ START_OF_INSTRUCTIONS
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
-                    DEBUG("TRACE - RET FROM MAIN()\n");
+                    DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -1831,9 +2312,10 @@ START_OF_INSTRUCTIONS
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                if (is_interrupt) {
+                CALC_DISPATCH_MANUAL
+                if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     pc = next_pc;
-                    END_BREAKPOINT
+                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
                 }
                 DISPATCH
             }
@@ -1856,96 +2338,168 @@ START_OF_INSTRUCTIONS
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-            if (op3R->int_value < 0) goto OUT_OF_RANGE;
-            if (op3R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op3R->int_value < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op3R->int_value >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op1R = op2R->attributes[op3R->int_value];
             DISPATCH
 
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
-            if ((int)op3I < 0) goto OUT_OF_RANGE;
-            if ((int)op3I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op3I < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op3I >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op1R = op2R->attributes[(int)op3I];
             DISPATCH
 
         /* Link attribute op3 (1 base) of op2 to op1 */
         START_INSTRUCTION(LINKATTR1_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-            if (op3R->int_value - 1 < 0) goto OUT_OF_RANGE;
-            if (op3R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op3R->int_value - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op3R->int_value - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op1R = op2R->attributes[op3R->int_value - 1];
             DISPATCH
 
         /* Link attribute op3 (1 base) of op2 to op1 */
         START_INSTRUCTION(LINKATTR1_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR1 R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
-            if ((int)op3I - 1 < 0) goto OUT_OF_RANGE;
-            if ((int)op3I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op3I - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op3I - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op1R = op2R->attributes[(int)op3I - 1];
             DISPATCH
 
         /* Link op3 to attribute op1 of op2 */
         START_INSTRUCTION(LINKTOATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKTOATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-            if (op1R->int_value < 0) goto OUT_OF_RANGE;
-            if (op1R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op1R->int_value < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op1R->int_value >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[op1R->int_value] = op3R;
             DISPATCH
 
         /* Link op3 to attribute op1 of op2 */
         START_INSTRUCTION(LINKTOATTR_INT_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKTOATTR %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
-            if ((int)op1I < 0) goto OUT_OF_RANGE;
-            if ((int)op1I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op1I < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op1I >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[(int)op1I] = op3R;
             DISPATCH
 
         /* Link op3 to attribute op1 (1 base) of op2 */
         START_INSTRUCTION(LINKTOATTR1_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKTOATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-            if (op1R->int_value - 1 < 0) goto OUT_OF_RANGE;
-            if (op1R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op1R->int_value - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op1R->int_value - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[op1R->int_value - 1] = op3R;
             DISPATCH
 
         /* Link op3 to attribute op1 (1 base) of op2 */
         START_INSTRUCTION(LINKTOATTR1_INT_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKTOATTR1 %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
-            if ((int)op1I - 1 < 0) goto OUT_OF_RANGE;
-            if ((int)op1I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op1I - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op1I - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[(int)op1I -1] = op3R;
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
         START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - UNLINKATTR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-            if (op1R->int_value < 0) goto OUT_OF_RANGE;
-            if (op1R->int_value >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op1R->int_value < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op1R->int_value >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[op1R->int_value] = op2R->unlinked_attributes[op1R->int_value];
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
         START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - UNLINKATTR %d,R%lu\n", (int)op1I, REG_IDX(2));
-            if ((int)op1I < 0) goto OUT_OF_RANGE;
-            if ((int)op1I >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op1I < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op1I >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[(int)op1I] = op2R->unlinked_attributes[(int)op1I];
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
         START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - UNLINKATTR1 R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-            if (op1R->int_value - 1 < 0) goto OUT_OF_RANGE;
-            if (op1R->int_value - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if (op1R->int_value - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if (op1R->int_value - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[op1R->int_value - 1] = op2R->unlinked_attributes[op1R->int_value - 1];
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
         START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - UNLINKATTR1 %d,R%lu\n", (int)op1I, REG_IDX(2));
-            if ((int)op1I - 1 < 0) goto OUT_OF_RANGE;
-            if ((int)op1I - 1 >= op2R->num_attributes) goto OUT_OF_RANGE;
+            if ((int)op1I - 1 < 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
+            if ((int)op1I - 1 >= op2R->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH
+            }
             op2R->attributes[(int)op1I - 1] = op2R->unlinked_attributes[(int)op1I - 1];
             DISPATCH
 
@@ -2157,33 +2711,6 @@ START_OF_INSTRUCTIONS
             if (op3RI) next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             else next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(2);
             CALC_DISPATCH_MANUAL
-            DISPATCH
-
-        /* SIGNAL_STRING Signal type op1 */
-        START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
-            DEBUG("TRACE - SIGNAL \"%.*s\"\n", (int)op1S->string_len, op1S->string);
-            set_const_string(signal_value, op1S);
-            signal_value->int_value = 0; /* Will be set later, from the string if possible */
-            goto SIGNAL;
-
-        /* SIGNALT_STRING_REG Signal type op1 if op2 true */
-        START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
-            DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
-            if (op2RI) {
-                set_const_string(signal_value, op1S);
-                signal_value->int_value = 0; /* Will be set later, from the string if possible */
-                goto SIGNAL;
-            }
-            DISPATCH
-
-        /* SIGNALF_STRING_REG Signal type op1 if op2 true */
-        START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
-            DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
-            if (!op2RI) {
-                set_const_string(signal_value, op1S);
-                signal_value->int_value = 0; /* Will be set later, from the string if possible */
-                goto SIGNAL;
-            }
             DISPATCH
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)
@@ -3313,7 +3840,7 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
         op1R->int_value = ipow(op2R->int_value, op3R->int_value);
-        if (!op1R->int_value) goto OVERFLOW_UNDERFLOW;
+        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3324,7 +3851,7 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
         op1R->int_value = ipow(op2R->int_value, op3I);
-        if (!op1R->int_value) goto OVERFLOW_UNDERFLOW;
+        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3335,7 +3862,7 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
         op1R->int_value = ipow(op2I, op3R->int_value);
-        if (!op1R->int_value) goto OVERFLOW_UNDERFLOW;
+        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -3389,7 +3916,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - FTOI R%lu\n", REG_IDX(1));
             int_from_float(op1R);
             if (op1R->float_value != (double)op1R->int_value) {
-                goto CONVERSION_ERROR  ;
+                SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3436,7 +3963,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - STOI R%lu\n", REG_IDX(1));
             /* Convert a string to a integer - returns 1 on error */
             if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
-                goto CONVERSION_ERROR  ;
+                SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
             DISPATCH
 
@@ -3447,7 +3974,7 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - STOF R%lu\n", REG_IDX(1));
             /* Convert a string to a float - returns 1 on error */
             if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
-                goto CONVERSION_ERROR  ;
+                SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3471,7 +3998,7 @@ START_OF_INSTRUCTIONS
  * R3 contains the float value
  * R1 will store the coefficient as a string (or nan, inf, -inf)
  * R2 will store the decimal exponent as an integer
- * Output normalised, rounded to 7 decimal places (i.e. 6 fractional digits), and
+ * Output normalised, rounded to DBL_DIG (typically 15) decimal places (i.e. DBL_DIG-1 fractional digits), and
  * trimmed of trailing zeros
  * This instruction is designed to allow the user to format the float as they wish
  */
@@ -4304,7 +4831,11 @@ START_OF_INSTRUCTIONS
             hash = hash ^ (ch);          // xor next byte into the bottom of the hash
             hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
         }
+#ifdef __32BIT__
         sprintf(str, "%lu", hash);
+#else
+        sprintf(str, "%llu", hash);
+#endif
         set_null_string(op1R, str);
      }
 
@@ -4422,14 +4953,12 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 /* op3R->attributes[2] is the environment variables */
                 spawn_rc = shellspawn(command, pIn, pOut, pErr, op3R->attributes[3], &command_rc, &errorText);
                 if (spawn_rc == SHELLSPAWN_NOFOUND) {
-                    set_null_string(signal_value, "Command Not Found");
-                    signal_value->int_value = SIGNAL_FAILURE;
-                    goto SIGNAL;
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Command Not Found");
+                    DISPATCH
                 }
                 if (spawn_rc) {
-                    set_null_string(signal_value, errorText);
-                    signal_value->int_value = SIGNAL_FAILURE;
-                    goto SIGNAL;
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, errorText);
+                    DISPATCH
                 }
                 if (errorText) free(errorText);
                 free(command);
@@ -4689,36 +5218,31 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
     START_INSTRUCTION(ICHKRNG_REG_INT_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - ICHKRNG R%lu,%d,%d\n", REG_IDX(1), (int)op2I, (int)op3I);
-        if (op1R->int_value < op2I) goto OUT_OF_RANGE;
-        if (op1R->int_value > op3I) goto OUT_OF_RANGE;
+        if (op1R->int_value < op2I || op1R->int_value > op3I) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
         DISPATCH
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
     START_INSTRUCTION(ICHKRNG_REG_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - ICHKRNG R%lu,%d,R%lu\n", REG_IDX(1), (int)op2I, REG_IDX(3));
-        if (op1R->int_value < op2I) goto OUT_OF_RANGE;
-        if (op1R->int_value > op3R->int_value) goto OUT_OF_RANGE;
+        if (op1R->int_value < op2I || op1R->int_value > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
         DISPATCH
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
     START_INSTRUCTION(ICHKRNG_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - ICHKRNG R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
-        if (op1R->int_value < op2R->int_value) goto OUT_OF_RANGE;
-        if (op1R->int_value > op3R->int_value) goto OUT_OF_RANGE;
+        if (op1R->int_value < op2R->int_value || op1R->int_value > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
         DISPATCH
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
     START_INSTRUCTION(ICHKRNG_INT_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - ICHKRNG %d,%d,R%lu\n", (int)op1I, (int)op2I, REG_IDX(3));
-        if (op1I < op2I) goto OUT_OF_RANGE;
-        if (op1I > op3R->int_value) goto OUT_OF_RANGE;
+        if (op1I < op2I || op1I > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
         DISPATCH
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
     START_INSTRUCTION(ICHKRNG_INT_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - ICHKRNG %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
-        if (op1I < op2R->int_value) goto OUT_OF_RANGE;
-        if (op1I > op3R->int_value) goto OUT_OF_RANGE;
+        if (op1I < op2R->int_value || op1I > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
         DISPATCH
 
     /* getenv - get environment variable, op1=env[op2] */
@@ -4753,7 +5277,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
         START_INSTRUCTION(IUNKNOWN)
         START_INSTRUCTION(INULL)
-            goto UNKNOWN_INSTRUCTION;
+            SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION);
+            DISPATCH
 
         START_INSTRUCTION(EXIT)
             DEBUG("TRACE - EXIT");
@@ -4771,65 +5296,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             goto interprt_finished;
 
     END_OF_INSTRUCTIONS
-
-    OVERFLOW_UNDERFLOW:
-        set_null_string(signal_value, "OVERFLOW_UNDERFLOW");
-        signal_value->int_value = SIGNAL_OVERFLOW_UNDERFLOW;
-        goto SIGNAL;
-
-    CONVERSION_ERROR:
-        set_null_string(signal_value, "CONVERSION_ERROR");
-         signal_value->int_value = SIGNAL_CONVERSION_ERROR;
-        goto SIGNAL;
-
-    UNKNOWN_INSTRUCTION:
-        set_null_string(signal_value, "UNKNOWN_INSTRUCTION");
-        signal_value->int_value = SIGNAL_UNKNOWN_INSTRUCTION;
-        goto SIGNAL;
-
-    FUNCTION_NOT_FOUND:
-        set_null_string(signal_value, "FUNCTION_NOT_FOUND");
-        signal_value->int_value = SIGNAL_FUNCTION_NOT_FOUND;
-        goto SIGNAL;
-
-    OUT_OF_RANGE:
-        set_null_string(signal_value, "OUT_OF_RANGE");
-        signal_value->int_value = SIGNAL_OUT_OF_RANGE;
-        goto SIGNAL;
-
-    FAILURE:
-        set_null_string(signal_value, "FAILURE");
-        signal_value->int_value = SIGNAL_FAILURE;
-        goto SIGNAL;
-
-    SIGNAL:
-        // Fill in the text / code if not defined already
-        if (signal_value->int_value == 0 && signal_value->string_length == 0) {
-            signal_value->int_value = SIGNAL_OTHER;
-            set_null_string(signal_value, "SIGNAL_OTHER");
-        }
-        else if (signal_value->int_value == 0) {
-            null_terminate_string_buffer(signal_value);
-            signal_value->int_value = rxpa_getsignalcode(signal_value->string_value);
-        }
-        else if (signal_value->string_length == 0) {
-            set_null_string(signal_value, rxpa_getsignaltext(signal_value->int_value));
-        }
-
-        null_terminate_string_buffer(signal_value);
-        if (strcmp(signal_value->string_value, rxpa_getsignaltext(signal_value->int_value)) == 0) {
-            // The signal description from the code and text is the same - so do not repeat it
-            fprintf(stderr,"\nSignal %d (%s)\n", (int)signal_value->int_value, rxpa_getsignaltext(signal_value->int_value));
-        }
-        else {
-            // The signal text contains additional details to the code.
-            fprintf(stderr,"\nSignal %d (%s) - %s\n", (int)signal_value->int_value, rxpa_getsignaltext(signal_value->int_value), signal_value->string_value);
-        }
-
-        fprintf(stderr,"No Signal Handler - not supported [yet!] so Aborting\n");
-
-        rc = 100 + (int)(signal_value->int_value);
-        goto interprt_finished;
 
     interprt_finished:
 
@@ -4878,6 +5344,15 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Free interrupt argument */
     clear_value(interrupt_arg);
     free(interrupt_arg);
+
+    /* Free array of interrupt objects - interrupt_object[] */
+    {
+        size_t i;
+        for (i = 0; i < RXSIGNAL_MAX; i++) {
+            clear_value(interrupt_object[i]);
+            free(interrupt_object[i]);
+        }
+    }
 
     /* Free arguments array */
     if (arguments_array) {

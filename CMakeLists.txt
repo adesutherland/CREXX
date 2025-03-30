@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.24)
 project(CREXX)
 
+# Print the CMake version
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
+
+# Print the CMake gererator
+message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
+
+# Debugging output - make cmake print all the commands it executes
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
 # Global Platform Options
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     if ("${CMAKE_CXX_PLATFORM_ID}" STREQUAL "MinGW")
@@ -35,8 +44,3 @@ set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 # set the destination directory for your scripts in the build directory
 set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-# copy the scripts from the source directory to the destination directory using file() command
-#file(COPY ${SOURCE_SCRIPTS_DIR} DESTINATION ${DEST_SCRIPTS_DIR})
-
-

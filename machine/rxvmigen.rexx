@@ -50,8 +50,8 @@
 
   inst=inst+1
   call add_meta_inst     '                             {'inst',"breakpoint","",0,OP_NONE,OP_NONE,OP_NONE},'
-  call add_threaded_inst '                         &&BREAKPOINT,'
-  call add_bytecode_inst '                         INST_BREAKPOINT,'
+  call add_threaded_inst '                         &&INTERRUPT,'
+  call add_bytecode_inst '                         INST_INTERRUPT,'
 
   inst=inst+1
   call add_meta_inst     '                             {'inst',"unknown","",0,OP_NONE,OP_NONE,OP_NONE} };'
@@ -161,7 +161,8 @@ alreadyDefined:
 	call inc_miss '  CALC_DISPATCH('numparm');'
     call inc_miss '    DEBUG("TRACE - 'ucmd'\n");'
     call inc_miss '    DEBUG("'ucmd' not yet defined\n");'
-	call inc_miss '    goto SIGNAL;'
+    call inc_miss '    SET_SIGNAL(RXSIGNAL_NOT_IMPLEMENTED);'
+	call inc_miss '    DISPATCH'
 
 /*
 	do ni=1 to numparm

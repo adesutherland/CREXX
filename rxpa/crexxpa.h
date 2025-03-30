@@ -43,7 +43,7 @@ typedef enum rxsignal {
     SIGNAL_ERROR = 1,                /* Triggered when a syntax error occurs during the execution of a REXX program */
     SIGNAL_OVERFLOW_UNDERFLOW = 2,   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
     SIGNAL_CONVERSION_ERROR = 3,     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
-    SIGNAL_UNKNOWN_INSTRUCTION = 4,  /* Triggered when the REXX program attempts to execute an unknown RSAS instruction */
+    SIGNAL_UNKNOWN_INSTRUCTION = 4,  /* Triggered when the REXX program attempts to execute an unknown RXAS instruction */
     SIGNAL_FUNCTION_NOT_FOUND = 5,   /* Triggered when the REXX program attempts to execute an unknown function */
     SIGNAL_OUT_OF_RANGE = 6,         /* Triggered when the REXX program attempts to access an array element that is out of range */
     SIGNAL_FAILURE = 7,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */

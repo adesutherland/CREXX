@@ -48,6 +48,7 @@ RX_INLINE void value_init(value *v) {
     v->binary_value = 0;
     v->binary_buffer_length = 0;
     v->decimal_value = 0;
+    v->decimal_value_length = 0;
     v->decimal_buffer_length = 0;
     value_zero(v);
 }
@@ -290,7 +291,7 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
 }
 
 /* set value string from null string value */
-RX_INLINE void set_null_string(value *v, char *from) {
+RX_INLINE void set_null_string(value *v, const char *from) {
     prep_string_buffer(v, strlen(from));
     memcpy(v->string_value, from, v->string_length);
     v->string_pos = 0;
