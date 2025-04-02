@@ -38,21 +38,23 @@ typedef void* rxpa_attribute_value;
 typedef void (*rxpa_libfunc)(rxinteger, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
 
 // Enumeration of Signal Codes
+// These are used to indicate the status of the REXX program
+// NOTE These need to sync with the interpreter rxsignal.h file (they are separate to isolate the plugin from the interpreter)
 typedef enum rxsignal {
     SIGNAL_NONE = 0,
-    SIGNAL_ERROR = 1,                /* Triggered when a syntax error occurs during the execution of a REXX program */
-    SIGNAL_OVERFLOW_UNDERFLOW = 2,   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
-    SIGNAL_CONVERSION_ERROR = 3,     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
-    SIGNAL_UNKNOWN_INSTRUCTION = 4,  /* Triggered when the REXX program attempts to execute an unknown RXAS instruction */
-    SIGNAL_FUNCTION_NOT_FOUND = 5,   /* Triggered when the REXX program attempts to execute an unknown function */
-    SIGNAL_OUT_OF_RANGE = 6,         /* Triggered when the REXX program attempts to access an array element that is out of range */
-    SIGNAL_FAILURE = 7,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
-    SIGNAL_HALT = 8,                 /* Triggered when the REXX program receives an external request to halt its execution */
-    SIGNAL_NOTREADY = 9,             /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
-    SIGNAL_INVALID_ARGUMENTS = 10,   /* Triggered when invalid arguments are passed to a function or subroutine */
-    SIGNAL_DIVISION_BY_ZERO = 11,    /* Triggered when the REXX program attempts to divide by zero */
-    SIGNAL_UNICODE_ERROR = 12,       /* Triggered when an unicode error occurs */
-    SIGNAL_OTHER = 99                /* Triggered when an unknown error occurs */
+    SIGNAL_ERROR = 3,                /* Triggered when a syntax error occurs during the execution of a REXX program */
+    SIGNAL_OVERFLOW_UNDERFLOW = 4,   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
+    SIGNAL_CONVERSION_ERROR = 6,     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
+    SIGNAL_UNKNOWN_INSTRUCTION = 10, /* Triggered when the REXX program attempts to execute an unknown RXAS instruction */
+    SIGNAL_FUNCTION_NOT_FOUND = 11,  /* Triggered when the REXX program attempts to execute an unknown function */
+    SIGNAL_OUT_OF_RANGE = 8,         /* Triggered when the REXX program attempts to access an array element that is out of range */
+    SIGNAL_FAILURE = 2,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
+    SIGNAL_HALT = 20,                /* Triggered when the REXX program receives an external request to halt (term) its execution */
+    SIGNAL_NOTREADY = 15,            /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
+    SIGNAL_INVALID_ARGUMENTS = 7,    /* Triggered when invalid arguments are passed to a function or subroutine */
+    SIGNAL_DIVISION_BY_ZERO = 5,     /* Triggered when the REXX program attempts to divide by zero */
+    SIGNAL_UNICODE_ERROR = 9,        /* Triggered when an unicode error occurs */
+    SIGNAL_OTHER = 30                /* Triggered when an unknown error occurs */
 } rxsignal;
 
 // Plugin Helper Functions

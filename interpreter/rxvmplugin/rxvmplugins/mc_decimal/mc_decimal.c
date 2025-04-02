@@ -36,17 +36,17 @@ static void check_signal(decplugin *plugin) {
 
         switch (dec_context->status) {
             case DEC_Invalid_operation:
-                plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+                plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
                 break;
             case DEC_Division_by_zero:
-                plugin->base.signal_number = RXVM_SIGNAL_DIVISION_BY_ZERO;
+                plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
                 break;
             case DEC_Overflow:
             case DEC_Underflow:
-                plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+                plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
                 break;
             default:
-                plugin->base.signal_number = RXVM_SIGNAL_ERROR;
+                plugin->base.signal_number = RXSIGNAL_ERROR;
         }
         strcpy(buffer, "decNumber: ");
         strcat(buffer, decContextStatusToString(dec_context));

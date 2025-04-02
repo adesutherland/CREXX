@@ -8,20 +8,14 @@ set(CMAKE_C_STANDARD 90)
 include(${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/RxvmPluginFunction.cmake)
 
 # Add the dynamic plugin library
-add_dynamic_rxvmplugin_target(db_decimal_dynamic db_decimal.c ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h)
-add_dependencies(db_decimal_dynamic rxvmplugin) # Note: For build safety we want rxvm to be built first
-target_include_directories(db_decimal_dynamic PRIVATE .)
-target_include_directories(db_decimal_dynamic PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
-target_include_directories(db_decimal_dynamic PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+add_dynamic_rxvmplugin_target(db_decimal_dynamic db_decimal.c)
+
 # Set the output name to db_decimal
 set_target_properties(db_decimal_dynamic PROPERTIES OUTPUT_NAME db_decimal)
 
 # Add the static plugin library - with manual linking and initialising
-add_static_rxvmplugin_target(db_decimal_manual db_decimal.c ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h)
-add_dependencies(db_decimal_manual rxvmplugin) # Note: For build safety we want rxvm to be built first
-target_include_directories(db_decimal_manual PRIVATE .)
-target_include_directories(db_decimal_manual PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
-target_include_directories(db_decimal_manual PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+add_static_rxvmplugin_target(db_decimal_manual db_decimal.c)
+
 # add MANUAL_PLUGIN_LINK to the compile definitions
 target_compile_definitions(db_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 

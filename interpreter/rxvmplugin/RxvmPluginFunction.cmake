@@ -9,7 +9,12 @@ function(add_dynamic_rxvmplugin_target plugin_name)
     endif()
 
     # Create the plugin module
-    add_library(${plugin_name} MODULE ${sources})
+    add_library(${plugin_name} MODULE ${sources}
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h
+            ${CMAKE_SOURCE_DIR}/interpreter/rxsignal.h)
+    add_dependencies(${plugin_name} rxvmplugin)
+    target_include_directories(${plugin_name} PRIVATE .)
+    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
     target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
     target_compile_definitions(${plugin_name} PRIVATE BUILD_DLL)
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rxvm_")
@@ -27,7 +32,12 @@ function(add_static_rxvmplugin_target plugin_name)
     endif()
 
     # Create a static library version of the plugin
-    add_library(${plugin_name} STATIC ${sources})
+    add_library(${plugin_name} STATIC ${sources}
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h
+            ${CMAKE_SOURCE_DIR}/interpreter/rxsignal.h)
+    add_dependencies(${plugin_name} rxvmplugin)
+    target_include_directories(${plugin_name} PRIVATE .)
+    target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
     target_include_directories(${plugin_name} PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
     set_target_properties(${plugin_name} PROPERTIES PREFIX "rxvm_")
 endfunction()

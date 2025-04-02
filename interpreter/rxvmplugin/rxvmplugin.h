@@ -10,6 +10,7 @@
 #define CREXX_RXVMPLUGIN_H
 
 #include "rxvalue.h" /* For register `value` */
+#include "rxsignal.h"
 
 /* Enum for the different types of plugins */
 typedef enum rxvm_plugin_type {
@@ -18,22 +19,6 @@ typedef enum rxvm_plugin_type {
     RXVM_PLUGIN_UNICODE = 2, // Unicode Plugin
     RXVM_PLUGIN_MAX = 3 // Maximum value for the enum
 } rxvm_plugin_type;
-
-// Signal Codes - These need to be synced with the rxsigal enum in crexxpa.h */
-#define RXVM_SIGNAL_NONE 0
-#define RXVM_SIGNAL_ERROR 1                /* Triggered when a syntax error occurs during the execution of a REXX program */
-#define RXVM_SIGNAL_OVERFLOW_UNDERFLOW 2   /* Triggered when a numeric overflow or underflow occurs during the execution of a REXX program */
-#define RXVM_SIGNAL_CONVERSION_ERROR 3     /* Triggered when a conversion error between types occurs during the execution of a REXX program */
-#define RXVM_SIGNAL_UNKNOWN_INSTRUCTION 4  /* Triggered when the REXX program attempts to execute an unknown RSAS instruction */
-#define RXVM_SIGNAL_FUNCTION_NOT_FOUND 5   /* Triggered when the REXX program attempts to execute an unknown function */
-#define RXVM_SIGNAL_OUT_OF_RANGE 6         /* Triggered when the REXX program attempts to access an array element that is out of range */
-#define RXVM_SIGNAL_FAILURE 7              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
-#define RXVM_SIGNAL_HALT 8                 /* Triggered when the REXX program receives an external request to halt its execution */
-#define RXVM_SIGNAL_NOTREADY 9             /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
-#define RXVM_SIGNAL_INVALID_ARGUMENTS 10   /* Triggered when invalid arguments are passed to a function or subroutine */
-#define RXVM_SIGNAL_DIVISION_BY_ZERO 11    /* Triggered when the REXX program attempts to divide by zero */
-#define RXVM_SIGNAL_UNICODE_ERROR 12       /* Triggered when an unicode error occurs */
-#define RXVM_SIGNAL_OTHER 99
 
 /* Base information block for all rxvm plugins - this is extended for each plugin type */
 typedef struct rxvm_plugin rxvm_plugin;

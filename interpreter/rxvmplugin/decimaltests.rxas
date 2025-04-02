@@ -252,6 +252,9 @@ test15end:
     say r4
 test16end:
 
+    /* Test ddiv (reg, reg, reg) - with division by zero */
+    say ""
+
     /* todo: test ddiv with division by zero when we can trap signals */
 
     /* Test DEQ_REG_REG_REG */

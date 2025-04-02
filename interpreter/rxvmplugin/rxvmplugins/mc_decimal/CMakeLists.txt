@@ -25,23 +25,14 @@ target_link_libraries(decnumber_test decnumber)
 include(${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/RxvmPluginFunction.cmake)
 
 # Add the decnumber dynamic plugin library
-add_dynamic_rxvmplugin_target(mc_decimal_dynamic mc_decimal.c ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h)
-add_dependencies(mc_decimal_dynamic rxvmplugin rxvm) # Note: For build safety we want rxvm to be built first
-target_include_directories(mc_decimal_dynamic PRIVATE .)
-target_include_directories(mc_decimal_dynamic PRIVATE decnumber)
-target_include_directories(mc_decimal_dynamic PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
-target_include_directories(mc_decimal_dynamic PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+add_dynamic_rxvmplugin_target(mc_decimal_dynamic mc_decimal.c)
 target_link_libraries(mc_decimal_dynamic decnumber)
 # Set the output name to mc_decimal
 set_target_properties(mc_decimal_dynamic PROPERTIES OUTPUT_NAME mc_decimal)
 
 # Add the decnumber static plugin library - with auto linking and initialising of the plugin
-add_static_rxvmplugin_target(mc_decimal mc_decimal.c ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h)
-add_dependencies(mc_decimal rxvmplugin rxvm) # Note: For build safety we want rxvm to be built first
-target_include_directories(mc_decimal PRIVATE .)
+add_static_rxvmplugin_target(mc_decimal mc_decimal.c)
 target_include_directories(mc_decimal PRIVATE decnumber)
-target_include_directories(mc_decimal PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
-target_include_directories(mc_decimal PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 target_link_libraries(mc_decimal decnumber)
 
 # Add the static test harness executable - with auto linking and initialising of the plugin
@@ -62,12 +53,7 @@ target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin)
 add_dependencies(mc_decimal_dyn_test_harness mc_decimal_dynamic)
 
 # Add the decnumber static plugin library - with manual linking and initialising
-add_static_rxvmplugin_target(mc_decimal_manual mc_decimal.c ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/rxvmplugin.h)
-add_dependencies(mc_decimal_manual rxvmplugin rxvm) # Note: For build safety we want rxvm to be built first
-target_include_directories(mc_decimal_manual PRIVATE .)
-target_include_directories(mc_decimal_manual PRIVATE decnumber)
-target_include_directories(mc_decimal_manual PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
-target_include_directories(mc_decimal_manual PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
+add_static_rxvmplugin_target(mc_decimal_manual mc_decimal.c)
 target_link_libraries(mc_decimal_manual decnumber)
 # add MANUAL_PLUGIN_LINK to the compile definitions
 target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)

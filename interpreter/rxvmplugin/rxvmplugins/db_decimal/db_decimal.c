@@ -51,40 +51,40 @@ static void check_signal(decplugin *plugin, long double value) {
     // Detect the long double errors
 #if USE_ERRNO
     if (errno == ERANGE) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         errno = 0; // Clear errno
         return;
     }
     if (errno == EDOM) {
-        plugin->base.signal_number = RXVM_SIGNAL_DIVISION_BY_ZERO;
+        plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
         plugin->base.signal_string = "Divide by zero or domain error";
         errno = 0; // Clear errno
         return;
     }
 #else
     if (value == HUGE_VALL || value == -HUGE_VALL) {
-        plugin->base.signal_number = RXVM_SIGNAL_DIVISION_BY_ZERO;
+        plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
         plugin->base.signal_string = "Divide by zero";
         return;
     }
     if (value == LDBL_MAX || value == -LDBL_MAX) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         return;
     }
     if (value == LDBL_MIN || value == -LDBL_MIN) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         return;
     }
     if (isnan(value)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return;
     }
     if (value == 0.0 && signbit(value)) {
-        plugin->base.signal_number = RXVM_SIGNAL_DIVISION_BY_ZERO;
+        plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
         plugin->base.signal_string = "Negative zero";
         return;
     }
@@ -337,13 +337,13 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
 
     // Handle special cases
     if (isnan(decimalValue)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Source is NaN";
         return;
     }
     if (decimalValue == HUGE_VALL || decimalValue == LDBL_MAX || decimalValue == -HUGE_VALL || decimalValue == -LDBL_MAX ||
         decimalValue > (long double)INT64_MAX || decimalValue < (long double)INT64_MIN) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         return;
     }
@@ -359,13 +359,13 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
     }
     if (exponent > 18) {
         // The value is too large to fit in an int64_t
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         return;
     }
     if (!isdigit(c[0])) {
         // Not a number - e.g. "nan" or "inf"
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Source is not a number";
         return;
     }
@@ -386,7 +386,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
         uvalue *= int_powers_of_10[exponent];
         if (is_neg) {
             if (-uvalue < INT64_MIN) {
-                plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+                plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
                 plugin->base.signal_string = "Overflow/Underflow";
             }
             else {
@@ -395,7 +395,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
         }
         else {
             if (uvalue > INT64_MAX) {
-                plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+                plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
                 plugin->base.signal_string = "Overflow/Underflow";
             }
             else {
@@ -404,7 +404,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
         }
     } else {
         // The value is not an integer
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Source is not an integer";
     }
 }
@@ -451,11 +451,11 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
     *result = (double)*(long double*)input->decimal_value;
     /* Check if *result is a valid number - note that check_signal() works for long double but not double ... */
     if (isnan(*result)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Source is NaN";
     }
     if (*result == HUGE_VAL || *result == -HUGE_VAL) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
     }
     check_signal(plugin, *result);
@@ -539,12 +539,12 @@ static int decimalCompare(decplugin *plugin, const value *op1, const value *op2)
     long double number1 = *(long double*)op1->decimal_value;
     long double number2 = *(long double*)op2->decimal_value;
     if (isnan(number1)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return 0;
     }
     if (isnan(number2)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return 0;
     }
@@ -564,7 +564,7 @@ static int decimalCompareString(decplugin *plugin, const value *op1, const char 
     char *endptr;
     long double number1 = *(long double*)op1->decimal_value;
     if (isnan(number1)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return 0;
     }
@@ -572,27 +572,27 @@ static int decimalCompareString(decplugin *plugin, const value *op1, const char 
     errno = 0;  // Reset errno before the call
     long double number2 = strtold(op2, &endptr);
     if (endptr == op2) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return 0;
     }
     if (errno == ERANGE) {
         if (number2 == HUGE_VALL || number2 == -HUGE_VALL) {
-            plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+            plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
             plugin->base.signal_string = "Overflow";
         } else {
-            plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+            plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
             plugin->base.signal_string = "Underflow";
         }
         return 0;
     }
     if (number2 == HUGE_VALL || number2 == -HUGE_VALL) {
-        plugin->base.signal_number = RXVM_SIGNAL_OVERFLOW_UNDERFLOW;
+        plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
         plugin->base.signal_string = "Overflow/Underflow";
         return 0;
     }
     if (isnan(number2)) {
-        plugin->base.signal_number = RXVM_SIGNAL_CONVERSION_ERROR;
+        plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
         plugin->base.signal_string = "Invalid operation";
         return 0;
     }
