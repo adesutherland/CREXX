@@ -24,6 +24,8 @@
 
 // #include <complex.h>
 
+#include <signal.h>
+
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
 
@@ -396,6 +398,19 @@ RX_INLINE void clear_frame(stack_frame *frame) {
     }
 }
 
+// Bit field of raised VM interrupts (checked by the interpreter)
+static volatile sig_atomic_t interrupts = 0;
+
+// Function to set an interrupt
+void set_interrupt(unsigned char signal) {
+    interrupts |= 1 << (signal - 1);
+}
+
+// Function to clear an interrupt
+void clear_interrupt(unsigned char signal) {
+    interrupts &= ~(1 << (signal - 1));
+}
+
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
 if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
@@ -421,9 +436,9 @@ set_null_string(interrupt_object[(signal)], (message));}
 copy_value(interrupt_object[(signal)], (payload));}
 
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
-#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) interrupt_from_rxpa_signal(signal,&interrupts,interrupt_object);
+#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) interrupt_from_rxpa_signal(signal,interrupt_object);
 
-void interrupt_from_rxpa_signal(value *signal, size_t *interrupts, value* interrupt_object[RXSIGNAL_MAX]) {
+void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_MAX]) {
     size_t int_num;
 
     if (signal->int_value < 1 || signal->int_value >= RXSIGNAL_MAX) {
@@ -443,7 +458,7 @@ void interrupt_from_rxpa_signal(value *signal, size_t *interrupts, value* interr
     }
 
     // Set the interrupt
-    *interrupts |= 1 << (int_num - 1);
+    interrupts |= 1 << (int_num - 1);
 }
 
 /* Interpreter */
@@ -459,7 +474,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     value *signal_value = value_f();
     unsigned char signal_code = 0;
     value *arguments_array;                /* note that the needs mallocing / freeing */
-    size_t interrupts = 0;                 /* Bit field of raised interrupts */
     unsigned char last_interrupt = 0; /* Interrupt being handled */
     /* Array of objects attached to raised interrupts */
     value *interrupt_object[RXSIGNAL_MAX];
@@ -476,6 +490,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             interrupt_object[i] = value_f();
         }
     }
+    // Initialize the native signal handler system
+    initialize_vm_signals();
 
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -790,6 +806,7 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
+                    restore_interrupt((int)sig); // Disable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -804,6 +821,7 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_HALT;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -818,6 +836,7 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -833,6 +852,7 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_BRANCH;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -850,6 +870,7 @@ START_OF_INSTRUCTIONS
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL;
                     current_frame->interrupt_table[sig-1].function = signal_function;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -867,6 +888,7 @@ START_OF_INSTRUCTIONS
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_CALL_BRANCH;
                     current_frame->interrupt_table[sig-1].function = signal_function;
                     current_frame->interrupt_table[sig-1].jump = REG_IDX(1);
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -881,6 +903,7 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_RETURN;
+                    enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
             DISPATCH
@@ -5080,12 +5103,18 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* freadline - op1 (string) = read until newline op2 file*(int) */
     START_INSTRUCTION(FREADLINE_REG_REG) CALC_DISPATCH(2)
         DEBUG("TRACE - FREADLINE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        {
-            int ch;
+    {
+        int ch;
 
-            op1R->string_length = 0;
-            op1R->string_pos = 0;
+        op1R->string_length = 0;
+        op1R->string_pos = 0;
 
+        if (op2R->int_value == 0) {
+            // no file - raise error
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "File not open");
+        }
+
+        else {
             /* Read until EOF or newline */
             while ((ch = fgetc((FILE*)op2R->int_value)) != EOF) {
 
@@ -5103,12 +5132,12 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 extend_string_buffer(op1R, op1R->string_length);
                 op1R->string_value[ op1R->string_length - 1] = (char)ch;
             }
-
-#ifndef NUTF8
-            op1R->string_char_pos = 0;
-            op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
-#endif
         }
+        }
+#ifndef NUTF8
+        op1R->string_char_pos = 0;
+        op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+#endif
         DISPATCH
 
     /* freadbyte - op1 (int) = read byte op2 file*(int) */
@@ -5298,6 +5327,9 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     END_OF_INSTRUCTIONS
 
     interprt_finished:
+
+    /* Cleanup / Remove OS Interrupt handlers */
+    cleanup_vm_signals();
 
     /* Unwind any stack frames */
     while (current_frame) {

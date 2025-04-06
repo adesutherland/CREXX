@@ -33,6 +33,6 @@
 
 #define RXSIGNAL_OTHER                30 /* Other Interrupt */
 #define RXSIGNAL_BREAKPOINT           31 /* Breakpoint (called after each instruction if enabled) */
-#define RXSIGNAL_MAX                  32 /* Maximum Interrupt Code */
+#define RXSIGNAL_MAX                  32 /* Maximum Interrupt Code - this is not a valid signal code */
 
 #endif //RXSIGNAL_H

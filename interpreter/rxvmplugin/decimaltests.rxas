@@ -80,7 +80,6 @@ test3end:
     say r3
 test4end:
 
-    /* Test dtoi - todo test conversion error signal when we can trap signals */
     say ""
     sayx "Test 5 (dtoi)"
     inc r2
@@ -93,6 +92,17 @@ test4end:
     sayx " - failed "
     say r3
 test5end:
+
+    say ""
+    sayx "Test 5.1 (dtoi - conversion error)"
+    inc r2
+    load r3,12.34d
+    sigbr test5_1end, "CONVERSION_ERROR" /* Set signal to branch */
+    dtoi r3 /* This should cause a signal */
+    inc r1
+    sayx " - failed "
+test5_1end:
+    sighalt "CONVERSION_ERROR" /* Unset signal handler */
 
     /* Test dtof */
     say ""
@@ -254,8 +264,15 @@ test16end:
 
     /* Test ddiv (reg, reg, reg) - with division by zero */
     say ""
-
-    /* todo: test ddiv with division by zero when we can trap signals */
+    sayx "Test 16.1 (ddiv - reg,decimal,reg - division by zero)"
+    inc r2
+    load r3,0d
+    sigbr test16_1end, "DIVISION_BY_ZERO" /* Set signal to branch */
+    ddiv r4,9d,r3 /* This should cause a signal */
+    inc r1
+    sayx " - failed "
+test16_1end:
+    sighalt "DIVISION_BY_ZERO" /* Unset signal handler */
 
     /* Test DEQ_REG_REG_REG */
     say ""

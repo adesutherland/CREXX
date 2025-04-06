@@ -33,6 +33,7 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmload.c
+        ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h
@@ -119,6 +120,7 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmload.c
+        ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
         ${CMAKE_SOURCE_DIR}/machine/rxbin.h

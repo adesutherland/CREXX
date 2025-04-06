@@ -293,4 +293,51 @@ void nullredr(value* redirect_reg);
 /* EXIT Function Support */
 void mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
+/**
+ * @brief Enables handling for a specific VM interrupt code.
+ * Translates the VM code to an OS signal and registers the master handler.
+ * Does nothing if the VM code doesn't map to a catchable OS signal.
+ *
+ * @param vm_signal The RXSIGNAL_* code to enable.
+ * @return 0 on success or if no action needed, -1 on failure to register handler.
+ */
+int enable_interrupt(int vm_signal);
+
+/**
+ * @brief Restores handling for a specific VM interrupt code.
+ * Restores the original signal handler for the corresponding OS signal.
+ *
+ * @param vm_signal The RXSIGNAL_* code to disable.
+ * @return 0 on success or if no action needed, -1 on failure to restore handler.
+ */
+int restore_interrupt(int vm_signal);
+
+/**
+ * @brief Initializes the VM signal handling system.
+ * Clears flags, initializes storage, and prepares for enabling interrupts.
+ * Should be called once at VM startup.
+ * @return 0 on success.
+ */
+int initialize_vm_signals(void);
+
+/**
+ * @brief Cleans up signal handlers, restoring originals for active ones.
+ * Intended to be called via atexit or manually before VM shutdown.
+ */
+void cleanup_vm_signals(void);
+
+/**
+ * @brief Sets an interrupt signal.
+ * This function is used to set a specific VM interrupt signal.
+ * @param signal The signal to set.
+ */
+void set_interrupt(unsigned char signal);
+
+/**
+ * @brief Clears an interrupt signal.
+ * This function is used to clear a specific VM interrupt signal.
+ * @param signal The signal to clear.
+ */
+void clear_interrupt(unsigned char signal);
+
 #endif //CREXX_RXVMINTP_H
