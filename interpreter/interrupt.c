@@ -4,7 +4,7 @@
 #define _POSIX_C_SOURCE 200809L /* Request POSIX features */
 #include <signal.h>
 #include <stddef.h>  /* For NULL */
-#include <stdio.h>   /* For printf, fprintf, perror */
+// #include <stdio.h>   /* For printf, fprintf, perror */
 #include <string.h>  /* For memset */
 
 /* Include VM signal definitions */
@@ -30,6 +30,8 @@
 
 /* Storage for original signal dispositions */
 #ifdef _WIN32
+    /* Type for the signal handler function */
+    typedef void (*OsSignalHandlerFunc)(int);
     static OsSignalHandlerFunc g_original_os_handlers[MAX_OS_SIGNALS];
 #else
     static struct sigaction g_original_os_actions[MAX_OS_SIGNALS];
@@ -89,11 +91,7 @@ static int get_vm_signal(int os_signal) {
     return RXSIGNAL_MAX; /* Unmapped is an error - RXSIGNAL_MAX is ignored */
 }
 
-
 /* --- Master Signal Handler --- */
-
-/* Type for the signal handler function */
-typedef void (*OsSignalHandlerFunc)(int);
 
 /*
  * This handler is called for any OS signal we intercept.
@@ -136,12 +134,12 @@ int enable_interrupt(int vm_signal) {
 #ifndef _WIN32
     struct sigaction sa_new; /* POSIX */
 #else
-    sSignalHandlerFunc os_handler_prev; /* Windows */
+    OsSignalHandlerFunc os_handler_prev; /* Windows */
 #endif
 
     /* 1. Validate VM signal code */
     if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
-        fprintf(stderr, "Warning: Invalid VM signal code %d for enable_interrupt.\n", vm_signal);
+      //  fprintf(stderr, "Warning: Invalid VM signal code %d for enable_interrupt.\n", vm_signal);
         return 0; /* Invalid code, treat as no-op success */
     }
 
@@ -156,7 +154,7 @@ int enable_interrupt(int vm_signal) {
 
     /* 4. Check if mappable and valid OS signal */
     if (os_signal < 0 || os_signal >= MAX_OS_SIGNALS) {
-         fprintf(stderr,"Info: VM signal %d does not map to a handled OS signal on this platform.\n", vm_signal);
+       //  fprintf(stderr,"Info: VM signal %d does not map to a handled OS signal on this platform.\n", vm_signal);
         return 0; /* Not mappable, treat as no-op success */
     }
 
@@ -186,7 +184,7 @@ int enable_interrupt(int vm_signal) {
     /* 5c. Install our handler */
     if (sigaction(os_signal, &sa_new, NULL) == -1) {
         perror("Error: sigaction enable failed");
-        fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
+      //  fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
         return -1; /* Failure */
     }
 #else
@@ -197,7 +195,7 @@ int enable_interrupt(int vm_signal) {
 
     if (os_handler_prev == SIG_ERR) {
         perror("Error: signal enable failed");
-        fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
+      //  fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
         return -1; /* Failure */
     }
 
@@ -209,7 +207,7 @@ int enable_interrupt(int vm_signal) {
 #endif
 
     /* 6. Mark as active */
-    printf("Info: Enabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
+   // printf("Info: Enabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
     g_handler_active[vm_signal] = 1;
     return 0; /* Success */
 }
@@ -229,7 +227,7 @@ int restore_interrupt(int vm_signal) {
 
     /* 1. Validate VM signal code */
     if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
-        fprintf(stderr, "Warning: Invalid VM signal code %d for restore_interrupt.\n", vm_signal);
+        // fprintf(stderr, "Warning: Invalid VM signal code %d for restore_interrupt.\n", vm_signal);
         return 0;
     }
 
@@ -254,7 +252,7 @@ int restore_interrupt(int vm_signal) {
     /* --- POSIX: Restore original action --- */
     if (sigaction(os_signal, &g_original_os_actions[os_signal], NULL) == -1) {
         perror("Error: sigaction disable failed");
-        fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
+      //  fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
         /* Still mark inactive? Maybe leave active if restore failed? */
         /* Let's mark inactive as we tried. */
         g_handler_active[vm_signal] = 0;
@@ -270,7 +268,7 @@ int restore_interrupt(int vm_signal) {
 
     if (signal(os_signal, os_handler_original) == SIG_ERR) {
          perror("Error: signal disable failed");
-         fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
+      //   fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
          /* Mark inactive even on failure? */
          g_handler_active[vm_signal] = 0;
          return -1; /* Failure */
@@ -278,7 +276,7 @@ int restore_interrupt(int vm_signal) {
 #endif
 
     /* 6. Mark as inactive */
-    printf("Info: Disabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
+   // printf("Info: Disabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
     g_handler_active[vm_signal] = 0;
     return 0; /* Success */
 }
@@ -291,7 +289,7 @@ int restore_interrupt(int vm_signal) {
  */
 int initialize_vm_signals(void) {
     int i;
-    printf("Initializing VM signal system...\n");
+    // printf("Initializing VM signal system...\n");
 
     /* Initialize tracking and storage */
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
@@ -304,7 +302,7 @@ int initialize_vm_signals(void) {
         memset(&g_original_os_actions[i], 0, sizeof(struct sigaction));
 #endif
     }
-    printf("VM signal system initialized.\n");
+    // printf("VM signal system initialized.\n");
     return 0;
 }
 
@@ -314,11 +312,11 @@ int initialize_vm_signals(void) {
  */
 void cleanup_vm_signals(void) {
     int i;
-    printf("\nCleaning up VM signal handlers...\n");
+    // printf("\nCleaning up VM signal handlers...\n");
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
         if (g_handler_active[i]) {
             restore_interrupt(i); /* Attempt to disable/restore */
         }
     }
-    printf("VM signal handler cleanup finished.\n");
+    // printf("VM signal handler cleanup finished.\n");
 }
