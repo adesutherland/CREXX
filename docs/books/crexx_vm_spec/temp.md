@@ -46,7 +46,7 @@ Make a new subdirectory in the current directory (not in CREXX, but in the one t
 ```
 mkdir crexx-build
 ```
-and cd into that directory. Now issue the following command (we assume that you installed ninja, otherwise subsitute 'make' for the two instances of 'ninja'):
+and cd into that directory. Now issue the following command (we assume that you installed ninja, otherwise substitute 'make' for the two instances of 'ninja'):
 ```
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest --output-on-failure
 ```

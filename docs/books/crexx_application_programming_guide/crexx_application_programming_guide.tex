@@ -77,7 +77,7 @@ variants, the latter is going to gain importance, while the
 that reason, most examples will be in the function notation.
 
 The compiler needs to verify if it is possible to call the called
-code: it must be present in excutable form, and it needs to have the right
+code: it must be present in executable form, and it needs to have the right
 \emph{signature}\footnote{with signature we mean the combination of
   parameters and return type}. The compiler will not automatically compile a callee
 of which the source can be located but the executable form is missing;
@@ -171,7 +171,7 @@ program at hand. The backpatcher runs last and handles forward references.
 
 The \code{rxas} assembler has a \code{.rxas} file as input and
 produces an \code{rxbin} file as output, which can be considered an
-\emph{object module}, as it has unresolved adresses, which can be
+\emph{object module}, as it has unresolved addresses, which can be
 resolved by the linkage editor component of the \code{rxvm} virtual
 machine interpreter. It also produces a report to stdout (in case of
 errors only) and can produce a trace file in Debug/verbose mode

@@ -176,7 +176,7 @@ If all calls to the Parse() interface are made from within [<tt>%code</tt> direc
 
 *   Declare a local variable of type "yyParser"
 *   Initialize the variable using ParseInit()
-*   Pass a pointer to the variable in calls ot Parse()
+*   Pass a pointer to the variable in calls of Parse()
 *   Deallocate substructure in the parse variable using ParseFinalize().
 
 The following code illustrates how this is done:
@@ -513,7 +513,7 @@ In words, the <tt>%fallback</tt> directive is followed by a list of token names 
 
 The <tt>%if</tt>, <tt>%ifdef</tt>, <tt>%ifndef</tt>, <tt>%else</tt>, and <tt>%endif</tt> directives are similar to #if, #ifdef, #ifndef, #else, and #endif in the C-preprocessor, just not as general. Each of these directives must begin at the left margin. No whitespace is allowed between the "%" and the directive name.
 
-Grammar text in between "<tt>%ifdef MACRO</tt>" and the next nested "<tt>%endif</tt>" is ignored unless the "-DMACRO" command-line option is used. Grammar text betwen "<tt>%ifndef MACRO</tt>" and the next nested "<tt>%endif</tt>" is included except when the "-DMACRO" command-line option is used.
+Grammar text in between "<tt>%ifdef MACRO</tt>" and the next nested "<tt>%endif</tt>" is ignored unless the "-DMACRO" command-line option is used. Grammar text between "<tt>%ifndef MACRO</tt>" and the next nested "<tt>%endif</tt>" is included except when the "-DMACRO" command-line option is used.
 
 The text in between "<tt>%if</tt> _CONDITIONAL_" and its corresponding <tt>%endif</tt> is included only if _CONDITIONAL_ is true. The CONDITION is one or more macro names, optionally connected using the "||" and "&&" binary operators, the "!" unary operator, and grouped using balanced parentheses. Each term is true if the corresponding macro exists, and false if it does not exist.
 
