@@ -76,7 +76,7 @@ mkdir crexx-build
 \end{verbatim}
 
 and cd into that directory. Now issue the following command (we assume
-that you installed ninja, otherwise subsitute `make' for the two
+that you installed ninja, otherwise substitute `make' for the two
 instances of `ninja'):
 
 \begin{verbatim}

@@ -1536,7 +1536,7 @@ expo: procedure expose x.
 
 /* Try multiple and mixed vars on EXPOSE to ensure dead children */
 /* are freed... */
-exposmult: procedure expose i i i j j x.1 x.2 x.i /* 3 childs */ x. /**/
+exposmult: procedure expose i i i j j x.1 x.2 x.i /* 3 children */ x. /**/
  x3=x.3; drop x.3
  return x.1 x3 x.7
 
