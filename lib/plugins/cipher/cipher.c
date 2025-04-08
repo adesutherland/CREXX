@@ -34,7 +34,7 @@ PROCEDURE(md5) {
     uint8_t * tmsg = NULL;
     uint8_t digest[16];
     char * imsg=GETSTRING(ARG0);
-    char result[32];
+    char result[33]; /* +1 for the null terminator */
     size_t initial_len=strlen(imsg);
 
     // Initial hash values
