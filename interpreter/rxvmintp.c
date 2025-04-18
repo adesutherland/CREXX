@@ -25,6 +25,7 @@
 // #include <complex.h>
 
 #include <signal.h>
+#include <mach/thread_policy.h>
 
 #include "rxvmvars.h"
 #include "rxvmplugin_framework.h"
@@ -190,6 +191,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
             return "FAILURE";
+        case RXSIGNAL_QUIT:
+            return "QUIT";
         case RXSIGNAL_TERM:
             return "TERM";
         case RXSIGNAL_NOTREADY:
@@ -231,6 +234,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
+    if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
     if (strcmp(interrupt, "TERM") == 0) return RXSIGNAL_TERM;
     if (strcmp(interrupt, "NOTREADY") == 0) return RXSIGNAL_NOTREADY;
     if (strcmp(interrupt, "INVALID_ARGUMENTS") == 0) return RXSIGNAL_INVALID_ARGUMENTS;
@@ -345,6 +349,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_TERM-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_NOTREADY-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_INVALID_ARGUMENTS-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -402,12 +407,12 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 static volatile sig_atomic_t interrupts = 0;
 
 // Function to set an interrupt
-void set_interrupt(unsigned char signal) {
+void raise_signal(unsigned char signal) {
     interrupts |= 1 << (signal - 1);
 }
 
 // Function to clear an interrupt
-void clear_interrupt(unsigned char signal) {
+void clear_signal(unsigned char signal) {
     interrupts &= ~(1 << (signal - 1));
 }
 
@@ -806,7 +811,7 @@ START_OF_INSTRUCTIONS
                 }
                 else {
                     current_frame->interrupt_table[sig-1].response = RXSIGNAL_RESPONSE_IGNORE;
-                    restore_interrupt((int)sig); // Disable the corresponding native interrupt
+                    ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
             DISPATCH

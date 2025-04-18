@@ -24,6 +24,7 @@
 
 #define RXSIGNAL_NOTREADY             15 /* Input/output error, e.g., file not ready (POSIX SIGPIPE) */
 
+#define RXSIGNAL_QUIT                 19 /* Request to halt execution (POSIX SIGQUIT / Windows SIGBREAK) */
 #define RXSIGNAL_TERM                 20 /* Request to halt execution (POSIX SIGTERM) */
 #define RXSIGNAL_POSIX_INT            21 /* POSIX SIGINT (user interrupt) */
 #define RXSIGNAL_POSIX_HUP            22 /* POSIX SIGHUP (reload configuration) */

@@ -299,9 +299,18 @@ void mprintf(const char* format, ...); /* printf replacement - prints to the say
  * Does nothing if the VM code doesn't map to a catchable OS signal.
  *
  * @param vm_signal The RXSIGNAL_* code to enable.
- * @return 0 on success or if no action needed, -1 on failure to register handler.
+ * @return 0 on success or if no action is needed, -1 on failure to register handler.
  */
 int enable_interrupt(int vm_signal);
+
+/**
+ * @brief Sets the specific VM interrupt code to be ignored, meaning the linked OS signal is ignored.
+ * Does nothing if the VM code doesn't map to a catchable OS signal.
+ *
+ * @param vm_signal The RXSIGNAL_* code to ignore.
+ * return 0 on success or if no action is needed, -1 on failure to register handler.
+ */
+int ignore_interrupt(int vm_signal);
 
 /**
  * @brief Restores handling for a specific VM interrupt code.
@@ -331,13 +340,13 @@ void cleanup_vm_signals(void);
  * This function is used to set a specific VM interrupt signal.
  * @param signal The signal to set.
  */
-void set_interrupt(unsigned char signal);
+void raise_signal(unsigned char signal);
 
 /**
  * @brief Clears an interrupt signal.
  * This function is used to clear a specific VM interrupt signal.
  * @param signal The signal to clear.
  */
-void clear_interrupt(unsigned char signal);
+void clear_signal(unsigned char signal);
 
 #endif //CREXX_RXVMINTP_H

@@ -4,7 +4,6 @@
 #define _POSIX_C_SOURCE 200809L /* Request POSIX features */
 #include <signal.h>
 #include <stddef.h>  /* For NULL */
-// #include <stdio.h>   /* For printf, fprintf, perror */
 #include <string.h>  /* For memset */
 
 /* Include VM signal definitions */
@@ -38,6 +37,7 @@
 #endif
 
 /* Tracks which VM signals have our handler active (indexed by RXSIGNAL_* code) */
+/* 0=inactive, 1=active handler, -1=set to ignore by us */
 static volatile sig_atomic_t g_handler_active[RXSIGNAL_MAX];
 
 /* --- Mapping between VM Signals and OS Signals --- */
@@ -61,6 +61,9 @@ static const VmOsSignalMap g_signal_map[] = {
     { RXSIGNAL_POSIX_USR2,         SIGUSR2 },
     { RXSIGNAL_POSIX_CHLD,         SIGCHLD },
     { RXSIGNAL_NOTREADY,           SIGPIPE }, /* Often related to broken pipes */
+    { RXSIGNAL_QUIT,               SIGQUIT},
+#else
+       { RXSIGNAL_QUIT,               SIGBREAK },
 #endif
     /* Note: RXSIGNAL_KILL (SIGKILL) cannot be caught */
     /* Note: RXSIGNAL_FAILURE, etc. do not map directly */
@@ -81,7 +84,6 @@ static int get_os_signal(int vm_signal) {
 /* Helper to get VM signal from OS signal */
 static int get_vm_signal(int os_signal) {
     size_t i;
-    /* SIGFPE/SIGSEGV map to multiple VM signals, find first match */
     /* This mapping back might be ambiguous - first match wins here */
     for (i = 0; i < g_signal_map_size; ++i) {
         if (g_signal_map[i].os_signal == os_signal) {
@@ -101,15 +103,15 @@ static int get_vm_signal(int os_signal) {
 static void vm_master_signal_handler(int signum /* OS Signal Number */) {
     int vm_signal;
 
-    /* 1. Translate OS signal back to VM signal */
+    /* Translate OS signal back to VM signal */
     vm_signal = get_vm_signal(signum);
 
-    /* 2. Check if the VM signal code is valid for the bitmask */
+    /* Check if the VM signal code is valid for the bitmask */
     if (vm_signal > RXSIGNAL_NONE && vm_signal < RXSIGNAL_MAX) {
-        set_interrupt(vm_signal); /* Set the interrupt signal */
+        raise_signal(vm_signal); /* Set the interrupt signal */
     }
 
-    /* 5. Re-arm handler if needed? */
+    /* Re-arm handler if needed? */
     /* With sigaction (POSIX) - Not needed if SA_RESETHAND isn't set (default) */
     /* With signal (Windows/C90) - Sometimes needed on older systems */
 #ifdef _WIN32
@@ -137,78 +139,160 @@ int enable_interrupt(int vm_signal) {
     OsSignalHandlerFunc os_handler_prev; /* Windows */
 #endif
 
-    /* 1. Validate VM signal code */
+    /* Validate VM signal code */
     if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
-      //  fprintf(stderr, "Warning: Invalid VM signal code %d for enable_interrupt.\n", vm_signal);
         return 0; /* Invalid code, treat as no-op success */
     }
 
-    /* 2. Check if already active */
-    if (g_handler_active[vm_signal]) {
-        /* printf("Info: Handler for VM signal %d already active.\n", vm_signal); */
+    /* Check if already active */
+    if (g_handler_active[vm_signal] == 1) {
         return 0;
     }
 
-    /* 3. Get the corresponding OS signal */
+    /* Get the corresponding OS signal */
     os_signal = get_os_signal(vm_signal);
 
-    /* 4. Check if mappable and valid OS signal */
+    /* Check if mappable and valid OS signal */
     if (os_signal < 0 || os_signal >= MAX_OS_SIGNALS) {
-       //  fprintf(stderr,"Info: VM signal %d does not map to a handled OS signal on this platform.\n", vm_signal);
         return 0; /* Not mappable, treat as no-op success */
     }
 
-    /* 5. Register the handler */
+    /* Register the handler */
 #ifndef _WIN32
     /* --- POSIX: Use sigaction --- */
     struct sigaction sa_old;
 
-    /* 5a. Query and store the original action *before* setting the new one */
-    if (sigaction(os_signal, NULL, &sa_old) == 0) {
-         memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(struct sigaction));
-    } else {
-         /*perror("Warning: sigaction query failed"); */
-         /*fprintf(stderr, "Could noåt query original action for OS signal %d. Restoring may default to SIG_DFL.\n", os_signal);*/
-         /* Initialize original to SIG_DFL equivalent */
-         memset(&g_original_os_actions[os_signal], 0, sizeof(struct sigaction));
-         g_original_os_actions[os_signal].sa_handler = SIG_DFL;
-         sigemptyset(&g_original_os_actions[os_signal].sa_mask);
+    if (g_handler_active[vm_signal] == -1) {
+        /* Already set to ignore by us, so don't save original */
+
+        /* Query and store the original action *before* setting the new one */
+        if (sigaction(os_signal, NULL, &sa_old) == 0) {
+            memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(struct sigaction));
+        } else {
+            /* perror("Warning: sigaction query failed"); */
+            /* Initialize original to SIG_DFL equivalent */
+            memset(&g_original_os_actions[os_signal], 0, sizeof(struct sigaction));
+            g_original_os_actions[os_signal].sa_handler = SIG_DFL;
+            sigemptyset(&g_original_os_actions[os_signal].sa_mask);
+        }
     }
 
-    /* 5b. Set up our new action */
+    /* Set up our new action */
     memset(&sa_new, 0, sizeof(sa_new));
     sa_new.sa_handler = vm_master_signal_handler;
     sigemptyset(&sa_new.sa_mask); /* Block no other signals during handler */
     sa_new.sa_flags = SA_RESTART;  /* Restart interrupted syscalls */
 
-    /* 5c. Install our handler */
+    /* Install our handler */
     if (sigaction(os_signal, &sa_new, NULL) == -1) {
         perror("Error: sigaction enable failed");
-      //  fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
         return -1; /* Failure */
     }
 #else
     /* --- Windows: Use signal --- */
 
-    /* 5a. Install our handler, getting previous one */
+    /* Install our handler, getting the previous one */
     os_handler_prev = signal(os_signal, vm_master_signal_handler);
 
     if (os_handler_prev == SIG_ERR) {
-        perror("Error: signal enable failed");
-      //  fprintf(stderr, "Failed to enable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
+        /* perror("Error: signal enable failed"); */
         return -1; /* Failure */
     }
 
-    /* 5b. Store original handler if not already stored */
+    /* store original handler if not already stored */
     /* Note: Only captures the handler present *just before* we installed ours */
     if (g_original_os_handlers[os_signal] == NULL) {
         g_original_os_handlers[os_signal] = os_handler_prev;
     }
 #endif
 
-    /* 6. Mark as active */
-   // printf("Info: Enabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
+    /* Mark as active */
     g_handler_active[vm_signal] = 1;
+    return 0; /* Success */
+}
+
+/**
+ * @brief Sets the specific VM interrupt code to be ignored, meaning the linked OS signal is ignored.
+ * Does nothing if the VM code doesn't map to a catchable OS signal.
+ *
+ * @param vm_signal The RXSIGNAL_* code to ignore.
+ * return 0 on success or if no action is needed, -1 on failure to register handler.
+ */
+int ignore_interrupt(int vm_signal) {
+   int os_signal;
+#ifndef _WIN32
+    struct sigaction sa_new; /* POSIX */
+#else
+    OsSignalHandlerFunc os_handler_prev; /* Windows */
+#endif
+
+    /* Validate VM signal code */
+    if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
+        return 0; /* Invalid code, treat as no-op success */
+    }
+
+    /* Check if already ignored by us */
+    if (g_handler_active[vm_signal] == -1) {
+        return 0;
+    }
+
+    /* Get the corresponding OS signal */
+    os_signal = get_os_signal(vm_signal);
+
+    /* Check if mappable and valid OS signal */
+    if (os_signal < 0 || os_signal >= MAX_OS_SIGNALS) {
+        return 0; /* Not mappable, treat as no-op success */
+    }
+
+    /* Register the handler */
+#ifndef _WIN32
+    /* --- POSIX: Use sigaction --- */
+    struct sigaction sa_old;
+
+    if (g_handler_active[vm_signal] == 1) {
+        /* Already set to active by us, so don't save original */
+
+        /* Query and store the original action *before* setting the new one */
+        if (sigaction(os_signal, NULL, &sa_old) == 0) {
+            memcpy(&g_original_os_actions[os_signal], &sa_old, sizeof(struct sigaction));
+        } else {
+            /* perror("Warning: sigaction query failed"); */
+            /* Initialize original to SIG_DFL equivalent */
+            memset(&g_original_os_actions[os_signal], 0, sizeof(struct sigaction));
+            g_original_os_actions[os_signal].sa_handler = SIG_DFL;
+            sigemptyset(&g_original_os_actions[os_signal].sa_mask);
+        }
+    }
+
+    /* Set up our new action to ignore */
+    memset(&sa_new, 0, sizeof(sa_new));
+    sa_new.sa_handler = SIG_IGN; /* Set to ignore */
+    sigemptyset(&sa_new.sa_mask); /* Block no other signals during handler */
+    sa_new.sa_flags = SA_RESTART;  /* Restart interrupted syscalls */
+
+    if (sigaction(os_signal, &sa_new, NULL) == -1) {
+        /* perror("Error: sigaction enable failed"); */
+        return -1; /* Failure */
+    }
+#else
+    /* --- Windows: Use signal --- */
+    /* Install SIG_IGN, getting the previous one */
+    os_handler_prev = signal(os_signal, SIG_IGN);
+
+    if (os_handler_prev == SIG_ERR) {
+        perror("Error: signal enable failed");
+        return -1; /* Failure */
+    }
+
+    /* Store original handler if not already stored */
+    /* Note: Only captures the handler present *just before* we installed ours */
+    if (g_original_os_handlers[os_signal] == NULL) {
+        g_original_os_handlers[os_signal] = os_handler_prev;
+    }
+#endif
+
+    /* Mark as ignored by us */
+    g_handler_active[vm_signal] = -1;
     return 0; /* Success */
 }
 
@@ -225,35 +309,31 @@ int restore_interrupt(int vm_signal) {
     OsSignalHandlerFunc os_handler_original; /* Windows */
 #endif
 
-    /* 1. Validate VM signal code */
+    /* Validate VM signal code */
     if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
-        // fprintf(stderr, "Warning: Invalid VM signal code %d for restore_interrupt.\n", vm_signal);
         return 0;
     }
 
-    /* 2. Check if inactive */
+    /* Check if inactive */
     if (!g_handler_active[vm_signal]) {
-        /* printf("Info: Handler for VM signal %d already inactive.\n", vm_signal); */
         return 0;
     }
 
-    /* 3. Get the corresponding OS signal */
+    /* Get the corresponding OS signal */
     os_signal = get_os_signal(vm_signal);
 
-    /* 4. Check if mappable and valid */
+    /* Check if mappable and valid */
     if (os_signal < 0 || os_signal >= MAX_OS_SIGNALS) {
         /* This case should ideally not happen if it was active, but check anyway */
         g_handler_active[vm_signal] = 0; /* Mark inactive */
         return 0;
     }
 
-    /* 5. Restore original handler */
+    /* Restore original handler */
 #ifndef _WIN32
     /* --- POSIX: Restore original action --- */
     if (sigaction(os_signal, &g_original_os_actions[os_signal], NULL) == -1) {
-        perror("Error: sigaction disable failed");
-      //  fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
-        /* Still mark inactive? Maybe leave active if restore failed? */
+        /* perror("Error: sigaction disable failed"); */
         /* Let's mark inactive as we tried. */
         g_handler_active[vm_signal] = 0;
         return -1; /* Failure */
@@ -262,21 +342,19 @@ int restore_interrupt(int vm_signal) {
     /* --- Windows: Restore original handler --- */
     os_handler_original = g_original_os_handlers[os_signal];
     if (os_handler_original == NULL) {
-         /* If we never captured it (shouldn't happen if active?), default */
+         /* If we never captured it (shouldn't happen if active), default */
          os_handler_original = SIG_DFL;
     }
 
     if (signal(os_signal, os_handler_original) == SIG_ERR) {
          perror("Error: signal disable failed");
-      //   fprintf(stderr, "Failed to disable handler for OS signal %d (VM signal %d).\n", os_signal, vm_signal);
-         /* Mark inactive even on failure? */
+         /* Mark inactive even on failure */
          g_handler_active[vm_signal] = 0;
          return -1; /* Failure */
     }
 #endif
 
-    /* 6. Mark as inactive */
-   // printf("Info: Disabled handler for VM signal %d (OS signal %d).\n", vm_signal, os_signal);
+    /* Mark as inactive */
     g_handler_active[vm_signal] = 0;
     return 0; /* Success */
 }
@@ -289,7 +367,6 @@ int restore_interrupt(int vm_signal) {
  */
 int initialize_vm_signals(void) {
     int i;
-    // printf("Initializing VM signal system...\n");
 
     /* Initialize tracking and storage */
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
@@ -302,7 +379,6 @@ int initialize_vm_signals(void) {
         memset(&g_original_os_actions[i], 0, sizeof(struct sigaction));
 #endif
     }
-    // printf("VM signal system initialized.\n");
     return 0;
 }
 
@@ -312,11 +388,9 @@ int initialize_vm_signals(void) {
  */
 void cleanup_vm_signals(void) {
     int i;
-    // printf("\nCleaning up VM signal handlers...\n");
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
         if (g_handler_active[i]) {
-            restore_interrupt(i); /* Attempt to disable/restore */
+            restore_interrupt(i); /* Attempt to restore */
         }
     }
-    // printf("VM signal handler cleanup finished.\n");
 }
