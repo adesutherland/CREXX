@@ -175,7 +175,7 @@ int rxasinbf(Assembler_Context *scanner);
  *   scanner->location
  *
  *  file_name_includes_type_extension should be set to true if the filename in the Assmebler_Context
- *  already has the ".rxas" extention (otherwise it is added)
+ *  already has the ".rxas" extension (otherwise it is added)
 */
 int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension);
 
