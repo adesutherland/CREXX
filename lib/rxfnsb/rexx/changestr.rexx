@@ -9,6 +9,8 @@ changestr: procedure = .string
   offset=1
   nlen=0
   assembler strlen nlen,needle
+  nnlen=0
+  assembler strlen nnlen,nneedle
   newstr=haystack
 
   do i=1 to 8192      /* use a large do loop until we get a do forever */
@@ -16,6 +18,6 @@ changestr: procedure = .string
      if offset=0 then return newstr
      if offset=1 then newstr=nneedle||substr(newstr,offset+nlen)
      else newstr=substr(newstr,1,offset-1)||nneedle||substr(newstr,offset+nlen)
-     offset=offset+nlen
+     offset=offset+nnlen
   end
 return newstr
