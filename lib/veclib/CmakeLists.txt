@@ -15,7 +15,6 @@ foreach(_binfile ${VECBINS})
 	add_custom_command(
 		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-#		  DEPENDS rxas rxc ../rxas/library-rxas.rxbin ${REXXSRC} ${_prev_target}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."
@@ -31,4 +30,5 @@ endforeach()
 # 		DEPENDS ${VECBINS}
 # )
 
-#add_custom_target(veclib ALL DEPENDS veclib.rxbin)
+add_custom_target(veclib ALL DEPENDS veclib.rxbin)
+add_dependencies(veclib library)
