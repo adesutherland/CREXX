@@ -7,6 +7,8 @@
 
 // Platform-specific includes and definitions
 #ifdef _WIN32
+    #define READY_WAIT_TIMEOUT_S 10
+
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <processthreadsapi.h> // CreateProcess, TerminateProcess etc.
@@ -24,6 +26,8 @@
         // Note: TERM maps to TerminateProcess later, not a console event
         return (DWORD)-1; // Indicate not a console signal
     }
+
+
 #else // POSIX
     #include <unistd.h>     // fork, execv, pipe, read, close, sleep_ms, kill, getpid, etc.
     #include <sys/types.h>  // pid_t
@@ -212,8 +216,12 @@ int main(int argc, char* argv[]) {
     }
     printf("\n - Signal: %s\n - Expected Substring (pre-signal) : '%s'\n - Expected Substring (post-signal): '%s'\n - Timeout: %ds\n",
            signal_name, READY_STRING, expected_substring, final_timeout_seconds);
-
+#if defined _WIN32
+    int sig_to_send = signal_name_to_windows(signal_name);
+#else
     int sig_to_send = signal_name_to_posix(signal_name);
+#endif
+
     if (sig_to_send == -1) {
         fprintf(stderr, "*** ERROR *** Unknown or unsupported signal name '%s' for POSIX.\n", signal_name);
         return 2; // Unknown signal
