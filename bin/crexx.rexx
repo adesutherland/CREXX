@@ -65,10 +65,10 @@ if linking then do
   say 'linking!'
   exit
 end
-
+lpath = '/lib/rxfnsb'
 do i=1 to words(filenames)
   filename=word(filenames,i)
-  'rxc -i' rxpath'/lib/rxfnsb' filename
+  'rxc -i' rxpath||lpath filename
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC
@@ -89,13 +89,16 @@ do i=1 to words(filenames)
       say '[ 'res' ] rxcpack - C-Packed' filename
     end
     
-    'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lrxpa -lm -L',
-    rxpath'/interpreter -L',
-    rxpath'/machine -L',
-    rxpath'/avl_tree -L',
-    rxpath'/rxpa -L',
-    rxpath'/platform',
-    filename'.c'
+    'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lrxpa -lrxvmplugin -ldecnumber -lm -L',
+      rxpath'/interpreter -L',
+      rxpath'/interpreter/rxvmplugin -L',
+      rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal -L',
+      rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal -L',
+      rxpath'/machine -L',
+      rxpath'/avl_tree -L',
+      rxpath'/rxpa -L',
+      rxpath'/platform',
+		  filename'.c'
     if verbose then do
     if RC = 0 then res='OK'
     else res = RC
@@ -123,6 +126,7 @@ return
 
 logo: procedure
 rversion = ''
+/* note that for brevity we use an assembler directive to get to the versions */
 assembler rxvers rversion
 say 'cRexx compiler driver' rversion
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
