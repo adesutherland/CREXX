@@ -25,10 +25,6 @@ arg command=.string[]
      else if command.i='-m' then maclib=command.j
   end
 
-    infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250601/lib/plugins/precomp/Macro1.rxpp'
-    outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250601/lib/plugins/precomp/\Macro1.rexx'
-    maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250601/lib/plugins/precomp/\Maclib.rexx'
-
     say 'Input File:  ' infile
     say 'Output File: ' outfile
     say 'Macro Lib:   ' maclib
