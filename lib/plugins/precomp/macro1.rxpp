@@ -1,0 +1,587 @@
+/*
+ * crexx RXPP
+ * CREXX Pre Compiler
+ */
+options levelb
+import rxfnsb
+say SQUARE(DOUBLE(4))
+
+/* Macro definitions */
+##define log              {say time('l')' log record' ; say '    something'}
+##define Liststem(stem)        {do _indx=1 to stem.0; say stem._indx ; end}
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
+ log()
+ log()
+ log()
+
+list2stem(fruits, "apple", "banana", "cherry")
+say hi(fruits)
+liststem(fruits)
+ say DOUBLE(9)             /* double 9              */
+ say SQUARE(DOUBLE(4))     /* square after doubling */
+ fred=9
+ say SQUARE(fred)          /* square fred */
+
+/* loop through fruit array */
+   foreach(fruits,j)
+     say fruits.j
+   end
