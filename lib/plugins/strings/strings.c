@@ -191,7 +191,8 @@ PROCEDURE(substring) {
     strncpy(result, wordstring + position, length); // Copy the substring
     result[length] = '\0'; // Null-terminate the substring
 
-    RETURNSTRX(result); // Return the substring
+    RETURNSTR(result); // Return the substring
+    free(result);
     ENDPROC;
 }
 
