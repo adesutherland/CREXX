@@ -88,16 +88,22 @@ do i=1 to words(filenames)
       else res = RC
       say '[ 'res' ] rxcpack - C-Packed' filename
     end
+
+/* LINK_LIBRARIES = interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/lib\ */
+/* avl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/\ */
+/* rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a */
     
-    'gcc -o' filename '-lrxvml -lmachine -lavl_tree -lplatform -lrxpa -lrxvmplugin -ldecnumber -lm -L',
-      rxpath'/interpreter -L',
-      rxpath'/interpreter/rxvmplugin -L',
-      rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal -L',
-      rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal -L',
-      rxpath'/machine -L',
-      rxpath'/avl_tree -L',
-      rxpath'/rxpa -L',
-      rxpath'/platform',
+    'gcc -O3 -DNDEBUG -o' filename ,
+      '-L'rxpath'/interpreter',
+      '-L'rxpath'/interpreter/rxvmplugin',
+      '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal',
+      '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal',
+      '-L'rxpath'/machine',
+      '-L'rxpath'/avl_tree',
+      '-L'rxpath'/rxpa',
+      '-L'rxpath'/platform',
+	'-lrxvml -lrxpa -lmachine -lavl_tree -lplatform -lm -lrxvmplugin ',
+        rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a ',
 		  filename'.c'
     if verbose then do
     if RC = 0 then res='OK'
@@ -122,6 +128,8 @@ say '-help           -- display (this) help info'
 say '-version        -- display the version number'
 say '-exec           -- execute (default)'
 say '-native         -- build native executable; implies noexec; default nonative'
+say '-verbose        -- report in a verbose way about progress'
+
 return
 
 logo: procedure
