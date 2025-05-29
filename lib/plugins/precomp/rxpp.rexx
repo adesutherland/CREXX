@@ -24,11 +24,11 @@ arg command=.string[]
      else if command.i='-o' then outfile=command.j
      else if command.i='-m' then maclib=command.j
   end
-
+/*
 infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
 outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Macro1.rexx'
 maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Maclib.rexx'
-
+ */
 
     say 'Input File:  ' infile
     say 'Output File: ' outfile
@@ -176,7 +176,7 @@ return
  */
 printGen: procedure=.string
   arg line=.string, type=.int
-  if printgen_global='NONE' then return ''   ## suppress all macro call definitions
+  if printgen_global='none' then return ''   ## suppress all macro call definitions
   if type=1 then return '/* 'line' D*/'   ## DEFINE clause
   if type=2 then return '/* 'line' I*/'   ## INCLUDE clause
   if type=3 then return '/* 'line' S*/'   ## SET clause
@@ -190,11 +190,12 @@ CMD_set: procedure
   arg lino=.int,incl=.string
   stype.lino= 'S'
   varn='{'fword(incl,2)'}'
+  varn=lower(varn)
   i = macros_varname.0
   do j=1 to macros_varname.0
      if macros_varname.j=varn then do
         macros_varvalue.j=fstrip(subword(incl,3))
-        if varn='{printgen}' then printgen_global=upper(macros_varvalue.j)   ## set printgen_global additionally directly will be used often
+        if varn='{printgen}' then printgen_global=fword(lower(macros_varvalue.j),1)   ## set printgen_global additionally directly will be used often
         return
      end
   end
@@ -226,13 +227,17 @@ return
 writeline: procedure
   arg oline=.string
   do while oline \= ''
-     do while fpos('{',oline,1)>0 & fpos('}',oline,1)>0
+     fp1=fpos('{',oline,1)>0
+     fp2=fpos('}',oline,fp1+1)
+     do while fp1>0 & fp2>0
         cmt=fsubstr(fstrip(oline),1,2)
         if cmt='/*' | cmt='##' then leave
         do i=1 to macros_varname.0
-           oline=ChangeStr(macros_varname.i,oline,macros_varvalue.i)
+            oline=ChangeStr(macros_varname.i,oline,macros_varvalue.i)
         end
-     end
+        fp1=fpos('{',oline,fp2+1)>0
+        fp2=fpos('}',oline,fp2+1)
+      end
      ppi = pos('\', oline)
      if ppi > 0 then do    /* Write part before the backslash */
         lino = lino + 1
@@ -306,9 +311,9 @@ return line
           isVariadic = 1
           args = fstrip(changestr('...', '', args))
        end
+       if printgen_global='all' then call writeline printGen(fstrip(line),0)
+       else if level=0 & printgen_global='nnest' then call writeline printGen(fstrip(line),0)
 
-       if level=0 & printgen_global='NNEST' then call writeline printGen(fstrip(line),0)
-       else if printgen_global='ALL' then call writeline printGen(fstrip(line),0)
 
        callPos = fpos(name, uline, callPos + 1)
        remain  = fsubstr(line, callPos + length(name),0)    ## set to parameter part, macro has format name( +length positions into it
@@ -504,11 +509,11 @@ rxppinit: procedure
   rexxname=translate(rexxname,,'/\')
   wrds=words(rexxname)
   rexxname=word(rexxname,wrds)
-  macros_varname.1 ='{mainrexx}'
+  macros_varname.1 ='{rxpp_rexx}'
   macros_varvalue.1=rexxname
   macros_varname.2 ='{printgen}'
   macros_varvalue.2=0
-  printgen_global='NNEST'
-  macros_varname.3 ='{RXXP_DATE}'
-  macros_varvalue.3=date()
+  printgen_global='nnest'
+  macros_varname.3 ='{rxpp_date}'
+  macros_varvalue.3=date()' 'time()
 return

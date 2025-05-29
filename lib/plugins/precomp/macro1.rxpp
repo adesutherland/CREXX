@@ -4,18 +4,27 @@
  */
 options levelb
 import rxfnsb
-say {RXPP_DATE}
-##set printgen nnest
 
-say SQUARE(DOUBLE(4))
-/* Macro definitions */
-##define log              {say time('l')' log record' ; say '{prefix} something'}
+##set printgen none          ## show no precompiler calls in generated rexx
+##set printgen all           ## show all nested precompiler calls in generated rexx
+##set printgen nnest         ## show only first precompiler call for nested calls (default)
+
+
+say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
+
+say {rxpp_date}              ## pre defined pre-compiler variable: compilation date/time
+say {rxpp_rexx}              ## pre defined pre-compiler variable: main rexx name
+
+/* define a macro containing a {variable}, the define instruction is fetched in pass 1, therefore the value doesn't need to be avaliable */
+##define log                   {say time('l')' log record' ; say '{prefix} something'}
+
 ##define Liststem(stem)        {do _indx=1 to stem.0; say stem._indx ; end}
+/* the set instruction is always setup in pass 2 */
 ##set prefix 1234
- log()
-##set prefix 456
-
- log()
+ log()                       ## now in pass 2 expand the log macro
+##set prefix 456             ## change the prefix
+ log()                       ## and re-expand another log macro
+ say {prefix}                ## output the current prefix->compiler variable
 
 list2stem(fruits, "apple", "banana", "cherry")
 say hi(fruits)
