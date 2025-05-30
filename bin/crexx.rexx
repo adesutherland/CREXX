@@ -24,7 +24,7 @@ end
 
 /* defaults for options */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0
+execute=1;linking=0;libraries=''
 
 /* loop through arguments and find options and program files */
 do i=1 to fn.0
@@ -39,11 +39,19 @@ do i=1 to fn.0
       if fn.i = '-native' then native=1
       if fn.i = '-version' then version=1
       if fn.i = '-verbose' then verbose=1
+      if fn.i = '-verbose0' then verbose=0
+      if fn.i = '-verbose1' then verbose=1
+      if fn.i = '-verbose2' then verbose=2
+      if fn.i = '-verbose3' then verbose=3
       if fn.i = '--noexec' then execute=0
       if fn.i = '--native' then native=1
       if fn.i = '--version' then version=1
+      if fn.i = '--verbose0' then verbose=0
+      if fn.i = '--verbose1' then verbose=1
       if fn.i = '--verbose' then verbose=1
-      if fn.i = '--linking' then linking=1
+      if fn.i = '--verbose2' then verbose=2
+      if fn.i = '--verbose3' then verbose=3
+      if left(fn.i,2)= '-l' then libraries = libraries';'substr(fn.i,3)
     end
 end -- do i
 
@@ -53,19 +61,21 @@ env_wanted='CREXX_HOME'
 assembler getenv rxpath,env_wanted
 
 if verbose then call logo
-if verbose then say 'using CREXX_HOME:' rxpath
-
+if verbose>1 then say 'using CREXX_HOME:' rxpath
 
 /*
  * here we are using the rxvm instead of the rxvme
  * and have to specify the functions and libraries
  * in the responsefile
  */
-if linking then do
-  say 'linking!'
-  exit
-end
-lpath = '/lib/rxfnsb'
+/* if linking then do */
+/*   say 'linking!' */
+/*   exit */
+/* end */
+lpath = '/lib/rxfnsb'libraries
+
+if verbose>1 then say 'Compile path:' rxpath||lpath
+
 do i=1 to words(filenames)
   filename=word(filenames,i)
   'rxc -i' rxpath||lpath filename
@@ -80,19 +90,16 @@ do i=1 to words(filenames)
     else res = RC
     say '[ 'res' ] rxas    - Assembled' filename
   end
-    
+
+  modules = translate(libraries,' ',';')
   if native then do
-    'rxcpack' filename rxpath'/lib/rxfnsb/library'
+    'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
     if verbose then do
       if RC = 0 then res='OK'
       else res = RC
       say '[ 'res' ] rxcpack - C-Packed' filename
     end
 
-/* LINK_LIBRARIES = interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/lib\ */
-/* avl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/\ */
-/* rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a */
-    
     'gcc -O3 -DNDEBUG -o' filename ,
       '-L'rxpath'/interpreter',
       '-L'rxpath'/interpreter/rxvmplugin',
@@ -102,21 +109,27 @@ do i=1 to words(filenames)
       '-L'rxpath'/avl_tree',
       '-L'rxpath'/rxpa',
       '-L'rxpath'/platform',
-	'-lrxvml -lrxpa -lmachine -lavl_tree -lplatform -lm -lrxvmplugin ',
+	'-lrxvml',
+	'-lrxpa',
+	'-lmachine',
+	'-lavl_tree',
+	'-lplatform',
+        '-lm -lrxvmplugin',
         rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a ',
 		  filename'.c'
-    if verbose then do
-    if RC = 0 then res='OK'
-    else res = RC
-    say '[ 'res' ] gcc     - C-Compiled' filename
-  end
-
-  end
+    if verbose then
+      do
+	if RC = 0 then res='OK'
+	else res = RC
+	say '[ 'res' ] gcc     - C-Compiled' filename
+	end
+    
+    end
   else do
     'rxvme' filename
-  end
-end   -- do i
-
+    end
+  end   -- do i
+    
 help: procedure 
 call logo
 say
@@ -128,13 +141,13 @@ say '-help           -- display (this) help info'
 say '-version        -- display the version number'
 say '-exec           -- execute (default)'
 say '-native         -- build native executable; implies noexec; default nonative'
-say '-verbose        -- report in a verbose way about progress'
+say '-verbose[0-3]   -- report in a verbose way on progress; default verbose0'
 
 return
 
 logo: procedure
 rversion = ''
-/* note that for brevity we use an assembler directive to get to the versions */
+/* note that for brevity we use an assembler directive to get to the version */
 assembler rxvers rversion
 say 'cRexx compiler driver' rversion
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
