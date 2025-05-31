@@ -6,7 +6,7 @@
  */
 options levelb
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue printgen_global outbuf lino rexxlines alphaN mExpanded
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue printgen_global printgen_flags outbuf lino rexxlines alphaN mExpanded expandLevel ifblock
 import rxfnsb
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -24,16 +24,16 @@ arg command=.string[]
      else if command.i='-o' then outfile=command.j
      else if command.i='-m' then maclib=command.j
   end
+
 /*
 infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
 outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Macro1.rexx'
 maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Maclib.rexx'
- */
+*/
 
     say 'Input File:  ' infile
     say 'Output File: ' outfile
     say 'Macro Lib:   ' maclib
-
 
   call rxppinit infile                              ## init global and environment variables
   say '['time('l')'] Pre-Compile pass one'
@@ -41,9 +41,12 @@ maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Macli
   say '['time('l')'] Pre-Compile pass two'
   call RXPPPassTwo outfile,sourceLines              ## analyse source and expand macros
   say '['time('l')'] Pre-Compiled REXX saved'
+##  call printvars
   call list_array outbuf, -1,-1
   call writeall outbuf,outfile,-1                   ## write generated output to file
   say '['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
+##  call printvars
+
 return 0
 /* ------------------------------------------------------------------
  * Pass one load source file and determine preprocessor statements
@@ -68,6 +71,11 @@ RXPPPassOne: procedure = .int
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
   say '['time('l')'] Macros extracted:   'macros_mname.0-maclibm
+  call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
+  say '['time('l')'] Macros arranged:    'macros_mname.0
+  call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
+  ifblock.1=0
+  call ifstack
 return rexxlines
 /* ------------------------------------------------------------------
  * Analyse REXX program and expand Macros
@@ -78,17 +86,29 @@ RXPPPassTwo: procedure
   do lineNo=1 to lino
      line = source.lineNo
  	 if stype.LineNo='D' then do
- 	    ## call writeLine line
- 	    call printGen line,1
- 	 end
- 	  else if stype.LineNo='I' then do
-           ## call writeLine line
-      	   call printGen line,2
+ 	    if pos('NDEF',printgen_flags)>0 then iterate
+ 	    call writeLine printGen(line,1)
+  	 end
+     else if stype.LineNo='I' then do
+   	   call writeLine printGen(line,2)
      end
+     else if stype.LineNo='IF' then do
+     ##  call writeLine printGen(line,4)
+        if getvarindx(fword(line,2))>0 & ifblock.lineno>0 then lineno=ifblock.lineno
+        else nop      ##  say 'if var not defined '
+     end
+     else if stype.LineNo='IFN' then do
+      ##  call writeLine printGen(line,4)
+        if getvarindx(fword(line,2))=0 & ifblock.lineno>0 then lineno=ifblock.lineno
+        else nop       ## say 'ifn var not defined '
+     end
+     else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if fstrip(line) \='' then do
   	    newline = expandRecursive(line)
   	    call writeline newline
  	 end
+
+
   end
   call writeline ''
   say '['time('l')'] Pre-Compiled REXX generated '
@@ -180,6 +200,7 @@ printGen: procedure=.string
   if type=1 then return '/* 'line' D*/'   ## DEFINE clause
   if type=2 then return '/* 'line' I*/'   ## INCLUDE clause
   if type=3 then return '/* 'line' S*/'   ## SET clause
+  if type=4 then return '/* 'line' IF*/'  ## IF clause
   else return '/* rxpp: 'line' */'        ## Macro call
 return '/* rxpp: 'line' U*/'
 /* ------------------------------------------------------------------
@@ -194,7 +215,7 @@ CMD_set: procedure
   i = macros_varname.0
   do j=1 to macros_varname.0
      if macros_varname.j=varn then do
-        macros_varvalue.j=fstrip(subword(incl,3))
+        macros_varvalue.j=DropComment(subword(incl,3))
         if varn='{printgen}' then printgen_global=fword(lower(macros_varvalue.j),1)   ## set printgen_global additionally directly will be used often
         return
      end
@@ -202,8 +223,39 @@ CMD_set: procedure
 
   i = i + 1
   macros_varname.i =varn
-  macros_varvalue.i=fstrip(subword(incl,3))
- return
+  macros_varvalue.i=DropComment(subword(incl,3))
+return
+/* ------------------------------------------------------------------
+ * Drop comments at the end of a line
+ * ------------------------------------------------------------------
+ */
+dropComment: procedure=.string
+  arg varvalue=.string
+  fp1=fpos('##',varvalue,1)
+  if fp1>1 then varvalue=fsubstr(varvalue,1,fp1-1)
+  fp1=fpos('/*',varvalue,1)
+  if fp1>1 then varvalue=fsubstr(varvalue,1,fp1-1)
+return fstrip(varvalue)
+/* ------------------------------------------------------------------
+ * Process ##UNSET command
+ * ------------------------------------------------------------------
+ */
+CMD_unset: procedure
+  arg lino=.int,incl=.string
+  stype.lino= 'S'
+  varn='{'fword(incl,2)'}'
+  varn=lower(varn)
+  if varn='{printgen}'  then return
+  if varn='{rxpp_rexx}' then return
+  if varn='{rxpp_date}' then return
+  do j=1 to macros_varname.0
+     if macros_varname.j=varn then do
+        macros_varname.j=''
+        macros_varvalue.j=''
+        return
+     end
+  end
+return
 /* ------------------------------------------------------------------
  * Process ##INCLUDE command
  * ------------------------------------------------------------------
@@ -227,17 +279,7 @@ return
 writeline: procedure
   arg oline=.string
   do while oline \= ''
-     fp1=fpos('{',oline,1)>0
-     fp2=fpos('}',oline,fp1+1)
-     do while fp1>0 & fp2>0
-        cmt=fsubstr(fstrip(oline),1,2)
-        if cmt='/*' | cmt='##' then leave
-        do i=1 to macros_varname.0
-            oline=ChangeStr(macros_varname.i,oline,macros_varvalue.i)
-        end
-        fp1=fpos('{',oline,fp2+1)>0
-        fp2=fpos('}',oline,fp2+1)
-      end
+     oline=injectVariable(oline)
      ppi = pos('\', oline)
      if ppi > 0 then do    /* Write part before the backslash */
         lino = lino + 1
@@ -259,6 +301,7 @@ writeline: procedure
 expandRecursive:  procedure=.string
   arg line=.string
   old = ''
+  expandlevel=0
   do until old = line | line=''   /* No change → stop */
      old = line
      line = expandLine(line)  /* Expand one level */
@@ -273,17 +316,22 @@ expandLine:  procedure=.string
   ucmd=upper(fword(line,1))
   if ucmd = '##SET' then do
      call cmd_set 9999,line
+     if pos('NSET',printgen_flags)>0 then return ''
+     return printGen(line,3)
+  end
+  else if ucmd = '##UNSET' then do
+     call cmd_unset 9999,line
+     if pos('NSET',printgen_flags)>0 then return ''
      return printGen(line,3)
   end
   ## if cmt='##' then return line
   ## if cmt='/*' then return line
   ## if fpos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
-  i=hasMacro(line,macros_mname)    ## checks also for ## /*
-  level=0
-  do while i>0
-     line=resolveMacro(i,line,level)
-     level=level+1
-     i=hasMacro(line,macros_mname)
+  i=hasMacro(line,macros_mname,1)      ## checks also for ## /*
+   do while i>0
+     line=resolveMacro(i,line,expandLevel)
+     expandlevel=expandlevel+1
+     i=hasMacro(line,macros_mname,i+1)
   end
 return line
 /* ------------------------------------------------------------------
@@ -297,13 +345,8 @@ return line
    name    = macros_mname.i
    args    = macros_margs.i
    body    = macros_mbody.i
-   do while fpos('{',body,1)>0 & fpos('}',body,1)>0
-      do i=1 to macros_varname.0
-         body=ChangeStr(macros_varname.i,body,macros_varvalue.i)
-      end
-   end
+   body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
-
    do while fpos(name, uline, callPos + 1) > 0
     ## test Macro is variadic
        isVariadic = 0
@@ -313,11 +356,14 @@ return line
        end
        if printgen_global='all' then call writeline printGen(fstrip(line),0)
        else if level=0 & printgen_global='nnest' then call writeline printGen(fstrip(line),0)
-
-
+       level=level+1     ## increase level in case a second instance of macro is found
        callPos = fpos(name, uline, callPos + 1)
+       if callpos>1 then do
+          status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
+          if status_before=0 then iterate
+       end
        remain  = fsubstr(line, callPos + length(name),0)    ## set to parameter part, macro has format name( +length positions into it
-    ## extract argument list
+     ## extract argument list
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
 
@@ -331,6 +377,25 @@ return line
        callPos = callPos - 1        /* set next start point */
    end
 return line
+/* ------------------------------------------------------------------
+ * Inject pre-compiler variable into line
+ * ------------------------------------------------------------------
+ */
+injectVariable: procedure=.string
+  arg line2change=.string
+   fp1=fpos('{',line2change,1)>0
+   fp2=fpos('}',line2change,fp1+1)
+   do while fp1>0 & fp2>0
+      cmt=fsubstr(fstrip(line2change),1,2)
+       if cmt='/*' | cmt='##' then leave
+      do i=1 to macros_varname.0
+         if macros_varname.i='' then iterate
+         Line2change=ChangeStr(macros_varname.i,line2change,macros_varvalue.i)
+      end
+      fp1=fpos('{',line2change,fp2+1)>0
+      fp2=fpos('}',line2change,fp2+1)
+   end
+return line2change
 /* ------------------------------------------------------------------
  * Replace fixed define arguments
  * ------------------------------------------------------------------
@@ -418,13 +483,11 @@ fetchArguments: procedure=.string
 
   do j = 1 to length(remain)
      c = fsubstr(remain, j, 1)
-
      if c = '(' then depth = depth + 1
      if c = ')' then do
         depth = depth - 1
         if depth = 0 then leave  /* finished parsing full argument expression */
      end
-
      argText = argText || c
   end
   return fstrip(argText)
@@ -494,6 +557,81 @@ parseArgList: procedure=.int
   if fstrip(token) <> '' then callargs.i = fstrip(token)
 return i
 /* ------------------------------------------------------------------
+ * Dump pre-compiler variables
+ * ------------------------------------------------------------------
+ */
+printvars: procedure
+  say 'Pre-Compiler Variable List'
+  say '-------------------------------------------------------'
+  do i=1 to macros_varname.0
+     if macros_varname.i='' then iterate
+     say right(i,3,'0')' 'macros_varname.i"='"macros_varvalue.i"'"
+  end
+return
+/* ------------------------------------------------------------------
+ * Return pre-compiler variable index
+ * ------------------------------------------------------------------
+ */
+getvarindx: procedure=.int
+  arg varname=.string
+  do i=1 to macros_varname.0
+     if macros_varname.i='' then i
+  end
+  return 0
+/* ------------------------------------------------------------------
+ * Return pre-compiler variable content
+ * ------------------------------------------------------------------
+ */
+getvar: procedure=.string
+  arg varname=.string
+  do i=1 to macros_varname.0
+     if macros_varname.i='' then iterate
+     if macros_varname.i =varname then return macros_varvalue.i
+  end
+return ''
+/* ------------------------------------------------------------------
+ * Dump pre-compiler variables
+ * ------------------------------------------------------------------
+ */
+ifstack: procedure
+  stack.1 = ''         /* simulate stack using indexed stem */
+  depth = 0            /* current depth */
+
+  which=0
+  i=fsearch(source,1,'##IF ','##IFN ',"",which)
+  do while i>0
+     if which=1 then stype.i='IF'
+     else if which=2 then stype.i='IFN'
+     lnk=findMatchingEndif(i+1)
+     ifblock.i=lnk
+     i=fsearch(source,i+1,'##IF ','##IFN ','',which)
+  end
+ ## do i=1 to ifblock.0
+ ##    say i ifblock.i
+ ## end
+return
+
+findMatchingEndif: procedure=.int
+  arg startline=.int
+  nest = 1  /* Start at 1 because the current ##IF is level 1 */
+  which = 0
+  i = fsearch(source, startline, '##IF ','##IFN ','##END', which)
+  do while i > 0
+    if which = 1 | which=2 then nest = nest + 1
+    else if which = 3 then do
+      nest = nest - 1
+      stype.i = 'X'  /* mark for removal or annotation */
+      if nest = 0 then return i  /* finally matched ##ENDIF */
+    end
+    i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
+  end
+
+  say '**ERROR: No matching ##ENDIF found after line' startline
+return 0
+
+
+
+/* ------------------------------------------------------------------
  * Init RXPP environment
  * ------------------------------------------------------------------
  */
@@ -514,6 +652,10 @@ rxppinit: procedure
   macros_varname.2 ='{printgen}'
   macros_varvalue.2=0
   printgen_global='nnest'
-  macros_varname.3 ='{rxpp_date}'
-  macros_varvalue.3=date()' 'time()
+  macros_varname.3 ='{flags}'
+  macros_varvalue.3='DEF SET'
+  printgen_flags='NDEF NSET'
+  printgen_global='nnest'
+  macros_varname.4 ='{rxpp_date}'
+  macros_varvalue.4=date()' 'time()
 return

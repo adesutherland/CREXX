@@ -11,9 +11,11 @@
 ##define double(x)   	   {2*x}
 
 /* Data Handling */
-##define hi(stem)           {stem.0}
+##define hi(stem)          {stem.0}
 ##define mapput(map,k,v)   {map.k=v}
 ##define mapget(map,k)     {map.k}
+##define quote(string2quote)  {'string2quote'}
+##define Dquote(string2quote) {"string2quote"}
 
 /* Control Flow Shortcuts */
 ##define repeat(n)         {do __i=1 to n}

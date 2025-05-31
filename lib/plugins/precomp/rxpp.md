@@ -1,25 +1,37 @@
 # RXPP Macro System: How It Works
 
-## 📚 Table of Contents
 
-* [🔧 What is RXPP?](#-what-is-rxpp)
-* [💪 What RXPP Macros Do](#-what-rxpp-macros-do)
-* [✅ Macro Definition](#-macro-definition)
-* [🤖 Macro Invocation](#-macro-invocation)
-* [📥 Macro Inclusion](#-macro-inclusion)
-* [📊 How It Works Internally](#-how-it-works-internally)
-* [✨ Example](#-example)
-* [🚀 Benefits](#-benefits)
-* [📊 Common Use Cases](#-common-use-cases)
-* [🧪 Invocation Syntax](#-invocation-syntax)
-* [📚 Sample Macros](#-sample-macros)
-* [📦 RXPP Build System](#-overview)
+## RXPP + CREXX Build System Documentation
+
+This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
+
+---
+
+## 💼 Table of Contents
+
+* [📆 Overview](#-overview)
 * [🚀 Usage Example](#-usage-example)
 * [📂 Input/Output Example](#-inputoutput-example)
-* [📂 Scripts: Windows Batch (.bat) and Linux Shell (.sh)](#-inputoutput-example)
-* [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
+* [🛏️ Pipeline Flow Diagram](#-pipeline-flow-diagram)
 * [🛠 Troubleshooting Guide](#-troubleshooting-guide)
+* [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
+  * [🧹 Supported Directives](#-supported-directives)
+    * [`##SET var value`](#set-var-value)
+    * [`##UNSET var`](#unset-var)
+    * [`##IF var`](#if-var)
+    * [`##IFN var`](#ifn-var)
+    * [`##ENDIF`](#endif)
+  * [⚙️ Behavior Notes](#%ef%b8%8f-behavior-notes)
+  * [🧪 Example with Nesting](#-example-with-nesting)
+  * [🔮 Planned Enhancements](#-planned-enhancements)
 
+---
+
+### 💼 Overview
+
+* **RXPP** handles macro expansion for CREXX source files.
+* **rxCREXX** is the master script (batch or shell) that handles: precompile → compile → assemble → run phases based on input flags.
+* Scripts are modular and support plugin-based builds using REXX virtual machine tools.
 
 This document explains how the RXPP (REXX Preprocessor for CREXX) macro system functions. It focuses on the mechanics and design rather than macro syntax content.
 
@@ -242,10 +254,218 @@ Here are some useful sample macros and their purposes:
 
 These macros simplify routine tasks and make your REXX code shorter and clearer.
 
+
+## 🔧 RXPP Preprocessor Directives (##)
+
+RXPP supports a set of preprocessor-style directives for conditional compilation, macro expansion control, and variable handling. These are executed during preprocessing, before REXX interpretation.
+
+---
+
+### 🧩 Supported Directives
+
+### `##SET var value`
+
+Defines or updates a preprocessor variable.
+
+**Example:**
+
+```rexx
+##SET DEBUG 1
+##SET prefix Log:
+```
+
+### `##UNSET var`
+
+Removes a previously defined variable from the preprocessor context.
+
+**Example:**
+
+```rexx
+##UNSET DEBUG
+```
+
+### `##IF var`
+
+Begins a conditional block that is processed **only if** the variable is defined and considered truthy.
+
+**Example:**
+
+```rexx
+##IF DEBUG
+  say "Debugging"
+##ENDIF
+```
+
+### `##IFN var`
+
+(Short for `IF NOT`)
+
+Starts a block that is processed **only if** the variable is not set.
+
+**Example:**
+
+```rexx
+##IFN DEBUG
+  say "Not in debug mode"
+##ENDIF
+```
+
+### `##ENDIF` or `##END`
+
+Closes the nearest open `##IF` or `##IFN` block.
+
+**Example:**
+
+```rexx
+##IF DEBUG
+  say "Debugging"
+##IFN VERBOSE
+  say "Minimal output"
+##ENDIF
+##ENDIF
+```
+
+---
+
+## ⚙️ Behavior Notes
+
+| Feature                        | Description                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| ✅ **Nested `##IF`/`##IFN` blocks** | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
+| 🆎 Case                        | Variable names are case-insensitive                                  |
+| 📄 Variable scope              | All variables are global to the precompiler pass                     |
+| 🔁 Processing stages           | All `##IF`/`##IFN` are evaluated before macro expansion              |
+| 💥 Error handling              | Unmatched `##IF` or `##ENDIF` produces an error                      |
+
+---
+
+## 🧪 Example with Nesting
+
+```rexx
+##SET DEBUG 1
+##SET VERBOSE 0
+
+##IF DEBUG
+  say "Debug mode"
+  ##IFN VERBOSE
+    say "Silent debug"
+  ##ENDIF
+##ENDIF
+```
+
+This will output:
+
+```
+Debug mode
+Silent debug
+```
+
+---
+
+
 ---
 ## RXPP + CREXX Build System Documentation
 
 This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
+
+---
+
+### 📦 Overview
+
+* **RXPP** handles macro expansion for CREXX source files.
+* **rxCREXX** is the master script (batch or shell) that handles: precompile → compile → assemble → run phases based on input flags.
+* Scripts are modular and support plugin-based builds using REXX virtual machine tools.
+
+---
+
+## 🚀 Usage Example
+
+To execute a full CREXX processing pipeline:
+
+```bash
+./rxCREXX.sh PCAR macro1.rxpp macro1.rexx maclib.rexx
+```
+
+Or on Windows:
+
+```bat
+rxCREXX.bat PCAR macro1.rxpp macro1.rexx maclib.rexx
+```
+
+**Where:**
+
+* `PCAR` are the flags for each step:
+
+  * `P`: Precompile
+  * `C`: Compile
+  * `A`: Assemble
+  * `R`: Run
+* `macro1.rxpp` is the source file to precompile
+* `macro1.rexx` is the generated output file
+* `maclib.rexx` is the macro library used during preprocessing
+
+All output paths, build directories, and runtime libraries are configured in the `rxconfig` file.
+
+### 📂 Input/Output Example
+
+**Inputs:**
+
+* `macro1.rxpp`: RXPP macro source
+* `maclib.rexx`: macro definitions
+
+**Generated Files:**
+
+* `macro1.rexx`: RXPP-expanded output (precompiled REXX)
+* `macro1.obj` or similar: compiled object/bytecode
+* Final executable or linked result (e.g., binary or VM-loadable code)
+
+**Directories (from config):**
+
+* Input: `$sourcelib` (from home/lib/plugins/precomp)
+* Output: `$build/lib/plugins/precomp` (pluglib)
+* Dependencies: `$build/lib/rxfnsb/library` (library functions)
+
+---
+
+## 🧭 Pipeline Flow Diagram
+
+```text
+macro1.rxpp + maclib.rexx
+        │
+        ▼
+   [Precompile - RXPP]
+        │     (rxprecomp.sh → macro1.rexx)
+        ▼
+  macro1.rexx (generated REXX)
+        │
+        ▼
+   [Compile - rxc]
+        │     (rxcompile.sh → macro1.obj)
+        ▼
+    macro1.obj (compiled)
+        │
+        ▼
+   [Assemble - rxas]
+        │     (rxasm.sh → macro1 binary)
+        ▼
+   [Run - rxvm]
+              (rxrun.sh → executes macro1)
+```
+
+---
+
+## 🛠 Troubleshooting Guide
+
+| Issue                          | Cause                                        | Resolution                                                                                      |
+| ------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `command not found`            | Script path or permissions                   | Ensure `chmod +x *.sh` is run and the script is in your PATH or called directly (`./script.sh`) |
+| `No such file or directory`    | File path typo or missing input              | Check that input files like `macro1.rxpp` or `maclib.rexx` exist and match case exactly         |
+| Compilation fails              | Missing macro expansion or syntax error      | Verify `rxpp` macro resolves correctly and input REXX syntax is valid                           |
+| `member` variable is empty     | `basename` failed or wrong file name passed  | Make sure the third parameter is a valid filename (e.g. `macro1.rexx`)                          |
+| Output missing                 | Incorrect config path or script failure      | Check values in `rxconfig.sh` and run with `set -x` to debug                                    |
+| No execution / No output shown | `RUN` flag missing or script silently failed | Include `R` in flags and add `echo`/`set -x` in run script to trace it                          |
+
+> Tip: If a step fails, test each script individually (e.g., `source rxprecomp.sh`) to isolate the issue.
 
 ---
 

@@ -4,17 +4,19 @@
  */
 options levelb
 import rxfnsb
-
-##set printgen none          ## show no precompiler calls in generated rexx
-##set printgen all           ## show all nested precompiler calls in generated rexx
-##set printgen nnest         ## show only first precompiler call for nested calls (default)
-
-
-say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
-
-say {rxpp_date}              ## pre defined pre-compiler variable: compilation date/time
-say {rxpp_rexx}              ## pre defined pre-compiler variable: main rexx name
-
+##if def
+  ##set printgen none          ## show no precompiler calls in generated rexx
+  ##set printgen all           ## show all nested precompiler calls in generated rexx
+  ##set printgen nnest         ## show only first precompiler call for nested calls (default)
+##endif
+##ifn def
+  ##set printgen none          ## show no precompiler calls in generated rexx
+  ##if abc
+       say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
+       say quote({rxpp_date})       ## pre defined pre-compiler variable: compilation date/time
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##endif
+##end
 /* define a macro containing a {variable}, the define instruction is fetched in pass 1, therefore the value doesn't need to be avaliable */
 ##define log                   {say time('l')' log record' ; say '{prefix} something'}
 
@@ -25,38 +27,7 @@ say {rxpp_rexx}              ## pre defined pre-compiler variable: main rexx nam
 ##set prefix 456             ## change the prefix
  log()                       ## and re-expand another log macro
  say {prefix}                ## output the current prefix->compiler variable
+##unset prefix
 
 list2stem(fruits, "apple", "banana", "cherry")
-say hi(fruits)
-liststem(fruits)
- say DOUBLE(9)             /* double 9              */
- say SQUARE(DOUBLE(4))     /* square after doubling */
- fred=9
- say SQUARE(fred)          /* square fred */
-
-/* loop through fruit array */
-   foreach(fruits,j)
-     say fruits.j
-   end
-   ##set prefix 789
- log()
- ##set prefix old
- log()
- ##set prefix new
- log()
-
-list2stem(fruits, "apple", "banana", "cherry")
-say hi(fruits)
-liststem(fruits)
- say DOUBLE(9)             /* double 9              */
- say SQUARE(DOUBLE(4))     /* square after doubling */
- fred=9
- say SQUARE(fred)          /* square fred */
-
-/* loop through fruit array */
-   foreach(fruits,j)
-     say fruits.j
-   end
- log()
- log()
- log()
+say arrayhi(123) hi(fruits)
