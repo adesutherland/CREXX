@@ -33,7 +33,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 * **rxCREXX** is the master script (batch or shell) that handles: precompile → compile → assemble → run phases based on input flags.
 * Scripts are modular and support plugin-based builds using REXX virtual machine tools.
 
-This document explains how the RXPP (REXX Preprocessor for CREXX) macro system functions. It focuses on the mechanics and design rather than macro syntax content.
+This document explains how the RXPP (REXX Preprocessor for CREXX) macro system functions.
 
 ---
 

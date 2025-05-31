@@ -4,6 +4,7 @@
  */
 options levelb
 import rxfnsb
+##set def 1
 ##if def
   ##set printgen none          ## show no precompiler calls in generated rexx
   ##set printgen all           ## show all nested precompiler calls in generated rexx

@@ -7,7 +7,7 @@
 
 /* Math Helpers */
 ##define CUBE(x)           {x*x*x}
-##define SQuARE(x) 		   {x*x}
+##define SQUARE(x) 		   {x*x}
 ##define double(x)   	   {2*x}
 
 /* Data Handling */
@@ -23,7 +23,6 @@
 
 /* Variadic & Utility */  
 ##define list2Stem(name, ...)  {name.$indx=arglist.$indx}
-
 
 ##define foreach(stem,indx)   {do indx=1 to stem.0 }
 ##define forpair(array, key, val)  {do key=1 to array.0; val=array.key}

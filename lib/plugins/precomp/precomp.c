@@ -307,6 +307,21 @@ PROCEDURE(word) {
     RETURNSTRX(""); // Return empty string if index is out of bounds
     ENDPROC;
 }
+
+/* -------------------------------------------------------------------------------------
+* Portable strupr() because that is windows-only
+* -------------------------------------------------------------------------------------
+*/
+
+char *strupr_portable(char *s) {
+    char *p = s;
+    while (*p) {
+        *p = toupper((unsigned char)*p);
+        p++;
+    }
+    return s;
+}
+
 /* -------------------------------------------------------------------------------------
 * Check if line contains a macro call
 * -------------------------------------------------------------------------------------
@@ -329,7 +344,7 @@ PROCEDURE (hasmacro) {
         RETURNINTX(0)
     };
     char * dupline = strdup(line);
-    dupline= strupr(dupline);
+    dupline= strupr_portable(dupline);
     for (i = from; i<mmax; i++) {
          if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
             RETURNINTX(i + 1);
