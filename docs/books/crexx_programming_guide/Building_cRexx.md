@@ -127,6 +127,8 @@ library and the cRexx executables in their binary form.
 
 ## What do we have after a successful build process
 
+### Native executables
+
 When all went well, we have a set of native executables for the platform
 we built cRexx on. These are
 
@@ -136,9 +138,9 @@ we built cRexx on. These are
 | rxc     | cRexx compiler                                  |
 | rxas    | cRexx assembler                                 |
 | rxdas   | cRexx disassembler                              |
-| rxvm    | cRexx VM                                        |
+| rxvm    | cRexx VM, threaded interpreter                  |
 | rxpp    | cRexx macro preprocessor                        |
-| rxbvm   | cRexx VM, non-threaded version                  |
+| rxbvm   | cRexx VM, non-threaded conventional interpreter |
 | rxvme   | cRexx VM, with linked-in Rexx library           |
 | rxdb    | cRexx debugger                                  |
 | rxcpack | cRexx C-generator for native executables        |
@@ -158,3 +160,30 @@ disassembler, debugger and cpacker directories of the crexx-build
 directory we created earlier. It is up to you to add all these
 separately to the `PATH` environment, or to just collect them all into one
 directory that is already on the `PATH`.
+
+### Production and debug builds
+
+Production builds are optimized, while debug builds are slower in exection time but deliver support for the analysis and debugging of problems in the code. The standard distribution is an optimized production build, while a debug build can be produced with the Debug CMake build option.
+
+| Name    | Function                                        |
+|---------|-------------------------------------------------|
+| -DCMAKE_BUILD_TYPE=Release  | An Optimized build (default)|
+| -DCMAKE_BUILD_TYPE=Debug    | A Debug build              |
+
+Table: Debug vs Release options. {#tbl:id}
+
+### Libraries
+
+### Optional libraries - build options
+
+| Name    | Function                                        |
+|---------|-------------------------------------------------|
+| -DENABLE_ODBC=ON  | Produce the ODBC Plugin               |
+| -DENABLE_GTK=ON  | Produce the GTK (GUI) Plugin           |
+
+
+Table: Optional plugin build  options. {#tbl:id}
+
+Some libraries, with dependencies on installed software products, are only produced when they are opted-in with CMake build options. The defaults for these options are \code{OFF}.
+
+

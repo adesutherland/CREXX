@@ -37,7 +37,8 @@ second character set is used for data; the contents of
 variables. Here the whole of Unicode can be used.
 
 \section{Command Line Arguments}
-When the command line argument -h is specified the options are shown:\\
+When the command line argument -h is specified the options are shown:
+
 \fontspec{IBM Plex Mono}
 \begin{shaded}
   \small

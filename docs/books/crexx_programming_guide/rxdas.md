@@ -1,12 +1,12 @@
 # rxdas - the \crexx{} Disassembler
 
 A disassembler reverses the actions of an assembler; where the
-assembler turns a text file containing unstrictions and directives
+assembler turns a text file containing instructions and directives
 into a binary executable, the disassembler returns this binary file
 into its text form\footnote{as much as possible, given the fact that
   some information on literals has disappeared};in this case it
 delivers a disassembly which in itself can be re-assembled - and still
-works. 
+works.
 
 ## Input/Output
 
