@@ -463,8 +463,7 @@ PROCEDURE (fsearch) {
     char * ustr3= GETSTRING(ARG4);
     char * haystack;
     for (i = from; i < mmax; i++) {
-        haystack = strdup(GETSARRAY(ARG0, i));
-        haystack = strupr_portable(haystack);
+        haystack = strdup(strupr_portable(GETSARRAY(ARG0, i)));
         if (ustr1[0] != '\0')
             if (strstr(haystack, GETSTRING(ARG2)) > 0) {
                 SETINT(ARG5, 1);
