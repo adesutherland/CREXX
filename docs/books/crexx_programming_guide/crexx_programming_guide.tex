@@ -1,0 +1,152 @@
+\input{../../../boilerplate/preamble}
+
+\begin{document}
+\renewcommand{\isbn}{978-90-819090-1-3}
+\setcounter{tocdepth}{1}
+\title{\fontspec{TeX Gyre
+    Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW
+    Light}\\Programming Guide}
+
+\author{The \crexx{} team}
+%\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
+\date{\null\hfill \today}
+\maketitle
+\pagenumbering{Roman}
+\pagestyle{plain}
+\frontmatter
+\pagenumbering{Roman}
+\pagestyle{fancy}
+\input{../../../boilerplate/bookmeta}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\frontmatter
+\large
+\input{../../../boilerplate/hyphenation.tex}
+\input{../../../boilerplate/series}
+\input{../../../boilerplate/conventions}
+
+\mainmatter
+\input{about}
+\part{Guide}
+\input{toolchain}
+
+\chapter{Running \crexx{} on Linux and macOS}
+Linux and other Unix-like operating systems like Apple macOS behave in
+an identical way when compiling, linking and running a \crexx{}
+program.
+\input{Running_cRexx}
+\chapter{Running \crexx{} on Windows operating systems}
+\chapter{Running \crexx{} on VM/370CE}
+\chapter{Intralanguage calls}
+This chapter discusses calls from one \crexx{} procedure to another,
+including the built-in function package. Search order is an
+intrinsically related concept: how is the called component found. There
+are some differences with Classic Rexx and ooRexx, which can call (and interpret)
+external procedures in source. In this respect, \crexx{} behaves like
+\nr{}, because a called component needs to be compiled, executable
+code; for \nr{} a \code{.class} file and in \crexx{} an \code{.rxbin}
+file. Level B introduces a package (module) system where a program can
+be part of a package and be imported into calling code.
+\section{At compile time}
+At compile time, a program uses the \code{CALL} statement, or the
+function notation with parentheses (also called round brackets). Going
+forward, and moving into object oriented notations for other \rexx{}
+variants, the latter is going to gain importance, while the
+\code{CALL} statement will be fixed in its current functionality. For
+that reason, most examples will be in the function notation.
+
+The compiler needs to verify if it is possible to call the called
+code: it must be present in executable form, and it needs to have the right
+\emph{signature}\footnote{with signature we mean the combination of
+  parameters and return type}. The compiler will not automatically compile a callee
+of which the source can be located but the executable form is missing;
+existing systems based on interpreters will happily interrupt their
+work and tokenize another source file when called; the \crexx{}
+\code{rxc} compiler will not.
+
+This implies that there are inherent dependencies to be followed
+while building an application system that consists of multiple
+modules; this is not different than in other compiled
+languages. Building utilities like Make or Ninja can provide these
+services, and these can be orchestrated by meta-build tools like
+CMake. The \crexx{} toolchain itself is built using CMake and from its
+build specification in CMake most of these patterns can be gleaned.
+
+The \textbf{import} statement\label{intraImport} tells the compiler we want to
+import functions from a certain package.
+
+
+\section{At runtime}
+\chapter{Interlanguage calls}
+A \crexx{} program is able to call programs written in the \textsc{Rexx}
+language, but also programs native to the platform, using a number of
+calling conventions: \[todo: checkrelease\]
+\begin{description}
+  \item[Address] the \code{address} statement can use the shell and
+    I/O indirection to start native executables and provide input, and
+    retrieve the output.
+    \item[RexxSaa] the traditional RexxSAA calling convention can be
+      used for direct interfaces to executables that are designed to
+      function as a Rexx library. In its most simple form, these can
+      return \textsc{Rexx} strings to the calling program.
+      \item[Generic Call Interface] In this RexxSAA extension, the
+      type and length of the parameters can be specified by the
+      caller\footnote{Which is considered unsafe but sometimes the
+        only possibility for programs not designed to be called by \crexx{}}.
+    \end{description}
+    \chapter{Tracing and Debugging}
+    \section{An example debugging session}
+
+\part{Tools Reference}
+\include{rxc}
+\include{rxas}
+\input{rxdas}
+
+\chapter{\crexx{} Debugger}\label{debugger}
+The debugger is the only program in the toolchain delivered with \textsc{Rexx}
+as its source code; the other programs, at the moment, are compiled
+from C. It is easily adaptable and can be regarded a \emph{debugger
+  construction set}. By adapting and recompiling the user can
+implement their own wishes for a debugger. In this sense, it can be
+seen as an open-ended complement to the \textsc{Rexx} \code{trace}
+statement. Because it has modes for \textsc{Rexx} as well as
+\code{rxas} Assembler, it is a very useful tool for debugging
+low-level problems.
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxdb -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+\section{Runtime Options}
+After the \code{rxdb} program is started, a few runtime options appear in the
+delivered version. This is an example session:
+\chapter{\crexx{} C Packer}
+The C Packer program converts the \emph{.rxbin} files into a C
+language structure which links together all needed modules, and a
+large part of the Virtual Machine infrastructure, which file then can
+be compiled and link edited by the C compiler. GCC and Clang are the
+targeted compiler toolchains for Linux, macOS and Windows.
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxcpack -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+
+
+\backmatter
+\listoftables
+%\listoffigures
+%\lstlistoflistings
+\printindex
+\clearpage
+\psset{unit=1in}
+\begin{pspicture}(3.5,1in)
+  \psbarcode{\isbn}{includetext guardwhitespace}{isbn}
+\end{pspicture}
+\end{document}
