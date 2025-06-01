@@ -88,14 +88,16 @@ do i=1 to words(filenames)
     if RC = 0 then res='OK'
     else res = RC
     say '[ 'res' ] rxc     - Compiled' filename
-  end
+    end
+  if RC>0 then exit
   'rxas' filename
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC
     say '[ 'res' ] rxas    - Assembled' filename
   end
-
+  if RC>0 then exit
+  
   modules = translate(libraries,' ',';')
   if native then do
     pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
@@ -140,7 +142,7 @@ do i=1 to words(filenames)
 	else res = RC
 	say '[ 'res' ] gcc     - C-Compiled' filename
 	end
-    
+    if RC>0 then exit  
     end
   else do
     ex_command = 'rxvme' filename modules
