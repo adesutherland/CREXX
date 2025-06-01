@@ -3,9 +3,9 @@
 ## Register based Virtual Machine
 \crexx{} uses a register based virtual machine.
 
-A register-based virtual machine uses registers, which in this case are memory locations, to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed. In the `rxvm` virtual machine, the compiler of the underlying C implementation assigns the hardware registers.
+A register-based virtual machine uses software registers to store and manipulate data. In a register-based virtual machine, the instructions explicitly reference the registers by number, and the values are loaded into and out of the registers as needed.
 
-In contrast, a stack-based virtual machine uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack.
+In contrast, a stack-based virtual machine, like used for the JVM and UCSD-Pascal, uses a stack to store and manipulate data. In a stack-based virtual machine, the operands are pushed onto the stack, and the operators pop them off the stack, perform the operation, and push the result back onto the stack. The stack-based approach is simpler than the register-based approach because there are no explicit references to registers in the instructions, and the operands are automatically managed by the stack.
 
 Some other differences between a register-based virtual machine and a stack-based virtual machine include:
 
@@ -14,44 +14,42 @@ Some other differences between a register-based virtual machine and a stack-base
 - Stack-based virtual machines can be easier to implement and optimize for certain types of operations, such as function calls and loops, where the data can be easily pushed onto and popped off the stack.
 - Register-based virtual machines can provide more flexibility in terms of register allocation and optimization, which can be particularly important for high-performance applications.
 
-
 The execution environment of a \crexx{} program is a
 threaded[^threaded] virtual
 machine that is designed for optimal performance. This virtual
-machine, implemented in the `rxvm` executable, executes
-machine instructions produced by the `rxc` \crexx{}
-compiler, or written by hand, assembled into an `.rxbin` binary file by
-the `rxas` assembler.
+machine, implemented in the ```rxvm``` executable, executes
+machine instructions produced by the ```rxc``` \crexx{}
+compiler, or written by hand, assembled into an ```.rxbin``` binary file by
+the ```rxas``` assembler.
 
-[^threaded]: an alternative, non-threaded executable is available under the `rxbvm` name.
+[^threaded]: an alternative, non-threaded executable is available under the ```rxbvm``` name.
 
 ## Machine Interface
 
 This section describes the processor-specific information for the
-hypothetical rxvm processor. \index{RXVM processor} The instruction set can be seen as the ISA
-(instruction set architecture) for an `rxvm` processor, of which the microcode is implemented in the C99 language.
+hypothetical rxvm processor. \index{rxvm processor} The instruction set can be seen as the <!--index-->ISA (instruction set architecture) for this ```rxvm``` processor, of which the microcode is implemented in the C99 language.
 
 Programs intended to execute directly on the processor use the
-RXVM instruction set and the
+<!--index-->`rxvm` instruction set and the
 instruction encoding and semantics of this architecture.
 
 An application program can assume that all instructions defined by the
-architecture and that are neither privileged nor optional, exist and work
-as documented.
+<!--index-->architecture and that are neither privileged nor optional, exist and work
+as documented. At this moment, there are no <!--index-->privileged RXVM instructions.
 
 To be ABI (application binary interface) conforming, the processor must implement the instructions of
 the architecture, perform the specified operations, and produce the
-expected results.  The ABI neither places performance constraints on
+expected results. The ABI neither places performance constraints on
 systems nor specifies what instructions must be implemented in
 hardware.  A software implementation of the architecture conforms to
 the ABI; likewise, the architecture could be implemented in hardware,
-e.g. an FPGA.
+e.g. an <!--index-->FPGA.
 
 ## The Register
 
 \index{register}
 \begin{wrapfigure}{l}{0.4\textwidth}
-\includegraphics[scale=0.6]{charts/register.pdf}
+\includegraphics[scale=0.4]{charts/register.pdf}
 \end{wrapfigure}
 
 The number of registers is only limited by memory and, for

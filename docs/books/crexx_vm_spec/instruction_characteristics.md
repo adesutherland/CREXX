@@ -11,11 +11,9 @@ characteristics:
   
 - There is no separate CC (Condition Code) or status register; a
     register specified in the instruction is used for these results;
-    for example all comparisons leave their result in a register, which
-    subsequently can be used for a conditional branch
+    for example all comparisons leave their result in a register, which is specified in the instruction and then subsequently can be used for a conditional branch
     
-- The assembler does not have any data definition directives; data is entered directly into registers,
-  which then are used by the instructions. In `.rxbin` modules this data is represented in the Constant Pool. 
+- The assembler does not have any data definition directives; data is entered directly into registers, which then are used by the instructions. In ```.rxbin``` modules this data is represented in the Constant Pool. 
 
 ## Instruction Argument Types
 
