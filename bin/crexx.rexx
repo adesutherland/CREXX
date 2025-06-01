@@ -74,11 +74,16 @@ if verbose>1 then say 'using CREXX_HOME:' rxpath
 /* end */
 lpath = '/lib/rxfnsb'libraries
 
-if verbose>1 then say 'Compile path:' rxpath||lpath
+if verbose>1 then say 'crexx Library path:' rxpath||lpath
 
 do i=1 to words(filenames)
   filename=word(filenames,i)
-  'rxc -i' rxpath||lpath filename
+  rxcmd = 'rxc -i' rxpath||lpath filename
+  if verbose>1 then
+    do
+      say 'rxc command:' rxcmd
+      end
+  rxcmd
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC
@@ -93,14 +98,19 @@ do i=1 to words(filenames)
 
   modules = translate(libraries,' ',';')
   if native then do
-    'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
+    pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
+    if verbose>1 then
+    do
+      say 'rxcpack command:' pack_cmd
+      end
+    pack_cmd
     if verbose then do
       if RC = 0 then res='OK'
       else res = RC
       say '[ 'res' ] rxcpack - C-Packed' filename
     end
 
-    'gcc -O3 -DNDEBUG -o' filename ,
+    cc_command = 'gcc -O3 -DNDEBUG -o' filename ,
       '-L'rxpath'/interpreter',
       '-L'rxpath'/interpreter/rxvmplugin',
       '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal',
@@ -116,7 +126,14 @@ do i=1 to words(filenames)
 	'-lplatform',
         '-lm -lrxvmplugin',
         rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a ',
-		  filename'.c'
+	  filename'.c'
+    cc_command
+    if verbose>1 then
+      do
+	say 'cc compile command:'
+	say cc_command
+	end
+    
     if verbose then
       do
 	if RC = 0 then res='OK'
@@ -126,7 +143,11 @@ do i=1 to words(filenames)
     
     end
   else do
-    'rxvme' filename
+    ex_command = 'rxvme' filename modules
+    if verbose>1 then do
+      say 'crexx executes:' ex_command
+      end
+    ex_command
     end
   end   -- do i
     

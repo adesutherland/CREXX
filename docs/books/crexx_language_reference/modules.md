@@ -1,8 +1,8 @@
 # Modules
 
-Each source file (.rexx) is compiled and assembled into a module file (\*.rxbin). These module files can be combined into a single module library through simple file concatenation. This module library can be regarded as a module itself.
+Each source file (.rexx) is compiled and assembled into a module file (\*.rxbin). These module files can be combined (linked) into a single module library through simple file concatenation. This module library can be regarded as a module itself.
 
-Each module will contain a number of procedures, class members, and global variables that (if exposed) can be called by other modules.
+Each module will contain a number of procedures, class members, and global variables which (if exposed) can be called by other modules.
 
 *CURRENT STATUS: Classes are not implemented*
 
