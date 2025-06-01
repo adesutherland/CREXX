@@ -1,0 +1,17 @@
+.srcfile="words.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "words.main"="b" ".void" main() "" ""
+   .src 5:1="say words('The quick brown fox jumps over the lazy dog')"
+   load r1,1
+   load r2,"The quick brown fox jumps over the lazy dog"
+   settp r2,2
+   call r3,words(),r1
+   itos r3
+   say r3
+   .src 5:57=""
+   ret
+
+words() .expose=rxfnsb.words
+   .meta "rxfnsb.words"="b" ".int" words() "string1=.string"
