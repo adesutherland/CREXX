@@ -178,8 +178,8 @@ Table: Debug vs Release options. {#tbl:id}
 
 | Name    | Function                                        |
 |---------|-------------------------------------------------|
-| -DENABLE_ODBC=ON  | Produce the ODBC Plugin               |
-| -DENABLE_GTK=ON  | Produce the GTK (GUI) Plugin           |
+| -DENABLE_ODBC=ON  | Build the ODBC Plugin               |
+| -DENABLE_GTK=ON  | Build the GTK (GUI) Plugin           |
 
 
 Table: Optional plugin build  options. {#tbl:id}

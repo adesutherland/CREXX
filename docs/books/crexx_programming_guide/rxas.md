@@ -8,9 +8,8 @@ translate an \emph{.rxas} file produced by the \crexx{} compiler
 
 ## Program Structure
 
-\includegraphics[width=\textwidth]{charts/asmstructure.pdf}
+\includegraphics[width=\textwidth]{charts/asmstructure-crop.pdf}
 
-% \end{wrapfigure}
 The assembler processing goes through a number of steps in a single
 pass: first, the Lexer / Scanner tokenises the RXAS code. After that,
 the Parser parses the structure into a series of instructions. The
