@@ -50,6 +50,7 @@ set(REXXBINS
         tslastpos.rxbin
         tsubstr.rxbin
         tsword.rxbin
+	ts_words.rxbin
         ts_reradix.rxbin
         ts_sequence.rxbin
         ts_find.rxbin

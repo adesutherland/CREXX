@@ -3,7 +3,7 @@
 The \crexx{} language is a further development, and variant of the
 \textsc{Rexx} language\footnote{Cowlishaw, 1979}. This book aims to
 document the workings of this implementation and serves as reference
-for users and implementors alike.
+for users and implementers alike.
 
 ## Programming Guide
 
