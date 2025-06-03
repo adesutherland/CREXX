@@ -1,4 +1,4 @@
-# ODBC Plugin Documentation
+# ODBC Programming
 
 
 ## Overview

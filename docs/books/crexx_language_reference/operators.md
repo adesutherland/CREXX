@@ -4,7 +4,7 @@
 
 Level B incorporates the Classic REXX operators. These operators function similarly to their counterparts in other programming languages. However, it's worth mentioning that Classic REXX, being untyped, allows for flexible use of these operators with different data types, which might lead to implicit conversions or unexpected behaviours. In Level B, this flexibility is supported by implicit promotions which may lead to errors at compile or runtime. 
 
-## **Arithmetic operators** {#arithmetic-operators}
+## Arithmetic operators {#arithmetic-operators}
 
 | Operator     | Description                                                                 |
 |--------------|-----------------------------------------------------------------------------|
@@ -21,7 +21,7 @@ Level B incorporates the Classic REXX operators. These operators function simila
 Table: Arithmetic Operators {#tbl:id}
 
 
-## **Comparative operators** {#comparative-operators}
+## Comparative operators {#comparative-operators}
 
 | Operator(s)       | Description                                           |
 |-------------------|-------------------------------------------------------|
@@ -39,7 +39,7 @@ Table: Arithmetic Operators {#tbl:id}
 
 Table: Comparative Operators {#tbl:id}
 
-## **String Concatenation** {#string-concatenation}
+## String Concatenation {#string-concatenation}
 
 | Operator         | Description                                                                 |
 |------------------|-----------------------------------------------------------------------------|
@@ -49,7 +49,7 @@ Table: Comparative Operators {#tbl:id}
 
 Table: String Concatenation Operators {#tbl:id}
 
-## **Logical operators** {#logical-operators}
+## Logical operators {#logical-operators}
 
 | Operator     | Description                                                    |
 |--------------|----------------------------------------------------------------|
@@ -60,7 +60,7 @@ Table: String Concatenation Operators {#tbl:id}
 
 Table: Logical Operators {#tbl:id}
 
-## **Term Operators** {#term-operators}
+## Term Operators {#term-operators}
 
 | Operator      | Description                        |
 |---------------|------------------------------------|
@@ -69,7 +69,7 @@ Table: Logical Operators {#tbl:id}
 
 Table: Term Operators {#tbl:id}
 
-## **Operator Precedence** {#operator-priorities}
+## Operator Precedence {#operator-priorities}
 
 The order of priority of the operators (from highest to lowest) is:
 

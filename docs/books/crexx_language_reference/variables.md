@@ -1,14 +1,14 @@
 # Variables {#variables}
 
-## **Keywords** {#keywords}
+## Keywords
 
 Unlike in classic REXX, keywords (instructions and operators) cannot be used for variables or constant names.
 
-## **Typed Variables** {#typed-variables}
+## Typed Variables
 
 The approach to typing variables is designed to be simple and as “classic REXX”-like as possible but introduce type safety which allows more bugs to be highlighted before runtime. This is achieved by allowing 
 
-## **Declaration** {#declaration}
+## Declaration
 
 Variables will be implicitly declared and initialised to be of a certain type on their first assignment. E.g
 

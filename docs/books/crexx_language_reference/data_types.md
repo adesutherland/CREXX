@@ -2,7 +2,7 @@
 
 Types in the language are named using a period (.) followed by the type name. This naming convention helps to distinguish types from other elements in the language, such as variables and procedures.
 
-## **Built-In Types**
+## Built-In Types
 
 The language includes a number of built-in types, which are provided by the language itself. These types include:
 
@@ -18,13 +18,13 @@ The language includes a number of built-in types, which are provided by the lang
 
 Table: Built-in types {#tbl:id}
 
-**Statically Typed**
+## Statically Typed
 
-The language's type system is statically typed, which means that the types of variables and expressions are known at compile time. This helps to ensure that the language is type-safe, meaning that it is unlikely for programs to crash due to type errors.
+The language's type system is statically typed, which means that the types of variables and expressions are known at compile time. This helps to ensure that the language is type-safe, meaning that it is unlikely for programs to crash at runtime due to type errors.
 
 REXX will automatically convert / promote variable types between Integer, Float and String \- this may cause a compile time or run time error (signal).
 
-## **Taken Constants**
+## Taken Constants
 
 Taken \[as a\] Constants are symbols that are unassigned REXX variables, these are read-only and have a value equal to their name.
 
@@ -36,7 +36,7 @@ SAY CONSTANT\_SYM; /\* Prints "CONSTANT\_SYM" \*/
 
 CONSTANT\_SYM \= 1; /\* "CONSTANT\_SYM is a constant" error \*/ 
 
-## **Arrays**
+## Arrays
 
 These look like STEMS but actually are (at their simplistic default) 1 based dynamic arrays, with .0 giving the array size.
 
@@ -58,7 +58,7 @@ A 2-dimensional array of type float could be implicitly declared with
 
 array.1.1 \= 0.0
 
-## **Alternative Square Bracket Syntax**
+## Alternative Square Bracket Syntax
 
 Square brackets can be used e.g.
 
@@ -70,7 +70,7 @@ array.2
 
 are equivalent.
 
-## **Explicit Declaration** {#explicit-declaration}
+## Explicit Declaration {#explicit-declaration}
 
 Arrays can be explicitly declared
 
@@ -84,23 +84,23 @@ array \= .int\[-2 to \*\]       /\* 1 Dimensional, \-2 base, dynamic growth (-2,
 
 array \= .string\[0 to 5, 4 to 10\]  
 
-Arrays are Objects (see next and the **Classes and Interfaces** section) and can be passed to and from functions.
+Arrays are Objects (see next and the Classes and Interfaces section) and can be passed to and from functions.
 
-## **Objects** {#objects}
+## Objects {#objects}
 
 CREXX Registers contain objects with certain physical attributes, defined below . In fact all variables, even simple values are stored as objects. 
 
-Classes and Interfaces are templates that define the properties and methods of an object. These templates provide the capability for REXX programs to use objects. See the **Classes and Interfaces** section for details.
+Classes and Interfaces are templates that define the properties and methods of an object. These templates provide the capability for REXX programs to use objects. See the Classes and Interfaces section for details.
 
 For CREXX Level B the object design is required to ensure that the low level REXX VM capabilities are available to programmers from Level B programs.
 
-## **Object Physical Attributes** {#object-physical-attributes}
+## Object Physical Attributes {#object-physical-attributes}
 
 Each Object has the following physical attributes. REXX and RXAS programs can use these physical attributes to create a logical view of an object’s “userland” attributes and methods.
 
 Note that all these values can be used concurrently. However CREXX protocols need to be understood, for example the object’s string\_value is used for string conversions from the object’s numeric values by the compiler. 
 
-* **Status** \- 64 bit field to store value status flags. These attributes will be defined here and need to be consistent across the compiler, assembler, virtual machine  
+* Status \- 64 bit field to store value status flags. These attributes will be defined here and need to be consistent across the compiler, assembler, virtual machine  
 * **Int\_value** \- 64 bit integer  
 * **Float\_value** \- double float  
 * **Decimal\_value** \- arbitrary precision maths value (TODO)  
@@ -115,24 +115,24 @@ Note that all these values can be used concurrently. However CREXX protocols nee
 * **Attributes** \- An array of child objects (which can be nested to any level). Attributes are the capability used by the compiler to store REXX class logical attributes. They are also used to store members of an array  
 * **Num\_attributes** \- The number of child objects
 
-## **CREXX VM Objects** {#crexx-vm-objects}
+## CREXX VM Objects {#crexx-vm-objects}
 
 The following are objects created and used by the Rexx VM.
 
-### *Caller Address*  {#caller-address}
+### Caller Address  {#caller-address}
 
 Both passed to an interrupt handler and also returned by the *metaloadcalleraddr* assembler instruction.
 
 * Attribute 1\. int\_value \= return module number  
 * Attribute 2\. int\_value \= return instruction address (in module binary space)
 
-### *Loaded Modules*  {#loaded-modules}
+### Loaded Modules  {#loaded-modules}
 
 Returned by *metaloadedmodules* assembler instruction.
 
 * Array of module names
 
-### *Loaded Procedures* {#loaded-procedures}
+### Loaded Procedures {#loaded-procedures}
 
 Returned by the *metaloadedprocs* assembler instruction
 
@@ -141,7 +141,7 @@ An array of objects, each object has
 * Attribute 1\. string\_value \= name of the procedure  
 * Attribute 2\. int\_value \= pointer to the private CREXX procedure block
 
-### *Decoded Opcode* {#decoded-opcode}
+### Decoded Opcode {#decoded-opcode}
 
 Returned by the *metadecodeinst* assembler instruction
 
@@ -153,7 +153,7 @@ Returned by the *metadecodeinst* assembler instruction
 * Attribute 6\. Int\_value \- operated 2 type  
 * Attribute 7\. Int\_value \- operated 3 type
 
-### *Procedure Details* {#procedure-details}
+### Procedure Details {#procedure-details}
 
 Returned by the *metaloadoperand* assembler instruction (TODO review name).
 
@@ -161,7 +161,7 @@ Returned by the *metaloadoperand* assembler instruction (TODO review name).
 
  TODO needs to do more that get the function name \- a function object is needed
 
-### *Metadata* {#metadata}
+### Metadata {#metadata}
 
 Returned by the *metaloaddata* assembler instruction.
 
@@ -210,13 +210,13 @@ An array of objects for all the metadata returned by the instruction, meaning fo
 * String\_value \= ".meta\_clear"  
 * Attribute 1\. String\_value \= variable symbol (moving out of scope)
 
-### *Redirect(s)* {#redirect(s)}
+### Redirect(s) {#redirect(s)}
 
 Used by spawn assembler instructions for IO redirects. Each object is a a pointer to an opaque REDIRECT binary structures (e.g. generated by assembler instruction  *redrtoarr*)
 
 The array structure holds three redirects: input, output, error
 
-### *Signal* {#signal}
+### Signal {#signal}
 
 Raised signal object 
 
