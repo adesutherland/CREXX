@@ -3,27 +3,32 @@
 
 ## RXPP + CREXX Build System Documentation
 
+
 This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
 
 ---
 
 ## 💼 Table of Contents
 
-* [📆 Overview](#-overview)
-* [🚀 Usage Example](#-usage-example)
-* [📂 Input/Output Example](#-inputoutput-example)
-* [🛏️ Pipeline Flow Diagram](#-pipeline-flow-diagram)
-* [🛠 Troubleshooting Guide](#-troubleshooting-guide)
-* [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
-  * [🧹 Supported Directives](#-supported-directives)
+* [📆 Overview](overview)
+* [🚀 Usage Example](usage-example)
+* [📂 Input/Output Example](inputoutput-example)
+* [🛏️ Pipeline Flow Diagram](pipeline-flow-diagram)
+* [🛠 Troubleshooting Guide](troubleshooting-guide)
+* [🔧 RXPP Preprocessor Directives (##)](rxpp-preprocessor-directives-)
+  * [🧹 Supported Directives](supported-directives)
+    * [`##CFLAG values`](#cflag-values)
     * [`##SET var value`](#set-var-value)
     * [`##UNSET var`](#unset-var)
+    * [`##INCLUDE file`](#include-file)
     * [`##IF var`](#if-var)
     * [`##IFN var`](#ifn-var)
-    * [`##ENDIF`](#endif)
-  * [⚙️ Behavior Notes](#%ef%b8%8f-behavior-notes)
-  * [🧪 Example with Nesting](#-example-with-nesting)
-  * [🔮 Planned Enhancements](#-planned-enhancements)
+    * [`##ELSE`](#else)
+    * [`##ENDIF`](ndif)
+  * [🧭 Pre-Compilation Flow](pre-compilation-flow)
+* [⚙️ Behavior Notes](havior-notes)
+  * [🧪 Example with Nesting](xample-with-nesting)
+  * [🔮 Planned Enhancements](planned-enhancements)
 
 ---
 
@@ -261,13 +266,34 @@ RXPP supports a set of preprocessor-style directives for conditional compilation
 
 ---
 
-### 🧩 Supported Directives
+### `##CFLAG values`
+
+##CFLAG — Sets the preprocessor variable from compiler flags or external input during the earliest configuration pass, before normal preprocessing begins.
+The definition must be placed at the very beginning of the source file, before any other ## macro instructions appear.
+
+Use the following flags in `cflags` to control diagnostic output during the pre-compilation process:
+
+| Option      | Description                                                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **def**     | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
+| **set**     | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
+| **iflink**  | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
+| **1buf**    | Displays the raw source input immediately after it is read from the file.                                                        |
+| **2buf**    | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
+| **3buf**    | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
+| **vars**    | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
+| **maclist** | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
+
+**Example:**
+```rexx
+##cflags def set iflink 1buf 2buf 3buf vars maclist  /* set early stage compiler flags */
+```
+
 
 ### `##SET var value`
 
 Defines or updates a preprocessor variable.
 
-**Example:**
 
 ```rexx
 ##SET DEBUG 1
@@ -284,10 +310,19 @@ Removes a previously defined variable from the preprocessor context.
 ##UNSET DEBUG
 ```
 
+### `##INCLUDE file`
+
+Includes the contents of an external file into the source at the point of invocation. Nested includes are supported. By default, the file is resolved relative to the current working directory. If the file resides elsewhere, a fully qualified path must be provided. Quotation marks around the filename are not required.
+
+**Example:**
+
+```rexx
+##INCLUDE myrexx.rexx
+```
+
 ### `##IF var`
 
-Begins a conditional block that is processed **only if** the variable is defined and considered truthy.
-
+Begins a conditional block that is processed only if the specified variable is defined in the preprocessor context. No evaluation of the variable’s content or value is performed—only its existence is checked.
 **Example:**
 
 ```rexx
@@ -300,13 +335,26 @@ Begins a conditional block that is processed **only if** the variable is defined
 
 (Short for `IF NOT`)
 
-Starts a block that is processed **only if** the variable is not set.
+Begins a conditional block that is processed only if the specified variable is not defined in the preprocessor context. The variable’s content or value is not evaluated—only its absence is considered.
 
 **Example:**
 
 ```rexx
 ##IFN DEBUG
   say "Not in debug mode"
+##ENDIF
+```
+### `##ELSE`
+
+Begins a block that is executed when the condition in a preceding ##IF evaluates to false (i.e., the variable is not defined), or when a ##IFN condition evaluates to false (i.e., the variable is defined).
+
+**Example:**
+
+```rexx
+##IFN DEBUG
+  say "Not in debug mode"
+##else 
+  say "We are in debug mode"  
 ##ENDIF
 ```
 
@@ -324,6 +372,67 @@ Closes the nearest open `##IF` or `##IFN` block.
 ##ENDIF
 ##ENDIF
 ```
+
+## 🧭 Pre-Compilation Flow
+This document illustrates the main routine of the pre-compilation process, showing when each buffer (`1buf`, `2buf`, `3buf`) and macros and variables are printed based on the `cflags` configuration.
+
+
+```
+┌────────────────────────────────────┐
+│ call rxppinit infile               │
+│ → Initializes global variables     │
+└────────────────────────────────────┘
+               │
+               ▼
+┌────────────────────────────────────┐
+│ RXPPPassOne(infile, outfile, ...)  │
+│ → Loads source & macro library     │
+│ → Pass 1 completed                 │
+└────────────────────────────────────┘
+               │
+    ┌──────────┴────────────┐
+    ▼                       ▼
+ [If '1buf' in cflags]   [Skip if not]
+ call list_array source,...,"Buffer after Pass 1"
+               │
+               ▼
+┌────────────────────────────────────┐
+│ call RXPPPassTwo                   │
+│ → Expands conditional blocks       │
+│   (e.g., ##ELSE handling)          │
+└────────────────────────────────────┘
+               │
+    ┌──────────┴────────────┐
+    ▼                       ▼
+ [If '2buf' in cflags]   [Skip if not]
+ call list_array source,...,"Buffer after Pass 2"
+               │
+               ▼
+┌────────────────────────────────────┐
+│ call RXPPPassThree outfile         │
+│ → Fully expands macros             │
+└────────────────────────────────────┘
+               │
+    ┌──────────┴────────────┐
+    ▼                       ▼
+ [If '3buf' in cflags]   [Skip if not]
+ call list_array outbuf,...,"Buffer after Pass 3"
+               │
+               ▼
+┌────────────────────────────────────┐
+│ call writeall outbuf, outfile      │
+│ → Writes final output to file      │
+└────────────────────────────────────┘
+               │
+               ▼
+┌────────────────────────────────────┐
+│ Additional Diagnostics:            │
+│ - printvars (if 'vars' in cflags)  │
+│ - printmacs (if 'maclist' set)     |
+|  - includes  (if 'ìncludes' set)   │
+└────────────────────────────────────┘
+```
+
 
 ---
 
@@ -365,6 +474,7 @@ Silent debug
 
 ---
 ## RXPP + CREXX Build System Documentation
+
 
 This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
 

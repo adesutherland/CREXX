@@ -4,17 +4,25 @@
  */
 options levelb
 import rxfnsb
-##set def 1
+##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+say 'Compile date {rxpp_date}'
+##set abc 1
+##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
 ##if def
+/* enter IF DEF clause   */
   ##set printgen none          ## show no precompiler calls in generated rexx
   ##set printgen all           ## show all nested precompiler calls in generated rexx
   ##set printgen nnest         ## show only first precompiler call for nested calls (default)
-##endif
-##ifn def
-  ##set printgen none          ## show no precompiler calls in generated rexx
+##else
+  /* enter ELSE IF DEF clause   */
+  ##set printgen none        ## show no precompiler calls in generated rexx
   ##if abc
+  /* enter IF ABC clause   */
        say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
        say quote({rxpp_date})       ## pre defined pre-compiler variable: compilation date/time
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##else
+  /* enter ELSE IF ABC clause   */
        say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
   ##endif
 ##end
@@ -30,5 +38,3 @@ import rxfnsb
  say {prefix}                ## output the current prefix->compiler variable
 ##unset prefix
 
-list2stem(fruits, "apple", "banana", "cherry")
-say arrayhi(123) hi(fruits)

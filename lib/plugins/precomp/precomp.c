@@ -95,13 +95,20 @@ PROCEDURE (reverse_array) {
 PROCEDURE (search_array) {
     int i, from, to;
 
-    to  = GETARRAYHI(ARG0);
-    from=GETINT(ARG2)-1;
-
-    for (i = from; i < to; ++i) {
-        if (strstr(GETSARRAY(ARG0, i),GETSTRING(ARG1))>0) {
-            RETURNINT(i+1);
-            PROCRETURN
+    to = GETARRAYHI(ARG0);
+    from = GETINT(ARG2) - 1;
+    int match = GETINT(ARG3);
+    if (match == 0) {   // substring match sufficient
+        for (i = from; i < to; ++i) {
+            if (strstr(GETSARRAY(ARG0, i), GETSTRING(ARG1)) > 0) {
+                RETURNINTX(i + 1);
+            }
+        }
+    } else {
+        for (i = from; i < to; ++i) {  // full string match required
+            if (strcmp(GETSARRAY(ARG0, i), GETSTRING(ARG1)) == 0) {
+                RETURNINTX(i + 1);
+            }
         }
     }
     RETURNINT(0);
@@ -125,6 +132,8 @@ ENDPROC
 }
 /* -------------------------------------------------------------------------------------
  * Insert empty item(s) in an array and shift elements accordingly
+ * the line number is the first which is shifted,
+ * this means the empty lines are added prior to this line
  * -------------------------------------------------------------------------------------
  */
 PROCEDURE (insert_array) {
@@ -182,12 +191,14 @@ PROCEDURE (list_array)  {
     hi  = GETARRAYHI(ARG0);
     from= GETINT(ARG1);
     to  = GETINT(ARG2);
+    char * hdr=GETSTRING(ARG3);
     if (to<=0) to=hi;
 
     if (from<1) from=1;
     if (from>hi) from=hi;
     if (to>hi || to<1) to=hi;
-    printf("      Entries of String Array \n");
+    if (hdr[0]=='\0') printf("      Entries of String Array \n");
+    else printf("%s\n",hdr);
     printf("Entry     Data   Range %d-%d\n",from,to);
     printf("-------------------------------------------------------\n");
     for (i=from-1;i<to;i++) {
@@ -321,7 +332,6 @@ char *strupr_portable(char *s) {
     }
     return s;
 }
-
 /* -------------------------------------------------------------------------------------
 * Check if line contains a macro call
 * -------------------------------------------------------------------------------------
@@ -375,7 +385,6 @@ PROCEDURE(strip) {
     RETURNSTRX(string); // Return the stripped string
 ENDPROC;
 }
-
 
 // Insert 'needle' into 'haystack' at position 'at', replacing 'len' characters
 PROCEDURE (insertat) {
@@ -463,28 +472,108 @@ PROCEDURE (fsearch) {
     char * ustr3= GETSTRING(ARG4);
     char * haystack;
     for (i = from; i < mmax; i++) {
-        haystack = strdup(strupr_portable(GETSARRAY(ARG0, i)));
+        haystack = strupr_portable(strdup(GETSARRAY(ARG0, i)));
+        while (isspace((unsigned char)*haystack)) haystack++;
         if (ustr1[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG2)) > 0) {
+            if (strstr(haystack, GETSTRING(ARG2)) == haystack) {
                 SETINT(ARG5, 1);
                 RETURNINTX(i + 1);
             }
         if (ustr2[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG3)) > 0) {
+            if (strstr(haystack, GETSTRING(ARG3)) == haystack) {
                 SETINT(ARG5, 2);
                 RETURNINTX(i + 1);
             }
         if (ustr3[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG4)) > 0) {
+            if (strstr(haystack, GETSTRING(ARG4)) == haystack) {
                 SETINT(ARG5, 3);
                 RETURNINTX(i + 1);
             }
-
     }
     RETURNINTX(0);
     PROCRETURN
 ENDPROC
 }
+
+PROCEDURE (fquoted) {
+    char * template = GETSTRING(ARG0);
+    char *start = NULL;
+    const char *end = NULL;
+    char quote_char = '\0';
+    int i=0,j=0;
+    char buffer[512];
+    int count=0;
+    // Search for opening quote
+/*
+    while (input[i]) {
+        if (input[i] != '\'' && input[i] != '"') i++;
+        else {
+            char quote = input[i];
+            int start = i + 1;
+            i = start;
+
+            while (input[i] && input[i] != quote) i++;
+
+            if (input[i] == quote) {
+                int end = i;
+                int len = end - start;
+                char buffer[512];  // Large enough for your substrings
+                if (len >= sizeof(buffer)) len = sizeof(buffer) - 1;
+                strncpy(buffer, &input[start], len);
+                buffer[len] = '\0';
+                SETARRAYHI(ARG1,j+1);  // reset arrayhi
+                SETSARRAY(ARG1, j, buffer);
+                j++;   // set to next array element
+                i++;  // skip past closing quote
+            } else break; // No closing quote found; stop or continue based on your needs
+        }
+      }
+*/
+    while (template[i]) {
+        // Skip whitespace
+        while (isspace(template[i])) i++;
+
+        if (template[i] == '\'' || template[i] == '"') {   // Quoted separator
+            char quote = template[i++];
+            int start = i;
+            while (template[i] && template[i] != quote) i++;
+            int len = i - start;
+            if (len > 63) len = 63;
+            SETARRAYHI(ARG1,count+1);  // set arrayhi
+            SETARRAYHI(ARG2,count+1);  // set arrayhi
+            strncpy(buffer, &template[start], len);
+            buffer[len] = '\0';
+            SETSARRAY(ARG1, count, buffer);
+            SETSARRAY(ARG2, count, "S");
+            count++;
+            if (template[i]) i++;  // Skip closing quote
+        } else if (isalpha(template[i])) {
+            // Variable name
+            int start = i;
+            while (isalnum(template[i])) i++;
+            int len = i - start;
+            if (len > 63) len = 63;
+            strncpy(buffer, &template[start], len);
+            buffer[len] = '\0';
+            SETARRAYHI(ARG1,count+1);  // set arrayhi
+            SETARRAYHI(ARG2,count+1);  // set arrayhi
+
+            SETSARRAY(ARG1, count, buffer);
+            SETSARRAY(ARG2, count, "V");
+            count++;
+        } else {
+            i++;  // Skip unknown char
+        }
+    }
+
+   RETURNINTX(count)
+ENDPROC
+}
+
+/* -------------------------------------------------------------------------------------
+* search in array a certain string, up to 3 strings are possible
+* -------------------------------------------------------------------------------------
+*/
 PROCEDURE (xlog) {
     char * xlog=GETSTRING(ARG0);
     printf("XLOG %s\n",xlog);
@@ -496,9 +585,9 @@ LOADFUNCS
    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[]");
    ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
    ADDPROC(reverse_array,"precomp.reverse_array","b",  ".void",  "expose a = .string[]");
-   ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int");
+   ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
    ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
-   ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int");
+   ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
    ADDPROC(hasmacro,     "precomp.hasmacro",     "b",  ".int",   "line=.string,maclist=.string[],from=.int");
    ADDPROC(readall,      "precomp.readall",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
    ADDPROC(writeall,     "precomp.writeall",     "b",  ".int",   "expose array=.string[],file=.string,arg2=.int");
@@ -508,6 +597,7 @@ LOADFUNCS
    ADDPROC(word,         "precomp.fword",        "b",  ".string","string = .string,wnum=.int");
    ADDPROC(substr,       "precomp.fsubstr",      "b",  ".string","string = .string,pos=.int,len=.int");
    ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
+   ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
 ENDLOADFUNCS
 
