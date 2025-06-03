@@ -6,13 +6,17 @@ Types in the language are named using a period (.) followed by the type name. Th
 
 The language includes a number of built-in types, which are provided by the language itself. These types include:
 
-* .void \- Represents the absence of a value.  
-* .int \- Represents an integer.  
-* .float \- Represents a floating-point number.  
-* .string \- Represents a string of characters \- these are unicode codepoints, internally encoded using utf8  
-* .binary \- Represents an opaque binary value.  
-* .boolean \- Represents a boolean value.  
-* .object \- Represents the base class for all objects in the language..
+| Type       | Description                                                                 |
+|------------|-----------------------------------------------------------------------------|
+| `.void`    | Represents the absence of a value                                           |
+| `.int`     | Represents an integer                                                       |
+| `.float`   | Represents a floating-point number                                          |
+| `.string`  | Represents a string of characters – Unicode codepoints, encoded as UTF-8    |
+| `.binary`  | Represents an opaque binary value                                           |
+| `.boolean` | Represents a boolean value                                                  |
+| `.object`  | Represents the base class for all objects in the language                   |
+
+Table: Built-in types {#tbl:id}
 
 **Statically Typed**
 
