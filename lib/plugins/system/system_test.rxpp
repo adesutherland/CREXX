@@ -1,0 +1,125 @@
+/* REXX */
+options levelb
+import system
+import rxfnsb
+
+/* system_test.rexx - Test suite for system functions */
+say " test "
+say "=== System Functions Test Suite ==="
+
+say ""
+log('Start function')
+/* Test environment variables */
+say "Testing getenv()..."
+home = getenv("HOME")
+path = getenv("PATH")
+say "  HOME:" home
+say "  PATH:" left(path, 50)"..."
+say ""
+log('End function')
+/* Test directory operations */
+say "Testing directory operations..."
+current = getdir()
+log("LOG4711 lCurrent directory: "current)
+test_dir = "test_folder"
+say "  "time('l')" Creating directory:" test_dir
+rc = createdir(test_dir)
+if rc = 0 then
+    say "  ✓ Directory created successfully"
+else
+    say "  ✗ Failed to create directory:" rc
+
+say "  "time('l')" Testing directory exists..."
+if testdir(test_dir) = 0 then
+    say "  ✓ Directory exists"
+else
+    say "  ✗ Directory not found"
+
+say "  "time('l')" Changing to test directory..."
+rc = setdir(test_dir)
+if rc = 0 then
+    say "  ✓ Changed directory successfully"
+else
+    say "  ✗ Failed to change directory:" rc
+
+/* Return to original directory */
+call setdir current
+
+say "  "time('l')" Removing test directory..."
+rc = removedir(test_dir)
+if rc = 0 then
+    say "  ✓ Directory removed successfully"
+else
+    say "  ✗ Failed to remove directory:" rc
+say ""
+
+/* Test file operations */
+say "Testing file operations..."
+test_file = "test.txt"
+say "  "time('l')" Creating test file:" test_file
+call lineout test_file, "Test content"
+
+say "  "time('l')" Testing file exists..."
+if testfile(test_file) = 0 then
+    say "  ✓ File exists"
+else
+    say "  ✗ File not found"
+
+new_name = "renamed.txt"
+say "  "time('l')" Renaming file to:" new_name
+rc = renamefile(test_file, new_name)
+if rc = 0 then
+    say "  ✓ File renamed successfully"
+else
+    say "  ✗ Failed to rename file:" rc
+
+say "  "time('l')" Deleting test file..."
+rc = deletefile(new_name)
+if rc = 0 then
+    say "  ✓ File deleted successfully"
+else
+    say "  ✗ Failed to delete file:" rc
+say ""
+
+/* Test clipboard operations */
+say "  "time('l')" Testing clipboard operations..."
+test_text = "Test clipboard text"
+rc = setclipboard(test_text)
+if rc = 0 then do
+    say "  ✓ Text copied to clipboard"
+    clip_content = getclipboard()
+    if clip_content = test_text then
+        say "  ✓ Clipboard content verified"
+    else
+        say "  ✗ Clipboard content mismatch"
+end
+else
+    say "  ✗ Failed to set clipboard:" rc
+say ""
+
+/* Test system information */
+say "  "time('l')" Testing system information..."
+say "  Platform :" opsys()
+say "  Host name:" host()
+say "  User name:" userid()
+say "  Uptime   :" uptime()' seconds'
+say ""
+
+/* Test sleep function */
+say "  "time('l')" Testing sleep()..."
+say "  Sleeping for 1 second (1000 ms) ..."
+call wait 1000
+say time('l')"  ✓ Sleep completed"
+say ""
+
+/* Test beep */
+say "  "time('l')" Testing beep()..."
+rc = beep()
+if rc = 0 then
+    say "  ✓ Beep executed"
+else
+    say "  ✗ Beep failed:" rc
+say ""
+say " end time "time('l')
+say "=== Test Suite Complete ==="
+exit 0
