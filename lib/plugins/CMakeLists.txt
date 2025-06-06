@@ -11,6 +11,8 @@ add_subdirectory(rxuuid)
 add_subdirectory(strings)
 add_subdirectory(precomp)
 
+
+
 if(ENABLE_ODBC)
     add_subdirectory(odbc)
     message(STATUS "Building with ODBC support enabled.")

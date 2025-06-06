@@ -6,6 +6,9 @@
 #include <limits.h>
 #if defined(__APPLE__)
  #include <sys/stat.h>
+ #include <sys/time.h>
+ #include <sys/sysctl.h>
+ #include <errno.h>
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #define max(a,b)             \
   ({			     \
@@ -37,6 +40,8 @@
 // #include <arpa/inet.h>    // Linux
    #define wait(ms) usleep(ms*1000)
 #endif
+
+char * path;
 
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 // distinguish between Windows and Linux and MAC
@@ -696,7 +701,7 @@ ENDPROC
  */
 PROCEDURE(waitX) {
     int waittime = GETINT(ARG0);
-    wait(waittime);
+    wait(&waittime);
     RETURNINTX(0);
     ENDPROC
 }
@@ -710,21 +715,31 @@ PROCEDURE(beep) {
 //        printf("\a");
 //        wait(5);
 //    }
-    Beep(750, 300); // Frequency: 750 Hz, Duration: 300 ms
+    #ifdef _WIN32
+    beep(750, 300,0,0); // Frequency: 750 Hz, Duration: 300 ms
+    #else
+    printf("\a");
+    #endif
     RETURNINTX(0);
     ENDPROC
 }
 PROCEDURE(getuser) {
 char username[256];
-DWORD username_len = sizeof(username);
 
+#ifdef _WIN32
+DWORD username_len = sizeof(username);
+#else
+uint32_t username_len = sizeof(username);
+#endif
 
 #ifdef _WIN32
     if (GetUserName(username, &username_len)) {
     RETURNSTRX(username);
     } else RETURNSTRX("unknown");
 #else
-   RETURNSTRX(getuid());
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%u", getuid());
+    RETURNSTRX(buffer);
 #endif
 ENDPROC
 }
