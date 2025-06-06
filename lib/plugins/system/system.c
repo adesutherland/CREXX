@@ -716,7 +716,8 @@ PROCEDURE(beep) {
 //        wait(5);
 //    }
     #ifdef _WIN32
-    beep(750, 300); // Frequency: 750 Hz, Duration: 300 ms
+    /* beep(750, 300); // Frequency: 750 Hz, Duration: 300 ms */
+    printf("\a");
     #else
     printf("\a");
     #endif

@@ -457,3 +457,5 @@
 1733502065296:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | cons
 1733502073426:pipe < instructions.txt | sort 8 | specs /insert into inst_name VALUES(''/ next 8-18 strip next /''/ next /,''/ next /'');/ next | > insert_name_dec.sql
 1733502075652:exit
+1749247459721:pipe < instructions.txt | sort 8 | specs /insert into instruction VALUES(''/ 1 1-6 next /'',''/ next 8-18 strip next /'',''/ next 18-38 next /'',''/ next 39-100 next /'');/ next | > insert_ins.sql
+1749247462758:exit
