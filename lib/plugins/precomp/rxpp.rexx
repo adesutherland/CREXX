@@ -18,25 +18,24 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
-
   say '['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
-     if command.i='-i' then infile=command.j
-     else if command.i='-o' then outfile=command.j
-     else if command.i='-m' then maclib=command.j
+     if upper(command.i)     ='-I' then infile=command.j
+     else if upper(command.i)='-O' then outfile=command.j
+     else if upper(command.i)='-M' then maclib=command.j
   end
 
 /*
 infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
-outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Macro1.rexx'
-maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/\Maclib.rexx'
- */
+outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
+maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
+*/
 
   if fstrip(infile)='' then do
        say 'Error: no source file specified'
        exit 8
-    end
+  end
 
     say 'Input File:  ' infile
     say 'Output File: ' outfile
