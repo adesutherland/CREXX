@@ -23,6 +23,8 @@ do o=1 to stemout[0]
   instructionNames[mnem]=name
 end
 
+
+decopt = '-p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal"'
 /*
  * select the categories
  */  
@@ -93,7 +95,7 @@ do i=1 to outstem[0]
       lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.def}{\\input{../../examples/'mnemonic||oper'.def}}{}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rexx}{\\splice{rxc ../../examples/'mnemonic||oper'}}{}')
-      lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvme ../../examples/'mnemonic||oper'} \\end{shaded} \\fontspec{TeX Gyre Pagella}}{}')
+      lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvme 'decopt' ../../examples/'mnemonic||oper'} \\end{shaded} \\fontspec{TeX Gyre Pagella}}{}')
     end
     lineout('instruction_chapter.tex','\\end{description}')
     lineout('instruction_chapter.tex','\\clearpage')
