@@ -701,7 +701,7 @@ ENDPROC
  */
 PROCEDURE(waitX) {
     int waittime = GETINT(ARG0);
-    wait(&waittime);
+    wait(waittime);
     RETURNINTX(0);
     ENDPROC
 }
@@ -716,7 +716,7 @@ PROCEDURE(beep) {
 //        wait(5);
 //    }
     #ifdef _WIN32
-    beep(750, 300,0,0); // Frequency: 750 Hz, Duration: 300 ms
+    beep(750, 300); // Frequency: 750 Hz, Duration: 300 ms
     #else
     printf("\a");
     #endif
