@@ -1,4 +1,4 @@
-/* GETPI Plugin Test */
+/* uuid plugin Test */
 options levelb
 import rxuuid
 import rxfnsb

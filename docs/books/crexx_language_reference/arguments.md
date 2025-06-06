@@ -13,7 +13,12 @@ if fn[0]=0 then do
   call help
   exit
 end
+
+help: procedure
+say 'this program needs arguments'
 ```
+
+<!--splice--args.rexx-->
 
 When there is program text before the first procedure, the ```main()``` procedure is automatically generated. In \crexx{} level B, the arguments to a procedure have a type, in the example this is a string array which is referenced in a variable of type ```.string[]```.
 
