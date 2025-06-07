@@ -701,7 +701,11 @@ ENDPROC
  */
 PROCEDURE(waitX) {
     int waittime = GETINT(ARG0);
+#ifdef _WIN32
     wait(waittime);
+#else
+    wait(&waittime);
+#endif
     RETURNINTX(0);
     ENDPROC
 }
