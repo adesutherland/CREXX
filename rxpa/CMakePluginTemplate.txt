@@ -2,6 +2,9 @@
 function(plugin_template plugin_name test_rexx use_precomp)
   set(src "${plugin_name}.c")
 
+
+set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
+
 # Create dynamic plugin module
   add_dynamic_plugin_target(_${plugin_name} ${src})
 # ---------------------------------------------------------------------------------------
@@ -37,7 +40,7 @@ function(plugin_template plugin_name test_rexx use_precomp)
 # ---------------------------------------------------------------------------------------
     add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-            -i "${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}"
+            -i "${rx_include}"
             -o ${test_rexx} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}" &&
             ${CMAKE_BINARY_DIR}/assembler/rxas ${test_rexx}
         DEPENDS rxas rxc library _${plugin_name} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx"
