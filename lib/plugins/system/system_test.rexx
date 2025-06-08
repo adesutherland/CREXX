@@ -2,12 +2,13 @@
 options levelb
 import system
 import rxfnsb
+/* ##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */ */
 /* system_test.rexx - Test suite for system functions */
-say " test "
+say " test of precompile function, just a simple LOG macro call added"
 say "=== System Functions Test Suite ==="
 say ""
-/* rxpp: log('Start function') */
-say time('l') 'Start function'
+/* rxpp: log('Enter System Test with Elapsed Time') */
+say time('l') 'Enter System Test with Elapsed Time'
 /* Test environment variables */
 say "Testing getenv()..."
 home = getenv("HOME")
@@ -25,21 +26,16 @@ say time('l') "LOG4711 lCurrent directory: "current
 test_dir = "test_folder"
 say "  "time('l')" Creating directory:" test_dir
 rc = createdir(test_dir)
-if rc = 0 then
-    say "  ✓ Directory created successfully"
-else
-    say "  ✗ Failed to create directory:" rc
+if rc = 0 then say "  ✓ Directory created successfully"
+else say "  ✗ Failed to create directory:" rc
 say "  "time('l')" Testing directory exists..."
 if testdir(test_dir) = 0 then
     say "  ✓ Directory exists"
-else
-    say "  ✗ Directory not found"
+else say "  ✗ Directory not found"
 say "  "time('l')" Changing to test directory..."
 rc = setdir(test_dir)
-if rc = 0 then
-    say "  ✓ Changed directory successfully"
-else
-    say "  ✗ Failed to change directory:" rc
+if rc = 0 then say "  ✓ Changed directory successfully"
+else say "  ✗ Failed to change directory:" rc
 /* Return to original directory */
 call setdir current
 say "  "time('l')" Removing test directory..."

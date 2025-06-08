@@ -5,7 +5,11 @@
 options levelb
 import rxfnsb
 ##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+
 say 'Compile date {rxpp_date}'
+
+##parse line,"name=" name "age=" age "role=" role
 ##set abc 1
 ##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
 ##if def
@@ -37,4 +41,23 @@ say 'Compile date {rxpp_date}'
  log()                       ## and re-expand another log macro
  say {prefix}                ## output the current prefix->compiler variable
 ##unset prefix
+Setstem(fruits, "apple", "banana", "cherry","pear","melon","kiwi","lemon","grape")
+say hi(fruits)
+exit
+
+match_template_line: procedure
+  arg line=.string, fixed=.string[],expose value=.string[]
+  loffset=length(line)+1
+  fp1=0
+  do i=1 to fixed.0
+     fp1=pos(fixed.i,line,fp1+1)
+     k=i+1
+     if fixed.k='' then fp2=loffset
+     else fp2=pos(fixed.k,line,fp1+1)
+     from=fp1+length(fixed.i)
+     len=fp2-from
+     value.i=substr(line,from,len)
+  end
+return
+
 

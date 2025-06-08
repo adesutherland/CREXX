@@ -22,23 +22,24 @@
 ##define guard(cond,act)   {if cond<>0 then do; act; return; end}
 
 /* Variadic & Utility */  
-##define list2Stem(name, ...)  {name.$indx=arglist.$indx}
+##define SetStem(name, ...)  {name.$indx=arglist.$indx}
 
 ##define foreach(stem,indx)   {do indx=1 to stem.0 }
 ##define forpair(array, key, val)  {do key=1 to array.0; val=array.key}
 
 /* System & Timing */
-##define benchmark(start,end)  {say 'Elapsed:' (end-start) 'ms'}
 
 /* Miscellaneous */
 ##define swap(a,b)         {temp=a; a=b; b=temp}
-##define ifdef(var, code)  {if symbol(var) = 'VAR' then do; code; end}
+
+##define log(txt)          {say time('l') txt}
 
 /* --- File Helpers --- */
 ##define readfile(stem, file)   {stem.1='' ; call readall stem,file,-1}
 ##define writefile(file, stem) {call writeall(file, stem, 1, stem.0)}
 ##define ltrim(str)    {strip(str, 'L')}
 ##define rtrim(str)    {strip(str, 'T')}
+
 
 
 

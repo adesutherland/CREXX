@@ -495,57 +495,33 @@ PROCEDURE (fsearch) {
 ENDPROC
 }
 
-PROCEDURE (fquoted) {
-    char * template = GETSTRING(ARG0);
-    char *start = NULL;
-    const char *end = NULL;
-    char quote_char = '\0';
-    int i=0,j=0;
+PROCEDURE(fquoted) {
+    char *template = GETSTRING(ARG0);
     char buffer[512];
-    int count=0;
-    // Search for opening quote
-/*
-    while (input[i]) {
-        if (input[i] != '\'' && input[i] != '"') i++;
-        else {
-            char quote = input[i];
-            int start = i + 1;
-            i = start;
+    int i = 0;
+    int const_count = 0;
+    int vname_count = 0;
 
-            while (input[i] && input[i] != quote) i++;
-
-            if (input[i] == quote) {
-                int end = i;
-                int len = end - start;
-                char buffer[512];  // Large enough for your substrings
-                if (len >= sizeof(buffer)) len = sizeof(buffer) - 1;
-                strncpy(buffer, &input[start], len);
-                buffer[len] = '\0';
-                SETARRAYHI(ARG1,j+1);  // reset arrayhi
-                SETSARRAY(ARG1, j, buffer);
-                j++;   // set to next array element
-                i++;  // skip past closing quote
-            } else break; // No closing quote found; stop or continue based on your needs
-        }
-      }
-*/
     while (template[i]) {
         // Skip whitespace
         while (isspace(template[i])) i++;
 
-        if (template[i] == '\'' || template[i] == '"') {   // Quoted separator
+        if (template[i] == '\'' || template[i] == '"') {
+            // Quoted separator
             char quote = template[i++];
             int start = i;
             while (template[i] && template[i] != quote) i++;
             int len = i - start;
             if (len > 63) len = 63;
-            SETARRAYHI(ARG1,count+1);  // set arrayhi
-            SETARRAYHI(ARG2,count+1);  // set arrayhi
             strncpy(buffer, &template[start], len);
             buffer[len] = '\0';
-            SETSARRAY(ARG1, count, buffer);
-            SETSARRAY(ARG2, count, "S");
-            count++;
+
+            // Fill const.
+            SETARRAYHI(ARG1, const_count + 1);
+            SETSARRAY(ARG1, const_count, buffer);
+            const_count++;
+            printf("const %d %s\n",const_count,buffer );
+
             if (template[i]) i++;  // Skip closing quote
         } else if (isalpha(template[i])) {
             // Variable name
@@ -555,19 +531,17 @@ PROCEDURE (fquoted) {
             if (len > 63) len = 63;
             strncpy(buffer, &template[start], len);
             buffer[len] = '\0';
-            SETARRAYHI(ARG1,count+1);  // set arrayhi
-            SETARRAYHI(ARG2,count+1);  // set arrayhi
 
-            SETSARRAY(ARG1, count, buffer);
-            SETSARRAY(ARG2, count, "V");
-            count++;
+            // Fill vname.
+            SETARRAYHI(ARG2, vname_count + 1);
+            SETSARRAY(ARG2, vname_count, buffer);
+            vname_count++;
         } else {
             i++;  // Skip unknown char
         }
     }
-
-   RETURNINTX(count)
-ENDPROC
+    RETURNINTX(const_count + vname_count);
+    ENDPROC
 }
 
 /* -------------------------------------------------------------------------------------

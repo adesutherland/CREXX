@@ -18,20 +18,18 @@ function(plugin_template plugin_name test_rexx use_precomp)
 
      # input, output files
      set(REXX_PRE ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rxpp)
+     set(REXX_LOG ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.log)
      set(REXX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx)
      set(REXX_MACLIB ${sourcelib}/maclib.rexx)
 
      add_custom_command(
             OUTPUT ${REXX_SRC}
-            COMMAND ${CMAKE_COMMAND} -E echo ">>> Starting RXPP"
             COMMAND ${rxvm}/rxvm ${rxpre} rx_precomp ${lib} -a
             -I ${REXX_PRE}
             -o ${REXX_SRC}
-            -m ${REXX_MACLIB}
-            COMMAND ${CMAKE_COMMAND} -E echo ">>> Finished RXPP"
+            -m ${REXX_MACLIB}  > ${REXX_LOG} 2>&1
             DEPENDS ${REXX_PRE} ${REXX_MACLIB}
             WORKING_DIRECTORY ${pluglib}
-            COMMENT "Running RXPP Precompiler"
      )
   endif()
 # ---------------------------------------------------------------------------------------

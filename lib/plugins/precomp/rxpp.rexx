@@ -18,44 +18,42 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
-  say '['time('l')'] Pre-Compile started'
+  say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
      if upper(command.i)     ='-I' then infile=command.j
      else if upper(command.i)='-O' then outfile=command.j
      else if upper(command.i)='-M' then maclib=command.j
   end
-
 /*
 infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
 outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
-maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
-*/
-
+maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250607/lib/plugins/precomp/Maclib.rexx'
+ */
   if fstrip(infile)='' then do
-       say 'Error: no source file specified'
+       say 'CRX0100E+['time('l')'] no source file specified'
        exit 8
   end
 
-    say 'Input File:  ' infile
-    say 'Output File: ' outfile
-    say 'Macro Lib:   ' maclib
+  say 'Input File:  ' infile
+  say 'Output File: ' outfile
+  say 'Macro Lib:   ' maclib
 
   call rxppinit infile                              ## init global and environment variables
-  say '['time('l')'] Pre-Compile pass one'
+  say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   sourceLines=RXPPPassOne(infile,outfile,maclib)    ## load source file and macro library
   ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
      if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
-   say '['time('l')'] Pre-Compile pass two'
+  say 'CRX0200I ['time('l')'] Pre-Compile pass two'
   call RXPPPassThree outfile                        ## analyse source and expand macros
-  say '['time('l')'] Pre-Compiled REXX saved'
+  say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
   call writeall outbuf,outfile,-1                   ## write generated output to file
-  say '['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
+  say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
   if pos(' vars',cflags)>0 then call printvars
   if pos(' maclist',cflags)>0 then call printmacs
-   if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
+  if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
 return 0
 /* ------------------------------------------------------------------
  * Pass one load source file and determine preprocessor statements
@@ -65,10 +63,14 @@ RXPPPassOne: procedure = .int
   arg expose infile=.string, outfile=.string,maclib=.string
 
   macnum=readSource(maclib)
-  call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
-  say '['time('l')'] Maclib loaded:      'source.0' records'
-  say '['time('l')'] Macros extracted:   'macros_mname.0
-
+  if macnum<0 then do
+     say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
+  end
+  else do
+     call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
+     say 'CRX0110I ['time('l')'] Maclib loaded:      'source.0' records'
+     say 'CRX0120I ['time('l')'] Macros extracted:   'macros_mname.0
+  end
   ## clear source array, DROP doesn't work as expected
   do i=1 to source.0
      source.i=""
@@ -77,16 +79,16 @@ RXPPPassOne: procedure = .int
 
   rexxLines=readSource(infile)
   if rexxLines<0 then do
-     say 'Error: source file missing: ' infile
+     say 'CRX0910E+['time('l')'] source file missing: 'infile
      exit 8
   end
 
-  say '['time('l')'] Rexx Source loaded: 'rexxLines' records'
+  say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
-  say '['time('l')'] Macros extracted:   'macros_mname.0-maclibm
+  say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
   call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
-  say '['time('l')'] Macros arranged:    'macros_mname.0
+  say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
   call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
 
 return rexxlines
@@ -168,8 +170,7 @@ findMatchingEndif: procedure=.int
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
   end
-
-  say '**ERROR: No matching ##ENDIF found after line' startline
+  say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
 return 0
 /* ------------------------------------------------------------------
  * Analyse REXX program and expand Macros
@@ -199,6 +200,7 @@ RXPPPassThree: procedure
            lineno=ifblock.lineno
         end
      end
+     else if stype.LineNo='PARSE' then call CMD_parse lineno,line
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if fstrip(line) \='' then do
   	    newline = expandRecursive(line)
@@ -206,7 +208,7 @@ RXPPPassThree: procedure
  	 end
   end
   call writeline ''
-  say '['time('l')'] Pre-Compiled REXX generated '
+  say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
 /* ------------------------------------------------------------------
  * Read Rexx Source
@@ -229,6 +231,7 @@ GetPrecomp: procedure
        ucmd=upper(fword(line,1))
        if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
        else if ucmd = '##INCLUDE' then call cmd_include lineNo,line
+       else if ucmd = '##PARSE' then stype.LineNo='PARSE'
        else if ucmd = '##????' then do    ## for any new pre compile statement
        end
     end
@@ -253,7 +256,7 @@ return
       name    = fstrip(fsubstr(def, 1, ppi - 1))
       ppi2    = fpos(')', def,ppi+1)
       if ppi2 = 0 then do
-         say 'Error: missing closing parenthesis in macro definition: ' def
+         say 'CRX0930E+['time('l')'] missing closing parenthesis in macro definition: ' def
          exit 8
       end
       if ppi2 - ppi - 1>0 then arglist = fstrip(fsubstr(def, ppi + 1, ppi2 - ppi - 1))
@@ -271,7 +274,7 @@ return
    len=length(body)-2
    body=fsubstr(body,2,len)
    if body = '' then do
-      say 'Error: empty macro body or missing {} in macro: ' name
+       say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8
    end
 
@@ -307,6 +310,38 @@ CMD_set: procedure
   varn=fword(incl,2)
   vind=setvar(varn,DropComment(subword(incl,3)))
   if varn='cflags' then cflags=fword(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
+return
+/* ------------------------------------------------------------------
+ * Process ##PARSE command
+ * ------------------------------------------------------------------
+ */
+CMD_parse: procedure
+  arg lino=.int,incl=.string
+  stype.lino= 'P'
+  varn=DropComment(subword(incl,2))
+  ppi=fpos(',',varn,1)
+  if ppi<=1 then return
+  invar=substr(varn,1,ppi-1)
+  template=substr(varn,ppi+1)
+  fixed_items.1=''
+  variable_names.1=''
+ /* 1. search for quoted arrays in the template */
+  say 123 find_quoted(template,fixed_items,variable_names)
+  rc=insert_array(source,lino+1,fixed_items.0+variable_names.0+1)
+  rc=insert_array(stype,lino+1,fixed_items.0+variable_names.0+1)
+  j=lino+1
+  say 345 fixed_items.0 variable_names.0
+  call list_array fixed_items,-1,-1,'fixed items'
+  do i=1 to fixed_items.0
+     j=j+1
+     source.j='fixed.'i'="'fixed_items.i'"'
+end
+  j=j+1
+  source.j='call match_template_line line,fixed,matched_items'
+  do i=1 to variable_names.0
+     j=j+1
+     source.j=variable_names.i'=matched_items.'i
+  end
   return
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
@@ -344,7 +379,7 @@ CMD_include: procedure
   include.1=''
   new=readall(include,file,-1)
   if new<0 then do
-     say 'Error: missing include file: 'file
+      say 'CRX0950E+['time('l')'] missing include file: 'file
      exit 8
   end
   if search_array(included_files,file,1,1)>0 then return

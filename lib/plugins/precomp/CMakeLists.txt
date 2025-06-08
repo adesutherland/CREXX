@@ -2,33 +2,25 @@ cmake_minimum_required(VERSION 3.24)
 project(precomp_plugin C)
 
 set(CMAKE_C_STANDARD 99)
+# -------------------------------------------------------------------------------------------
+# Set plugin_name and test_rexx to match the specific plugin and its corresponding test case.
+# -------------------------------------------------------------------------------------------
+set(plugin_name "precomp")       # add plugin name
+set(test_rexx "rxpp")            # add rexx to test plugin
+set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
 
-# Including RXPA Build System
-include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+# ===========================================================================================
+# The following sequence is generic and does not require modification.
+#   plugin_template(${plugin_name} ${test_rexx} PRECOMP)
+# ===========================================================================================
+include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
 
-# Create dynamic plugin module
-add_dynamic_plugin_target(_precomp precomp.c)
+plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
-# Build test2 Rexx
-add_custom_command(
-        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
-        -i \"${CMAKE_BINARY_DIR}/lib/rxfnsb\;${CMAKE_CURRENT_BINARY_DIR}\"
-        -o rxpp \"${CMAKE_CURRENT_SOURCE_DIR}/rxpp\" &&
-        ${CMAKE_BINARY_DIR}/assembler/rxas rxpp
-
-        DEPENDS rxas rxc library _precomp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp.rexx
-        OUTPUT rxpp.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-)
-add_custom_target(rxpp ALL
-        DEPENDS rxpp.rxbin
-        )
-
-# Enable test2ing functionality
+# Enable testing and define the test case
 enable_testing()
-
-# Basic test to run rxpp.rxbin with the precomp plugin
-add_test(NAME rxpp
-        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm rxpp rx_precomp ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
+# execute test
+add_test(NAME ${test_rexx}
+        COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${test_rexx} rx_${plugin_name} ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
