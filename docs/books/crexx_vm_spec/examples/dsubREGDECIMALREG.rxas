@@ -1,0 +1,7 @@
+main() .locals=5
+	load r3,1.23456e3d
+	dsub r4,1e3,r3
+	dtos r4
+	say r4
+	ret
+	

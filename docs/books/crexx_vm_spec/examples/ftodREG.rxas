@@ -1,0 +1,12 @@
+    /* Test ftod */
+    say ""
+    sayx "Test 4 (ftod)"
+    inc r2
+    load r3,1001.1
+    ftod r3
+    dtos r3
+    seq r0,r3,"1001.1"
+    brt test4end,r0
+    inc r1
+    sayx " - failed "
+    say r3

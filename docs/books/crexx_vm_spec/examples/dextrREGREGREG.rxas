@@ -1,0 +1,18 @@
+main() .locals=6
+	load r5,1234.56789d /* Input Decimal */
+	dextr r3,r4,r5
+	/* Check r3 - should be "1.23456789" */
+	seq r0,r3,"1.23456789"
+	brt check,r0
+	say "failed coeficient"
+	say r3
+check:
+	/* Check r4 - should be 3 */
+	ieq r0,r4,3
+	brt succeed,r0
+	say "failed exponent"
+succeed:	
+	itos r4
+	say r4
+	ret
+	

@@ -5,7 +5,7 @@ Foo [label=<
 <table border="0" cellborder="1" cellspacing="0">
 <tr><td> Name </td> <td> OP1 </td><td> OP2 </td><td> OP3 </td> </tr>
 <tr><td> DLT </td><td> REG </td><td> REG </td><td> REG </td> </tr>
-<tr><td> DLT </td><td> REG </td><td> REG </td><td> FLOAT </td> </tr>
-<tr><td> DLT </td><td> REG </td><td> FLOAT </td><td> REG </td> </tr>
+<tr><td> DLT </td><td> REG </td><td> REG </td><td> DECIMAL </td> </tr>
+<tr><td> DLT </td><td> REG </td><td> DECIMAL </td><td> REG </td> </tr>
 </table>>];
 }

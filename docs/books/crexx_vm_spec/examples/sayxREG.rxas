@@ -1,0 +1,8 @@
+main() .locals=3
+   load r1,"this is line1"
+   load r2,"this is line2"
+   say r1
+   sayx "this is line2"
+   sayx r2
+   say "end"
+   ret

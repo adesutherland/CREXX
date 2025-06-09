@@ -1,0 +1,12 @@
+main() .locals=5
+	load r3,1.23457e3d
+	load r4,1.23456e3d
+	dgtbr succeed,r3,r4
+	say "failed "
+	ret
+succeed:
+	say "succeed"
+	ret
+	
+	
+	

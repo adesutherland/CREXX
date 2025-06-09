@@ -18,11 +18,11 @@
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 50.25,-45 50.25,-22.5 0,-22.5"/>
 <text text-anchor="start" x="3" y="-28.7" font-family="Times,serif" font-size="14.00"> SAYX </text>
 <polygon fill="none" stroke="black" points="50.25,-22.5 50.25,-45 112.5,-45 112.5,-22.5 50.25,-22.5"/>
-<text text-anchor="start" x="64.12" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="53.25" y="-28.7" font-family="Times,serif" font-size="14.00"> STRING </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 50.25,-22.5 50.25,0 0,0"/>
 <text text-anchor="start" x="3" y="-6.2" font-family="Times,serif" font-size="14.00"> SAYX </text>
 <polygon fill="none" stroke="black" points="50.25,0 50.25,-22.5 112.5,-22.5 112.5,0 50.25,0"/>
-<text text-anchor="start" x="53.25" y="-6.2" font-family="Times,serif" font-size="14.00"> STRING </text>
+<text text-anchor="start" x="64.12" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 </g>
 </g>
 </svg>

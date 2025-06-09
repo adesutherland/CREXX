@@ -18,19 +18,19 @@
 <polygon fill="none" stroke="black" points="0,-112.5 0,-135 46.5,-135 46.5,-112.5 0,-112.5"/>
 <text text-anchor="start" x="7.12" y="-118.7" font-family="Times,serif" font-size="14.00"> RET </text>
 <polygon fill="none" stroke="black" points="46.5,-112.5 46.5,-135 120.75,-135 120.75,-112.5 46.5,-112.5"/>
-<text text-anchor="start" x="59.25" y="-118.7" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text text-anchor="start" x="49.5" y="-118.7" font-family="Times,serif" font-size="14.00"> no operand </text>
 <polygon fill="none" stroke="black" points="0,-90 0,-112.5 46.5,-112.5 46.5,-90 0,-90"/>
 <text text-anchor="start" x="7.12" y="-96.2" font-family="Times,serif" font-size="14.00"> RET </text>
 <polygon fill="none" stroke="black" points="46.5,-90 46.5,-112.5 120.75,-112.5 120.75,-90 46.5,-90"/>
-<text text-anchor="start" x="49.5" y="-96.2" font-family="Times,serif" font-size="14.00"> no operand </text>
+<text text-anchor="start" x="66.38" y="-96.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,-67.5 0,-90 46.5,-90 46.5,-67.5 0,-67.5"/>
 <text text-anchor="start" x="7.12" y="-73.7" font-family="Times,serif" font-size="14.00"> RET </text>
 <polygon fill="none" stroke="black" points="46.5,-67.5 46.5,-90 120.75,-90 120.75,-67.5 46.5,-67.5"/>
-<text text-anchor="start" x="66.38" y="-73.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="69" y="-73.7" font-family="Times,serif" font-size="14.00"> INT </text>
 <polygon fill="none" stroke="black" points="0,-45 0,-67.5 46.5,-67.5 46.5,-45 0,-45"/>
 <text text-anchor="start" x="7.12" y="-51.2" font-family="Times,serif" font-size="14.00"> RET </text>
 <polygon fill="none" stroke="black" points="46.5,-45 46.5,-67.5 120.75,-67.5 120.75,-45 46.5,-45"/>
-<text text-anchor="start" x="69" y="-51.2" font-family="Times,serif" font-size="14.00"> INT </text>
+<text text-anchor="start" x="59.25" y="-51.2" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 46.5,-45 46.5,-22.5 0,-22.5"/>
 <text text-anchor="start" x="7.12" y="-28.7" font-family="Times,serif" font-size="14.00"> RET </text>
 <polygon fill="none" stroke="black" points="46.5,-22.5 46.5,-45 120.75,-45 120.75,-22.5 46.5,-22.5"/>

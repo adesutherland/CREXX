@@ -26,7 +26,7 @@
 <polygon fill="none" stroke="black" points="87.75,-22.5 87.75,-45 128.25,-45 128.25,-22.5 87.75,-22.5"/>
 <text text-anchor="start" x="90.75" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="128.25,-22.5 128.25,-45 168.75,-45 168.75,-22.5 128.25,-22.5"/>
-<text text-anchor="start" x="131.25" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="133.88" y="-28.7" font-family="Times,serif" font-size="14.00"> INT </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 47.25,-22.5 47.25,0 0,0"/>
 <text text-anchor="start" x="3" y="-6.2" font-family="Times,serif" font-size="14.00"> IADD </text>
 <polygon fill="none" stroke="black" points="47.25,0 47.25,-22.5 87.75,-22.5 87.75,0 47.25,0"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="87.75,0 87.75,-22.5 128.25,-22.5 128.25,0 87.75,0"/>
 <text text-anchor="start" x="90.75" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="128.25,0 128.25,-22.5 168.75,-22.5 168.75,0 128.25,0"/>
-<text text-anchor="start" x="133.88" y="-6.2" font-family="Times,serif" font-size="14.00"> INT </text>
+<text text-anchor="start" x="131.25" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 </g>
 </g>
 </svg>

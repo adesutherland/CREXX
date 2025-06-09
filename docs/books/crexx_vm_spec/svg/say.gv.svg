@@ -22,7 +22,7 @@
 <polygon fill="none" stroke="black" points="0,-67.5 0,-90 46.5,-90 46.5,-67.5 0,-67.5"/>
 <text text-anchor="start" x="6.75" y="-73.7" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,-67.5 46.5,-90 108.75,-90 108.75,-67.5 46.5,-67.5"/>
-<text text-anchor="start" x="63" y="-73.7" font-family="Times,serif" font-size="14.00"> INT </text>
+<text text-anchor="start" x="53.25" y="-73.7" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 <polygon fill="none" stroke="black" points="0,-45 0,-67.5 46.5,-67.5 46.5,-45 0,-45"/>
 <text text-anchor="start" x="6.75" y="-51.2" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,-45 46.5,-67.5 108.75,-67.5 108.75,-45 46.5,-45"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text text-anchor="start" x="6.75" y="-6.2" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 108.75,-22.5 108.75,0 46.5,0"/>
-<text text-anchor="start" x="53.25" y="-6.2" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text text-anchor="start" x="63" y="-6.2" font-family="Times,serif" font-size="14.00"> INT </text>
 </g>
 </g>
 </svg>

@@ -1,0 +1,7 @@
+main() .locals=5
+	setdgts 10
+	getdgts r4
+	itos r4
+	say r4
+	ret
+	

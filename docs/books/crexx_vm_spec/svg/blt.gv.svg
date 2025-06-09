@@ -26,7 +26,7 @@
 <polygon fill="none" stroke="black" points="84,-22.5 84,-45 124.5,-45 124.5,-22.5 84,-22.5"/>
 <text text-anchor="start" x="87" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="124.5,-22.5 124.5,-45 165,-45 165,-22.5 124.5,-22.5"/>
-<text text-anchor="start" x="127.5" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="130.12" y="-28.7" font-family="Times,serif" font-size="14.00"> INT </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text text-anchor="start" x="7.5" y="-6.2" font-family="Times,serif" font-size="14.00"> BLT </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 84,-22.5 84,0 46.5,0"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="84,0 84,-22.5 124.5,-22.5 124.5,0 84,0"/>
 <text text-anchor="start" x="87" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="124.5,0 124.5,-22.5 165,-22.5 165,0 124.5,0"/>
-<text text-anchor="start" x="130.12" y="-6.2" font-family="Times,serif" font-size="14.00"> INT </text>
+<text text-anchor="start" x="127.5" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 </g>
 </g>
 </svg>

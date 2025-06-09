@@ -18,15 +18,15 @@
 <polygon fill="none" stroke="black" points="0,-45 0,-67.5 46.5,-67.5 46.5,-45 0,-45"/>
 <text text-anchor="start" x="4.5" y="-51.2" font-family="Times,serif" font-size="14.00"> EXIT </text>
 <polygon fill="none" stroke="black" points="46.5,-45 46.5,-67.5 120.75,-67.5 120.75,-45 46.5,-45"/>
-<text text-anchor="start" x="49.5" y="-51.2" font-family="Times,serif" font-size="14.00"> no operand </text>
+<text text-anchor="start" x="66.38" y="-51.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 46.5,-45 46.5,-22.5 0,-22.5"/>
 <text text-anchor="start" x="4.5" y="-28.7" font-family="Times,serif" font-size="14.00"> EXIT </text>
 <polygon fill="none" stroke="black" points="46.5,-22.5 46.5,-45 120.75,-45 120.75,-22.5 46.5,-22.5"/>
-<text text-anchor="start" x="66.38" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="69" y="-28.7" font-family="Times,serif" font-size="14.00"> INT </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text text-anchor="start" x="4.5" y="-6.2" font-family="Times,serif" font-size="14.00"> EXIT </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 120.75,-22.5 120.75,0 46.5,0"/>
-<text text-anchor="start" x="69" y="-6.2" font-family="Times,serif" font-size="14.00"> INT </text>
+<text text-anchor="start" x="49.5" y="-6.2" font-family="Times,serif" font-size="14.00"> no operand </text>
 </g>
 </g>
 </svg>

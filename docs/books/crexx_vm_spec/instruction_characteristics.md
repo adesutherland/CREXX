@@ -25,5 +25,8 @@ characteristics:
 |ID| a label|
 |INT| an integer type (a whole number)|
 |FLOAT| a floating point number|
+|DECIMAL| a decimal number|
+
+These argument types are listed in the instructions. Related instructions share the mnemonic but differ in opcode and argument types.
 
 

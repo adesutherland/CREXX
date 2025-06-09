@@ -32,17 +32,17 @@
 <polygon fill="none" stroke="black" points="46.5,-22.5 46.5,-45 87,-45 87,-22.5 46.5,-22.5"/>
 <text text-anchor="start" x="49.5" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="87,-22.5 87,-45 141.75,-45 141.75,-22.5 87,-22.5"/>
-<text text-anchor="start" x="97.12" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="90" y="-28.7" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 <polygon fill="none" stroke="black" points="141.75,-22.5 141.75,-45 196.5,-45 196.5,-22.5 141.75,-22.5"/>
-<text text-anchor="start" x="144.75" y="-28.7" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text text-anchor="start" x="151.88" y="-28.7" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text text-anchor="start" x="4.12" y="-6.2" font-family="Times,serif" font-size="14.00"> FDIV </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 87,-22.5 87,0 46.5,0"/>
 <text text-anchor="start" x="49.5" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="87,0 87,-22.5 141.75,-22.5 141.75,0 87,0"/>
-<text text-anchor="start" x="90" y="-6.2" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text text-anchor="start" x="97.12" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="141.75,0 141.75,-22.5 196.5,-22.5 196.5,0 141.75,0"/>
-<text text-anchor="start" x="151.88" y="-6.2" font-family="Times,serif" font-size="14.00"> REG </text>
+<text text-anchor="start" x="144.75" y="-6.2" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 </g>
 </g>
 </svg>
