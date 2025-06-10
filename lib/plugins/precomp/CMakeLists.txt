@@ -29,7 +29,7 @@ add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i "${rx_include}" -o rxpp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas rxpp
         COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack rxpp ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        DEPENDS rxas rxc rxpp.rexx library rxcpack rxpa
+        DEPENDS precomp rxas rxc rxpp.rexx library rxcpack rxpa
         OUTPUT rxpp.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "rxpp compile, assemble and package rxpp ..."
