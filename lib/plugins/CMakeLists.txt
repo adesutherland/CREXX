@@ -10,6 +10,7 @@ add_subdirectory(cipher)
 add_subdirectory(rxuuid)
 add_subdirectory(strings)
 add_subdirectory(precomp)
+add_subdirectory(getpi)
 
 
 
@@ -41,7 +42,6 @@ if(WIN32)
 	add_subdirectory(matrix)
 #	add_subdirectory(rxshm)
 #	add_subdirectory(system)
-	add_subdirectory(getpi)
 #	add_subdirectory(pick)
 #	add_subdirectory(vpool)
 endif()
