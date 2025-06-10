@@ -9,7 +9,6 @@ add_subdirectory(stack)
 add_subdirectory(cipher)
 add_subdirectory(rxuuid)
 add_subdirectory(strings)
-add_subdirectory(precomp)
 add_subdirectory(getpi)
 
 
@@ -28,9 +27,10 @@ else()
     message(STATUS "GTK Gui support is disabled, skipping subdirectory.")
 endif()
 
-# if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-#
-#endif()
+if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+add_subdirectory(precomp)
+endif()
+
 if(WIN32)
 	add_subdirectory(rxml)
 #	add_subdirectory(regex)
