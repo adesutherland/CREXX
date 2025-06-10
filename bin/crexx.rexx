@@ -164,7 +164,7 @@ say '-help           -- display (this) help info'
 say '-version        -- display the version number'
 say '-exec           -- execute (default)'
 say '-native         -- build native executable; implies noexec; default nonative'
-say '-verbose[0-3]   -- report in a verbose way on progress; default verbose0'
+say '-verbose[0-3]   -- report on progress; default verbose0'
 
 return
 
