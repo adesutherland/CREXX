@@ -10,7 +10,7 @@ add_subdirectory(cipher)
 add_subdirectory(rxuuid)
 add_subdirectory(strings)
 add_subdirectory(getpi)
-
+add_subdirectory(precomp)
 
 
 if(ENABLE_ODBC)
@@ -28,7 +28,7 @@ else()
 endif()
 
 if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-add_subdirectory(precomp)
+
 endif()
 
 if(WIN32)

@@ -20,7 +20,8 @@ plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 # Enable testing and define the test case
 enable_testing()
 # execute test
-add_test(NAME ${test_rexx}
+add_test(TARGET PRECOMP_TEST
+  NAME ${test_rexx}
         COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${test_rexx} rx_${plugin_name} ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
@@ -39,5 +40,5 @@ add_executable(rxpp rxpp.c)
 
 target_link_libraries(rxpp rxvml rxpa machine avl_tree platform m)
 
-add_dependencies(rxpp rxvml machine rxpa avl_tree platform)
+add_dependencies(rxpp ${test_rexx} rxvml machine rxpa avl_tree platform)
 
