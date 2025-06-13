@@ -6,6 +6,7 @@
  * Version 31. May 2025
  */
 options levelb
+
 import precomp
 namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files alphaN mExpanded expandLevel ifblock
 import rxfnsb
@@ -18,6 +19,7 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
+
   say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
@@ -25,11 +27,13 @@ arg command=.string[]
      else if upper(command.i)='-O' then outfile=command.j
      else if upper(command.i)='-M' then maclib=command.j
   end
+
 /*
 infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
 outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
-maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250607/lib/plugins/precomp/Maclib.rexx'
- */
+maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
+*/
+
   if fstrip(infile)='' then do
        say 'CRX0100E+['time('l')'] no source file specified'
        exit 8
@@ -178,7 +182,9 @@ return 0
  */
 RXPPPassThree: procedure
   arg out=.string
-  do lineNo=1 to source.0
+  lineNo=0
+  do while lineNo<source.0
+     lineNo=Lineno+1
      line = source.lineNo
   	 if stype.LineNo='D' then do
  	    if pos(' ndef',cflags)>0 then iterate
@@ -207,6 +213,7 @@ RXPPPassThree: procedure
   	    call writeline newline
  	 end
   end
+
   call writeline ''
   say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
@@ -225,16 +232,21 @@ return i
 GetPrecomp: procedure
    arg lino=.int
    lineNo = 0
-   do lineNo=1 to source.0
-       lineMin=max(LineNo-1,1)
-       line = source.lineNo
-       ucmd=upper(fword(line,1))
-       if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
-       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line
-       else if ucmd = '##PARSE' then stype.LineNo='PARSE'
-       else if ucmd = '##????' then do    ## for any new pre compile statement
-       end
-    end
+   do while lineNo < source.0      ## array might grow, so while is more reliable
+      LineNo=LineNo+1
+      lineMin=max(LineNo-1,1)
+      line = source.lineNo
+      ucmd=upper(fword(line,1))
+      if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
+      else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
+      else if ucmd = '##USE'     then call cmd_include lineNo,line,2
+      else if ucmd = '##DATA'    then call cmd_data lineNo,line,fword(line,2)
+      else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
+      else if ucmd = '##SYSIN'   then call cmd_data lineNo,line,"sysin"
+##      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
+##       else if ucmd = '##????' then do    ## for any new pre compile statement
+##       end
+   end
 return
 /* ------------------------------------------------------------------
  * Process ##DEFINE command
@@ -373,7 +385,7 @@ return
  * ------------------------------------------------------------------
  */
 CMD_include: procedure
-  arg lino=.int,incl=.string
+  arg lino=.int,incl=.string,mode=.int
   stype.lino= 'I'
   file=fword(incl,2)
   include.1=''
@@ -386,12 +398,38 @@ CMD_include: procedure
   imax=included_files.0
   if included_files.imax\='' then imax=imax+1
   included_files.imax=file
-  rc=insert_array(source,lino+1,new)
-  rc=insert_array(stype,lino+1,new)
-  do j=1 to new
-     lino=lino+1
-     source.lino=include.j
+  if mode=1 then do
+     rc=insert_array(source,lino+1,new)
+     rc=insert_array(stype,lino+1,new)
+     insertat=lino
   end
+  else do
+     linc=source.0
+     say 123 linc new
+     rc=insert_array(source,linc+1,new)
+     rc=insert_array(stype,linc+1,new)
+     insertat=linc
+  end
+  do j=1 to new
+     insertat=insertat+1
+     source.insertat=include.j
+  end
+return
+/* ------------------------------------------------------------------
+ * Process ##DATA command
+ * ------------------------------------------------------------------
+ */
+CMD_data: procedure
+  arg lino=.int,line=.string,array=.string
+  stype.lino= 'D'
+  j=0
+  do i=lino+1 to source.0
+     line=source.i
+     if upper(fword(line,1))='##END' then leave
+     j=j+1
+     source.i=array'.'j'='safe_quote(line)
+  end
+  stype.i='D'   ## set D for ##END
 return
 /* ------------------------------------------------------------------
  * Write a line to the output buffer, splitting on backslashes (\)

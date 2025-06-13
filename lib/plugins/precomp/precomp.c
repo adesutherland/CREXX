@@ -148,7 +148,7 @@ PROCEDURE (insert_array) {
     for (i = from; i < from + new; ++i) {
         INSERTATTR(ARG0, i);
     }
-    RETURNINTX(new);
+   RETURNINTX(new);
 ENDPROC
 }
 /* -------------------------------------------------------------------------------------
@@ -553,6 +553,51 @@ PROCEDURE (xlog) {
     printf("XLOG %s\n",xlog);
 }
 
+// Helper to check if a string is properly quoted
+int is_properly_quoted(const char* str) {
+    size_t len = strlen(str);
+    if (len < 2) return 0;
+
+    char quote = str[0];
+    if ((quote != '\'' && quote != '"') || str[len - 1] != quote)
+        return 0;
+
+    // Check for valid escaping inside
+    for (size_t i = 1; i < len - 1; ++i) {
+        if (str[i] == quote) {
+            if (i + 1 >= len - 1 || str[i + 1] != quote)
+                return 0;  // not escaped by doubling
+            i++;  // skip the second quote
+        }
+    }
+}
+// Quote a string safely for use in REXX
+PROCEDURE(safe_quote) {
+    char* input=GETSTRING(ARG0) ;
+    if (is_properly_quoted(input)) {
+        RETURNSTRX(strdup(input));  // return as-is
+    }
+
+    int has_single = strchr(input, '\'') != NULL;
+    int has_double = strchr(input, '"') != NULL;
+
+    const char quote = has_single && !has_double ? '"' : '\'';  // safest choice
+
+ // Estimate worst-case size (every quote gets doubled + outer quotes + null terminator)
+    size_t len = strlen(input);
+    char* result = malloc(2 * len + 3);  // worst case: all quotes doubled + 2 outer + '\0'
+    char* p = result;
+    *p++ = quote;
+    for (size_t i = 0; i < len; ++i) {
+        if (input[i] == quote) *p++ = quote;  // double the quote
+        *p++ = input[i];
+    }
+    *p++ = quote;
+    *p = '\0';
+    RETURNSTRX(result);
+ENDPROC
+}
+
 LOADFUNCS
    ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
    ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
@@ -573,5 +618,6 @@ LOADFUNCS
    ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
+   ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
 ENDLOADFUNCS
 

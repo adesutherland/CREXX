@@ -21,6 +21,9 @@ This document combines the functionality of the RXPP macro preprocessor and the 
     * [`##SET var value`](#set-var-value)
     * [`##UNSET var`](#unset-var)
     * [`##INCLUDE file`](#include-file)
+    * [`##USE file`](#use-file)
+    * [`##DATA array-name`](#data-array-name-) 
+    * [`##SYSIN`](#sysin)
     * [`##IF var`](#if-var)
     * [`##IFN var`](#ifn-var)
     * [`##ELSE`](#else)
@@ -266,6 +269,81 @@ RXPP supports a set of preprocessor-style directives for conditional compilation
 
 ---
 
+
+### `##USE file`
+
+Like `##INCLUDE`, this directive injects the contents of the specified file into the source code, **but defers its inclusion to the end of the resulting REXX script**.
+
+This is particularly useful for appending utility code, subroutines, or deferred content without disrupting the main control flow of the primary script.
+
+**Syntax:**
+
+```rexx
+##USE myfooter.rexx
+```
+
+**Behavior:**
+
+- Contents of `myfooter.rexx` are read during preprocessing.
+- The code is **appended** at the **end** of the final output file.
+- Files specified with `##USE` are processed after all `##INCLUDE` content and macro expansions.
+
+---
+
+### `##DATA array-name` 
+
+Allows you to define **literal data** lines directly within the source file. These lines are assigned into a REXX stem array under the given name.
+
+**Syntax:**
+
+```rexx
+##DATA fruits
+apple
+banana
+cherry
+##end
+```
+
+**Behavior:**
+
+- Populates the stem `fruits.` as follows:
+  ```rexx
+  fruits.1 = "apple"
+  fruits.2 = "banana"
+  fruits.3 = "cherry"
+  fruits.0 = 3
+  ```
+- The `##end` line marks the termination of the data block.
+- Lines are read and stored exactly as written, preserving whitespace and order.
+
+**Use Case:** Ideal for embedding short datasets or configuration options directly in your REXX code without external files.
+
+### `##SYSIN`
+
+The ##SYSIN directive is a shorthand equivalent of ##DATA SYSIN. It directly embeds input lines into the stem array SYSIN..
+
+Syntax:
+
+##SYSIN
+param1
+param2
+param3
+##end
+
+Behavior:
+
+Creates a stem SYSIN. with each line as an entry:
+
+SYSIN.1 = "param1"
+SYSIN.2 = "param2"
+SYSIN.3 = "param3"
+SYSIN.0 = 3
+
+This approach is reminiscent of the MVS JCL //SYSIN DD * statement, where inline data is passed to programs.
+
+Use Case: Provides a concise method to define system input directly in the script, especially for batch-like workflows.
+
+---
 ### `##CFLAG values`
 
 ##CFLAG — Sets the preprocessor variable from compiler flags or external input during the earliest configuration pass, before normal preprocessing begins.
