@@ -237,12 +237,13 @@ GetPrecomp: procedure
       lineMin=max(LineNo-1,1)
       line = source.lineNo
       ucmd=upper(fword(line,1))
+      if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,fword(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
-      else if ucmd = '##SYSIN'   then call cmd_data lineNo,line,"sysin"
+      else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
 ##      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end

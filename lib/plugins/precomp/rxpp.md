@@ -23,7 +23,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
     * [`##INCLUDE file`](#include-file)
     * [`##USE file`](#use-file)
     * [`##DATA array-name`](#data-array-name-) 
-    * [`##SYSIN`](#sysin)
+    * [`##SYSxxx`](#sysxxx)
     * [`##IF var`](#if-var)
     * [`##IFN var`](#ifn-var)
     * [`##ELSE`](#else)
@@ -292,7 +292,11 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 ### `##DATA array-name` 
 
-Allows you to define **literal data** lines directly within the source file. These lines are assigned into a REXX stem array under the given name.
+The **##DATA** directive allows you to define literal data lines directly within the source file. These lines are assigned to a REXX stem array under the specified array-name.
+
+Each line is stored as-is, using the appropriate quote or double-quote pair to preserve its original content. This means any quotes within a string are retained exactly as written—no escaping or interpretation is performed.
+
+**Use Case:** This mechanism is useful for embedding configuration values, data records, or script fragments directly in the source, without relying on external files.
 
 **Syntax:**
 
@@ -314,13 +318,27 @@ cherry
   fruits.0 = 3
   ```
 - The `##end` line marks the termination of the data block.
-- Lines are read and stored exactly as written, preserving whitespace and order.
 
-**Use Case:** Ideal for embedding short datasets or configuration options directly in your REXX code without external files.
 
-### `##SYSIN`
+  **Example containing quote delimiters:**
+```rexx
+##DATA MYTEXT
+This is a line with 'inner quotes'
+This is another line
+##end
 
-The ##SYSIN directive is a shorthand equivalent of ##DATA SYSIN. It directly embeds input lines into the stem array SYSIN..
+Resulting Stem Array:
+MYTEXT.0 = 2
+MYTEXT.1 = "This is a line with 'inner quotes'"
+MYTEXT.2 = 'This is a simple line'
+```
+
+### `##SYSxxx`
+
+The ##SYSxxx directive serves as a shorthand for ##DATA SYSxxx, where xxx is an arbitrary identifier. It embeds the subsequent input lines directly into the stem array SYSxxx..
+
+This mechanism is conceptually similar to MVS JCL, where the //SYSxxx prefix denotes system DD (Data Definition) statements. For example, //SYSIN DD * is used to pass inline data to a program, and //SYSLIB DD specifies a system library.
+This approach is reminiscent of the MVS JCL //SYSIN DD * statement, where inline data is passed to programs.
 
 Syntax:
 
@@ -339,7 +357,32 @@ SYSIN.2 = "param2"
 SYSIN.3 = "param3"
 SYSIN.0 = 3
 
-This approach is reminiscent of the MVS JCL //SYSIN DD * statement, where inline data is passed to programs.
+##SYSUT1
+"C:\temp\my_tempfile.txt"
+##end
+
+##SYSLIB
+"C:\temp\my_macro_lib.rexx"
+"C:\temp\general_macro_lib.rexx"
+##end
+
+Resulting Stem Arrays:
+After preprocessing, the following stem variables will be populated:
+
+SYSUT1.0 = 1
+SYSUT1.1 = "C:\temp\my_tempfile.txt"
+
+SYSLIB.0 = 2
+SYSLIB.1 = "C:\temp\my_macro_lib.rexx"
+SYSLIB.2 = "C:\temp\general_macro_lib.rexx"
+
+In this example:
+
+##SYSUT1 defines a single inline entry (SYSUT1.1) pointing to a temporary file.
+
+##SYSLIB includes two library paths assigned to SYSLIB.1 and SYSLIB.2.
+
+These stem arrays can then be processed in your program as needed, similar to how JCL uses DD statements like //SYSUT1 or //SYSLIB.
 
 Use Case: Provides a concise method to define system input directly in the script, especially for batch-like workflows.
 
@@ -351,20 +394,22 @@ The definition must be placed at the very beginning of the source file, before a
 
 Use the following flags in `cflags` to control diagnostic output during the pre-compilation process:
 
-| Option      | Description                                                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **def**     | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
-| **set**     | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
-| **iflink**  | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
-| **1buf**    | Displays the raw source input immediately after it is read from the file.                                                        |
-| **2buf**    | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
-| **3buf**    | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
-| **vars**    | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
-| **maclist** | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
+| Option       | Description                                                                                                                      |
+|--------------|----------------------------------------------------------------------------------------------------------------------------------|
+| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
+| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
+| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
+| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                        |
+| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
+| **3buf**     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
+| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
+| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
+| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
+If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
 
 **Example:**
 ```rexx
-##cflags def set iflink 1buf 2buf 3buf vars maclist  /* set early stage compiler flags */
+##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage compiler flags */
 ```
 
 
