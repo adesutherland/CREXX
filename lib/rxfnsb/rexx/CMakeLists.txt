@@ -59,6 +59,8 @@ set(BIFS
 		find
 		index
 		xrange
+		parsecompile
+		parsetext
 		# datatype
 )
 
