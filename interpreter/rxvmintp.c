@@ -9,6 +9,7 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
+#include <mach/thread_policy.h>
 #endif
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -17,12 +18,12 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
+#include <signal.h>
 #include "platform.h"
 #include "rxas.h"
 #include "rxvminst.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
-
 // #include <complex.h>
 
 #include <signal.h>

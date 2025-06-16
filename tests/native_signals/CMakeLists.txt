@@ -4,7 +4,13 @@ set(CMAKE_C_STANDARD 99) # enables inline keyword
 
 # Set the binary tool binary output directory to /tools
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tools)
-add_executable(signal_tester sigtest.c)
+if(WIN32)
+    # On Windows, we use sigtest-windows.c
+    add_executable(signal_tester sigtest-windows.c)
+else()
+    # On POSIX systems, we use sigtest-posix.c
+    add_executable(signal_tester sigtest-posix.c)
+endif()
 
 # Build the rxas test
 add_custom_command(

@@ -1,6 +1,55 @@
 //
 // Created by Adrian Sutherland on 05/04/2025.
 //
+
+
+/* TODO - We need to redefine CREXX Signals for external os events as follows:
+
+    // --- User/System Initiated Interruption & Termination ---
+
+    // CREXX_EVENT_INTERRUPT:
+    //   Meaning: A polite request from the user (e.g., Ctrl+C) to stop current activity
+    //            and/or initiate a graceful shutdown. The application should attempt
+    //            to clean up and exit, but can choose to ignore or finish current tasks.
+    //   OS Mapping: Windows: CTRL_C_EVENT
+    //               POSIX:   SIGINT
+    CREXX_EVENT_INTERRUPT,
+
+    // CREXX_EVENT_BREAK:
+    //   Meaning: A more insistent request from the user (e.g., Ctrl+Break) to halt
+    //            execution and/or initiate an immediate graceful shutdown. This is
+    //            often used if the application is unresponsive to an INTERRUPT.
+    //            The application should prioritize stopping quickly over completing
+    //            non-critical tasks.
+    //   OS Mapping: Windows: CTRL_BREAK_EVENT
+    //               POSIX:   SIGQUIT (Note: POSIX SIGQUIT often implies a core dump,
+    //                        which this event does not require or imply on CREXX/Windows.)
+    CREXX_EVENT_BREAK,
+
+    // CREXX_EVENT_SHUTDOWN:
+    //   Meaning: A critical request from the OS or a control system to perform a
+    //            graceful shutdown. This is typically due to the user closing the console
+    //            window, logging off, or the entire system shutting down/rebooting.
+    //            The application MUST perform all necessary cleanup (saving data,
+    //            flushing logs, releasing resources) and exit within a short grace period
+    //            to avoid forceful termination by the OS.
+    //   OS Mapping: Windows: CTRL_CLOSE_EVENT, CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT
+    //               POSIX:   SIGTERM (typically sent programmatically, not via console UI)
+    CREXX_EVENT_SHUTDOWN,
+
+    // --- Application Control & Management ---
+
+    // CREXX_EVENT_RELOAD_CONFIG:
+    //   Meaning: A request to reload the application's configuration settings from
+    //            its source (e.g., a file) without restarting the application.
+    //            The application should attempt to apply new settings safely and
+    //            continue operation.
+    //   OS Mapping: Windows: Custom IPC (e.g., RESTful API, Named Pipe, UDP listener)
+    //               POSIX:   SIGHUP (common convention for daemons to reload config)
+    CREXX_EVENT_RELOAD_CONFIG,
+*/
+
+
 #define _POSIX_C_SOURCE 200809L /* Request POSIX features */
 #include <signal.h>
 #include <stddef.h>  /* For NULL */
@@ -53,17 +102,20 @@ static const VmOsSignalMap g_signal_map[] = {
 
     /* Termination / User Interaction */
     { RXSIGNAL_TERM,               SIGTERM },
-    { RXSIGNAL_POSIX_INT,          SIGINT  },
 #ifndef _WIN32
-    /* POSIX-specific Signals */
+    /* POSIX-specific Signals Mappings */
+    { RXSIGNAL_POSIX_INT,          SIGINT  },
+    { RXSIGNAL_QUIT,               SIGQUIT },
     { RXSIGNAL_POSIX_HUP,          SIGHUP  },
     { RXSIGNAL_POSIX_USR1,         SIGUSR1 },
     { RXSIGNAL_POSIX_USR2,         SIGUSR2 },
     { RXSIGNAL_POSIX_CHLD,         SIGCHLD },
     { RXSIGNAL_NOTREADY,           SIGPIPE }, /* Often related to broken pipes */
-    { RXSIGNAL_QUIT,               SIGQUIT},
 #else
-       { RXSIGNAL_QUIT,               SIGBREAK },
+    /* Windows-specific Signal Mappings */
+    { RXSIGNAL_TERM,          CTRL_CLOSE_EVENT  },
+    { RXSIGNAL_QUIT,          CTRL_BREAK_EVENT },
+{ RXSIGNAL_POSIX_INT,         CTRL_C_EVENT  },
 #endif
     /* Note: RXSIGNAL_KILL (SIGKILL) cannot be caught */
     /* Note: RXSIGNAL_FAILURE, etc. do not map directly */
@@ -100,24 +152,28 @@ static int get_vm_signal(int os_signal) {
  * It must be simple and only use async-signal-safe functions.
  * It translates the OS signal to a VM signal and sets a bit in the global flag mask.
  */
+#ifdef _WIN32
+static BOOL WINAPI vm_master_signal_handler(DWORD signum) {
+#else
 static void vm_master_signal_handler(int signum /* OS Signal Number */) {
+#endif
     int vm_signal;
 
     /* Translate OS signal back to VM signal */
-    vm_signal = get_vm_signal(signum);
+    vm_signal = get_vm_signal((int)(signum));
 
     /* Check if the VM signal code is valid for the bitmask */
     if (vm_signal > RXSIGNAL_NONE && vm_signal < RXSIGNAL_MAX) {
         raise_signal(vm_signal); /* Set the interrupt signal */
+#ifdef _WIN32
+        return TRUE; /* Indicate we handled it */
+#endif
     }
 
     /* Re-arm handler if needed? */
     /* With sigaction (POSIX) - Not needed if SA_RESETHAND isn't set (default) */
-    /* With signal (Windows/C90) - Sometimes needed on older systems */
 #ifdef _WIN32
-    /* Re-registering is sometimes needed for standard signal() */
-    /* However, let's assume modern Windows CRT behaves well unless problems arise */
-    /* signal(signum, vm_master_signal_handler); */
+    return FALSE; /* Indicate we did not handle it */
 #endif
 }
 
@@ -136,7 +192,7 @@ int enable_interrupt(int vm_signal) {
 #ifndef _WIN32
     struct sigaction sa_new; /* POSIX */
 #else
-    OsSignalHandlerFunc os_handler_prev; /* Windows */
+    int handler_installed; /* Windows */
 #endif
 
     /* Validate VM signal code */
@@ -188,22 +244,6 @@ int enable_interrupt(int vm_signal) {
         perror("Error: sigaction enable failed");
         return -1; /* Failure */
     }
-#else
-    /* --- Windows: Use signal --- */
-
-    /* Install our handler, getting the previous one */
-    os_handler_prev = signal(os_signal, vm_master_signal_handler);
-
-    if (os_handler_prev == SIG_ERR) {
-        /* perror("Error: signal enable failed"); */
-        return -1; /* Failure */
-    }
-
-    /* store original handler if not already stored */
-    /* Note: Only captures the handler present *just before* we installed ours */
-    if (g_original_os_handlers[os_signal] == NULL) {
-        g_original_os_handlers[os_signal] = os_handler_prev;
-    }
 #endif
 
     /* Mark as active */
@@ -222,8 +262,6 @@ int ignore_interrupt(int vm_signal) {
    int os_signal;
 #ifndef _WIN32
     struct sigaction sa_new; /* POSIX */
-#else
-    OsSignalHandlerFunc os_handler_prev; /* Windows */
 #endif
 
     /* Validate VM signal code */
@@ -274,21 +312,6 @@ int ignore_interrupt(int vm_signal) {
         /* perror("Error: sigaction enable failed"); */
         return -1; /* Failure */
     }
-#else
-    /* --- Windows: Use signal --- */
-    /* Install SIG_IGN, getting the previous one */
-    os_handler_prev = signal(os_signal, SIG_IGN);
-
-    if (os_handler_prev == SIG_ERR) {
-        perror("Error: signal enable failed");
-        return -1; /* Failure */
-    }
-
-    /* Store original handler if not already stored */
-    /* Note: Only captures the handler present *just before* we installed ours */
-    if (g_original_os_handlers[os_signal] == NULL) {
-        g_original_os_handlers[os_signal] = os_handler_prev;
-    }
 #endif
 
     /* Mark as ignored by us */
@@ -305,9 +328,6 @@ int ignore_interrupt(int vm_signal) {
  */
 int restore_interrupt(int vm_signal) {
     int os_signal;
-#ifdef _WIN32
-    OsSignalHandlerFunc os_handler_original; /* Windows */
-#endif
 
     /* Validate VM signal code */
     if (vm_signal <= RXSIGNAL_NONE || vm_signal >= RXSIGNAL_MAX) {
@@ -338,20 +358,6 @@ int restore_interrupt(int vm_signal) {
         g_handler_active[vm_signal] = 0;
         return -1; /* Failure */
     }
-#else
-    /* --- Windows: Restore original handler --- */
-    os_handler_original = g_original_os_handlers[os_signal];
-    if (os_handler_original == NULL) {
-         /* If we never captured it (shouldn't happen if active), default */
-         os_handler_original = SIG_DFL;
-    }
-
-    if (signal(os_signal, os_handler_original) == SIG_ERR) {
-         perror("Error: signal disable failed");
-         /* Mark inactive even on failure */
-         g_handler_active[vm_signal] = 0;
-         return -1; /* Failure */
-    }
 #endif
 
     /* Mark as inactive */
@@ -379,6 +385,15 @@ int initialize_vm_signals(void) {
         memset(&g_original_os_actions[i], 0, sizeof(struct sigaction));
 #endif
     }
+
+#ifdef _WIN32
+    /* Install our handler */
+    if (!SetConsoleCtrlHandler(vm_master_signal_handler, TRUE))
+    {
+        fprintf(stderr, "ERROR: Could not set console control handler. GetLastError: %lu\n", GetLastError());
+        return -1; // Indicate failure to set up handler
+    }
+#endif
     return 0;
 }
 
@@ -388,6 +403,13 @@ int initialize_vm_signals(void) {
  */
 void cleanup_vm_signals(void) {
     int i;
+#ifdef _WIN32
+    /* Install our handler */
+    if (!SetConsoleCtrlHandler(vm_master_signal_handler, FALSE))
+    {
+        fprintf(stderr, "ERROR: Could not unload console control handler. GetLastError: %lu\n", GetLastError());
+    }
+#endif
     for (i = 0; i < RXSIGNAL_MAX; ++i) {
         if (g_handler_active[i]) {
             restore_interrupt(i); /* Attempt to restore */

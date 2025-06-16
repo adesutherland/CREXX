@@ -14,6 +14,8 @@ say_exit_func say_exit = say_exit_default;
 void say_exit_default(char* message) {
     /* Print the message to stdout without a newline or any formatting */
     printf("%s", message);
+    // Flush
+    fflush(stdout);
 }
 
 /* Set the say exit function */
