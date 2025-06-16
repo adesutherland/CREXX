@@ -15,7 +15,7 @@ import rxfnsb
   string2Parse = "  ms.mspdm.slib(crexx) SHR"
   say time('l')' Compile Template'
   rc=parseCompile(template,token,token_type)
-     call token_print token,token_type                              ## print tokens
+     call token_print template,token,token_type                     ## print tokens
   call parseString string2Parse, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content    ## print variables
 ## 2. Example
@@ -25,7 +25,7 @@ import rxfnsb
   string2Parse = "René     Captain Jansen is-a REXX wizard"
   say time('l')' Compile Template'
   rc=parseCompile(template,token,token_type)
-    call token_print token,token_type                              ## print tokens
+    call token_print template,token,token_type                     ## print tokens
   call parseString string2Parse, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
 ## 2. Example
@@ -35,7 +35,7 @@ import rxfnsb
   string2Parse = "1. think,2. overthink,3. redesign,4. code in rexx and pray,5. blame the user"
    say time('l')' Compile Template'
   rc=parseCompile(template,token,token_type)
-    call token_print token,token_type                              ## print tokens
+    call token_print template,token,token_type                     ## print tokens
   call parseString string2Parse, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
 exit
@@ -44,7 +44,7 @@ exit
  * ----------------------------------------------------------------------
  */
 token_print: procedure
-  arg token=.string[],token_type=.string[]
+  arg template=.string,token=.string[],token_type=.string[]
   say 'Template='template
   say time('l')' Compile completed'
   say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
