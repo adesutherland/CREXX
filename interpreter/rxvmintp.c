@@ -12,6 +12,7 @@
 #endif
 #ifdef __APPLE__
 #include <mach/thread_policy.h>
+#include <dlfcn.h>
 #endif
 #include <sys/time.h>
 #include <time.h>
@@ -23,7 +24,6 @@
 #include "rxastree.h"
 #include "rxvmintp.h"
 // #include <complex.h>
-
 #include <signal.h>
 
 
