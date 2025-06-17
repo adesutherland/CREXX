@@ -9,10 +9,8 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
-#include <mach/thread_policy.h>
 #endif
 #ifdef __APPLE__
-#include <dlfcn.h>
 #include <mach/thread_policy.h>
 #endif
 #include <sys/time.h>
