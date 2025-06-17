@@ -238,6 +238,8 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #else
 #define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
 #endif
+#define ENDPROC {back2caller: RESETSIGNAL}     // cleanup of ADDPROC
+#define PROCRETURN {goto back2caller;}
 #define GETSTRING(attr) rxpa_getstring((attr))
 #define SETSTRING(attr, str) rxpa_setstring((attr),(str))
 #define SETINT(attr, value) rxpa_setint((attr),(value))
@@ -252,6 +254,21 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define SWAPATTRS(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
 #define SET_SAY_EXIT(func) rxpa_setsayexit((func))
 #define RESET_SAY_EXIT() rxpa_resetsayexit()
+#define RETURNSTR(value) rxpa_setstring(RETURN,(value))
+#define RETURNSTRX(value) {rxpa_setstring(RETURN,(value));PROCRETURN}
+#define RETURNINT(value) rxpa_setint(RETURN,(value))
+#define RETURNFLOAT(value) rxpa_setfloat(RETURN,(value))
+#define GETARRAYHI(attr) rxpa_getnumattrs((attr))
+#define SETARRAYHI(attr, num) rxpa_setnumattrs((attr),(num))
+#define SWAPARRAY(attr, index1, index2) rxpa_swapattrs((attr),(index1),(index2))
+#define GETSARRAY(pnum,index) GETSTRING(GETATTR(pnum, index))
+#define SETSARRAY(pnum,index,value) SETSTRING(GETATTR(pnum, index),value)
+#define INSERTSARRAY(pnum,indx,value) {INSERTATTR(pnum,indx); \
+SETSARRAY(pnum,indx,value);};
+#define SETIARRAY(pnum,index,value) SETINT(GETATTR(pnum, index),value)
+#define RETURNINTX(value) {RETURNINT(value); PROCRETURN}
+#define GETIARRAY(pnum,index) GETINT(GETATTR(pnum, index))
+#define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
 
 #endif
 

@@ -570,6 +570,7 @@ int is_properly_quoted(const char* str) {
             i++;  // skip the second quote
         }
     }
+    return 1;  // properly quoted
 }
 // Quote a string safely for use in REXX
 PROCEDURE(safe_quote) {
