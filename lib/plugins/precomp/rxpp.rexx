@@ -19,7 +19,7 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
-  internal_testing=1    ## activate only for rxpp internal tests
+  internal_testing=0    ## activate only for rxpp internal tests
   say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
