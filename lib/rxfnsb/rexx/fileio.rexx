@@ -7,56 +7,41 @@ import _rxsysb
 
 /* REXX Lineout BIF */
 lineout: procedure = .int
-    arg fname = .string, line = ""
+    arg fname = "stdout", line = ""
+    if fname = "" then fname = "stdout" /* In case of blank argument */
 
     if ?line then do
         /* line specified - open file */
         nl = '0a'x
-
-      say '----> in lineout before'
-      if length(fname)=0 then do
-	/* no file specified, use stdout */
-	assembler sayx line
-	say '----> in lineout before return'
-	return 0
-      end
-      say '----> in lineout after sayx'
-      
-      fileid = _open(fname, "w")
-      if fileid = 0 then say "ERROR lineout() file" fname "could not open"
-      else do
+        fileid = _open(fname, "w")
+        if fileid = 0 then say "ERROR lineout() file" fname "could not open"
         assembler fwrite fileid,line
         assembler fwrite fileid,nl
-      end
     end
     
     else do
         /* line not specified - close file */
         call _close fname
     end
-
     return 0
 
 /* REXX Linein BIF */
 linein: procedure = .string
-    arg fname = .string
+    arg fname = "stdin"
+    if fname = "" then fname = "stdin" /* In case of blank argument */
 
     line = ""
-
     fileid = _open(fname, "r")
     if fileid = 0 then say "ERROR linein() file" fname "could not open"
-    else do
-        assembler freadline line,fileid
-    end
-
+    assembler freadline line,fileid
     return line
 
-/* REXX Linein BIF */
+/* REXX Lines BIF */
 lines: procedure = .int
-    arg fname = .string
+    arg fname = "stdin"
+    if fname = "" then fname = "stdin" /* In case of blank argument */
 
     line = ""
-
     fileid = _open(fname, "r")
     if fileid = 0 then return 0
 

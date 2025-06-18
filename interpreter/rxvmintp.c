@@ -5051,19 +5051,36 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             int fd;
             char* filename = reg2nullstring(op2R);
             char* mode = reg2nullstring(op3R);
-            op1R->int_value = (rxinteger)fopen(filename, mode);
+
+            // If the filename is "stdout", "stderr", or "stdin" we use the C runtime's handle
+            if (strcmp(filename, "stdout") == 0) {
+                op1R->int_value = (rxinteger)stdout;
+            } else if (strcmp(filename, "stderr") == 0) {
+                op1R->int_value = (rxinteger)stderr;
+            } else if (strcmp(filename, "stdin") == 0) {
+                op1R->int_value = (rxinteger)stdin;
+            } else {
+                /* Otherwise we open the file normally */
+                op1R->int_value = (rxinteger)fopen(filename, mode);
+
+                /* If the open succeeds, add the FD_CLOEXEC so that the file is not available to an ADDRESSed command! */
+                if (op1R->int_value) {
+#ifdef _WIN32
+                    // On Windows, get the underlying OS HANDLE from the C-runtime file descriptor.
+                    intptr_t handle = _get_osfhandle(_fileno((FILE*)op1R->int_value));
+                    if (handle != -1) {
+                        // Set the handle to be non-inheritable. This is the equivalent
+                        // of POSIX's FD_CLOEXEC flag.
+                        SetHandleInformation((HANDLE)handle, HANDLE_FLAG_INHERIT, 0);
+                    }
+#else
+                    fd = fileno((FILE*)op1R->int_value);
+                    fcntl(fd, F_SETFD, FD_CLOEXEC);
+#endif
+                }
+            }
             free(filename);
             free(mode);
-
-            /* If the open succeeds, add the FD_CLOEXEC so that the file is not available to an ADDRESSed command! */
-            if (op1R->int_value) {
-#ifdef _WIN32
-                // todo Windows use O_NOINHERIT
-#else
-                fd = fileno((FILE*)op1R->int_value);
-                fcntl(fd, F_SETFD, FD_CLOEXEC);
-#endif
-            }
         }
         DISPATCH
 
