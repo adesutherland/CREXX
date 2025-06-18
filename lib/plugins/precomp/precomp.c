@@ -74,21 +74,6 @@ PROCEDURE (sort_bylen) {
     }
 }
 /* -------------------------------------------------------------------------------------
- * Reverse array order
- * -------------------------------------------------------------------------------------
- */
-PROCEDURE (reverse_array) {
-    int i, k, to;
-    to = GETARRAYHI(ARG0)-1; // make max index to offset
-    k = to / 2;      // split in halfs
-    for (i = 0; i <= k; ++i) {
-        SWAPARRAY(ARG0, i, to);
-        to--;
-    }
-    PROCRETURN
-    ENDPROC
-}
-/* -------------------------------------------------------------------------------------
  * Search certain strings in array and return its index or zero
  * -------------------------------------------------------------------------------------
  */
@@ -206,24 +191,6 @@ PROCEDURE (list_array)  {
     }
     printf("%d Entries\n",to);
 }
-// New pos function to determine the first occurrence of a substring with an offset
-PROCEDURE(pos) {
-    char *needle = GETSTRING(ARG0);   // Get the substring to find
-    char *haystack = GETSTRING(ARG1);  // Get the input string
-    int offset = GETINT(ARG2) - 1;         // Get the offset to start searching
- // Check for NULL input or invalid offset
-    if (haystack[0] == 0 || needle[0] == 0) {    // if anything is nullstring return 0
-       RETURNINTX(0); // Return 0
-    }
-    if(offset<0) offset=0;
-    // Adjust the starting point for the search
-    char *found = strstr(haystack + offset, needle); // Find the first occurrence of the substring
-    if (found != NULL) {
-       RETURNINTX(found - haystack + 1); // Return the position (1-based index)
-    }
-    RETURNINTX(0); // Return 0 if the substring is not found
-ENDPROC;
-}
 
 PROCEDURE(readall) {
     int lines = 1, llen, amax = 0, amaxl, maxlines;
@@ -292,32 +259,6 @@ char *strcasestr(const char *haystack, const char *needle) {
     }
     return NULL;
 }
-PROCEDURE(word) {
-    char *wordstring = GETSTRING(ARG0); // Get the input string
-    int  indx = GETINT(ARG1);            // Get the index of the desired subword
-    char *delim;                        // Get the delimiter
-    int  curword = 1;                    // Counter for the current word
-
-    // Check for NULL input or invalid index
-    if (wordstring[0] == '\0' || indx < 1) {
-        RETURNSTRX(""); // Return empty string on error
-    }
-    delim = " "; // Default delimiter
-
-  // Create a temporary buffer for tokenization
-    char * dupline = strdup(wordstring);
-    char *token = strtok(dupline, delim); // Tokenize the string
-    while (token != NULL) {
-       if (curword == indx) {
-          RETURNSTRX(token); // Return the found subword
-       }
-       token = strtok(NULL, delim); // Get the next token
-       curword++;
-    }
-
-    RETURNSTRX(""); // Return empty string if index is out of bounds
-    ENDPROC;
-}
 
 /* -------------------------------------------------------------------------------------
 * Portable strupr() because that is windows-only
@@ -365,27 +306,6 @@ PROCEDURE (hasmacro) {
 ENDPROC
 }
 
-// New STRIP function to remove leading/trailing characters
-PROCEDURE(strip) {
-    char * string = GETSTRING(ARG0); // Get the input string
-    char * end;
-  // Check for NULL input
-    if (string[0] == '\0' ) RETURNSTRX(""); // Return empty string on error
-
-    // Determine the length of the input string
-    while (isspace((unsigned char)*string)) string++;
-
-    // Strip from the right
-// Trim trailing space
-    end = string + strlen(string) - 1;
-
-    while (end > string && isspace((unsigned char)*end)) end--;
-
-    *(end + 1) = '\0';    // Write new null terminator
-    RETURNSTRX(string); // Return the stripped string
-ENDPROC;
-}
-
 // Insert 'needle' into 'haystack' at position 'at', replacing 'len' characters
 PROCEDURE (insertat) {
 // char* insertAt(const char* haystack, const char* needle, int at, int len) {
@@ -428,33 +348,6 @@ PROCEDURE (insertat) {
     RETURNSTR(result);
     free(result);
     ENDPROC
-}
-PROCEDURE (substr) {
-    char * string = GETSTRING(ARG0);
-    int start =  GETINT(ARG1)-1;
-    int len = GETINT(ARG2) ;
-    int src_len = strlen(string);
-
-// Bounds check
-    if(src_len==0) RETURNSTRX("")
-    if (start < 0 || start >= src_len) {
-        RETURNSTRX("");  // return empty string
-    }
-
-// Adjust len if it goes past the end
-    if (len <= 0 || start + len > src_len) {
-        len = src_len - start;
-    }
-
-    char *result = malloc(len + 1);
-    if (!result) RETURNSTRX("");
-
-    strncpy(result, string + start, len);
-    result[len] = '\0';
-
-    RETURNSTR(result);
-    free(result);
-ENDPROC
 }
 /* -------------------------------------------------------------------------------------
 * search in array a certain string, up to 3 strings are possible
@@ -604,18 +497,13 @@ LOADFUNCS
    ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[]");
    ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
-   ADDPROC(reverse_array,"precomp.reverse_array","b",  ".void",  "expose a = .string[]");
    ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
    ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
    ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
    ADDPROC(hasmacro,     "precomp.hasmacro",     "b",  ".int",   "line=.string,maclist=.string[],from=.int");
    ADDPROC(readall,      "precomp.readall",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
    ADDPROC(writeall,     "precomp.writeall",     "b",  ".int",   "expose array=.string[],file=.string,arg2=.int");
-   ADDPROC(pos,          "precomp.fpos",         "b",  ".int",   "string = .string,substr=.string,offset=.int");
    ADDPROC(insertat,     "precomp.insertatc",    "b",  ".string","haystack = .string,needle=.string,offset=.int,len=.int");
-   ADDPROC(strip,        "precomp.fstrip",       "b",  ".string","string = .string");
-   ADDPROC(word,         "precomp.fword",        "b",  ".string","string = .string,wnum=.int");
-   ADDPROC(substr,       "precomp.fsubstr",      "b",  ".string","string = .string,pos=.int,len=.int");
    ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");

@@ -846,11 +846,11 @@ ENDPROC
 
 // New PARSE function to extract variables from a template and input string
 PROCEDURE(PARSE) {
-    char *input_string   = GETSTRING(ARG0);  // Get the input string
+    char *input_string = GETSTRING(ARG0);  // Get the input string
     char *parse_template = GETSTRING(ARG1);  // Get the parse template
-    int  count = 0;                          // Counter for the number of variables
+    int count = 0;                          // Counter for the number of variables
     char *current_pos = input_string;        // Current position in input string
-    
+
     // Initialize output arrays
     SETARRAYHI(ARG2, 0);
     SETARRAYHI(ARG3, 0);
@@ -866,34 +866,34 @@ PROCEDURE(PARSE) {
     char *template_copy = strdup(parse_template);
     char *token = strtok(template_copy, "'");
     int is_delimiter = 0;  // Toggle between variable names and delimiters
-    
+
     while (token != NULL && count < 512) {
         token = trim(token);  // Remove whitespace
-        
+
         if (strlen(token) > 0) {
             if (!is_delimiter) {
                 // Store variable name
                 SETARRAYHI(ARG2, count + 1);
                 SETSARRAY(ARG2, count, token);
-                
+
                 // Get next token (delimiter)
                 token = strtok(NULL, "'");
                 if (token != NULL) {
                     token = trim(token);
                     // Find this delimiter in input string
                     char *next_delim = strstr(current_pos, token);
-                    
+
                     if (next_delim != NULL) {
                         // Extract value up to delimiter
                         int length = next_delim - current_pos;
-                        char *value = (char *)malloc(length + 1);
+                        char *value = (char *) malloc(length + 1);
                         strncpy(value, current_pos, length);
                         value[length] = '\0';
-                        
+
                         SETARRAYHI(ARG3, count + 1);
                         SETSARRAY(ARG3, count, trim(value));
                         free(value);
-                        
+
                         current_pos = next_delim + strlen(token);
                     } else {
                         // Last variable gets rest of string
@@ -911,11 +911,109 @@ PROCEDURE(PARSE) {
         }
         token = strtok(NULL, "'");
     }
-    
+
     free(template_copy);
     RETURNINT(count);
-ENDPROC;
+    ENDPROC;
 }
+    PROCEDURE (fquoted_old) {
+        char * template = GETSTRING(ARG0);
+        char *start = NULL;
+        const char *end = NULL;
+        char quote_char = '\0';
+        int i=0,j=0;
+        char buffer[512];
+        int count=0;
+        // Search for opening quote
+
+        while (template[i]) {
+            // Skip whitespace
+            while (isspace(template[i])) i++;
+
+            if (template[i] == '\'' || template[i] == '"') {   // Quoted separator
+                char quote = template[i++];
+                int start = i;
+                while (template[i] && template[i] != quote) i++;
+                int len = i - start;
+                if (len > 63) len = 63;
+                SETARRAYHI(ARG1,count+1);  // set arrayhi
+                SETARRAYHI(ARG2,count+1);  // set arrayhi
+                strncpy(buffer, &template[start], len);
+                buffer[len] = '\0';
+                SETSARRAY(ARG1, count, buffer);
+                SETSARRAY(ARG2, count, "S");
+                count++;
+                if (template[i]) i++;  // Skip closing quote
+            } else if (isalpha(template[i])) {
+                // Variable name
+                int start = i;
+                while (isalnum(template[i])) i++;
+                int len = i - start;
+                if (len > 63) len = 63;
+                strncpy(buffer, &template[start], len);
+                buffer[len] = '\0';
+                SETARRAYHI(ARG1,count+1);  // set arrayhi
+                SETARRAYHI(ARG2,count+1);  // set arrayhi
+
+                SETSARRAY(ARG1, count, buffer);
+                SETSARRAY(ARG2, count, "V");
+                count++;
+            } else {
+                i++;  // Skip unknown char
+            }
+        }
+
+        RETURNINTX(count)
+        ENDPROC
+    }
+
+PROCEDURE(fquoted) {
+    char *template = GETSTRING(ARG0);
+    char buffer[512];
+    int i = 0;
+    int const_count = 0;
+    int vname_count = 0;
+
+    while (template[i]) {
+        // Skip whitespace
+        while (isspace(template[i])) i++;
+
+        if (template[i] == '\'' || template[i] == '"') {
+            // Quoted separator
+            char quote = template[i++];
+            int start = i;
+            while (template[i] && template[i] != quote) i++;
+            int len = i - start;
+            if (len > 63) len = 63;
+            strncpy(buffer, &template[start], len);
+            buffer[len] = '\0';
+
+            // Fill const.
+            SETARRAYHI(ARG1, const_count + 1);
+            SETSARRAY(ARG1, const_count, buffer);
+            const_count++;
+            if (template[i]) i++;  // Skip closing quote
+        } else if (isalpha(template[i])) {
+            // Variable name
+            int start = i;
+            while (isalnum(template[i])) i++;
+            int len = i - start;
+            if (len > 63) len = 63;
+            strncpy(buffer, &template[start], len);
+            buffer[len] = '\0';
+
+            // Fill vname.
+            SETARRAYHI(ARG2, vname_count + 1);
+            SETSARRAY(ARG2, vname_count, buffer);
+            vname_count++;
+        } else {
+            i++;  // Skip unknown char
+        }
+    }
+    RETURNINTX(const_count + vname_count);
+    ENDPROC
+}
+
 // Linked List definitions
 LOADFUNCS
    ADDPROC(words, "strings.xwords", "b",  ".int","string = .string,delim=.string");
@@ -934,5 +1032,6 @@ LOADFUNCS
    ADDPROC(iff, "strings.iff", "b", ".string", "expression=.string,true=.string,false=.string");
    ADDPROC(add_items, "strings.set_items", "b", ".int", "expose target_array=.string[],items_string=.string");
    ADDPROC(PARSE, "strings.parse", "b", ".int", "input_string=.string, parse_template=.string, expose varnames=.string[], expose varvalues=.string[]");
+   ADDPROC(fquoted,      "strings.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
 ENDLOADFUNCS
 

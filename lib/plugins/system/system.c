@@ -270,28 +270,121 @@ PROCEDURE(listdir) {
 ENDPROC
 }
 //
-// temporary
-PROCEDURE(writeall) {
-    int lines=0,tto,i,maxlines;
-    searchReplace(GETSTRING(ARG1),'\\','/');
-    FILE *file = fopen(GETSTRING(ARG1), "w");
-    if (file == NULL) {
-        RETURNINT(-8);
-        PROCRETURN
+
+PROCEDURE(append_binary_file) {
+    searchReplace(GETSTRING(ARG0), '\\', '/');
+    searchReplace(GETSTRING(ARG1), '\\', '/');
+    char *src_filename =GETSTRING(ARG0);
+    char *dest_filename=GETSTRING(ARG1);
+
+    FILE *src = fopen(src_filename, "rb");
+    if (!src) {
+        perror("Failed to open source file");
+        RETURNINTX(-8);
     }
-    tto=GETARRAYHI(ARG0);
-    maxlines = GETINT(ARG2);
-    for (i = 0 ; i < tto; ++i) {
-        if (lines>0) fputs("\n",file);   // complete last record, avoids NL for last record
-        fputs(GETSARRAY(ARG0,i),file);
-        lines++;
-        if (maxlines>0 && lines>=maxlines) break;
+
+    FILE *dest = fopen(dest_filename, "ab");  // Open destination in append binary mode
+    if (!dest) {
+        perror("Failed to open destination file");
+        fclose(src);
+        RETURNINTX(-12);
     }
-    RETURNINT(lines);
-    fclose(file);
-    PROCRETURN
-    ENDPROC
+
+    char buffer[4096];
+    size_t bytes, total=0;
+
+    while ((bytes = fread(buffer, 1, sizeof(buffer), src)) > 0) {
+        if (fwrite(buffer, 1, bytes, dest) != bytes) {
+            perror("Write error");
+            fclose(src);
+            fclose(dest);
+            RETURNINTX(-16);
+        }
+        total=total+bytes;
+    }
+
+    fclose(src);
+    fclose(dest);
+    RETURNINTX(total);
+ ENDPROC
 }
+
+#define MARKER "cReXx"
+#define MARKER_LEN 5
+#define NAME_OFFSET 64
+#define MAX_NAME_LEN 32  // Adjust based on your format expectations
+
+PROCEDURE(rxbin_modules) {
+    char * filename=GETSTRING(ARG0);
+    FILE *file = fopen(filename, "rb");
+    if (!file) RETURNINTX(-8);
+
+    // Get file size
+    fseek(file, 0, SEEK_END);
+    long filesize = ftell(file);
+    rewind(file);
+
+    // Read file into memory
+    unsigned char *buffer = malloc(filesize);
+    if (!buffer) {
+        perror("Memory allocation failed");
+        fclose(file);
+        return;
+    }
+    fread(buffer, 1, filesize, file);
+    fclose(file);
+
+    // Scan for components
+    long pos = 0, modnum=0;
+    printf("List Library content\n",modnum);
+    printf("--------------------------------------------------------------------------------\n");
+    while (pos < filesize - MARKER_LEN) {
+        if (memcmp(&buffer[pos], MARKER, MARKER_LEN) == 0) {
+            long component_start = pos;
+            pos += MARKER_LEN;
+
+            // Search for the next marker
+            long next_pos = component_start + 1;
+            while (next_pos < filesize - MARKER_LEN && memcmp(&buffer[next_pos], MARKER, MARKER_LEN) != 0) {
+                next_pos++;
+            }
+
+            long component_length = next_pos - component_start;
+
+            // Extract name at offset 64 (if within bounds)
+            if (component_length > NAME_OFFSET) {
+                char raw_name[256+ 1] = {0};
+                long name_pos = component_start + NAME_OFFSET;
+             // Copy and null-terminate
+                strcpy(raw_name, &buffer[name_pos]);
+             // Normalize path separators
+                for (int i = 0; i < MAX_NAME_LEN; i++) {
+                    if (raw_name[i] == '\\') raw_name[i] = '/';
+                }
+
+             // Find last two slashes
+                char *last = strrchr(raw_name, '/');
+                if (last) {
+                    printf("Module: /../%-36s | Offset: %7ld | Length: %6ld\n",last+1, component_start, component_length);
+                }
+                else printf("Module: %-40s | Offset: %7ld | Length: %6ld\n",raw_name, component_start, component_length);
+            } else {
+                printf("Component at offset %ld is too short to contain a name\n", component_start);
+            }
+
+            // Continue from the next component
+            pos = next_pos;
+            modnum++;
+        } else {
+            pos++;
+        }
+    }
+    printf("Library contains %ld modules\n",modnum);
+    free(buffer);
+  ENDPROC
+}
+
+
 
 int nextdel(char * strg,int i, int plen,char pchar) {
     while (i < plen) {
@@ -810,7 +903,8 @@ LOADFUNCS
     ADDPROC(getuser,     "system.userid"      ,"b",    ".string",  "");
     ADDPROC(getcomputer, "system.host"        ,"b",    ".string",  "");
     ADDPROC(opsys,       "system.opsys"       ,"b",    ".string",  "");
-    ADDPROC(writeall,    "system.writeall",    "b",    ".int","expose array=.string[],file=.string,arg2=.int");
+    ADDPROC(append_binary_file,"system.append","b",    ".int","source=.string,target=.string");
+    ADDPROC(rxbin_modules,"system.lmodules",   "b",    ".int","source=.string");
     ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
     ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
 ENDLOADFUNCS

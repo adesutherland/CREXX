@@ -2,6 +2,14 @@
 options levelb
 import system
 import rxfnsb
+
+say append("C:/Users/PeterJ/CLionProjects/CREXX/250606/cmake-build-debug/lib/plugins/strings/trim.rxbin", ,
+            "C:/Users/PeterJ/CLionProjects/CREXX/250606/cmake-build-debug/lib/rxfnsb/library.rxbin")
+
+exit
+
+
+/*
 /* ##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */ */
 /* system_test.rexx - Test suite for system functions */
 say " test of precompile function, just a simple LOG macro call added"
@@ -108,3 +116,4 @@ say ""
 say " end time "time('l')
 say "=== Test Suite Complete ==="
 exit 0
+*/
