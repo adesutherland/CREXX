@@ -4,14 +4,38 @@
  */
 options levelb
 import rxfnsb
-##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+##set printgen none
 
+##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */
+##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
+##SYSIN
+  123 SQUARE(DOUBLE(4))
+  my flags {printgen}
+"def" '123'
+ sasdfjä
+     'already ''quoted'' correctly ''
+ "ABC" 123 "DEF"
+
+##end
+
+##SYSUT1
+   mylib
+      yourlib
+##end
+
+##SYSLIB
+   my-private-lib
+      your-private-lib
+##end
+
+
+
+##use C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/parse.rxpp
 
 say 'Compile date {rxpp_date}'
 
-##parse line,"name=" name "age=" age "role=" role
 ##set abc 1
-##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
+
 ##if def
 /* enter IF DEF clause   */
   ##set printgen none          ## show no precompiler calls in generated rexx
@@ -37,27 +61,21 @@ say 'Compile date {rxpp_date}'
 /* the set instruction is always setup in pass 2 */
 ##set prefix 1234
  log()                       ## now in pass 2 expand the log macro
-##set prefix 456             ## change the prefix
+##set prefix "456"             ## change the prefix
  log()                       ## and re-expand another log macro
  say {prefix}                ## output the current prefix->compiler variable
 ##unset prefix
 Setstem(fruits, "apple", "banana", "cherry","pear","melon","kiwi","lemon","grape")
 say hi(fruits)
-exit
 
-match_template_line: procedure
-  arg line=.string, fixed=.string[],expose value=.string[]
-  loffset=length(line)+1
-  fp1=0
-  do i=1 to fixed.0
-     fp1=pos(fixed.i,line,fp1+1)
-     k=i+1
-     if fixed.k='' then fp2=loffset
-     else fp2=pos(fixed.k,line,fp1+1)
-     from=fp1+length(fixed.i)
-     len=fp2-from
-     value.i=substr(line,from,len)
-  end
-return
+template = "name 10 job +5 name2 'is' skill"
+tokens.1 = ""
+  types.1  = ""
+call CompileTemplate template
+do i=1 to tokens.0
+   say tokens.i types.i
+end
+say 'This is the current last line'
+exit
 
 

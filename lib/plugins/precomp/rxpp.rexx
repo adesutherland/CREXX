@@ -19,7 +19,7 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
-
+  internal_testing=1    ## activate only for rxpp internal tests
   say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
@@ -28,13 +28,13 @@ arg command=.string[]
      else if upper(command.i)='-M' then maclib=command.j
   end
 
-/*
-infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
-outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
-maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
-*/
+if internal_testing=1 then do
+   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
+   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
+   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
+end
 
-  if fstrip(infile)='' then do
+  if strip(infile)='' then do
        say 'CRX0100E+['time('l')'] no source file specified'
        exit 8
   end
@@ -134,9 +134,9 @@ RXPPPassTwo: procedure
   else do i=1 to ifblock.0
      if ifblock.i=0 then iterate
      lnk=ifblock.i
-     say right(i,4,'0')' 'left(fstrip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
+     say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
      do j=i+1 to lnk
-        say '? skipped: 'right(j,4,'0')' 'fstrip(source.j)
+        say '? skipped: 'right(j,4,'0')' 'strip(source.j)
      end
   end
 return
@@ -196,19 +196,19 @@ RXPPPassThree: procedure
      end
      else if stype.LineNo='IF' then do
        ##  call writeLine printGen(line,4)
-       if findvar(fword(line,2))=0 & ifblock.lineno>0 then do
+       if findvar(word(line,2))=0 & ifblock.lineno>0 then do
            lineno=ifblock.lineno
         end
      end
      else if stype.LineNo='IFN' then do
        ##  call writeLine printGen(line,4)
-        if findvar(fword(line,2))>0 & ifblock.lineno>0 then do
+        if findvar(word(line,2))>0 & ifblock.lineno>0 then do
            lineno=ifblock.lineno
         end
      end
-     else if stype.LineNo='PARSE' then call CMD_parse lineno,line
+  ##   else if stype.LineNo='PARSE' then call CMD_parse lineno,line ## doesn't make sense!
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
-     else if fstrip(line) \='' then do
+     else if strip(line) \='' then do
   	    newline = expandRecursive(line)
   	    call writeline newline
  	 end
@@ -236,15 +236,15 @@ GetPrecomp: procedure
       LineNo=LineNo+1
       lineMin=max(LineNo-1,1)
       line = source.lineNo
-      ucmd=upper(fword(line,1))
+      ucmd=upper(word(line,1))
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
-      else if ucmd = '##DATA'    then call cmd_data lineNo,line,fword(line,2)
+      else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-##      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
+##    else if ucmd = '##PARSE' then stype.LineNo='PARSE'     ## is not worth it
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -262,30 +262,28 @@ return
    body    = ''
 
    def = subword(line, 2)
-   wrd=fword(def,1)
-   ppi = fpos('(', wrd,1)    ## must be in macro name, not in later macro body
-
+   wrd=word(def,1)
+   ppi = pos('(', wrd,1)    ## must be in macro name, not in later macro body
    if ppi > 1 then do  /* Format: name(arg1, arg2) body */
-      name    = fstrip(fsubstr(def, 1, ppi - 1))
-      ppi2    = fpos(')', def,ppi+1)
+      name    = strip(substr(def, 1, ppi - 1))
+      ppi2    = pos(')', def,ppi+1)
       if ppi2 = 0 then do
          say 'CRX0930E+['time('l')'] missing closing parenthesis in macro definition: ' def
          exit 8
       end
-      if ppi2 - ppi - 1>0 then arglist = fstrip(fsubstr(def, ppi + 1, ppi2 - ppi - 1))
+      if ppi2 - ppi - 1>0 then arglist = strip(substr(def, ppi + 1, ppi2 - ppi - 1))
       else arglist=''
-      body    = fstrip(fsubstr(def, ppi2 + 1,0))
+      body    = strip(substr(def, ppi2 + 1))
    end
    else do /* Format: name body (no arguments) */
-      name = fword(def, 1)
+      name = word(def, 1)
       body = subword(def, 2)
       arglist=''
    end
-
 /* Remove braces and trim */
-   body = fstrip(body)
+   body = strip(body)
    len=length(body)-2
-   body=fsubstr(body,2,len)
+   body=substr(body,2,len)
    if body = '' then do
        say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8
@@ -296,7 +294,7 @@ return
    if macros_mname.i \= '' then i = i + 1
 
    macros_mname.i = upper(name)'('
-   macros_margs.i = fstrip(arglist)
+   macros_margs.i = strip(arglist)
    macros_mbody.i = body
    stype.lino     = 'D'
 return
@@ -306,7 +304,7 @@ return
  */
 printGen: procedure=.string
   arg line=.string, type=.int
-  if printgen_flags=' none' then return ''   ## suppress all macro call definitions
+  if printgen_flags='none' then return '' ## suppress all macro call definitions
   if type=1 then return '/* 'line' D*/'   ## DEFINE clause
   if type=2 then return '/* 'line' I*/'   ## INCLUDE clause
   if type=3 then return '/* 'line' S*/'   ## SET clause
@@ -320,41 +318,23 @@ return '/* rxpp: 'line' U*/'
 CMD_set: procedure
   arg lino=.int,incl=.string
   stype.lino= 'S'
-  varn=fword(incl,2)
+  varn=word(incl,2)
   vind=setvar(varn,DropComment(subword(incl,3)))
-  if varn='cflags' then cflags=fword(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
+  if varn='cflags' then cflags=word(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
 return
-/* ------------------------------------------------------------------
- * Process ##PARSE command
- * ------------------------------------------------------------------
+/* ----------------------------------------------------------------------
+ *  Print created tokens
+ * ----------------------------------------------------------------------
  */
-CMD_parse: procedure
-  arg lino=.int,incl=.string
-  stype.lino= 'P'
-  varn=DropComment(subword(incl,2))
-  ppi=fpos(',',varn,1)
-  if ppi<=1 then return
-  invar=substr(varn,1,ppi-1)
-  template=substr(varn,ppi+1)
-  fixed_items.1=''
-  variable_names.1=''
- /* 1. search for quoted arrays in the template */
-  say 123 find_quoted(template,fixed_items,variable_names)
-  rc=insert_array(source,lino+1,fixed_items.0+variable_names.0+1)
-  rc=insert_array(stype,lino+1,fixed_items.0+variable_names.0+1)
-  j=lino+1
-  say 345 fixed_items.0 variable_names.0
-  call list_array fixed_items,-1,-1,'fixed items'
-  do i=1 to fixed_items.0
-     j=j+1
-     source.j='fixed.'i'="'fixed_items.i'"'
-end
-  j=j+1
-  source.j='call match_template_line line,fixed,matched_items'
-  do i=1 to variable_names.0
-     j=j+1
-     source.j=variable_names.i'=matched_items.'i
+token_print: procedure
+  arg template=.string,token=.string[],token_type=.string[]
+  say 'Template='template
+  say time('l')' Compile completed'
+  say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
+  do j = 1 to token.0
+     say "Token" j ": '"token.j"' Type:" token_type.j
   end
+  say time('l')' Parse String using compiled Template'
   return
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
@@ -362,11 +342,11 @@ end
  */
 dropComment: procedure=.string
   arg varvalue=.string
-  fp1=fpos('##',varvalue,1)
-  if fp1>1 then varvalue=fsubstr(varvalue,1,fp1-1)
-  fp1=fpos('/*',varvalue,1)
-  if fp1>1 then varvalue=fsubstr(varvalue,1,fp1-1)
-return fstrip(varvalue)
+  fp1=pos('##',varvalue,1)
+  if fp1>1 then varvalue=substr(varvalue,1,fp1-1)
+  fp1=pos('/*',varvalue,1)
+  if fp1>1 then varvalue=substr(varvalue,1,fp1-1)
+return strip(varvalue)
 /* ------------------------------------------------------------------
  * Process ##UNSET command
  * ------------------------------------------------------------------
@@ -374,7 +354,7 @@ return fstrip(varvalue)
 CMD_unset: procedure
   arg lino=.int,incl=.string
   stype.lino= 'S'
-  varn=fword(incl,2)
+  varn=word(incl,2)
   varn=lower(varn)
   if varn='printgen'  then return
   if varn='rxpp_rexx' then return
@@ -388,7 +368,7 @@ return
 CMD_include: procedure
   arg lino=.int,incl=.string,mode=.int
   stype.lino= 'I'
-  file=fword(incl,2)
+  file=word(incl,2)
   include.1=''
   new=readall(include,file,-1)
   if new<0 then do
@@ -406,7 +386,6 @@ CMD_include: procedure
   end
   else do
      linc=source.0
-     say 123 linc new
      rc=insert_array(source,linc+1,new)
      rc=insert_array(stype,linc+1,new)
      insertat=linc
@@ -426,7 +405,7 @@ CMD_data: procedure
   j=0
   do i=lino+1 to source.0
      line=source.i
-     if upper(fword(line,1))='##END' then leave
+     if upper(word(line,1))='##END' then leave
      j=j+1
      source.i=array'.'j'='safe_quote(line)
   end
@@ -443,9 +422,9 @@ writeline: procedure
      ppi = pos('\', oline)
      if ppi > 0 then do    /* Write part before the backslash */
         lino = lino + 1
-        outbuf.lino = fsubstr(oline, 1, ppi - 1)
+        outbuf.lino = substr(oline, 1, ppi - 1)
      /* Continue with the rest of the line */
-        oline = fsubstr(oline, ppi + 1,0)
+        oline = substr(oline, ppi + 1)
      end
      else do   /* Write the remaining content */
         lino = lino + 1
@@ -473,7 +452,7 @@ return line
  */
 expandLine:  procedure=.string
   arg line=.string
-  ucmd=upper(fword(line,1))
+  ucmd=upper(word(line,1))
   if ucmd = '##SET' | ucmd = '##UNSET' then do
      call cmd_set 9999,line
      if pos(' nset',cflags)>0 then return ''
@@ -481,7 +460,7 @@ expandLine:  procedure=.string
   end
   ## if cmt='##' then return line
   ## if cmt='/*' then return line
-  ## if fpos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
+  ## if pos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
   i=hasMacro(line,macros_mname,1)      ## checks also for ## /*
    do while i>0
      line=resolveMacro(i,line,expandLevel)
@@ -502,22 +481,22 @@ return line
    body    = macros_mbody.i
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
-   do while fpos(name, uline, callPos + 1) > 0
+   do while pos(name, uline, callPos + 1) > 0
     ## test Macro is variadic
        isVariadic = 0
-       if fpos('...', args,1) > 0 then do
+       if pos('...', args,1) > 0 then do
           isVariadic = 1
-          args = fstrip(changestr('...', '', args))
+          args = strip(changestr('...', '', args))
        end
-       if printgen_flags='all' then call writeline printGen(fstrip(line),0)
-       else if level=0 & printgen_flags='nnest' then call writeline printGen(fstrip(line),0)
+       if printgen_flags='all' then call writeline printGen(strip(line),0)
+       else if level=0 & printgen_flags='nnest' then call writeline printGen(strip(line),0)
        level=level+1     ## increase level in case a second instance of macro is found
-       callPos = fpos(name, uline, callPos + 1)
+       callPos = pos(name, uline, callPos + 1)
        if callpos>1 then do
           status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
           if status_before=0 then iterate
        end
-       remain  = fsubstr(line, callPos + length(name),0)    ## set to parameter part, macro has format name( +length positions into it
+       remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
      ## extract argument list
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
@@ -538,17 +517,17 @@ return line
  */
 injectVariable: procedure=.string
   arg line2change=.string
-   fp1=fpos('{',line2change,1)>0
-   fp2=fpos('}',line2change,fp1+1)
+   fp1=pos('{',line2change,1)>0
+   fp2=pos('}',line2change,fp1+1)
    do while fp1>0 & fp2>0
-      cmt=fsubstr(fstrip(line2change),1,2)
+      cmt=substr(strip(line2change),1,2)
        if cmt='/*' | cmt='##' then leave
       do i=1 to macros_varname.0
          if macros_varname.i='' then iterate
          Line2change=ChangeStr(macros_varname.i,line2change,macros_varvalue.i)
       end
-      fp1=fpos('{',line2change,fp2+1)>0
-      fp2=fpos('}',line2change,fp2+1)
+      fp1=pos('{',line2change,fp2+1)>0
+      fp2=pos('}',line2change,fp2+1)
    end
 return line2change
 /* ------------------------------------------------------------------
@@ -559,7 +538,7 @@ replaceFixArg: Procedure=.string
   arg bodyexp=.string,xargs=.string
   wrds=words(xargs)
   do k=1 to wrds
-      aname = fword(xargs, k)
+      aname = word(xargs, k)
       aval  = callargs.k
       bodyExp = replaceArg(bodyExp, aname, aval)
   end
@@ -577,22 +556,22 @@ variadic: procedure=.string
 
   /* Extract left-hand side (e.g., result = ...) */
   tempBody = translate(bodyExp, , '.=')
-  lhs      = fword(tempBody, 1)
-  ix       = fword(tempBody, 2)
+  lhs      = word(tempBody, 1)
+  ix       = word(tempBody, 2)
 
   /* Extract the remaining expression */
   tempBody = translate(bodyExp, , '=')
   remain   = subword(tempBody, 2)
 
   /* Replace the primary macro parameters */
-  bodyExp  = replaceArg(bodyExp, lhs, fword(argText, 1))      /* fixed first argument */
+  bodyExp  = replaceArg(bodyExp, lhs, word(argText, 1))      /* fixed first argument */
   bodyExp  = replaceArg(bodyExp, 'argcount', varCount)
 
   originalBody = bodyExp  /* store original for each iteration */
 
   /* Loop through variadic arguments */
   do k = 1 to varCount
-     value   = fword(argText, k + 1)
+     value   = word(argText, k + 1)
      bodyExp = replaceArg(bodyExp, '$indx', k)
      bodyExp = replaceArg(bodyExp, 'arglist.'k, value)
      call writeline bodyExp
@@ -605,8 +584,8 @@ variadic: procedure=.string
 
   /* Extract final left-hand side for return */
   finalBody = translate(bodyExp, , '=')
-  lhs       = fword(finalBody, 1)
-  remain    = fword(finalBody, 2)
+  lhs       = word(finalBody, 1)
+  remain    = word(finalBody, 2)
 
   if remain = '' then return ''  /* empty body check */
   return ''
@@ -637,7 +616,7 @@ fetchArguments: procedure=.string
   depth   = 1  /* Initial open parenthesis already passed before this call */
 
   do j = 1 to length(remain)
-     c = fsubstr(remain, j, 1)
+     c = substr(remain, j, 1)
      if c = '(' then depth = depth + 1
      if c = ')' then do
         depth = depth - 1
@@ -645,7 +624,7 @@ fetchArguments: procedure=.string
      end
      argText = argText || c
   end
-  return fstrip(argText)
+  return strip(argText)
 /* ------------------------------------------------------------------
  * Replace Argument in Macro Call
  * ------------------------------------------------------------------
@@ -654,11 +633,11 @@ replaceArg: procedure=.string
   arg str=.string, name=.string, value=.string
 
   posn = 1
-  p = fpos(name, str, 1)
+  p = pos(name, str, 1)
   do while p>0
      before = ''
-     if p > 1 then before = fsubstr(str, p - 1, 1)
-     after  = fsubstr(str, p + length(name), 1)
+     if p > 1 then before = substr(str, p - 1, 1)
+     after  = substr(str, p + length(name), 1)
     /* check before and after chars to change only full variable names */
 	verbb=verify(before, alphaN, 'N')
     verba=verify(after, alphaN, 'N')
@@ -672,7 +651,7 @@ replaceArg: procedure=.string
   ##    str=insertat(value,str,p,length(name))
   ##    if cstr \=str then say "***** '"cstr"' '"str"'"
     posn = p + length(value)
-    p = fpos(name, str, posn)
+    p = pos(name, str, posn)
   end
 return str
 /* ------------------------------------------------------------------
@@ -682,8 +661,8 @@ return str
 InsertAt: Procedure=.string
 arg needle=.string,haystack=.string,at=.int,len=.int
   if at+len>length(haystack) then rhs=''
-  else rhs=fsubstr(haystack, at+len,0)
-  if at>1 then lhs=fsubstr(haystack, 1, at-1)
+  else rhs=substr(haystack, at+len)
+  if at>1 then lhs=substr(haystack, 1, at-1)
   else lhs=''
 return lhs || needle || rhs
 /* ------------------------------------------------------------------
@@ -697,9 +676,9 @@ parseArgList: procedure=.int
   depth = 0
   token = ''
   do j = 1 to length(argstr)
-    c = fsubstr(argstr, j, 1)
+    c = substr(argstr, j, 1)
     if c = ',' & depth = 0 then do
-      callargs.i = fstrip(token)
+      callargs.i = strip(token)
       token = ''
       i = i + 1
     end
@@ -709,7 +688,7 @@ parseArgList: procedure=.int
       token = token || c
     end
   end
-  if fstrip(token) <> '' then callargs.i = fstrip(token)
+  if strip(token) <> '' then callargs.i = strip(token)
 return i
 /* ------------------------------------------------------------------
  * Dump pre-compiler variables
@@ -772,6 +751,7 @@ return ''
 setvar: procedure=.int
   arg varname=.string,varvalue=.string
   varname='{'lower(varname)'}'
+  if varname='{printgen}' then printgen_flags=varvalue
   i=getvarindx(varname)
   if i=0 then i=macros_varname.0+1
   macros_varname.i=varname

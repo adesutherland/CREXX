@@ -294,7 +294,9 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 The **##DATA** directive allows you to define literal data lines directly within the source file. These lines are assigned to a REXX stem array under the specified array-name.
 
-Each line is stored as-is, using the appropriate quote or double-quote pair to preserve its original content. This means any quotes within a string are retained exactly as written—no escaping or interpretation is performed.
+Each line is initially read as written, with surrounding quotes (single or double) preserved to retain the intended string content. Quotes within strings are not escaped or altered during this step.
+
+Note: If a line contains a macro call or preprocessor variable, it will be expanded in a later preprocessing stage. So while the line is treated as a literal string at first, it may still undergo transformation before reaching the final output.
 
 **Use Case:** This mechanism is useful for embedding configuration values, data records, or script fragments directly in the source, without relying on external files.
 
@@ -415,13 +417,45 @@ If a specific flag is not set, the corresponding option is disabled by default. 
 
 ### `##SET var value`
 
-Defines or updates a preprocessor variable.
+Defines or updates a preprocessor variable. These variables can be embedded within standard REXX statements, macros, or ##DATA content definitions.
 
+The value assigned is processed as follows:
+* Any trailing comment (defined by ##comment or /* comment */) on the same line is removed.
+* The entire string after the variable name is taken.
+* Leading and trailing spaces are stripped.
+* The resulting string is assigned to the preprocessor variable.
+
+Quoting is not required unless you need to preserve leading or trailing spaces. If you use quotes, they are included as part of the variable's value.
 
 ```rexx
-##SET DEBUG 1
-##SET prefix Log:
+##SET DEBUG 1        ## switch on debug mode 
+##define log        {say time('l')' log record' ; say '{prefix} something'}
+##SET prefix Log:    ## set a prefix string for the log statement
 ```
+Usage: 
+```rexx
+ log()                       ## and re-expand another log macro
+ say {prefix}                ## output the current prefix->compiler variable
+##DATA SYSIN
+  current used prefix {prefix}
+#end  
+```
+
+The **PRINTGEN** variable controls whether generation steps are logged as comments in the generated REXX script. This does not affect whether the generation steps are performed — it only affects what is visible in the output.
+```rexx
+##SET PRINTGEN ALL
+```
+Logs all generation steps, including nested ones, as comments in the generated REXX script.
+```rexx
+##SET PRINTGEN NONE
+```
+No generation steps are logged as comments. The steps are still executed but leave no trace in the output.
+```rexx
+##SET PRINTGEN NNEST
+```
+Logs only top-level generation steps (i.e., direct macro calls) as comments. Nested macro calls are not logged.
+
+Note: Use this setting to control the verbosity of the generated script for easier debugging or cleaner output.
 
 ### `##UNSET var`
 
