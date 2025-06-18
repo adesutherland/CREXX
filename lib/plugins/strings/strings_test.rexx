@@ -41,8 +41,6 @@ trim: procedure = .string
                 end
              return retstr
 
- namespace rxfnsb expose ltrim
-
  ltrim: procedure = .string
        arg instr = .string, option = "B", schar= " "
                  retstr=""
