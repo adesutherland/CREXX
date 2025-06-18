@@ -270,9 +270,30 @@ int rxldmod(rxvm_context *context, char *file_name) {
     DEBUG("Loading Module(s) from file %s\n", file_name);
 
     // Check if the file is a crexx module
-    if (fileexists(file_name, "rxbin", context->location)) {
+    // if context->location is not set we need to first check the file_name as an absolute path
+    // then if not found try as a relative path from the current working directory ('.')
+    char *location = context->location;
+    int file_exists = 0;
+    if (!location) {
+        // Check if the file exists as an absolute path
+        if (fileexists(file_name, "rxbin", 0)) {
+            location = 0; // Absolute path, no location needed
+            file_exists = 1;
+        } else {
+            // Try as a relative path from the current working directory
+            location = ".";
+            if (fileexists(file_name, "rxbin", location)) {
+                file_exists = 1;
+            }
+        }
+    }
+    else {
+        file_exists = fileexists(file_name, "rxbin", location);
+    }
+
+    if (file_exists) {
         DEBUG("CREXX Module file\n");
-        fp = openfile(file_name, "rxbin", context->location, "rb");
+        fp = openfile(file_name, "rxbin", location, "rb");
         if (!fp) return 0;
 
         loaded_rc = 0;
@@ -305,75 +326,96 @@ int rxldmod(rxvm_context *context, char *file_name) {
         fclose(fp);
     }
 
-    // Check if the file is a crexx native plugin
-    else if (fileexists(file_name, "rxplugin", context->location)) {
-        DEBUG("CREXX Native Plugin file\n");
-
-        // Create the rxpa_initctxptr context
-        struct rxpa_initctxptr rxpa_functions;
-        rxpa_functions.addfunc = rxpa_addfunc;
-        rxpa_functions.getstring = rxpa_getstring;
-        rxpa_functions.setstring = rxpa_setstring;
-        rxpa_functions.setint = rxpa_setint;
-        rxpa_functions.getint = rxpa_getint;
-        rxpa_functions.setfloat = rxpa_setfloat;
-        rxpa_functions.getfloat = rxpa_getfloat;
-        rxpa_functions.getnumattrs = rxpa_getnumattrs;
-        rxpa_functions.setnumattrs = rxpa_setnumattrs;
-        rxpa_functions.getattr = rxpa_getattr;
-        rxpa_functions.insertattr = rxpa_insertattr;
-        rxpa_functions.removeattr = rxpa_removeattr;
-        rxpa_functions.swapattrs = rxpa_swapattrs;
-
-        // Exit Function Management
-        rxpa_functions.setsayexit = rxpa_setsayexit;
-        rxpa_functions.resetsayexit = rxpa_resetsayexit;
-
-        // Load the plugin - and run the plugin initialization function
-        // Create the filename by appending ".rxplugin" to the file name
-        char *full_file_name = malloc(strlen(file_name) + strlen(".rxplugin") + 1);
-        sprintf(full_file_name, "%s.rxplugin", file_name);
-
-        // Create rxpa_context and module for the addfunc callback
-        current_rxpa_context = rxpa_context_f(context);
-        current_rxpa_context->plugin_being_loaded = malloc(sizeof(module_file));
-        init_module(current_rxpa_context->plugin_being_loaded);
-        current_rxpa_context->plugin_being_loaded->header.name_size = strlen(full_file_name) + 1;
-        current_rxpa_context->plugin_being_loaded->name = malloc(
-                current_rxpa_context->plugin_being_loaded->header.name_size);
-        strcpy(current_rxpa_context->plugin_being_loaded->name, full_file_name);
-        current_rxpa_context->plugin_being_loaded->fromfile = 0;
-        current_rxpa_context->plugin_being_loaded->native = 1;
-        current_rxpa_context->plugin_being_loaded->header.expose_head = -1;
-        current_rxpa_context->plugin_being_loaded->header.proc_head = -1;
-        current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
-
-        // Load the plugin
-        int rc = load_plugin(&rxpa_functions, context->location, full_file_name);
-        free(full_file_name);
-
-        // Check Result
-        if (!rc) {
-            DEBUG("CREXX Plugin %s loaded successfully\n", file_name);
-            n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
-            current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
-        } else {
-            DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
-            free_rxpa_context(current_rxpa_context);
-            return(-1);
+    else {
+        // Check if the file is a native plugin
+        // if context->location is not set we need to first check the file_name as an absolute path
+        // then if not found try as a relative path from the current working directory ('.')
+        location = context->location;
+        file_exists = 0;
+        if (!location) {
+            // Check if the file exists as an absolute path
+            if (fileexists(file_name, "rxplugin", 0)) {
+                location = 0; // Absolute path, no location needed
+                file_exists = 1;
+            } else {
+                // Try as a relative path from the current working directory
+                location = ".";
+                if (fileexists(file_name, "rxplugin", location)) {
+                    file_exists = 1;
+                }
+            }
+        }
+        else {
+            file_exists = fileexists(file_name, "rxbin", location);
         }
 
-        // Free the rxpa_context
-        free_rxpa_context(current_rxpa_context);
-        current_rxpa_context = 0;
-    }
+        if (file_exists) {
+            DEBUG("CREXX Native Plugin file\n");
 
-    // Else an unrecognised file
-    else {
-        DEBUG("Unrecognised file type %s\n", file_name);
-        return(-1);
-    }
+            // Create the rxpa_initctxptr context
+            struct rxpa_initctxptr rxpa_functions;
+            rxpa_functions.addfunc = rxpa_addfunc;
+            rxpa_functions.getstring = rxpa_getstring;
+            rxpa_functions.setstring = rxpa_setstring;
+            rxpa_functions.setint = rxpa_setint;
+            rxpa_functions.getint = rxpa_getint;
+            rxpa_functions.setfloat = rxpa_setfloat;
+            rxpa_functions.getfloat = rxpa_getfloat;
+            rxpa_functions.getnumattrs = rxpa_getnumattrs;
+            rxpa_functions.setnumattrs = rxpa_setnumattrs;
+            rxpa_functions.getattr = rxpa_getattr;
+            rxpa_functions.insertattr = rxpa_insertattr;
+            rxpa_functions.removeattr = rxpa_removeattr;
+            rxpa_functions.swapattrs = rxpa_swapattrs;
 
+            // Exit Function Management
+            rxpa_functions.setsayexit = rxpa_setsayexit;
+            rxpa_functions.resetsayexit = rxpa_resetsayexit;
+
+            // Load the plugin - and run the plugin initialization function
+            // Create the filename by appending ".rxplugin" to the file name
+            char *full_file_name = malloc(strlen(file_name) + strlen(".rxplugin") + 1);
+            sprintf(full_file_name, "%s.rxplugin", file_name);
+
+            // Create rxpa_context and module for the addfunc callback
+            current_rxpa_context = rxpa_context_f(context);
+            current_rxpa_context->plugin_being_loaded = malloc(sizeof(module_file));
+            init_module(current_rxpa_context->plugin_being_loaded);
+            current_rxpa_context->plugin_being_loaded->header.name_size = strlen(full_file_name) + 1;
+            current_rxpa_context->plugin_being_loaded->name = malloc(
+                    current_rxpa_context->plugin_being_loaded->header.name_size);
+            strcpy(current_rxpa_context->plugin_being_loaded->name, full_file_name);
+            current_rxpa_context->plugin_being_loaded->fromfile = 0;
+            current_rxpa_context->plugin_being_loaded->native = 1;
+            current_rxpa_context->plugin_being_loaded->header.expose_head = -1;
+            current_rxpa_context->plugin_being_loaded->header.proc_head = -1;
+            current_rxpa_context->plugin_being_loaded->header.meta_head = -1;
+
+            // Load the plugin
+            int rc = load_plugin(&rxpa_functions, context->location, full_file_name);
+            free(full_file_name);
+
+            // Check Result
+            if (!rc) {
+                DEBUG("CREXX Plugin %s loaded successfully\n", file_name);
+                n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
+                current_rxpa_context->plugin_being_loaded = 0; // We are done with it! It will be freed eventually
+            } else {
+                DEBUG("Failed to load plugin %s (rc=%d)\n", file_name, rc);
+                free_rxpa_context(current_rxpa_context);
+                return(-1);
+            }
+
+            // Free the rxpa_context
+            free_rxpa_context(current_rxpa_context);
+            current_rxpa_context = 0;
+        }
+        // Else an unrecognised file
+        else {
+            DEBUG("Unrecognised file type %s\n", file_name);
+            return(-1);
+        }
+    }
     return (int)(n); /* Module Number */
 }
 
