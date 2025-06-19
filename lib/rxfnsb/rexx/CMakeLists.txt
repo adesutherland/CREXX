@@ -61,6 +61,7 @@ set(BIFS
 		xrange
 		parsecompile
 		parsetext
+		parse
 		# datatype
 )
 
