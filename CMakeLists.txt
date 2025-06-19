@@ -22,6 +22,7 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 endif ()
 
 option(ENABLE_ODBC "Enable ODBC support" OFF)
+option(ENABLE_GUI  "Enable GUI support"  OFF)
 
 include(CTest)
 add_subdirectory(re2c)
