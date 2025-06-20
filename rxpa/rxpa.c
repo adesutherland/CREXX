@@ -65,7 +65,12 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 #elif __APPLE__
     // Create a full file name buffer and append the directory and file name
     char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-    sprintf(full_file_name, "%s/%s", dir, file_name);
+
+    if (file_name[0] == '/') {
+       sprintf(full_file_name, "%s", file_name);
+     } else {
+       sprintf(full_file_name, "%s/%s", dir, file_name);
+     }
 
     // Load the dylib
     void* hDll = dlopen(full_file_name, RTLD_LAZY);

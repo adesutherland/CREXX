@@ -23,15 +23,18 @@ arg command=.string[]
   say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
-     if upper(command.i)     ='-I' then infile=command.j
-     else if upper(command.i)='-O' then outfile=command.j
-     else if upper(command.i)='-M' then maclib=command.j
+     command.i=upper(command.i)
+     if command.i     ='-I' then infile=command.j
+     else if command.i='-IN' then infile=command.j
+     else if command.i='-O' then outfile=command.j
+     else if command.i='-OUT' then outfile=command.j
+     else if command.i='-M' then maclib=command.j
   end
 
 if internal_testing=1 then do
-   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
-   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
-   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Maclib.rexx'
+   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/system/system_test.rxpp'
+   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/system/system_test.rexx'
+   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/precomp/Maclib.rexx'
 end
 
   if strip(infile)='' then do
@@ -238,7 +241,7 @@ GetPrecomp: procedure
       line = source.lineNo
       ucmd=upper(word(line,1))
       if substr(ucmd,1,2)\='##' then iterate
-      if ucmd      = '##DEFINE'  then call cmd_define  lineNo,line
+      if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
@@ -254,9 +257,9 @@ return
  * Parses a macro definition and stores it in the macro tables
  * ------------------------------------------------------------------
  */
- CMD_define: procedure
+ CMD_define: procedure=.int
    arg lino=.int,line=.string
-
+   nlino=lino
    name    = ''
    arglist = ''
    body    = ''
@@ -282,10 +285,21 @@ return
    end
 /* Remove braces and trim */
    body = strip(body)
+   stype.nlino='D'
+   do forever
+      if body='' then leave
+      nlen=length(body)
+      if substr(body,nlen,1)\='\' then leave
+      nlino=nlino+1
+      nlen=nlen-1
+      body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      stype.nlino='D'
+   end
+   body = strip(body)   ## possibly not necessary, but for safety, we need to strip off the braces!
    len=length(body)-2
    body=substr(body,2,len)
    if body = '' then do
-       say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
+      say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8
    end
 
@@ -296,8 +310,35 @@ return
    macros_mname.i = upper(name)'('
    macros_margs.i = strip(arglist)
    macros_mbody.i = body
-   stype.lino     = 'D'
-return
+
+return nlino
+/* ------------------------------------------------------------------
+ * Count braces to recognise multi line macros
+ * ------------------------------------------------------------------
+ */
+countBraces: procedure=.int
+  arg str=.string
+  leftBraces = 0
+  rightBraces = 0
+  inQuote = ''
+  len=length(str)
+  i = 1
+  do while i <= len
+    ch = substr(str, i, 1)
+    if inQuote = '' then do
+       if ch = '"' | ch = "'" then inQuote = ch
+       else if ch = '{' then leftBraces = leftBraces + 1
+       else if ch = '}' then rightBraces = rightBraces + 1
+    end
+    else do
+       if ch = inQuote then inQuote = ''  /* close quote */
+       else if ch = '\' then do  /* skip escaped quote if next char matches */
+          if i+1 <= len & substr(str, i+1, 1) = inQuote then i = i + 1
+       end
+    end
+    i = i + 1
+  end
+  return leftBraces - rightBraces
 /* ------------------------------------------------------------------
  * Print pre compiler statements and Macro Calls
  * ------------------------------------------------------------------
@@ -417,6 +458,7 @@ return
  */
 writeline: procedure
   arg oline=.string
+/* not necessary - I hope
   do while oline \= ''
      oline=injectVariable(oline)
      ppi = pos('\', oline)
@@ -432,6 +474,10 @@ writeline: procedure
         leave
      end
   end
+  */
+## just insert line to buffer
+   lino = lino + 1
+   outbuf.lino = oline
   return
 /* ------------------------------------------------------------------
  * Expand recursively

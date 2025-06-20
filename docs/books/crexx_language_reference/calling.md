@@ -2,12 +2,15 @@
 
 ## Greeting the world
 
-\rexx{} is designed as a small language, but there are already a lot of  things you can do without involving anything outside of it. One of those is to greet the world, as is the usual and obligatory first example of any programming language book.
+\rexx{} is designed as a small language, but there are already a lot of  things you can do without involving anything outside of it. One of those is to greet the world, as is the usual and obligatory first example of any programming language book:
 
 ```rexx <!--hello.rexx-->
+options levelb
 /* rexx: welcoming the world */
 say 'hello world!'
 ```
+
+<!--splice--hello.rexx-->
 
 There is no need to include the starting comment, but by all means include it if you want to.[^1]
 
@@ -18,10 +21,13 @@ There is no need to include the starting comment, but by all means include it if
 With the roots of the \rexx{} language (when it still went with one less 'x' at the end) as a command language, there is one other important thing we can do without any outside support, and that is sending commands to the environment.
 
 ```rexx <!--helloaddress.rexx-->
+options levelb
 /* rexx: welcoming the world */
 say 'hello world!'
 'date'
 ```
+
+<!--splice--helloaddress.rexx-->
 
 As ```system``` is the standard environment before we change it (by specifying something else on the \code{address} statement), this is sent to this environment, most of the time the shell under which your program executes. If this has a ```date``` command, the output of it will be returned. The I/O to the environment using the ```address``` statement can also be redirected using *stem variables*. In fact, sending commands to an environment is one of the examples of Object Orientation using Classic \rexx{}; the same message can be sent to different objects, as long as these are implemented in the environment, and will potentially yield different answers.
 
@@ -52,7 +58,9 @@ say 'hello cRexx world!'
 say 'today it''s' date('w')
 ```
 
-Importing the standard ('bif') library gives us access to the Date() function, which has the advantage that we do not have to guess that the host platform has a ```date``` command and gives us all kinds of options, and date arithmetic. The ```rxfnsb``` library contains all the standard \rexx{} built-in functions, for the b-level implementation, which means that they use native types for their arguments. If we, for example, want to use a database in our application, we only need to import the ```odbc``` library.
+<!--splice--hellodate.rexx-->
+
+Importing the standard (\code{rxfnsb} 'bif') library gives us access to the Date() function, which has the advantage that we do not have to guess that the host platform has a ```date``` command and gives us all kinds of options, and date arithmetic. The ```rxfnsb``` library contains all the standard \rexx{} built-in functions, for the b-level implementation, which means that they use native types for their arguments. If we, for example, want to use a database in our application, we only need to import the ```odbc``` library.
 
 ```rexx <!--odbc.rexx-->
 /* ODBC Sample */
@@ -61,7 +69,6 @@ import odbc
 import rxfnsb
 database='CompanyDB'
 table   =database'.Employees'
-/* Connect to Database */
 /* -----------------------------------------------------------------
  * Connect to Database
  * -----------------------------------------------------------------

@@ -5,10 +5,10 @@ Support for using command line arguments is built in the \rexx{} family of langu
 As an example,
 
 ```rexx <!--args.rexx-->
-options levelb dashcomments
+options levelb
 import rxfnsb
 arg fn = .string[]
--- when no commandline arguments found, display help
+/* when no commandline arguments found, display help */
 if fn[0]=0 then do
   call help
   exit
@@ -17,8 +17,6 @@ end
 help: procedure
 say 'this program needs arguments'
 ```
-
-<!--splice--args.rexx-->
 
 When there is program text before the first procedure, the ```main()``` procedure is automatically generated. In \crexx{} level B, the arguments to a procedure have a type, in the example this is a string array which is referenced in a variable of type ```.string[]```.
 
@@ -39,4 +37,3 @@ do i=1 to fn.0
 ```
 
 These two fragments illustrate how to handle command line arguments to a program; when there are no arguments, ```fn.0``` is 0 and we call a ```help``` function to explain about the usage of this program. If there are arguments, we loop over them and decide whether they are options (these start with a dash) or files (if they don't).
-

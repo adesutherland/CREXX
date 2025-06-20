@@ -28,7 +28,7 @@ import rxfnsb
     call token_print template,token,token_type                     ## print tokens
   call parseString string2Parse, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
-## 2. Example
+## 3. Example
 ## ----------
   say '-------- 3. Example --------------'
   template = "first','second','third','fourth','fifth"
@@ -38,6 +38,30 @@ import rxfnsb
     call token_print template,token,token_type                     ## print tokens
   call parseString string2Parse, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
+## 4. Example
+## ----------
+  say '-------- 4. Example parse in one go --------------'
+  template = "dsn'(' member "'")"mode'
+  string2Parse = "  ms.mspdm.slib(crexx) SHR"
+  drop variable.
+  say time('l')' Parse Template'
+    call parse string2Parse, template,variable,variable_content
+    call variable_print string2Parse, variable,variable_content    ## print variables
+## 5. Example
+## ----------
+  say '-------- 5. Example parse in one go --------------'
+  template = "name 10 job +8 surname 'is-a' skill"
+  string2Parse = "René     Captain Jansen is-a REXX wizard"
+  say time('l')' Parse Template'
+    call parse string2Parse, template,variable,variable_content
+    call variable_print string2Parse, variable,variable_content    ## print variables
+## 6. Example
+## ----------
+  say '-------- 6. Example parse in one go --------------'
+  template = "first','second','third','fourth','fifth"
+  say time('l')' Parse Template'
+    call parse string2Parse, template,variable,variable_content
+    call variable_print string2Parse, variable,variable_content    ## print variables
 exit
 /* ----------------------------------------------------------------------
  *  Print created tokens
