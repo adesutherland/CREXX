@@ -6,7 +6,7 @@ import rxfnsb
 
 /* openkey database */
 say "openkeying database..."
-handle = openkey("c:/temp/crexx/test.db", "w+")
+handle = openkey("test.db", "w+") /* Just put it in the current directory (under the cmakefile, the current bin directory) */
 if handle < 0 then do
     say "Failed to openkey database"
     exit 1
