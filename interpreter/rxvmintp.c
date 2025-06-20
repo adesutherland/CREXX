@@ -4983,10 +4983,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                 spawn_rc = shellspawn(command, pIn, pOut, pErr, op3R->attributes[3], &command_rc, &errorText);
                 if (spawn_rc == SHELLSPAWN_NOFOUND) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Command Not Found");
+                    free(command);
+                    if (errorText) free(errorText);
                     DISPATCH
                 }
                 if (spawn_rc) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, errorText);
+                    free(command);
+                    if (errorText) free(errorText);
                     DISPATCH
                 }
                 if (errorText) free(errorText);
