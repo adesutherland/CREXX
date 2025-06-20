@@ -25,16 +25,22 @@ typedef void (*initfuncs_type)(rxpa_initctxptr);
 //               -2 Failed to call _initfuncs
 int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 {
-    // Provide a default current directory
-    if (!dir) dir = ".";
 
 // Windows Version
 #ifdef _WIN32
     // Create a full file name buffer and append the directory and file name
     char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-    sprintf(full_file_name, "%s\\%s", dir, file_name);
+
+    if (!dir) {
+        sprintf(full_file_name, "%s", file_name);
+    } else {
+        sprintf(full_file_name, "%s\\%s", dir, file_name);
+    }
+
     // Load the DLL
-    SetDllDirectory(".");
+    // SetDllDirectory("."); // Commented out because it should not be necessary, but it can be harmful because it
+                             // means the current directory is searched for DLLs BEFORE the system directories, which
+                             // can lead to DLL hijacking attacks.
     HMODULE hDll = LoadLibrary(TEXT(full_file_name));
     if (!hDll) {
         DWORD errorCode = GetLastError();
@@ -66,7 +72,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // Create a full file name buffer and append the directory and file name
     char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
 
-    if (file_name[0] == '/') {
+    if (!dir) {
        sprintf(full_file_name, "%s", file_name);
      } else {
        sprintf(full_file_name, "%s/%s", dir, file_name);
@@ -90,7 +96,11 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 #else
     // Create a full file name buffer and append the directory and file name
     char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-    sprintf(full_file_name, "%s/%s", dir, file_name);
+    if (!dir) {
+        sprintf(full_file_name, "%s", file_name);
+    } else {
+        sprintf(full_file_name, "%s/%s", dir, file_name);
+    }
 
     // Load the so
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
