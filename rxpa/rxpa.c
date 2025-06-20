@@ -25,18 +25,21 @@ typedef void (*initfuncs_type)(rxpa_initctxptr);
 //               -2 Failed to call _initfuncs
 int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 {
+    // Create a full file name buffer and append the directory and file name
+    char* full_file_name;
+    int free_full_file_name = 0;
+
+    if (!dir) {
+        full_file_name  = file_name;
+        sprintf(full_file_name, "%s", file_name);
+    } else {
+        full_file_name  = malloc(strlen(dir) + strlen(file_name) + 2);
+        sprintf(full_file_name, "%s/%s", dir, file_name);
+        free_full_file_name = 1;
+    }
 
 // Windows Version
 #ifdef _WIN32
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-
-    if (!dir) {
-        sprintf(full_file_name, "%s", file_name);
-    } else {
-        sprintf(full_file_name, "%s\\%s", dir, file_name);
-    }
-
     // Load the DLL
     // SetDllDirectory("."); // Commented out because it should not be necessary, but it can be harmful because it
                              // means the current directory is searched for DLLs BEFORE the system directories, which
@@ -65,19 +68,9 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
         return -2;
     }
     init(ctx);
-    free(full_file_name);
 
 // OSX Version
 #elif __APPLE__
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-
-    if (!dir) {
-       sprintf(full_file_name, "%s", file_name);
-     } else {
-       sprintf(full_file_name, "%s/%s", dir, file_name);
-     }
-
     // Load the dylib
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
@@ -90,18 +83,9 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
         return -2;
     }
     init(ctx);
-    free(full_file_name);
 
 // Linux Version
 #else
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-    if (!dir) {
-        sprintf(full_file_name, "%s", file_name);
-    } else {
-        sprintf(full_file_name, "%s/%s", dir, file_name);
-    }
-
     // Load the so
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
@@ -115,9 +99,9 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
         return -2;
     }
     init(ctx);
-    free(full_file_name);
 #endif
 
+    if (free_full_file_name) free(full_file_name);
     return 0;
 }
 

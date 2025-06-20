@@ -479,7 +479,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     value *interrupt_arg;
     value *signal_value = value_f();
     unsigned char signal_code = 0;
-    value *arguments_array;                /* note that the needs mallocing / freeing */
+    value *arguments_array = 0;                /* note that the needs mallocing / freeing */
     unsigned char last_interrupt = 0; /* Interrupt being handled */
     /* Array of objects attached to raised interrupts */
     value *interrupt_object[RXSIGNAL_MAX];

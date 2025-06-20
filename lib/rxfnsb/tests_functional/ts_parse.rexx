@@ -43,7 +43,7 @@ import rxfnsb
   say '-------- 4. Example parse in one go --------------'
   template = "dsn'(' member "'")"mode'
   string2Parse = "  ms.mspdm.slib(crexx) SHR"
-  drop variable.
+  /* drop variable. */
   say time('l')' Parse Template'
     call parse string2Parse, template,variable,variable_content
     call variable_print string2Parse, variable,variable_content    ## print variables
