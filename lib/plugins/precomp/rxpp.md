@@ -10,28 +10,68 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 
 ## 💼 Table of Contents
 
-* [📆 Overview](overview)
-* [🚀 Usage Example](usage-example)
-* [📂 Input/Output Example](inputoutput-example)
-* [🛏️ Pipeline Flow Diagram](pipeline-flow-diagram)
-* [🛠 Troubleshooting Guide](troubleshooting-guide)
-* [🔧 RXPP Preprocessor Directives (##)](rxpp-preprocessor-directives-)
-  * [🧹 Supported Directives](supported-directives)
-    * [`##CFLAG values`](#cflag-values)
-    * [`##SET var value`](#set-var-value)
-    * [`##UNSET var`](#unset-var)
-    * [`##INCLUDE file`](#include-file)
-    * [`##USE file`](#use-file)
-    * [`##DATA array-name`](#data-array-name-) 
-    * [`##SYSxxx`](#sysxxx)
-    * [`##IF var`](#if-var)
-    * [`##IFN var`](#ifn-var)
-    * [`##ELSE`](#else)
-    * [`##ENDIF`](ndif)
-  * [🧭 Pre-Compilation Flow](pre-compilation-flow)
-* [⚙️ Behavior Notes](havior-notes)
-  * [🧪 Example with Nesting](xample-with-nesting)
-  * [🔮 Planned Enhancements](planned-enhancements)
+* [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
+* [💼 Table of Contents](#-table-of-contents)
+  * [💼 Overview](#-overview)
+* [🔧 What is RXPP?](#-what-is-rxpp)
+* [💪 What RXPP Macros Do](#-what-rxpp-macros-do)
+* [✅ Macro Definition](#-macro-definition)
+* [🤖 Macro Invocation](#-macro-invocation)
+* [📥 Macro Inclusion](#-macro-inclusion)
+* [📊 How It Works Internally](#-how-it-works-internally)
+  * [1. **Registration**](#1-registration)
+  * [2. **Detection**](#2-detection)
+  * [3. **Substitution**](#3-substitution)
+  * [4. **Variadic Macros**](#4-variadic-macros)
+  * [5. **Emission**](#5-emission)
+* [✨ Example](#-example)
+  * [Input:](#input)
+  * [Output:](#output)
+* [🚀 Benefits](#-benefits)
+* [📊 Common Use Cases](#-common-use-cases)
+* [🧪 Invocation Syntax](#-invocation-syntax)
+* [📚 Sample Macros](#-sample-macros)
+* [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
+  * [`##USE file`](#use-file)
+  * [`##DATA array-name` ](#data-array-name)
+  * [`##SYSxxx`](#sysxxx)
+  * [`##CFLAG values`](#cflag-values)
+  * [`##SET var value`](#set-var-value)
+  * [`##UNSET var`](#unset-var)
+  * [`##INCLUDE file`](#include-file)
+  * [`##IF var`](#if-var)
+  * [`##IFN var`](#ifn-var)
+  * [`##ELSE`](#else)
+  * [`##ENDIF` or `##END`](#endif-or-end)
+* [🧭 Pre-Compilation Flow](#-pre-compilation-flow)
+* [⚙️ Behavior Notes](#-behavior-notes)
+* [🧪 Example with Nesting](#-example-with-nesting)
+* [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
+  * [📦 Overview](#-overview)
+* [🚀 Usage Example](#-usage-example)
+  * [📂 Input/Output Example](#-inputoutput-example)
+* [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
+* [🛠 Troubleshooting Guide](#-troubleshooting-guide)
+  * [📦 Overview](#-overview)
+* [🚀 Usage Example](#-usage-example)
+  * [📂 Input/Output Example](#-inputoutput-example)
+* [📁 Scripts: Windows Batch (.bat) and Linux Shell (.sh)](#-scripts-windows-batch-bat-and-linux-shell-sh)
+  * [rxCREXX.bat](#rxcrexxbat)
+  * [rxCREXX.sh](#rxcrexxsh)
+  * [rxflags.bat](#rxflagsbat)
+  * [rxflags.sh](#rxflagssh)
+  * [rxconfig.bat](#rxconfigbat)
+  * [rxconfig.sh](#rxconfigsh)
+  * [rxprecomp.bat](#rxprecompbat)
+  * [rxprecomp.sh](#rxprecompsh)
+  * [rxcompile.bat](#rxcompilebat)
+  * [rxcompile.sh](#rxcompilesh)
+  * [rxasm.bat](#rxasmbat)
+  * [rxasm.sh](#rxasmsh)
+  * [rxrun.bat](#rxrunbat)
+  * [rxrun.sh](#rxrunsh)
+  * [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
+* [🛠 Troubleshooting Guide](#-troubleshooting-guide)
 
 ---
 
@@ -77,9 +117,16 @@ Or, without arguments:
 ```
 
 * Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler
-* The macro body must be code on a **single line**; there is **no continuation separator** supported
 * Multiple REXX statements within a macro must be separated by a semicolon (`;`)
 * The macro body is enclosed in `{}` and treated as replacement text
+* RXPP supports multi-line macro definitions using C-style line continuation syntax!
+```rexx
+##define swap(a,b) {temp=a  \
+a=b     \
+b=temp }
+``` 
+***Note:*** The backslash (\) must be the final character on each continued line. Comments after the backslash are not allowed.
+However, /* ... */-style comments may appear before the backslash. ## comments are not allowed on continued lines, as they indicate the end of line interpretation.
 
 ---
 
@@ -100,7 +147,7 @@ They can also act as commands which expand into a series of REXX statements. For
 
 This macro, when invoked as `Liststem(fruits)`, would expand into a loop that prints all elements of the `fruits.` stem array.
 
-Note: A macro may contain an incomplete `do` statement. In such cases, the macro expansion must be completed manually in your source code. For example:
+***Note:*** A macro may contain an incomplete `do` statement. In such cases, the macro expansion must be completed manually in your source code. For example:
 
 ```rexx
 ##define repeat(n) {do __i=1 to n}
@@ -290,13 +337,13 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 ---
 
-### `##DATA array-name` 
+### `##DATA array-name`
 
 The **##DATA** directive allows you to define literal data lines directly within the source file. These lines are assigned to a REXX stem array under the specified array-name.
 
 Each line is initially read as written, with surrounding quotes (single or double) preserved to retain the intended string content. Quotes within strings are not escaped or altered during this step.
 
-Note: If a line contains a macro call or preprocessor variable, it will be expanded in a later preprocessing stage. So while the line is treated as a literal string at first, it may still undergo transformation before reaching the final output.
+***Note:*** If a line contains a macro call or preprocessor variable, it will be expanded in a later preprocessing stage. So while the line is treated as a literal string at first, it may still undergo transformation before reaching the final output.
 
 **Use Case:** This mechanism is useful for embedding configuration values, data records, or script fragments directly in the source, without relying on external files.
 
@@ -322,7 +369,7 @@ cherry
 - The `##end` line marks the termination of the data block.
 
 
-  **Example containing quote delimiters:**
+**Example containing quote delimiters:**
 ```rexx
 ##DATA MYTEXT
 This is a line with 'inner quotes'
@@ -432,7 +479,7 @@ Quoting is not required unless you need to preserve leading or trailing spaces. 
 ##define log        {say time('l')' log record' ; say '{prefix} something'}
 ##SET prefix Log:    ## set a prefix string for the log statement
 ```
-Usage: 
+Usage:
 ```rexx
  log()                       ## and re-expand another log macro
  say {prefix}                ## output the current prefix->compiler variable
@@ -455,7 +502,7 @@ No generation steps are logged as comments. The steps are still executed but lea
 ```
 Logs only top-level generation steps (i.e., direct macro calls) as comments. Nested macro calls are not logged.
 
-Note: Use this setting to control the verbosity of the generated script for easier debugging or cleaner output.
+***Note:*** Use this setting to control the verbosity of the generated script for easier debugging or cleaner output.
 
 ### `##UNSET var`
 
