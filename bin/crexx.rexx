@@ -60,7 +60,7 @@ rxpath=''
 env_wanted='CREXX_HOME'
 assembler getenv rxpath,env_wanted
 
-if verbose then call logo
+if version then call logo
 if verbose>1 then say 'using CREXX_HOME:' rxpath
 
 /*
@@ -76,6 +76,10 @@ lpath = '/lib/rxfnsb'libraries
 
 if verbose>1 then say 'crexx Library path:' rxpath||lpath
 
+/* Output Arrays for command output */
+out = .string[]
+err = .string[]
+
 do i=1 to words(filenames)
   filename=word(filenames,i)
   rxcmd = 'rxc -i' rxpath||lpath filename
@@ -83,7 +87,13 @@ do i=1 to words(filenames)
     do
       say 'rxc command:' rxcmd
       end
-  rxcmd
+  address cmd rxcmd output out error err /* Note that cmd has no meaning currently */
+  do j = 1 to out.0
+    say '> rxc output:' out.j
+  end
+  do j = 1 to err.0
+    say '> rxc error: ' err.j
+  end
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC

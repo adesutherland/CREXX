@@ -24,15 +24,15 @@ static void help() {
 #else
             "        : Threaded Mode\n"
 #endif
-            "Usage   : rxvm [options] binary_file [binary_file_2 ...] -a args ... \n"
-            "Options :\n"
-            "  -h              Prints help message\n"
-            "  -c              Prints Copyright & License Details\n"
+            "cREXX Wrapper Options :\n"
+            "  --h              Prints this Help Message\n"
+            "  --c              Prints Copyright & License Details\n"
 #ifndef NDEBUG
-            "  -d              Debug/Trace Mode\n"
+            "  --d              Debug/Trace Mode\n"
 #endif
-            "  -l location     Working Location (directory)\n"
-            "  -v              Prints Version\n";
+            "  --l location     Working Location (directory)\n"
+            "  --v              Prints cREXX Wrapper Version\n\n"
+            "Wrapper options (if any) must be the first arguments and program arguments follow\n";
 
     printf("%s",helpMessage);
 }
@@ -46,7 +46,7 @@ static void error_and_exit(char* message) {
 static void license() {
     char *message =
             "cREXX License (MIT)\n"
-            "Copyright (c) 2020-2021 Adrian Sutherland\n\n"
+            "Copyright (c) 2020-2025 Adrian Sutherland\n\n"
 
             "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
             "of this software and associated documentation files (the \"Software\"), to deal\n"
@@ -97,11 +97,11 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
-        if (strlen(argv[i]) > 2) {
-            error_and_exit("Invalid argument");
-        }
-        switch (toupper((argv[i][1]))) {
+        // If an argument is not a wrapper one, then break out of the loop
+        if (strlen(argv[i]) != 3) break;
+        if (argv[i][1] != '-') break;
 
+        switch (toupper((argv[i][2]))) {
             case 'L': /* Working Location / Directory */
                 i++;
                 if (i >= argc) {
@@ -134,9 +134,11 @@ int main(int argc, char *argv[]) {
 #endif
 
             default:
-                error_and_exit("Invalid argument");
+                goto end_wrapper_args; /* Not a wrapper argument, so break out of the loop */
         }
     }
+
+end_wrapper_args:
 
     /* Load Module */
     if (rxldmodm(&context, (char*)&rx__pg, rx__pg_l) == 0) {
