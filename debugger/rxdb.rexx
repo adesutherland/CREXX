@@ -10,11 +10,19 @@ import rxfnsb
 import globals
 
 main: procedure = .int expose next_instruction last_instruction mode
+    arg cmd_line = .string[]
     esc = '1B'x
     green = esc"[32m"
     reset = esc"[0m"
     topleft = esc"[1;1H"
     clear = esc"[2J"
+
+    /* Very Rudermentary Command Line Parsing */
+    if cmd_line.0 > 0 then do
+        say "RXDB - REXX Debugger"
+        say "Usage: just rxdb - no arguments"
+        return 0
+    end
 
     say green"RXDB Version 0.1.3"
     say ""
