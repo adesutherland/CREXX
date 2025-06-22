@@ -832,8 +832,12 @@ assembler_arg(A)         ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLOSE_BRACKET.
                          { A = ast_f(context, FUNC_SYMBOL, S); }
 assembler_arg(A)         ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_FLOAT(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, FLOAT,S)); }
 assembler_arg(A)         ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_INTEGER(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, INTEGER,S)); }
 assembler_arg(A)         ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
 

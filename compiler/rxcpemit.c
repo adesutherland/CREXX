@@ -2976,6 +2976,12 @@ static walker_result emit_walker(walker_direction direction,
                 char* inst = mprintf("   %.*s",
                                      node->node_string_length, node->node_string);
 
+                /* Lower case the instruction */
+                int l;
+                for (l = 0; inst[l]; l++) {
+                    inst[l] = (char)tolower(inst[l]);
+                }
+
                 /* Argument 1 */
                 if (child1) {
                     if (child1->node_type == FUNC_SYMBOL) {
