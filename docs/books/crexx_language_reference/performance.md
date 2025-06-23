@@ -13,5 +13,5 @@ into it, as well as their own version of the \crexx{} virtual machine;
 the startup of these programs is very fast because the compilation,
 assembly and linkedit steps can be skipped.
 
-[^1]: native to the instruction set architecture of the machine and
+[^1]: native to combination of the instruction set architecture of the machine and
 its operating system calling conventions.

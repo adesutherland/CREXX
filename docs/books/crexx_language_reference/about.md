@@ -1,7 +1,4 @@
-\def\tightlist{}
-
-
-\chapter*{About This Book}
+# About This Book
 The \crexx{} language is a further development, and variant of the
 \textsc{Rexx} language\footnote{Cowlishaw, 1979}.
 
@@ -11,27 +8,29 @@ programming language. It usually includes a complete listing of all
 the language constructs, such as statements, expressions, functions,
 classes, and modules, along with their syntax, parameters, and usage.
 
-\section*{Audience}
+## Audience
+
 The \crexx{} language reference is aimed at experienced programmers who
 are familiar with the \textsc{Rexx} language. It is an
 essential resource for developers who need to write code in the
 language, debug programs, or create tools, while the \emph{\crexx{} User's Guide} serves as an introduction to
 the language and is intended for new users.
 
-\section*{History}
+## History
 
-\begin{description}
-\item[mvp] This version documents the Minimally Viable Product
-  release, Q1 2022 and is intended for developers only. It documents \crexx{} level B, which is a typed
-  subset of Classic Rexx.
-\item[f29] First version, Git feature [F0029]
-\end{description}
+- This is the first version. It documents \crexx{} level B, which is a typed subset of Classic Rexx.
 
-\section*{Document Structure}
+
+## Document Structure
+
 This document is in three parts:
-\begin{enumerate}
-\item The objectives of the \crexx{} language and the concepts underlying its design, and acknowledgements.
-\item An overview and introduction to the \crexx{} language.
-\item The definition of the language.
-\end{enumerate}
+
+Objectives
+: The objectives of the \crexx{} language and the concepts underlying its design, and acknowledgements.
+
+Overview
+: An overview and introduction to the \crexx{} language.
+
+Reference
+: The definition of the language.
 
