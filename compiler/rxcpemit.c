@@ -47,7 +47,7 @@ static int is_constant(ASTNode* node) {
 static int use_symbol_reg(ASTNode* node) {
     if (    node->symbolNode                 // It's a symbol
             && node->symbolNode->symbol->symbol_type != FUNCTION_SYMBOL   // It's not a function
-            && node->node_type != OP_ARG_EXISTS // If it's not OP_ARG_EXISTS (if this list become long we need a better way ...)
+            && node->node_type != OP_ARG_EXISTS // If it's not OP_ARG_EXISTS (if this list becomes long we need a better way ...)
             && !(node->child)           // It's not an array element
         ) return 1;
     else return 0;
@@ -1991,9 +1991,18 @@ static walker_result emit_walker(walker_direction direction,
                 output_append_text(node->output, temp1);
                 free(temp1);
 
-                /* Step through the arguments - evaluating them */
+                /* First Step through the arguments evaluating any expressions
+                 * This must be done BEFORE argument marshalling using swaps   */
                 n = child1;
-                i = node->additional_registers + 1; /* First one is the number of arguments */
+                while (n) {
+                    if (n->output) output_concat(node->output, n->output);
+                    n = n->sibling;
+                }
+
+                /* Now step through the arguments - marshalling them in order and
+                 * setting argument flags as required */
+                n = child1;
+                i = node->additional_registers + 1; /* The first one is the number of arguments */
                 while (n) {
                     k = 0; /* 1 if we need to settp */
                     j = 0; /* The required value of settp */
@@ -2039,7 +2048,6 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
 
-                    if (n->output) output_concat(node->output, n->output);
                     n = n->sibling; i++;
                 }
 
@@ -2967,6 +2975,12 @@ static walker_result emit_walker(walker_direction direction,
                 /* First the command */
                 char* inst = mprintf("   %.*s",
                                      node->node_string_length, node->node_string);
+
+                /* Lower case the instruction */
+                int l;
+                for (l = 0; inst[l]; l++) {
+                    inst[l] = (char)tolower(inst[l]);
+                }
 
                 /* Argument 1 */
                 if (child1) {
