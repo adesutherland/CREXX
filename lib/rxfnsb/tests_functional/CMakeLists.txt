@@ -56,6 +56,7 @@ set(REXXBINS
         ts_find.rxbin
         ts_index.rxbin
         ts_parse.rxbin
+        ts_datatype.rxbin
 )
 
 set(LIBRPATH ../library)

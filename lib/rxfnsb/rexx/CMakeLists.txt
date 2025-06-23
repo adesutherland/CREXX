@@ -62,7 +62,7 @@ set(BIFS
 		parsecompile
 		parsetext
 		parse
-		# datatype
+		datatype
 )
 
 foreach (BIF ${BIFS})
