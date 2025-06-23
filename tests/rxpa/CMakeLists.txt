@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(rxpatest C)
+add_subdirectory(multplugins)
 
 set(CMAKE_C_STANDARD 90)
 
