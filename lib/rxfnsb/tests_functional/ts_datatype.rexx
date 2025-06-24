@@ -2,27 +2,90 @@
 options levelb
 import rxfnsb
 
-
-/* DATATYPE */
-errors=0
-/* These from the Rexx book. */
-
-if datatype('1') \= 'NUM'      then do
-  errors=errors+1
-  say 'ts_datatype failed in test 1' /* datatype('1') */
-end
-if datatype(' 12 ') \= 'NUM'      then do
-   errors=errors+1
-   say 'ts_datatype failed in test 2' datatype(' 12 ') \= 'NUM'
-end
-if datatype('') \= 'CHAR'         then do
-   errors=errors+1
-   say 'ts_datatype failed in test 2'
- end
-  
- if datatype('123*') \= 'CHAR'     then do
-    errors=errors+1
-    say 'ts_datatype failed in test 3'
-  end
-
-return errors <> 0
+   failed=0
+   failed=failed+tstdtp('12.3','N',1    )
+   failed=failed+tstdtp('12.3','W',0    )
+   failed=failed+tstdtp('Fred','M',1    )
+   failed=failed+tstdtp('','M',0    )
+   failed=failed+tstdtp('Minx','L',0    )
+   ##   failed=failed+tstdtp('3d?','s',1     )
+   failed=failed+tstdtp('BCd3','X',1    )
+   failed=failed+tstdtp('BC d3','X',1   )
+   failed=failed+tstdtp("foobar","", "CHAR"            )
+   failed=failed+tstdtp("foo bar","", "CHAR"           )
+   failed=failed+tstdtp("123.456.789","", "CHAR"       )
+   failed=failed+tstdtp("123.456","", "NUM"            )
+   failed=failed+tstdtp("","", "CHAR"                  )
+   failed=failed+tstdtp("DeadBeef" , 'A', "1"       )
+   failed=failed+tstdtp("Dead Beef",'A', "0"        )
+   failed=failed+tstdtp("1234ABCD",'A', '1'         )
+   failed=failed+tstdtp("",'A', "0"                 )
+   failed=failed+tstdtp("foobar",'B', "0"           )
+   failed=failed+tstdtp("01001101",'B', "1"         )
+   failed=failed+tstdtp("0110 1101",'B', "1"        )
+   failed=failed+tstdtp("",'B', "1"                 )
+   failed=failed+tstdtp("foobar",'L', "1"           )
+   failed=failed+tstdtp("FooBar",'L', "0"           )
+   failed=failed+tstdtp("foo bar",'L', "0"          )
+   failed=failed+tstdtp("",'L', "0"                 )
+   failed=failed+tstdtp("foobar",'M', "1"           )
+   failed=failed+tstdtp("FooBar",'M', "1"           )
+   failed=failed+tstdtp("foo bar",'M', "0"          )
+   failed=failed+tstdtp("FOOBAR",'M', "1"           )
+   failed=failed+tstdtp("",'M', "0"                 )
+   failed=failed+tstdtp("foo bar",'N', "0"          )
+   failed=failed+tstdtp("1324.1234",'N', "1"        )
+   failed=failed+tstdtp("123.456.789",'N', "0"      )
+   failed=failed+tstdtp("",'N', "0"                 )
+   failed=failed+tstdtp("foo bar",'S', "0"          )
+   failed=failed+tstdtp("??@##_Foo$Bar!!!",'S', "1" )
+   failed=failed+tstdtp("",'S', "0"                 )
+   failed=failed+tstdtp("foo bar",'U', "0"          )
+   failed=failed+tstdtp("Foo Bar",'U', "0"          )
+   failed=failed+tstdtp("FOOBAR",'U', "1"           )
+   failed=failed+tstdtp("",'U', "0"                 )
+   failed=failed+tstdtp("Foobar",'W', "0"           )
+   failed=failed+tstdtp("123",'W', "1"              )
+   failed=failed+tstdtp("12.3",'W', "0"             )
+   failed=failed+tstdtp("",'W', "0"                 )
+   failed=failed+tstdtp('123.123','W', '0'          )
+   failed=failed+tstdtp('123.123E3','W', '1'        )
+   failed=failed+tstdtp('123.0000003','W', '1'      )
+   failed=failed+tstdtp('123.0000004','W', '1'      )
+   failed=failed+tstdtp('123.0000005','W', '0'      )
+   failed=failed+tstdtp('123.0000006','W', '0'      )
+   failed=failed+tstdtp(' 23','W', '1'              )
+   failed=failed+tstdtp(' 23 ','W', '1'             )
+   failed=failed+tstdtp('23 ','W', '1'              )
+   failed=failed+tstdtp('123.00','W', '1'           )
+   failed=failed+tstdtp('123000E-2','W', '1'        )
+   failed=failed+tstdtp('123000E+2','W', '1'        )
+   failed=failed+tstdtp("Foobar",'X', "0"           )
+   failed=failed+tstdtp("DeadBeef",'X', "1"         )
+   failed=failed+tstdtp("A B C",'X', "0"            )
+   failed=failed+tstdtp("A BC DF",'X', "1"          )
+   failed=failed+tstdtp("123ABC",'X', "1"           )
+   failed=failed+tstdtp("123AHC",'X', "0"           )
+   failed=failed+tstdtp("",'X', "1"                 )
+   failed=failed+tstdtp('0.000E-2','w', '1'         )
+   failed=failed+tstdtp('0.000E-1','w', '1'         )
+   failed=failed+tstdtp('0.000E0','w', '1'          )
+   failed=failed+tstdtp('0.000E1','w', '1'          )
+   failed=failed+tstdtp('0.000E2','w', '1'          )
+   failed=failed+tstdtp('0.000E3','w', '1'          )
+   failed=failed+tstdtp('0.000E4','w', '1'          )
+   failed=failed+tstdtp('0.000E5','w', '1'          )
+   failed=failed+tstdtp('0.000E6','w', '1'          )
+   failed=failed+tstdtp('0E-1','w', '1'             )
+   failed=failed+tstdtp('0E0','w', '1'              )
+   failed=failed+tstdtp('0E1','w', '1'              )
+   failed=failed+tstdtp('0E2','w', '1'              )
+   say 'tests failed 'failed
+ exit 0
+tstdtp: procedure=.int
+   arg value=.string,type="",shouldbe=.string
+   result=datatype(value,type)
+   if result=shouldbe then say 'datatype('value','type') is 'result', test is ok'
+   else say 'datatype('value','type') is 'result' but should be 'shouldbe', test failed'
+   if result=shouldbe then return 0
+return 1
