@@ -43,5 +43,6 @@ add_subdirectory(bin)
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
+
 # set the destination directory for your scripts in the build directory
 set(DEST_SCRIPTS_DIR ${CMAKE_CURRENT_BINARY_DIR})
