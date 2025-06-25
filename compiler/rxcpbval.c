@@ -15,6 +15,7 @@ static OperandType nodetype_to_operandtype(NodeType ntype) {
     switch (ntype) {
         case INTEGER: return OP_INT;
         case FLOAT: return OP_FLOAT;
+        case DECIMAL:  return OP_DECIMAL;
         case STRING: return OP_STRING;
         case FUNC_SYMBOL: return OP_FUNC;
         default: return OP_REG;
@@ -221,6 +222,7 @@ static ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int *
         if (is_node_string(node, ".void")) return TP_VOID;
         if (is_node_string(node, ".int")) return TP_INTEGER;
         if (is_node_string(node, ".float")) return TP_FLOAT;
+        if (is_node_string(node, ".decimal")) return TP_DECIMAL;
         if (is_node_string(node, ".string")) return TP_STRING;
         if (is_node_string(node, ".binary")) return TP_BINARY;
         if (is_node_string(node, ".boolean")) return TP_BOOLEAN;
@@ -234,6 +236,8 @@ static ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int *
     switch (node->node_type) {
         case FLOAT:
             return TP_FLOAT;
+        case DECIMAL:
+            return TP_DECIMAL;
         case INTEGER:
             return TP_INTEGER;
         case STRING:
@@ -614,7 +618,21 @@ static walker_result initial_checks_walker(walker_direction direction,
             }
         }
         else if (node->node_type == REXX_OPTIONS) {
-            /* TODO Process any REXX options specific for levelb */
+            /* Process any REXX options specific for levelb */
+            /* Loop through the children */
+            child = node->child;
+            while (child) {
+                if (child->node_type == LITERAL) {
+                    /* Check the option */
+                    if (is_node_string(child, "decimal")) {
+                        context->decimal = 1;
+                    }
+                    else if (is_node_string(child, "binary")) {
+                        context->decimal = 0;
+                    }
+                }
+                child = child->sibling;
+            }
         }
         else if (node->node_type == NAMESPACE) {
             if (!context->namespace) {
@@ -1702,17 +1720,17 @@ static void validate_symbols(Scope* scope) {
  */
 
 /* Type promotion matrix for numeric operators */
-static const ValueType promotion[8][8] = {
-/*                  TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_STRING,  TP_BINARY,   TP_OBJECT */
-
-/* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN},
-/* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_BINARY,   TP_OBJECT},
-/* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_BOOLEAN, TP_UNKNOWN,  TP_OBJECT},
-/* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_INTEGER, TP_UNKNOWN,  TP_OBJECT},
-/* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
-/* TP_BINARY  */ {TP_UNKNOWN, TP_BINARY,  TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_OBJECT},
-/* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,   TP_OBJECT},
+static const ValueType promotion[9][9] = {
+/*                   TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_STRING,  TP_BINARY,   TP_OBJECT */
+/* TP_UNKNOWN */ {TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_UNKNOWN},
+/* TP_VOID    */ {TP_UNKNOWN, TP_VOID,    TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_BINARY,   TP_OBJECT},
+/* TP_BOOLEAN */ {TP_UNKNOWN, TP_BOOLEAN, TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_BOOLEAN, TP_UNKNOWN,  TP_OBJECT},
+/* TP_INTEGER */ {TP_UNKNOWN, TP_INTEGER, TP_INTEGER, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_INTEGER, TP_UNKNOWN,  TP_OBJECT},
+/* TP_FLOAT   */ {TP_UNKNOWN, TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
+/* TP_DECIMAL */ {TP_UNKNOWN, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_DECIMAL, TP_UNKNOWN,  TP_OBJECT},
+/* TP_STRING  */ {TP_UNKNOWN, TP_FLOAT,   TP_BOOLEAN, TP_INTEGER, TP_FLOAT,   TP_DECIMAL, TP_FLOAT,   TP_UNKNOWN,  TP_OBJECT},
+/* TP_BINARY  */ {TP_UNKNOWN, TP_BINARY,  TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN, TP_UNKNOWN,  TP_OBJECT},
+/* TP_OBJECT  */ {TP_UNKNOWN, TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,  TP_OBJECT,   TP_OBJECT},
 };
 
 /* Returns the value_type of a node - arrays changes to TP_OBJECT */
@@ -1946,6 +1964,13 @@ static walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
                     set_node_type(node, TP_FLOAT);
+                }
+                break;
+
+            case DECIMAL:
+                if (node->value_type == TP_UNKNOWN) {
+                    context->changed = 1;
+                    set_node_type(node, TP_DECIMAL);
                 }
                 break;
 

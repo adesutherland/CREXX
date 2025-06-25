@@ -33,6 +33,7 @@ static int is_constant(ASTNode* node) {
         case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */
         case STRING: /* This and the following will exist if the optimiser has not been run */
         case FLOAT:
+        case DECIMAL:
         case INTEGER:
             if (node->value_type == node->target_type)
                 return 1; /* No type promotion - so a constant */
@@ -826,6 +827,7 @@ static walker_result register_walker(walker_direction direction,
                 break;
 
             case FLOAT:
+            case DECIMAL:
             case INTEGER:
             case STRING:
             case CONSTANT:
@@ -1204,17 +1206,18 @@ static char* get_comment_line_number_only(ASTNode *node, char* comment_text) {
 
 
 /* Type promotion matrix for numeric operators */
-static const char* promotion[8][8] = {
-/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT,TP_STRING,TP_BINARY,TP_OBJECT */
+static const char* promotion[9][9] = {
+/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT, TP_DECIMAL, TP_STRING,TP_BINARY,TP_OBJECT */
 
-/* TP_UNKNOWN */   {0,         0,      0,         0,         0,       0,        0,        0},
-/* TP_VOID    */   {0,         0,      0,         0,         0,       0,        0,        0},
-/* TP_BOOLEAN */   {0,         0,      0,         "btoi",    "btof",  "btos",   0,        0},
-/* TP_INTEGER */   {0,         0,      0,         0,         "itof",  "itos",   0,        0},
-/* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,       "ftos",   0,        0},
-/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof",  0,        0,        0},
-/* TP_BINARY  */   {0,         0,      0,         0,         0,       0,        0,        0},
-/* TP_OBJECT  */   {0,         0,      0,         0,         0,       0,        0,        0},
+/* TP_UNKNOWN */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_VOID    */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_BOOLEAN */   {0,         0,      0,         "btoi",    "btof", "btod",    "btos",   0,        0},
+/* TP_INTEGER */   {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0},
+/* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0},
+/* TP_DECIMAL */   {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0},
+/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        0,        0},
+/* TP_BINARY  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_OBJECT  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
 };
 static void type_promotion(ASTNode *node) {
     char *temp;
@@ -1259,6 +1262,11 @@ static char* format_constant(ValueType type, ASTNode* node) {
                              node->node_string_length,
                              node->node_string);
     }
+    else if (type == TP_DECIMAL) {
+        buffer = mprintf("%.*sd",
+                        node->node_string_length,
+                        node->node_string);
+    }
     else {
         /* Integer */
         buffer = mprintf("%.*s",
@@ -1277,6 +1285,8 @@ static char* type_to_prefix(ValueType value_type) {
             return "s";
         case TP_FLOAT:
             return "f";
+        case TP_DECIMAL:
+            return "d";
         default:
             return "";
     }
@@ -2230,6 +2240,17 @@ static walker_result emit_walker(walker_direction direction,
                         }
                     }
 
+                    else if (child1->target_type == TP_DECIMAL) {
+                        temp1 = mprintf("   %s%s %c%d,%.*sd,%c%d\n",
+                        tp_prefix,
+                        op,
+                        node->register_type,
+                        node->register_num,
+                        child1->node_string_length, child1->node_string,
+                        child2->register_type,
+                        child2->register_num);
+                    }
+
                     /* INTEGER */
                     else {
                         temp1 = mprintf("   %s%s %c%d,%.*s,%c%d\n",
@@ -2290,6 +2311,17 @@ static walker_result emit_walker(walker_direction direction,
                                             child1->register_num,
                                             child2->node_string_length, child2->node_string);
                         }
+                    }
+
+                    else if (child2->target_type == TP_DECIMAL) {
+                        temp1 = mprintf("   %s%s %c%d,%c%d,%.*sd\n",
+                                        tp_prefix,
+                                        op,
+                                        node->register_type,
+                                        node->register_num,
+                                        child1->register_type,
+                                        child1->register_num,
+                                        child2->node_string_length, child2->node_string);
                     }
 
                     /* INTEGER */
@@ -2725,6 +2757,13 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_type,
                                     child1->register_num);
                 }
+                else if (node->value_type == TP_DECIMAL) {
+                    temp1 = mprintf("   dsub %c%d,0,%c%d\n",
+                                    node->register_type,
+                                    node->register_num,
+                                    child1->register_type,
+                                    child1->register_num);
+                }
                 else {
                     temp1 = mprintf("   isub %c%d,0,%c%d\n",
                                     node->register_type,
@@ -2937,6 +2976,7 @@ static walker_result emit_walker(walker_direction direction,
             case CONST_SYMBOL:
             case STRING:
             case FLOAT:
+            case DECIMAL:
             case INTEGER:
                 /* If register is not set then the parent node will handle this
                  * as a constant - we just set the value as a string */
@@ -3342,6 +3382,10 @@ static walker_result emit_walker(walker_direction direction,
                                         if (n->child->float_value >= 0.0) j = 1;
                                         else j = -1;
                                     }
+                                    else if (n->child->value_type == TP_DECIMAL) {
+                                        if (n->child->decimal_value[0] == '-') j = -1;
+                                        else j = 1;
+                                    }
                                     else j = 1;
                                 }
                                 else j = 0; /* Not a constant */
@@ -3443,7 +3487,7 @@ static walker_result emit_walker(walker_direction direction,
                     output_concat(node->output, child1->output);
 
                     node->loopinc = output_fs(comment_meta);
-                    temp1 = mprintf("   %sadd %c%d,%c%d,%c%d\n",
+                    temp1 = mprintf(" %sadd %c%d,%c%d,%c%d\n",
                                     tp_prefix,
                                     node->parent->register_type,
                                     node->parent->register_num,

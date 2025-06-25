@@ -338,6 +338,7 @@ char* type_nm(ValueType type) {
         case TP_BOOLEAN: return ".boolean";
         case TP_INTEGER: return ".int";
         case TP_FLOAT: return ".float";
+        case TP_DECIMAL: return ".decimal";
         case TP_STRING: return ".string";
         case TP_BINARY: return ".binary";
         case TP_OBJECT: return ".object";

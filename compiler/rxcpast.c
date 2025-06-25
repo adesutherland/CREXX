@@ -193,6 +193,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->int_value = 0;
     node->bool_value = 0;
     node->float_value = 0;
+    node->decimal_value = 0; /* Decimal value as a string - malloced */
     node->register_num = -1;
     node->register_type = 'r';
     node->additional_registers = -1;
@@ -309,6 +310,14 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     }
     else {
         new_node->node_string = node->node_string;
+    }
+
+    /* Decimal Value - need to malloc a new buffer if set */
+    if (node->decimal_value) {
+        new_node->decimal_value = malloc(strlen(node->decimal_value) + 1);
+        strcpy(new_node->decimal_value, node->decimal_value);
+    } else {
+        new_node->decimal_value = 0;
     }
 
     /* Scope / Symbol not copied */
@@ -928,6 +937,8 @@ const char *ast_ndtp(NodeType type) {
             return "LITERAL";
         case FLOAT:
             return "FLOAT";
+        case DECIMAL:
+            return "DECIMAL";
         case INTEGER:
             return "INTEGER";
         case OP_MAKE_ARRAY:
@@ -1296,6 +1307,7 @@ void free_ast(Context *context) {
     while (t) {
         n = t->free_list;
         if (t->free_node_string) free(t->node_string);
+        if (t->decimal_value) free(t->decimal_value);
         if (t->value_dim_base) free(t->value_dim_base);
         if (t->value_dim_elements) free(t->value_dim_elements);
         if (t->value_class) free(t->value_class);
@@ -1433,6 +1445,9 @@ char* ast_n2tp(ASTNode *node) {
                 break;
             case TP_FLOAT:
                 strcpy(buffer, ".float");
+                break;
+            case TP_DECIMAL:
+                strcpy(buffer, ".decimal");
                 break;
             case TP_STRING:
                 strcpy(buffer, ".string");
@@ -1763,6 +1778,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case BINARY:
             case INTEGER:
             case FLOAT:
+            case DECIMAL:
             case CONSTANT:
                 attributes = "color=cyan3 shape=box";
                 only_label = 1;

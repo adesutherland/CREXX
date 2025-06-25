@@ -808,6 +808,7 @@ static ValueType type_from_string(char* type) {
     if (!type) return TP_UNKNOWN;
     if (strcmp(type, ".int") == 0) return TP_INTEGER;
     if (strcmp(type, ".float") == 0) return TP_FLOAT;
+    if (strcmp(type, ".decimal") == 0) return TP_DECIMAL;
     if (strcmp(type, ".string") == 0) return TP_STRING;
     if (strcmp(type, ".binary") == 0) return TP_BINARY;
     if (strcmp(type, ".boolean") == 0) return TP_BOOLEAN;

@@ -37,7 +37,7 @@ typedef enum RexxLevel {
 } RexxLevel;
 
 typedef enum ValueType {
-    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_STRING, TP_BINARY, TP_OBJECT
+    TP_UNKNOWN, TP_VOID, TP_BOOLEAN, TP_INTEGER, TP_FLOAT, TP_DECIMAL, TP_STRING, TP_BINARY, TP_OBJECT
 } ValueType;
 
 /*  Importable Functions */
@@ -78,6 +78,8 @@ typedef struct Context {
     char hashcomments;
     char dashcomments;
     char slashcomments;
+    /* Language Options */
+    char decimal;
     /* Optimiser Options */
     int optimise;
 } Context;
@@ -105,7 +107,7 @@ void sym_imva(Context *context, Symbol *symbol);
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, EXIT, FOR, FUNCTION, FUNC_SYMBOL, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
-    FLOAT, INTEGER, OP_MAKE_ARRAY,
+    FLOAT, INTEGER, OP_MAKE_ARRAY, DECIMAL,
     NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_ARGS, OP_ARG_VALUE, OP_ARG_EXISTS, OP_ARG_IX_EXISTS,
     OP_CONCAT, OP_MULT, OP_DIV, OP_IDIV,
     OP_MOD, OP_OR, OP_POWER, OP_NOT, OP_NEG, OP_PLUS,
@@ -167,6 +169,7 @@ struct ASTNode {
     rxinteger int_value;
     int bool_value;
     double float_value;
+    char* decimal_value; /* Decimal value as a string - malloced */
     /* These are only valid after the set_source_location walker has run */
     Token *token_start, *token_end;
     char *source_start, *source_end;

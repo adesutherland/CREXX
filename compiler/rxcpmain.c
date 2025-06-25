@@ -116,6 +116,7 @@ Context *cntx_f() {
     context->level = UNKNOWN;
     context->lexer_stem_mode = 0;
     context->hashcomments = 1; /* This is the recommended & default line comment style */
+    context->decimal = 0; /* Use binary decimal by default */
 
     return context;
 }
