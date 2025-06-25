@@ -1705,6 +1705,134 @@
 \clearpage
 \section{I/O operations}
 \begin{description}
+\item[\texttt{FREADB}]  - Read bytes from file\index{freadb}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/freadb.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/freadb.operation}{\input{operation/freadb.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x012d}]\fontspec{IBM Plex Sans Condensed} op1(binary) = fread op2 file*(int) op3 bytes(int) REGREGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/freadbREGREGREG.def}{\input{../../examples/freadbREGREGREG.def}}{}
+\IfFileExists{../../examples/freadbREGREGREG.rexx}{\splice{rxc ../../examples/freadbREGREGREG}}{}
+\IfFileExists{../../examples/freadbREGREGREG.rxas}{\lstinputlisting[language=rxas,label=freadb,caption=freadb example.]{../../examples/freadbREGREGREG.rxas} \splice{rxas ../../examples/freadbREGREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/freadbREGREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FREADBYTE}]  - Read byte from file\index{freadbyte}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/freadbyte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/freadbyte.operation}{\input{operation/freadbyte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x012f}]\fontspec{IBM Plex Sans Condensed} op1 (int) = read byte op2 file*(int) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/freadbyteREGREG.def}{\input{../../examples/freadbyteREGREG.def}}{}
+\IfFileExists{../../examples/freadbyteREGREG.rexx}{\splice{rxc ../../examples/freadbyteREGREG}}{}
+\IfFileExists{../../examples/freadbyteREGREG.rxas}{\lstinputlisting[language=rxas,label=freadbyte,caption=freadbyte example.]{../../examples/freadbyteREGREG.rxas} \splice{rxas ../../examples/freadbyteREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/freadbyteREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FREADCDPT}]  - Read codepoint from file\index{freadcdpt}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/freadcdpt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/freadcdpt.operation}{\input{operation/freadcdpt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0130}]\fontspec{IBM Plex Sans Condensed} op1 (string and int) = read codepoint op2 file*(int) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/freadcdptREGREG.def}{\input{../../examples/freadcdptREGREG.def}}{}
+\IfFileExists{../../examples/freadcdptREGREG.rexx}{\splice{rxc ../../examples/freadcdptREGREG}}{}
+\IfFileExists{../../examples/freadcdptREGREG.rxas}{\lstinputlisting[language=rxas,label=freadcdpt,caption=freadcdpt example.]{../../examples/freadcdptREGREG.rxas} \splice{rxas ../../examples/freadcdptREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/freadcdptREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FREADLINE}]  - Read line from file\index{freadline}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/freadline.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/freadline.operation}{\input{operation/freadline.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x012e}]\fontspec{IBM Plex Sans Condensed} op1 (string) = read until newline op2 file*(int) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/freadlineREGREG.def}{\input{../../examples/freadlineREGREG.def}}{}
+\IfFileExists{../../examples/freadlineREGREG.rexx}{\splice{rxc ../../examples/freadlineREGREG}}{}
+\IfFileExists{../../examples/freadlineREGREG.rxas}{\lstinputlisting[language=rxas,label=freadline,caption=freadline example.]{../../examples/freadlineREGREG.rxas} \splice{rxas ../../examples/freadlineREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/freadlineREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FWRITE}]  - Write string to file\index{fwrite}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/fwrite.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/fwrite.operation}{\input{operation/fwrite.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0131}]\fontspec{IBM Plex Sans Condensed} fwrite to op1 file*(int) from op2(string) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/fwriteREGREG.def}{\input{../../examples/fwriteREGREG.def}}{}
+\IfFileExists{../../examples/fwriteREGREG.rexx}{\splice{rxc ../../examples/fwriteREGREG}}{}
+\IfFileExists{../../examples/fwriteREGREG.rxas}{\lstinputlisting[language=rxas,label=fwrite,caption=fwrite example.]{../../examples/fwriteREGREG.rxas} \splice{rxas ../../examples/fwriteREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/fwriteREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FWRITEB}]  - Write bytes to file\index{fwriteb}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/fwriteb.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/fwriteb.operation}{\input{operation/fwriteb.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0132}]\fontspec{IBM Plex Sans Condensed} fwrite to op1 file*(int) from op2(binary) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/fwritebREGREG.def}{\input{../../examples/fwritebREGREG.def}}{}
+\IfFileExists{../../examples/fwritebREGREG.rexx}{\splice{rxc ../../examples/fwritebREGREG}}{}
+\IfFileExists{../../examples/fwritebREGREG.rxas}{\lstinputlisting[language=rxas,label=fwriteb,caption=fwriteb example.]{../../examples/fwritebREGREG.rxas} \splice{rxas ../../examples/fwritebREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/fwritebREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FWRITEBYTE}]  - Write byte to file\index{fwritebyte}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/fwritebyte.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/fwritebyte.operation}{\input{operation/fwritebyte.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0133}]\fontspec{IBM Plex Sans Condensed} write byte to op1 file*(int) op2 source(int) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/fwritebyteREGREG.def}{\input{../../examples/fwritebyteREGREG.def}}{}
+\IfFileExists{../../examples/fwritebyteREGREG.rexx}{\splice{rxc ../../examples/fwritebyteREGREG}}{}
+\IfFileExists{../../examples/fwritebyteREGREG.rxas}{\lstinputlisting[language=rxas,label=fwritebyte,caption=fwritebyte example.]{../../examples/fwritebyteREGREG.rxas} \splice{rxas ../../examples/fwritebyteREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/fwritebyteREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
+\item[\texttt{FWRITECDPT}]  - Write codepoint to file\index{fwritecdpt}\\
+\item[\texttt{Syntax}] - form \\
+\fontspec{IBM Plex Mono}
+\includesvg{../../svg/fwritecdpt.gv}
+\fontspec{TeX Gyre Pagella}
+\item[\texttt{Operation}]
+\IfFileExists{operation/fwritecdpt.operation}{\input{operation/fwritecdpt.operation}}{}
+\item[\texttt{}]
+\item[\texttt{0x0134}]\fontspec{IBM Plex Sans Condensed} write codepoint to op1 file*(int) op2 source(int) REGREG\\
+\fontspec{TeX Gyre Pagella}
+\IfFileExists{../../examples/fwritecdptREGREG.def}{\input{../../examples/fwritecdptREGREG.def}}{}
+\IfFileExists{../../examples/fwritecdptREGREG.rexx}{\splice{rxc ../../examples/fwritecdptREGREG}}{}
+\IfFileExists{../../examples/fwritecdptREGREG.rxas}{\lstinputlisting[language=rxas,label=fwritecdpt,caption=fwritecdpt example.]{../../examples/fwritecdptREGREG.rxas} \splice{rxas ../../examples/fwritecdptREGREG} \obeylines \begin{shaded} \fontspec{IBM Plex Mono}[Scale=0.8] \splice{rxvme -p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal" ../../examples/fwritecdptREGREG} \end{shaded} \fontspec{TeX Gyre Pagella}}{}
+\end{description}
+\clearpage
+\begin{description}
 \item[\texttt{OPENDLL}]  - Open Dynamic Link Library\index{opendll}\\
 \item[\texttt{Syntax}] - form \\
 \fontspec{IBM Plex Mono}
