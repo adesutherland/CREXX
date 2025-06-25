@@ -28,8 +28,8 @@ add_dependencies(rxpp rxvml machine rxpa avl_tree platform)
 # This is needed to ensure that the static library is linked into the executable and ** initalized at runtime **
 configure_linker_for_static_lib(rxpp precomp)
 
-# add_custom_target(rxppcopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxpp)
+add_custom_target(rxppcopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxpp)
 
-# add_custom_command(TARGET rxppcopy POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/lib/plugins/precomp/rxpp ${CMAKE_BINARY_DIR}/bin/
-# )
+add_custom_command(TARGET rxppcopy POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/lib/plugins/precomp/rxpp${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
+)

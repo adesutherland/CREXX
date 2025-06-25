@@ -21,6 +21,12 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 endif ()
 
+if(WIN32)
+    set(EXE_SUFFIX ".exe")
+else()
+    set(EXE_SUFFIX "")
+endif()
+
 option(ENABLE_ODBC "Enable ODBC support" OFF)
 option(ENABLE_GUI  "Enable GUI support"  OFF)
 
