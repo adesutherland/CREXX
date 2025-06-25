@@ -58,8 +58,8 @@ add_dependencies(rxc rxclib)
 
 target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa m)
 
-add_custom_target(rxccopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxc)
+# add_custom_target(rxccopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxc)
 
-add_custom_command(TARGET rxccopy POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/compiler/rxc ${CMAKE_BINARY_DIR}/bin/
-)
+# add_custom_command(TARGET rxccopy POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/compiler/rxc ${CMAKE_BINARY_DIR}/bin/
+# )

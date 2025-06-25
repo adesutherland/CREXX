@@ -12,7 +12,7 @@ target_link_libraries(rxdas machine avl_tree platform)
 
 target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../machine ../platform)
 
-add_custom_target(rxdascopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxc)
-add_custom_command(TARGET rxdascopy POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/disassembler/rxdas ${CMAKE_BINARY_DIR}/bin/
-)
+# add_custom_target(rxdascopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxdas)
+# add_custom_command(TARGET rxdascopy POST_BUILD
+#     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/disassembler/rxdas ${CMAKE_BINARY_DIR}/bin/
+# )

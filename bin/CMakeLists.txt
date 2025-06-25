@@ -7,7 +7,6 @@ set(CMAKE_C_STANDARD 90)
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas crexx
-#        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o globals ${CMAKE_CURRENT_SOURCE_DIR}/globals
         COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack crexx ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         DEPENDS rxas rxc crexx.rexx library rxcpack rxpa
         OUTPUT crexx.c
