@@ -51,6 +51,7 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
+  decimal = float [d];
   integer = digit+;
   simple = fsymchr symchr*;
   class = [.] simple;
@@ -186,6 +187,7 @@ int rexbscan(Context* s) {
   //  'WITH' { return(TK_WITH); }
     class { return(TK_CLASS); }
     float { return(TK_FLOAT); }
+    decimal { return(TK_DECIMAL); }
     integer { return(TK_INTEGER); }
     'ARG' / [.] {
       s->lexer_stem_mode = 1;

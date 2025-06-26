@@ -216,6 +216,7 @@ def_value(D)             ::=   TK_MINUS(O) TK_INTEGER(S).
 /* Common errors if a user tried to use an expression in an array definition */
 def_value(D)             ::=   TK_VAR_SYMBOL(S) error. { D = mknd_err(ast_f(context, VAR_SYMBOL,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_FLOAT(S) error. { D = mknd_err(ast_f(context, FLOAT,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_DECIMAL(S) error. { D = mknd_err(ast_f(context, DECIMAL,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_STRING(S) error. { D = mknd_err(ast_f(context, STRING,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_PLUS(S) error. { D = mknd_err(ast_f(context, OP_ADD,S), "INVALID_IN_ARRAY_DEF");}
 def_value(D)             ::=   TK_MINUS(S) error. { D = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_IN_ARRAY_DEF"); }
@@ -507,10 +508,14 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CALL(K) error.
 /* Assignments / Defines with invalid LHS */
 assignment(G) ::=  TK_FLOAT(K) TK_EQUAL(T) expression(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, FLOAT,K), "INVALID_LHS")); add_ast(G,E);  }
+assignment(G) ::=  TK_DECIMAL(K) TK_EQUAL(T) expression(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, DECIMAL,K), "INVALID_LHS")); add_ast(G,E);  }
 assignment(G) ::=  TK_INTEGER(K) TK_EQUAL(T) expression(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
 define(G) ::=  TK_FLOAT(K) TK_EQUAL(T) type_def(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, FLOAT,K), "INVALID_LHS")); add_ast(G,E);  }
+define(G) ::=  TK_DECIMAL(K)TK_EQUAL(T) type_def(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, DECIMAL,K), "INVALID_LHS")); add_ast(G,E);  }
 define(G) ::=  TK_INTEGER(K) TK_EQUAL(T) type_def(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
 
@@ -832,8 +837,12 @@ assembler_arg(A)         ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLOSE_BRACKET.
                          { A = ast_f(context, FUNC_SYMBOL, S); }
 assembler_arg(A)         ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
+assembler_arg(A)         ::= TK_DECIMAL(S).
+                         { A = ast_f(context, DECIMAL,S); }
 assembler_arg(A)         ::= TK_MINUS(O) TK_FLOAT(S).
                          { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, FLOAT,S)); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_DECIMAL(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, DECIMAL,S)); }
 assembler_arg(A)         ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
 assembler_arg(A)         ::= TK_MINUS(O) TK_INTEGER(S).
@@ -919,7 +928,7 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL.
+%left TK_STRING TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
@@ -953,6 +962,8 @@ term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
 term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
+term(A)                ::= TK_DECIMAL(S).
+                         { A = ast_f(context, DECIMAL,S); }
 term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
 term(A)                ::= TK_STRING(S).
