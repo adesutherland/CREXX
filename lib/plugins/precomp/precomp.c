@@ -325,11 +325,7 @@ PROCEDURE (insertat) {
     if (at < 0) at = 0;
     if (at > haystack_len-1) at = haystack_len;
 
-    // Calculate lengths for parts
-    int lhs_len   = at > 0 ? at - 1 : 0;
-    int rhs_start = at + len - 1;
-
-// Bounds check
+ // Bounds check
     if (at < 0) at = 0;
     if (at > haystack_len) at = haystack_len;  // Insert at end if at > length
     if (at + len > haystack_len) len = haystack_len - at;
@@ -495,6 +491,25 @@ PROCEDURE(safe_quote) {
     RETURNSTRX(result);
 ENDPROC
 }
+PROCEDURE(fpos) {
+    char *substring = GETSTRING(ARG0);   // Get the substring to find
+    char *wordstring = GETSTRING(ARG1);  // Get the input string
+    int offset = GETINT(ARG2) - 1;         // Get the offset to start searching
+
+    // Check for NULL input or invalid offset
+    if (wordstring == NULL || substring == NULL || offset < 0) {
+        RETURNINT(-1); // Return -1 on error
+    }
+    if(offset<0) offset=0;
+    // Adjust the starting point for the search
+    char *found = strstr(wordstring + offset, substring); // Find the first occurrence of the substring
+    if (found != NULL) {
+        RETURNINTX(found - wordstring + 1); // Return the position (1-based index)
+    }
+
+    RETURNINT(0); // Return 0 if the substring is not found
+    ENDPROC;
+}
 
 LOADFUNCS
    ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
@@ -512,5 +527,7 @@ LOADFUNCS
    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
    ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
+   ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
+
 ENDLOADFUNCS
 

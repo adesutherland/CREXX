@@ -33,9 +33,9 @@ arg command=.string[]
   end
 
 if internal_testing=1 then do
-   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/system/system_test.rxpp'
-   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/system/system_test.rexx'
-   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250623/lib/plugins/precomp/Maclib.rexx'
+   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/system/system_test.rxpp'
+   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/system/system_test.rexx'
+   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/precomp/Maclib.rexx'
 end
 
   if strip(infile)='' then do
@@ -536,12 +536,12 @@ return line
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    do while pos(name, uline, callPos + 1) > 0
-    ## test Macro is variadic
-       isVariadic = 0
-       if pos('...', args,1) > 0 then do
-          isVariadic = 1
-          args = strip(changestr('...', '', args))
-       end
+   ## test Macro is variadic
+      isVariadic = 0
+      if pos('...', args,1) > 0 then do
+         isVariadic = 1
+         args = strip(changestr('...', '', args))
+      end
        if printgen_flags='all' then call writeline printGen(strip(line),0)
        else if level=0 & printgen_flags='nnest' then call writeline printGen(strip(line),0)
        level=level+1     ## increase level in case a second instance of macro is found
@@ -554,7 +554,6 @@ return line
      ## extract argument list
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
-
        bodyExp = body
        xargs   = translate(args, , ',')
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
@@ -699,13 +698,16 @@ replaceArg: procedure=.string
 	if length(after) =0 then verba=1
     if verbb=0 | verba=0 then do
 	   posn = p + 1
+	   p=posn
        iterate        /* no, not a valid variable name */
-     end
+    end
+    if p>length(str) then leave
     str=insertatc(value,str,p,length(name))    ## use the C-function
-  ##    str=insertat(value,str,p,length(name))
-  ##    if cstr \=str then say "***** '"cstr"' '"str"'"
+    ##  str=insertat(value,str,p,length(name))
+    ##  if cstr \=str then say "***** '"cstr"' '"str"'"
     posn = p + length(value)
-    p = pos(name, str, posn)
+  ##  say "POS Debug: POS('"name"','"str"',"posn")"
+    p = fpos(name, str, posn)
   end
 return str
 /* ------------------------------------------------------------------
