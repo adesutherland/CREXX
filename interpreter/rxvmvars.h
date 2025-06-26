@@ -769,7 +769,7 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
 /* This sets v's string_pos (the byte index) and v's string_char_pos
  * (the utf8 codepoint index) based on a new string_char_pos */
 RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
-    assert (v->string_char_pos < v->string_chars);
+    assert (v->string_char_pos  == 0 || v->string_char_pos < v->string_chars);
     /* We need to walk through the UTF8 characters until we get to
      * the required string_char_pos and then we will know the corresponding
      * string_pos. But we need to work out the best starting point for the walk:
