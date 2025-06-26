@@ -883,7 +883,7 @@ ENDPROC
  */
 LOADFUNCS
 //      C Function, REXX namespace & name, Option, Return Type, Arguments
-    ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "env_name=.string");
+    ADDPROC(getEnv,      "system.getenv",      "b",    ".string", "input=.string");
     ADDPROC(getdir,      "system.getdir",      "b",    ".string", "");
     ADDPROC(setdir,      "system.setdir",      "b",    ".int",    "arg0=.string");
     ADDPROC(testdir,     "system.testdir",     "b",    ".int",    "arg0=.string");

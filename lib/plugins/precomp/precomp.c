@@ -174,6 +174,7 @@ PROCEDURE (copy_array) {
 PROCEDURE (list_array)  {
     int i,from,to,hi;
     hi  = GETARRAYHI(ARG0);
+    if (hi==1 && strlen(GETSARRAY(ARG0,1))==0 ) hi=0;
     from= GETINT(ARG1);
     to  = GETINT(ARG2);
     char * hdr=GETSTRING(ARG3);
@@ -186,10 +187,13 @@ PROCEDURE (list_array)  {
     else printf("%s\n",hdr);
     printf("Entry     Data   Range %d-%d\n",from,to);
     printf("-------------------------------------------------------\n");
-    for (i=from-1;i<to;i++) {
-        printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+    if(hi<=0) printf("Array contains no Entries\n");
+    else {
+       for (i=from-1;i<to;i++) {
+           printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+       }
+       printf("%d Entries\n",to);
     }
-    printf("%d Entries\n",to);
 }
 
 PROCEDURE(readall) {

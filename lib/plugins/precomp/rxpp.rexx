@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files alphaN mExpanded expandLevel ifblock
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files alphaN mExpanded expandLevel ifblock elapsedTime
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -20,6 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
   internal_testing=0    ## activate only for rxpp internal tests
+  ElapsedTime=time('us')
   say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
@@ -38,8 +39,8 @@ if internal_testing=1 then do
 end
 
   if strip(infile)='' then do
-       say 'CRX0100E+['time('l')'] no source file specified'
-       exit 8
+     say 'CRX0100E+['time('l')'] no source file specified'
+     exit 8
   end
 
   say 'Input File:  ' infile
@@ -61,6 +62,8 @@ end
   if pos(' vars',cflags)>0 then call printvars
   if pos(' maclist',cflags)>0 then call printmacs
   if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
+  elapsedTime=(time('us')-elapsedtime)
+  say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
 return 0
 /* ------------------------------------------------------------------
  * Pass one load source file and determine preprocessor statements
@@ -289,15 +292,20 @@ return
    do forever
       if body='' then leave
       nlen=length(body)
-      if substr(body,nlen,1)\='\' then leave
+      if substr(body,nlen,1) \= '\' then leave
       nlino=nlino+1
+      if nlino>source.0 then do
+         say 'CRX0950E+['time('l')'] macro definition is not closed: 'name
+         exit 8
+      end
       nlen=nlen-1
-      body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      if nlen>1 then body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      else body=strip(source.nlino)
       stype.nlino='D'
    end
    body = strip(body)   ## possibly not necessary, but for safety, we need to strip off the braces!
    len=length(body)-2
-   body=substr(body,2,len)
+   if len>0 then body=substr(body,2,len)
    if body = '' then do
       say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8

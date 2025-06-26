@@ -2,25 +2,114 @@
 options levelb
 import system
 import rxfnsb
-##cflags ndef nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+mainargs(allin)
+##cflags def nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+##define flen111(len,string)         {len=0; len=length(string)}
+say 123
+String='  C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system'
+say time()
+elapsedTime=time('us')
+do i=1 to 1000000
+   new=length(string)
+end
+say (time('us')-elapsedtime)/1000000
+say new
+elapsedTime=time('us')
+do i=1 to 1000000
+   ## flen111(new,string)
+end
+say (time('us')-elapsedtime)/1000000
+say "'"new"'"
+
+exit
+
+
+##SYSLIN
+  INCLUDE SYSLIB(NEWPROG)
+  INCLUDE SYSLIB(EXISTMOD)
+  INCLUDE SYSRXFNS(library)
+  NAME NEWPROG
+##end
+##syslib
+  "C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system"
+  "C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\strings"
+##end
+##SYSRXFNS
+  C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\rxfnsb
+##end
+say 'T 'time('T')
+say 'TS 'time('TS')
+say 'Z 'time('Z')
+say 'ZN 'time('ZN')
+say 'UTC 'time('UTC')
+say 'N 'time('N')
+say 'L 'time('L')
+say 'H 'time('H')
+say 'M 'time('M')
+say 'S 'time('S')
+say 'US 'time('US')
+say 'E 'time('E')
+say 'R 'time('R')
+say 'S 'time('S')
+say 'US 'time('US')
+say 'E 'time('E')
+say 'R 'time('R')
+
+##define stemSearch(array,search,from) \
+  {_result=0 \
+   do _ssi=from to array.0 \
+      if pos(search,array._ssi)=0 then iterate \
+      _result=_ssi \
+      leave \
+   end \
+   if _result=0 then result=0 \
+   else result=_result \
+   }
+do i=1 to 100
+   myarray.i='Record 'right(i,3,'0')
+end
+foreach(myarray)
+   say _item
+end
+
+result=0
+do until result=0
+   stemsearch(myarray,'11',result+1)
+   say 111 result
+end
+
 /* system_test.rexx - Test suite for system functions */
 say " test of precompile function, just a simple LOG macro call added"
 say "=== System Functions Test Suite ==="
+var1='second'
+var2='first'
+swap(var1,var2)
+say 1 var1
+say 2 var2
 
-say ""
+say 111 datatype("var1")
+
+say "C:\Temp\CREXX\myfile.rexx"
 log('Enter System Test with Elapsed Time')
 /* Test environment variables */
 say "Testing getenv()..."
 home = getenv("HOME")
 path = getenv("PATH")
-say "  HOME:" home
+say "  HOME: '"home"'"
 say "  PATH:" left(path, 50)"..."
 say ""
 log('End function')
 /* Test directory operations */
 say "Testing directory operations..."
 current = getdir()
+
 log("LOG4711 lCurrent directory: "current)
+log("LOG4711 lCurrent directory: "current)
+log("LOG4711 lCurrent directory: "current)
+log("LOG4711 lCurrent directory: "current)
+log("LOG4711 lCurrent directory: "current)
+  say 123
 test_dir = "test_folder"
 say "  "time('l')" Creating directory:" test_dir
 rc = createdir(test_dir)

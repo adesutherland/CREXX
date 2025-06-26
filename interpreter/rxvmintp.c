@@ -4529,7 +4529,7 @@ START_OF_INSTRUCTIONS
                 rxinteger len, i;
                 int ch;
                 PUTSTRLEN(op1R, 0)      /* reset length of target  */
-                GETSTRLEN(len, op3R)
+                GETSTRLEN(len, op2R)
                 for (i = offset; i < len; i++) {
                     GETSTRCHAR(ch, op2R, i)
                     op2R->int_value = ch;
