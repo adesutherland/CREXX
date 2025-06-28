@@ -87,6 +87,7 @@ target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 # Value test executable
 add_executable(ts_regvalue_tester ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE . ../utf8 ../platform ../machine)
+target_link_libraries(ts_regvalue_tester m)
 
 # Enable testing
 enable_testing()
