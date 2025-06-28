@@ -84,8 +84,19 @@ target_include_directories(rxbvml PRIVATE . ${CMAKE_BINARY_DIR}/machine ./rxvmpl
 		../assembler ../machine ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
+# Value test executable
+add_executable(ts_regvalue_tester ts_regvalue_tester.c rxvalue.h rxvmvars.h)
+target_include_directories(ts_regvalue_tester PRIVATE . ../utf8 ../platform ../machine)
+
 # Enable testing
 enable_testing()
+
+# Value Tests
+add_test(
+		NAME ts_regvalue_tester
+		COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ts_regvalue_tester
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 # Instruction Sanity Tests - Raise uncaptured signal
 add_custom_command(

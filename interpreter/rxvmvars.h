@@ -769,76 +769,79 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
 /* This sets v's string_pos (the byte index) and v's string_char_pos
  * (the utf8 codepoint index) based on a new string_char_pos */
 RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
-    assert (v->string_char_pos  == 0 || v->string_char_pos < v->string_chars);
-    /* We need to walk through the UTF8 characters until we get to
-     * the required string_char_pos and then we will know the corresponding
-     * string_pos. But we need to work out the best starting point for the walk:
-     * - The start of the string,
-     * - The end of the string, or
-     * - from the existing string_pos
-     */
-    int diff;
+    assert (v->string_char_pos <= v->string_chars);
 
-    diff = (int)(new_string_char_pos - v->string_char_pos);
+    // Boundary Check: If the requested position is beyond the last character,
+    // clamp it to the end of the string.
+    if (new_string_char_pos >= v->string_chars) {
+        if (v->string_chars == 0) {
+            v->string_pos = 0;
+            v->string_char_pos = 0;
+        } else {
+            // Position at the very end of the string.
+            // string_char_pos can be equal to string_chars, indicating a position
+            // after the last character, which is useful for appending.
+            // Here we will just set it to the last valid character index for seeking.
+            v->string_pos = v->string_length;
+            v->string_char_pos = v->string_chars;
+        }
+        return;
+    }
 
+    int diff = (int)new_string_char_pos - (int)v->string_char_pos;
+
+    if (diff == 0) {
+        return; // Nothing to do
+    }
+
+    // Optimised for stepping one character forward or backward
     if (diff == 1) {
-        /* Optimised for the scenario where the user program is walking the string */
         v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
         v->string_char_pos++;
         return;
     }
-
     if (diff == -1) {
-        /* Might be looping through the string backwards */
         v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
         v->string_char_pos--;
         return;
     }
 
-    if (diff > 1) {
-        /* So the new position is bigger than the current position ... we need
-         * to check if it is quicker to search from the end of the string */
-        if (v->string_chars - 1 - new_string_char_pos < diff) {
-            /* loop from the end */
-            v->string_pos = v->string_length;
-            v->string_char_pos = v->string_chars - 1;
-            v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
-            while (v->string_char_pos != new_string_char_pos) {
-                v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
-                v->string_char_pos--;
-            }
-            return;
-        }
-        /* loop from the current position */
-        while (v->string_char_pos != new_string_char_pos) {
+    // For larger jumps, determine the most efficient starting point.
+    // We compare the cost of seeking from the start, the current position, or the end.
+    size_t cost_from_start = new_string_char_pos;
+    size_t cost_from_current = (diff > 0) ? diff : -diff;
+    size_t cost_from_end = v->string_chars - new_string_char_pos;
+
+    if (cost_from_start <= cost_from_current && cost_from_start <= cost_from_end) {
+        // Seek from the beginning
+        v->string_char_pos = 0;
+        v->string_pos = 0;
+        while (v->string_char_pos < new_string_char_pos) {
             v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
             v->string_char_pos++;
         }
-        return;
-    }
-
-    if (diff < 1) {
-        /* So the new position is smaller than the current position ... we need
-         * to check if it is quicker to search from the beginning of the string */
-        if (new_string_char_pos <= -diff) {
-            /* loop from the beginning */
-            v->string_pos = 0;
-            v->string_char_pos = 0;
-            while (v->string_char_pos != new_string_char_pos) {
-                v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
-                v->string_char_pos++;
-            }
-            return;
-        }
-        /* loop from the current position */
-        while (v->string_char_pos != new_string_char_pos) {
+    } else if (cost_from_end < cost_from_current) {
+        // Seek from the end (backwards)
+        v->string_char_pos = v->string_chars;
+        v->string_pos = v->string_length;
+        while (v->string_char_pos > new_string_char_pos) {
             v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
             v->string_char_pos--;
         }
-        return;
+    } else {
+        // Seek from the current position
+        if (diff > 0) { // Forward
+            while (v->string_char_pos < new_string_char_pos) {
+                v->string_pos += utf8codepointcalcsize(v->string_value + v->string_pos);
+                v->string_char_pos++;
+            }
+        } else { // Backward
+            while (v->string_char_pos > new_string_char_pos) {
+                v->string_pos -= utf8rcodepointcalcsize(v->string_value + v->string_pos);
+                v->string_char_pos--;
+            }
+        }
     }
-
-    /* If we reach here it means the current position was not changed - fine */
 }
 #endif
 
