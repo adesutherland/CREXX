@@ -291,6 +291,7 @@ void init_ops() {
     instr_f("substring", "set op1=substr(op2,op3) remaining string", OP_REG, OP_REG, OP_REG);
     instr_f("substcut", "set op1=substr(op1,,op2) cuts off op1 after position op3", OP_REG, OP_REG, OP_NONE);
     instr_f("padstr", "set op1=op2[repeated op3 times]", OP_REG, OP_REG, OP_REG);
+    instr_f("strpos", "op1 is position of op2 in op3", OP_REG, OP_REG, OP_REG);
 
     instr_f("getbyte", "get byte  (op1=op2(op3)", OP_REG, OP_REG, OP_REG);
     instr_f("cnop", "no operation", OP_NONE, OP_NONE, OP_NONE);

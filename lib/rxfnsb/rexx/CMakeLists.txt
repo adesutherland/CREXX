@@ -36,6 +36,8 @@ set(BIFS
 		max
 		min
 		overlay
+		pos
+		lastpos
 		raise
 		sign
 		space

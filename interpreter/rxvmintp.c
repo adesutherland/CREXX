@@ -4574,6 +4574,29 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(CNOP) CALC_DISPATCH(0)
         DEBUG("TRACE - CNOP\n");
         DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  find substring in string                                           pej 27 June 2025
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(STRPOS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - STRPOS R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            {
+                char *charpos;
+                rxinteger offset=op1RI;
+                offset--;    // make position an offset
+                size_t haystack_len = strlen(op3R->string_value);
+                if (offset < 0 || offset >= haystack_len) {
+                    REG_RETURN_INT(0);  // Or -1, depending on your logic
+                } else {
+                    op2R->string_value[op2R->string_length]=0;
+                    op3R->string_value[op3R->string_length]=0;
+                    charpos = strstr(op3R->string_value + offset, op2R->string_value);
+                    if (charpos > 0) offset = charpos - op3R->string_value;
+                    else offset = -1;
+                    REG_RETURN_INT(offset + 1)       // make offset a position
+                }
+            }
+            DISPATCH
 
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
