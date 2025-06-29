@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     // First - the linker "magic" will take care of initializing static linked plugins with auto-initializers
 
     // Secondly - we manually initialize the plugins that are statically linked with manual initializers (hardcoded)
-    CALL_PLUGIN_INITIALIZER(dbnumber);
+    CALL_PLUGIN_INITIALIZER(decnumber);
 
     // Finally - we manually load the dynamic plugins as we process the command line arguments (-p)
 

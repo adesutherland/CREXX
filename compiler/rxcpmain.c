@@ -9,6 +9,7 @@
 #include "rxcpmain.h"
 #include "rxvminst.h"
 #include "rxcpdary.h"
+#include "rxvmplugin_framework.h"
 
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
@@ -339,6 +340,18 @@ int rxcmain(int argc, char *argv[]) {
         fprintf(stderr, "Can't read input file\n");
         exit(-1);
     }
+
+    /* Load VM Plugins */
+    // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)
+    CALL_PLUGIN_INITIALIZER(decnumber); // MC Decimal Plugin
+    decplugin* decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
+    if (!decimal) {
+        printf("PANIC - No default decimal plugin\n");
+        exit(255); // Documented 255 is for missing decimal plugin
+    }
+
+    // Set the number of digits in the rxvmplugin context
+    decimal->setDigits(decimal, 18); // 18 is the max significant digits for the default plugin
 
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);

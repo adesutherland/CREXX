@@ -162,7 +162,7 @@ end_wrapper_args:
      */
     // First - the linker "magic" will take care of initializing static linked plugins with auto-initializers
     // Secondly - we manually initialize the plugins that are statically linked with manual initializers (hardcoded)
-    CALL_PLUGIN_INITIALIZER(dbnumber);
+    CALL_PLUGIN_INITIALIZER(decnumber);
 
     /* Run the program */
 #ifndef NDEBUG

@@ -50,13 +50,11 @@ target_link_libraries(rxclib machine avl_tree platform rxaslib rxpa m)
 
 target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/machine
-        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 
 add_executable(rxc rxc_main.c)
-
-add_dependencies(rxc rxclib)
-
-target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa m)
+target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual m)
 
 add_custom_target(rxccopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxc)
 
