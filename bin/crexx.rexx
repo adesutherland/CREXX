@@ -128,7 +128,8 @@ do i=1 to words(filenames)
 	'-lavl_tree',
 	'-lplatform',
         '-lm -lrxvmplugin',
-        rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal/rxvm_db_decimal_manual.a ',
+	  rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a ',
+	  rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a ',
 	  filename'.c'
     cc_command
     if verbose>1 then
@@ -178,3 +179,7 @@ say 'cRexx compiler driver' rversion
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
 return
+
+
+/* for decimal: gcc -O3 -DNDEBUG -o we -L/Users/rvjansen/apps/crexx_release/interpreter -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/db_decimal -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal -L/Users/rvjansen/apps/crexx_release/machine -L/Users/rvjansen/apps/crexx_release/avl_tree -L/Users/rvjansen/apps/crexx_release/rxpa -L/Users/rvjansen/apps/crexx_release/platform -lrxvml -lrxpa -lmachine -lavl_tree -lplatform -lm -lrxvmplugin -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal -ldecnumber /Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a */
+
