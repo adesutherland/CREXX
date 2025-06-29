@@ -35,6 +35,8 @@ do i=1 to fn.0
     end
   else
     do
+      if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
+      if fn.i = '-help' then call help
       if fn.i = '-noexec' then execute=0
       if fn.i = '-native' then native=1
       if fn.i = '-version' then version=1
@@ -44,13 +46,6 @@ do i=1 to fn.0
       if fn.i = '-verbose2' then verbose=2
       if fn.i = '-verbose3' then verbose=3
       if fn.i = '--noexec' then execute=0
-      if fn.i = '--native' then native=1
-      if fn.i = '--version' then version=1
-      if fn.i = '--verbose0' then verbose=0
-      if fn.i = '--verbose1' then verbose=1
-      if fn.i = '--verbose' then verbose=1
-      if fn.i = '--verbose2' then verbose=2
-      if fn.i = '--verbose3' then verbose=3
       if left(fn.i,2)= '-l' then libraries = libraries';'substr(fn.i,3)
     end
 end -- do i
@@ -68,10 +63,6 @@ if verbose>1 then say 'using CREXX_HOME:' rxpath
  * and have to specify the functions and libraries
  * in the responsefile
  */
-/* if linking then do */
-/*   say 'linking!' */
-/*   exit */
-/* end */
 lpath = '/lib/rxfnsb'libraries
 
 if verbose>1 then say 'crexx Library path:' rxpath||lpath
@@ -175,7 +166,8 @@ say '-version        -- display the version number'
 say '-exec           -- execute (default)'
 say '-native         -- build native executable; implies noexec; default nonative'
 say '-verbose[0-3]   -- report on progress; default verbose0'
-
+say
+say 'all options can also be prefixed with --'
 return
 
 logo: procedure
