@@ -118,6 +118,10 @@ Context *cntx_f() {
     context->lexer_stem_mode = 0;
     context->hashcomments = 1; /* This is the recommended & default line comment style */
     context->decimal = 0; /* Use binary decimal by default */
+    context->binary = 1; /* Use binary numbers by default */
+    context->debug_mode = 0;
+    context->optimise = 1; /* Optimise by default */
+    context->decimal_plugin = 0; /* No decimal plugin by default */
 
     return context;
 }
@@ -341,24 +345,25 @@ int rxcmain(int argc, char *argv[]) {
         exit(-1);
     }
 
-    /* Load VM Plugins */
-    // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)
-    CALL_PLUGIN_INITIALIZER(decnumber); // MC Decimal Plugin
-    decplugin* decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
-    if (!decimal) {
-        printf("PANIC - No default decimal plugin\n");
-        exit(255); // Documented 255 is for missing decimal plugin
-    }
-
-    // Set the number of digits in the rxvmplugin context
-    decimal->setDigits(decimal, 18); // 18 is the max significant digits for the default plugin
-
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);
     context->debug_mode = debug_mode;
     context->optimise = do_optimise;
     if (file_directory) context->location = file_directory;
     else context->location = location;
+
+    /* Load VM Plugins */
+    // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)
+    CALL_PLUGIN_INITIALIZER(decnumber); // MC Decimal Plugin
+    context->decimal_plugin = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
+    if (!context->decimal_plugin) {
+        printf("PANIC - No default decimal plugin\n");
+        exit(255); // Documented 255 is for missing decimal plugin
+    }
+    if (context->debug_mode) printf("Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
+
+    // Set the number of digits in the rxvmplugin context
+    ((decplugin*)context->decimal_plugin)->setDigits((decplugin*)context->decimal_plugin, 18); // Default to 18 digits
 
     /* Create Options parser to work out required language level */
     opt_pars(context);

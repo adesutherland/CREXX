@@ -989,6 +989,99 @@ RX_INLINE int string2float(double *out, char *string, size_t length) {
     return rc;
 }
 
+/* Convert a string to a decimal - returns 1 on error
+ * Validated the string is a valid decimal number
+ * and returns the decimal as a malloced string in out.
+ * The out must be freed by the caller
+ * Returns 0 on success, 1 on error.
+ */
+RX_INLINE int stringtodecimal(char **out, char *string, size_t length) {
+    // Note that decimal can have a large number of digits
+    // First validate the string is a valid decimal number by checking each character
+    // Skip leading spaces
+    *out = NULL; // Set output to NULL (used on an error)
+    int i;
+
+    if (length == 0) {
+        // Empty string is not a valid decimal
+        return 1; // Error
+    }
+    // Skip leading spaces
+    for (i = 0; i < length; i++) {
+        if (!isspace(string[i])) break;
+    }
+    int start = i;
+    // Check for a sign
+    if (string[i] == '+') {
+        i++;
+        start = i;
+    }
+    else if (string[i] == '-') {
+        i++;
+    }
+    // Check for digits before the decimal point
+    int has_digits = 0;
+    while (i < length && isdigit(string[i])) {
+        has_digits = 1;
+        i++;
+    }
+    // Check for a decimal point
+    if (i < length && string[i] == '.') {
+        i++;
+        // Check for digits after the decimal point
+        while (i < length && isdigit(string[i])) {
+            has_digits = 1;
+            i++;
+        }
+    }
+    // Check for a trailing exponent
+    if (i < length && (string[i] == 'e' || string[i] == 'E')) {
+        i++;
+        // Check for an optional sign
+        if (i < length && (string[i] == '+' || string[i] == '-')) {
+            i++;
+        }
+        // Check for digits in the exponent
+        if (i < length && isdigit(string[i])) {
+            while (i < length && isdigit(string[i])) {
+                i++;
+            }
+        }
+        else {
+            // No digits in exponent
+            return 1; // Error
+        }
+    }
+    int end = i; // Mark the end of the valid decimal part
+
+    // Check for a trailing 'd' which we use as a marker for a decimal literal
+    if (i < length && string[i] == 'd') {
+        i++;
+    }
+
+    // Skip trailing spaces
+    while (i < length && isspace(string[i])) {
+        i++;
+    }
+
+    // If we reached the end of the string and we have digits, we have a valid decimal
+    if (i == length && has_digits) {
+        // Allocate memory for the decimal string
+        *out = malloc(end - start + 1);
+        if (*out == NULL) {
+            // Error allocating memory - PANIC and exit with error
+            fprintf(stderr, "Memory allocation error in stringtodecimal\n");
+            exit(EXIT_FAILURE);
+        }
+        // Copy the valid decimal part to the output
+        memcpy(*out, string + start, end - start);
+        (*out)[end - start] = '\0'; // Null-terminate the string
+        return 0; // Success
+    }
+    // If we reach here, the string is not a valid decimal
+    return 1; // Error
+}
+
 // Static function to trim trailing zeros from a number format and including possibly the decimal point
 static void trim_numeric_trailing_zeros(char *str) {
     size_t len = strlen(str);

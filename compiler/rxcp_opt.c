@@ -11,6 +11,9 @@
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
+#include "rxvmplugin_framework.h"
+#include "rxbin.h" /* Needed for rxvmvars.h */
+#include "rxvmvars.h"
 
 /* Optimiser payload */
 typedef struct Payload {
@@ -59,177 +62,6 @@ static void update_string(ASTNode* node) {
             /* Do nothing */
             return;
     }
-}
-
-/* Convert a string to an integer - returns 1 on error */
-static int string2integer(rxinteger *out, char *string, size_t length) {
-    char *buffer = malloc(length + 1);
-    char *end = buffer;
-    int rc = 0;
-    errno = 0;
-
-    /* Null terminated buffer */
-    buffer[length] = 0;
-    memcpy(buffer, string, length);
-
-    /* Convert */
-    #ifdef __32BIT__
-    rxinteger l = strtol(buffer, &end, 10);
-    #else
-    rxinteger l = strtoll(buffer, &end, 10);
-    #endif
-
-    /* Convert error */
-    if (errno == ERANGE || end == buffer) {
-        rc = 1;
-        goto end_string2integer;
-    }
-
-    /* Check only trailing spaces */
-    while (*end != 0) {
-        if (!isspace(*end)) {
-            rc = 1;
-            goto end_string2integer;
-        }
-        end++;
-    }
-
-    /* All good */
-    *out = l;
-
-    end_string2integer:
-    free(buffer);
-    return rc;
-}
-
-/* Convert a string to a float - returns 1 on error */
-static int string2float(double *out, char *string, size_t length) {
-    char *buffer = malloc(length + 1);
-    char *end = buffer;
-    int rc = 0;
-    errno = 0;
-
-    /* Null terminated buffer */
-    buffer[length] = 0;
-    memcpy(buffer, string, length);
-
-    /* Convert */
-    double l = strtod(buffer, &end);
-
-    /* Convert error */
-    if (errno == ERANGE || end == buffer) {
-        rc = 1;
-        goto end_string2float;
-    }
-
-    /* Check only trailing spaces */
-    while (*end != 0) {
-        if (!isspace(*end)) {
-            rc = 1;
-            goto end_string2float;
-        }
-        end++;
-    }
-
-    /* All good */
-    *out = l;
-
-    end_string2float:
-    free(buffer);
-    return rc;
-}
-
-/* Convert a string to a decimal - returns 1 on error
- * Validated the string is a valid decimal number
- * and returns the decimal as a malloced string in out.
- * Returns 0 on success, 1 on error.
- */
-/* The out will be a malloced string that must be freed by the caller */
-static int stringtodecimal(char **out, char *string, size_t length) {
-    // Note that decimal can have a large number of digits
-    // First validate the string is a valid decimal number by checking each character
-    // Skip leading spaces
-    *out = NULL; // Set output to NULL (used on an error)
-    int i;
-
-    if (length == 0) {
-        // Empty string is not a valid decimal
-        return 1; // Error
-    }
-    // Skip leading spaces
-    for (i = 0; i < length; i++) {
-        if (!isspace(string[i])) break;
-    }
-    int start = i;
-    // Check for a sign
-    if (string[i] == '+') {
-        i++;
-        start = i;
-    }
-    else if (string[i] == '-') {
-        i++;
-    }
-    // Check for digits before the decimal point
-    int has_digits = 0;
-    while (i < length && isdigit(string[i])) {
-        has_digits = 1;
-        i++;
-    }
-    // Check for a decimal point
-    if (i < length && string[i] == '.') {
-        i++;
-        // Check for digits after the decimal point
-        while (i < length && isdigit(string[i])) {
-            has_digits = 1;
-            i++;
-        }
-    }
-    // Check for a trailing exponent
-    if (i < length && (string[i] == 'e' || string[i] == 'E')) {
-        i++;
-        // Check for an optional sign
-        if (i < length && (string[i] == '+' || string[i] == '-')) {
-            i++;
-        }
-        // Check for digits in the exponent
-        if (i < length && isdigit(string[i])) {
-            while (i < length && isdigit(string[i])) {
-                i++;
-            }
-        }
-        else {
-            // No digits in exponent
-            return 1; // Error
-        }
-    }
-    int end = i; // Mark the end of the valid decimal part
-
-    // Check for a trailing 'd' which we use as a marker for a decimal literal
-    if (i < length && string[i] == 'd') {
-        i++;
-    }
-
-    // Skip trailing spaces
-    while (i < length && isspace(string[i])) {
-        i++;
-    }
-
-    // If we reached the end of the string and we have digits, we have a valid decimal
-    if (i == length && has_digits) {
-        // Allocate memory for the decimal string
-        *out = malloc(end - start + 1);
-        if (*out == NULL) {
-            // Error allocating memory - PANIC and exit with error
-            fprintf(stderr, "Memory allocation error in stringtodecimal\n");
-            exit(EXIT_FAILURE);
-        }
-        // Copy the valid decimal part to the output
-        memcpy(*out, string + start, end - start);
-        (*out)[end - start] = '\0'; // Null-terminate the string
-        return 0; // Success
-    }
-    // If we reach here, the string is not a valid decimal
-    return 1; // Error
 }
 
 /* Convert a CONSTANT node from a STRING to new_type */
@@ -357,30 +189,45 @@ static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int val
 static int compare_nodes(ASTNode* node1, ASTNode* node2) {
     double fdiff;
     rxinteger idiff;
+
+    if (node1->value_type == TP_INTEGER) {
+        idiff = node1->int_value - node2->int_value;
+        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    }
+
+    if (node1->value_type == TP_BOOLEAN) {
+        idiff = (node1->int_value != 0) - (node2->int_value != 0); /* Weird */
+        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    }
+
     if (node1->value_type == TP_FLOAT) {
         fdiff = node1->float_value - node2->float_value;
         return fdiff>0 ? 1 : (fdiff<0 ? -1 : 0);
     }
 
-    else if (node1->value_type == TP_INTEGER) {
-        idiff = node1->int_value - node2->int_value;
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+    if (node1->value_type == TP_DECIMAL) {
+        Context* context = node1->context;
+        decplugin* decplugin = context->decimal_plugin;
+        value* val1 = value_f();
+        value* val2 = value_f();
+        decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
+        decplugin->decimalFromString(decplugin, val2, node2->decimal_value);
+        int cmp = decplugin->decimalCompare(decplugin, val1, val2);
+        clear_value(val1);
+        free(val1);
+        clear_value(val2);
+        free(val2);
+        return cmp;
     }
 
-    else if (node1->value_type == TP_BOOLEAN) {
-        idiff = (node1->int_value != 0) - (node2->int_value != 0); /* Weird */
+    /* Use STRING */
+    if ((idiff = memcmp(node1->node_string, node2->node_string,
+                        MIN(node1->node_string_length,
+                            node2->node_string_length)) != 0))
+        return (int)idiff;
+    else {
+        idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
         return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
-    }
-
-    else { /* Use STRING */
-        if ((idiff = memcmp(node1->node_string, node2->node_string,
-                            MIN(node1->node_string_length,
-                                node2->node_string_length)) != 0))
-            return (int)idiff;
-        else {
-            idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
-            return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
-        }
     }
 }
 

@@ -80,6 +80,8 @@ typedef struct Context {
     char slashcomments;
     /* Language Options */
     char decimal;
+    char binary;
+    void *decimal_plugin; /* Pointer to the decimal plugin */
     /* Optimiser Options */
     int optimise;
 } Context;
@@ -210,6 +212,8 @@ const char* tk_tp_nm(int type); /* Get Token Type Name */
 ASTNode* ast_f(Context* context, NodeType type, Token *token);
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks */
 ASTNode *ast_fstr(Context* context, Token *token);
+/* ASTNode Factory - adds a DECIMAL token removing the trailing d if it exists */
+ASTNode *ast_fdec(Context* context, Token *token);
 /* ASTNode Factory - With node type*/
 ASTNode *ast_ft(Context* context, NodeType type);
 /* ASTNode Factory - With node type and string value */

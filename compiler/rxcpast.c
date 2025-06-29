@@ -699,6 +699,20 @@ ASTNode *ast_fstr(Context* context, Token *token) {
 }
 #undef ADD_CHAR_TO_BUFFER
 
+/* ASTNode Factory - adds a DECIMAL token removing the trailing d if it exists */
+ASTNode *ast_fdec(Context* context, Token *token) {
+    /* Make the token */
+    ASTNode *node = ast_f(context, DECIMAL, token);
+
+    /* If the last character is a 'd' then remove it */
+    if (node->node_string[node->node_string_length - 1] == 'd' ||
+        node->node_string[node->node_string_length - 1] == 'D') {
+        node->node_string_length--;
+        node->node_string[node->node_string_length] = 0; /* Null terminate */
+    }
+    return node;
+}
+
 /* Set the string value of an ASTNode. string must be malloced. memory is
  * then managed by the AST Library (the caller must not free it) */
 void ast_sstr(ASTNode *node, char* string, size_t length) {
