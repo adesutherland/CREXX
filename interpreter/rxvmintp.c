@@ -467,6 +467,25 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     interrupts |= 1 << (int_num - 1);
 }
 
+#define IS_UNICODE_WHITESPACE(cp) ( \
+    (cp) == 0x0009 || /* Tab */       \
+    (cp) == 0x000A || /* Line Feed */ \
+    (cp) == 0x000B || /* Vertical Tab */ \
+    (cp) == 0x000C || /* Form Feed */ \
+    (cp) == 0x000D || /* Carriage Return */ \
+    (cp) == 0x0020 || /* Space */     \
+    (cp) == 0x0085 || /* Next Line */ \
+    (cp) == 0x00A0 || /* No-Break Space */ \
+    (cp) == 0x1680 || \
+    (cp) == 0x180E || \
+    ((cp) >= 0x2000 && (cp) <= 0x200A) || \
+    (cp) == 0x2028 || \
+    (cp) == 0x2029 || \
+    (cp) == 0x202F || \
+    (cp) == 0x205F || \
+    (cp) == 0x3000 )
+
+
 /* Interpreter */
 RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *procedure;
@@ -4363,8 +4382,7 @@ START_OF_INSTRUCTIONS
             next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             CALC_DISPATCH_MANUAL
         DISPATCH
-
-/* ------------------------------------------------------------------------------------
+ /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -4386,7 +4404,7 @@ START_OF_INSTRUCTIONS
 #else
                     ch = op2R->string_value[result];
 #endif
-                    if (ch == ' ') goto blankfound;
+                    if (IS_UNICODE_WHITESPACE(ch)) goto blankfound;
                 }
                 result = -len;
             blankfound:
@@ -4417,7 +4435,7 @@ START_OF_INSTRUCTIONS
 #else
             ch = op2R->string_value[result];
 #endif
-            if (ch != ' ') goto nonblankfound;
+            if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
         }
         result = -len;
 
@@ -4584,8 +4602,7 @@ START_OF_INSTRUCTIONS
                 char *charpos;
                 rxinteger offset=op1RI;
                 offset--;    // make position an offset
-                size_t haystack_len = strlen(op3R->string_value);
-                if (offset < 0 || offset >= haystack_len) {
+                if (offset < 0 || offset >= op3R->string_length) {
                     REG_RETURN_INT(0);  // Or -1, depending on your logic
                 } else {
                     op2R->string_value[op2R->string_length]=0;
