@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.24)
 
 set(RXASBINS
         _elapsed.rxbin
-        copies.rxbin
+        # copies.rxbin
         # lastpos.rxbin
-        left.rxbin
+        # left.rxbin
         # length.rxbin
         # pos.rxbin
-        reverse.rxbin
-        right.rxbin
+        # reverse.rxbin
+        # right.rxbin
         # substr.rxbin
         subword.rxbin
         word.rxbin

@@ -6,11 +6,11 @@ import rxfnsb
 errors=0
 if copies('abc',3) \= 'abcabcabc' then do
   errors=errors+1
-  say 'COPIES failed in test 1 '
+  say 'COPIES failed in test 1 'copies('abc',3)
 end
 if copies('abc',0) \= '' then do
   errors=errors+1
-  say 'COPIES failed in test 2 '
+  say 'COPIES failed in test 2 'copies('abc',0)
   /* These from Mark Hessling. */
 end
 if copies("foo",3) \= "foofoofoo" then do

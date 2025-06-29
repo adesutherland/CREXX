@@ -1,4 +1,4 @@
-/* 
+/*
  * rexx LEFT bif in rxas. Uses substr.rxas
  * no error checking
  * left: procedure = .string

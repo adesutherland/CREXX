@@ -16,6 +16,7 @@ set(BIFS
 		centre
 		changestr
 		compare
+		copies
 		countstr
 		d2b
 		d2c
@@ -38,7 +39,10 @@ set(BIFS
 		overlay
 		pos
 		lastpos
+		left
+		right
 		raise
+		reverse
 		sign
 		space
 		strip
