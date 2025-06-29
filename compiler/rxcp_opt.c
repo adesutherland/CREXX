@@ -145,7 +145,7 @@ static int string2float(double *out, char *string, size_t length) {
  * Returns 0 on success, 1 on error.
  */
 /* The out will be a malloced string that must be freed by the caller */
-int stringtodecimal(char **out, char *string, size_t length) {
+static int stringtodecimal(char **out, char *string, size_t length) {
     // Note that decimal can have a large number of digits
     // First validate the string is a valid decimal number by checking each character
     // Skip leading spaces
@@ -314,6 +314,18 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
     node->value_type = TP_FLOAT;
     node->node_type = CONSTANT;
     node->float_value = value;
+    update_string(node);
+    string_to_type(node, node->target_type);
+    payload->changed = 1;
+}
+
+static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value) {
+    size_t length = strlen(value);
+    ast_prnc(node);
+    node->value_type = TP_DECIMAL;
+    node->node_type = CONSTANT;
+    node->decimal_value = malloc(length + 1); // +1 for null terminator
+    strcpy(node->decimal_value, value);
     update_string(node);
     string_to_type(node, node->target_type);
     payload->changed = 1;

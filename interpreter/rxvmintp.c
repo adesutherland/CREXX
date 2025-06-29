@@ -575,7 +575,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     current_frame->decimal = (decplugin*)get_rxvmplugin(RXVM_PLUGIN_DECIMAL);
     if (!current_frame->decimal) {
         printf("PANIC - No default decimal plugin\n");
-        exit(999); // Documented 999 is for missing decimal plugin
+        exit(255); // Documented 255 is for missing decimal plugin
     }
     current_frame->decimal_loaded_here = 1;
 
