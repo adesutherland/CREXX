@@ -98,13 +98,6 @@ jobs:
           ./debug/rxbvme -v
         shell: bash
 
-      - name: Build CMS lexers
-        run: |
-          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rxasscan.c assembler/rxasscan.re
-          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rxcposcn.c compiler/rxcposcn.re
-          ${{ runner.temp }}/release/re2c/re2c -I S370 -o S370/rexbscan.c compiler/rxcpbscn.re
-        shell: bash
-
       - name: Upload Executable
         if: env.RELEASE_ID
         uses: actions/upload-artifact@v4
@@ -133,12 +126,6 @@ jobs:
           name: rxasscan.c
           path: ${{ runner.temp }}/release/assembler/rxasscan.c
 
-      - name: Upload rxasscan.c.s370
-        uses: actions/upload-artifact@v4
-        with:
-          name: rxasscan.c.s370
-          path: S370/rxasscan.c
-
       - name: Upload rxasgrmr.c
         uses: actions/upload-artifact@v4
         with:
@@ -156,12 +143,6 @@ jobs:
         with:
           name: rxcposcn.c
           path: ${{ runner.temp }}/release/compiler/rxcposcn.c
-
-      - name: Upload rxcposcn.c.s370
-        uses: actions/upload-artifact@v4
-        with:
-          name: rxcposcn.c.s370
-          path: S370/rxcposcn.c
 
       - name: Upload rxcpopgr.c
         uses: actions/upload-artifact@v4
@@ -181,12 +162,6 @@ jobs:
           name: rexbscan.c
           path: ${{ runner.temp }}/release/compiler/rexbscan.c
 
-      - name: Upload rexbscan.c.s370
-        uses: actions/upload-artifact@v4
-        with:
-          name: rexbscan.c.s370
-          path: S370/rexbscan.c
-
       - name: Upload rxcpbgmr.c
         uses: actions/upload-artifact@v4
         with:
@@ -198,135 +173,6 @@ jobs:
         with:
           name: rxcpbgmr.h
           path: ${{ runner.temp }}/release/compiler/rxcpbgmr.h
-
-  #**************************************************#
-  build-cms:
-    name: Build for CMS
-    runs-on: [ubuntu-latest]
-    needs: [build-ubuntu]
-    container: adriansutherland/vm370:builder
-   
-    steps:
-    - name: Determine Release Name
-      run: |
-        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-        echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-        elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-        echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
-        elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
-        echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
-        else
-        echo "Skip release"
-        fi
-      shell: bash
-
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Download instrmiss.h
-      uses: actions/download-artifact@v4
-      with:
-        name: instrmiss.h
-        path: machine
-
-    - name: Download instrset.h
-      uses: actions/download-artifact@v4
-      with:
-        name: instrset.h
-        path: machine
-
-    - name: Download rxasscan.c.s370
-      uses: actions/download-artifact@v4
-      with:
-        name: rxasscan.c.s370
-        path: S370
-
-    - name: Download rxasgrmr.c
-      uses: actions/download-artifact@v4
-      with:
-        name: rxasgrmr.c
-        path: assembler
-
-    - name: Download rxasgrmr.h
-      uses: actions/download-artifact@v4
-      with:
-        name: rxasgrmr.h
-        path: assembler
-
-    - name: Download rxcposcn.c.s370
-      uses: actions/download-artifact@v4
-      with:
-        name: rxcposcn.c.s370
-        path: S370
-
-    - name: Download rxcpopgr.c
-      uses: actions/download-artifact@v4
-      with:
-        name: rxcpopgr.c
-        path: compiler
-
-    - name: Download rxcpopgr.h
-      uses: actions/download-artifact@v4
-      with:
-        name: rxcpopgr.h
-        path: compiler
-
-    - name: Download rexbscan.c.s370
-      uses: actions/download-artifact@v4
-      with:
-        name: rexbscan.c.s370
-        path: S370
-
-    - name: Download rxcpbgmr.c
-      uses: actions/download-artifact@v4
-      with:
-        name: rxcpbgmr.c
-        path: compiler
-
-    - name: Download rxcpbgmr.h
-      uses: actions/download-artifact@v4
-      with:
-        name: rxcpbgmr.h
-        path: compiler
-
-    - name: Move Source
-      run: |
-        mkdir /opt/hercules/vm370/io
-        mv * /opt/hercules/vm370/io
-      shell: bash
-
-    - name: Build
-      working-directory: /opt/hercules/vm370     
-      run: |
-        chmod -R ugo+rw *
-        hercules -f hercules.conf -d >/dev/null 2>/dev/null &
-        cd io/S370
-        chmod +x *.sh
-         echo "Running CMSBUILD"
-        ./cmsbuild.sh
-      shell: bash
-
-    - name: Get Executable
-      run: |
-        mkdir -p exe
-        cp /opt/hercules/vm370/io/crexxbin.aws exe
-        cp /opt/hercules/vm370/io/crexxsrc.aws exe
-        cp /opt/hercules/vm370/io/crexxbin.vmarc exe
-        cp /opt/hercules/vm370/io/crexxsrc.vmarc exe
-        cp /opt/hercules/vm370/io/LICENSE exe
-        cp /opt/hercules/vm370/io/README.md exe
-        cp /opt/hercules/vm370/io/SECURITY.md exe
-        cp /opt/hercules/vm370/io/S370/cmsinstall.sh exe
-        cp /opt/hercules/vm370/io/history.txt exe
-        chmod -R ugo+r exe
-      shell: bash
-
-    - name: Upload Executable
-      if: env.RELEASE_ID
-      uses: actions/upload-artifact@v4
-      with:
-        name: CREXX-CMS
-        path: ./exe
 
 #**************************************************#
   build-windows:
@@ -568,7 +414,7 @@ jobs:
 #**************************************************#
   release:
     name: Release
-    needs: [build-ubuntu, build-windows, build-cms, build-macos]
+    needs: [build-ubuntu, build-windows, build-macos]
     runs-on: [ubuntu-latest]
     steps:
 
@@ -597,17 +443,6 @@ jobs:
           git push -f origin ${{ env.RELEASE_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get CMS binary
-        if: env.RELEASE_ID
-        uses: actions/download-artifact@v4
-        with:
-          name: CREXX-CMS
-          path: CREXX-CMS
-
-      - name: ZIP CMS binary 
-        run: 
-          zip -r CREXX-CMS.zip CREXX-CMS
 
       - name: Get ubuntu binary
         if: env.RELEASE_ID
@@ -663,7 +498,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./CREXX-CMS.zip
             ./CREXX-Ubuntu.zip
             ./CREXX-Windows.zip
             ./CREXX-MacOS.zip
