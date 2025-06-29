@@ -104,13 +104,16 @@ if delword(x,99)  \= 'CREXX is faster than BREXX' then do
   errors=errors+1
   say 'DELWORD failed in test 24 '
 end
+say x' after 24'
 if delword(x,1,1) \= 'is faster than BREXX' then do
   errors=errors+1
   say 'DELWORD failed in test 25 '
 end
+say x' after 25'
+## x='CREXX is faster than BREXX'
 if delword(x,2,1) \= 'CREXX faster than BREXX' then do
   errors=errors+1
-  say 'DELWORD failed in test 26 '
+  say 'DELWORD failed in test 26 "'delword(x,2,1)'"'
 end
 if delword(x,3,1) \= 'CREXX is than BREXX' then do
   errors=errors+1

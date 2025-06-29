@@ -5,7 +5,7 @@ namespace rxfnsb expose delword
 
 /* delword(string,wordnumber-to-delete,length) delete one word, or the remaining words in string */
 delword: procedure = .string
-  arg expose string = .string, wnum = .int, wcount = -1
+  arg string = .string, wnum = .int, wcount = -1
 
   if wnum<1    then return string
   if wcount=0  then return string

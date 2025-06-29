@@ -16,6 +16,16 @@ trunc: procedure = .string
    assembler itos schar
 
  /*  assembler ftos innum      */        /* translate input from float to string */
+ /* translate exponentional format to integer */
+   ppi=pos('E',innum)
+   if ppi>0 then do
+      num=substr(innum,1,ppi-1)
+      exp=substr(innum,ppi+1)
+      num=num*10**exp
+      assembler itos num
+      innum=num||'.0000000000000000'
+   end
+
    Assembler strlen hlen,innum       /* determine string length              */
 
 /* step 1 transfer all digits before decimal point */

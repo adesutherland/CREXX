@@ -4,20 +4,21 @@ import rxfnsb
 
 errors=0
 /* These from TRL */
-
+abc='ABC'
+##   1234567
 if  '  ABC  ' \= centre(abc,7)             then do
   errors=errors+1
-  say 'CENTER failed in test 1 '
+  say 'CENTER failed in test 1 "'centre(abc,7)'"'
 end
 
 if center(abc,7) \= '  ABC  '              then do
   errors=errors+1
-  say 'CENTER failed in test 2 '
+  say 'CENTER failed in test 2 "'centre(abc,7)'"'
 end
 
 if center(abc,8,'-') \= '--ABC---'         then do
   errors=errors+1
-  say 'CENTER failed in test 3 '
+  say 'CENTER failed in test 3 "'center(abc,8,'-')'"'
 end
 
 if center('The blue sky',8) \= 'e blue s'  then do
@@ -73,9 +74,10 @@ end
 
 /* 1234567890123456789012345678901234567890123 */
 x='the quick brown fox jumps over the lazy dog'
-if center(x,43,) \= 'the quick brown fox jumps over the lazy dog ' then do
+                  /* 1234567890123456789012345678901234567890123 */
+if center(x,43,) \= 'the quick brown fox jumps over the lazy dog' then do
   errors=errors+1
-  say 'CENTER failed in test 14 '
+  say 'CENTER failed in test 14 ""'center(x,43,)'"'
 end
 
 say '|'center(x,43,)'|'

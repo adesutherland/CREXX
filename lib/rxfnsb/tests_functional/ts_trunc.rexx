@@ -78,9 +78,9 @@ if trunc(10000000.5,2) \= 10000000.50 then do
   errors=errors+1
   say 'TRUNC failed in test 15 '
 end
-if trunc(10000000.05,2) \= 10000000.10 then do
+if trunc(10000000.05,2) \= 10000000.05 then do    ## previous comparison value was wrong: 10000000.10
   errors=errors+1
-  say 'TRUNC failed in test 16 '
+  say 'TRUNC failed in test 16 'trunc(10000000.05,2)
 end
 if trunc(10000000.005,2) \= 10000000.00 then do
   errors=errors+1
@@ -90,44 +90,44 @@ if trunc(10000005.5,2) \= 10000005.50 then do
   errors=errors+1
   say 'TRUNC failed in test 18 '
 end
-if trunc(10000000.55,2) \= 10000000.60 then do
+if trunc(10000000.55,2) \= 10000000.55 then do      ## previous comparison value was wrong: 10000000.60
   errors=errors+1
   say 'TRUNC failed in test 19 '
 end
-if trunc(10000000.055,2) \= 10000000.10 then do
+if trunc(10000000.055,2) \= 10000000.05 then do
   errors=errors+1
-  say 'TRUNC failed in test 20 '
+  say 'TRUNC failed in test 20 'trunc(10000000.055,2)
 end
 if trunc(10000000.0055,2) \= 10000000.00 then do
   errors=errors+1
   say 'TRUNC failed in test 21 '
 end
-if trunc(10000000.04,2) \= 10000000.00 then do
+if trunc(10000000.04,2) \= 10000000.04 then do
   errors=errors+1
-  say 'TRUNC failed in test 22 '
+  say 'TRUNC failed in test 22 'trunc(10000000.04,2)
 end
-if trunc(10000000.045,2) \= 10000000.00 then do
+if trunc(10000000.045,2) \= 10000000.04 then do
   errors=errors+1
   say 'TRUNC failed in test 23 '
 end
-if trunc(10000000.45,2) \= 10000000.50 then do
+if trunc(10000000.45,2) \= 10000000.45 then do
   errors=errors+1
   say 'TRUNC failed in test 24 '
 end
 /* Duplicates of test 16
    
    end
-   if trunc(10000000.05,2) \= 10000000.10 then do
+   if trunc(10000000.05,2) \= 10000000.05 then do
    errors=errors+1
    say 'TRUNC failed in test 25 '
    
    end
-   if trunc(10000000.05,2) \= 10000000.10 then do
+   if trunc(10000000.05,2) \= 10000000.05 then do
    errors=errors+1
    say 'TRUNC failed in test 26 '
    
    end
-   if trunc(10000000.05,2) \= 10000000.10 then do
+   if trunc(10000000.05,2) \= 10000000.05 then do
    errors=errors+1
    say 'TRUNC failed in test 27 '
  */
@@ -141,17 +141,17 @@ if trunc(99999999.9,2) \= 99999999.90 then do
   errors=errors+1
   say 'TRUNC failed in test 29 '
 end
-if trunc(99999999.99,2) \= 100000000.00 then do
+if trunc(99999999.99,2) \= 99999999.99 then do
   errors=errors+1
   say 'TRUNC failed in test 30 '
 end
 if trunc(1E2,0) \= 100 then do
   errors=errors+1
-  say 'TRUNC failed in test 31 '
+  say 'TRUNC failed in test 31 'trunc(1E2,0)
 end
 if trunc(12E1,0) \= 120 then do
   errors=errors+1
-  say 'TRUNC failed in test 32 '
+  say 'TRUNC failed in test 32 'trunc(12E1,0)
 end
 if trunc(123.,0) \= 123 then do
   errors=errors+1
@@ -179,7 +179,7 @@ if trunc(123.12345,0) \= 123 then do
 end
 if trunc(1E2,1) \= 100.0 then do
   errors=errors+1
-  say 'TRUNC failed in test 39 '
+  say 'TRUNC failed in test 39 'trunc(1E2,1)
 end
 if trunc(12E1,1) \= 120.0 then do
   errors=errors+1
