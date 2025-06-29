@@ -708,7 +708,6 @@ ASTNode *ast_fdec(Context* context, Token *token) {
     if (node->node_string[node->node_string_length - 1] == 'd' ||
         node->node_string[node->node_string_length - 1] == 'D') {
         node->node_string_length--;
-        node->node_string[node->node_string_length] = 0; /* Null terminate */
     }
     return node;
 }
