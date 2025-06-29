@@ -54,6 +54,7 @@ static void update_string(ASTNode* node) {
         case TP_DECIMAL:
             length = strlen(node->decimal_value);
             buffer = malloc(length + 1);
+            strcpy(buffer,node->decimal_value);
             /* Update the node's string - this also takes ownership of the memory */
             ast_sstr(node, buffer, length);
             return;
@@ -455,14 +456,38 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_ADD:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       child1->float_value +
                                                       child2->float_value);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal addition */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalAdd(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
+                            /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value +
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_MINUS:
@@ -555,16 +580,24 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_PLUS:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                           child1->float_value);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            rewrite_to_decimal_constant(node, payload,
+                                                            child1->decimal_value);
+                        }
+                        else {
+                            /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                             child1->int_value);
+                        }
                         break;
 
                     case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */
                     case FLOAT:
+                    case DECIMAL:
                     case INTEGER:
                     case STRING:
                         node->node_type = CONSTANT;
@@ -622,6 +655,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     rxinteger int_value;
     int bool_value;
     double float_value;
+    char *decimal_value;
     char *node_string;
     size_t node_string_length;
 
@@ -642,6 +676,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         int_value = value_node->int_value;
         bool_value = value_node->bool_value;
         float_value = value_node->float_value;
+        decimal_value = value_node->decimal_value; /* Memory management is owned by the node */
         node_string = value_node->node_string;
         node_string_length = value_node->node_string_length;
 
@@ -669,6 +704,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
                 int_value = value_node->int_value;
                 bool_value = value_node->bool_value;
                 float_value = value_node->float_value;
+                decimal_value = value_node->decimal_value; /* Memory management is owned by the node */
                 node_string = value_node->node_string;
                 node_string_length = value_node->node_string_length;
 
@@ -696,6 +732,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
             int_value = 0;
             bool_value = 0;
             float_value = 0.0;
+            decimal_value = "0.0"; /* Memory management is owned by the node - in this case this is on the stack */
             /* if type is string it is blank, else 0 */
             if (value_type == TP_STRING) {
                 node_string = "";
@@ -723,6 +760,18 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         n->value_type = value_type;
         n->int_value = int_value;
         n->float_value = float_value;
+        /* If the value is a decimal then we need to copy the string into a new malloc'd string */
+        if (decimal_value) {
+            if (n->decimal_value) free(n->decimal_value); /* Free the old one */
+            n->decimal_value = malloc(strlen(decimal_value) + 1);
+            strcpy(n->decimal_value, decimal_value);
+        }
+        else {
+            if (n->decimal_value) {
+                free(n->decimal_value);
+                n->decimal_value = 0;
+            }
+        }
         n->bool_value = bool_value;
         if (n->free_node_string) {
             free(n->node_string);
