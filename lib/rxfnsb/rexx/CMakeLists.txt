@@ -55,6 +55,10 @@ set(BIFS
 		value
 		verify
 		version
+		word
+		words
+		wordindex
+		subword
 		wordlength
 		wordpos
 		x2b

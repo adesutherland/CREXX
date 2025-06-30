@@ -10,12 +10,12 @@ set(RXASBINS
         # reverse.rxbin
         # right.rxbin
         # substr.rxbin
-        subword.rxbin
-        word.rxbin
-        wordindex.rxbin
+        # subword.rxbin
+        # word.rxbin
+        # wordindex.rxbin
         # wordlen.rxbin
         # wordlength.rxbin
-        words.rxbin
+        # words.rxbin
 )
 
 unset(_prev_target)
