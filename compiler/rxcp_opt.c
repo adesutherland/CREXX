@@ -22,6 +22,12 @@ typedef struct Payload {
     char changed;
 } Payload;
 
+static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length);
+static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double value);
+static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
+static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
+static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+
 /* Update the string representation if a CONSTANT node */
 static void update_string(ASTNode* node) {
     char* buffer;
@@ -52,11 +58,27 @@ static void update_string(ASTNode* node) {
             return;
 
         case TP_DECIMAL:
-            length = strlen(node->decimal_value);
-            buffer = malloc(length + 1);
-            strcpy(buffer,node->decimal_value);
-            /* Update the node's string - this also takes ownership of the memory */
-            ast_sstr(node, buffer, length);
+            {
+                /* We need to convert the decimal to a string via the plugin to get the correct format / digits */
+                if (node->decimal_value == 0) {
+                    /* No decimal value - so just return an empty string */
+                    buffer = malloc(1);
+                    buffer[0] = '\0';
+                    ast_sstr(node, buffer, 0);
+                    return;
+                }
+                Context* context = node->context;
+                decplugin* decplugin = context->decimal_plugin;
+                value* value = value_f();
+
+                decplugin->decimalFromString(decplugin, value, node->decimal_value);
+                char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                decplugin->decimalToString(decplugin, value, result_string);
+                /* Update the node's string - this also takes ownership of the memory */
+                ast_sstr(node, result_string, strlen(result_string));
+                clear_value(value);
+                free(value);
+            }
             return;
 
         default:
@@ -67,123 +89,123 @@ static void update_string(ASTNode* node) {
 
 /* Convert a CONSTANT node from a STRING to new_type */
 static void string_to_type(ASTNode* node, ValueType new_type) {
-    double f, floor_val;
-    switch (new_type) {
-        case TP_FLOAT:
-            node->value_type = TP_FLOAT;
-            node->target_type = TP_FLOAT;
-            if (string2float(&node->float_value,node->node_string,node->node_string_length)) {
-                mknd_err(node, "BAD_CONVERSION");
-            }
-            return;
-        case TP_DECIMAL:
-            node->value_type = TP_DECIMAL;
-            node->target_type = TP_DECIMAL;
-            if (stringtodecimal(&node->decimal_value,node->node_string,node->node_string_length)) {
-                mknd_err(node, "BAD_CONVERSION");
-            }
-            return;
-        case TP_BOOLEAN:
-            node->value_type = TP_BOOLEAN;
-            node->target_type = TP_BOOLEAN;
-            /* Convert it to a float and then to 1/0 - slow but safe */
-            if (string2float(&f,node->node_string,node->node_string_length)) {
-                mknd_err(node, "BAD_CONVERSION");
-            }
-            if (f) node->int_value = 1;
-            else node->int_value = 0;
-            update_string(node);
-            break;
-
-        case TP_INTEGER:
-            node->value_type = new_type;
-            node->target_type = new_type;
-            if (string2integer(&node->int_value,node->node_string,node->node_string_length)) {
-                /* Check if it is an int in float format */
+        double f, floor_val;
+        switch (new_type) {
+            case TP_FLOAT:
+                node->value_type = TP_FLOAT;
+                node->target_type = TP_FLOAT;
+                if (string2float(&node->float_value,node->node_string,node->node_string_length)) {
+                    mknd_err(node, "BAD_CONVERSION");
+                }
+                return;
+            case TP_DECIMAL:
+                node->value_type = TP_DECIMAL;
+                node->target_type = TP_DECIMAL;
+                if (stringtodecimal(&node->decimal_value,node->node_string,node->node_string_length)) {
+                    mknd_err(node, "BAD_CONVERSION");
+                }
+                return;
+            case TP_BOOLEAN:
+                node->value_type = TP_BOOLEAN;
+                node->target_type = TP_BOOLEAN;
+                /* Convert it to a float and then to 1/0 - slow but safe */
                 if (string2float(&f,node->node_string,node->node_string_length)) {
                     mknd_err(node, "BAD_CONVERSION");
                 }
-                floor_val = floor(f);
-                /* Less than an "EPSILON" above the floor? */
-                if (f - floor_val < 1e-015 ) {
-                    /* Yes - so and integer */
-                    node->int_value = (rxinteger)floor_val;
-                    return;
-                }
-                /* Less than an "EPSILON" below the next floor (ceiling)? */
-                floor_val += 1.0;
-                if (floor_val - f < 1e-015 ) {
-                    /* Yes - so and integer */
-                    node->int_value = (rxinteger)floor_val;
-                    return;
-                }
-                /* Not an integer */
-                mknd_err(node, "BAD_CONVERSION");
-            }
-            return;
+                if (f) node->int_value = 1;
+                else node->int_value = 0;
+                update_string(node);
+                break;
 
-        case TP_STRING:
-            node->value_type = TP_STRING;
-            node->target_type = TP_STRING;
-            return;
+            case TP_INTEGER:
+                node->value_type = new_type;
+                node->target_type = new_type;
+                if (string2integer(&node->int_value,node->node_string,node->node_string_length)) {
+                    /* Check if it is an int in float format */
+                    if (string2float(&f,node->node_string,node->node_string_length)) {
+                        mknd_err(node, "BAD_CONVERSION");
+                    }
+                    floor_val = floor(f);
+                    /* Less than an "EPSILON" above the floor? */
+                    if (f - floor_val < 1e-015 ) {
+                        /* Yes - so and integer */
+                        node->int_value = (rxinteger)floor_val;
+                        return;
+                    }
+                    /* Less than an "EPSILON" below the next floor (ceiling)? */
+                    floor_val += 1.0;
+                    if (floor_val - f < 1e-015 ) {
+                        /* Yes - so and integer */
+                        node->int_value = (rxinteger)floor_val;
+                        return;
+                    }
+                    /* Not an integer */
+                    mknd_err(node, "BAD_CONVERSION");
+                }
+                return;
 
-        default: ;
+            case TP_STRING:
+                node->value_type = TP_STRING;
+                node->target_type = TP_STRING;
+                return;
+
+            default: ;
+        }
     }
-}
 
-/* Note the string has to be malloced and memory management is then owned by the
- * node (ie. malloc string but DONT free it after the call */
-static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
-    ast_prnc(node);
-    node->value_type = TP_STRING;
-    node->node_type = CONSTANT;
-    ast_sstr(node, string, length);
-    string_to_type(node, node->target_type);
-    payload->changed = 1;
-}
+    /* Note the string has to be malloced and memory management is then owned by the
+     * node (ie. malloc string but DONT free it after the call */
+    static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
+        ast_prnc(node);
+        node->value_type = TP_STRING;
+        node->node_type = CONSTANT;
+        ast_sstr(node, string, length);
+        string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
 
-static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double value) {
-    ast_prnc(node);
-    node->value_type = TP_FLOAT;
-    node->node_type = CONSTANT;
-    node->float_value = value;
-    update_string(node);
-    string_to_type(node, node->target_type);
-    payload->changed = 1;
-}
+    static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double value) {
+        ast_prnc(node);
+        node->value_type = TP_FLOAT;
+        node->node_type = CONSTANT;
+        node->float_value = value;
+        update_string(node);
+        string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
 
-static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value) {
-    size_t length = strlen(value);
-    ast_prnc(node);
-    node->value_type = TP_DECIMAL;
-    node->node_type = CONSTANT;
-    node->decimal_value = malloc(length + 1); // +1 for null terminator
-    strcpy(node->decimal_value, value);
-    update_string(node);
-    string_to_type(node, node->target_type);
-    payload->changed = 1;
-}
+    static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value) {
+        size_t length = strlen(value);
+        ast_prnc(node);
+        node->value_type = TP_DECIMAL;
+        node->node_type = CONSTANT;
+        node->decimal_value = malloc(length + 1); // +1 for null terminator
+        strcpy(node->decimal_value, value);
+        update_string(node);
+        string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
 
-static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value) {
-    ast_prnc(node);
-    node->value_type = TP_INTEGER;
-    node->node_type = CONSTANT;
-    node->int_value = value;
-    update_string(node);
-    string_to_type(node, node->target_type);
-    payload->changed = 1;
-}
+    static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value) {
+        ast_prnc(node);
+        node->value_type = TP_INTEGER;
+        node->node_type = CONSTANT;
+        node->int_value = value;
+        update_string(node);
+        string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
 
-static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value) {
-    if (value) value = 1;
-    ast_prnc(node);
-    node->value_type = TP_BOOLEAN;
-    node->node_type = CONSTANT;
-    node->int_value = value;
-    update_string(node);
-    string_to_type(node, node->target_type);
-    payload->changed = 1;
-}
+    static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value) {
+        if (value) value = 1;
+        ast_prnc(node);
+        node->value_type = TP_BOOLEAN;
+        node->node_type = CONSTANT;
+        node->int_value = value;
+        update_string(node);
+        string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
 
 /* Compares two nodes returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))

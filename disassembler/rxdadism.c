@@ -206,7 +206,7 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
             ix = pgm->binary[index].index;
             c = ((string_constant *)(pgm->const_pool + ix))->string;
             sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
-            out_len = snprintf(buffer, buffer_len, "%.*s", (int)sz, c);
+            out_len = snprintf(buffer, buffer_len, "%.*sd", (int)sz, c);
             break;
         case OP_BINARY:
             ix = pgm->binary[index].index;
