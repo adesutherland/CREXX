@@ -24,7 +24,7 @@ end
 
 /* defaults for options */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0;libraries=''
+execute=1;linking=0;compile=1;libraries=''
 
 /* loop through arguments and find options and program files */
 do i=1 to fn.0
@@ -45,11 +45,12 @@ do i=1 to fn.0
       if fn.i = '-verbose1' then verbose=1
       if fn.i = '-verbose2' then verbose=2
       if fn.i = '-verbose3' then verbose=3
-      if fn.i = '--noexec' then execute=0
+      if fn.i = '-noexec' then execute=0
+      if fn.i = '-nocompile' then compile=0
       if left(fn.i,2)= '-l' then libraries = libraries';'substr(fn.i,3)
     end
 end -- do i
-
+  
 /* figure out the path for libraries etc */
 rxpath=''
 env_wanted='CREXX_HOME'
@@ -76,9 +77,14 @@ do i=1 to words(filenames)
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do
-      say 'rxc command:' rxcmd
-      end
-  address cmd rxcmd output out error err /* Note that cmd has no meaning currently */
+      if compile then say 'rxc command:' rxcmd
+      if compile=0 then
+	do
+	  say 'rxc does not compile due to --nocompile option'
+	  RC = 0
+	end
+    end
+  if compile then address cmd rxcmd output out error err /* Note that cmd has no meaning currently */
   do j = 1 to out.0
     say '> rxc output:' out.j
   end
@@ -88,14 +94,14 @@ do i=1 to words(filenames)
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC
-    say '[ 'res' ] rxc     - Compiled' filename
+    if compile then say '[ 'res' ] rxc     - Compiled' filename
     end
   if RC>0 then exit
   'rxas' filename
   if verbose then do
     if RC = 0 then res='OK'
     else res = RC
-    say '[ 'res' ] rxas    - Assembled' filename
+    if compile then say '[ 'res' ] rxas    - Assembled' filename
   end
   if RC>0 then exit
   
@@ -149,11 +155,12 @@ do i=1 to words(filenames)
   else do
     ex_command = 'rxvme' filename modules
     if verbose>1 then do
-      say 'crexx executes:' ex_command
-      end
-    ex_command
+      if execute then say 'crexx executes:' ex_command
+      if execute=0 then say 'crexx does not execute because of --noexec'
     end
-  end   -- do i
+    if execute then ex_command
+  end
+end   -- do i
     
 help: procedure 
 call logo
@@ -165,7 +172,8 @@ say
 say '-help           -- display (this) help info'
 say '-version        -- display the version number'
 say '-exec           -- execute (default)'
-say '-native         -- build native executable; implies noexec; default nonative'
+say '-compile        -- compile to rxbin (default)'
+say '-native         -- compile to native executable; implies noexec; default nonative'
 say '-verbose[0-3]   -- report on progress; default verbose0'
 say
 say 'all options can also be prefixed with --'
@@ -179,7 +187,4 @@ say 'cRexx compiler driver' rversion
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
 return
-
-
-/* for decimal: gcc -O3 -DNDEBUG -o we -L/Users/rvjansen/apps/crexx_release/interpreter -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/db_decimal -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal -L/Users/rvjansen/apps/crexx_release/machine -L/Users/rvjansen/apps/crexx_release/avl_tree -L/Users/rvjansen/apps/crexx_release/rxpa -L/Users/rvjansen/apps/crexx_release/platform -lrxvml -lrxpa -lmachine -lavl_tree -lplatform -lm -lrxvmplugin -L/Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal -ldecnumber /Users/rvjansen/apps/crexx_release/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a */
 
