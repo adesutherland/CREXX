@@ -4121,7 +4121,8 @@ START_OF_INSTRUCTIONS
                 int ch;
 #ifndef NUTF8
                 string_set_byte_pos(op2R, op3R->int_value);
-                utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                const char *end = utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+                int bytelen = end - op2R->string_value + op2R->string_pos;
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
@@ -4384,6 +4385,9 @@ START_OF_INSTRUCTIONS
         DISPATCH
  /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  Blanks are all unicode white spaces
+ *  returned is the offset which is 0 based
+ *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3)
@@ -4413,7 +4417,10 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  FndNBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
+ *  FndNBlnk REG_REG_REG  return first non blank after op2[op3]          pej 27 August 2021
+ *  Blanks are all unicode white spaces
+ *  returned is the offset which is 0 based
+ *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3)
@@ -4594,6 +4601,8 @@ START_OF_INSTRUCTIONS
         DISPATCH
 /* ------------------------------------------------------------------------------------
  *  find substring in string                                           pej 27 June 2025
+ *  returned is the offset 1-based
+ *  0 mean nothing found
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(STRPOS_REG_REG_REG) CALC_DISPATCH(3)
