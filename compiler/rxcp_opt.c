@@ -513,32 +513,100 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_MINUS:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       child1->float_value -
                                                       child2->float_value);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal subtraction */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalSub(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value -
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_MULT:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       child1->float_value *
                                                       child2->float_value);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal multiplication */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalMul(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value *
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_POWER:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       pow(child1->float_value,
                                                           child2->float_value));
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal power */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalPow(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
                         else {
                             rewrite_to_integer_constant(node, payload,
                                                         (rxinteger) pow(
@@ -549,56 +617,162 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_DIV:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       child1->float_value /
                                                       child2->float_value);
-                        else /* Never Happens */
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal division */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalDiv(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
+                            /* Never Happens */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value /
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_IDIV:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       floor(child1->float_value /
                                                             child2->float_value));
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal integer division */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            decplugin->decimalDiv(decplugin, result, val1, val2);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value /
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_MOD:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                       fmod(child1->float_value,
                                                            child2->float_value));
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal modulo */
+                            value* val1 = value_f();
+                            value* val2 = value_f();
+                            value* result = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
+                            // decplugin->decimalMod(decplugin, result, val1, val2);
+                            // TODO We need to implement decimal modulo in the plugin and rxvm
+                            // TODO We need to implement fload modulo in rxvm (missing instructions)
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, result, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(val2);
+                            free(val2);
+                            clear_value(result);
+                            free(result);
+                        }
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value %
                                                         child2->int_value);
+                        }
                         break;
 
                     case OP_NOT:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_boolean_constant(node, payload,
                                                             child1->float_value ==
                                                             0.0);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal NOT */
+                            value* val1 = value_f();
+                            value* zero = value_f();
+                            int result;
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, zero, "0");
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            result = decplugin->decimalCompare(decplugin, val1, zero);
+                            rewrite_to_boolean_constant(node, payload, result == 0);
+                            clear_value(val1);
+                            free(val1);
+                            clear_value(zero);
+                            free(zero);
+                        }
+                        else {
                             rewrite_to_boolean_constant(node, payload,
                                                             child1->int_value ==
                                                             0);
+                        }
                         break;
 
                     case OP_NEG:
-                        if (node->value_type == TP_FLOAT)
+                        if (node->value_type == TP_FLOAT) {
                             rewrite_to_float_constant(node, payload,
                                                           -child1->float_value);
-                        else
+                        }
+                        else if (node->value_type == TP_DECIMAL) {
+                            /* Decimal negation */
+                            value* val1 = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            decplugin->decimalNeg(decplugin, val1, val1);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, val1, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
+                        }
+                        else {
                             rewrite_to_integer_constant(node, payload,
                                                             -child1->int_value);
+                        }
                         break;
 
                     case OP_PLUS:
@@ -607,8 +781,18 @@ static walker_result opt1_walker(walker_direction direction,
                                                           child1->float_value);
                         }
                         else if (node->value_type == TP_DECIMAL) {
-                            rewrite_to_decimal_constant(node, payload,
-                                                            child1->decimal_value);
+                            /* To ensure correct significant digits we need to
+                             * convert to a decimal number and back */
+                            value* val1 = value_f();
+                            Context* context = node->context;
+                            decplugin* decplugin = context->decimal_plugin;
+                            decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            decplugin->decimalToString(decplugin, val1, result_string);
+                            rewrite_to_decimal_constant(node, payload, result_string);
+                            free(result_string);
+                            clear_value(val1);
+                            free(val1);
                         }
                         else {
                             /* Must be integer */
