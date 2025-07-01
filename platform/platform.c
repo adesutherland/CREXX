@@ -247,8 +247,7 @@ void dirclose(void **dir_ptr) {
 
     struct fl_dir *ptr = *dir_ptr;
 
-    if (!ptr) return;
-
+    if (!ptr || !ptr->d) return;
     closedir(ptr->d);
     free(ptr);
     *dir_ptr = 0;

@@ -1,8 +1,16 @@
-# GUI Programming
+# Graphical User Interfaces and Graphics
+
+## The GTK Plugin
+
+The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with agraphical user interface.
+
+\crexx{} does not implement event loop multitasking or callbacks yet. At the moment, the inclusion of the GTK plugin is a build time option[^option]. 
+
+[^option]: \code{-DENABLE_GTK=ON}
 
 ## Overview
 
-This chapter provides an overview of a lightweight graphical user interface (GUI) plugin for \crexx{}, focusing on the most essential widgets. 
+This section provides an overview of a lightweight graphical user interface (GUI) plugin for \crexx{}, focusing on the most essential widgets. 
 <!-- It contains two files: `gui.c`, which implements the GUI functionality using GTK, and `gui_test.rexx`, which demonstrates how to use the procedures defined in `gui.c`. -->
 
 ## Quick Start Guide
@@ -1275,8 +1283,6 @@ return
 
 ---
 
-## Appendix
-
 ### Function Index
 
 ### X11 Colours
@@ -1300,3 +1306,5 @@ This section provides a list of commonly used X11 colours that you can use in yo
 - **`dimgray`**: A dimmer shade of gray.
 - **`slategray`**: A bluish-gray color.
 - **`light slate gray` **: A light bluish-gray color.
+
+
