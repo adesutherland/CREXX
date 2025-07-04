@@ -652,12 +652,12 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_IDIV:
-                        if (node->value_type == TP_FLOAT) {
-                            rewrite_to_float_constant(node, payload,
-                                                      floor(child1->float_value /
-                                                            child2->float_value));
+                        /* Children are the same and define the processing */
+                        if (node->child->value_type == TP_FLOAT) {
+                            int result = floor(child1->float_value / child2->float_value);
+                            rewrite_to_integer_constant(node, payload, result);
                         }
-                        else if (node->value_type == TP_DECIMAL) {
+                        else if (node->child->value_type == TP_DECIMAL) {
                             /* Decimal integer division */
                             value* val1 = value_f();
                             value* val2 = value_f();
@@ -667,6 +667,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
+                            // TODO We need to implement rounding to the nearest integer in the plugin and rxvm
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
