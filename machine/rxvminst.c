@@ -271,6 +271,7 @@ void init_ops() {
     instr_f("exit", "Exit op1", OP_INT, OP_NONE, OP_NONE);
 
     instr_f("btoi", "Set register integer value from its boolean value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("btod", "Set register decimal value from its boolean value", OP_REG, OP_NONE, OP_NONE);
     instr_f("btof", "Set register float value from its boolean value", OP_REG, OP_NONE, OP_NONE);
     instr_f("btos", "Set register string value from its boolean value", OP_REG, OP_NONE, OP_NONE);
     instr_f("itos", "Set register string value from its int value", OP_REG, OP_NONE, OP_NONE);
@@ -278,6 +279,8 @@ void init_ops() {
     instr_f("itof", "Set register float value from its int value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftoi", "Set register int value from its float value", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftob", "Set register boolean (int 1 or 0) value from its float value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("itob", "Set register boolean (int 1 or 0) value from its integer value", OP_REG, OP_NONE, OP_NONE);
+    instr_f("stob", "Set register boolean (int 1 or 0) value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stof", "Set register float value from its string value", OP_REG, OP_NONE, OP_NONE);
     instr_f("stoi", "Set register int value from its string value", OP_REG, OP_NONE, OP_NONE);
 
@@ -432,6 +435,7 @@ void init_ops() {
     instr_f("stod", "Convert Decimal String to Decimal Number op1=s2dec(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dtos", "Convert Decimal Number to Decimal String op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dtoi", "Convert Decimal Number to Integer op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("dtob", "Convert Decimal Number to Boolean op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("itod", "Convert Integer to Decimal Number op1=s2dec(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("ftod", "Convert Float to Decimal Number op1=f2dec(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dtof", "Convert Decimal Number to Float op1=f2dec(op2)", OP_REG, OP_NONE, OP_NONE);

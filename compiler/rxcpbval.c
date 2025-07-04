@@ -1846,7 +1846,10 @@ static walker_result set_node_types_walker(walker_direction direction,
             case OP_DIV:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    set_node_type(node, TP_FLOAT);
+                    /* Promote to at least FLOAT, or to DECIMAL if either of the child1 is DECIMAL */
+                    ValueType type = promotion[child1->value_type][child2->value_type];
+                    type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT */
+                    set_node_type(node, type);
                 }
                 break;
 

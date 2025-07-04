@@ -2758,7 +2758,7 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_num);
                 }
                 else if (node->value_type == TP_DECIMAL) {
-                    temp1 = mprintf("   dsub %c%d,0,%c%d\n",
+                    temp1 = mprintf("   dsub %c%d,0d,%c%d\n",
                                     node->register_type,
                                     node->register_num,
                                     child1->register_type,

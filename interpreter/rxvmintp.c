@@ -1577,6 +1577,17 @@ START_OF_INSTRUCTIONS
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
+ * Convert Boolean to Decimal                                     added August 2024 pej
+ * ------------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BTOD_REG)
+    CALC_DISPATCH(1)
+    DEBUG("TRACE - BTOD R%lu\n", REG_IDX(1));
+    // Convert
+    current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value ? 1 : 0);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+    /* ------------------------------------------------------------------------------------
  * Convert Float to Decimal                                       added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
@@ -1610,6 +1621,16 @@ START_OF_INSTRUCTIONS
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOI R%lu\n", REG_IDX(1));
     current_frame->decimal->decimalToInt(current_frame->decimal, op1R, &op1R->int_value);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ * Convert Decimal to Boolean
+ * ------------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DTOB_REG)
+    CALC_DISPATCH(1)
+    DEBUG("TRACE - DTOB R%lu\n", REG_IDX(1));
+    op1R->int_value = current_frame->decimal->decimalCompareString(current_frame->decimal, op1R, "0") ? 1 : 0; // Convert to boolean
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -3976,6 +3997,32 @@ START_OF_INSTRUCTIONS
 
             if (op1R->float_value) op1R->int_value = 1;
             else op1R->int_value = 0;
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  ITOB_REG  Set register boolean (int set to 1 or 0) value from its int value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(ITOB_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - ITOB R%lu\n", REG_IDX(1));
+
+            if (op1R->int_value) op1R->int_value = 1;
+            else op1R->int_value = 0;
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  ITOB_REG  Set register boolean (int set to 1 or 0) value from its string value
+ *  -----------------------------------------------------------------------------------*/
+        START_INSTRUCTION(STOB_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - STOB R%lu\n", REG_IDX(1));
+
+            if (op1R->string_length != 1) op1R->int_value = 0;
+            else {
+                if (op1R->string_value[0] == '1') {
+                    op1R->int_value = 1;
+                } else {
+                    op1R->int_value = 0;
+                }
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
