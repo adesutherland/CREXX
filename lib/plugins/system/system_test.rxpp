@@ -5,205 +5,291 @@ import rxfnsb
 mainargs(allin)
 ##cflags def nset niflink n1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
 
-##define flen111(len,string)         {len=0; len=length(string)}
-say 123
-String='  C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system'
-say time()
+##define tailstr(tailstring,string,position)  {_pos=position; assembler substring tailstring,string,_pos}
+##define leadstr(leadstring,string,len)       {_len=len; leadstring=string; assembler substcut leadstring,_len}
+##define strupper(result,string)              {assembler strupper result,string}
+
+##define strlen(len,string)                   {len=0;         assembler strlen len,string}
+
+myString='C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system'
+
+say c2x(substr("René",4,1))
+exit
+cycle=1000
+
 elapsedTime=time('us')
-do i=1 to 1000000
-   new=length(string)
+do i=1 to cycle
+   mlen=length(mystring)
+end
+say (time('us')-elapsedtime)/1000000
+say mlen
+elapsedTime=time('us')
+do i=1 to cycle
+   strlen(mlen,mystring)
+end
+say (time('us')-elapsedtime)/1000000
+say mlen
+elapsedTime=time('us')
+do i=1 to cycle
+   new=substr(mystring,4)
 end
 say (time('us')-elapsedtime)/1000000
 say new
+
 elapsedTime=time('us')
-do i=1 to 1000000
-   ## flen111(new,string)
+subst=""
+do i=1 to cycle
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+                     tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+   tailstr(subst,mystring,4)
+      tailstr(subst,mystring,4)
+         tailstr(subst,mystring,4)
+            tailstr(subst,mystring,4)
+               tailstr(subst,mystring,4)
+                  tailstr(subst,mystring,4)
+
 end
 say (time('us')-elapsedtime)/1000000
-say "'"new"'"
-
+say subst
 exit
-
-
-##SYSLIN
-  INCLUDE SYSLIB(NEWPROG)
-  INCLUDE SYSLIB(EXISTMOD)
-  INCLUDE SYSRXFNS(library)
-  NAME NEWPROG
-##end
-##syslib
-  "C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system"
-  "C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\strings"
-##end
-##SYSRXFNS
-  C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\rxfnsb
-##end
-say 'T 'time('T')
-say 'TS 'time('TS')
-say 'Z 'time('Z')
-say 'ZN 'time('ZN')
-say 'UTC 'time('UTC')
-say 'N 'time('N')
-say 'L 'time('L')
-say 'H 'time('H')
-say 'M 'time('M')
-say 'S 'time('S')
-say 'US 'time('US')
-say 'E 'time('E')
-say 'R 'time('R')
-say 'S 'time('S')
-say 'US 'time('US')
-say 'E 'time('E')
-say 'R 'time('R')
-
-##define stemSearch(array,search,from) \
-  {_result=0 \
-   do _ssi=from to array.0 \
-      if pos(search,array._ssi)=0 then iterate \
-      _result=_ssi \
-      leave \
-   end \
-   if _result=0 then result=0 \
-   else result=_result \
-   }
-do i=1 to 100
-   myarray.i='Record 'right(i,3,'0')
-end
-foreach(myarray)
-   say _item
-end
-
-result=0
-do until result=0
-   stemsearch(myarray,'11',result+1)
-   say 111 result
-end
-
-/* system_test.rexx - Test suite for system functions */
-say " test of precompile function, just a simple LOG macro call added"
-say "=== System Functions Test Suite ==="
-var1='second'
-var2='first'
-swap(var1,var2)
-say 1 var1
-say 2 var2
-
-say 111 datatype("var1")
-
-say "C:\Temp\CREXX\myfile.rexx"
-log('Enter System Test with Elapsed Time')
-/* Test environment variables */
-say "Testing getenv()..."
-home = getenv("HOME")
-path = getenv("PATH")
-say "  HOME: '"home"'"
-say "  PATH:" left(path, 50)"..."
-say ""
-log('End function')
-/* Test directory operations */
-say "Testing directory operations..."
-current = getdir()
-
-log("LOG4711 lCurrent directory: "current)
-log("LOG4711 lCurrent directory: "current)
-log("LOG4711 lCurrent directory: "current)
-log("LOG4711 lCurrent directory: "current)
-log("LOG4711 lCurrent directory: "current)
-  say 123
-test_dir = "test_folder"
-say "  "time('l')" Creating directory:" test_dir
-rc = createdir(test_dir)
-if rc = 0 then say "  ✓ Directory created successfully"
-else say "  ✗ Failed to create directory:" rc
-
-say "  "time('l')" Testing directory exists..."
-if testdir(test_dir) = 0 then
-    say "  ✓ Directory exists"
-else say "  ✗ Directory not found"
-
-say "  "time('l')" Changing to test directory..."
-rc = setdir(test_dir)
-if rc = 0 then say "  ✓ Changed directory successfully"
-else say "  ✗ Failed to change directory:" rc
-
-/* Return to original directory */
-call setdir current
-
-say "  "time('l')" Removing test directory..."
-rc = removedir(test_dir)
-if rc = 0 then
-    say "  ✓ Directory removed successfully"
-else
-    say "  ✗ Failed to remove directory:" rc
-say ""
-
-/* Test file operations */
-say "Testing file operations..."
-test_file = "test.txt"
-say "  "time('l')" Creating test file:" test_file
-call lineout test_file, "Test content"
-
-say "  "time('l')" Testing file exists..."
-if testfile(test_file) = 0 then
-    say "  ✓ File exists"
-else
-    say "  ✗ File not found"
-
-new_name = "renamed.txt"
-say "  "time('l')" Renaming file to:" new_name
-rc = renamefile(test_file, new_name)
-if rc = 0 then
-    say "  ✓ File renamed successfully"
-else
-    say "  ✗ Failed to rename file:" rc
-
-say "  "time('l')" Deleting test file..."
-rc = deletefile(new_name)
-if rc = 0 then
-    say "  ✓ File deleted successfully"
-else
-    say "  ✗ Failed to delete file:" rc
-say ""
-
-/* Test clipboard operations */
-say "  "time('l')" Testing clipboard operations..."
-test_text = "Test clipboard text"
-rc = setclipboard(test_text)
-if rc = 0 then do
-    say "  ✓ Text copied to clipboard"
-    clip_content = getclipboard()
-    if clip_content = test_text then
-        say "  ✓ Clipboard content verified"
-    else
-        say "  ✗ Clipboard content mismatch"
-end
-else
-    say "  ✗ Failed to set clipboard:" rc
-say ""
-
-/* Test system information */
-say "  "time('l')" Testing system information..."
-say "  Platform :" opsys()
-say "  Host name:" host()
-say "  User name:" userid()
-say "  Uptime   :" uptime()' seconds'
-say ""
-
-/* Test sleep function */
-say "  "time('l')" Testing sleep()..."
-say "  Sleeping for 1 second (1000 ms) ..."
-call wait 1000
-say time('l')"  ✓ Sleep completed"
-say ""
-
-/* Test beep */
-say "  "time('l')" Testing beep()..."
-rc = beep()
-if rc = 0 then
-    say "  ✓ Beep executed"
-else
-    say "  ✗ Beep failed:" rc
-say ""
-say " end time "time('l')
-say "=== Test Suite Complete ==="
-exit 0

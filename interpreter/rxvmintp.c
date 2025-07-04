@@ -4157,30 +4157,72 @@ START_OF_INSTRUCTIONS
 #endif
             }
             DISPATCH
+// Lazy Peter approach
+#define setCodePointETC()       \
+   {string_set_byte_pos(op2R, op3R->int_value); \
+    start = op2R->string_value + op2R->string_pos; \
+    end = utf8codepoint(start, &ch); \
+    bytelen = end - start;}
+#define split2hex(chr,into)           \
+    {op1R->string_value[into] = hexconst[(chr>> 4) & 0xF];   \
+     op1R->string_value[into+1] = hexconst[chr & 0xF]  ; \
+     op1R->string_value[into+2] = '\0';  }
+
 /* ------------------------------------------------------------------------------------
  *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                       pej 04 November 2021
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+        START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                static const char hexconst[] = {'0','1','2','3','4','5','6','7','8','9','a', 'b', 'c', 'd', 'e', 'f','A', 'B', 'C', 'D', 'E', 'f'};
-                int ch;
+                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+                                                'e', 'f', 'A', 'B', 'C', 'D', 'E', 'f'};
+                int ch, i, bytelen, mode;
+                unsigned char bytebuf[4] = {0, 0, 0, 0};
+
+                if (strstr(op1R->string_value, "UTFV1") > 0) goto hexm2;
+                if (strstr(op1R->string_value, "UTFV2") > 0) goto hexm3;
+
+                char *start, *end;
 #ifndef NUTF8
-                string_set_byte_pos(op2R, op3R->int_value);
-                const char *end = utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
-                int bytelen = end - op2R->string_value + op2R->string_pos;
+                setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
-                rxinteger lhs = (ch >> 4) & 15;   // extract left hand side of value
-                rxinteger rhs = (ch) & 15; // extract right hand side of value
-                op1R->string_value[0] = hexconst[lhs];    // set first character of hex value
-                op1R->string_value[1] = hexconst[rhs];    // set first character of hex value
-                op1R->string_value[2] = '\0';            // set end of string, just to be safe
+                split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
                 PUTSTRLEN(op1R, 2)                  // hex length is 2
+                goto hexdispatch;
+   /* ----- create full UTF8 code -------------- */
+                hexm2:
+#ifndef NUTF8
+                setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
+                for (i = 0; i < bytelen && i < 4; ++i) {
+                    bytebuf[i] = (unsigned char) start[i];
+                }
+#else
+                ch=op2R->string_value[op3R->int_value];
+#endif
+                for (i = 0; i < 4; ++i) {
+                    unsigned char b = bytebuf[i];
+                    split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
+                }
+                PUTSTRLEN(op1R, 8);
+                goto hexdispatch;
+    /* ----- add UTF8 code depending on length -------------- */
+            hexm3:
+#ifndef NUTF8
+                setCodePointETC()   //calculate Codepoint/length, etc. in a macro
+#else
+                ch=op2R->string_value[op3R->int_value];
+#endif
+                for (i = 0; i < bytelen; ++i) {
+                    unsigned char b = start[i];
+                    split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
+                }
+                PUTSTRLEN(op1R, bytelen * 2);
             }
-            DISPATCH
+        hexdispatch:
+        DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  POSCHAR_REG_REG_REG  op1 position of op3 in op2                pej 05 November 2021
