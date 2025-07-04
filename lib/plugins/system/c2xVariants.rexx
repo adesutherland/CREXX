@@ -8,12 +8,7 @@ import system
 import rxfnsb
 /* rxpp: mainargs(allin) */
 arg allin=.string[]
-a=47.11d
-b=2
-say a*b
-say 12//7
-say 12%7
-exit
+
 say ' current c2x presentation, do not handle UTF8 > 1 byte'
 say copies('-',100)
 say "René:       "c2x("René")
@@ -125,7 +120,6 @@ c2xV5: procedure = .string
   len=0
   assembler strlen len,from
   if len=0 then return ""
-  offset=0
   fz="UTFV2"
-  assembler hexchar fz,from,offset
-return fz
+  assembler hexchar fz,from,0
+return strip(fz)

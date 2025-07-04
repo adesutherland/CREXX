@@ -27,7 +27,7 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
 
      add_custom_command(
             OUTPUT ${REXX_SRC}
-            COMMAND ${rxvm}/rxvm ${rxpre} rx_precomp ${lib} -a
+            COMMAND ${rxvm}/rxvm ${rxpre} rxprecomp ${lib} -a
             -I ${REXX_PRE}
             -o ${REXX_SRC}
             -m ${REXX_MACLIB}  > ${REXX_LOG} 2>&1

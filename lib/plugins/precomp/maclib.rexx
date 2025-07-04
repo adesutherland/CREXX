@@ -1,5 +1,8 @@
 /* --- Standard Macro Library for RXPP --- */
 
+##define mainargs(stem)    {arg stem=.string[]}
+
+
 /* Debugging & Introspection */
 ##define debug(expr)       {say '>>' expr '=' expr}
 ##define comment(msg)      {/* msg */}

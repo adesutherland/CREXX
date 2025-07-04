@@ -484,6 +484,17 @@ writeline: procedure
   end
   */
 ## just insert line to buffer
+   if lino=1 then do
+      lino = lino + 1
+      outbuf.lino='/* 'copies('-',70)
+      lino = lino + 1
+      outbuf.lino = ' * PRE Compiled on 'date()' at 'time()
+      lino = lino + 1
+      outbuf.lino = ' * 'copies('-',70)
+      lino = lino + 1
+      outbuf.lino=' */'
+   end
+
    lino = lino + 1
    outbuf.lino = oline
   return
@@ -703,11 +714,9 @@ replaceArg: procedure=.string
     end
     if p>length(str) then leave
     str=insertatc(value,str,p,length(name))    ## use the C-function
-    ##  str=insertat(value,str,p,length(name))
-    ##  if cstr \=str then say "***** '"cstr"' '"str"'"
     posn = p + length(value)
-  ##  say "POS Debug: POS('"name"','"str"',"posn")"
-    p = fpos(name, str, posn)
+    ## if posn>length(str) then say 'string exceeds length'
+    p = pos(name, str, posn)
   end
 return str
 /* ------------------------------------------------------------------
