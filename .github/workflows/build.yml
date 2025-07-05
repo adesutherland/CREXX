@@ -449,3 +449,48 @@ jobs:
             ./CREXX-Ubuntu.zip
             ./CREXX-Windows.zip
             ./CREXX-MacOS.zip
+
+  #**************************************************#
+  # This new job runs for pushes to 'master'
+  # and creates a release candidate.
+  #**************************************************#
+  release-candidate:
+    name: Create Release Candidate
+    runs-on: ubuntu-latest
+    needs: [build-ubuntu, build-windows, build-macos]
+    # Only run this job for pushes to the master branch
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Generate Timestamp and Names
+        id: names
+        run: |
+          echo "RELEASE_NAME=Release Candidate" >> $GITHUB_ENV
+          echo "TAG_NAME=rc-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Zip Artifacts
+        run: |
+          zip -r CREXX-Ubuntu.zip artifacts/CREXX-Ubuntu
+          zip -r CREXX-Windows.zip artifacts/CREXX-Windows
+          zip -r CREXX-MacOS.zip artifacts/CREXX-MacOS
+
+      - name: Create New Release Candidate
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # This is the user-facing title of the release.
+          name: ${{ env.RELEASE_NAME }}
+          # This is the underlying Git tag. It's unique for each run.
+          tag_name: ${{ env.TAG_NAME }}
+          # Mark it as a pre-release, which is appropriate for a candidate.
+          prerelease: true
+          files: |
+            ./CREXX-Ubuntu.zip
+            ./CREXX-Windows.zip
+            ./CREXX-MacOS.zip
