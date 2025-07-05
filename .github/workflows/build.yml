@@ -30,7 +30,7 @@ jobs:
         shell: bash
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -212,7 +212,7 @@ jobs:
       shell: bash
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: 'recursive'
 
@@ -325,7 +325,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -470,6 +470,9 @@ jobs:
     permissions:
       contents: write # Permission is needed here to delete releases
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Delete releases older than 30 days
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
