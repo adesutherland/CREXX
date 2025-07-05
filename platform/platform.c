@@ -325,7 +325,7 @@ char* exefqname()
 
 #else
 
-    exePath[0] = '\0'
+    exePath[0] = '\0';
 
 #endif
 
