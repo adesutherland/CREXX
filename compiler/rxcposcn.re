@@ -4,30 +4,35 @@
 #include "rxcpopgr.h"
 #include "rxcpmain.h"
 
-#define   YYCTYPE     char
+#define   YYCTYPE     unsigned char
 #define   YYCURSOR    s->cursor
+#define   YYLIMIT     s->buff_end
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
 int opt_scan(Context* s) {
     int depth;
 
+/*!re2c
+    re2c:yyfill:enable = 0;
+    re2c:eof = 0;
+*/
+
+    /* Character Encoding Specifics  */
+    /*!include:re2c "encoding.re" */
+
     regular:
-    if (s->cursor >= s->buff_end) {
-        return TK_EOS;
-    }
-    s->top = s->cursor;
 
 /*!re2c
     re2c:yyfill:enable = 0;
+    re2c:eof = 0;
 
-    whitespace = [ \t\v\f]+;
+    eol2 = "\r\n";
+    eol1 = [\r] | [\n];
+    eof = [\000] ;
+    any = [^] \ eof ;
     digit = [0-9];
-    letter = [a-zA-Z];
-    all = [\000-\377];
-    eof = [\000];
-    any = all\eof;
-    symchr = letter|digit|[.!?_];
+    symchr = letter|digit|[._];
     symbol = symchr*;
 */
 
@@ -43,16 +48,38 @@ int opt_scan(Context* s) {
     'LEVELD' { return(TK_LEVELD); }
     'LEVELG' { return(TK_LEVELG); }
     'LEVELL' { return(TK_LEVELL); }
+    'HASHCOMMENTS' { return(TK_HASHCOMMENTS); }
+    'DASHCOMMENTS' { return(TK_DASHCOMMENTS); }
+    'SLASHCOMMENTS' { return(TK_SLASHCOMMENTS); }
+    'NOHASHCOMMENTS' { return(TK_NOHASHCOMMENTS); }
+    'NODASHCOMMENTS' { return(TK_NODASHCOMMENTS); }
+    'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
-    whitespace { goto regular; }
+    $ { return(TK_EOS); }
+    whitespace {
+        s->top = s->cursor;
+        goto regular;
+    }
     ";" { return(TK_EOC); }
-    "\r\n" {
+
+    // Accept all line comment formats
+    [#] {
+       goto skip_line_comment;
+    }
+    "//" {
+       goto skip_line_comment;
+    }
+    "--" {
+       goto skip_line_comment;
+    }
+
+    eol2 {
         s->line++;
         s->linestart = s->cursor+2;
         return(TK_EOC);
     }
-    "\n" {
+    eol1 {
         s->line++;
         s->linestart = s->cursor+1;
         return(TK_EOC);
@@ -63,15 +90,18 @@ int opt_scan(Context* s) {
     comment:
 /*!re2c
     "*/" {
-        if(--depth == 0) goto regular;
+        if(--depth == 0) {
+            s->top = s->cursor;
+            goto regular;
+        }
         else goto comment;
     }
-    "\n" {
+    eol1 {
         s->line++;
         s->linestart = s->cursor+1;
         goto comment;
     }
-    "\r\n" {
+    eol2 {
         s->line++;
         s->linestart = s->cursor+2;
         goto comment;
@@ -81,6 +111,30 @@ int opt_scan(Context* s) {
         goto comment;
     }
     eof { return(TK_EOS); }
+    $ { return(TK_EOS); }
     any { goto comment; }
+*/
+
+skip_line_comment:
+/*!re2c
+  eol1 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor+1;
+    s->top = s->cursor - 1;
+    return(TK_EOC);
+  }
+  eol2 {
+    s->line++;
+    s->prev_linestart = s->linestart;
+    s->linestart = s->cursor+2;
+    s->top = s->cursor - 1;
+    return(TK_EOC);
+  }
+  eof { return(TK_EOS); }
+  $ { return(TK_EOS); }
+  any {
+    goto skip_line_comment;
+  }
 */
 }

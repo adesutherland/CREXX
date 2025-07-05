@@ -1,0 +1,32 @@
+/* wordindx */
+ * wordindx: procedure = .int
+ *   arg string1 = .string, wordnum = .int
+ */
+   .globals=0
+wordindex() .locals=11 .expose=rxfnsb.wordindex
+   .meta "rxfnsb.wordindex"="b" ".int" wordindex() "string1 = .string, wordnum = .int" ""
+   copy  r1,a1      /* string */
+   copy  r2,a2      /* word number      */
+   load  r3,0       /* offset in string */
+   load  r4,100000  /* length doesn't matter */
+   load  r6,0       /* word count       */
+   load  R10,""     /* extracted word   */
+ loop:
+   fndnblnk r3,r1,r3   /* find first/next non blank offset   */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5
+   inc r6              /* else increase word count           */
+                       /* offset of word is in R3            */
+   ieq r7,r6,r2        /* is this the word we ae looking for?*/
+   brt wordi,r7        /* end and return position            */
+   fndblnk r3,r1,r3    /* from offset find next blank offset */
+   ilt r5,r3,0         /* if <0, nothing found, end search   */
+   brt break,r5        /* word not found                     */
+   bct loop,r4,r3      /* continue to look for next non blank char */
+wordi:
+   inc  r3             /* +1 to make offset to position      */
+   br   return
+break:
+   load r3,0
+return:
+   ret r3

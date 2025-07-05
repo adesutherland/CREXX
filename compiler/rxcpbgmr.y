@@ -1,5 +1,5 @@
 /* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
+/* (c) Adrian Sutherland 2021-2023   */
 /* Grammar                      */
 
 %name RexxB 
@@ -9,98 +9,522 @@
 %start_symbol program
 
 %include {
-/* cREXX Phase 0 (PoC 2) Compiler */
-/* (c) Adrian Sutherland 2021   */
-/* Grammar                      */
+/* cREXX Compiler                  */
+/* (c) Adrian Sutherland 2021-2023 */
+/* Grammar                         */
 
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS.
 %wildcard ANYTHING.
 
+/* Low precedence */
+%left ANYTHING.
+
+/* 0 Sets the stack to grow dynamically! */
+%stack_size 0
+
+%stack_overflow
+{
+     /* This should never happen as the stack grows dynamically
+        Have to print the error directly - and exit(1) */
+     fprintf(stderr,"INTERNAL ERROR: Parser Overflow\n");
+     exit(1);
+}
+
+%syntax_error {
+    /*
+    int i;
+    int n = YYNTOKEN;
+    // Example of getting the offending token
+    Token *badToken = yypParser->yytos->minor.yy0;
+    prnt_tok(badToken);
+
+    // Example of getting expected tokens
+    for (i = 0; i < n; ++i) {
+        int a = yy_find_shift_action((YYCODETYPE)i, yypParser->yytos->stateno);
+        if (a != YY_ERROR_ACTION) {
+            fprintf(stderr, "possible token: %s\n", yyTokenName[i]);
+        }
+    }
+    */
+}
+
 /* Program & Structure */
+program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I) TK_EOS.
+                     {
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
+                        add_ast(P,R);
+                        add_ast(R,N);
+                        add_ast(P,I);
+                     }
+
 program(P)       ::= rexx_options(R) instruction_list(I) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(P,I);
                      }
 
+
 /* This case covers when the EOS was handled by an error (e.g. a missing END) in
  * sub-rules */
+program(P)       ::= rexx_options(R) namespace_list(N) instruction_list(I).
+                     {
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
+                        add_ast(P,R);
+                        add_ast(R,N);
+                        add_ast(P,I);
+                     }
+
 program(P)       ::= rexx_options(R) instruction_list(I).
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                         add_ast(P,I);
+                     }
+
+program(P)       ::= rexx_options(R) namespace_list(N) TK_EOS.
+                     {
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
+                        add_ast(P,R);
+                        add_ast(R,N);
                      }
 
 program(P)       ::= rexx_options(R) TK_EOS.
                      {
-                        P = ast_ft(context, PROGRAM_FILE); context->ast = P;
+                        context->ast = ast_ft(context, REXX_UNIVERSE);
+                        P = ast_ft(context, PROGRAM_FILE); add_ast(context->ast,P);
                         add_ast(P,R);
                      }
 
 program(E)       ::= ANYTHING(T) error.
-                     { E = ast_err(context, "49.1", T); context->ast = E; }
+                     { E = ast_err(context, "MISSING_OPTIONS", T); context->ast = E; }
 
 program(E)       ::=  error.
-                     { E = ast_errh(context, "49.2"); }
+                     { E = ast_errh(context, "PARSE_FAILURE"); context->ast = E; }
 
 /* Optional EOC */
 ncl0             ::= TK_EOC.
 ncl0             ::= .
 
-/* Junk sync - also for error reporting */
+/* Skip junk for syncing and for error reporting */
 junk(J)          ::= . { J = 0; }
-junk(J)          ::= junk_list(L). { J = L; }
-junk_list(L)     ::= ANYTHING(L1).
-                   { L = ast_err(context, "49.3", L1); }
-junk_list(L)     ::= junk_list(L1) ANYTHING.
-                   { L = L1; } /* We are only reporting the first error */
+junk(J)          ::= ANYTHING(A) error.
+                     { J = ast_err(context, "EXTRANEOUS", A); }
+junk(J)          ::= TK_BADCOMMENT(C) error.
+                     { J = ast_err(context, "BAD_COMMENT", C); }
+junk(J)          ::= error.
+                     { J = ast_errh(context, "SYNTAX_ERROR"); }
 
-/* Variables / Labels */
-var_symbol(A)    ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
-label(A)         ::= TK_LABEL(S). { A = ast_f(context, LABEL, S); }
+/* Classes / Variables */
+class(C)                 ::= TK_CLASS(T).
+                             { C = ast_f(context, CLASS, T); }
+type_def(A)              ::= class(S).
+                             { A = S; }
+type_def(A)              ::= class(S) array_def_parameters(P).
+                             { A = S; if (P) add_ast(A,P); }
+type_def(A)              ::= TK_CLASS_STEM(S) stem_def_parts(P).
+                             { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
+array_def_parameters(P)  ::= TK_OPEN_SBRACKET def_expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
+                             { P = E; }
+stem_def_parts(L)        ::= stem_def_part(S).
+                             { L = S; }
+stem_def_parts(L)        ::= stem_def_parts(L1) stem_def_part(E).
+                             { if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               add_sbtr(L,E);
+                             }
+stem_def_part(A)         ::= TK_STEMINT(S).
+                             {  /* Remove the leading "." */
+                                S->column++; S->length--; S->token_string++;
+                                A = ast_ft(context, RANGE);
+                                add_ast(A, ast_ft(context, NOVAL));
+                                add_ast(A, ast_f(context, INTEGER, S));
+                             }
+stem_def_part(A)         ::= TK_STEMNOVAL(S).
+                             {  /* Remove the leading "." */
+                                S->column++; S->length--; S->token_string++;
+                                A = ast_ft(context, RANGE);
+                                add_ast(A, ast_ft(context, NOVAL));
+                                add_ast(A, ast_ft(context, NOVAL));
+                             }
+stem_def_part(A)         ::= TK_STEMVAR(S).
+                             { A = mknd_err(ast_f(context, VAR_SYMBOL,S), "INVALID_IN_ARRAY_DEF");}
+stem_def_part(A)         ::= TK_STEMSTRING(S).
+                             { A = mknd_err(ast_f(context, VAR_SYMBOL,S), "INVALID_IN_ARRAY_DEF"); }
+def_expression_list(L)   ::= .
+                             { L = ast_ft(context, RANGE);
+                               add_ast(L, ast_ft(context, NOVAL));
+                               add_ast(L, ast_ft(context, NOVAL));
+                             }
+def_expression_list(L)   ::= def_expression(E).
+                             { L = E; }
+def_expression_list(L)   ::= def_expression_list(L1) TK_COMMA def_expression(E).
+                             { ASTNode* _temp;
+                               if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               add_sbtr(L, E);
+                             }
+def_expression_list(L)   ::= def_expression_list(L1) TK_COMMA.
+                             { ASTNode* _temp;
+                               if (L1) L = L1;
+                               else {
+                                 L = ast_ft(context, RANGE);
+                                 add_ast(L, ast_ft(context, NOVAL));
+                                 add_ast(L, ast_ft(context, NOVAL));
+                               }
+                               _temp = ast_ft(context, RANGE);
+                               add_ast(_temp, ast_ft(context, NOVAL));
+                               add_ast(_temp, ast_ft(context, NOVAL));
+                               add_sbtr(L, _temp);
+                             }
+def_expression(D)        ::=   def_value(S).
+                             { D = ast_ft(context, RANGE);
+                               add_ast(D, ast_ft(context, NOVAL));
+                               add_ast(D, S);
+                             }
+def_expression(D)        ::=   def_value(S1) TK_TO def_value(S2).
+                             { D = ast_ft(context, RANGE);
+                               add_ast(D, S1);
+                               add_ast(D, S2);
+                             }
+def_value(D)             ::=   TK_INTEGER(S).
+                             { D = ast_f(context, INTEGER,S); }
+def_value(D)             ::=   TK_MULT(S).
+                             { D = ast_f(context, NOVAL,S); }
+def_value(D)             ::=   TK_MINUS(O) TK_INTEGER(S).
+                             { D = ast_f(context, OP_NEG, O); add_ast(D, ast_f(context, INTEGER,S)); }
+/* Common errors if a user tried to use an expression in an array definition */
+def_value(D)             ::=   TK_VAR_SYMBOL(S) error. { D = mknd_err(ast_f(context, VAR_SYMBOL,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_FLOAT(S) error. { D = mknd_err(ast_f(context, FLOAT,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_DECIMAL(S) error. { D = mknd_err(ast_f(context, DECIMAL,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_STRING(S) error. { D = mknd_err(ast_f(context, STRING,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_PLUS(S) error. { D = mknd_err(ast_f(context, OP_ADD,S), "INVALID_IN_ARRAY_DEF");}
+def_value(D)             ::=   TK_MINUS(S) error. { D = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_INTEGER ANYTHING(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
+
+var_symbol(A)          ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
+var_symbol(A)          ::= TK_VAR_SYMBOL(S) array_parameters(P).
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+var_symbol(A)          ::= TK_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, VAR_SYMBOL, S); if (P) add_ast(A,P); }
+array_parameters(P)    ::= TK_OPEN_SBRACKET expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
+                           { P = E; }
+stemparts(L)           ::= stempart(S).
+                           { L = S; }
+stemparts(L)           ::= stemparts(L1) stempart(E).
+                           { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L,E);}
+stempart(A)            ::= TK_STEMVAR(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, VAR_SYMBOL, S);
+                           }
+stempart(A)            ::= TK_STEMINT(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, INTEGER, S);
+                           }
+stempart(A)            ::= TK_STEMSTRING(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, STRING, S);
+                           }
+stempart(A)            ::= TK_STEMNOVAL(S).
+                           {  /* Remove the leading "." */
+                              S->column++; S->length--; S->token_string++;
+                              A = ast_f(context, NOVAL, S);
+                           }
+
+/* Labels */
+label(A)               ::= TK_LABEL(S).
+                           { A = ast_f(context, LABEL, S); }
 
 /* Language Options */
-rexx_options(I)    ::= TK_OPTIONS TK_EOC.
-                   { I = 0; }
-rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) TK_EOC.
-                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,L); }
+rexx_options(I)    ::= TK_OPTIONS(T) junk(J) TK_EOC.
+                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,J); }
+rexx_options(I)    ::= TK_OPTIONS(T) option_list(L) junk(J) TK_EOC.
+                   { I = ast_f(context, REXX_OPTIONS, T); add_ast(I,L); add_ast(I,J); }
 option_list(L)     ::= option(L1).
                    { L = L1; }
-option_list(L)     ::= option_list(L1) option(L2).
-                   { L = L1; add_sbtr(L,L2); }
-option(C)          ::= TK_SYMBOL(S).
-                   { C = ast_f(context, CONST_SYMBOL, S); }
+option_list(L)     ::= option_list(L1) junk(J) option(L2).
+                   { L = L1; add_sbtr(L,J); add_sbtr(L,L2); }
 option(C)          ::= TK_VAR_SYMBOL(S).
-                   { C = ast_f(context, CONST_SYMBOL, S); }
-option(E)          ::= error.
-                   { E = ast_errh(context, "100.1"); }
+                   { C = ast_f(context, LITERAL, S); }
 
+/* Namespace Instructions */
+literal(L)               ::= TK_VAR_SYMBOL(N).
+                         { L = ast_f(context, LITERAL, N); }
+namespace_list(I)        ::= namespace_instruction(L).
+                         { I = L; }
+namespace_list(I)        ::= namespace_list(I1) namespace_instruction(L).
+                         { I = I1; add_sbtr(I,L); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I, N); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(K) literal(N) expose(E) junk(J) TK_EOC.
+                         { I = ast_f(context, NAMESPACE, K); add_ast(I,N); add_ast(I,E); add_ast(I,J); }
+namespace_instruction(I) ::= TK_IMPORT(K) literal(N) junk(J) TK_EOC.
+                         { I = ast_f(context, IMPORT, K); add_ast(I,N); add_ast(I,J); }
+namespace_instruction(I) ::= TK_NAMESPACE(E) TK_EOC.
+                         { I = mknd_err(ast_f(context, NAMESPACE,E), "BAD_NAMESPACE_SYNTAX"); }
+namespace_instruction(I) ::= TK_IMPORT(E) TK_EOC.
+                         { I = mknd_err(ast_f(context, NAMESPACE,E), "BAD_IMPORT_SYNTAX"); }
+namespace_instruction(I) ::= TK_NAMESPACE ANYTHING(E) error TK_EOC.
+                         { I = ast_err(context, "BAD_NAMESPACE_SYNTAX", E); }
+namespace_instruction(I) ::= TK_IMPORT ANYTHING(E) error TK_EOC.
+                         { I = ast_err(context, "BAD_IMPORT_SYNTAX", E); }
+expose(I)                ::= TK_EXPOSE(K) expose_list(L).
+                         { I = ast_f(context, EXPOSED, K); add_ast(I,L); }
+expose_list(I)           ::= literal(L).
+                         { I = L; }
+expose_list(I)           ::= expose_list(I1) literal(L).
+                         { I = I1; add_sbtr(I,L); }
+
+/* Program file body */
 instruction_list(I)  ::= labeled_instruction(L).
                          { I = ast_ft(context, INSTRUCTIONS); add_ast(I,L); }
 instruction_list(I)  ::= instruction_list(I1) labeled_instruction(L).
                          { I = I1; add_ast(I,L); }
 
 labeled_instruction(I) ::= group(B). { I = B; }
+
 labeled_instruction(I) ::= single_instruction(B) junk(J) TK_EOC.
-                           { I = B; add_ast(I, J); }
+                           { I = B; add_sbtr(I,J); }
 labeled_instruction(I) ::= label(B). { I = B; }
-labeled_instruction(I) ::= TK_EOC. { I = 0; }
+labeled_instruction(E) ::= TK_BADCOMMENT(C).
+                           { E = ast_err(context, "BAD_COMMENT", C); }
+labeled_instruction(E) ::= error.
+                           { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 instruction(I)         ::= group(B). { I = B; }
 instruction(I)         ::= single_instruction(B) junk(J) TK_EOC.
-                           { I = B; add_ast(I, J); }
+                           { I = B; add_sbtr(I,J); }
+instruction(E)         ::= TK_BADCOMMENT(C).
+                           { E = ast_err(context, "BAD_COMMENT", C); }
+instruction(E)         ::= error.
+                           { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 single_instruction(I)  ::= assignment(B). { I = B; }
+single_instruction(I)  ::= define(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
-single_instruction(E)  ::= error.
-                          { E = ast_errh(context, "49.4"); }
+
+/* Assignments trying to assign to a keywords */
+assignment(G)     ::= TK_DO(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_LOOP(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_CLASS(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_TO(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_EXPOSE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_THEN(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ELSE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_WHEN(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_OTHERWISE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_SELECT(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_END(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_BY(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_FOR(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_FOREVER(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_WHILE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_UNTIL(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_IF(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ARG(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ADDRESS(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_OUTPUT(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ERROR(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_INPUT(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_SAY(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_ITERATE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_LEAVE(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_RETURN(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_NOP(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+assignment(G)     ::= TK_CALL(K) TK_EQUAL(T) expression(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+
+/* Defines trying to assign to a keywords */
+define(G)     ::= TK_DO(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_LOOP(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_CLASS(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_TO(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_EXPOSE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_THEN(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ELSE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_WHEN(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_OTHERWISE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_SELECT(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_END(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_BY(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_FOR(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_FOREVER(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_WHILE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_UNTIL(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_IF(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ARG(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ADDRESS(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_OUTPUT(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ERROR(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_INPUT(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ASSEMBLER(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_SAY(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_ITERATE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_LEAVE(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_RETURN(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_NOP(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+define(G)     ::= TK_CALL(K) TK_EQUAL(T) type_def(E).
+      { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
+
+/* Assignments trying to assign from a keywords */
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_DO(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_LOOP(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CLASS(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_TO(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_EXPOSE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_THEN(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ELSE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_WHEN(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_OTHERWISE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_SELECT(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_END(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_BY(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_FOR(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_FOREVER(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_WHILE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_UNTIL(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_IF(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ADDRESS(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_OUTPUT(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ERROR(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_INPUT(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ASSEMBLER(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_SAY(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_ITERATE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_LEAVE(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_RETURN(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_NOP(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CALL(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+
+/* Assignments / Defines with invalid LHS */
+assignment(G) ::=  TK_FLOAT(K) TK_EQUAL(T) expression(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, FLOAT,K), "INVALID_LHS")); add_ast(G,E);  }
+assignment(G) ::=  TK_DECIMAL(K) TK_EQUAL(T) expression(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, DECIMAL,K), "INVALID_LHS")); add_ast(G,E);  }
+assignment(G) ::=  TK_INTEGER(K) TK_EQUAL(T) expression(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
+define(G) ::=  TK_FLOAT(K) TK_EQUAL(T) type_def(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, FLOAT,K), "INVALID_LHS")); add_ast(G,E);  }
+define(G) ::=  TK_DECIMAL(K)TK_EQUAL(T) type_def(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, DECIMAL,K), "INVALID_LHS")); add_ast(G,E);  }
+define(G) ::=  TK_INTEGER(K) TK_EQUAL(T) type_def(E).
+    { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
+
+/* Correct Define and Assignment */
+define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E).
+    {
+        I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
+        V->node_type = VAR_TARGET;
+    }
 
 assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
     {
@@ -108,66 +532,102 @@ assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
         V->node_type = VAR_TARGET;
     }
 
-assignment(I) ::=  TK_FLOAT(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
-      add_ast(I,E); }
-
-assignment(I) ::=  TK_INTEGER(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.1", T));
-      add_ast(I,E); }
-
-
-assignment(I) ::=  TK_CONST_SYMBOL(T) TK_EQUAL expression(E).
-    { I = ast_f(context, ASSIGN, T); add_ast(I,ast_err(context, "31.2", T));
-      add_ast(I,E); }
-
 command(I)             ::= expression(E).
-                       { I = ast_ft(context, ADDRESS); add_ast(I,E); }
+                       { I = ast_ft(context, ADDRESS); add_ast(I,ast_ft(context, NOVAL)); add_ast(I,E); }
 
-//keyword_instruction(I) ::= address(K). { I = K; }
-//keyword_instruction(I) ::= arg(K). { I = K; }
-//keyword_instruction(I) ::= call(K). { I = K; }
-//keyword_instruction(I) ::= iterate(K). { I = K; }
-//keyword_instruction(I) ::= leave(K). { I = K; }
-//keyword_instruction(I) ::= nop(K). { I = K; }
+keyword_instruction(I) ::= assembler(K). { I = K; }
+keyword_instruction(I) ::= address(K). { I = K; }
+keyword_instruction(I) ::= arg(K). { I = K; }
+keyword_instruction(I) ::= call(K). { I = K; }
+keyword_instruction(I) ::= iterate(K). { I = K; }
+keyword_instruction(I) ::= leave(K). { I = K; }
+keyword_instruction(I) ::= nop(K). { I = K; }
 //keyword_instruction(I) ::= parse(K). { I = K; }
-//keyword_instruction(I) ::= procedure(K). { I = K; }
+keyword_instruction(I) ::= procedure(K). { I = K; }
 //keyword_instruction(I) ::= pull(K). { I = K; }
-//keyword_instruction(I) ::= return(K). { I = K; }
+keyword_instruction(I) ::= return(K). { I = K; }
+keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
-keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "8.1", T); }
-keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "8.2", T); }
-keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "9.1", T); }
-keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "9.2", T); }
-keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "10.1", T); }
+/* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
+   sure if the error virtual token is only enabled when in error recovery node. If so this
+   would explain it, and be a great (undocumented) feature */
+keyword_instruction(I) ::= TK_THEN(T) error. { I = ast_err(context, "UNEXPECTED_THEN", T); }
+keyword_instruction(I) ::= TK_ELSE(T) error. { I = ast_err(context, "UNEXPECTED_ELSE", T); }
+keyword_instruction(I) ::= TK_WHEN(T) error. { I = ast_err(context, "UNEXPECTED_WHEN", T); }
+keyword_instruction(I) ::= TK_OTHERWISE(T) error. { I = ast_err(context, "UNEXPECTED_OTHERWISE", T); }
+keyword_instruction(I) ::= TK_END(T) error. { I = ast_err(context, "UNEXPECTED_END", T); }
+keyword_instruction(I) ::= TK_NAMESPACE(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+keyword_instruction(I) ::= TK_IMPORT(T) ANYTHING error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
+keyword_instruction(I) ::= TK_NAMESPACE(T) error.
+                           { I = ast_err(context, "BAD_NAMESPACE", T); }
+keyword_instruction(I) ::= TK_IMPORT(T) error.
+                           { I = ast_err(context, "BAD_IMPORT", T); }
 
+group(I) ::= simple_do(K) TK_EOC. { I = K; }
 group(I) ::= simple_do(K). { I = K; }
+group(I) ::= do(K) TK_EOC. { I = K; }
 group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
 
 /* Groups */
 
 /* Simple DO Group */
-simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END TK_EOC.
+simple_do(G) ::= TK_DO TK_EOC instruction_list(I) TK_END.
           { G = I; }
-simple_do(G) ::= TK_DO ANYTHING(E).
-          { G = ast_err(context, "14.1", E); }
+simple_do(G) ::= TK_DO TK_EOC TK_END.
+          { G = ast_ft(context, NOP); }
+simple_do(G) ::= TK_DO error.
+          { G = ast_errh(context, "INCOMPLETE_DO"); }
+simple_do(G) ::= TK_DO ANYTHING(E) error.
+          { G = ast_err(context, "INCOMPLETE_DO", E); }
 simple_do(G) ::= TK_DO(E) TK_EOS.
-          { G = ast_err(context, "35.1", E); }
+          { G = ast_err(context, "INCOMPLETE_DO", E); }
 simple_do(G) ::= TK_DO(E) TK_EOC instruction_list(I) TK_EOS.
-          { G = I; add_ast(G,ast_err(context, "14.1", E)); }
+          { G = I; add_ast(G,ast_err(context, "INCOMPLETE_DO", E)); }
 simple_do(G) ::= TK_DO TK_EOC instruction_list(I) ANYTHING(E).
-          { G = I; add_ast(G,ast_err(context, "35.1", E)); }
+          { G = I; add_ast(G,ast_err(context, "INCOMPLETE_DO", E)); }
 
 /* DO Group */
-do(G)         ::= TK_DO(T) dorep(R) TK_EOC instruction_list(I) TK_END TK_EOC.
-                  { G = ast_f(context, DO, T); add_ast(G,R); add_ast(G,I); }
-do(G)         ::= TK_DO dorep ANYTHING(E).
-                  { G = ast_err(context, "27.1", E); }
-do(G)         ::= TK_DO(E) dorep TK_EOC instruction_list(I) TK_EOS.
-                  { G = I; add_ast(G,ast_err(context, "14.1", E)); }
-do(G)         ::= TK_DO dorep TK_EOC instruction_list(I) ANYTHING(E).
-                  { G = I; add_ast(G,ast_err(context, "35.1", E)); }
+
+tk_doloop(D)  ::= TK_DO(T).
+                  { D = ast_f(context, DO, T); }
+tk_doloop(D)  ::= TK_LOOP(T).
+                  { D = ast_f(context, DO, T); }
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END.
+                  { G = T; add_ast(G,R); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) dorep(R) TK_EOC TK_END.
+                  { G = T; add_ast(G,R); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC instruction_list(I) TK_END.
+                  { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) dorep(R) docond(D) TK_EOC TK_END.
+                  { G = T; add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC instruction_list(I) TK_END.
+                  { G = T; ASTNode* R = ast_ft(context, REPEAT);
+                    add_ast(G,R); add_ast(R,D); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) docond(D) TK_EOC TK_END.
+                  { G = T; ASTNode* R = ast_ft(context, REPEAT);
+                    add_ast(G,R); add_ast(R,D); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC instruction_list(I) TK_END.
+                  { G = T; add_ast(G,F); add_ast(G,I); }
+do(G)         ::= tk_doloop(T) doforever(F) TK_EOC TK_END.
+                  { G = T; add_ast(G,F); add_ast(G,ast_ft(context, NOP)); }
+do(G)         ::= tk_doloop dorep error.
+                  { G = ast_errh(context, "INVALID_DO"); }
+do(G)         ::= tk_doloop dorep ANYTHING(E) error.
+                  { G = ast_err(context, "INVALID_DO", E); }
+do(G)         ::= tk_doloop(E) dorep TK_EOC instruction_list(I) TK_EOS.
+                  { G = I; mknd_err(E, "MISSING_END"); add_ast(G,E); }
+do(G)         ::= tk_doloop(E) dorep TK_EOC TK_EOS.
+                  { G = ast_ft(context, NOP); mknd_err(E, "INCOMPLETE_DO"); add_ast(G,E); }
+do(G)         ::= tk_doloop dorep TK_EOC instruction_list(I) ANYTHING(E).
+                  { G = I; add_ast(G,ast_err(context, "INVALID_EXPRESSION", E)); }
+do(G)         ::= tk_doloop dorep TK_EOC ANYTHING(E).
+                  { G = ast_ft(context, NOP); add_ast(G,ast_err(context, "INVALID_EXPRESSION", E)); }
+dorep(R)      ::= expression(E).
+                  { R = ast_ft(context, REPEAT);
+                  ASTNode* F = ast_ft(context, FOR); add_ast(R,F); add_ast(F,E); }
 dorep(R)      ::= assignment(A).
                   { R = ast_ft(context, REPEAT); add_ast(R,A); }
 dorep(R)      ::= assignment(A) dorep_list(L).
@@ -183,6 +643,15 @@ dorep_item(R) ::= TK_BY(T) expression(E).
 dorep_item(R) ::= TK_FOR(T) expression(E).
                   { R = ast_f(context, FOR, T); add_ast(R,E); }
 
+doforever(R)  ::= TK_FOREVER(T).
+                  { R = ast_f(context, REPEAT, T); }
+
+docond(R) ::= TK_WHILE(T) expression(E).
+                  { R = ast_f(context, WHILE, T); add_ast(R,E); }
+docond(R) ::= TK_UNTIL(T) expression(E).
+                  { R = ast_f(context, UNTIL, T); add_ast(R,E); }
+
+
 /* IF Group */
 %nonassoc TK_IF.
 %nonassoc TK_ELSE.
@@ -191,48 +660,211 @@ if(I) ::= TK_IF(K) expression(E) ncl0 then(T) else(F).
 if(I) ::= TK_IF(K) expression(E) ncl0 then(T).
           { I = ast_f(context, IF, K); add_ast(I,E); add_ast(I,T); }
 if(I) ::= TK_IF expression ncl0 ANYTHING(E).
-          { I = ast_err(context, "18.1", E); }
+          { I = ast_err(context, "MISSING_THEN", E); }
 
 then(T) ::= TK_THEN ncl0 instruction(I).
             { T = I; }
 then(T) ::= TK_THEN(E) ncl0 TK_EOS.
-            { T = ast_err(context, "14.3", E); }
+            { T = ast_err(context, "MISSING_END", E); }
 then(T) ::= TK_THEN ncl0 TK_END(E).
-            { T = ast_err(context, "10.5", E); }
+            { T = ast_err(context, "UNEXPECTED_END", E); }
 
 else(T) ::= TK_ELSE ncl0 instruction(I).
             { T = I; }
 else(T) ::= TK_ELSE(E) ncl0 TK_EOS.
-            { T = ast_err(context, "14.4", E); }
+            { T = ast_err(context, "MISSING_END", E); }
 else(T) ::= TK_ELSE ncl0 TK_END(E).
-            { T = ast_err(context, "10.6", E); }
+            { T = ast_err(context, "UNEXPECTED_END", E); }
+
+/* Procedure / Args */
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,C); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE.
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); }
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL type_def(C) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,C); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE TK_EQUAL TK_VOID(V) expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_f(context, VOID, V)); add_ast(P,E);}
+procedure(P)      ::= TK_LABEL(L) TK_PROCEDURE expose(E).
+                      { P = ast_f(context, PROCEDURE, L); add_ast(P,ast_ft(context, VOID)); add_ast(P,E);}
+
+arg(P)            ::= TK_ARG arg_list(A).
+                      { P = A;}
+
+/* Argument Templates */
+arg_list(L)       ::= . { L = ast_ft(context, ARGS); }
+arg_list(L)       ::= argument(T). { L = ast_ft(context, ARGS); add_ast(L,T); }
+arg_list(L)       ::= arg_list(L1) TK_COMMA argument(T). { L = L1; add_ast(L,T); }
+/* Without Optional Flag (?) */
+argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 0;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_EXPOSE var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 0;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_ELLIPSIS(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); add_ast(T,ast_f(context, VARG, V)); add_ast(T,E); T->is_ref_arg = 0;
+                        T->is_opt_arg = 0; T->is_varg = 1; }
+argument(T)       ::= TK_EXPOSE TK_ELLIPSIS(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); add_ast(T,ast_f(context, VARG_REFERENCE, V)); add_ast(T,E);
+                        T->is_ref_arg = 1; T->is_opt_arg = 0; T->is_varg = 1; }
+
+/* With Optional (?) Flag */
+argument(T)       ::= TK_EXPOSE TK_OPTIONAL var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_OPTIONAL var_symbol(V) TK_EQUAL expression(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_OPTIONAL var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_TARGET; T->is_ref_arg = 0; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+argument(T)       ::= TK_EXPOSE TK_OPTIONAL var_symbol(V) TK_EQUAL type_def(E).
+                      { T = ast_ft(context, ARG); V->node_type = VAR_REFERENCE; T->is_ref_arg = 1; T->is_opt_arg = 1;
+                        add_ast(T,V); add_ast(T,E); }
+/* Errors */
+argument(E)         ::= error.
+                      { E = ast_errh(context, "SYNTAX_ERROR"); }
+argument(E)         ::= TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_CLASS(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_CLASS(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_CLASS_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_EXPOSE TK_CLASS_STEM(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
+argument(E)         ::= TK_OPTIONAL(S) TK_ELLIPSIS TK_EQUAL type_def.
+                      { E = ast_err(context, "OPTIONAL_ELLIPSIS", S); }
+argument(E)         ::= TK_EXPOSE TK_OPTIONAL(S) TK_ELLIPSIS TK_EQUAL type_def.
+                      { E = ast_err(context, "OPTIONAL_ELLIPSIS", S); }
+argument(E)         ::= TK_ELLIPSIS TK_EQUAL(X) expression.
+                      { E = ast_err(context, "MUST_EQUAL_TYPE", X); }
+argument(E)         ::= TK_EXPOSE TK_ELLIPSIS TK_EQUAL(X) expression.
+                      { E = ast_err(context, "MUST_EQUAL_TYPE", X); }
+argument(E)         ::= TK_ELLIPSIS(S).
+                      { E = ast_err(context, "MISSING_TYPE", S); }
 
 /* Instructions */
 
+/* ADDRESS */
+address(A)   ::= TK_ADDRESS literal(S) expression(E).
+             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); }
+address(A)   ::= TK_ADDRESS literal(S) expression(E) redirect_list(R).
+             { A = ast_ft(context, ADDRESS); add_ast(A,S); add_ast(A,E); add_ast(A,R); }
+redirect_list(L) ::= redirect(E).
+                 { L = E; }
+redirect_list(L) ::= redirect_list(L1) redirect(L2).
+                 { L = L1; add_sbtr(L,L2); }
+redirect(C)      ::= TK_OUTPUT var_symbol(S).
+                 { C = ast_ft(context, REDIRECT_OUT); add_ast(C, S); }
+redirect(C)      ::= TK_ERROR var_symbol(S).
+                 { C = ast_ft(context, REDIRECT_ERROR); add_ast(C, S); }
+redirect(C)      ::= TK_INPUT expression(S).
+                 { C = ast_ft(context, REDIRECT_IN); add_ast(C, S); }
+redirect(C)      ::= TK_EXPOSE expose_list_as_var(S).
+                 { C = ast_ft(context, REDIRECT_EXPOSE); add_ast(C, S); }
+expose_list_as_var(I) ::= var_symbol(L).
+                      { I = L; }
+expose_list_as_var(I) ::= expose_list_as_var(I1) var_symbol(L).
+                      { I = I1; add_sbtr(I,L); }
+
+/* Assembler */
+assembler(I) ::= TK_ASSEMBLER assembler_instruction(A).
+             { I = A; }
+assembler(I) ::= TK_ASSEMBLER TK_EOC assembler_instruction(A).
+             { I = A; }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC assembler_list(I) TK_END.
+             { G = I; }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC TK_END.
+             { G = 0; }
+assembler(G) ::= TK_ASSEMBLER TK_DO ANYTHING(E).
+             { G = ast_err(context, "BAD_ASSEMBLER", E); }
+assembler(G) ::= TK_ASSEMBLER TK_DO(E) TK_EOS.
+             { G = ast_err(context, "ASSEMBLER_NO_END", E); }
+assembler(G) ::= TK_ASSEMBLER TK_DO(E) TK_EOC assembler_list(I) TK_EOS.
+             { G = I; add_ast(G,ast_err(context, "ASSEMBLER_NO_END", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_DO TK_EOC assembler_list(I) ANYTHING(E).
+             { G = I; add_ast(G,ast_err(context, "BAD_ASSEMBLER", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC assembler_list(I) TK_END.
+             { G = I; }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC TK_END.
+             { G = 0; }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO ANYTHING(E).
+             { G = ast_err(context, "BAD_ASSEMBLER", E); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO(E) TK_EOS.
+             { G = ast_err(context, "ASSEMBLER_NO_END", E); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO(E) TK_EOC assembler_list(I) TK_EOS.
+             { G = I; add_ast(G,ast_err(context, "ASSEMBLER_NO_END", E)); }
+assembler(G) ::= TK_ASSEMBLER TK_EOC TK_DO TK_EOC assembler_list(I) ANYTHING(E).
+             { G = I; add_ast(G,ast_err(context, "BAD_ASSEMBLER", E)); }
+assembler_list(I)  ::= assembler_instruction(L) TK_EOC.
+                       { I = L; }
+assembler_list(I)  ::= assembler_list(I1) assembler_instruction(L) TK_EOC.
+                       { I = I1; add_sbtr(I,L); }
+assembler_instruction(I) ::= assembler_op(OP).
+    { I = OP; }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1).
+    { I = OP; add_ast(I,A1); }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembler_arg(A2).
+    { I = OP; add_ast(I,A1); add_ast(I,A2); }
+assembler_instruction(I) ::= assembler_op(OP) assembler_arg(A1) TK_COMMA assembler_arg(A2) TK_COMMA assembler_arg(A3).
+    { I = OP; add_ast(I,A1); add_ast(I,A2); add_ast(I,A3);}
+assembler_op(OP)         ::= TK_VAR_SYMBOL(S).
+                         { OP = ast_f(context, ASSEMBLER, S); }
+assembler_op(OP)         ::= TK_SAY(S). /* SAY is also a REXX keyword */
+                         { OP = ast_f(context, ASSEMBLER, S); }
+assembler_op(OP)         ::= TK_EXIT(S). /* EXIT is also a REXX keyword */
+                         { OP = ast_f(context, ASSEMBLER, S); }
+assembler_arg(A)         ::= var_symbol(B).
+                         { A = B; }
+assembler_arg(A)         ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLOSE_BRACKET.
+                         { A = ast_f(context, FUNC_SYMBOL, S); }
+assembler_arg(A)         ::= TK_FLOAT(S).
+                         { A = ast_f(context, FLOAT,S); }
+assembler_arg(A)         ::= TK_DECIMAL(S).
+                         { A = ast_f(context, DECIMAL,S); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_FLOAT(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, FLOAT,S)); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_DECIMAL(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, DECIMAL,S)); }
+assembler_arg(A)         ::= TK_INTEGER(S).
+                         { A = ast_f(context, INTEGER,S); }
+assembler_arg(A)         ::= TK_MINUS(O) TK_INTEGER(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, INTEGER,S)); }
+assembler_arg(A)         ::= TK_STRING(S).
+                         { A = ast_fstr(context,S); }
+
+/* Iterate */
+iterate(I) ::= TK_ITERATE(T) var_symbol(S).
+    { I = ast_f(context, ITERATE, T); add_ast(I,S); }
+
+iterate(I) ::= TK_ITERATE(T).
+    { I = ast_f(context, ITERATE, T); }
+
+/* Leave */
+leave(I) ::= TK_LEAVE(T) var_symbol(S).
+    { I = ast_f(context, LEAVE, T); add_ast(I,S); }
+
+leave(I) ::= TK_LEAVE(T).
+    { I = ast_f(context, LEAVE, T); }
+
 /*
-### ADDRESS
-    address ::= 'ADDRESS' e:taken_constant c:expression? -> (ADDRESS ENVIRONMENT[e] c);
-
-### Arg
-    arg ::= 'ARG' t:template_list?
-        -> (PARSE (OPTIONS UPPER?) ARG t?)
-
-### Call
-    call ::= 'CALL' (f:taken_constant / ( (. -> ERROR[19.2]) resync) ) e:expression_list?
-         -> (CALL CONST_SYMBOL[f] e);
-    expression_list ::= expr (',' expr)*;
-
-### Iterate
-    iterate ::= 'ITERATE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-            -> (ITERATE v?)
-
-### Leave
-    leave ::= 'LEAVE' ( v:VAR_SYMBOL / (. -> ERROR[20.2]) resync) )?
-          -> (LEAVE v?);
-
-### Nop
-    nop ::= 'NOP';
-
 ### Parse
     parse ::= ('PARSE' (in:parse_type / (. -> ERROR[25.12]) resync)) out:template_list?)
              -> (PARSE OPTIONS in out)
@@ -243,24 +875,35 @@ else(T) ::= TK_ELSE ncl0 TK_END(E).
     parse_type ::= parse_key;
     parse_key ::= 'ARG'->ARG / 'PULL'->PULL;
 
-### Procedure
-    procedure ::= LABEL 'PROCEDURE' ncl
-                 ( !(TK_EOS / procedure) i:labeled_instruction )*
-              -> (PROCEDURE LABEL (INSTRUCTIONS i));
-
 
 ### Pull
     pull ::= 'PULL' t:template_list?
          -> (PARSE (OPTIONS UPPER?) PULL t?);
-
-### Return
-    return ::= 'RETURN' e:expression?
-           -> (RETURN e?);
 */
+
+/* Return */
+return(I) ::= TK_RETURN(T) expression(E).
+    { I = ast_f(context, RETURN, T); add_ast(I,E); }
+
+return(I) ::= TK_RETURN(T).
+    { I = ast_f(context, RETURN, T); }
+
+/* EXIT */
+exit(I) ::= TK_EXIT(T) expression(E).
+    { I = ast_f(context, EXIT, T); add_ast(I,E); }
+
+exit(I) ::= TK_EXIT(T).
+    { I = ast_f(context, EXIT, T); }
 
 /* Say */
 say(I) ::= TK_SAY(T) expression(E).
     { I = ast_f(context, SAY, T); add_ast(I,E); }
+say(I) ::= TK_SAY(T).
+    { I = ast_f(context, SAY, T); add_ast(I,ast_ft(context, STRING)); }
+
+/* Nop */
+nop(I) ::= TK_NOP(T).
+    { I = ast_f(context, NOP, T); }
 
 /*
 ### Parse Templates
@@ -285,24 +928,94 @@ say(I) ::= TK_SAY(T) expression(E).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_CONST_SYMBOL TK_STRING TK_FLOAT TK_INTEGER TK_VAR_SYMBOL.
+%left TK_STRING TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL.
+%left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
 
-/*
-    function ::= (f:taken_constant '(' p:expression_list? (')') -> (FUNCTION[f] p)
-              / ((e:. -> (ERROR["36"] e)) resync);
-*/
+function_name(N)       ::= TK_VAR_SYMBOL(S).
+                           { N = ast_f(context, FUNCTION, S); }
+function_name(N)       ::= TK_STRING(S).
+                           { N = ast_f(context, FUNCTION, S); }
+call(I) ::= TK_CALL(T) function_name(F) expression_list(E).
+        { I = ast_f(context, CALL, T); add_ast(I,F); if (E) add_ast(F,E); }
+call(I) ::= TK_CALL(T) ANYTHING(E).
+        { I = ast_f(context, CALL, T); add_ast(I,ast_err(context, "EXPECTED_PROCEDURE", E)); }
 
+/* Expression Lists */
+expression_list(L)     ::= .
+                         { L = ast_ft(context, NOVAL); }
+expression_list(L)     ::= expression_in_list(E).
+                         { L = E; }
+expression_list(L)     ::= expression_list(L1) TK_COMMA expression_in_list(E).
+                         { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L,E);}
+expression_list(L)     ::= expression_list(L1) TK_COMMA.
+                         { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 
-term(A)              ::= var_symbol(B). [TK_VAR_SYMBOL]
+/* Expression terminal nodes */
+term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_STRING(S) function_parameters(P).
+                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { P = E; }
+term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
-term(A)              ::= TK_CONST_SYMBOL(S).
-                         { A = ast_f(context, CONST_SYMBOL, S); }
-term(A)              ::= TK_FLOAT(S).
+term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
-term(A)              ::= TK_INTEGER(S).
+term(A)                ::= TK_DECIMAL(S).
+                         { A = ast_fdec(context,S); }
+term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
-term(A)              ::= TK_STRING(S). { A = ast_f(context, STRING,S); }
+term(A)                ::= TK_STRING(S).
+                         { A = ast_fstr(context,S); }
+
+/* Special Operator - ARG */
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARGS, A); }
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARG_VALUE, A); add_ast(F, E);}
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_STRING(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                              if (OP->length>2 && toupper(OP->token_string[1]) == 'E') {
+                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
+                              }
+                              else if (OP->length>2 && toupper(OP->token_string[1]) == 'O') {
+                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
+                              }
+                              else F = mknd_err(ast_fstr(context,OP), "INVALID_ARG_OPTION");
+                           }
+term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_VAR_SYMBOL(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                              if (OP->length>0 && toupper(OP->token_string[0]) == 'E') {
+                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
+                              }
+                              else if (OP->length>0 && toupper(OP->token_string[0]) == 'O') {
+                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
+                              }
+                              else F = ast_err(context, "INVALID_ARG_OPTION", OP);
+                           }
+term(F)                ::= TK_ARG TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
+                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+term(F)                ::= TK_ARG TK_OPEN_BRACKET ANYTHING(A).
+                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+
+/* Special Operator - ? */
+term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_ARG_EXISTS, S); }
+
+/* Special Operator - arg pseudo array/stem */
+term(A)                ::= TK_ARG(S) array_parameters(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
+term(A)                ::= TK_ARG_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
+                           { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
+
+/* These Keywords can be trapped at error terms - e.g. they are not instructions */
+term(E)                 ::= TK_OPTIONS(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
+term(E)                 ::= TK_NAMESPACE(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
+term(E)                 ::= TK_IMPORT(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
+term(E)                 ::= TK_VOID(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
+term(E)                 ::= TK_OPTIONAL(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
+
 bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
@@ -311,11 +1024,11 @@ bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
 /* These are the normal expression form in unambiguous form */
 prefix_expression(P) ::= bracket(B). { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_MINUS(O) prefix_expression(C). [TK_NOT]
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
 power_expression(P)  ::= prefix_expression(E).
                          { P = E; }
 power_expression(A)  ::= power_expression(B) TK_POWER(O) prefix_expression(C).
@@ -343,7 +1056,7 @@ addition(A)          ::= addition(B) TK_MINUS(O) multiplication(C).
 prefix_expression_c(P) ::= bracket(B). { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
-                         { A = ast_f(context, OP_PREFIX, O); add_ast(A,C); }
+                         { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 power_expression_c(P)::= prefix_expression_c(E).
                          { P = E; }
 power_expression_c(A)::= power_expression_c(B) TK_POWER(O) prefix_expression_c(C).
@@ -406,16 +1119,46 @@ and_expression(P)    ::= or_expression(E).
                          { P = E; }
 and_expression(A)    ::= and_expression(B) TK_AND(O) or_expression(C).
                          { A = ast_f(context, OP_AND, O); add_ast(A,B); add_ast(A,C); }
-expression(P)        ::= and_expression(E).
-                         { P = E; }
 
-/* Support Standard REXX Errors */
-expression(E)        ::= TK_COMMA(S).
-                         { E = ast_err(context, "37.1", S); }
-expression(E)        ::= TK_CLOSE_BRACKET(S).
-                         { E = ast_err(context, "37.2", S); }
+/* Errors */
+and_expression(E)  ::= TK_UNKNOWN(U) error. { E = ast_err(context, "BADCHAR", U); }
+and_expression(E)  ::= TK_CONCAT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_MULT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_DIV(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_IDIV(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_MOD(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_POWER(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NEQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_GT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_LT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_GTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_EQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_NEQ(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_GT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_LT(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_GTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_S_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_AND(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_OR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
-/*
+expression(P)  ::= and_expression(E). { P = E; }
+expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }
+expression(E)  ::= TK_CLOSE_BRACKET(U) error. { E = ast_err(context, "BADEXPR", U); }
+
+/* expressions in a list cannot expression() errors above because of parsing conflicts */
+expression_in_list(P) ::= and_expression(E). { P = E; }
+
+/* Finally set the nodes with the highest precedence */
+%left TK_BADCOMMENT.
+%left TK_EOC.
+
+/* ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+   ******************************* END *************************************
+
 valueexp(P)            ::= TK_VALUE(T) expression(E). { P = ast_f(T); add_ast(P,E); }
 
 expression0(P)         ::= . { P = ast_ft(TK_NULL); }
@@ -427,9 +1170,8 @@ expression_list1(L)    ::= expression(E). { L = ast_ft(TK_LIST); add_ast(L,E); }
 expression_list1(L)    ::= expression_list1(L1) TK_COMMA expression(E). { L = L1; add_ast(L,E); }
 
 // VARIABLE & SYMBOLS
-var_symbol(T)          ::= TK_SYMBOL(S). { T = ast_f(S); }
-var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S); }
-var_symbol(T)          ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
+var_symbol(T)          ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
+var_symbol(T)          ::= TK_SYMBOL_STEM(S). { T = ast_f(S);
 var_symbol_list1(L)    ::= var_symbol(V). { L = ast_ft(TK_LIST); add_ast(L,V); }
 var_symbol_list1(L)    ::= var_symbol_list1(L1) var_symbol(V). { L = L1; add_ast(L,V); }
 
@@ -442,8 +1184,7 @@ variable_list(L)       ::= variable_list(L1) variable(V). { L = L1; add_ast(L,V)
 // FUNCTIONS
 function(F)            ::= taken_constant(T) function_parameters(P).
                            { F = ast_ft(TK_FUNCTION); add_ast(F,T); add_ast(F,P); }
-taken_constant(T)      ::= TK_SYMBOL(S). { T = ast_f(S); }
-taken_constant(T)      ::= TK_SYMBOL_COMPOUND(S). { T = ast_f(S); }
+taken_constant(T)      ::= TK_VAR_SYMBOL(S). { T = ast_f(S); }
 taken_constant(T)      ::= TK_STRING(S). { T = ast_f(S); }
 function_parameters(P) ::= TK_BOPEN expression_list(E) TK_BCLOSE. { P = E; }
 
@@ -610,8 +1351,6 @@ keyword_instruction(I) ::= upper(K). { I = K; }
 
 assignment(I)          ::= var_symbol(V) TK_EQUAL(T) expression(E). [TK_EQUAL]
                            { I = ast_f(T); add_ast(I,V); add_ast(I,E); }
-assignment(I)          ::= TK_SYMBOL_COMPOUND(V) TK_EQUAL(T) expression(E). [TK_EQUAL]
-                           { I = ast_f(T); add_ast(I,ast_f(V)); add_ast(I,E); }
 
 instruction(I)         ::= do(K). { I = K; }
 instruction(I)         ::= if(K). { I = K; }

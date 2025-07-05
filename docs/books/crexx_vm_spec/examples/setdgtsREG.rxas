@@ -1,0 +1,16 @@
+/* ddiv example */
+main()  .locals=4
+	say  "ddiv example 100/81 in 100 decimals:"
+	setdgts  75
+	load  r1,100
+	load r2,81
+	itod  r1	
+	itod  r2    	 
+	ddiv  r3,r1,r2	
+	dtos  r1
+	dtos  r2
+	dtos  r3
+	say   r1
+	say   r2
+	say   r3
+	ret 

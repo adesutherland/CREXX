@@ -1,0 +1,41 @@
+digraph REXXAST { pad=0.25
+subgraph scope_0x600001ed0880{
+n0x600003edc0c010[ordering="out" label="REXX_UNIVERSE" color=blue]
+subgraph scope_0x600001ed0d80{
+n0x600003edc0c011[ordering="out" label="PROGRAM_FILE" color=blue]
+n0x600003edc0c010 -> n0x600003edc0c011 [xlabel="1"]
+n0x600003edc0c011 -> "s0x600003edc0c010_test1" [color=cyan dir="both"]
+n0x600003edc0c02[ordering="out" label="REXX_OPTIONS" color=blue]
+n0x600003edc0c011 -> n0x600003edc0c02 [xlabel="1"]
+n0x600003edc0c01[ordering="out" label="LITERAL\nlevelb" color=cyan3 shape=cds]
+n0x600003edc0c02 -> n0x600003edc0c01 [xlabel="1"]
+subgraph scope_0x600001ed0dc0{
+n0x600003edc0c04[ordering="out" label="PROCEDURE\nexternal
+(.int)" color=pink]
+n0x600003edc0c011 -> n0x600003edc0c04 [xlabel="2"]
+n0x600003edc0c04 -> "s0x600003edc0c011_external" [color=cyan dir="forward"]
+n0x600003edc0c03[ordering="out" label="CLASS\n.int
+(.int)" color=green]
+n0x600003edc0c04 -> n0x600003edc0c03 [xlabel="1"]
+n0x600003edc0c09[ordering="out" label="ARGS\n" color=green]
+n0x600003edc0c04 -> n0x600003edc0c09 [xlabel="2"]
+n0x600003edc0c08[ordering="out" label="ARG\n
+(.int)" color=green]
+n0x600003edc0c09 -> n0x600003edc0c08 [xlabel="1"]
+n0x600003edc0c06[ordering="out" label="VAR_TARGET\nlookfor
+(.int)" color=cyan3 shape=cds]
+n0x600003edc0c08 -> n0x600003edc0c06 [xlabel="1"]
+n0x600003edc0c06 -> "s0x600003edc0c04_lookfor" [color=cyan dir="forward"]
+n0x600003edc0c07[ordering="out" label="CLASS\n.int
+(.int)" color=green]
+n0x600003edc0c08 -> n0x600003edc0c07 [xlabel="2"]
+n0x600003edc0c012[ordering="out" label="NOP" color=green4]
+n0x600003edc0c04 -> n0x600003edc0c012 [xlabel="3"]
+"s0x600003edc0c04_lookfor"[style=filled fillcolor=cyan shape=box label="test1.external.lookfor\n(.int)\n"]
+}
+"s0x600003edc0c011_external"[style=filled fillcolor=pink shape=box label="test1.external\n(.int)\n"]
+}
+"s0x600003edc0c010_test1"[style=filled fillcolor=green shape=box label="test1"]
+}
+
+}

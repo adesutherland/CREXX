@@ -1,0 +1,19 @@
+// Plugin Pool funcpool
+Pool    ="funcpool"
+// ------ function fsubstr
+function="fsubstr(.string)"
+passing ="source(string) offset(int) length(int)"
+//
+// ------ function fright
+FUnCtion="fRIght(.string)"  // Function fright
+passing ="source(.string) length(int) pad(string)"
+//
+// ------ function fleft
+function ="fleft(.string)"
+passing  ="source(.STRing) length(INT) pad(.string)"
+// ------ function fpos
+function ="fpos(int)"
+passing  ="source(.STRing) find(string)"
+// ------ function fcalc
+function ="fcalc(int)"
+passing  ="p0(.int) p1(.int)"

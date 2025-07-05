@@ -1,0 +1,47 @@
+\input{../../../boilerplate/preamble}
+\begin{document}
+\renewcommand{\isbn}{978-90-819090-1-3}
+\setcounter{tocdepth}{1}
+\title{\fontspec{TeX Gyre Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW Light}\\VM Specification}
+
+\author{The \crexx{} team}
+%\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
+\date{\null\hfill \today}
+\maketitle
+\pagenumbering{Roman}
+\pagestyle{plain}
+\frontmatter
+\pagenumbering{Roman}
+\pagestyle{fancy}
+\input{../../../boilerplate/bookmeta}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\frontmatter
+\large
+\input{../../../boilerplate/hyphenation}
+\input{../../../boilerplate/series}
+\input{../../../boilerplate/conventions}
+%% \pagestyle{fancy}
+%... then configure it.
+
+% Clear all headers and footers (see also \fancyhf{})
+%% \fancyhead{}\fancyfoot{}
+
+%% % Set the header and footer for Even
+%% % pages but omit the zone (L, C or R)
+%% \fancyhead[E]{Header: even page \thepage}
+%% %\fancyfoot[E]{Footer: even page \thepage}
+
+%% % Set the header and footer for Odd
+%% % pages but omit the zone (L, C or R)
+%% %\fancyhead[O]{Header: odd page \thepage}
+%% \fancyfoot[O]{Footer: odd page \thepage}
+\input{structure}
+\clearpage
+\psset{unit=1in}
+\begin{pspicture}(3.5,1in)
+  \psbarcode{\isbn}{includetext guardwhitespace}{isbn}
+\end{pspicture}
+\end{document}

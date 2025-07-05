@@ -1,0 +1,105 @@
+This description contains an unstructured collection of findings using the CREXX plug-in interface, it is not sorted or prioritised.
+
+How to define a plugin
+> My preferred method is to cut and paste. I used the SYSINFO example, which is not too simple but not too complex either.
+
+- Understanding how a plugin works
+> the plugin is called from within a rexx script (either by CALL or a function call). This call is handled by the _**CALL instruction (rxvmintp)**_ when it is recognised as a plugin function. Control is then passed to **_rxpa_callfunc,_** which builds the input parameters of the plugin and eventually calls it:
+
+` plugin(_numargs, _arg, _return, _signal)`
+
+>_numargs is the number of passed input parameters aka registers (addresses)
+>_arg         contain all passed parameters aka registers (addresses) in an array, each array entry contains the passed register
+>_return      is the address of a return value, which is after passing back control set by CREXX
+>_signal      is a signal address where a signal event can be set, to be later controlled by CREXX
+
+
+>The plugin handler provides these parameters which contains the parameters used within the rexx call.
+>The plugin code should use the PROCEDURE macro, as it transparently provides the above variables.
+
+- To ease control over the parameters, there are several macros defined, the functionality is self-explaining:
+>ARG(n)          `n=0 to number-of-arguments` represent the parameters passed from the rexx-script. and can be used in the functions below
+```
+ARG(0)   represents the register address of the first parameter
+ARG(1)   register of the second parameter (if set)
+...
+```
+```
+GETSTRING(ARG(x))
+SETSTRING(ARG(x), str)
+RETURNSTR(value)
+SETINT(ARG(x), value)
+RETURNINT(value)
+GETINT(ARG(x))
+SETFLOAT(ARG(x), value)
+RETURNFLOAT(value)
+GETFLOAT(ARG(x))
+SET_SAY_EXIT(func)
+RESET_SAY_EXIT()
+```
+- you can read rexx variables (passed as parameters), example:
+```
+    char *varName = GETSTRING(ARG(0));  // fetch first parameter, the source string
+    int offset   = GETINT(ARG(1));                // fetch second parameter, the offset in string
+    int length   = GETINT(ARG(2));                // fetch third  parameter, the length of the substring
+```
+- typically the result is returned as a function result, which is the third parameter of the plugin call`plugin(_numargs, _arg, _return, _signal)`
+```
+> Example:
+    strncpy(varName,varName+offset-1,length);  // copy n characters from a string
+    varName[length]='\0';  // null terminate the result field
+    RETURNSTR(varName);  // transfer it into the CREXX result field
+```
+> Upon return from the plugin, CREXX will take the return value that is stored in _return and process it in the normal way.
+> **RETURNSTR** does not return from the procedure, it just sets the return value. It is recommended not to use a return statement, as this omits the cleanup handling process you can use the **PROCRETURN** macro call.
+- Updating the content of a passed rexx-variable from the calling rexx script is also possible, but is not without risk:
+> 1. the rexx variable must be pre-defined
+> 2. it must have sufficient pre-allocated memory to receive the new string of the plugin
+> example REXX:
+```
+options levelb
+import funcpool
+target=''      /* define rexx variable */
+assembler do
+   load target,"1234"
+end
+say updfield("my test string",target)
+say "field updated by plugin function '"target"'"
+```
+> The assembler part is necessary because the compiler optimises the assembler code and doesn't recognise the plugin's variable contents change, so it uses the constant instead of the changed variable.
+
+> Example plugin:
+```
+    char *source ;    // Get the source string
+    char ttarget[strlen(source)+1];   // Get the source string
+
+    source=GETSTRING(ARG(0));
+    strcpy(&ttarget,source);
+    SETSTRING(ARG(1), "The brown fox jumps over the lazy dog");
+    RETURNSTR("");
+```
+- structure of plugins
+> it seems a good idea to combine several functions in one function pool. They could be related or non-related. The overhead of loading is possibly reduced.
+```
+// Functions to be provided to rexx, it is done via the LOADFUNCS definition within the plugin:
+LOADFUNCS
+//      C Function, REXX namespace & name, Option, Return Type, Arguments
+    ADDPROC(fsubstr,     "funcpool.fsubstr",      "b",    ".string",   "source=.string,offset=.int,length=.int");
+    ADDPROC(updfield,   "funcpool.updfield",    "b",    ".string",   "source=.string,target=.string");
+ENDLOADFUNCS
+```
+- Definition of a single function:
+> to simplify the standardised input parameters a PROCEDURE/ENDPROC macros can be used. They establish communication with the plugin handler and the calling REXX script:
+```
+PROCEDURE(fsubstr) {
+    // Should never happen as the compiler checks arguments; best practice is to check this anyway
+    if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "substring parameters missing or incomplete") // sets the signal and returns
+    char *varName = GETSTRING(ARG(0));  // Get the source string
+    int offset   = GETINT(ARG(1));
+    int length   = GETINT(ARG(2));
+
+    strncpy(varName,varName+offset-1,length);
+    varName[length]='\0';
+    RETURNSTR(varName);
+ENDPROC    // does cleanup and reset signal
+```

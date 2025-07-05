@@ -1,0 +1,69 @@
+/*
+ * CREXX Interpreter Sanity Tests for Signal / interrupt related instructions
+ */
+
+.globals=0
+
+main() .locals=6
+    sigignore "OTHER"
+    say "1. Should not signal"
+    signal "OTHER"
+
+    sigbr a_signal,"OTHER"
+    say "2. Should call branch signal handler ..."
+    signal "OTHER"
+    continue:
+
+    sigcall sighandler(),"OTHER"
+    say "3. Should call function signal handler (with message) ..."
+    signal "OTHER", "Test 3 Message to handler"
+    say " ... returned from function signal handler with message"
+
+    say "4. Should call function signal handler (with payload) ..."
+    load r0, "Test 4 Payload Message"
+    signal "OTHER", r0
+    say " ... returned from function signal handler with payload"
+
+    say "5. Test the return on signal mode ..."
+    sigret "OTHER"
+    call return_test()
+    say " ... returned from test"
+
+    say "6. Test the call and branch on signal mode ..."
+    sigcallbr a_signal2,sighandler(),"OTHER"
+    signal "OTHER", "Test 6 Message to handler"
+    continue2:
+
+    sighalt "OTHER"
+    say "7. Should signal with a PANIC"
+    signal "OTHER", "Test 7 message"
+    ret 0
+
+    a_signal:
+    say " ... Signal Branch Handler called"
+    br continue
+
+    a_signal2:
+    say " ... And then branch"
+    br continue2
+
+
+return_test()  .locals=0
+    say " ... in child function. About to signal"
+    signal "OTHER"
+    say " ... ERROR should not get here"
+    ret
+
+sighandler() .locals=1
+    say " ... Signal Function Handler"
+
+    linkattr r0,a1,3 /* link the 4th attribute of the first argument to r0 so we can print it */
+    sayx " ... Called with signal: "
+    sayx r0
+
+    linkattr r0,a1,4
+    sayx ", and message: "
+    sayx r0
+
+    say ""
+    ret

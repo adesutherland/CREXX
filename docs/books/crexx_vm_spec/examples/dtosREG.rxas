@@ -1,0 +1,7 @@
+main() .locals=4
+	load r3,"1e3"
+	stod r3
+	dtos r3
+	say r3
+	ret
+

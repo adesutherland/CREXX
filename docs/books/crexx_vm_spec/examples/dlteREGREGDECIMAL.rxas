@@ -1,0 +1,9 @@
+main() .locals=5
+	load r3,1.23456e3d
+	dlte r4,r3,1234.56d
+	brt succeed,r4
+	say "failed"
+succeed:
+	say "succeed"
+	ret
+	

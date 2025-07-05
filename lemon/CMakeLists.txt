@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.24)
 project(Lemon C)
 
 set(CMAKE_C_STANDARD 90)
@@ -12,5 +12,4 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_CURRENT_SOURCE_DIR}/lempar.c
         ${CMAKE_CURRENT_BINARY_DIR}/lempar.c
-        COMMENT "Create Lemon Parser Generator ..."
 )

@@ -1,0 +1,17 @@
+\chapter{Interlanguage calls}
+A \crexx{} program is able to call programs written in the \textsc{Rexx}
+language, but also programs native to the platform, using a number of
+calling conventions: \[todo: checkrelease\]
+\begin{description}
+  \item[Address] the \code{address} statement can use the shell and
+    I/O indirection to start native executables and provide input, and
+    retrieve the output.
+    \item[RexxSaa] the traditional RexxSAA calling convention can be
+      used for direct interfaces to executables that are designed to
+      function as a Rexx library. In its most simple form, these can
+      return \textsc{Rexx} strings to the calling program.
+      \item[Generic Call Interface] In this RexxSAA extension, the
+      type and length of the parameters can be specified by the
+      caller\footnote{Which is considered unsafe but sometimes the
+        only possibility for programs not designed to be called by \crexx{}}.
+    \end{description}

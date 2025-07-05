@@ -1,0 +1,7 @@
+main() .locals=6
+	load r3,3d
+	ddiv r4,9d,r3
+	dtos r4
+	say r4
+	ret
+	

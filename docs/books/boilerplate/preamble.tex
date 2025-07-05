@@ -1,0 +1,201 @@
+\documentclass[10pt]{book}
+\usepackage[FINAL]{../../../boilerplate/rexx} 
+\usepackage{hyperref}
+\usepackage{graphics}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{etoolbox}
+\usepackage{fontspec}
+\usepackage{tocloft}
+\usepackage{titlesec}
+\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
+\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{makeidx}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{listings}
+
+%fancyhdr for page headers, footers, numbers
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{} % Clear default header/footer settings
+
+\fancyheadoffset{0pt}
+\addtolength{\headsep}{15pt}
+
+% Define the headers
+\fancyhead[RO]{\normalfont \nouppercase{\rightmark}}  % Chapter title on right pages, aligned right
+\fancyhead[LE]{\normalfont \nouppercase{\leftmark}}   % Section title on left pages, aligned right
+
+% Ensure chapter and section marks update correctly
+%% \renewcommand{\chaptermark}[1]{\markright{#1}\normalfont \thechapter.\ #1}
+%% \renewcommand{\sectionmark}[1]{\markleft{#1}\normalfont \thesection.\ #1}
+
+\fancyfoot[C]{\thepage}
+
+% avoid headers on empty pages
+\usepackage{emptypage}
+
+
+% Increase space for numbers in ToC entries
+\cftsecnumwidth    = 3.5em
+\cftsubsecnumwidth = 4em
+\cftsubsubsecnumwidth = 5em
+
+
+\usepackage{caption}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{framed}
+\usepackage{fancyvrb}
+\definecolor{shadecolor}{rgb}{0.9,0.9,0.9}
+\definecolor{nrblue}{RGB}{38,139,210}
+\definecolor{nrgreen}{RGB}{65,133,153}
+\definecolor{nrcyan}{RGB}{42,161,152 }
+\definecolor{nrorange}{RGB}{203 ,75,22}
+\definecolor{nrgrey}{RGB}{101,123,131}
+\usepackage{alltt}
+%% \DeclareCaptionFont{white}{\color{white}}
+%% \DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
+%% \captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
+\usepackage[official]{eurosym}
+%% \makeatletter
+%% \@empty\z@\@empty
+%% \lst@CCPutMacro\lst@ProcessOther {"2D}{\lst@ttfamily{-{}}{-{}}} 
+%% \makeatother
+%%\renewcommand*\familydefault{\sfdefault}
+\input{../../../boilerplate/netrexxformat}
+\input{../../../boilerplate/assemblerformat}
+\input{../../../boilerplate/rxasformat}
+%% \input{../../../boilerplate/jclformat}
+\usepackage{pst-barcode,pstricks-add}
+\usepackage{bashful}
+\usepackage{metalogo}
+\usepackage{marginnote}
+\usepackage{pdfpages}
+\usepackage{svg}
+\usepackage{float}
+\makeindex
+\DeclareGraphicsExtensions{.jpg,.png}
+\setlength{\parskip}{8pt}
+\setlength{\parindent}{0pt}
+\usepackage{enumitem}
+\usepackage{underscore}
+\usepackage{babel}
+\usepackage{graphicx}
+\usepackage{array}
+% \usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{makeidx}
+\usepackage{framed}
+\usepackage{alltt}
+\usepackage{barracuda}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{multicol}
+\usepackage[CJK]{ucharclasses}
+\usepackage[comma]{natbib}           % CSLI Pubs favored bibliography package.
+%% \bibliographystyle{cslipubs-natbib}  % CSLI Pubs bibliography format.
+\bibliographystyle{plainnat}  % CSLI Pubs bibliography format.
+% defines for consistent use
+\newcommand{\crexx}{\textsc{crexx}}
+\newcommand{\rexx}{R\textsc{exx}}
+\newcommand{\nr}{Net\textsc{rexx}}
+%% \newcommand{\nrpackagename}{\splice{java GetPackageName}}
+%% \newcommand{\minimalJVMversion}{8}
+%% \newcommand{\maximalJVMversion}{19ea}
+\newcommand{\keyword}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+%% \newcommand{\thisyear}{\splice{java TexYear}}
+\newcommand{\tightlist}{}
+\newcommand{\Shaded}{\shaded}
+\newcommand{\msd}[1]{\msdhelper#1\relax}
+\newcommand{\msdhelper}[1]
+  {\ifx\relax#1\else
+    \ifx-#1--{}\else#1\fi
+    \expandafter\msdhelper\fi}
+  \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
+  \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
+
+\newcommand{\simularelease}{12.00, date of release  9 aug 1985}
+
+%% the font used for tables
+\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono Pro}\small}
+
+%% \setlength{\labelsep}{2em} % Distance between label and text
+\setlength{\labelwidth}{75pt} % Width of the label box  
+
+\setlist[description]{font=\normalfont}
+
+\usepackage{sectsty}
+%% \partfont{\color{nrgreen}}
+\chapterfont{\fontspec{Avenir Light}}
+\sectionfont{\fontspec{Avenir Light}}
+\subsectionfont{\fontspec{Avenir Light}}
+\subsubsectionfont{\fontspec{Avenir Light}}
+
+\usepackage[Sonny]{fncychap}
+
+\raggedbottom
+
+\geometry{left=1in, top=1in, bottom=1in, right=1in}
+\setstretch{1.2}
+\titlespacing*{\section}{0pt}{*1.5}{*0.5}
+\titlespacing*{\subsection}{0pt}{*1.2}{*0.4}
+
+\setlength{\parskip}{0.5em}
+\raggedbottom
+
+\makeatletter
+\patchcmd{\@startsection}{\@afterindenttrue}{\@afterindentfalse}{}{}
+\makeatother
+
+%% heading number left overhang
+\makeatletter
+\def\@seccntformat#1{\protect\makebox[0pt][r]{\csname
+the#1\endcsname\quad}}
+\makeatother
+
+%% use the heading fonts in the TOC
+%% \renewcommand{\cftsecfont}{\sffamily\bfseries} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+
+\renewcommand{\cftpartfont}{\sffamily}
+\renewcommand{\cftchapfont}{\sffamily} % Matches section font
+\renewcommand{\cftchappagefont}{\sffamily} % Matches section font
+\renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+\renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
+\renewcommand{\cftsecfont}{\sffamily} % Matches section font
+
+\titleformat{name=\chapter,numberless}[display]
+  %{\fontspec{Avenir Light}\filcenter} % formatting applied to the
+  % heading text
+    {\filcenter} % formatting applied to the heading text
+  {}
+  {0pt}
+  %% {\titlerule \vspace{1ex} \fontspec{Avenir Light} } 
+ {\titlerule \vspace{1ex} }  % code before the heading text
+
+\titlespacing*{name=\chapter,numberless}
+  {0pt}{-1cm}{1cm}  % left, before, after
+
+  \renewcommand{\contentsname}{\fontspec{Avenir Light}Contents}
+  \renewcommand{\indexname}{\fontspec{Avenir Light}Index}
+  \renewcommand{\listtablename}{\fontspec{Avenir Light}List of tables}
+  \renewcommand{\listfigurename}{\fontspec{Avenir Light}List of figures}
+  
+  \sectionfont{%
+    \hrule                % place a horizontal line
+    \vspace{1ex}%         % add some vertical space
+    \fontspec{Avenir Light}       % set section title size & style
+  }
+
+
+  

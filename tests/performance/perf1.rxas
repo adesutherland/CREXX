@@ -1,0 +1,30 @@
+/* REXX COMPILER PoC */
+
+.globals=0
+
+main() .locals=8
+        time r6
+
+* Line 2: {DO}
+* Line 2: i=1
+        load r2,1
+* Line 2: to 1000000000
+        load r3,1000000000
+    l20:
+* Line 2: to 1000000000
+        igt r0,r2,r3
+        brt l13,r0
+* Line 3: b=i-1
+        load r5,1
+        isub r4,r2,r5
+* Line 2: {Implicit "BY 1"}
+        inc r2
+* Line 2: {DO-END}
+        br l20
+    l13:
+        time r7
+        isub r7,r7,r6
+        say "Execution Time: "
+        say r7
+        say "\n"
+        exit

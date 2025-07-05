@@ -1,0 +1,54 @@
+# In a common cmake file (e.g., rxpa/PluginFunctionTemplate.cmake)
+function(plugin_template plugin_name test_rexx use_precomp)
+  set(src "${plugin_name}.c")
+
+
+set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
+
+# Create dynamic plugin module
+  add_dynamic_plugin_target(_${plugin_name} ${src})
+# ---------------------------------------------------------------------------------------
+# Pre-Compile (RXPP) Step (optional)
+# ---------------------------------------------------------------------------------------
+  if(use_precomp)
+     # Define paths
+     set(build "${CMAKE_SOURCE_DIR}/cmake-build-debug")        # Build path
+     set(pluglib "${build}/lib/plugins/precomp")               # Plugin library path
+     set(sourcelib "${CMAKE_SOURCE_DIR}/lib/plugins/precomp")  # Source library path
+     set(lib "${build}/lib/rxfnsb/library")                    # Runtime library path
+     set(rxvm "${build}/interpreter")                          # rxvm direcory
+     set(rxpre "${pluglib}/rxpp")                              # Precompiler executable and location
+
+     # input, output files
+     set(REXX_PRE ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rxpp)
+     set(REXX_LOG ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.log)
+     set(REXX_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx)
+     set(REXX_MACLIB ${sourcelib}/maclib.rexx)
+
+     add_custom_command(
+            OUTPUT ${REXX_SRC}
+            COMMAND ${rxvm}/rxvm ${rxpre} rxprecomp ${lib} -a
+            -I ${REXX_PRE}
+            -o ${REXX_SRC}
+            -m ${REXX_MACLIB}  > ${REXX_LOG} 2>&1
+            DEPENDS ${REXX_PRE} ${REXX_MACLIB}
+            WORKING_DIRECTORY ${pluglib}
+     )
+  endif()
+# ---------------------------------------------------------------------------------------
+# Compile and ASM
+# ---------------------------------------------------------------------------------------
+    add_custom_command(
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc
+            -i "${rx_include}"
+            -o ${test_rexx} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}" &&
+            ${CMAKE_BINARY_DIR}/assembler/rxas ${test_rexx}
+        DEPENDS rxas rxc library _${plugin_name} "${CMAKE_CURRENT_SOURCE_DIR}/${test_rexx}.rexx"
+        OUTPUT ${test_rexx}.rxbin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    add_custom_target(${test_rexx} ALL
+        DEPENDS ${test_rexx}.rxbin
+    )
+endfunction()

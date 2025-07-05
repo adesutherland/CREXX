@@ -1,0 +1,7 @@
+%%{init: {'theme':'neutral'}}%%
+graph LR
+A[(source.rxas)] --> B[Lexer]
+B --> C[Parser]
+C --> D[Optimizer]
+D --> E[Binary Writer]
+E --> F[(source.rxbin)]

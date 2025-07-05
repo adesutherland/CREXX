@@ -1,0 +1,1 @@
+SETDGTS specifies the number of significant digits in a decimal operation when decimal mode MC is active. \footnote{When decimal mode DC is used, then this instruction will be ignored (but is still a valid instruction in a \code{.rxbin} module).}

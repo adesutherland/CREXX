@@ -2,10 +2,11 @@
 #define CREXX_RXDADISM_H
 
 #include "rxas.h"
+#include "rxbin.h"
 
-#define rxversion "cREXX-Phase-0 v0.1.5"
+#define rxversion "crexx-DEV2507"
 
 /* Disassembler */
-void disassemble(bin_space *pgm, FILE *stream);
+void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_all_constant_pool);
 
 #endif //CREXX_RXDADISM_H

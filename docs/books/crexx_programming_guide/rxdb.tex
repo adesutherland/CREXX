@@ -1,0 +1,20 @@
+\chapter{rxdb - the \crexx{} Debugger}\label{debugger}
+The debugger is one of the programs in the toolchain delivered with \crexx{}
+as its source code; most other programs, at the moment, are compiled
+from C. It is easily adaptable and can be regarded a \emph{debugger
+  construction set}. By adapting and recompiling the user can
+implement their own wishes for a debugger. In this sense, it can be
+seen as an open-ended complement to the \textsc{Rexx} \code{trace}
+statement. Because it has modes for \textsc{Rexx} as well as
+\code{rxas} Assembler, it is a useful tool for debugging
+high-level as well as low-level problems.
+\section{Command Line Options}
+\fontspec{IBM Plex Mono}
+\begin{shaded}
+  \small
+  \obeylines \splice{rxdb -h | sed "s/&/\and/g"}
+ \end{shaded}
+\fontspec{TeX Gyre Pagella}
+\section{Runtime Options}
+After the \code{rxdb} program is started, a few runtime options appear in the
+delivered version. This is an example session:

@@ -1,0 +1,40 @@
+\chapter{Intralanguage calls}
+This chapter discusses calls from one \crexx{} procedure to another,
+including the built-in function package. Search order is an
+intrinsically related concept: how is the called component found. There
+are some differences with Classic Rexx and ooRexx, which can call (and interpret)
+external procedures in source. In this respect, \crexx{} behaves like
+\nr{}, where a called component needs to be compiled, executable
+code; for \nr{} a \code{.class} file and in \crexx{} an \code{.rxbin}
+file. Level B introduces a package (module) system where a program can
+be part of a package and be imported into calling code.
+\section{At compile time}
+At compile time, a program uses the \code{CALL} statement, or the
+function notation with parentheses (also called round brackets). Going
+forward, and moving into object oriented notations for other \rexx{}
+variants, the latter is going to gain importance, while the
+\code{CALL} statement will be fixed in its current functionality. For
+that reason, most examples will be in the function notation.
+
+The compiler needs to verify if it is possible to call the called
+code: it must be present in executable form, and it needs to have the right
+\emph{signature}\footnote{with signature we mean the combination of
+  parameter types and return type}. The compiler will not automatically compile a callee
+of which the source can be located but the executable form is missing;
+existing systems based on interpreters will happily interrupt their
+work and tokenize another source file when called; the \crexx{}
+\code{rxc} compiler will not.
+
+This implies that there are inherent dependencies to be followed
+while building an application system that consists of multiple
+modules; this is not different than in other compiled
+languages. Building utilities like Make or Ninja can provide these
+services, and these can be orchestrated by meta-build tools like
+CMake. The \crexx{} toolchain itself is built using CMake and from its
+build specification in CMake most of these patterns can be gleaned.
+
+The \textbf{import} statement\label{intraImport} tells the compiler we want to
+import functions from a certain package.
+
+
+\section{At runtime}

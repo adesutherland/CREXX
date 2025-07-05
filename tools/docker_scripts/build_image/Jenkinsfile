@@ -1,0 +1,23 @@
+pipeline {
+    agent { docker { image 'netrexx-build' } }
+    environment {
+        CLASSPATH = '/netrexx-code/build/lib/NetRexxF.jar'
+    }
+    stages {
+        stage('checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://git.code.sf.net/p/netrexx/code']]])
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'make'
+            }
+        }
+        stage('archive') {
+            steps {
+                archiveArtifacts artifacts: 'build/lib/NetRexxF.jar', fingerprint: true, onlyIfSuccessful: true
+            }
+        }
+    }
+}

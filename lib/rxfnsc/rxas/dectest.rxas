@@ -1,0 +1,31 @@
+.srcfile="dectest.rxas"
+.globals=0
+
+main() .locals=5
+
+   load r1,"110"      /* Load first string */
+   S2DEC r2,r1        /* Convert first to Decimal */
+   load r1,"991"      /* Load second string */
+   S2DEC r3,r1        /* Convert second to Decimal */
+   DCMP r1,r2,r3      /* Compare first to second */
+   load r1,"2001"
+   S2DEC r3,r1        /* convert compare result to string */
+   DSUB r1,r2,r3      /* 110 - 2001 */
+   DEC2S r4,r1        /* convert dec to string */
+   say r4             /* 110 - 2001 */
+   DMULT r1,r2,r3     /* Multiply 110 x 991 */
+   DADD r1,r2,r3      /* Add 110 + 991 */
+   DEC2S r4,r1        /* convert result to string */
+   say r4
+   DSUB r1,r2,r3      /* SUBTRACT 110 - 991 */
+   DEC2S r4,r1        /* convert result to string */
+   say r4
+   DDIV r1,r2,r3      /* Divide CT 110/991 */
+   DEC2S r4,r1        /* convert result to string */
+   say r4
+   load r2,3100       /* load integer */
+   I2DEC r1,r2        /* convert integer to dec */
+   DEC2S r4,r1        /* convert it back to integer */
+   say r4
+
+   ret 0

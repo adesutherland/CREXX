@@ -10,53 +10,80 @@
 #define   YYMARKER    s->marker
 #define   YYCTXMARKER s->ctxmarker
 
-int scan(Assembler_Context* s, char *buff_end) {
+int rx_scan(Assembler_Context* s, char *buff_end) {
     int depth;
 
-    regular:
 /*!re2c
     re2c:yyfill:enable = 0;
+*/
+    regular:
 
-    whitespace = [ \t\v\f]+;
+    /* Character Encoding Specifics  */
+    /*!include:re2c "encoding.re" */
+
+/*!re2c
     digit = [0-9];
-    letter = [a-zA-Z];
-    any = [\x01-\xFF];
-    eof = [\x00];
+    eol2 = "\r\n";
+    eol1 = [\r] | [\n];
+    eof = [\000] ;
+    any = [^] \ eof ;
+
     slit = ["] ( (any\["\n\r]) | ( [\\]["] ) )* ["];
-    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\['\n\r]) [']);
-    float = [-+]? (digit* "." digit+ | digit+ ".");
+    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\[\n\r]) [']);
+
+    // floating literals
+    fsig = digit* "." digit+ | digit+ ".";
+    fexp = [eE] [+-]? digit+;
+    float = [-+]? (fsig fexp? | digit+ fexp);
+
+    // hex literals
+    hex =  ("0x" | "OX")[0-9a-fA-F][0-9a-fA-F]([0-9a-fA-F][0-9a-fA-F])*;
+
     integer = [-+]? digit+;
-    reg = ('r' | 'a' | 'g') digit+;
-    id = (letter | [_]) (letter | digit | [_-.])*;
+    rreg = 'r' digit+;
+    greg = 'g' digit+;
+    areg = 'a' digit+;
+    id = (letter | [_]) (letter | digit | [_\-.#])*;
 
     "/*" {
       depth = 1;
       goto comment;
     }
-    "\r\n" {
+    eol1 {
        s->line++;
        s->linestart = s->cursor+1;
        return(NEWLINE);
     }
-    [\r] | [\n] {
+    eol2 {
        s->line++;
-       s->linestart = s->cursor;
+       s->linestart = s->cursor+2;
        return(NEWLINE);
     }
+
     "*" [^\r\n]* { goto regular; }
 
+    float "d" {return(DECIMAL);}
     float {return(FLOAT);}
+    integer "d" {return(DECIMAL);}
     integer {return(INT);}
+    hex {return(HEX);}
     slit {return(STRING);}
     clit {return(CHAR);}
-    reg {return(REG);}
+    rreg {return(RREG);}
+    greg {return(GREG);}
+    areg {return(AREG);}
     id "()" {return(FUNC);}
     id ":" {return(LABEL);}
     id {return(ID);}
     '=' {return(EQUAL);}
+    ':' {return(COLON);}
     ',' {return(COMMA);}
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
+    '.expose' { return(KW_EXPOSE); }
+    '.src' { return(KW_SRC); }
+    '.srcfile' { return(KW_SRCFILE); }
+    '.meta' { return(KW_META); }
     eof { return(EOS); }
     whitespace {
       s->top = s->cursor;
@@ -90,7 +117,7 @@ int scan(Assembler_Context* s, char *buff_end) {
     goto comment;
   }
   eof {
-    error_f(s, s->line+1, 0, 1, "Error EOS before comment end");
+    rxaserrf(s, s->line+1, 0, 1, "Error EOS before comment end");
     return(EOS);
   }
   * { goto comment; }

@@ -1,0 +1,22 @@
+/*
+ * rexx TESTBGT branch if op2>op3 to op1
+ */
+.globals=0
+main()  .locals=8
+
+   load r1,"Test BGE with reg reg"
+   say r1
+   load r2,0
+   load r3,10
+loop:
+   bge  endloop,r2,r3
+   inc  r2
+   itos r2
+   say  r2
+   br   loop
+endloop:
+   load r1,"Endloop reached"
+   say r1
+   ret
+
+

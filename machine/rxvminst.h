@@ -5,9 +5,7 @@
 #ifndef CREXX_RXVMINST_H
 #define CREXX_RXVMINST_H
 
-#ifdef __CMS__
-#include "cms.h"
-#endif
+#include "platform.h"
 
 typedef enum OperandType
 {
@@ -18,7 +16,9 @@ typedef enum OperandType
     OP_INT = 4,
     OP_FLOAT = 5,
     OP_CHAR = 6,
-    OP_STRING = 7
+    OP_STRING = 7,
+    OP_DECIMAL = 8,
+    OP_BINARY = 9
 } OperandType;
 
 typedef struct Instruction

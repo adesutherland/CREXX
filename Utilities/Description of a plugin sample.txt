@@ -1,0 +1,174 @@
+Setting up a CREXX Plugin requires some effort to make it consistent. So I had in mind a generator that does this for me. Think of a rexx-type definition. This defines the basis of a plugin:
+
+// Plugin Pool funcpool
+Pool    ="funcpool"
+// ------ function fsubstr
+function="fsubstr(.string)"
+passing ="source(string) offset(int) length(int)"
+//
+// ------ function fright
+FUnCtion="fRIght(.string)"  // Function fright
+passing ="source(.string) length(int) pad(string)"
+//
+// ------ function fleft
+function ="fleft(.string)"
+passing  ="source(.STRing) length(INT) pad(.string)"
+// ------ function fpos
+function ="fpos(int)"
+passing  ="source(.STRing) find(string)"
+// ------ function fcalc
+function ="fcalc(int)"
+passing  ="p0(.int) p1(.int)"
+
+It defines a pool name and each function. The function name has the return type in parentheses. PASSING defines the variables passed to the plugin, the type is also enclosed in parentheses. "//" are line comments, which are dropped.
+
+The PluginCreate rexx then generates a syntactically correct C skeleton, which only requires code in the functional sections:
+
+/* ----------------------------------------------------------------------
+ * PLUGIN: funcpool
+ * ----------------------------------------------------------------------
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>     // For POSIX systems (Linux/macOS)
+#include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
+/* ----------------------------------------------------------------------
+ * FUNCTION: fsubstr(source, offset, length)
+ * ----------------------------------------------------------------------
+ */
+PROCEDURE(fsubstr) {
+  if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "fsubstr requires 3  parameters")
+  char *source=GETSTRING(ARG(0));
+  int   offset=GETINT(ARG(1));
+  int   length=GETINT(ARG(2));
+  char  preturn[255];  // change return size accordingly
+        // -------------------------------------------------
+        // add processing code for the above variables here
+        // useful functions:
+        //     strncpy(dest,source+,variable(+offset),length) requires \0 termination
+        //     strcpy(dest,source+,variable(+offset)) does not require \0 termination
+        //     strcmp(source,"constant"/variable)==0  compare, 0 if equal, <0 lt, >0 gt
+        //     fpos= (long) strstr(haystack[+offset],needle)  find offset
+        // ...
+        // -------------------------------------------------
+  RETURNSTR(preturn);
+ENDPROC
+}
+/* ----------------------------------------------------------------------
+ * FUNCTION: fright(source, length, pad)
+ * ----------------------------------------------------------------------
+ */
+PROCEDURE(fright) {
+  if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "fright requires 3  parameters")
+  char *source=GETSTRING(ARG(0));
+  int   length=GETINT(ARG(1));
+  char *pad=GETSTRING(ARG(2));
+  char  preturn[255];  // change return size accordingly
+        // -------------------------------------------------
+        // add processing code for the above variables here
+        // useful functions:
+        //     strncpy(dest,source+,variable(+offset),length) requires \0 termination
+        //     strcpy(dest,source+,variable(+offset)) does not require \0 termination
+        //     strcmp(source,"constant"/variable)==0  compare, 0 if equal, <0 lt, >0 gt
+        //     fpos= (long) strstr(haystack[+offset],needle)  find offset
+        // ...
+        // -------------------------------------------------
+  RETURNSTR(preturn);
+ENDPROC
+}
+/* ----------------------------------------------------------------------
+ * FUNCTION: fleft(source, length, pad)
+ * ----------------------------------------------------------------------
+ */
+PROCEDURE(fleft) {
+  if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "fleft requires 3  parameters")
+  char *source=GETSTRING(ARG(0));
+  int   length=GETINT(ARG(1));
+  char *pad=GETSTRING(ARG(2));
+  char  preturn[255];  // change return size accordingly
+        // -------------------------------------------------
+        // add processing code for the above variables here
+        // useful functions:
+        //     strncpy(dest,source+,variable(+offset),length) requires \0 termination
+        //     strcpy(dest,source+,variable(+offset)) does not require \0 termination
+        //     strcmp(source,"constant"/variable)==0  compare, 0 if equal, <0 lt, >0 gt
+        //     fpos= (long) strstr(haystack[+offset],needle)  find offset
+        // ...
+        // -------------------------------------------------
+  RETURNSTR(preturn);
+ENDPROC
+}
+/* ----------------------------------------------------------------------
+ * FUNCTION: fpos(source, find)
+ * ----------------------------------------------------------------------
+ */
+PROCEDURE(fpos) {
+  if( NUM_ARGS != 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "fpos requires 2  parameters")
+  char *source=GETSTRING(ARG(0));
+  char *find=GETSTRING(ARG(1));
+  int   preturn;
+        // -------------------------------------------------
+        // add processing code for the above variables here
+        // useful functions:
+        //     strncpy(dest,source+,variable(+offset),length) requires \0 termination
+        //     strcpy(dest,source+,variable(+offset)) does not require \0 termination
+        //     strcmp(source,"constant"/variable)==0  compare, 0 if equal, <0 lt, >0 gt
+        //     fpos= (long) strstr(haystack[+offset],needle)  find offset
+        // ...
+        // -------------------------------------------------
+  RETURNINT(preturn);
+ENDPROC
+}
+/* ----------------------------------------------------------------------
+ * FUNCTION: fcalc(p0, p1)
+ * ----------------------------------------------------------------------
+ */
+PROCEDURE(fcalc) {
+  if( NUM_ARGS != 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "fcalc requires 2  parameters")
+  int   p0=GETINT(ARG(0));
+  int   p1=GETINT(ARG(1));
+  int   preturn;
+        // -------------------------------------------------
+        // add processing code for the above variables here
+        // ...
+        // ...
+        // -------------------------------------------------
+  RETURNINT(preturn);
+ENDPROC
+}
+/* ----------------------------------------------------------------------
+ * ADDPROC definitions
+ * ----------------------------------------------------------------------
+ */
+LOADFUNCS // function   pool.function                   return type       parameters variable=.type ...
+  ADDPROC(fsubstr     ,"funcpool.fsubstr",       "b",  ".string",      "source=.string, offset=.int, length=.int");
+  ADDPROC(fright      ,"funcpool.fright",        "b",  ".string",      "source=.string, length=.int, pad=.string");
+  ADDPROC(fleft       ,"funcpool.fleft",         "b",  ".string",      "source=.string, length=.int, pad=.string");
+  ADDPROC(fpos        ,"funcpool.fpos",          "b",  ".int",         "source=.string, find=.string");
+  ADDPROC(fcalc       ,"funcpool.fcalc",         "b",  ".int",         "p0=.int, p1=.int");
+ENDLOADFUNCS
+/* ----------------------------------------------------------------------
+ * Generated from the following definition on 29 Oct 2024 at 09:29:48
+ * ----------------------------------------------------------------------
+   // Plugin Pool funcpool
+   Pool    ="funcpool"
+   // ------ function fsubstr
+   function="fsubstr(.string)"
+   passing ="source(string) offset(int) length(int)"
+   //
+   // ------ function fright
+   FUnCtion="fRIght(.string)"  // Function fright
+   passing ="source(.string) length(int) pad(string)"
+   //
+   // ------ function fleft
+   function ="fleft(.string)"
+   passing  ="source(.STRing) length(INT) pad(.string)"
+   // ------ function fpos
+   function ="fpos(int)"
+   passing  ="source(.STRing) find(string)"
+   // ------ function fcalc
+   function ="fcalc(int)"
+   passing  ="p0(.int) p1(.int)"
+ */
+
+The remaining part is coding the "what to do" part.

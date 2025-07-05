@@ -1,0 +1,10 @@
+filename=$1
+thisdir=$CREXX_HOME
+gcc  \
+    -lrxvml -lmachine -lavl_tree -lplatform -lm  \
+    -L$thisdir/interpreter \
+    -L$thisdir/machine \
+    -L$thisdir/avl_tree \
+    -L$thisdir/platform \
+    ${filename}
+

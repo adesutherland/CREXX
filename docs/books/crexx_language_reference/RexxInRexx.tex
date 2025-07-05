@@ -1,0 +1,16 @@
+\section{Rexx in Rexx}
+An aim of the project is to implement as much of the \crexx{} architecture as possible in \rexx{} itself. To achieve this however core \rexx{} level B facilities are needed. These will be used to implement classic \rexx{} and modernised \rexx{} variations. 
+
+[todo picture]
+\begin{itemize}
+\item Stage 1 - \rexx{} built-in functions will be implemented in \crexx{} level B
+\item Stage 2 - \rexx{} Languages (Interpreters / Compilers) will be re-implemented in \crexx{} level B
+\item Stage 3 - native code compilers based on LLVM IR and other technologies will be made available
+\end{itemize}
+
+An important difference from earlier implementations of the language tools is the emphasis on a clear separation of architectural levels. Where more (and indeed the very first implementations on VM/SP) versions contain a virtual machine layer, this implementation opens up these layers with clear boundaries between the compiler, the assembler and different backends. In this MVP, the execution engine is a threaded\footnote{} virtual machine, which optionally is delivered along with the application in a single native executable.
+
+The interface between the compiler and the assembler is a conventional text file with \crexx{} assembler instructions. It is possible to write \crexx{} assembler without resorting to the compiler; also a convenient way is provided (in \crexx{} level b) to use inline assembly. It is possible to implement other languages on top of the assembler and virtual machine, but for the moment that is out of the scope of this publication.
+
+The binary produced by the assembler is portable between the implementations of \crexx{} on all operating systems platforms and hardware instruction set combinations. The threaded executable will be OS/ISA specific, and (at this moment) is not yet guaranteed to be compatible over \crexx{} releases. Native executables are, at this moment alrready, executable without any part of the language toolchain available, i.e. without any installation.
+

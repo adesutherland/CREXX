@@ -1,0 +1,17 @@
+/* concat example */
+main()  .locals=5
+    load r3,0   
+    load r4,"!"
+    load r1,11
+loop:
+    brt   endloop,r1
+    concat r4,r4,a1 /* concat string to return */
+    inc   r3
+    br    loop
+endloop:    
+    say r4
+    itos r3
+    load r2,"we ran this"
+    concat r3,r2,r3
+    say r3
+    ret

@@ -1,0 +1,9 @@
+.globals=0
+
+log()          .expose=my.log
+
+func2()        .locals=3 .expose=global.func2
+               load r1,1
+               load r2,"In func2()"
+               call r0,log(),r1
+               ret

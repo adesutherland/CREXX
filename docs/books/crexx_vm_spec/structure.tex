@@ -1,0 +1,43 @@
+\mainmatter
+\input{about}
+\input{lowlevel}
+\input{rexx-considerations}
+\part{Instructions}
+
+
+\input{instruction_characteristics}
+\clearpage
+\input{instruction_chapter}
+\input{decimal_variants}
+\part{Assembler Guide and Reference}
+%% \input{rxas_programming_guide}
+\chapter{\crexx{} Assembler}
+\input{REXX-Assembler.tex}
+%% \input{options}
+\appendix
+\input{platform_considerations}
+
+\chapter{Notices}
+
+\part{Appendices and References}
+
+\chapter{Instructions by Mnemonic}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../../../crexx_reference_cards/mnemonic.tex}
+\end{longtable}
+
+
+\chapter{Instructions by Opcode}
+\begin{longtable}{lll}
+  \toprule
+  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
+  \input{../../../crexx_reference_cards/opcodes.tex}
+\end{longtable}
+
+\backmatter
+\listoftables
+%\listoffigures
+%\lstlistoflistings
+\printindex

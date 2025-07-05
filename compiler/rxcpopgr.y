@@ -30,13 +30,22 @@
 program            ::= rexx_options after_the_options.
 program            ::= after_the_options.
 program            ::= error.
-                   { if (context->level == UNKNOWN) context->level = LEVELC; }
+                   {
+                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->processedComments = 1;
+                   }
 
 rexx_options       ::= TK_OPTIONS TK_EOC.
-                   { if (context->level == UNKNOWN) context->level = LEVELC; }
+                   {
+                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->processedComments = 1;
+                   }
 
 rexx_options       ::= TK_OPTIONS option_list TK_EOC.
-                   { if (context->level == UNKNOWN) context->level = LEVELC; }
+                   {
+                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->processedComments = 1;
+                   }
 
 option_list        ::= option.
 option_list        ::= option_list option.
@@ -47,9 +56,18 @@ option             ::= TK_LEVELC. { context->level = LEVELC; }
 option             ::= TK_LEVELD. { context->level = LEVELD; }
 option             ::= TK_LEVELG. { context->level = LEVELG; }
 option             ::= TK_LEVELL. { context->level = LEVELL; }
+option             ::= TK_HASHCOMMENTS. { context->hashcomments = 1; }
+option             ::= TK_DASHCOMMENTS. { context->dashcomments = 1; }
+option             ::= TK_SLASHCOMMENTS. { context->slashcomments = 1; }
+option             ::= TK_NOHASHCOMMENTS. { context->hashcomments = 0; }
+option             ::= TK_NODASHCOMMENTS. { context->dashcomments = 0; }
+option             ::= TK_NOSLASHCOMMENTS. { context->slashcomments = 0; }
 option             ::= TK_SYMBOL. /* For some other language processor */
 
 after_the_options  ::= ANYTHING.
-                   { if (context->level == UNKNOWN) context->level = LEVELC; }
+                   {
+                        if (context->level == UNKNOWN) context->level = LEVELC;
+                        context->processedComments = 1;
+                   }
 
 after_the_options  ::= after_the_options ANYTHING.

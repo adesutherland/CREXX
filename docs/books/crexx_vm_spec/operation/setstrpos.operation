@@ -1,0 +1,1 @@
+setstrpos sets the character pointer of the register. Each register has a string and a current position in that string, which is set by this instruction.

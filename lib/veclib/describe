@@ -1,0 +1,59 @@
+Description of veclib
+
+APL-like functions to be used with CREXX
+
+  __quad_io (x)
+  set/query INDEX ORIGIN to 0 or 1
+  without parameters ==> return current setting of environment variable "index_origin"
+  default value of index_origin is 1
+
+  __min(s)
+  get the MINIMUM value of a vector
+  s is defined as a string (e.g. __min("4 1 3 2"))
+
+   __max(s)
+  get the MAXIMUM value of a vector
+  s is defined as a string (e.g. __max("4 1 3 2"))
+
+  __size(s)
+  returns the number of elements in the vector (like rho in APL)
+
+  __iota(x)
+  for the integer value x a vector is created
+  e.g. __iota(5) results in a string with "1 2 3 4 5", if index_origin is set to 1
+  or "0 1 2 3 4" if index_origin is set to 0
+
+  __pick(s,list)
+  get the elements from the vector s, defined by list
+  e.g. __pick("3 5 7","2 1")
+  would get the 2nd and 1st element of the vector return a vector of "5 3"
+
+  __sum(s)
+  sums the elements of vector s
+  e.g. __sum("1 2 3") would return 6
+  The famous GAUSS exercise at school to sum up the numbers 1..100 would be written in APL as +/iota100
+  and can be written in CREXX as __sum(__iota(100))
+
+  __reduce(op,s)
+  perform the operation op (+,-,*,/,%,//) between all elements of the vector s
+  e.g. __reduce("*","1 2 3") would be a multiplication of 1*2*3 ==> giving 6
+
+  __s2vec(s)
+  convert string s into a CREXX vector (i.e. matrix with one dimension)
+
+  __vec2s(m)
+  convert one dimensional CREXX matrix (vector) into a string representation
+
+   __alfasort(v)
+    sort the one dimensional matrix by alphabet                        
+
+    __numsort(v)
+    sort the one dimensional matrix numerically
+
+  __indexvec(v,reverse_flag)
+  instead of returning the sorted/reverse-sorted values, the positions (index) of the sorted values are returned
+
+                            
+                            
+                            e
+                            

@@ -1,0 +1,10 @@
+main() .locals=6
+	load r3,1.23456e3d
+	deq r4,r3,1234.56d
+	brt equal,r4
+	say "not equal"
+	ret
+equal:	
+	say "equal"
+	ret
+	

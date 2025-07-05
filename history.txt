@@ -1,5 +1,166 @@
 CREXX History / Change Log
+DEV2507 JULY 2025
+      - Current Development Version
 
+F0049 - Decimal Arithmetic WIP
+        - The compiler and optimizer now support decimal arithmetic operations, including addition, subtraction, multiplication, division, and negation.
+        - Type promotion and value rewriting logic has been enhanced to handle decimal types correctly.
+        - Conversion instructions have been added to allow seamless conversion between decimal and other data types like boolean, integer, and string.
+        BIF Migrations
+        - Several string-related Built-in Functions (e.g., `COPIES`, `LEFT`, `RIGHT`, `REVERSE`) have been refactored from their legacy implementation to native REXX BIFs. This improves performance and maintainability.
+        UTF-8 Support
+        - Work has been done to enhance support UTF-8, including changes to the `HEXCHAR` instruction to correctly determine character byte lengths.
+        - Bug Fixes and Other Enhancements
+            - A null pointer dereference in the directory cleanup logic has been fixed.
+            - The `sysinfo` plugin has been updated to include a `getLoadPath` function.
+            - Various adjustments have been made to the CREXX precompiler.
+        - Documentation  and Testing
+            - The documentation has been updated
+        - Manny other improvements in this long running branch!
+HF001 - Hotfix for Windows
+        Fixed Windows DLL Load in current directory
+        Fixed Removal of "\r" in spawned (ADDRESS) Windows Command io Redirect
+F0052 - Fixes and enhancements
+        RXPA - Added an "exit" to trap say instruction output
+        Compiler - Fix Register swap back after a function call with global register
+        Interpreter - Printing floats, changed max precision to 15 from 6 digits
+        Compiler - Fix segfault with a missing argument before an ellipsis
+        Compiler - Fix segfault when exposing an unknown variable
+F0051 - RXPA (Plugin Architecture)
+           Fix - rxc optimised constant arguments to pass by reference incorrectly setting the argument signature
+I0350 - Add - EXIT (and _exit function in _rxsysb file _rxsystem.rexx)
+        Fix - ADDRESS for a not found command freezes (on linux and osx)
+        Add - GetEnv()
+        Fix - 64 bit integer problems in disassembler
+        Fix - Update version() string. Change OS name 'apple' to 'macosx'
+              Format is [linux|windows|macosx|cms|unknown] [64|32] crexx version yyyymmdd (the compile date)
+Q0344 - Version Function
+F0045 - Arrays
+      - Address
+      - FILE IO
+      - Cleaned up Errors
+      - Binary Type
+      - Args
+F0046 - cREXX Level B bif completion branch, and 'escape from crexx' so-dll work
+F0044 - cREXX Level B Language enhancements (Part 2)
+      - Return type of implicitly defined main() automatically set to int or void
+      - Exposed Procedures
+      - Exposed Global Variables
+      - Module namespaces and Import namespaces
+      - Compiler reads procedure definitions from rexx, rxas and rxbin files in search paths for module and
+        imported namespaces
+      - Compiler determines global variable types from rexx, rxas and rxbin files in search paths for module namespace
+      - Debugger Fixes
+F0043 - cREXX Level B Language enhancements (Part 1)
+        Dash '--' line comments. Options dashcomments  / nodashcomments (default)
+        Slash '//' line comments. Options slashcomments  / noslashcomments (default)
+        Hash '#' line comments. Options hashcomments (default) / nohashcomments
+        Fix Parsing - stopping some syntax errors causing the parser to abort
+        Fix Parsing - Parser stack made dynamic
+        Fix parsing - bug related to invalid symbol formats being accepted
+        Change some internal representation from UPPERCASE to lowercase for reasons of modern aesthetics
+        Read external REXX, RXAS and RXBIN files for function definitions
+F0042 - cREXX Build and Packaging enhancements
+        rxcpack - converts rxbin files to c linkable source (aka a C array)
+        rxvme / rxvbme - interpreter linked with the cREXX stdlib
+        rxvml / rxbvml - interpreter library used to support standalone native exe's generated from cREXX source
+        rxdb (degugger, currently PoC status) - now provided as a standalone native exe
+        Note: The generated exe's are quite big (not too bad) however the use of the upx exe compressor mitigates this
+        CMAKE scripts updated to remove writing to source directories
+F0041 - REXX Enhancements:
+        Procedures with no arguments
+        Procedures with no return value
+        Line continuation
+        Hex Escapes (RXAS)
+        Hex/Binary literals (RXC)
+        File, line and var meta data (RXC, RXAS, RXDAS)
+        Allow rxbin files to be concatenated together (to create a library)
+        Build changes - a consolidate library.rxbin is created in lib/rxfns directory
+        Performance improvement in searching in constant pool - pointers chains for certain types, like procedures
+        Added some dependencies to the cmake scripts
+        Debugger PoC Version handles REXX Clauses
+        Fix of register assigment logic
+        Increased parser stack (100->2000) for more "if" depth. Trapped stack overflow errors
+        Fix argument constant check for external procedures
+F0040 - RXAS Debugging Support
+        Fix String Compare
+        Fix Assembler Keyhole Optimiser confusing register types (r,a,g)
+I0205 - Flexible source file extension
+I0265 - Fixed Segfault when there is a duplicate procedure definition
+F0031 - VM Performance Optimisations
+F0035 - (Almost) complete REXX/RXAS BIF library
+I0226 - Support an empty SAY command
+I0180 - Loop TO check is not right for a negative BY value
+I0177 - Implement LOOP as a synonym for DO in loops
+I0183 - Fix loop fails with empty do
+I0182 - Fix RXC sometimes goes into a loop when compiling loops/assignments
+F0037 - REXX Loop Constructs (UNTIL, WHILE, FOREVER, LEAVE, ITERATE)
+        RXAS bcf instruction
+I0172 - Fixed RXC generating idivi instruction. Includes adding missing
+        idiv_reg_int_reg and imod instructions. Deprecated divi and related
+        convert and calculate instructions
+I0169 - Fixed comparison operators picking up child1's value type not its target type
+I0159 - Fixed Compiler does not issue an error when a comment is not closed
+I0156 - Fixed Duplicate Labels.
+      - Improved readability of generated RXAS labels
+      - Performance Improvement for AND and OR logic
+      - New C-Opt rules to optimise brt/f to brt/f branches
+F0036 - COVID-Opt Assembler Keyhole Optimiser
+      - Initial set of C-Opt rules:
+        - swaps cancelling each other out
+        - concat to append
+        - br to brt/brf/brtf
+      - Jump to unconditional jump Assembler Optimiser
+      - BranchTrueFalse (BRTF) - Branch with two destinations
+      - String append instructions (APPEND/SAPPEND)
+I0I49 - Compiler error - does not take account os a swap interfering with a return register
+      - Segfault when the return register is also used as a argument
+I0146 - Compiler not always setting typeflags of arguments correctly
+I0134 - Imported procedure name as "func.func"- temp workaround
+F0034 - Optional Procedure Arguments
+F0023 - Show hex of instructions in disassembler
+F0030 - Fixes, BIF Functions, RXAS Instructions and RXVM Optimisations
+      - Prefix operators (~, +, -)
+F0032 - Document rexx bifs from standard (in docs/bifs)
+I0081 - UTF Char Positioning Fix
+F0018 - CALL, RETURN, ARG support (without PARSE)
+F0028 - rxc level B embedded REXX ASSEMBLER
+      - initial function() parsing (not complete)
+      - Fix UTF whitespace/tab (rxc and rxas)
+      - Fix rxas did not accept negative floats
+      - Fix rxc do repeat segfault with a non-integer loop counter
+      - Fix rxc optimiser turns loop variable to a constant
+      - Refactor rxc - ASTNode to Symbol Connector now a object so that
+        relationship attributes are supported; read/write attributes needed for
+        optimiser
+F0026 - Constant Folding and Constant Propagation Compiler Optimiser
+        Taken constants support
+        IF constant optimisation
+        Logical AND/OR Constant Optimisation
+        Lazy AND/OR expression evaluation
+        Use of the constant version of instructions
+        Updated TRACE messages to use rxas format
+        float and string comparison functions
+        say instruction rationalisation (say reg as string with a newline added only)
+I0061 - Fix Issue 61 - itof instruction missing
+
+0.1.6 - 14 July 2021
+F0022 - Feature - UTF
+        Feature - Long Strings
+        Fix - Faster end-of-source detection
+        Instruction itos replacing sprime and smaster
+        Updated instructions to seq, sne
+        New instructions appendchar, strlen, getstrpos, setstrpos, strchar
+        S370 build updates
+        Initial assembler and rexx test scripts on build
+F0017 - Feature - Linking Multiple Modules
+I0053 - Fix Issue 53 - String Concat Errors
+      - Deprecate SAY REG and replace with SSAY REG (String only)
+I0052 - Fix Issue 52 - Variables are case sensitive
+I0041 - Fix Issue 41 - Single Quote Strings Fails
+I0050 - Fix Issue 50 - VM/370 Printing Integers Fails
+
+0.1.5 - 3 June 2021
 F0012 - Classic Bytecode Interpreter mode (rxbvm executables)
       - VM/370 RXBVM runs
       - Instruction Database and generator optimisations

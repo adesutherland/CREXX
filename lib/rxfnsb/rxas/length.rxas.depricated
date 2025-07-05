@@ -1,0 +1,10 @@
+/*
+ * prototype length() function
+ * no error checking
+ */
+.globals=0
+
+length()  .locals=4 .expose=length.length
+    strlen r2,a1  /* first argument          */
+    ret    r2     /* return length of string */
+    

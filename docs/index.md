@@ -1,6 +1,6 @@
 # CREXX
 
-_Release Documentation - 16 Jan 2021_
+_Release Documentation - crexx-DEV2507 - Sept 2022_
 
 ## REXX Language Implementation Architecture
 
@@ -20,8 +20,6 @@ essence of REXX:
 CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
 and it will also run on Linux, Windows, OSX, and z/Architecture.
 
-Please see our [project aims](Project-Aims).
-
 ## Wiki Based Documentation
 
 This represents the latest thoughts, aims, architecture, designs and details; some of this may have been built, some things may have been built to older designs and some may just be a future wish. This is the place where we are developing the cREXX Architecture.
@@ -36,13 +34,13 @@ Key Links:
 
 ## Release Based Documentation
 
-This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is availabke as a website.
+This is the "As Built" documentation, specific to its release; the current [develop branch](https://adesutherland.github.io/CREXX/) version is available as a website.
 
 The documentation is stored in the code repository/branch under the [/doc](https://github.com/adesutherland/CREXX/tree/develop/docs) directory as markdown files.
 
 # Current Component User Documentation
 
-Version 0.1.4
+crexx-DEV2507
 
 ## Running a REXX program
 
@@ -68,6 +66,8 @@ Type
 for command format / options
 
 ## Assembler
+
+See [REXX Assembler Specification](assembler).
 
 Type
 

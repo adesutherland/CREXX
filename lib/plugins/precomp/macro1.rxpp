@@ -1,0 +1,81 @@
+/*
+ * crexx RXPP
+ * CREXX Pre Compiler
+ */
+options levelb
+import rxfnsb
+##set printgen none
+
+##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */
+##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
+##SYSIN
+  123 SQUARE(DOUBLE(4))
+  my flags {printgen}
+"def" '123'
+ sasdfjä
+     'already ''quoted'' correctly ''
+ "ABC" 123 "DEF"
+
+##end
+
+##SYSUT1
+   mylib
+      yourlib
+##end
+
+##SYSLIB
+   my-private-lib
+      your-private-lib
+##end
+
+
+
+##use C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/parse.rxpp
+
+say 'Compile date {rxpp_date}'
+
+##set abc 1
+
+##if def
+/* enter IF DEF clause   */
+  ##set printgen none          ## show no precompiler calls in generated rexx
+  ##set printgen all           ## show all nested precompiler calls in generated rexx
+  ##set printgen nnest         ## show only first precompiler call for nested calls (default)
+##else
+  /* enter ELSE IF DEF clause   */
+  ##set printgen none        ## show no precompiler calls in generated rexx
+  ##if abc
+  /* enter IF ABC clause   */
+       say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
+       say quote({rxpp_date})       ## pre defined pre-compiler variable: compilation date/time
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##else
+  /* enter ELSE IF ABC clause   */
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##endif
+##end
+/* define a macro containing a {variable}, the define instruction is fetched in pass 1, therefore the value doesn't need to be avaliable */
+##define log                   {say time('l')' log record' ; say '{prefix} something'}
+
+##define Liststem(stem)        {do _indx=1 to stem.0; say stem._indx ; end}
+/* the set instruction is always setup in pass 2 */
+##set prefix 1234
+ log()                       ## now in pass 2 expand the log macro
+##set prefix "456"             ## change the prefix
+ log()                       ## and re-expand another log macro
+ say {prefix}                ## output the current prefix->compiler variable
+##unset prefix
+Setstem(fruits, "apple", "banana", "cherry","pear","melon","kiwi","lemon","grape")
+say hi(fruits)
+
+template = "name 10 job +5 name2 'is' skill"
+tokens.1 = ""
+  types.1  = ""
+call CompileTemplate template
+do i=1 to tokens.0
+   say tokens.i types.i
+end
+say 'This is the current last line'
+exit
+
+

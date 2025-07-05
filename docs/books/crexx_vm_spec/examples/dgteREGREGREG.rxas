@@ -1,0 +1,12 @@
+main() .locals=6
+	load r3,1.23456e3d
+	load r4,1.23456e3d
+	dgte r5,r3,r4
+	brt succeed,r5
+	inc r1	
+	say "failed"
+succeed:	
+	itos r5
+	say r5
+	ret
+	
