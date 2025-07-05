@@ -411,99 +411,41 @@ jobs:
             ${{ runner.temp }}/exe/debug
             ${{ runner.temp }}/exe/release
 
-#**************************************************#
-  release:
-    name: Release
+  #**************************************************#
+  # This job runs after all builds are successful
+  # and creates the snapshot release.
+  #**************************************************#
+  snapshot-release:
+    name: Create Development Snapshot Release
+    runs-on: ubuntu-latest
     needs: [build-ubuntu, build-windows, build-macos]
-    runs-on: [ubuntu-latest]
+    if: github.ref == 'refs/heads/develop'
+
     steps:
-
-      - name: Determine Release Name
+      - name: Generate Timestamp and Names
+        id: names
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
-          echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
-          echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> $GITHUB_ENV
-          else
-          echo "Skip release"
-          fi
+          echo "RELEASE_NAME=Development Snapshot" >> $GITHUB_ENV
+          echo "TAG_NAME=dev-snapshot-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
 
-      - name: Checkout
-        if: env.RELEASE_ID
-        uses: actions/checkout@v3
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
 
-      - name: Checkout branch and push tag
-        if: env.RELEASE_ID
+      - name: Zip Artifacts
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git tag -f ${{ env.RELEASE_ID }}
-          git push -f origin ${{ env.RELEASE_ID }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          zip -r CREXX-Ubuntu.zip artifacts/CREXX-Ubuntu
+          zip -r CREXX-Windows.zip artifacts/CREXX-Windows
+          zip -r CREXX-MacOS.zip artifacts/CREXX-MacOS
 
-      - name: Get ubuntu binary
-        if: env.RELEASE_ID
-        uses: actions/download-artifact@v4
+      - name: Create New Snapshot Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: CREXX-Ubuntu
-          path: CREXX-Ubuntu
-
-      - name: ZIP ubuntu binary
-        if: env.RELEASE_ID
-        run: 
-          zip -r CREXX-Ubuntu.zip CREXX-Ubuntu
-
-      - name: Get windows binary
-        if: env.RELEASE_ID
-        uses: actions/download-artifact@v4
-        with:
-          name: CREXX-Windows
-          path: CREXX-Windows
-
-      - name: ZIP windows binary
-        if: env.RELEASE_ID
-        run: 
-          zip -r CREXX-Windows.zip CREXX-Windows
-
-      - name: Get MacOS binary
-        if: env.RELEASE_ID
-        uses: actions/download-artifact@v4
-        with:
-          name: CREXX-MacOS
-          path: CREXX-MacOS
-
-      - name: ZIP MacOS binary
-        if: env.RELEASE_ID
-        run:
-          zip -r CREXX-MacOS.zip CREXX-MacOS
-
-      - name: Delete old release assets
-        if: env.RELEASE_ID
-        uses: mknejp/delete-release-assets@v1
-        with:
-          tag: ${{ env.RELEASE_ID }}
-          token: ${{ github.token }}
-          fail-if-no-release: false
-          fail-if-no-assets: false
-          assets: |
-            *.zip
-            *.gz
-
-      - name: Create Release and Upload Assets
-        id: create_release
-        if: env.RELEASE_ID
-        uses: softprops/action-gh-release@v1
-        with:
+          name: ${{ env.RELEASE_NAME }}
+          tag_name: ${{ env.TAG_NAME }}
+          prerelease: true
           files: |
             ./CREXX-Ubuntu.zip
             ./CREXX-Windows.zip
             ./CREXX-MacOS.zip
-          name: Snapshot ${{ env.RELEASE_ID }}
-          tag_name: ${{ env.RELEASE_ID }}
-          draft: false
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
