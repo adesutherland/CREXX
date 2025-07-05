@@ -14,6 +14,8 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+          echo "RELEASE_ID=release_candidate" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
           echo "RELEASE_ID=dev-snapshot" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
@@ -198,6 +200,8 @@ jobs:
       run: |
         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
         echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+        echo "RELEASE_ID=release_candidate" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
         echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
@@ -310,6 +314,8 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
           echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+          echo "RELEASE_ID=release_candidate" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
           echo "RELEASE_ID=dev_snapshot" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
@@ -451,7 +457,44 @@ jobs:
             ./CREXX-MacOS.zip
 
   #**************************************************#
-  # This new job runs for pushes to 'master'
+  # This job runs AFTER the snapshot is made
+  # and cleans up old ones.
+  #**************************************************#
+  cleanup-snapshots:
+    name: Cleanup Old Snapshots
+    runs-on: ubuntu-latest
+    # This job must run after the snapshot release is successfully created
+    needs: snapshot-release
+    # This job also only runs on pushes to develop, just like the one it needs
+    if: github.ref == 'refs/heads/develop'
+    permissions:
+      contents: write # Permission is needed here to delete releases
+    steps:
+      - name: Delete releases older than 30 days
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NAME_TO_CLEAN: "Development Snapshot"
+        run: |
+          AGE_LIMIT_DAYS=30
+          echo "Checking for releases named '$RELEASE_NAME_TO_CLEAN' older than $AGE_LIMIT_DAYS days..."
+          CUTOFF_SECONDS=$(date -d "-$AGE_LIMIT_DAYS days" +%s)
+          gh release list --json name,tagName,createdAt --jq '.[] | select(.name == env.RELEASE_NAME_TO_CLEAN)' | \
+          jq -c '.' | \
+          while read -r release_json; do
+            tag=$(echo "$release_json" | jq -r '.tagName')
+            createdAt=$(echo "$release_json" | jq -r '.createdAt')
+            release_seconds=$(date -d "$createdAt" +%s)
+            if (( release_seconds < CUTOFF_SECONDS )); then
+              echo "Deleting release with tag '$tag' (created on $createdAt)..."
+              gh release delete "$tag" --yes --cleanup-tag
+            else
+              echo "Keeping release with tag '$tag' (created on $createdAt)..."
+            fi
+          done
+          echo "Cleanup complete."
+
+  #**************************************************#
+  # This job runs for pushes to 'master'
   # and creates a release candidate.
   #**************************************************#
   release-candidate:
