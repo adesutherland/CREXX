@@ -1,5 +1,22 @@
 CREXX History / Change Log
-F0049 - Decimal Arithmetic
+DEV2507 JULY 2025
+      - Current Development Version
+
+F0049 - Decimal Arithmetic WIP
+        - The compiler and optimizer now support decimal arithmetic operations, including addition, subtraction, multiplication, division, and negation.
+        - Type promotion and value rewriting logic has been enhanced to handle decimal types correctly.
+        - Conversion instructions have been added to allow seamless conversion between decimal and other data types like boolean, integer, and string.
+        BIF Migrations
+        - Several string-related Built-in Functions (e.g., `COPIES`, `LEFT`, `RIGHT`, `REVERSE`) have been refactored from their legacy implementation to native REXX BIFs. This improves performance and maintainability.
+        UTF-8 Support
+        - Work has been done to enhance support UTF-8, including changes to the `HEXCHAR` instruction to correctly determine character byte lengths.
+        - Bug Fixes and Other Enhancements
+            - A null pointer dereference in the directory cleanup logic has been fixed.
+            - The `sysinfo` plugin has been updated to include a `getLoadPath` function.
+            - Various adjustments have been made to the CREXX precompiler.
+        - Documentation  and Testing
+            - The documentation has been updated
+        - Manny other improvements in this long running branch!
 HF001 - Hotfix for Windows
         Fixed Windows DLL Load in current directory
         Fixed Removal of "\r" in spawned (ADDRESS) Windows Command io Redirect

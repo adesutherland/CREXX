@@ -4,7 +4,7 @@
 #ifndef CREXX_PA_H_
 #define CREXX_PA_H_
 
-#define rxpa_version "crexx-F0049"
+#define rxpa_version "crexx-DEV2507"
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters

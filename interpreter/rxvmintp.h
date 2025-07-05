@@ -7,7 +7,7 @@
 #include "rxvalue.h"
 #include "rxsignal.h"
 
-#define rxversion "crexx-F0049"
+#define rxversion "crexx-DEV2507"
 
 /* Module Structure */
 typedef struct module {

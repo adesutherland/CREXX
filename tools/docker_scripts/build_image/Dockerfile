@@ -24,7 +24,7 @@ apt-get install ninja-build
 RUN git clone https://github.com/adesutherland/CREXX.git crexx-code
 
 WORKDIR /crexx-code
-RUN git checkout feature/f0049
+RUN git checkout feature/DEV2507
 
 WORKDIR /
 RUN mkdir crexx_release
