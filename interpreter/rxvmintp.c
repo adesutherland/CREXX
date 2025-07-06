@@ -1783,6 +1783,44 @@ START_OF_INSTRUCTIONS
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------
+ * DIDIV_REG_REG_REG Decimal integer division
+ * ------------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_REG_REG)
+    CALC_DISPATCH(3)
+    DEBUG("TRACE - DIDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
+    // Note: This is integer division, so the result is truncated
+    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DIDIV_REG_DECIMAL_REG  Decimal Integer Divide  (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_DECIMAL_REG)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DIDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
+    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
+    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op1R, op3R);
+    // Note: This is integer division, so the result is truncated
+    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  DIDIV_REG_REG_DECIMAL  Decimal Integer Divide (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(DIDIV_REG_REG_DECIMAL)
+    CALC_DISPATCH(3);
+    DEBUG("TRACE - DIDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
+    current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op3S->string);
+    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op1R);
+    // Note: This is integer division, so the result is truncated
+    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
  *  DEQ_REG_REG_REG  Decimal Equals op1=(op2==op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
@@ -3676,7 +3714,93 @@ START_OF_INSTRUCTIONS
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI % op3RI)
             DISPATCH
- /* ------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------
+ *  FMOD_REG_REG_FLOAT Float Modulo (op1=op2 & op3)
+ *  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(FMOD_REG_REG_FLOAT) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+    REG_RETURN_FLOAT(fmod(op2RF, op3F))
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+*  FMOD_REG_FLOAT_REG  Float Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(FMOD_REG_FLOAT_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+    REG_RETURN_FLOAT(fmod(op2F, op3RF))
+    DISPATCH
+/* -----------------------------------------------------------------------------------
+*  FMOD_REG_REG_REG  Float Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    REG_RETURN_FLOAT(fmod(op2RF, op3RF))
+    DISPATCH
+
+
+
+/* ------------------------------------------------------------------------------------
+ *  DMOD_REG_REG_DECIMAL Decimal Modulo (op1=op2 & op3)
+ *  -----------------------------------------------------------------------------------
+*/
+    START_INSTRUCTION(DMOD_REG_REG_DECIMAL) CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,R%d,%s\n", (int)REG_IDX(1), (int)REG_IDX(2), op3S->string);
+    {
+        value* op = value_f();
+        current_frame->decimal->decimalFromString(current_frame->decimal, op, op3S->string);
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+        // Clear the temporary value
+        clear_value(op);
+        free(op);
+    }
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+*  FMOD_REG_DECIMAL_REG  Decimal Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - FMOD R%d,%s,R%d\n", (int)REG_IDX(1), op2S->string, (int)REG_IDX(3));
+    {
+        value* op = value_f();
+        current_frame->decimal->decimalFromString(current_frame->decimal, op, op2S->string);
+        // First, Calculate the decimal division (truncated)
+        current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op, op3R);
+        current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+        // Now calculate the remainder
+        current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op3R);
+        current_frame->decimal->decimalSub(current_frame->decimal, op1R, op, op1R);
+        // Clear the temporary value
+        clear_value(op);
+        free(op);
+    }
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* -----------------------------------------------------------------------------------
+*  FMOD_REG_REG_REG Decimal Modulo (op1=op2 % op3)
+*  -----------------------------------------------------------------------------------
+*/
+START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    // First, Calculate the decimal division (truncated)
+    current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
+    current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
+    // Now calculate the remainder
+    current_frame->decimal->decimalMul(current_frame->decimal, op1R, op1R, op3R);
+    current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op1R);
+    // Check for errors
+    RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+    DISPATCH
+/* ------------------------------------------------------------------------------------
   *  IOR_REG_REG_REG bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
   *  -----------------------------------------------------------------------------------
   */
@@ -3849,6 +3973,15 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  FIDIV_REG_REG_REG  Integer Div for Float (op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - FIDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_FLOAT(trunc(op2RF / op3RF))
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -3885,6 +4018,15 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  FIDIV_REG_REG_FLOAT  Integer Div for Float(op1=op2/op3)
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_REG_FLOAT) CALC_DISPATCH(3)
+            DEBUG("TRACE - FIDIV R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
+            REG_RETURN_FLOAT(trunc(op2RF / op3F))
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
@@ -3910,6 +4052,16 @@ START_OF_INSTRUCTIONS
         DEBUG("TRACE - FDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF)
             DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  FIDIV_REG_FLOAT_REG  Integer Div for Float (op1=op2/op3)                           pej 12 Apr 2021
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(FIDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
+        DEBUG("TRACE - FIDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+        REG_RETURN_FLOAT(trunc(op2F / op3RF))
+        DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  FPOW_REG_REG_FLOAT  op1=op2**op2w Float operationn                   pej 3 March 2022
  *  -----------------------------------------------------------------------------------

@@ -43,12 +43,28 @@ void init_ops() {
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_REG, OP_INT);
     instr_f("idiv", "Integer Divide (op1=op2/op3)", OP_REG, OP_INT, OP_REG);
 
+    instr_f("fidiv", "Integer Divide with Floats (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("fidiv", "Integer Divide with Floats (op1=op2/op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fidiv", "Integer Divide with Floats (op1=op2/op3)", OP_REG, OP_FLOAT, OP_REG);
+
+    instr_f("didiv", "Integer Divide with Decimals (op1=op2/op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("didiv", "Integer Divide with Decimals (op1=op2/op3)", OP_REG, OP_REG, OP_DECIMAL);
+    instr_f("didiv", "Integer Divide with Decimals (op1=op2/op3)", OP_REG, OP_DECIMAL, OP_REG);
+
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_REG);
     instr_f("divi", "Convert and Divide to Integer (op1=op2/op3) (Deprecated)", OP_REG, OP_REG, OP_INT);
 
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
     instr_f("imod", "Integer Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_INT);
     instr_f("imod", "Integer Modulo (op1=op2&op3)", OP_REG, OP_INT, OP_REG);
+
+    instr_f("fmod", "Float Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("fmod", "Float Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_FLOAT);
+    instr_f("fmod", "Float Modulo (op1=op2&op3)", OP_REG, OP_FLOAT, OP_REG);
+
+    instr_f("dmod", "Decimal Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_REG);
+    instr_f("dmod", "Decimal Modulo (op1=op2%op3)", OP_REG, OP_REG, OP_DECIMAL);
+    instr_f("dmod", "Decimal Modulo (op1=op2&op3)", OP_REG, OP_DECIMAL, OP_REG);
 
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_REG);
     instr_f("fadd", "Float Add (op1=op2+op3)", OP_REG, OP_REG, OP_FLOAT);
