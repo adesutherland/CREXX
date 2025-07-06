@@ -26,8 +26,8 @@ do o=1 to stemout[0]
 end
 
 
-decopt = '-p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal"'
---decopt=''
+--decopt = '-p "$CREXX_HOME/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal"'
+decopt=''
 /*
  * select the categories
  */  

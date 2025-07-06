@@ -22,8 +22,10 @@ insert into variant VALUES(4,'ooRexx','5','RexxLA Open Object Rexx');
 insert into variant VALUES(5,'NetRexx','5','RexxLA NetRexx');
 insert into variant VALUES(6,'Regina','3.9','Regina');
 insert into variant VALUES(7,'BREXX','x','BREXX');
-insert into variant VALUES(8,'CMS Rexx','x','CREXX');
-insert into variant VALUES(9,'TSO Rexx','x','CREXX');
+insert into variant VALUES(8,'CMS Rexx','x','z/VM CMS Rexx');
+insert into variant VALUES(9,'TSO Rexx','x','z/OS TSO Rexx');
+insert into variant VALUES(10,'ANSI','1','The ANSI/ISO Rexx Standard');
+insert into variant VALUES(11,'AREXX','1','Amiga Rexx');
 
 
 CREATE TABLE funcvariant
