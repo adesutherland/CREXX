@@ -2,6 +2,37 @@
 // Created by adrian on 29/03/2021.
 //
 
+/*
+ * ===================================================================
+ * LEVEL C COMPATIBILITY & DESIGN NOTES (StrictAnsiArithmetic Flag)
+ * ===================================================================
+ * This section documents the arithmetic behaviour that must change when
+ * the `StrictAnsiArithmetic` flag is enabled for Level C compatibility.
+ *
+ * -------------------------------------------------------------------
+ * 1. Decimal Arithmetic (% and // operators on `.decimal` type)
+ * -------------------------------------------------------------------
+ * For Level C, the ANSI "Integer Magnitude-Precision Constraint"
+ * must be enforced.
+ *
+ * CHECK: After calculating the intermediate division result, but
+ * before finalizing it, the following check is required:
+ *
+ * IF LENGTH(TRUNC(intermediate_result)) > DIGITS() THEN
+ * RAISE SYNTAX Error 26.11
+ *
+ * -------------------------------------------------------------------
+ * 2. Float Arithmetic (% and // operators on `.float` and `.decimal` types)
+ * -------------------------------------------------------------------
+ * The current design implements a "Float-First" model:
+ *
+ * 1. Perform the division using native floating-point arithmetic.
+ * 2. Truncate the final result to its integer part.
+ *
+ * This was chosen over an "Integer-First" model where operands
+ * would be truncated to integers *before* the division.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1630,7 +1661,7 @@ START_OF_INSTRUCTIONS
     START_INSTRUCTION(DTOB_REG)
     CALC_DISPATCH(1)
     DEBUG("TRACE - DTOB R%lu\n", REG_IDX(1));
-    op1R->int_value = current_frame->decimal->decimalCompareString(current_frame->decimal, op1R, "0") ? 1 : 0; // Convert to boolean
+    op1R->int_value = current_frame->decimal->decimalIsZero(current_frame->decimal, op1R) ? 0 : 1; // Convert to boolean
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
     DISPATCH
 /* ------------------------------------------------------------------------------------

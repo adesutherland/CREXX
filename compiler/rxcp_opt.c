@@ -3,6 +3,37 @@
  * cREXX Optimisations
  */
 
+/*
+ * ===================================================================
+ * LEVEL C COMPATIBILITY & DESIGN NOTES (StrictAnsiArithmetic Flag)
+ * ===================================================================
+ * This section documents the arithmetic behaviour that must change when
+ * the `StrictAnsiArithmetic` flag is enabled for Level C compatibility.
+ *
+ * -------------------------------------------------------------------
+ * 1. Decimal Arithmetic (% and // operators on `.decimal` type)
+ * -------------------------------------------------------------------
+ * For Level C, the ANSI "Integer Magnitude-Precision Constraint"
+ * must be enforced.
+ *
+ * CHECK: After calculating the intermediate division result, but
+ * before finalizing it, the following check is required:
+ *
+ * IF LENGTH(TRUNC(intermediate_result)) > DIGITS() THEN
+ * RAISE SYNTAX Error 26.11
+ *
+ * -------------------------------------------------------------------
+ * 2. Float Arithmetic (% and // operators on `.float` and `.decimal` types)
+ * -------------------------------------------------------------------
+ * The current design implements a "Float-First" model:
+ *
+ * 1. Perform the division using native floating-point arithmetic.
+ * 2. Truncate the final result to its integer part.
+ *
+ * This was chosen over an "Integer-First" model where operands
+ * would be truncated to integers *before* the division.
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -652,34 +683,36 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_IDIV:
-                        /* Children are the same and define the processing */
-                        if (node->child->value_type == TP_FLOAT) {
-                            int result = floor(child1->float_value / child2->float_value);
-                            rewrite_to_integer_constant(node, payload, result);
+                        if (node->value_type == TP_FLOAT) {
+                            // The result in truncated to an integer
+                            rewrite_to_float_constant(node, payload, trunc(child1->float_value / child2->float_value));
                         }
-                        else if (node->child->value_type == TP_DECIMAL) {
+                        else if (node->value_type == TP_DECIMAL) {
                             /* Decimal integer division */
                             value* val1 = value_f();
                             value* val2 = value_f();
                             value* result = value_f();
+                            double dresult;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
-                            // TODO We need to implement rounding to the nearest integer in the plugin and rxvm
+                            // Truncate the result to an integer
+                            decplugin->decimalTruncate(decplugin, result, result);
+                            // Convert to String
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
-                            free(result_string);
                             clear_value(val1);
                             free(val1);
                             clear_value(val2);
                             free(val2);
                             clear_value(result);
                             free(result);
+                            free(result_string);
                         }
-                        else {
+                        else { /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value /
                                                         child2->int_value);
@@ -701,9 +734,13 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin* decplugin = context->decimal_plugin;
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
-                            // decplugin->decimalMod(decplugin, result, val1, val2);
-                            // TODO We need to implement decimal modulo in the plugin and rxvm
-                            // TODO We need to implement fload modulo in rxvm (missing instructions)
+                            // Calculate the integer division first
+                            decplugin->decimalDiv(decplugin, result, val1, val2);
+                            // Truncate the result to an integer
+                            decplugin->decimalTruncate(decplugin, result, result);
+                            // Now calculate the modulo
+                            decplugin->decimalMul(decplugin, result, val2, result);
+                            decplugin->decimalSub(decplugin, result, val1, result);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
@@ -716,6 +753,7 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
+                            /* Must be integer */
                             rewrite_to_integer_constant(node, payload,
                                                         child1->int_value %
                                                         child2->int_value);
