@@ -2187,8 +2187,15 @@ static walker_result emit_walker(walker_direction direction,
             case OP_POWER:
                 if (!op) op="pow";
             case OP_DIV:
-            case OP_IDIV:
                 if (!op) op="div";
+            case OP_IDIV:
+                if (!op) {
+                    if (*tp_prefix == 'i') {
+                        op="div"; /* we will append the type later; noting that idiv is correct, not iidiv */
+                    } else {
+                        op="idiv"; /* i.e. it will become didiv or fidiv */
+                    }
+                }
             case OP_MOD:
                 if (!op) op="mod";
 

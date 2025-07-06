@@ -693,6 +693,37 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     trim_numeric_trailing_zeros(coefficient);
 }
 
+/* Is zero? */
+static int decimalIsZero(decplugin *plugin, const value *number) {
+    long double value = *(long double*)number->decimal_value;
+    return (value == 0.0L || value == -0.0L);
+}
+
+/* Truncate the decimal value to an integer */
+static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
+    CLEAR_ERRNO;
+    EnsureCapacity(result);
+    long double number = *(long double*)op1->decimal_value;
+    // Truncate the decimal part
+    number = truncl(number);
+    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    check_signal(plugin, number);
+    *((long double*)result->decimal_value) = number;
+}
+
+/* Round the decimal value to the nearest integer */
+static void decimalRound(decplugin *plugin, value *result, const value *op1) {
+    CLEAR_ERRNO;
+    EnsureCapacity(result);
+    long double number = *(long double*)op1->decimal_value;
+    // Round to the nearest integer
+    number = roundl(number);
+    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    check_signal(plugin, number);
+    *((long double*)result->decimal_value) = number;
+}
+
+
 /* Function to destroy a rxvmplugin plugin */
 static void destroy_decplugin(rxvm_plugin *plugin) {
     free(plugin->private_context);
@@ -733,6 +764,9 @@ static rxvm_plugin *new_decplugin() {
     plugin->decimalCompare = decimalCompare;
     plugin->decimalCompareString = decimalCompareString;
     plugin->decimalExtract = decimalExtract;
+    plugin->decimalIsZero = decimalIsZero;
+    plugin->decimalTruncate = decimalTruncate;
+    plugin->decimalRound = decimalRound;
 
     return (rxvm_plugin*)plugin;
 }

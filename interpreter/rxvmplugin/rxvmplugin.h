@@ -67,6 +67,9 @@ struct decplugin {
     void (*decimalNeg)(decplugin *plugin, value *result, const value *op1); // Negate a rxvmplugin number
     int (*decimalCompare)(decplugin *plugin, const value *op1, const value *op2); // Compare two rxvmplugin numbers
     int (*decimalCompareString)(decplugin *plugin, const value *op1, const char *op2); // Compare an rxvmplugin number to a string representation of a number
+    int (*decimalIsZero)(decplugin *plugin, const value *op1); // Check if a rxvmplugin number is zero
+    void (*decimalTruncate)(decplugin *plugin, value *result, const value *op1); // Truncate a rxvmplugin number to an integer value
+    void (*decimalRound)(decplugin *plugin, value *result, const value *op1); // Round a rxvmplugin number to the nearest integer
 };
 
 /* Information block for unicode plugins */

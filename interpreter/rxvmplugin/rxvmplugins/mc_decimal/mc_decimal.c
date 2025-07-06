@@ -504,6 +504,32 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     trim_numeric_trailing_zeros(coefficient);
 }
 
+/* Is zero */
+static int decimalIsZero(decplugin *plugin, const value *number) {
+    decNumber *dn = number->decimal_value;
+    return (decNumberIsZero(dn));
+}
+
+/* Truncate the decimal value to an integer */
+static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_DOWN); // Set rounding to truncate
+    decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
+    check_signal(plugin);
+}
+
+/* Round the decimal value to the nearest integer */
+static void decimalRound(decplugin *plugin, value *result, const value *op1) {
+    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_HALF_EVEN); // Set rounding to round
+    decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
+    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
+    check_signal(plugin);
+}
+
 /* Function to destroy a rxvmplugin plugin */
 static void destroy_decplugin(rxvm_plugin *plugin) {
     free(plugin->private_context);
@@ -544,6 +570,9 @@ static rxvm_plugin *new_decplugin() {
     plugin->decimalCompare = decimalCompare;
     plugin->decimalCompareString = decimalCompareString;
     plugin->decimalExtract = decimalExtract;
+    plugin->decimalIsZero = decimalIsZero;
+    plugin->decimalTruncate = decimalTruncate;
+    plugin->decimalRound = decimalRound;
 
     return (rxvm_plugin*)plugin;
 }

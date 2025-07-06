@@ -1846,7 +1846,6 @@ static walker_result set_node_types_walker(walker_direction direction,
             case OP_DIV:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    /* Promote to at least FLOAT, or to DECIMAL if either of the child1 is DECIMAL */
                     ValueType type = promotion[child1->value_type][child2->value_type];
                     type = promotion[type][TP_FLOAT]; /* Ensure at least FLOAT */
                     set_node_type(node, type);
@@ -1854,16 +1853,11 @@ static walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case OP_MOD:
+            case OP_IDIV:
                 if (node->value_type == TP_UNKNOWN) {
-                    /* Promote to INTEGER, or to FLOAT or DECIMAL if either of the child1 is FLOAT or DECIMAL */
                     ValueType type = promotion[child1->value_type][child2->value_type];
                     type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
                     set_node_type(node, type);
-                }
-            case OP_IDIV:
-                if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-                    set_node_type(node, TP_INTEGER);
                 }
                 break;
 
@@ -2144,31 +2138,15 @@ static walker_result type_safety_walker(walker_direction direction,
 
             case OP_CONCAT:
             case OP_SCONCAT:
-                set_node_target_type(child1, node->value_type);
-                set_node_target_type(child2, node->value_type);
-                break;
-
             case OP_ADD:
             case OP_MINUS:
             case OP_MULT:
             case OP_POWER:
-                set_node_target_type(child1, node->value_type);
-                set_node_target_type(child2, node->value_type);
-                break;
-
             case OP_DIV:
+            case OP_IDIV:
+            case OP_MOD:
                 set_node_target_type(child1, node->value_type);
                 set_node_target_type(child2, node->value_type);
-                break;
-
-            case OP_IDIV:
-            case OP_MOD: {
-                    /* Promote children to INTEGER, or to FLOAT or DECIMAL if either of the children is FLOAT or DECIMAL */
-                    ValueType type = promotion[child1->value_type][child2->value_type];
-                    type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
-                    set_node_target_type(child1, type);
-                    set_node_target_type(child2, type);
-                }
                 break;
 
             case OP_NOT:
