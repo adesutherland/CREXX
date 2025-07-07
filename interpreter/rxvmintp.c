@@ -72,6 +72,13 @@
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
+static inline int utf8codepoint_len(int ch) {
+    if (ch <= 0x7F) return 1;  // 0xxxxxxx
+    else if (ch <= 0x7FF) return 2;  // 110xxxxx 10xxxxxx
+    else if (ch <= 0xFFFF) return 3;  // 1110xxxx 10xxxxxx 10xxxxxx
+    else if (ch <= 0x10FFFF)return 4;  // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    else return 1;  // Invalid? Return 1 as fallback
+}
 
 /* Constant to get create the compile time data in ta "iso" like format */
 /* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
@@ -4813,26 +4820,58 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
 /* ------------------------------------------------------------------------------------
  *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
- *
- *  !!! the position parameter is offset +1, this is an exception from normally     !!!
- *  !!! using the offset. Reason: this instruction will be used directly from rexx  !!!
- *  !!  so we save one instruction                                                  !!
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
+            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
-                rxinteger offset = op3R->int_value - 1;   /* make position to offset  */
-                rxinteger len, i;
-                int ch;
-                PUTSTRLEN(op1R, 0)      /* reset length of target  */
-                GETSTRLEN(len, op2R)
-                for (i = offset; i < len; i++) {
-                    GETSTRCHAR(ch, op2R, i)
-                    op2R->int_value = ch;
-                    string_concat_char(op1R, op2R);
+                // offsetlen = (5 << 16) + 20
+                //            len=5, offset=20
+                 rxinteger offsetlen = op3R->int_value;
+
+                // Unpack offset and length from packed int (1-based offset)
+                rxinteger length = ((offsetlen >> 32) & 0xFFFF);
+                rxinteger offset = (offsetlen & 0xFFFF);
+
+                rxinteger total_len;
+                int ch, i;
+
+                // Convert to 0-based offset
+                offset = (offset > 0) ? offset - 1 : 0;
+
+                GETSTRLEN(total_len, op2R);
+                if (offset > total_len) offset = total_len;
+                if (offset + length > total_len) length = total_len - offset;
+
+                PUTSTRLEN(op1R, 0);  // clear result string
+                if(length<=0) goto noChars;
+
+#ifndef NUTF8
+                // Set initial byte position for character offset
+                string_set_byte_pos(op2R, offset);
+                rxinteger byte_pos = op2R->string_pos;
+
+                // Read and concatenate 'length' characters
+                prep_string_buffer(op1R, 4 * length + 1);
+                int temp_len = 0;
+                for (i = 0; i < length; i++) {
+                    utf8codepoint(op2R->string_value + byte_pos, &ch);
+                    int char_len = utf8codepoint_len(ch);
+                    memcpy(op1R->string_value + temp_len, op2R->string_value + byte_pos, char_len);
+                    temp_len += char_len;
+                    byte_pos += char_len;
                 }
-            }
+                op1R->string_value[temp_len] = '\0';
+                PUTSTRLEN(op1R, temp_len);
+#else
+                // Non-UTF8 fallback: just index and copy bytes
+        for (i = 0; i < length; i++) {
+            op2R->int_value = op2R->string_value[offset + i];
+            string_concat_char(op1R, op2R);
+        }
+#endif
+        noChars:
+             }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------

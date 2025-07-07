@@ -47,6 +47,7 @@ set(BIFS
 		space
 		strip
 		substr
+		substro
 		symbol
 		time
 		translate
