@@ -88,7 +88,7 @@ PROCEDURE(getLoadPath) {
 
     // dirname may modify its argument, so copy it
     char *dirbuf = strdup(resolved);
-    /* if (!dirbuf) return NULL; */
+    /* if (!dirbuf) return; */
 
     dir = strdup(dirname(dirbuf));
     free(dirbuf);
@@ -100,7 +100,7 @@ PROCEDURE(getLoadPath) {
 
     path[len] = '\0';
     char *dirbuf = strdup(path);
-    if (!dirbuf) return NULL;
+    if (!dirbuf) return;
     RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
 
     dir = strdup(dirname(dirbuf));
