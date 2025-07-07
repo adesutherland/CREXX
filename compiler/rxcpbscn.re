@@ -51,8 +51,8 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
-  decimal = float [d];
   integer = digit+;
+  decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
   class = [.] simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
