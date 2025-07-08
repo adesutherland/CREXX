@@ -4888,23 +4888,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - PADSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
-                int pad;
                 int i;
-                int count=op3R->int_value;
-                PUTSTRLEN(op1R, 0)            /* reset length of target  */
-                GETSTRCHAR(pad, op2R, 0)      /* fetch pad character   */
-                op3R->int_value = pad;
-                printf("padchar '%d'\n",pad);
-                for (i = 0; i < count; i++) {
-                    string_concat_char(op1R, op3R);
-                    printf("pad 0'%s' %x\n",op1R->string_value,op1R->string_value);
+                for (i = 0; i < op3R->int_value; i++) {
+                    string_concat_char(op1R, op2R);
                 }
-                PUTSTRLEN(op1R, count)
-                printf("pad 2'%s'\n",op1R->string_value);
-                op1R->string_value[count]='\0';
-                op3R->int_value=count;   // reset to original op3R value, just in case
-            }
-
+             }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
