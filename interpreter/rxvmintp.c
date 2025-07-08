@@ -4822,36 +4822,29 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
  *  -----------------------------------------------------------------------------------
  */
+/* ------------------------------------------------------------------------------------
+ *  SUBSTRING_REG_REG_REG op1 = substr(op2, length)
+ *  Extracts 'length' characters from op2, starting at byte offset op2R->string_pos
+ *  Assumes string_set_byte_pos(op2R, offset) was called externally.
+ *  pej updated July 2025
+ * ----------------------------------------------------------------------------------- */
+
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
-                // offsetlen = (5 << 16) + 20
-                //            len=5, offset=20
-                 rxinteger offsetlen = op3R->int_value;
-
-                // Unpack offset and length from packed int (1-based offset)
-                rxinteger length = ((offsetlen >> 32) & 0xFFFF);
-                rxinteger offset = (offsetlen & 0xFFFF);
-
+                rxinteger length = op3R->int_value;
                 rxinteger total_len;
                 int ch, i;
 
-                // Convert to 0-based offset
-                offset = (offset > 0) ? offset - 1 : 0;
-
-                GETSTRLEN(total_len, op2R);
-                if (offset > total_len) offset = total_len;
-                if (offset + length > total_len) length = total_len - offset;
-
-                PUTSTRLEN(op1R, 0);  // clear result string
-                if(length<=0) goto noChars;
+                // Bounds check
+                PUTSTRLEN(op1R, 0);               // Clear result string
+                GETSTRLEN(total_len, op2R);       // Pickup total string length
+                if (length > total_len) length = total_len;
+                if (length <= 0) goto noChars;
 
 #ifndef NUTF8
-                // Set initial byte position for character offset
-                string_set_byte_pos(op2R, offset);
-                rxinteger byte_pos = op2R->string_pos;
+                rxinteger byte_pos = op2R->string_pos;   //  pointer must be externally set by SETSTRPOS string1,start
 
-                // Read and concatenate 'length' characters
                 prep_string_buffer(op1R, 4 * length + 1);
                 int temp_len = 0;
                 for (i = 0; i < length; i++) {
@@ -4861,17 +4854,20 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     temp_len += char_len;
                     byte_pos += char_len;
                 }
-                op1R->string_value[temp_len] = '\0';
+                op1R->string_value[temp_len] = '\0';    // maybe not necessary, just to be safe
                 PUTSTRLEN(op1R, temp_len);
 #else
-                // Non-UTF8 fallback: just index and copy bytes
-        for (i = 0; i < length; i++) {
-            op2R->int_value = op2R->string_value[offset + i];
-            string_concat_char(op1R, op2R);
-        }
+                // Non-UTF8 fallback: just copy bytes
+                rxinteger byte_pos = op2R->string_pos;
+
+                if (byte_pos + length > op2R->string_length) length = op2R->string_length - byte_pos;
+                prep_string_buffer(op1R, length + 1);
+                memcpy(op1R->string_value, op2R->string_value + byte_pos, length);
+                op1R->string_value[length] = '\0';
+                PUTSTRLEN(op1R, length);
 #endif
-        noChars:
-             }
+            noChars:
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4894,13 +4890,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             {
                 int pad;
                 int i;
-                PUTSTRLEN(op1R, 0)       /* reset length of target  */
+                int count=op3R->int_value;
+                PUTSTRLEN(op1R, 0)            /* reset length of target  */
                 GETSTRCHAR(pad, op2R, 0)      /* fetch pad character   */
-                op2R->int_value = pad;
-                for (i = 0; i < op3R->int_value; i++) {
-                    string_concat_char(op1R, op2R);
+                op3R->int_value = pad;
+                printf("padchar '%d'\n",pad);
+                for (i = 0; i < count; i++) {
+                    string_concat_char(op1R, op3R);
+                    printf("pad 0'%s' %x\n",op1R->string_value,op1R->string_value);
                 }
+                PUTSTRLEN(op1R, count)
+                printf("pad 2'%s'\n",op1R->string_value);
+                op1R->string_value[count]='\0';
+                op3R->int_value=count;   // reset to original op3R value, just in case
             }
+
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
