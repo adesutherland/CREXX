@@ -1,19 +1,37 @@
 /* REXX */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 1 Jul 2025  at 14:05:14
+ * PRE Compiled on 8 Jul 2025  at 13:21:26
  * ----------------------------------------------------------------------
  */
 options levelb
 import system
 import rxfnsb
-/* rxpp: mainargs(allin) */
-arg allin=.string[]
-a=47.11d
-b=2
-say a*b
-say 12//7
-say 12%7
+##mainargs(allin)
+/* ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */ */
+/* ##define strlen(len,string)                   {len=0;         assembler strlen len,string} D*/
+myString='C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system\abc'
+say "'"substr("foobar",8,3)"'"   ## \=   "   "    then
 exit
+result=''
+position=8
+mlen=10
+count=1000000
+start=time('us')
+do i=1 to count
+   result=substro(myString,position)
+end
+elp=(time('us')-start)/1000000
+say "elapsed  "elp
+say 'old SUBSTR "'result'"'
+start=time('us')
+do i=1 to count
+   result=substr(myString,position)
+end
+elp=(time('us')-start)/1000000
+say 'new SUBSTR "'result'"'
+say "elapsed    "elp
+exit
+/*
 say ' current c2x presentation, do not handle UTF8 > 1 byte'
 say copies('-',100)
 say "René:       "c2x("René")
@@ -41,7 +59,6 @@ say "Peter:      "c2xV4("Peter")
 say "★ 3 bytes:  "c2xV4("★")
 say "😀 4 bytes: "c2xV4("😀")
 say ' '
-
 say ' UTF8 4 bytes presentation blank separated, backward compatible'
 say copies('-',100)
 say "René:       "c2xV1("René")
@@ -67,7 +84,6 @@ say "Adrian:     "c2xV5("Adrian")
 say "Peter:      "c2xV5("Peter")
 say "★ 3 bytes:  "c2xV5("★")
 say "😀 4 bytes: "c2xV5("😀")
-
 exit
 c2xV1: procedure = .string
   arg from = .string
@@ -81,7 +97,6 @@ c2xV1: procedure = .string
       stx=stx||fz||' '
   end
 return strip(stx)
-
 c2xV2: procedure = .string
   arg from = .string
   stx=""
@@ -106,7 +121,6 @@ c2xV3: procedure = .string
       stx=stx||fz
   end
 return stx
-
 c2xV4: procedure = .string
   arg from = .string
   stx=""
@@ -119,7 +133,6 @@ c2xV4: procedure = .string
       stx=stx||fz||' '
   end
 return strip(stx)
-
 c2xV5: procedure = .string
   arg from = .string
   len=0
@@ -129,3 +142,4 @@ c2xV5: procedure = .string
   fz="UTFV2"
   assembler hexchar fz,from,offset
 return fz
+*/
