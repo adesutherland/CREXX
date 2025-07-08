@@ -4883,6 +4883,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
 /* ------------------------------------------------------------------------------------
  *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
+ *  requires in op2R the codepoint of the character
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3)
