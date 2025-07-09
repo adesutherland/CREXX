@@ -624,11 +624,25 @@ static walker_result initial_checks_walker(walker_direction direction,
             while (child) {
                 if (child->node_type == LITERAL) {
                     /* Check the option */
-                    if (is_node_string(child, "decimal")) {
-                        context->decimal = 1;
+                    if (is_node_string(child, "decimalfloats")) {
+                        if (context->binary) {
+                            /* Error - can't have both decimal and binary floats */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->decimal = 1;
+                            context->binary = 0;
+                        }
                     }
-                    else if (is_node_string(child, "binary")) {
-                        context->decimal = 0;
+                    else if (is_node_string(child, "binaryfloats")) {
+                        if (context->decimal) {
+                         /* Error - can't have bothdecimal and binary floats */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->decimal = 0;
+                            context->binary = 1;
+                        }
                     }
                 }
                 child = child->sibling;
@@ -2615,6 +2629,89 @@ static walker_result func_type_safety_walker(walker_direction direction,
     return result_normal;
 }
 
+/* float2decimal_walker - walker which converts flaat node types to decimal
+ *
+ * This is run against a very early AST, just after initial checks, so no symbol table, we are just changing node types
+ * which will influence subsequence processing looking like the program was using decimals
+ */
+static walker_result float2decimal_walker(walker_direction direction,
+                                           ASTNode* node,
+                                           void *payload) {
+
+    Context *context = (Context*)payload;
+    ASTNode *child1, *child2;
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        context->current_scope = node->scope;
+    }
+    else {
+        /* OUT - BOTTOM UP */
+        switch (node->node_type) {
+            case FLOAT:
+                context->changed = 1;
+                node->node_type = DECIMAL;
+                break;
+            case CLASS:
+                if (node->node_string_length == strlen(".float")) {
+                    if (strncmp(node->node_string, ".float", node->node_string_length) == 0) {
+                        /* This is a .float class - convert to decimal */
+                        context->changed = 1;
+                        ast_str(node, ".decimal");
+                    }
+                }
+
+            default:;
+        }
+
+        context->current_scope = node->scope;
+    }
+
+    return result_normal;
+}
+
+/* decimal2float_walker - walker which converts decimal node types to flaat
+ *
+ * This is run against a very early AST, just after initial checks, so no symbol table, we are just changing node types
+ * which will influence subsequence processing looking like the program was using flaat
+ */
+static walker_result decimal2float_walker(walker_direction direction,
+                                           ASTNode* node,
+                                           void *payload) {
+
+    Context *context = (Context*)payload;
+    ASTNode *child1, *child2;
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        context->current_scope = node->scope;
+    }
+    else {
+        /* OUT - BOTTOM UP */
+        switch (node->node_type) {
+            /* TODO remove digits instructons -> NOP as these are irrelevent for float - consider a warning */
+            case DECIMAL:
+                context->changed = 1;
+                node->node_type = FLOAT;
+                break;
+            case CLASS:
+                if (node->node_string_length == strlen(".decimal")) {
+                    if (strncmp(node->node_string, ".decimal", node->node_string_length) == 0) {
+                        /* This is a .decimal class - convert to float */
+                        context->changed = 1;
+                        ast_str(node, ".float");
+                    }
+                }
+
+            default:;
+        }
+
+        context->current_scope = node->scope;
+    }
+
+    return result_normal;
+}
+
 /* Validate AST */
 void rxcp_val(Context *context) {
     int ordinal_counter;
@@ -2622,6 +2719,17 @@ void rxcp_val(Context *context) {
     /* AST fixups */
     context->current_scope = 0;
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
+
+    // Initial checks walker will have set the options
+    if (context->debug_mode) pdot_tree(context->ast, "astgraph00", context->file_name);
+    if (context->decimal)  {
+        /* decimal option set - this walker converts flaat node types to decimal */
+        ast_wlkr(context->ast, float2decimal_walker, (void *) context);
+    } else if (context->binary) {
+        /* binary option set - this walker converts decimal node types to binary */
+        ast_wlkr(context->ast, decimal2float_walker, (void *) context);
+    }
+    if (context->debug_mode) pdot_tree(context->ast, "astgraph01", context->file_name);
 
     /* Adds rxsysb library (e.g. for ADDRESS and EXIT) */
     context->current_scope = 0;

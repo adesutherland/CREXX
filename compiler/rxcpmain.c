@@ -117,8 +117,8 @@ Context *cntx_f() {
     context->level = UNKNOWN;
     context->lexer_stem_mode = 0;
     context->hashcomments = 1; /* This is the recommended & default line comment style */
-    context->decimal = 0; /* Use binary decimal by default */
-    context->binary = 1; /* Use binary numbers by default */
+    context->decimal = 0; /* Force floats to be decimal */
+    context->binary = 0;  /* Force floats to be binary */
     context->debug_mode = 0;
     context->optimise = 1; /* Optimise by default */
     context->decimal_plugin = 0; /* No decimal plugin by default */
