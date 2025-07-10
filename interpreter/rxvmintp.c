@@ -4070,17 +4070,27 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  FPOW_REG_REG_FLOAT  op1=op2**op2w Float operationn                   pej 3 March 2022
+ *  FPOW_REG_REG_FLOAT  op1=op2**op3 Float operationn                   pej 3 March 2022
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FPOW_REG_REG_FLOAT) CALC_DISPATCH(3)
-    DEBUG("TRACE - DIVF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    DEBUG("TRACE - DIVF R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
     {
         REG_RETURN_FLOAT(pow(op2RF,op3F))
     }
     DISPATCH
 /* ------------------------------------------------------------------------------------
- *  FPOW_REG_REG_REG  op1=op2**op2 Float operation                     pej 3 March 2021
+ *  FPOW_REG_FLOAT_REG  op1=op2**op3 Float operation
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(FPOW_REG_FLOAT_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - DIVF R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
+    {
+        REG_RETURN_FLOAT(pow(op2F,op3RF))
+    }
+    DISPATCH
+/* ------------------------------------------------------------------------------------
+ *  FPOW_REG_REG_REG  op1=op2**op3 Float operation                     pej 3 March 2021
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FPOW_REG_REG_REG) CALC_DISPATCH(3)
