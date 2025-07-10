@@ -9,7 +9,7 @@ errors=0
 /* if x2c('F7F2a2') \= '72s' then do
    errors=errors+1
    say 'X2C failed in test EBCDIC */
-if tx2c('F') \= '0f' then do
+if tx2c('F') \= '0F' then do
   errors=errors+1
   say 'X2C failed in test 3 '
 end
@@ -17,7 +17,7 @@ end
 /* if x2c("416263") \= "Abc" then do
    errors=errors+1
    say 'X2C failed in test 4 ' probably also EBCDIC */
-if tx2c("DeadBeef") \= "deadbeef" then do
+if tx2c("DeadBeef") \= "DEADBEEF" then do
   errors=errors+1
   say 'X2C failed in test 5 '
 end

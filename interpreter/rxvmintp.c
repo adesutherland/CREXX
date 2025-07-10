@@ -4365,8 +4365,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-                                                'e', 'f', 'A', 'B', 'C', 'D', 'E', 'f'};
+                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
                 int ch, i, bytelen, mode;
                 unsigned char bytebuf[4] = {0, 0, 0, 0};
 

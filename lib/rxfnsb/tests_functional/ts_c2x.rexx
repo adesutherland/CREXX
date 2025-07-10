@@ -22,9 +22,9 @@ if c2x( '101'x )\= '0101' then do
   say 'failed in test 3: c2x( '101'x )= ' c2x( '101'x )
 end
 
-if c2x( '0123456789abcdef'x )\= '0123456789ABCDEF' then do
+if c2x( '48656c6c6f'x )\= '48656C6C6F' then do
   errors=errors+1
-  say 'failed in test 4: c2x( '0123456789abcdef'x ) = ' c2x( '0123456789abcdef'x )
+  say 'failed in test 4: c2x( '48656c6c6f'x ) = ' c2x( '48656c6c6f'x )
 end
 
 if c2x( 'ffff'x )\= 'FFFF' then do
