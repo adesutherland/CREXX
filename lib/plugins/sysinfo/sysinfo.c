@@ -95,14 +95,9 @@ PROCEDURE(getLoadPath) {
 
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
     ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
-    if (len == -1)
-      RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
-
     path[len] = '\0';
     char *dirbuf = strdup(path);
     if (!dirbuf) RETURNSTRX("")
-    RETURNSIGNAL(SIGNAL_FAILURE, "Unable to get current load path")
-
     dir = strdup(dirname(dirbuf));
     free(dirbuf);
 
