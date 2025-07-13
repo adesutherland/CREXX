@@ -41,7 +41,7 @@ uintptr_t *Messages=0;
 #include <winsock2.h>
 #include <ws2tcpip.h> // For inet_pton() and other address conversion functions
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
-#endif
+
 /* ------------------------------------------------------------------------------------------------
  * this and that
  * ------------------------------------------------------------------------------------------------
