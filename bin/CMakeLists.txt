@@ -8,7 +8,7 @@ add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_BINARY_DIR}/lib/plugins/sysinfo\"" -o crexx ${CMAKE_CURRENT_SOURCE_DIR}/crexx
         COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas crexx
         COMMAND ${CMAKE_BINARY_DIR}/cpacker/rxcpack crexx ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
-        DEPENDS rxas rxc crexx.rexx library rxcpack rxpa
+        DEPENDS rxas rxc crexx.rexx library rxcpack rxpa sysinfocopy
         OUTPUT crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble and package crexx ..."
