@@ -173,7 +173,7 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvm' filename modules
+    ex_command = 'rxvme' filename modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
