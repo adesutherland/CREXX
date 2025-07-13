@@ -35,3 +35,9 @@ add_test(NAME sysinfo_test
         COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm sysinfo_test rx_sysinfo ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+add_custom_target(sysinfocopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rx_sysinfo_static.a)
+
+add_custom_command(TARGET sysinfocopy POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/lib/plugins/sysinfo/rx_sysinfo_static.a ${CMAKE_BINARY_DIR}/bin/
+  )

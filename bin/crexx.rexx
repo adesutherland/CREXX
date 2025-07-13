@@ -14,6 +14,8 @@
 
 options levelb dashcomments
 import rxfnsb
+import sysinfo
+
 arg fn = .string[]
 module = .string[]
 
@@ -23,9 +25,23 @@ if fn[0]=0 then do
   exit
 end
 
+
+/* figure out the path for libraries etc */
+rxpath=''
+env_wanted='CREXX_HOME'
+assembler getenv rxpath,env_wanted
+if rxpath='' then do
+  rxpath=getLoadPath()
+  lastSegment=lastpos('/',rxpath)
+  rxpath=substr(rxpath,1,lastSegment-1)
+end
+
+
 /* defaults for options */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0;compile=1;libraries=''
+execute=1;linking=0;compile=1;
+
+libraries='/lib/rxfnsb'
 
 modulenumber=1
 /* loop through arguments and find options and program files */
@@ -50,31 +66,26 @@ do i=1 to fn.0
       if fn.i = '-noexec' then execute=0
       if fn.i = '-nocompile' then compile=0
       if left(fn.i,2)= '-l' then do
+	if left(fn.i,1)=' ' then do
+	  fn.i=fn.i||fn.i+1
+	  fn.i+1=''
+	end
 	lastSlash = lastpos('/',fn.i)
-	libs = libs';'substr(fn.i,3)
+	libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
 	module[modulenumber] = substr(fn.i, lastSlash + 1)
-	libraries = libraries';'substr(fn.i,3,lastSlash-2)
+	libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
 	modulenumber = modulenumber+1
       end
     end
 end -- do i
 
-/* figure out the path for libraries etc */
-rxpath=''
-env_wanted='CREXX_HOME'
-assembler getenv rxpath,env_wanted
 
 if version then call logo
-if verbose>1 then say 'using CREXX_HOME:' rxpath
+if verbose>1 then say 'using rxpath:' rxpath
 
-/*
- * here we are using the rxvm instead of the rxvme
- * and have to specify the functions and libraries
- * in the responsefile
- */
-lpath = '/lib/rxfnsb'libraries
+lpath = libraries
 
-if verbose>1 then say 'crexx Library path:' rxpath||lpath
+if verbose>1 then say 'using lpath:' lpath
 
 /* Output Arrays for command output */
 out = .string[]
@@ -161,7 +172,7 @@ do i=1 to words(filenames)
     if RC>0 then exit  
     end
   else do
-    ex_command = 'rxvme' filename modules
+    ex_command = 'rxvm' filename modules
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
