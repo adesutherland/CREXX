@@ -45,7 +45,7 @@ add_subdirectory(interpreter)
 add_subdirectory(rxpa)
 add_subdirectory(lib)
 add_subdirectory(tests)
-# add_subdirectory(bin)
+add_subdirectory(bin)
 
 set(SOURCE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
