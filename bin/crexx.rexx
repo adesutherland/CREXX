@@ -35,7 +35,8 @@ if rxpath='' then do
   lastSegment=lastpos('/',rxpath)
   rxpath=substr(rxpath,1,lastSegment-1)
 end
-
+rxpath=rxpath'/'
+say '==============>' rxpath time()
 
 /* defaults for options */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
@@ -85,7 +86,7 @@ if verbose>1 then say 'using rxpath:' rxpath
 
 lpath = libraries
 
-if verbose>1 then say 'using lpath:' lpath
+if verbose>1 then say 'using lpath :' lpath
 
 /* Output Arrays for command output */
 out = .string[]
