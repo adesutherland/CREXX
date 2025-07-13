@@ -24,6 +24,9 @@ endif()
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
+# Create the static link module
+#add_static_plugin_target(_odbc odbc.c)
+
 # Create dynamic plugin module
 add_dynamic_plugin_target(_odbc odbc.c)
 

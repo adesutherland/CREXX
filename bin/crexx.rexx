@@ -15,6 +15,7 @@
 options levelb dashcomments
 import rxfnsb
 arg fn = .string[]
+module = .string[]
 
 /* when there are no commandline arguments found, display help */
 if fn[0]=0 then do
@@ -26,6 +27,7 @@ end
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
 execute=1;linking=0;compile=1;libraries=''
 
+modulenumber=1
 /* loop through arguments and find options and program files */
 do i=1 to fn.0
   if left(fn.i,1)<>'-' then
@@ -47,10 +49,16 @@ do i=1 to fn.0
       if fn.i = '-verbose3' then verbose=3
       if fn.i = '-noexec' then execute=0
       if fn.i = '-nocompile' then compile=0
-      if left(fn.i,2)= '-l' then libraries = libraries';'substr(fn.i,3)
+      if left(fn.i,2)= '-l' then do
+	lastSlash = lastpos('/',fn.i)
+	libs = libs';'substr(fn.i,3)
+	module[modulenumber] = substr(fn.i, lastSlash + 1)
+	libraries = libraries';'substr(fn.i,3,lastSlash-2)
+	modulenumber = modulenumber+1
+      end
     end
 end -- do i
-  
+
 /* figure out the path for libraries etc */
 rxpath=''
 env_wanted='CREXX_HOME'
@@ -105,7 +113,7 @@ do i=1 to words(filenames)
   end
   if RC>0 then exit
   
-  modules = translate(libraries,' ',';')
+  modules = translate(libs,' ',';')
   if native then do
     pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
     if verbose>1 then
@@ -154,6 +162,7 @@ do i=1 to words(filenames)
     end
   else do
     ex_command = 'rxvme' filename modules
+
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
       if execute=0 then say 'crexx does not execute because of --noexec'
