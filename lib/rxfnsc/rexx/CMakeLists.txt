@@ -73,7 +73,7 @@ foreach(_binfile ${REXXBINS})
 	add_custom_command(
 		  COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
 		  COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-		  DEPENDS rxas rxc ../rxas/libraryc-rxas.rxbin ${REXXSRC} ${_prev_dependency}
+		  DEPENDS rxas rxc ../rxas/rxfnsc-rxas.rxbin ${REXXSRC} ${_prev_dependency}
 		  OUTPUT ${_binfile} $(_binfile).rxbin
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."
@@ -83,10 +83,10 @@ endforeach()
 unset(_prev_dependency) # Clear the previous dependency
 
 add_custom_command(
- 		OUTPUT libraryc-rexx.rxbin
-		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > libraryc-rexx.rxbin
-		COMMENT "cREXX REXX Libraryc Archive ..."
+ 		OUTPUT rxfnsc-rexx.rxbin
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > rxfnsc-rexx.rxbin
+		COMMENT "cREXX REXX Rxfnsc Archive ..."
 		DEPENDS ${REXXBINS}
 )
 
-add_custom_target(libraryc-rexx ALL DEPENDS libraryc-rexx.rxbin)
+add_custom_target(rxfnsc-rexx ALL DEPENDS rxfnsc-rexx.rxbin)

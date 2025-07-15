@@ -10,7 +10,7 @@ set(REXXBINS
         crexxbrexx.rxbin
 )
 
-set(LIBRPATH ../libraryc)
+set(LIBRPATH ../rxfnsc)
 
 add_custom_target(testperfbifsc ALL DEPENDS ${REXXBINS})
 
@@ -21,7 +21,7 @@ foreach(_binfile ${REXXBINS})
     add_custom_command(
             COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsc -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
             COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-            DEPENDS rxas rxc libraryc ${_basename}.rexx ${_prev_target}
+            DEPENDS rxas rxc rxfnsc ${_basename}.rexx ${_prev_target}
             OUTPUT ${_binfile}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )

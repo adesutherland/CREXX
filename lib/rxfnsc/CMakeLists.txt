@@ -7,8 +7,8 @@ add_subdirectory(tests_performance)
 
 # Consolidate Rexx Library
 set(SUBLIBS
-        rexx/libraryc-rexx
-        rxas/libraryc-rxas
+        rexx/rxfnsc-rexx
+        rxas/rxfnsc-rxas
 )
 
 foreach (LIB ${SUBLIBS})
@@ -16,11 +16,11 @@ foreach (LIB ${SUBLIBS})
 endforeach ()
 
 add_custom_command(
-        OUTPUT libraryc.rxbin
-        COMMAND ${CMAKE_COMMAND} -E cat ${LIB_FILES} > libraryc.rxbin
+        OUTPUT rxfnsc.rxbin
+        COMMAND ${CMAKE_COMMAND} -E cat ${LIB_FILES} > rxfnsc.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS libraryc-rexx libraryc-rxas rexx/libraryc-rexx.rxbin rxas/libraryc-rxas.rxbin
+        DEPENDS rxfnsc-rexx rxfnsc-rxas rexx/rxfnsc-rexx.rxbin rxas/rxfnsc-rxas.rxbin
         COMMENT "cREXX Combined Library Archive ..."
 )
 
-add_custom_target(libraryc ALL DEPENDS libraryc.rxbin)
+add_custom_target(rxfnsc ALL DEPENDS rxfnsc.rxbin)

@@ -33,10 +33,10 @@ endforeach()
 unset(_prev_dependency) # Clear the previous dependency
 
 add_custom_command(
-        OUTPUT libraryc-rxas.rxbin
-        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > libraryc-rxas.rxbin
-        COMMENT "cREXX RXAS Libraryc Archive ..."
+        OUTPUT rxfnsc-rxas.rxbin
+        COMMAND ${CMAKE_COMMAND} -E cat ${RXASBINS} > rxfnsc-rxas.rxbin
+        COMMENT "cREXX RXAS Rxfnsc Archive ..."
         DEPENDS ${RXASBINS}
 )
 
-add_custom_target(libraryc-rxas ALL DEPENDS libraryc-rxas.rxbin )
+add_custom_target(rxfnsc-rxas ALL DEPENDS rxfnsc-rxas.rxbin )

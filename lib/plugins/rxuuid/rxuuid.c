@@ -374,7 +374,7 @@ PROCEDURE(uuid) {
     if (!uuid4_to_s(uuid, buffer, sizeof(buffer)))
         RETURNSTR("-8");
 
-    printf("%s\n", buffer);
+    /* printf("%s\n", buffer); */
     RETURNSTR(buffer);
     PROCRETURN
     ENDPROC

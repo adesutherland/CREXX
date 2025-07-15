@@ -35,12 +35,11 @@ if rxpath='' then do
   lastSegment=lastpos('/',rxpath)
   rxpath=substr(rxpath,1,lastSegment-1)
 end
-rxpath=rxpath'/'
-say '==============>' rxpath time()
+rxpath=rxpath'/' /* to avoid having to start -l with a slash */
 
 /* defaults for options */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0;compile=1;
+execute=1;linking=0;compile=1;optimize=1
 
 libraries='/lib/rxfnsb'
 
@@ -65,6 +64,7 @@ do i=1 to fn.0
       if fn.i = '-verbose2' then verbose=2
       if fn.i = '-verbose3' then verbose=3
       if fn.i = '-noexec' then execute=0
+      if fn.i = '-nooptimize' then optimize=0
       if fn.i = '-nocompile' then compile=0
       if left(fn.i,2)= '-l' then do
 	if left(fn.i,1)=' ' then do
@@ -209,3 +209,6 @@ say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserv
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
 return
 
+/*
+  /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
+  */
