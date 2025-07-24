@@ -4711,33 +4711,50 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FNDNBLNK_REG_REG_REG) CALC_DISPATCH(3)
-           DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1),
-              REG_IDX(2));
-    {
-        rxinteger result;
-        rxinteger len;
-        int ch;
-#ifndef NUTF8
-        len = (rxinteger)op2R->string_chars;
-#else
-        len = (rxinteger)op2R->string_length;
-#endif
-        for (result = op3R->int_value; result < len; result++) {
-#ifndef NUTF8
-            string_set_byte_pos(op2R, result);
-            utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
-#else
-            ch = op2R->string_value[result];
-#endif
-            if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
-        }
-        result = -len;
+    START_INSTRUCTION(FNDNBLNK_REG_REG_REG)  CALC_DISPATCH(3)
+            DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxinteger result;
+                rxinteger len;
+                int ch;
 
-    nonblankfound:
-        REG_RETURN_INT(result)
-    }
-    DISPATCH
+#ifndef NUTF8
+                len = (rxinteger)op2R->string_chars;
+#else
+                len = (rxinteger)op2R->string_length;
+#endif
+                result = op3R->int_value;
+
+                if (result >= 0) {  // FORWARD SEARCH
+                    for (; result < len; result++) {
+#ifndef NUTF8
+                        string_set_byte_pos(op2R, result);
+                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+                        ch = op2R->string_value[result];
+#endif
+                        if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
+                    }
+                    result = -len;  // Not found in forward scan
+                } else { // REVERSE SEARCH
+                    result = -result;  // Convert to positive index
+                    if (result >= len) result = len - 1;  // Clamp to valid range
+                    for (; result >= 0; result--) {
+#ifndef NUTF8
+                        string_set_byte_pos(op2R, result);
+                        utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
+#else
+                        ch = op2R->string_value[result];
+#endif
+                        if (!IS_UNICODE_WHITESPACE(ch)) goto nonblankfound;
+                    }
+                    result = -1;  // Not found in reverse scan
+                }
+                nonblankfound:
+                REG_RETURN_INT(result)
+            }
+            DISPATCH
+
  /* ------------------------------------------------------------------------------------
   *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
   *  -----------------------------------------------------------------------------------
@@ -4748,7 +4765,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* TODO */
     REG_RETURN_INT(0)
     DISPATCH
-
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
