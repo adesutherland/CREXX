@@ -72,12 +72,32 @@
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
-static inline int utf8codepoint_len(int ch) {
-    if (ch <= 0x7F) return 1;  // 0xxxxxxx
-    else if (ch <= 0x7FF) return 2;  // 110xxxxx 10xxxxxx
-    else if (ch <= 0xFFFF) return 3;  // 1110xxxx 10xxxxxx 10xxxxxx
-    else if (ch <= 0x10FFFF)return 4;  // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-    else return 1;  // Invalid? Return 1 as fallback
+// Decodes UTF8  Bytes and return number of bytes of character
+static inline int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
+    uint8_t c0 = p[0];
+
+    if ((c0 & 0x80) == 0x00) {
+        *codepoint = c0;
+        return 1;
+    } else if ((c0 & 0xE0) == 0xC0) {
+        *codepoint = ((c0 & 0x1F) << 6) |
+                     (p[1] & 0x3F);
+        return 2;
+    } else if ((c0 & 0xF0) == 0xE0) {
+        *codepoint = ((c0 & 0x0F) << 12) |
+                     ((p[1] & 0x3F) << 6) |
+                     (p[2] & 0x3F);
+        return 3;
+    } else if ((c0 & 0xF8) == 0xF0) {
+        *codepoint = ((c0 & 0x07) << 18) |
+                     ((p[1] & 0x3F) << 12) |
+                     ((p[2] & 0x3F) << 6) |
+                     (p[3] & 0x3F);
+        return 4;
+    } else {
+        *codepoint = 0xFFFD;  // ungültiges Startbyte
+        return -1;
+    }
 }
 
 /* Constant to get create the compile time data in ta "iso" like format */
@@ -4873,8 +4893,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 prep_string_buffer(op1R, 4 * length + 1);
                 int temp_len = 0;
                 for (i = 0; i < length; i++) {
-                    utf8codepoint(op2R->string_value + byte_pos, &ch);
-                    int char_len = utf8codepoint_len(ch);
+                //    utf8codepoint(op2R->string_value + byte_pos, &ch);
+                //    int char_len = utf8codepoint_len(ch);
+                    int char_len = utf8codepoint_express(op2R->string_value + byte_pos, &ch);
+
+
                     memcpy(op1R->string_value + temp_len, op2R->string_value + byte_pos, char_len);
                     temp_len += char_len;
                     byte_pos += char_len;

@@ -33,9 +33,9 @@ arg command=.string[]
   end
 
 if internal_testing=1 then do
-   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/system/system_test.rxpp'
-   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/system/system_test.rexx'
-   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250701/lib/plugins/precomp/Maclib.rexx'
+   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/system_test.rxpp'
+   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/system_test.rexx'
+   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/precomp/Maclib.rexx'
 end
 
   if strip(infile)='' then do
@@ -303,10 +303,10 @@ return
       else body=strip(source.nlino)
       stype.nlino='D'
    end
-   body = strip(body)   ## possibly not necessary, but for safety, we need to strip off the braces!
-   len=length(body)-2
-   if len>0 then body=substr(body,2,len)
-   if body = '' then do
+   opr=pos('{',body)
+   lopr=lastpos('}',body)
+   if lopr>0 then body=substr(body,opr+1,lopr-opr-1)
+   if strip(body) = '' | lopr=0 then do
       say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8
    end
@@ -544,6 +544,7 @@ return line
    name    = macros_mname.i
    args    = macros_margs.i
    body    = macros_mbody.i
+   say 555 "'"args"'" "'"body"'"
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    do while pos(name, uline, callPos + 1) > 0
@@ -561,12 +562,15 @@ return line
           status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
           if status_before=0 then iterate
        end
+       say 888 line callpos name "'"args"'"
        remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
+       say "Remain '"remain"'"
      ## extract argument list
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
        bodyExp = body
        xargs   = translate(args, , ',')
+       say 777 "'"xargs"'" "'"args"'"
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
        else bodyExp = replaceFixArg(bodyExp, xargs)
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
@@ -618,6 +622,8 @@ variadic: procedure=.string
   argText  = translate(argText, , ',')
   varCount = callArgCount - 1
 
+  say 222 bodyExp argtext
+
   /* Extract left-hand side (e.g., result = ...) */
   tempBody = translate(bodyExp, , '.=')
   lhs      = word(tempBody, 1)
@@ -628,18 +634,21 @@ variadic: procedure=.string
   remain   = subword(tempBody, 2)
 
   /* Replace the primary macro parameters */
-  bodyExp  = replaceArg(bodyExp, lhs, word(argText, 1))      /* fixed first argument */
-  bodyExp  = replaceArg(bodyExp, 'argcount', varCount)
-
+  say 333 argtext
+  if pos('arglist',lhs)>0 then inc=0
+  else do
+     bodyExp  = replaceArg(bodyExp, lhs, word(argText, 1))      /* fixed first argument */
+     bodyExp  = replaceArg(bodyExp, 'argcount', varCount)
+     inc=1
+  end
   originalBody = bodyExp  /* store original for each iteration */
-
   /* Loop through variadic arguments */
   do k = 1 to varCount
      value   = word(argText, k + 1)
+     say 111 value varcount inc
      bodyExp = replaceArg(bodyExp, '$indx', k)
      bodyExp = replaceArg(bodyExp, 'arglist.'k, value)
      call writeline bodyExp
-
      bodyExp = originalBody  /* reset to base form for next iteration */
   end
 
@@ -845,6 +854,6 @@ rxppinit: procedure
   cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars'
     call setvar 'cflags',cflags
   printgen_flags='all'
-    call setvar 'printgen',printgen_flags
+  call setvar 'printgen',printgen_flags
   call setvar 'rxpp_date',date()' 'time()
  return
