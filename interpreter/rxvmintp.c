@@ -4395,7 +4395,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+                                                'e', 'f', 'A', 'B', 'C', 'D', 'E', 'f'};
                 int ch, i, bytelen, mode;
                 unsigned char bytebuf[4] = {0, 0, 0, 0};
 
@@ -4925,7 +4926,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
-            PUTSTRLEN(op1R,op2R->int_value)
+        /* string_set_byte_pos(op1R, op2R->int_value) sets: the following variables:
+         *       op1R->string_char_pos:     position of the character in string, is identical to the input cut parameter
+         *       op1R->string_pos     :     byte position in the string, this is the new length of the string, the cut position
+         *  no edge testing necessary, cut values exceeding the length will be reset to max length
+         */
+           string_set_byte_pos(op1R, op2R->int_value); // sets string position to the last character to remain in string
+           PUTSTRLEN(op1R,op1R->string_pos)
 
         DISPATCH
 
