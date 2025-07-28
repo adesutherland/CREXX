@@ -21,9 +21,11 @@ trunc: procedure = .string
    if ppi>0 then do
       num=substr(innum,1,ppi-1)
       exp=substr(innum,ppi+1)
-      num=num*10**exp
-      assembler itos num
-      innum=num||'.0000000000000000'
+      assembler stof num
+      assembler stoi exp
+      xnum=num*(10**exp)
+      assembler itos xnum
+      innum=xnum||'.0000000000000000'
    end
 
    Assembler strlen hlen,innum       /* determine string length              */

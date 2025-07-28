@@ -2,6 +2,7 @@
 options levelb
 
 namespace rxfnsb expose left
+import _rxsysb
 
 left: procedure=.string
   arg lstring=.string, leftlen=0, pad=' '
@@ -15,10 +16,11 @@ left: procedure=.string
      return lstring                         /* and return it */
   end
  /* left length > string length, this needs padding */
-  plen=1
   padchar=''
   padstring=''
-  assembler substcut pad,plen              /* ensure pad is just one char */
+  padlength=0
+  assembler strlen padLength, pad
+  if padLength > 1 then call raise "syntax", "40.23", pad
   assembler strchar padchar, pad           /* padchar= utf8codepoint(pad) */
   leftlen=leftlen-llen                     /* how many padding chars needed */
   assembler padstr padstring, padchar, leftlen  /* create pad string */
