@@ -93,3 +93,8 @@ _deps
 
 # emacs backup files
 *~
+
+# apple cruft
+.DS_Store
+docs/.DS_Store
+docs/books/.DS_Store
