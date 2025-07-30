@@ -11,6 +11,7 @@
     #include <windows.h>
 #else
     #include <unistd.h>   // For POSIX systems (Linux/macOS)
+    #include <ctype.h>
 #endif
 
 

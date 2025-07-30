@@ -16,6 +16,7 @@ options levelb dashcomments
 import rxfnsb
 import sysinfo
 
+main: procedure = .int
 arg fn = .string[]
 module = .string[]
 
@@ -74,6 +75,7 @@ do i=1 to fn.0
 	lastSlash = lastpos('/',fn.i)
 	libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
 	module[modulenumber] = substr(fn.i, lastSlash + 1)
+	say '---->' module[modulenumber]
 	libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
 	modulenumber = modulenumber+1
       end
@@ -94,6 +96,9 @@ err = .string[]
 
 do i=1 to words(filenames)
   filename=word(filenames,i)
+  /* see if there is a .rxpp file to run the preprocessor against */
+  
+  
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do
@@ -155,7 +160,8 @@ do i=1 to words(filenames)
 	'-lplatform',
         '-lm -lrxvmplugin',
 	  rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a ',
-	  rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a ',
+	    rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a ',
+	 '-Wl,-force_load,"'rxpath'""',
 	  filename'.c'
     cc_command
     if verbose>1 then
@@ -182,7 +188,9 @@ do i=1 to words(filenames)
     if execute then ex_command
   end
 end   -- do i
-    
+
+  return 0
+  
 help: procedure 
 call logo
 say
@@ -190,12 +198,13 @@ say 'Arguments are: in_file_specification... [--option]...'
 say
 say 'The following options are available:'
 say
-say '-help           -- display (this) help info'
-say '-version        -- display the version number'
-say '-exec           -- execute (default)'
-say '-compile        -- compile to rxbin (default)'
-say '-native         -- compile to native executable; implies noexec; default nonative'
-say '-verbose[0-3]   -- report on progress; default verbose0'
+say '-help            -- display (this) help info'
+say '-version         -- display the version number'
+say '-exec            -- execute (default)'
+say '-compile         -- compile to rxbin (default)'
+say '-native          -- compile to native executable; implies noexec; default nonative'
+say '-verbose[0-3]    -- report on progress; default verbose0'
+say '-l[library path] -- use import library'
 say
 say 'all options can also be prefixed with --'
 return
@@ -212,3 +221,4 @@ return
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
   */
+
