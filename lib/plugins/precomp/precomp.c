@@ -174,12 +174,11 @@ PROCEDURE (copy_array) {
 PROCEDURE (list_array)  {
     int i,from,to,hi;
     hi  = GETARRAYHI(ARG0);
-    if (hi==1 && strlen(GETSARRAY(ARG0,1))==0 ) hi=0;
+ //   if (hi==1 && strlen(GETSARRAY(ARG0,1))==0 ) hi=0;
     from= GETINT(ARG1);
     to  = GETINT(ARG2);
     char * hdr=GETSTRING(ARG3);
     if (to<=0) to=hi;
-
     if (from<1) from=1;
     if (from>hi) from=hi;
     if (to>hi || to<1) to=hi;
@@ -510,7 +509,6 @@ PROCEDURE(fpos) {
     RETURNINT(0); // Return 0 if the substring is not found
     ENDPROC;
 }
-
 LOADFUNCS
    ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
    ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
@@ -527,6 +525,7 @@ LOADFUNCS
    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
    ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
+   ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
    ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
 
 ENDLOADFUNCS

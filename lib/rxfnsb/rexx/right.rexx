@@ -13,7 +13,6 @@ right: procedure = .string
   assembler strlen slen,rstring
   if rlen = slen then return rstring
 
-  plen = 1
   padchar = ''
   padlength=0
 

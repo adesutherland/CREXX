@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files alphaN mExpanded expandLevel ifblock elapsedTime
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -47,7 +47,7 @@ end
   say 'Output File: ' outfile
   say 'Macro Lib:   ' maclib
 
-  call rxppinit infile                              ## init global and environment variables
+  syspath=rxppinit(infile,maclib)                   ## init global and environment variables
   say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   sourceLines=RXPPPassOne(infile,outfile,maclib)    ## load source file and macro library
   ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
@@ -418,6 +418,7 @@ CMD_include: procedure
   arg lino=.int,incl=.string,mode=.int
   stype.lino= 'I'
   file=word(incl,2)
+  file=normalisepath(syspath'/'file)
   include.1=''
   new=readall(include,file,-1)
   if new<0 then do
@@ -428,6 +429,7 @@ CMD_include: procedure
   imax=included_files.0
   if included_files.imax\='' then imax=imax+1
   included_files.imax=file
+
   if mode=1 then do
      rc=insert_array(source,lino+1,new)
      rc=insert_array(stype,lino+1,new)
@@ -466,6 +468,7 @@ return
  */
 writeline: procedure
   arg oline=.string
+   oline=injectVariable(oline)
 /* not necessary - I hope
   do while oline \= ''
      oline=injectVariable(oline)
@@ -527,7 +530,7 @@ expandLine:  procedure=.string
   ## if cmt='/*' then return line
   ## if pos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
   i=hasMacro(line,macros_mname,1)      ## checks also for ## /*
-   do while i>0
+  do while i>0
      line=resolveMacro(i,line,expandLevel)
      expandlevel=expandlevel+1
      i=hasMacro(line,macros_mname,i+1)
@@ -544,7 +547,6 @@ return line
    name    = macros_mname.i
    args    = macros_margs.i
    body    = macros_mbody.i
-   say 555 "'"args"'" "'"body"'"
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    do while pos(name, uline, callPos + 1) > 0
@@ -562,15 +564,12 @@ return line
           status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
           if status_before=0 then iterate
        end
-       say 888 line callpos name "'"args"'"
        remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
-       say "Remain '"remain"'"
      ## extract argument list
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
        bodyExp = body
        xargs   = translate(args, , ',')
-       say 777 "'"xargs"'" "'"args"'"
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
        else bodyExp = replaceFixArg(bodyExp, xargs)
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
@@ -585,18 +584,18 @@ return line
  */
 injectVariable: procedure=.string
   arg line2change=.string
-   fp1=pos('{',line2change,1)>0
-   fp2=pos('}',line2change,fp1+1)
-   do while fp1>0 & fp2>0
-      cmt=substr(strip(line2change),1,2)
-       if cmt='/*' | cmt='##' then leave
-      do i=1 to macros_varname.0
-         if macros_varname.i='' then iterate
-         Line2change=ChangeStr(macros_varname.i,line2change,macros_varvalue.i)
-      end
-      fp1=pos('{',line2change,fp2+1)>0
-      fp2=pos('}',line2change,fp2+1)
-   end
+  fp1=pos('{',line2change,1)>0
+  fp2=pos('}',line2change,fp1+1)
+  do while fp1>0 & fp2>0
+     cmt=substr(strip(line2change),1,2)
+     if cmt='/*' | cmt='##' then leave
+     do i=1 to macros_varname.0
+        if macros_varname.i='' then iterate
+        Line2change=ChangeStr(macros_varname.i,line2change,macros_varvalue.i)
+     end
+     fp1=pos('{',line2change,fp2+1)>0
+     fp2=pos('}',line2change,fp2+1)
+  end
 return line2change
 /* ------------------------------------------------------------------
  * Replace fixed define arguments
@@ -622,8 +621,6 @@ variadic: procedure=.string
   argText  = translate(argText, , ',')
   varCount = callArgCount - 1
 
-  say 222 bodyExp argtext
-
   /* Extract left-hand side (e.g., result = ...) */
   tempBody = translate(bodyExp, , '.=')
   lhs      = word(tempBody, 1)
@@ -634,7 +631,6 @@ variadic: procedure=.string
   remain   = subword(tempBody, 2)
 
   /* Replace the primary macro parameters */
-  say 333 argtext
   if pos('arglist',lhs)>0 then inc=0
   else do
      bodyExp  = replaceArg(bodyExp, lhs, word(argText, 1))      /* fixed first argument */
@@ -645,7 +641,6 @@ variadic: procedure=.string
   /* Loop through variadic arguments */
   do k = 1 to varCount
      value   = word(argText, k + 1)
-     say 111 value varcount inc
      bodyExp = replaceArg(bodyExp, '$indx', k)
      bodyExp = replaceArg(bodyExp, 'arglist.'k, value)
      call writeline bodyExp
@@ -832,11 +827,79 @@ setvar: procedure=.int
   macros_varvalue.i=varvalue
 return i
 /* ------------------------------------------------------------------
+ * Check for relative or absolute path
+ * ------------------------------------------------------------------
+ */
+isAbsolutePath: procedure=.int
+  arg path=.string
+  path = translate(path, '/', '\')      /* Normalize slashes */
+  if left(path, 1) = '/' then return 1  /* Check for Unix-style absolute path */
+  if length(path) >= 2 then do          /* Check for Windows drive-letter absolute path (e.g. C:/folder) */
+     if verify(substr(path, 1, 1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')=0 & substr(path, 2, 1) = ':' then return 1
+  end
+  if left(path, 2) = '//' then return 1 /* Check for UNC path (Windows): starts with double backslash */
+return 0
+/* ------------------------------------------------------------------
+ * normalizePath: resolves ../, ./ and slashes in mixed paths to normalised UNIX-style
+ * Example: normalizePath("C:\\Users\\Peter/../Docs/./file.txt") -> "C:/Users/Docs/file.txt"
+ * ------------------------------------------------------------------
+ */
+normalisePath: procedure=.string
+  arg rawpath=.string
+
+  path = translate(rawpath, '/', '\')    /* Convert backslashes to forward slashes */
+  /* Split path into components by '/' */
+  components.1=''
+  compi = 0
+  do while path \= ''
+     ppi = pos('/', path)
+     if ppi > 0 then do
+        part = substr(path, 1, ppi - 1)
+        path = substr(path, ppi + 1)
+     end
+     else do
+        part = path
+        path = ''
+     end
+     if part = '' then iterate
+     compi = compi + 1
+     components.compi = part
+  end
+  /* Stack for normalised components */
+  parti = 0
+  do i = 1 to compi
+    part = components.i
+    if part = '.' then nop
+    else if part = '..' then do
+       if parti > 0 then parti = parti - 1
+    end
+    else do
+       parti = parti + 1
+       norm.parti = part
+    end
+  end
+  /* Check for drive letter prefix */
+  drive = ''
+  if substr(components.1, 2, 1) = ':' then do
+     drive = components.1
+     start = 2
+  end
+  else start = 1
+/* Reconstruct the normalised path with forward slashes */
+  normalised = ''
+  if drive \= '' then normalised = drive
+  do i = start to parti
+     normalised = normalised || '/' || norm.i
+  end
+  if normalised = '' then normalised = '/'
+return normalised
+
+/* ------------------------------------------------------------------
  * Init RXPP environment
  * ------------------------------------------------------------------
  */
-rxppinit: procedure
-  arg rexxname=.string
+rxppinit: procedure=.string
+  arg rexxname=.string,maclib=.string
   alphaN='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
   source.1=''
   stype.1='R'
@@ -850,10 +913,14 @@ rxppinit: procedure
   rexxname=translate(rexxname,,'/\')
   wrds=words(rexxname)
   rexxname=word(rexxname,wrds)
+  syspath=translate(maclib,,'/\')
+  wrds=words(syspath)
+  wlast=wordindex(syspath,wrds)
+  syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rexxname
   cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars'
     call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
   call setvar 'rxpp_date',date()' 'time()
- return
+ return strip(syspath)

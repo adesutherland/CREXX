@@ -518,11 +518,35 @@ Removes a previously defined variable from the preprocessor context.
 
 Includes the contents of an external file into the source at the point of invocation. Nested includes are supported. By default, the file is resolved relative to the current working directory. If the file resides elsewhere, a fully qualified path must be provided. Quotation marks around the filename are not required.
 
-**Example:**
+Paths passed to `##include` may contain `.` and `..` segments to navigate relative directories. These are automatically **normalized** by the preprocessor before the file is included.
+
+**Examples:**
 
 ```rexx
 ##INCLUDE myrexx.rexx
+##INCLUDE ../shared/config.rxh
+##INCLUDE /usr/lib/../local/lib/module.rxh
+##INCLUDE C:/project/lib/./math/../utils/functions.rxh
 ```
+
+These paths will be resolved to their normalized form before inclusion:
+
+```
+../shared/config.rxh                      → resolved relative to current directory
+/usr/lib/../local/lib/module.rxh         → /usr/local/lib/module.rxh
+C:/project/lib/./math/../utils/functions.rxh → C:/project/lib/utils/functions.rxh
+```
+
+#### Notes:
+- Both **absolute** and **relative** paths are supported.
+- Path separators `/` and `\` are both accepted; they are internally normalized to `/`.
+- Multiple slashes are collapsed (`//` becomes `/`).
+- Windows-style drive prefixes (`C:/`, `D:/`) are preserved.
+- UNC paths (`//server/share/path`) are allowed.
+
+
+
+
 
 ### `##IF var`
 

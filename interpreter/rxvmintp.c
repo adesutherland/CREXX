@@ -4926,15 +4926,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
-        /* string_set_byte_pos(op1R, op2R->int_value) sets: the following variables:
+        /* input parm op2 defines the last character position (not byte position), everything after that will be stripped off
+         * string_set_byte_pos(op1R, op2R->int_value) sets: the following variables:
          *       op1R->string_char_pos:     position of the character in string, is identical to the input cut parameter
          *       op1R->string_pos     :     byte position in the string, this is the new length of the string, the cut position
          *  no edge testing necessary, cut values exceeding the length will be reset to max length
+         *  op2R->int_value is 1 based
          */
            string_set_byte_pos(op1R, op2R->int_value); // sets string position to the last character to remain in string
            PUTSTRLEN(op1R,op1R->string_pos)
-
-        DISPATCH
+           DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
