@@ -2,6 +2,7 @@
 options levelb
 import llist
 import rxfnsb
+
 do i=1 to 10
    call push  0,"Record Push  "i
    call queue 0,"Record Queue "i
@@ -46,6 +47,7 @@ do i=1 to 5
    call addnode 0,"Record "i
 end
 call listLlist 0
+
 say "Set LList to 3. record" d2x(setNode(0,"3"))
 say "**** remove 3. item "removeNode(0)
 call listLlist 0
