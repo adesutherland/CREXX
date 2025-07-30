@@ -14,6 +14,9 @@
     #include <ctype.h>
 #endif
 
+#ifdef __linux__
+    #include <stdint.h>
+#endif
 
 #define HIGHVALUE ((char *)-1)
 
