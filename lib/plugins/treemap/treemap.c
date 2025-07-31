@@ -4,7 +4,7 @@
 #include "treemap.h"
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
-#define STACK_CAPACITY 1024
+#define STACK_CAPACITY 1024           // this defines the maximum depth of the tree, it is only used in tmap_keys (retrieve all keys)
 
 // Internal helper function declarations
 static TreeNode *new_node(const char *key, const char *value);
@@ -147,7 +147,7 @@ static void insert_fixup(TreeMap *map, TreeNode *z) {
     }
     map->root->color = BLACK;
 }
-
+/*  not needed we handle this via CREXX arrays
 void TreeMap_keys(TreeMap *map, void (*callback)(const char *key, void *ctx), void *ctx) {
     TreeNode *stack[STACK_CAPACITY];
     int top = -1;
@@ -163,7 +163,7 @@ void TreeMap_keys(TreeMap *map, void (*callback)(const char *key, void *ctx), vo
         current = current->right;
     }
 }
-
+*/
 static TreeNode *minimum(TreeNode *node) {
     while (node && node->left) node = node->left;
     return node;
@@ -367,14 +367,45 @@ void TreeMapIterator_destroy(TreeMapIterator *it) {
     free(it->stack);
     free(it);
 }
+
+void register_map(long long mapi) {
+    TreeMapRegistry *entry = malloc(sizeof(TreeMapRegistry));
+    entry->map = mapi;
+    entry->next = registry_head;
+    registry_head = entry;
+}
+int is_valid_map(long long map) {
+    TreeMapRegistry *curr = registry_head;
+    while (curr) {
+        if (curr->map == map) return 0;
+        curr = curr->next;
+    }
+    printf("+++ Tree Map %lld does not exist\n",(long long) map);
+    return 1;
+}
+
+/* ------------------------------------------------------------------------------------
+ * Create a new Tree
+ * Returned is the tree address
+ * ------------------------------------------------------------------------------------
+ */
 PROCEDURE(tmap_create) {
     TreeMap *map = TreeMap_create();
-    RETURNINTX((long long) map)
+    long long mapi=(long long) map;
+    register_map(mapi);
+    RETURNINTX(mapi)
 ENDPROC
 }
+/* ------------------------------------------------------------------------------------
+ * Add a new entry to the key
+ * Returned is the tree address
+ * ------------------------------------------------------------------------------------
+ */
+
 PROCEDURE(tmap_put) {
     long long mapi = GETINT(ARG0);
     TreeMap *map = (TreeMap *) mapi;
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     TreeMap_put(map, GETSTRING(ARG1), GETSTRING(ARG2));
     RETURNINTX(0)
 ENDPROC
@@ -382,6 +413,7 @@ ENDPROC
 
 PROCEDURE(tmap_get) {
    long long mapi = GETINT(ARG0);
+   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
    char* key=GETSTRING(ARG1);
    TreeMap *map = (TreeMap *) mapi;
    RETURNSTRX((char *) TreeMap_get(map,key));
@@ -390,22 +422,25 @@ ENDPROC
 
 PROCEDURE(tmap_haskey) {
    long long mapi = GETINT(ARG0);
+   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
    char* key=GETSTRING(ARG1);
    TreeMap *map = (TreeMap *) mapi;
-   RETURNINTX(TreeMap_containsKey(map,key))
+   RETURNINTX(TreeMap_containsKey(map,key))   // returns 1 for key is present, or 0 not available
 ENDPROC
 }
 
 PROCEDURE(tmap_hasvalue) {
-    long long mapi = GETINT(ARG0);
-    char* value=GETSTRING(ARG1);
-    TreeMap *map = (TreeMap *) mapi;
-    RETURNSTRX((char *) TreeMap_containsValue(map,value))
-    ENDPROC
+   long long mapi = GETINT(ARG0);
+   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+   char* value=GETSTRING(ARG1);
+   TreeMap *map = (TreeMap *) mapi;
+   RETURNSTRX((char *) TreeMap_containsValue(map,value))  // returns the key if value was found, else "" empty string
+ENDPROC
 }
 
 PROCEDURE(tmap_lastkey) {
    long long mapi = GETINT(ARG0);
+   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
    TreeMap *map = (TreeMap *) mapi;
    RETURNSTRX((char *) TreeMap_lastKey(map));
 ENDPROC
@@ -413,6 +448,7 @@ ENDPROC
 
 PROCEDURE(tmap_firstkey) {
     long long mapi = GETINT(ARG0);
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     TreeMap *map = (TreeMap *) mapi;
     RETURNSTRX((char *) TreeMap_firstKey(map));
     ENDPROC
@@ -420,6 +456,7 @@ PROCEDURE(tmap_firstkey) {
 
 PROCEDURE(tmap_remove) {
     long long mapi = GETINT(ARG0);
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     char* key=GETSTRING(ARG1);
     TreeMap *map = (TreeMap *) mapi;
     TreeMap_remove(map,key);          // doesn't deliver valid return code TODO produce valid RC
@@ -429,6 +466,7 @@ PROCEDURE(tmap_remove) {
 
 PROCEDURE(tmap_keys) {
     long long mapi = GETINT(ARG0);
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     int hi = 0;
     TreeMap *map = (TreeMap *) mapi;
 
@@ -442,44 +480,40 @@ PROCEDURE(tmap_keys) {
             current = current->left;
         }
         current = stack[top--];
-        SETARRAYHI(ARG1, hi + 1);
-        SETSARRAY(ARG1, hi, current->key);
+        PUSHSARRAY(ARG1, hi, current->key);
         hi++;
         current = current->right;
     }
-    SETARRAYHI(ARG1,hi);
     RETURNINTX(hi)
 ENDPROC
 }
 
 PROCEDURE(tmap_dump) {
     long long mapi = GETINT(ARG0);
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     int hi = 0;
     TreeMap *map = (TreeMap *) mapi;
 
-    printf("\nIterating TreeMap in order:\n");
     TreeMapIterator *it = TreeMapIterator_create(map);
     while (TreeMapIterator_hasNext(it)) {
       TreeNode *n = TreeMapIterator_next(it);
-      SETARRAYHI(ARG1, hi + 1);
-      SETARRAYHI(ARG2, hi + 1);
-      SETSARRAY(ARG1, hi, n->key);
-      SETSARRAY(ARG2, hi, n->value);
+      PUSHSARRAY(ARG1, hi, n->key);
+      PUSHSARRAY(ARG2, hi, n->key);
       hi++;
     }
     TreeMapIterator_destroy(it);
     RETURNINTX(hi)
 ENDPROC
 }
+
 PROCEDURE(tmap_free) {
     long long mapi = GETINT(ARG0);
+    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     TreeMap *map = (TreeMap *) mapi;
-    TreeMap_destroy(map);
+    TreeMap_destroy(map);             // There is no valid return code available
     RETURNINTX(0);                    // always return 0
 ENDPROC
 }
-
-
 LOADFUNCS
     ADDPROC(tmap_create,      "treemap.tmcreate",    "b",    ".int","");
     ADDPROC(tmap_put,         "treemap.tmput",       "b",    ".int",    "map=.int, key=.string, value=.string");
@@ -493,5 +527,3 @@ LOADFUNCS
     ADDPROC(tmap_keys,        "treemap.tmkeys",      "b",    ".int",    "map=.int, expose list=.string[]");
     ADDPROC(tmap_dump,        "treemap.tmdump",      "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
 ENDLOADFUNCS
-
-

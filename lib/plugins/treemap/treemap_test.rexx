@@ -56,9 +56,20 @@ do i=1 to keys.0
    say keys.i' --> 'values.i
 end
 
-say "Release tree"
-say "------------"
+say "Create 2. Map"
+say "-------------"
+map2=tmcreate()         ## create a treemap
+say TMput(map2,"Fred","Flintstone")
+say TMget(map2,"Fred")
+
+say "Release trees"
+say "-------------"
 say tmfree(map)
+say tmfree(map2)
+
+say "Use invalid Tree"
+say "----------------"
+say TMput(1234,"Fred","Flintstone")
 exit
 
 
