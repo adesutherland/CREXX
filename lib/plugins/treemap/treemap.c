@@ -18,6 +18,15 @@ static void delete_fixup(TreeMap *map, TreeNode *x);
 static TreeNode *find_node(TreeNode *root, const char *key);
 static void free_tree(TreeNode *node);
 
+uint64_t simple_hash64(const char* str) {
+    uint64_t hash = 14695981039346656037ULL; // FNV offset basis
+    while (*str) {
+        hash ^= (unsigned char)(*str++);
+        hash *= 1099511628211ULL; // FNV prime
+    }
+    return hash;
+}
+
 TreeMap *TreeMap_create() {
     TreeMap *map = malloc(sizeof(TreeMap));
     map->root = NULL;
@@ -47,7 +56,7 @@ static TreeNode *find_node(TreeNode *root, const char *key) {
     return NULL;
 }
 
-void TreeMap_put(TreeMap *map, const char *key, const char *value) {
+int TreeMap_put(TreeMap *map, const char *key, const char *value) {
     TreeNode *z = new_node(key, value);
     TreeNode *y = NULL;
     TreeNode *x = map->root;
@@ -55,13 +64,15 @@ void TreeMap_put(TreeMap *map, const char *key, const char *value) {
     while (x) {
         y = x;
         int cmp = strcmp(z->key, x->key);
+        printf("Put %s %s\n",z->key,x->key);
         if (cmp == 0) {
+            printf("Put2 %s %s\n",z->key,x->key);
             free(x->value);
             x->value = strdup(value);
             free(z->key);
             free(z->value);
             free(z);
-            return;
+            return 4;
         }
         x = (cmp < 0) ? x->left : x->right;
     }
@@ -75,6 +86,7 @@ void TreeMap_put(TreeMap *map, const char *key, const char *value) {
         y->right = z;
 
     insert_fixup(map, z);
+    return 0;
 }
 
 static void left_rotate(TreeMap *map, TreeNode *x) {
@@ -184,9 +196,9 @@ const char *TreeMap_lastKey(TreeMap *map) {
     return max ? max->key : NULL;
 }
 
-void TreeMap_remove(TreeMap *map, const char *key) {
+int TreeMap_remove(TreeMap *map, const char *key) {
     TreeNode *z = find_node(map->root, key);
-    if (!z) return;
+    if (!z) return 4;
 
     TreeNode *y = z;
     TreeNode *x;
@@ -221,6 +233,7 @@ void TreeMap_remove(TreeMap *map, const char *key) {
 
     if (y_original_color == BLACK && x)
         delete_fixup(map, x);
+    return 0;
 }
 
 static void transplant(TreeMap *map, TreeNode *u, TreeNode *v) {
@@ -368,22 +381,33 @@ void TreeMapIterator_destroy(TreeMapIterator *it) {
     free(it);
 }
 
-void register_map(long long mapi) {
+void register_map(long long mapi, char * name) {
     TreeMapRegistry *entry = malloc(sizeof(TreeMapRegistry));
     entry->map = mapi;
     entry->next = registry_head;
+    entry->name = simple_hash64(name);
+    entry->entries = 0;
     registry_head = entry;
 }
-int is_valid_map(long long map) {
+TreeMapRegistry* is_valid_map(long long map) {
     TreeMapRegistry *curr = registry_head;
     while (curr) {
-        if (curr->map == map) return 0;
+        if (curr->map == map) return curr;
         curr = curr->next;
     }
-    printf("+++ Tree Map %lld does not exist\n",(long long) map);
-    return 1;
+    printf("+++ Tree Map %lld does not exist\n", map);
+    return NULL;
 }
 
+uint64_t lookup_map(char * tree_name) {
+    uint64_t name = simple_hash64(tree_name);
+    TreeMapRegistry *curr = registry_head;
+    while (curr) {
+        if (curr->name == name) return curr->map;
+        curr = curr->next;
+    }
+    return 0;
+}
 /* ------------------------------------------------------------------------------------
  * Create a new Tree
  * Returned is the tree address
@@ -392,9 +416,20 @@ int is_valid_map(long long map) {
 PROCEDURE(tmap_create) {
     TreeMap *map = TreeMap_create();
     long long mapi=(long long) map;
-    register_map(mapi);
+    char* name=GETSTRING(ARG0);
+    if(strlen(name)==0) strcpy(name,"UNNAMED");
+    else strupr(name);
+    register_map(mapi,name);
     RETURNINTX(mapi)
 ENDPROC
+}
+
+PROCEDURE(tmap_lookup) {
+    char* name=GETSTRING(ARG0);
+    if(strlen(name)==0) strcpy(name,"UNNAMED");
+    else strupr(name);
+    RETURNINTX(lookup_map(name));
+    ENDPROC
 }
 /* ------------------------------------------------------------------------------------
  * Add a new entry to the key
@@ -405,70 +440,100 @@ ENDPROC
 PROCEDURE(tmap_put) {
     long long mapi = GETINT(ARG0);
     TreeMap *map = (TreeMap *) mapi;
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-    TreeMap_put(map, GETSTRING(ARG1), GETSTRING(ARG2));
-    RETURNINTX(0)
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    int rc=TreeMap_put(map, GETSTRING(ARG1), GETSTRING(ARG2));
+    if (rc==0) treeCB->entries++;
+    RETURNINTX(rc)
 ENDPROC
 }
 
 PROCEDURE(tmap_get) {
-   long long mapi = GETINT(ARG0);
-   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-   char* key=GETSTRING(ARG1);
-   TreeMap *map = (TreeMap *) mapi;
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
    RETURNSTRX((char *) TreeMap_get(map,key));
 ENDPROC
 }
 
 PROCEDURE(tmap_haskey) {
-   long long mapi = GETINT(ARG0);
-   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-   char* key=GETSTRING(ARG1);
-   TreeMap *map = (TreeMap *) mapi;
-   RETURNINTX(TreeMap_containsKey(map,key))   // returns 1 for key is present, or 0 not available
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
+    RETURNINTX(TreeMap_containsKey(map,key))   // returns 1 for key is present, or 0 not available
 ENDPROC
 }
 
 PROCEDURE(tmap_hasvalue) {
-   long long mapi = GETINT(ARG0);
-   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-   char* value=GETSTRING(ARG1);
-   TreeMap *map = (TreeMap *) mapi;
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char* value=GETSTRING(ARG1);
    RETURNSTRX((char *) TreeMap_containsValue(map,value))  // returns the key if value was found, else "" empty string
 ENDPROC
 }
 
 PROCEDURE(tmap_lastkey) {
-   long long mapi = GETINT(ARG0);
-   if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-   TreeMap *map = (TreeMap *) mapi;
-   RETURNSTRX((char *) TreeMap_lastKey(map));
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
+    RETURNSTRX((char *) TreeMap_lastKey(map));
 ENDPROC
 }
 
 PROCEDURE(tmap_firstkey) {
     long long mapi = GETINT(ARG0);
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
     RETURNSTRX((char *) TreeMap_firstKey(map));
+    ENDPROC
+}
+
+PROCEDURE(tmap_size) {
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    RETURNINTX(treeCB->entries);
     ENDPROC
 }
 
 PROCEDURE(tmap_remove) {
     long long mapi = GETINT(ARG0);
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-    char* key=GETSTRING(ARG1);
     TreeMap *map = (TreeMap *) mapi;
-    TreeMap_remove(map,key);          // doesn't deliver valid return code TODO produce valid RC
-    RETURNINTX(0);                    // always return 0
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
+    int rc=TreeMap_remove(map,key);          // doesn't deliver valid return code TODO produce valid RC
+    if (rc==0) treeCB->entries--;
+    RETURNINTX(rc);
     ENDPROC
 }
 
 PROCEDURE(tmap_keys) {
     long long mapi = GETINT(ARG0);
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-    int hi = 0;
     TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    int hi = 0;
 
     TreeNode *stack[STACK_CAPACITY];
     int top = -1;
@@ -490,15 +555,16 @@ ENDPROC
 
 PROCEDURE(tmap_dump) {
     long long mapi = GETINT(ARG0);
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
-    int hi = 0;
     TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
 
+    int hi = 0;
     TreeMapIterator *it = TreeMapIterator_create(map);
     while (TreeMapIterator_hasNext(it)) {
       TreeNode *n = TreeMapIterator_next(it);
       PUSHSARRAY(ARG1, hi, n->key);
-      PUSHSARRAY(ARG2, hi, n->key);
+      PUSHSARRAY(ARG2, hi, n->value);
       hi++;
     }
     TreeMapIterator_destroy(it);
@@ -508,20 +574,25 @@ ENDPROC
 
 PROCEDURE(tmap_free) {
     long long mapi = GETINT(ARG0);
-    if(is_valid_map(mapi)) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
     TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
     TreeMap_destroy(map);             // There is no valid return code available
     RETURNINTX(0);                    // always return 0
 ENDPROC
 }
 LOADFUNCS
-    ADDPROC(tmap_create,      "treemap.tmcreate",    "b",    ".int","");
+    ADDPROC(tmap_create,      "treemap.tmcreate",    "b",    ".int","name=''");
+    ADDPROC(tmap_lookup,      "treemap.tmlookup",    "b",    ".int","name=.string");
     ADDPROC(tmap_put,         "treemap.tmput",       "b",    ".int",    "map=.int, key=.string, value=.string");
     ADDPROC(tmap_get,         "treemap.tmget",       "b",    ".string", "map=.int, key=.string");
     ADDPROC(tmap_remove,      "treemap.tmremove",    "b",    ".int",    "map=.int, key=.string");
     ADDPROC(tmap_haskey,      "treemap.tmhaskey",    "b",    ".int",    "map=.int, key=.string");
     ADDPROC(tmap_hasvalue,    "treemap.tmhasvalue",  "b",    ".string", "map=.string, value=.string");
     ADDPROC(tmap_lastkey,     "treemap.tmlastkey",   "b",    ".string", "map=.int");
+    ADDPROC(tmap_size,        "treemap.tmsize",      "b",    ".int", "map=.int");
     ADDPROC(tmap_firstkey,    "treemap.tmfirstkey",  "b",   ".string",  "map=.int");
     ADDPROC(tmap_free,        "treemap.tmfree",      "b",    ".int",    "map=.int");
     ADDPROC(tmap_keys,        "treemap.tmkeys",      "b",    ".int",    "map=.int, expose list=.string[]");

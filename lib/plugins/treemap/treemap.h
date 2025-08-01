@@ -22,6 +22,8 @@ typedef struct TreeMapIterator {
 
 typedef struct TreeMapRegistry {
     long long map;
+    unsigned long long name;                  // uint64_t hash for a named tree map
+    int entries;                              // entries in the map
     struct TreeMapRegistry *next;
 } TreeMapRegistry;
 
@@ -29,9 +31,9 @@ static TreeMapRegistry *registry_head = NULL;
 
 // TreeMap API
 TreeMap *TreeMap_create();
-void TreeMap_put(TreeMap *map, const char *key, const char *value);
+int TreeMap_put(TreeMap *map, const char *key, const char *value);
 const char *TreeMap_get(TreeMap *map, const char *key);
-void TreeMap_remove(TreeMap *map, const char *key);
+int TreeMap_remove(TreeMap *map, const char *key);
 void TreeMap_destroy(TreeMap *map);
 // void TreeMap_keys(TreeMap *map, void (*callback)(const char *key, void *ctx), void *ctx); // directly coded for CREXX
 const char *TreeMap_firstKey(TreeMap *map);
