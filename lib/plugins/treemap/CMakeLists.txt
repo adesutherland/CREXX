@@ -24,3 +24,6 @@ add_test(NAME ${test_rexx}
         COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm ${test_rexx} rx_${plugin_name} ${CMAKE_BINARY_DIR}/lib/rxfnsb/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
+
+# Create the static link module
+#add_static_plugin_target(_treemap treemap.c)
