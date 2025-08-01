@@ -1,6 +1,7 @@
 // TreeMap implementation in C using a Red-Black Tree
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "treemap.h"
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
@@ -25,6 +26,13 @@ uint64_t simple_hash64(const char* str) {
         hash *= 1099511628211ULL; // FNV prime
     }
     return hash;
+}
+
+void str2upper(char* str) {
+    while (*str) {
+        *str = toupper((unsigned char)*str);
+        str++;
+    }
 }
 
 TreeMap *TreeMap_create() {
@@ -418,7 +426,7 @@ PROCEDURE(tmap_create) {
     long long mapi=(long long) map;
     char* name=GETSTRING(ARG0);
     if(strlen(name)==0) strcpy(name,"UNNAMED");
-    else strupr(name);
+    else str2upper(name);
     register_map(mapi,name);
     RETURNINTX(mapi)
 ENDPROC
@@ -427,7 +435,7 @@ ENDPROC
 PROCEDURE(tmap_lookup) {
     char* name=GETSTRING(ARG0);
     if(strlen(name)==0) strcpy(name,"UNNAMED");
-    else strupr(name);
+    else str2upper(name);
     RETURNINTX(lookup_map(name));
     ENDPROC
 }
