@@ -479,7 +479,29 @@ PROCEDURE(tmap_haskey) {
 ENDPROC
 }
 
+PROCEDURE(tmap_containsKey) {
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char * key= GETSTRING(ARG1);
+    RETURNINTX(TreeMap_containsKey(map,key))   // returns 1 for key is present, or 0 not available
+ENDPROC
+}
+
 PROCEDURE(tmap_hasvalue) {
+    long long mapi = GETINT(ARG0);
+    TreeMap *map = (TreeMap *) mapi;
+    TreeMapRegistry * treeCB=is_valid_map(mapi) ;
+    if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
+
+    char* value=GETSTRING(ARG1);
+   RETURNSTRX((char *) TreeMap_containsValue(map,value))  // returns the key if value was found, else "" empty string
+ENDPROC
+}
+
+PROCEDURE(tmap_containsValue) {
     long long mapi = GETINT(ARG0);
     TreeMap *map = (TreeMap *) mapi;
     TreeMapRegistry * treeCB=is_valid_map(mapi) ;
@@ -592,17 +614,35 @@ PROCEDURE(tmap_free) {
 ENDPROC
 }
 LOADFUNCS
-    ADDPROC(tmap_create,      "treemap.tmcreate",    "b",    ".int","name=''");
-    ADDPROC(tmap_lookup,      "treemap.tmlookup",    "b",    ".int","name=.string");
-    ADDPROC(tmap_put,         "treemap.tmput",       "b",    ".int",    "map=.int, key=.string, value=.string");
-    ADDPROC(tmap_get,         "treemap.tmget",       "b",    ".string", "map=.int, key=.string");
-    ADDPROC(tmap_remove,      "treemap.tmremove",    "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_haskey,      "treemap.tmhaskey",    "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_hasvalue,    "treemap.tmhasvalue",  "b",    ".string", "map=.string, value=.string");
-    ADDPROC(tmap_lastkey,     "treemap.tmlastkey",   "b",    ".string", "map=.int");
-    ADDPROC(tmap_size,        "treemap.tmsize",      "b",    ".int", "map=.int");
-    ADDPROC(tmap_firstkey,    "treemap.tmfirstkey",  "b",   ".string",  "map=.int");
-    ADDPROC(tmap_free,        "treemap.tmfree",      "b",    ".int",    "map=.int");
-    ADDPROC(tmap_keys,        "treemap.tmkeys",      "b",    ".int",    "map=.int, expose list=.string[]");
-    ADDPROC(tmap_dump,        "treemap.tmdump",      "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
+    ADDPROC(tmap_create,        "treemap.tmcreate",      "b",    ".int","name=''");
+    ADDPROC(tmap_lookup,        "treemap.tmlookup",      "b",    ".int","name=.string");
+    ADDPROC(tmap_put,           "treemap.tmput",         "b",    ".int",    "map=.int, key=.string, value=.string");
+    ADDPROC(tmap_get,           "treemap.tmget",         "b",    ".string", "map=.int, key=.string");
+    ADDPROC(tmap_remove,        "treemap.tmremove",      "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_haskey,        "treemap.tmhaskey",      "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_hasvalue,      "treemap.tmhasvalue",    "b",    ".string", "map=.string, value=.string");
+    ADDPROC(tmap_containsKey,   "treemap.tmcontainsKey", "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_containsValue, "treemap.tmcontainsValue","b",    ".string", "map=.string, value=.string");
+    ADDPROC(tmap_lastkey,       "treemap.tmlastkey",     "b",    ".string", "map=.int");
+    ADDPROC(tmap_size,          "treemap.tmsize",        "b",    ".int", "map=.int");
+    ADDPROC(tmap_firstkey,      "treemap.tmfirstkey",    "b",   ".string",  "map=.int");
+    ADDPROC(tmap_free,          "treemap.tmfree",        "b",    ".int",    "map=.int");
+    ADDPROC(tmap_keys,          "treemap.tmkeys",        "b",    ".int",    "map=.int, expose list=.string[]");
+    ADDPROC(tmap_dump,          "treemap.tmdump",        "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
+    ADDPROC(tmap_create,        "treemap.create",      "b",    ".int","name=''");
+    ADDPROC(tmap_lookup,        "treemap.lookup",      "b",    ".int","name=.string");
+    ADDPROC(tmap_put,           "treemap.put",         "b",    ".int",    "map=.int, key=.string, value=.string");
+    ADDPROC(tmap_get,           "treemap.get",         "b",    ".string", "map=.int, key=.string");
+    ADDPROC(tmap_remove,        "treemap.remove",      "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_haskey,        "treemap.haskey",      "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_hasvalue,      "treemap.hasvalue",    "b",    ".string", "map=.string, value=.string");
+    ADDPROC(tmap_containsKey,   "treemap.containsKey", "b",    ".int",    "map=.int, key=.string");
+    ADDPROC(tmap_containsValue, "treemap.containsValue","b",    ".string", "map=.string, value=.string");
+    ADDPROC(tmap_lastkey,       "treemap.lastkey",     "b",    ".string", "map=.int");
+    ADDPROC(tmap_size,          "treemap.size",        "b",    ".int", "map=.int");
+    ADDPROC(tmap_firstkey,      "treemap.firstkey",    "b",   ".string",  "map=.int");
+    ADDPROC(tmap_free,          "treemap.free",        "b",    ".int",    "map=.int");
+    ADDPROC(tmap_keys,          "treemap.keys",        "b",    ".int",    "map=.int, expose list=.string[]");
+    ADDPROC(tmap_dump,          "treemap.dump",        "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
+
 ENDLOADFUNCS
