@@ -13,6 +13,7 @@ add_subdirectory(getpi)
 add_subdirectory(precomp)
 add_subdirectory(keyaccess)
 add_subdirectory(llist)
+add_subdirectory(treemap)
 
 
 if(ENABLE_ODBC)
