@@ -32,7 +32,7 @@ static TreeMapRegistry *registry_head = NULL;
 // TreeMap API
 TreeMap *TreeMap_create();
 int TreeMap_put(TreeMap *map, const char *key, const char *value);
-const char *TreeMap_get(TreeMap *map, const char *key);
+char *TreeMap_get(TreeMap *map, const char *key);
 int TreeMap_remove(TreeMap *map, const char *key);
 void TreeMap_destroy(TreeMap *map);
 // void TreeMap_keys(TreeMap *map, void (*callback)(const char *key, void *ctx), void *ctx); // directly coded for CREXX

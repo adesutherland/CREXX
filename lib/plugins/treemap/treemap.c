@@ -54,7 +54,7 @@ static TreeNode *new_node(const char *key, const char *value) {
     return n;
 }
 
-const char *TreeMap_get(TreeMap *map, const char *key) {
+char *TreeMap_get(TreeMap *map, const char *key) {
     TreeNode *n = find_node(map->root, key);
     return n ? n->value : NULL;
 }
@@ -468,7 +468,9 @@ PROCEDURE(tmap_get) {
     if(treeCB==0 ) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "invalid TreeMap")
 
     char * key= GETSTRING(ARG1);
-   RETURNSTRX((char *) TreeMap_get(map,key));
+    char * value =TreeMap_get(map,key);
+    if(value==NULL) RETURNSTRX("");
+    RETURNSTRX(value) ;
 ENDPROC
 }
 

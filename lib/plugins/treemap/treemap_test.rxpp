@@ -1,0 +1,80 @@
+/* Treemap Plugin Test */
+options levelb
+import treemap
+import rxfnsb
+##cflags def nset iflink 1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+/* --------- OO Create definition ------------*/
+##set map_prefix tm    ## This prefix will be used to prefix all object functions
+map=tmcreate()         ## create a treemap
+/* --------- end of OO Create definition --- */
+
+say "Adding Key/Value pairs to the tree"
+say "----------------------------------"
+say 'TMPUT 'map.put("London","United Kingdom")   ## Put key record into treemap
+say 'TMPUT 'map.put("London","United Kingd")   ## Put key record into treemap
+say 'TMPUT 'map.put("Den Haag","Netherlands")    ## Put key record into treemap
+say 'TMPUT 'map.put("Berlin","Germany")          ## Put key record into treemap
+say " "
+say "Number of entries of the tree "map.size()
+say "--------------------------------"
+
+say "Retrieve Value via Key of the tree"
+say "----------------------------------"
+say 'TMGET 'map.get("London")        ## Retrieve record via key from treemap
+say 'TMGET 'map.get("Den Haag")      ## Retrieve record via key from treemap
+say 'TMGET 'map.get("Berlin")        ## Retrieve record via key from treemap
+say 'TMGET 'map.get("Athen")         ## Retrieve record via key from treemap
+say 'TMGET 'map.get("Cairo")         ## Retrieve record via key from treemap
+say 'TMGET 'map.get("New Delhi")     ## Retrieve record via key from treemap
+say 'TMGET 'map.get("Bangkog")       ## Retrieve record via key from treemap
+
+
+say "First and Last Key of the tree"
+say "------------------------------"
+say 'FIRST 'map.firstkey()       ## first key of treemap
+say 'LAST  'map.lastkey()        ## last key of treemap
+say "is Key part of the tree"
+say "-----------------------"
+say 'HASKEY "'map.haskey("Paris")'"'    ## is key available in treemap
+say 'HASKEY "'map.haskey("London")'"'   ## is key available in treemap
+say "is Value already define in the tree"
+say "-----------------------------------"
+say 'HASVALUE Japan? "'map.hasvalue("Japan")'"'        ## is value available in treemap
+say 'HASVALUE Netherlands? "'map.hasvalue("Netherlands")'"' ## is value available in treemap
+
+say "Fetch all Keys of the tree"
+say "--------------------------"
+keys.1=''              ## init key stem
+say map.keys(keys)   ## fetch all keys
+do i=1 to keys.0       ## report all keys
+   say i keys.i
+end
+say "Fetch all Keys/Value pairs of the tree"
+say "--------------------------------------"
+keys.1=''
+values.1=''
+say map.dump(keys,values)
+do i=1 to keys.0
+   say keys.i' --> 'values.i
+end
+
+say "Drop Key from tree"
+say "------------------"
+say map.remove('Berlin')
+say map.remove('Cairo')
+say " "
+say "Number of entries of the tree "map.size()
+say "--------------------------------"
+say "Fetch all Keys/Value pairs of the tree"
+say "--------------------------------------"
+keys.1=''
+values.1=''
+say map.dump(keys,values)
+do i=1 to keys.0
+   say keys.i' --> 'values.i
+end
+
+say "Release trees"
+say "-------------"
+say map.free()

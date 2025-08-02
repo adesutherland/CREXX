@@ -33,8 +33,8 @@ arg command=.string[]
   end
 
 if internal_testing=1 then do
-   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/system_test.rxpp'
-   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/system_test.rexx'
+   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
+   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'
    maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/precomp/Maclib.rexx'
 end
 
@@ -469,6 +469,8 @@ return
 writeline: procedure
   arg oline=.string
    oline=injectVariable(oline)
+  ## if pos('~',oline) then oline=oo_translate(oline)
+   if pos('.',oline) then oline=ooTranslate(oline)
 /* not necessary - I hope
   do while oline \= ''
      oline=injectVariable(oline)
@@ -501,6 +503,147 @@ writeline: procedure
    lino = lino + 1
    outbuf.lino = oline
   return
+/* ------------------------------------------------------------------
+ * Translate OO Calls
+ * ------------------------------------------------------------------
+ */
+oo_translate_tilde: procedure=.string
+arg line=.string
+line = strip(line)
+result = ''
+posStart = 1
+
+do forever
+    tildePos = pos('~', line, posStart)   ## Find object (left of ~)
+    if tildePos=0 then leave
+
+    i = tildePos - 1
+    do while i > 0
+       char = substr(line, i, 1)
+       if verify(char, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') \= 0 then leave
+       i = i - 1
+    end
+    objectStart = i + 1
+    object = strip(substr(line, objectStart, tildePos - objectStart))
+
+    ## Find method and args
+    parenOpen = pos('(', line, tildePos)
+    if parenOpen = 0 then leave  ## malformed, skip
+
+    ## Find matching closing parent
+    parenCount = 1
+    j = parenOpen + 1
+    do while j <= length(line) & parenCount > 0
+        ch = substr(line, j, 1)
+        if ch = '(' then parenCount = parenCount + 1
+        if ch = ')' then parenCount = parenCount - 1
+        j = j + 1
+    end
+    parenClose = j - 1
+
+    method = strip(substr(line, tildePos + 1, parenOpen - tildePos - 1))
+    args   = strip(substr(line, parenOpen + 1, parenClose - parenOpen - 1))
+
+    ## Build transformed call
+    upperMethod = translate(method)
+    upperObject = translate(object)
+ ##   callText = upperMethod || '_' || upperObject || '(' || object
+    callText = upperMethod'(' || object
+    if args \= '' then callText = callText || ',' || args
+    callText = callText || ')'
+
+    ## Append everything before the object~method and the transformed call
+    result = result || substr(line, posStart, objectStart - posStart) || callText
+
+    ## Move cursor past current match
+    posStart = parenClose + 1
+end
+
+## Append remainder of line
+if posStart <= length(line) then
+    result = result || substr(line, posStart)
+
+say "Original:   " line
+say "Transformed:" result
+
+return result
+
+ooTranslate: procedure=.string
+arg line=.string
+line = strip(line)
+result = ''
+posStart = 1
+say 567 line
+do while pos('.', line, posStart) > 0
+    dotPos = pos('.', line, posStart)
+
+    ##Detect method name after the dot
+    methodStart = dotPos + 1
+    methodEnd = methodStart
+
+    do while methodEnd <= length(line) & verify(substr(line, methodEnd, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
+        methodEnd = methodEnd + 1
+    end
+
+    ##If not followed by a '(', this is a stem access
+    if substr(line, methodEnd, 1) \= '(' then do
+        stemAccess = substr(line, posStart, methodEnd - posStart)
+        ##Preserve the stem text
+        result = result || substr(line, posStart, methodEnd - posStart)
+        posStart = methodEnd
+        iterate
+    end
+
+    ##Backtrack to extract the object name
+    objEnd = dotPos - 1
+    objStart = objEnd
+
+    do while objStart > 0 & ,
+        verify(substr(line, objStart, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
+        objStart = objStart - 1
+    end
+    objStart = objStart + 1
+
+    object = substr(line, objStart, objEnd - objStart + 1)
+    method = substr(line, methodStart, methodEnd - methodStart)
+
+    ##Extract argument list, handle nested parentheses
+    parenStart = methodEnd
+    parenCount = 1
+    p = parenStart + 1
+
+    do while p <= length(line) & parenCount > 0
+        c = substr(line, p, 1)
+        if c = '(' then parenCount = parenCount + 1
+        if c = ')' then parenCount = parenCount - 1
+        p = p + 1
+    end
+    parenEnd = p - 1
+    args = strip(substr(line, parenStart + 1, parenEnd - parenStart - 1))
+
+    ##Build the transformed function call
+    upperMethod = translate(method)
+    upperObject = translate(object)
+  ##  callText = upperMethod || '_' || upperObject || '(' || object
+
+    ooprefix=getvar(object'_prefix')
+    say 8888888888 ooprefix
+    xyprefix=getvar(object'_prefix')
+    callText = ooprefix||upperMethod'('object
+    if args \= '' then callText = callText || ',' || args
+    callText = callText || ')'
+
+    ##Append unchanged part before object, then transformed call
+    result = result || substr(line, posStart, objStart - posStart) || callText
+
+    ##Continue after the transformed expression
+    posStart = parenEnd + 1
+end
+
+##Append any remaining text
+if posStart <= length(line) then result = result || substr(line, posStart)
+return result
+
 /* ------------------------------------------------------------------
  * Expand recursively
  * ------------------------------------------------------------------
@@ -802,7 +945,8 @@ getvarindx: procedure=.int
 findvar: procedure=.string
   arg varname=.string
   varname='{'lower(varname)'}'
-return getvarindx(varname)
+  index=getvarindx(varname)
+return index
 /* ------------------------------------------------------------------
  * Return pre-compiler variable content
  * ------------------------------------------------------------------
@@ -810,9 +954,10 @@ return getvarindx(varname)
 getvar: procedure=.string
   arg varname=.string
   varname='{'lower(varname)'}'
+  vvalue=''
   i=getvarindx(varname)
-  if i>0 then return macros_varvalue.i
-return ''
+  if i>0 then vvalue=macros_varvalue.i
+return vvalue
 /* ------------------------------------------------------------------
  * Set pre-compiler variable
  * ------------------------------------------------------------------
