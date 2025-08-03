@@ -4,7 +4,24 @@ import treemap
 import rxfnsb
 ##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
 
-/* --------- end of OO Create definition --- */
+/* --------- OO Create definition using the stem --- */
+s1=ooCREATE(stem,1024)
+say 'stemPUT 's1.put("Country.UK.London","visited")              ## Put key record into stem
+say 'stemput 's1.put("Country.Netherlands.Amsterdam","visited")  ## Put key record into stem
+say 'stemput 's1.put("Country.Germany.Berlin", "visited")        ## Put key record into stem
+say 'stemGET 's1.get("Country.UK.London")                        ## GET record from stem
+say 'stemGET 's1.get("Country.Netherlands.Amsterdam")            ## GET record from stem
+say 'stemGET 's1.get("Country.Germany.Berlin")                   ## GET record from stem
+say 'stemMax 's1.max()
+keys.1=''
+values.1=''
+say 'stemIterate 's1.iterate(keys,values)
+say keys.0
+do i=1 to keys.0
+   say i keys.i'='values.i
+end
+
+/* --------- OO Create definition --- */
 map=ooCREATE(tm)
 map2=ooCREATE(tm)
 

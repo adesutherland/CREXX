@@ -171,23 +171,7 @@ static void insert_fixup(TreeMap *map, TreeNode *z) {
     }
     map->root->color = BLACK;
 }
-/*  not needed we handle this via CREXX arrays
-void TreeMap_keys(TreeMap *map, void (*callback)(const char *key, void *ctx), void *ctx) {
-    TreeNode *stack[STACK_CAPACITY];
-    int top = -1;
-    TreeNode *current = map->root;
 
-    while (top >= 0 || current) {
-        while (current) {
-            stack[++top] = current;
-            current = current->left;
-        }
-        current = stack[top--];
-        callback(current->key, ctx);
-        current = current->right;
-    }
-}
-*/
 static TreeNode *minimum(TreeNode *node) {
     while (node && node->left) node = node->left;
     return node;
@@ -420,6 +404,90 @@ uint64_t lookup_map(char * tree_name) {
     }
     return 0;
 }
+
+
+typedef struct Entry {
+    char *key;
+    char *value;
+    struct Entry *next;
+} Entry;
+
+typedef struct Stem {
+    Entry **buckets;     // now a dynamic array
+    size_t table_size;   // store the actual size
+    int entries;         // added entries
+} Stem;
+
+Stem *create_stem(size_t table_size) {
+    Stem *s = malloc(sizeof(Stem));
+    if (!s) return NULL;
+
+    s->table_size = table_size;
+    s->buckets = calloc(table_size, sizeof(Entry *));
+    if (!s->buckets) {
+        free(s);
+        return NULL;
+    }
+
+    return s;
+}
+
+int put_stem(Stem *s, const char *key, const char *value) {
+    size_t idx = simple_hash64(key)%s->table_size;
+    Entry *e = s->buckets[idx];
+
+    // Check for existing key
+    while (e) {
+        if (strcmp(e->key, key) == 0) {
+            free(e->value);
+            e->value = strdup(value);
+            return 4;
+        }
+        e = e->next;
+    }
+
+    // Insert new entry
+    Entry *new_entry = malloc(sizeof(Entry));
+    new_entry->key = strdup(key);
+    new_entry->value = strdup(value);
+    new_entry->next = s->buckets[idx];
+    s->buckets[idx] = new_entry;
+    s->entries++;
+    return 0;
+}
+
+char *get_stem(Stem *s, const char *key) {
+    if (!s || !key) return NULL;
+
+    size_t idx = simple_hash64(key)% s->table_size;  // Compute bucket index
+    Entry *e = s->buckets[idx];
+
+    while (e) {
+        if (strcmp(e->key, key) == 0) {
+            return e->value;  // Found match
+        }
+        e = e->next;
+    }
+
+    return NULL;  // Not found
+}
+
+void stem_free(Stem *s) {
+    for (size_t i = 0; i < s->table_size; ++i) {
+        Entry *e = s->buckets[i];
+        while (e) {
+            Entry *next = e->next;
+            free(e->key);
+            free(e->value);
+            free(e);
+            e = next;
+        }
+    }
+    free(s->buckets);
+    free(s);
+}
+
+
 /* ------------------------------------------------------------------------------------
  * Create a new Tree
  * Returned is the tree address
@@ -619,6 +687,59 @@ PROCEDURE(tmap_free) {
     RETURNINTX(0);                    // always return 0
 ENDPROC
 }
+PROCEDURE(stem_iterate) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+
+    if (!token) RETURNINTX(0);  // defensive check
+
+    int hi = 0;
+    for (size_t i = 0; i < token->table_size; ++i) {
+        Entry *e = token->buckets[i];
+        while (e) {
+            PUSHSARRAY(ARG1, hi, e->key);
+            PUSHSARRAY(ARG2, hi, e->value);
+            hi++;
+            e = e->next;  // correct and needed
+        }
+    }
+
+    RETURNINTX(hi);
+    ENDPROC
+}
+
+
+
+PROCEDURE(stem_create) {
+    int size=GETINT(ARG0);             // expected number of entries
+    if(size<1024) size=1024;
+    size=size*10;                      // *10 keeps the collision probability ~ 0.01%
+    Stem * token = create_stem(size);
+    RETURNINTX((long long) token);
+    ENDPROC
+}
+PROCEDURE(stem_put) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+    int rc=put_stem(token, GETSTRING(ARG1),GETSTRING(ARG2));
+    RETURNINTX(rc);
+    ENDPROC
+}
+PROCEDURE(stem_get) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+    char * result=get_stem(token, GETSTRING(ARG1));
+    RETURNSTRX(result);
+    ENDPROC
+}
+PROCEDURE(stem_hi) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+    RETURNINTX(token->entries);
+    ENDPROC
+}
+
+
 LOADFUNCS
     ADDPROC(tmap_create,        "treemap.tmcreate",      "b",    ".int","name=''");
     ADDPROC(tmap_lookup,        "treemap.tmlookup",      "b",    ".int","name=.string");
@@ -629,26 +750,15 @@ LOADFUNCS
     ADDPROC(tmap_hasvalue,      "treemap.tmhasvalue",    "b",    ".string", "map=.string, value=.string");
     ADDPROC(tmap_containsKey,   "treemap.tmcontainsKey", "b",    ".int",    "map=.int, key=.string");
     ADDPROC(tmap_containsValue, "treemap.tmcontainsValue","b",    ".string", "map=.string, value=.string");
-    ADDPROC(tmap_lastkey,       "treemap.tmlastkey",     "b",    ".string", "map=.int");
-    ADDPROC(tmap_size,          "treemap.tmsize",        "b",    ".int", "map=.int");
-    ADDPROC(tmap_firstkey,      "treemap.tmfirstkey",    "b",   ".string",  "map=.int");
-    ADDPROC(tmap_free,          "treemap.tmfree",        "b",    ".int",    "map=.int");
-    ADDPROC(tmap_keys,          "treemap.tmkeys",        "b",    ".int",    "map=.int, expose list=.string[]");
-    ADDPROC(tmap_dump,          "treemap.tmdump",        "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
-    ADDPROC(tmap_create,        "treemap.create",      "b",    ".int","name=''");
-    ADDPROC(tmap_lookup,        "treemap.lookup",      "b",    ".int","name=.string");
-    ADDPROC(tmap_put,           "treemap.put",         "b",    ".int",    "map=.int, key=.string, value=.string");
-    ADDPROC(tmap_get,           "treemap.get",         "b",    ".string", "map=.int, key=.string");
-    ADDPROC(tmap_remove,        "treemap.remove",      "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_haskey,        "treemap.haskey",      "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_hasvalue,      "treemap.hasvalue",    "b",    ".string", "map=.string, value=.string");
-    ADDPROC(tmap_containsKey,   "treemap.containsKey", "b",    ".int",    "map=.int, key=.string");
-    ADDPROC(tmap_containsValue, "treemap.containsValue","b",    ".string", "map=.string, value=.string");
-    ADDPROC(tmap_lastkey,       "treemap.lastkey",     "b",    ".string", "map=.int");
-    ADDPROC(tmap_size,          "treemap.size",        "b",    ".int", "map=.int");
-    ADDPROC(tmap_firstkey,      "treemap.firstkey",    "b",   ".string",  "map=.int");
-    ADDPROC(tmap_free,          "treemap.free",        "b",    ".int",    "map=.int");
-    ADDPROC(tmap_keys,          "treemap.keys",        "b",    ".int",    "map=.int, expose list=.string[]");
-    ADDPROC(tmap_dump,          "treemap.dump",        "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
-
+    ADDPROC(tmap_lastkey,       "treemap.tmlastkey",      "b",    ".string", "map=.int");
+    ADDPROC(tmap_size,          "treemap.tmsize",         "b",    ".int",    "map=.int");
+    ADDPROC(tmap_firstkey,      "treemap.tmfirstkey",     "b",   ".string",  "map=.int");
+    ADDPROC(tmap_free,          "treemap.tmfree",         "b",    ".int",    "map=.int");
+    ADDPROC(tmap_keys,          "treemap.tmkeys",         "b",    ".int",    "map=.int, expose list=.string[]");
+    ADDPROC(tmap_dump,          "treemap.tmdump",         "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
+    ADDPROC(stem_create,        "treemap.stemcreate",     "b",    ".int",    "items=.int");
+    ADDPROC(stem_put,           "treemap.stemput",        "b",    ".int",    "token=.int, key=.string, value=.string");
+    ADDPROC(stem_get,           "treemap.stemget",        "b",    ".string", "token=.int, key=.string");
+    ADDPROC(stem_iterate,       "treemap.stemiterate",    "b",    ".int",    "token=.int, expose keys=.string[], expose values=.string[]");
+    ADDPROC(stem_hi,            "treemap.stemmax",        "b",    ".int",    "token=.int");
 ENDLOADFUNCS
