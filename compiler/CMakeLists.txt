@@ -56,7 +56,7 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
 add_executable(rxc rxc_main.c)
 target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual m)
 
-add_custom_target(rxccopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxc)
+add_custom_target(rxccopy ALL DEPENDS rxc)
 
 add_custom_command(TARGET rxccopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/compiler/rxc${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/

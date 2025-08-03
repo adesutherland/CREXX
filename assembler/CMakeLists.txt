@@ -33,7 +33,8 @@ target_link_libraries(rxas rxaslib machine avl_tree platform)
 add_dependencies(rxas rxaslib machine avl_tree platform)
 target_include_directories(rxas PRIVATE . ${CMAKE_CURRENT_BINARY_DIR})
 
-add_custom_target(rxascopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxas)
+add_custom_target(rxascopy ALL DEPENDS rxas)
+
 add_custom_command(TARGET rxascopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/assembler/rxas${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
 )
