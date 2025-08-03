@@ -12,11 +12,11 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
 # ---------------------------------------------------------------------------------------
   if(use_precomp)
      # Define paths
-     set(build "${CMAKE_SOURCE_DIR}/cmake-build-debug")        # Build path
-     set(pluglib "${build}/lib/plugins/precomp")               # Plugin library path
+     set(build "${CMAKE_SOURCE_DIR}")        # Build path
+     set(pluglib "${CMAKE_BINARY_DIR}/lib/plugins/precomp")               # Plugin library path
      set(sourcelib "${CMAKE_SOURCE_DIR}/lib/plugins/precomp")  # Source library path
-     set(lib "${build}/lib/rxfnsb/library")                    # Runtime library path
-     set(rxvm "${build}/interpreter")                          # rxvm direcory
+     set(lib "${CMAKE_BINARY_DIR}/lib/rxfnsb/library")                    # Runtime library path
+     set(rxvm "${CMAKE_BINARY_DIR}/interpreter")                          # rxvm direcory
      set(rxpre "${pluglib}/rxpp")                              # Precompiler executable and location
 
      # input, output files
