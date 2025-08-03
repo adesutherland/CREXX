@@ -70,7 +70,7 @@ PROCEDURE (sort_bylen) {
                 SWAPARRAY(ARG1, j, j - gap);
                 SWAPARRAY(ARG2, j, j - gap);
             }
-         }
+        }
     }
 }
 /* -------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ PROCEDURE (drop_array) {
     }
     SETARRAYHI(ARG0, 1);  // reset arrayhi
     RETURNINTX(hi);
-ENDPROC
+    ENDPROC
 
 }
 /* -------------------------------------------------------------------------------------
@@ -133,8 +133,8 @@ PROCEDURE (insert_array) {
     for (i = from; i < from + new; ++i) {
         INSERTATTR(ARG0, i);
     }
-   RETURNINTX(new);
-ENDPROC
+    RETURNINTX(new);
+    ENDPROC
 }
 /* -------------------------------------------------------------------------------------
  * Copy an entire array or a range of into a target array
@@ -174,7 +174,7 @@ PROCEDURE (copy_array) {
 PROCEDURE (list_array)  {
     int i,from,to,hi;
     hi  = GETARRAYHI(ARG0);
- //   if (hi==1 && strlen(GETSARRAY(ARG0,1))==0 ) hi=0;
+    //   if (hi==1 && strlen(GETSARRAY(ARG0,1))==0 ) hi=0;
     from= GETINT(ARG1);
     to  = GETINT(ARG2);
     char * hdr=GETSTRING(ARG3);
@@ -188,10 +188,10 @@ PROCEDURE (list_array)  {
     printf("-------------------------------------------------------\n");
     if(hi<=0) printf("Array contains no Entries\n");
     else {
-       for (i=from-1;i<to;i++) {
-           printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
-       }
-       printf("%d Entries\n",to);
+        for (i=from-1;i<to;i++) {
+            printf("%0.7d   %s\n",i+1, GETSARRAY(ARG0,i));
+        }
+        printf("%d Entries\n",to);
     }
 }
 
@@ -292,7 +292,7 @@ PROCEDURE (hasmacro) {
         line++;
     }
     if (line[0]=='#' & line[1]=='#') {
-       RETURNINTX(0)
+        RETURNINTX(0)
     };
     if (line[0]=='/' & line[1]=='*') {
         RETURNINTX(0)
@@ -300,13 +300,13 @@ PROCEDURE (hasmacro) {
     char * dupline = strdup(line);
     dupline= strupr_portable(dupline);
     for (i = from; i<mmax; i++) {
-         if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
+        if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
             RETURNINTX(i + 1);
         }
     }
     RETURNINTX(0);
     PROCRETURN
-ENDPROC
+    ENDPROC
 }
 
 // Insert 'needle' into 'haystack' at position 'at', replacing 'len' characters
@@ -316,7 +316,7 @@ PROCEDURE (insertat) {
     char * haystack= GETSTRING(ARG1);
     int at =  GETINT(ARG2)-1;
     int len = GETINT(ARG3) ;
- //   printf("111 needle '%s' haystack '%s' at %d len %d\n",needle,haystack,at,len);
+    //   printf("111 needle '%s' haystack '%s' at %d len %d\n",needle,haystack,at,len);
     int haystack_len = strlen(haystack);
     int needle_len = strlen(needle);
 
@@ -324,7 +324,7 @@ PROCEDURE (insertat) {
     if (at < 0) at = 0;
     if (at > haystack_len-1) at = haystack_len;
 
- // Bounds check
+    // Bounds check
     if (at < 0) at = 0;
     if (at > haystack_len) at = haystack_len;  // Insert at end if at > length
     if (at + len > haystack_len) len = haystack_len - at;
@@ -359,9 +359,9 @@ PROCEDURE (fsearch) {
     if (from<0) from=0;
     if (from>=mmax) RETURNINTX(0);
     SETINT(ARG5, 0);
-    char * ustr1= GETSTRING(ARG2);
-    char * ustr2= GETSTRING(ARG3);
-    char * ustr3= GETSTRING(ARG4);
+    char * ustr1= strupr_portable(GETSTRING(ARG2));
+    char * ustr2= strupr_portable(GETSTRING(ARG3));
+    char * ustr3= strupr_portable(GETSTRING(ARG4));
     char * haystack;
     for (i = from; i < mmax; i++) {
         haystack = strupr_portable(strdup(GETSARRAY(ARG0, i)));
@@ -384,7 +384,30 @@ PROCEDURE (fsearch) {
     }
     RETURNINTX(0);
     PROCRETURN
-ENDPROC
+    ENDPROC
+}
+
+/* -------------------------------------------------------------------------------------
+* search in array a certain string, up to 3 strings are possible
+* -------------------------------------------------------------------------------------
+*/
+PROCEDURE (ffind) {
+    int i,mmax, from;
+    mmax = GETARRAYHI(ARG0);   // number of contained array items
+    from = GETINT(ARG1)-1;
+    if (from<0) from=0;
+    if (from>=mmax) RETURNINTX(0);
+    char * ustr= strupr_portable(strdup(GETSTRING(ARG2)));
+    char * haystack;
+    for (i = from; i < mmax; i++) {
+        haystack = strupr_portable(strdup(GETSARRAY(ARG0, i)));
+        if (strstr(haystack, ustr)!= NULL) {
+            RETURNINTX(i + 1);
+        }
+    }
+    RETURNINTX(0);
+    PROCRETURN
+    ENDPROC
 }
 
 PROCEDURE(fquoted) {
@@ -476,7 +499,7 @@ PROCEDURE(safe_quote) {
 
     const char quote = has_single && !has_double ? '"' : '\'';  // safest choice
 
- // Estimate worst-case size (every quote gets doubled + outer quotes + null terminator)
+    // Estimate worst-case size (every quote gets doubled + outer quotes + null terminator)
     size_t len = strlen(input);
     char* result = malloc(2 * len + 3);  // worst case: all quotes doubled + 2 outer + '\0'
     char* p = result;
@@ -488,7 +511,7 @@ PROCEDURE(safe_quote) {
     *p++ = quote;
     *p = '\0';
     RETURNSTRX(result);
-ENDPROC
+    ENDPROC
 }
 PROCEDURE(fpos) {
     char *substring = GETSTRING(ARG0);   // Get the substring to find
@@ -510,23 +533,22 @@ PROCEDURE(fpos) {
     ENDPROC;
 }
 LOADFUNCS
-   ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
-   ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
-   ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[]");
-   ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
-   ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
-   ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
-   ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
-   ADDPROC(hasmacro,     "precomp.hasmacro",     "b",  ".int",   "line=.string,maclist=.string[],from=.int");
-   ADDPROC(readall,      "precomp.readall",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
-   ADDPROC(writeall,     "precomp.writeall",     "b",  ".int",   "expose array=.string[],file=.string,arg2=.int");
-   ADDPROC(insertat,     "precomp.insertatc",    "b",  ".string","haystack = .string,needle=.string,offset=.int,len=.int");
-   ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
-   ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
-   ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
-   ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
-   ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
-   ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
-
+    ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
+    ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
+    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[]");
+    ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
+    ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
+    ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
+    ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
+    ADDPROC(hasmacro,     "precomp.hasmacro",     "b",  ".int",   "line=.string,maclist=.string[],from=.int");
+    ADDPROC(readall,      "precomp.readall",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
+    ADDPROC(writeall,     "precomp.writeall",     "b",  ".int",   "expose array=.string[],file=.string,arg2=.int");
+    ADDPROC(insertat,     "precomp.insertatc",    "b",  ".string","haystack = .string,needle=.string,offset=.int,len=.int");
+    ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
+    ADDPROC(ffind,        "precomp.ffind",        "b",  ".int",   "expose array=.string[],pos=.int,str1=.string");
+    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
+    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
+    ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
+    ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
 ENDLOADFUNCS
 

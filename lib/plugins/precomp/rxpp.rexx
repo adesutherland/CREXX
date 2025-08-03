@@ -135,6 +135,11 @@ RXPPPassTwo: procedure
      ifblock.i=lnk
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
   end
+  i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
+  do while i>0
+     call oocreatedefs i
+     i=ffind(source,i+1,'OOCREATE(')   ## search as next word in the source string
+  end
   if pos(' iflink',cflags)=0 then return
   if ifblock.0=0 then say "+++ no Pre Source Expansion occurred"
   else do i=1 to ifblock.0
@@ -145,6 +150,34 @@ RXPPPassTwo: procedure
         say '? skipped: 'right(j,4,'0')' 'strip(source.j)
      end
   end
+return
+/* ------------------------------------------------------------------
+ * Create the OOCreate definition
+ * ------------------------------------------------------------------
+ */
+oocreatedefs: procedure
+  arg lino=.int
+  ipi=pos('=',source.lino)
+  if ipi<=1 then return           ## no valid pointer=OOCREATE() statement
+  lhs=strip(substr(source.lino,1,ipi-1))
+  rhs=strip(substr(source.lino,ipi+1))
+  parenPos = POS("(", rhs)        ## Find the opening parenthesis
+  funcName = STRIP(SUBSTR(rhs, 1, parenPos-1))
+  ## Extract parameter list (between parentheses)
+  paramStr = STRIP(SUBSTR(rhs,parenPos + 1))
+  paramStr = LEFT(paramStr, LENGTH(paramStr)- 1)    ## Remove closing ')'
+/* drop first parameter, it's the prefix for the function calls */
+  ppi=pos(',',paramStr)
+  if ppi=0 then do
+     prefix=paramstr
+     paramstr=''
+  end
+  else do
+     prefix=substr(paramstr,1,ppi-1)
+     paramstr=substr(paramstr,ppi+1)
+  end
+  call setvar lhs'_prefix',prefix                 ## save the object handle: e.g. map=OOCREATE(tm) it will be map_prefix=tm
+  source.lino=lhs'='prefix'CREATE('paramstr')'    ## for now the call function must be CREATE with the provided prefix
 return
 /* ------------------------------------------------------------------
  * Pick up the compiler flg setup in an early stage

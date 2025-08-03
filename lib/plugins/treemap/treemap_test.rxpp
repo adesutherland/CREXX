@@ -2,20 +2,25 @@
 options levelb
 import treemap
 import rxfnsb
-##cflags def nset iflink 1buf n2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
 
-/* --------- OO Create definition ------------*/
-##set map_prefix tm    ## This prefix will be used to prefix all object functions
-map=tmcreate()         ## create a treemap
 /* --------- end of OO Create definition --- */
+map=ooCREATE(tm)
+map2=ooCREATE(tm)
 
 say "Adding Key/Value pairs to the tree"
 say "----------------------------------"
 say 'TMPUT 'map.put("London","United Kingdom")   ## Put key record into treemap
-say 'TMPUT 'map.put("London","United Kingd")   ## Put key record into treemap
 say 'TMPUT 'map.put("Den Haag","Netherlands")    ## Put key record into treemap
 say 'TMPUT 'map.put("Berlin","Germany")          ## Put key record into treemap
 say " "
+say "Adding Key/Value pairs to the tree"
+say "----------------------------------"
+say 'TMPUT 'map2.put("London","United Kingdom")   ## Put key record into treemap
+say 'TMPUT 'map2.put("Den Haag","Netherlands")    ## Put key record into treemap
+say 'TMPUT 'map2.put("Berlin","Germany")          ## Put key record into treemap
+say " "
+
 say "Number of entries of the tree "map.size()
 say "--------------------------------"
 
@@ -29,6 +34,12 @@ say 'TMGET 'map.get("Cairo")         ## Retrieve record via key from treemap
 say 'TMGET 'map.get("New Delhi")     ## Retrieve record via key from treemap
 say 'TMGET 'map.get("Bangkog")       ## Retrieve record via key from treemap
 
+say "Retrieve Value via Key of the tree"
+say "----------------------------------"
+say 'TMGET2 'map2.get("London")        ## Retrieve record via key from treemap
+say 'TMGET2 'map2.get("Den Haag")      ## Retrieve record via key from treemap
+say 'TMGET2 'map2.get("Berlin")        ## Retrieve record via key from treemap
+say 'TMGET2 'map2.get("Athen")         ## Retrieve record via key from treemap
 
 say "First and Last Key of the tree"
 say "------------------------------"
