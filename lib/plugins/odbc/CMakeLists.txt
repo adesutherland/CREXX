@@ -25,7 +25,7 @@ endif()
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 # Create the static link module
-#add_static_plugin_target(_odbc odbc.c)
+add_static_plugin_target(_odbc odbc.c)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_odbc odbc.c)
@@ -39,8 +39,20 @@ target_include_directories(_odbc PRIVATE
     ${ODBC_INCLUDE_DIR}  # Ensure ODBC headers are included
 )
 
+# Add include directories - static version
+target_include_directories(_odbc_static PRIVATE 
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/lib/include
+    ${CMAKE_SOURCE_DIR}/rxpa
+    ${CMAKE_SOURCE_DIR}
+    ${ODBC_INCLUDE_DIR}  # Ensure ODBC headers are included
+)
+
 # Link libraries
 target_link_libraries(_odbc PRIVATE ${ODBC_LIBS})
+
+# Link libraries static
+target_link_libraries(_odbc_static PRIVATE ${ODBC_LIBS})
 
 # Set output name
 set_target_properties(_odbc PROPERTIES
