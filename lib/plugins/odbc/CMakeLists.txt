@@ -12,7 +12,7 @@ if(WIN32)
     endif()
     set(ODBC_LIBS ${ODBC32_LIBRARY} ${ODBCCP32_LIBRARY})
 else()
-    find_package(ODBC REQUIRED)
+    # Search for ODBC headers and libraries in common locations
     find_path(ODBC_INCLUDE_DIR sql.h PATHS /usr/include /usr/local/include /opt/homebrew/include)
     find_library(ODBC_LIBRARY odbc PATHS /usr/lib /usr/local/lib /opt/homebrew/lib)
     if(NOT ODBC_INCLUDE_DIR OR NOT ODBC_LIBRARY)
