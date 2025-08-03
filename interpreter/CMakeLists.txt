@@ -141,8 +141,8 @@ add_test(
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_custom_target(rxvmcopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxvm)
-add_custom_target(rxvmecopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxvme)
+add_custom_target(rxvmcopy ALL DEPENDS rxvm)
+add_custom_target(rxvmecopy ALL DEPENDS rxvme)
 
 add_custom_command(TARGET rxvmcopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/interpreter/rxvm${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/

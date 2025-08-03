@@ -20,7 +20,7 @@ target_link_libraries(rxdb rxvml machine avl_tree rxpa platform m)
 
 add_dependencies(rxdb rxc rxas rxcpack library)
 
-add_custom_target(rxdbcopy ALL DEPENDS ${CMAKE_BINARY_DIR}/rxdb)
+add_custom_target(rxdbcopy ALL DEPENDS rxdb)
 
 add_custom_command(TARGET rxdbcopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/debugger/rxdb${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
