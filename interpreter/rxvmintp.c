@@ -1411,8 +1411,15 @@ START_OF_INSTRUCTIONS
             }
             DISPATCH
 
-            /* Regular Instructions */
-            /* LOAD */
+        /* Regular Instructions */
+
+        /* NULL (Clear the register) */
+        START_INSTRUCTION(NULL_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - NULL R%lu\n", REG_IDX(1));
+            value_zero(op1R);
+            DISPATCH
+
+        /* LOAD */
         START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - LOAD R%d,%d\n", (int) REG_IDX(1), (int) op2I);
             set_int(op1R, op2I);
