@@ -92,6 +92,23 @@ RXPPPassOne: procedure = .int
      say 'CRX0910E+['time('l')'] source file missing: 'infile
      exit 8
   end
+  linx=ffind(source,1,'options levelb')
+  if linx>0 then do
+     source.linx='/* dropped import */'
+     stype.linx='X'
+  end
+  linx=ffind(source,1,'import rxfnsb')
+  if linx>0 then do
+     source.linx='/* dropped import */'
+     stype.linx='X'
+  end
+  call insert_array source,1,3
+  source.1='/* RXPP */'
+  source.2='options levelb'
+  source.3='import rxfnsb'
+
+
+  rexxlines=rexxlines+3
 
   say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
   maclibm=macros_mname.0
@@ -249,7 +266,7 @@ RXPPPassThree: procedure
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
-  	    call writeline newline
+   	    call writeline newline
  	 end
   end
 
@@ -606,7 +623,6 @@ arg line=.string
 line = strip(line)
 result = ''
 posStart = 1
-say 567 line
 do while pos('.', line, posStart) > 0
     dotPos = pos('.', line, posStart)
 
@@ -660,7 +676,6 @@ do while pos('.', line, posStart) > 0
   ##  callText = upperMethod || '_' || upperObject || '(' || object
 
     ooprefix=getvar(object'_prefix')
-    say 8888888888 ooprefix
     xyprefix=getvar(object'_prefix')
     callText = ooprefix||upperMethod'('object
     if args \= '' then callText = callText || ',' || args
@@ -1071,7 +1086,6 @@ normalisePath: procedure=.string
   end
   if normalised = '' then normalised = '/'
 return normalised
-
 /* ------------------------------------------------------------------
  * Init RXPP environment
  * ------------------------------------------------------------------

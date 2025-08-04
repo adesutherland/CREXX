@@ -23,16 +23,24 @@ static void delete_fixup(TreeMap *map, TreeNode *x);
 static TreeNode *find_node(TreeNode *root, const char *key);
 static void free_tree(TreeNode *node);
 
-uint64_t simple_hash64(const char* str) {
-    uint64_t hash = 14695981039346656037ULL; // FNV offset basis
-    while (*str) {
-        hash ^= (unsigned char)(*str++);
-        hash *= 1099511628211ULL; // FNV prime
+static inline uint64_t simple_hash64(const char *str) {
+    uint64_t hash = 14695981039346656037ULL;  // FNV offset basis
+    const char *s = str;
+    while (*s) {
+        hash ^= (unsigned char)(*s++);
+        hash *= 1099511628211ULL;
+    }
+    // Pad with nulls if length < 32
+    size_t len = s - str;
+    if(len>32) return hash;
+    for (size_t i = len; i < 32; ++i) {
+        hash ^= 0;
+        hash *= 1099511628211ULL;
     }
     return hash;
 }
 
-void str2upper(char* str) {
+static inline void str2upper(char* str) {
     while (*str) {
         *str = toupper((unsigned char)*str);
         str++;
@@ -45,7 +53,7 @@ TreeMap *TreeMap_create() {
     return map;
 }
 
-static TreeNode *new_node(const char *key, const char *value) {
+static inline TreeNode *new_node(const char *key, const char *value) {
     TreeNode *n = malloc(sizeof(TreeNode));
     n->key = strdup(key);
     n->value = strdup(value);
@@ -54,12 +62,12 @@ static TreeNode *new_node(const char *key, const char *value) {
     return n;
 }
 
-char *TreeMap_get(TreeMap *map, const char *key) {
+static inline char *TreeMap_get(TreeMap *map, const char *key) {
     TreeNode *n = find_node(map->root, key);
     return n ? n->value : NULL;
 }
 
-static TreeNode *find_node(TreeNode *root, const char *key) {
+static inline TreeNode *find_node(TreeNode *root, const char *key) {
     while (root) {
         int cmp = strcmp(key, root->key);
         if (cmp == 0) return root;
@@ -76,9 +84,7 @@ int TreeMap_put(TreeMap *map, const char *key, const char *value) {
     while (x) {
         y = x;
         int cmp = strcmp(z->key, x->key);
-        printf("Put %s %s\n",z->key,x->key);
         if (cmp == 0) {
-            printf("Put2 %s %s\n",z->key,x->key);
             free(x->value);
             x->value = strdup(value);
             free(z->key);
@@ -172,12 +178,12 @@ static void insert_fixup(TreeMap *map, TreeNode *z) {
     map->root->color = BLACK;
 }
 
-static TreeNode *minimum(TreeNode *node) {
+static inline TreeNode *minimum(TreeNode *node) {
     while (node && node->left) node = node->left;
     return node;
 }
 
-static TreeNode *maximum(TreeNode *node) {
+static inline TreeNode *maximum(TreeNode *node) {
     while (node && node->right) node = node->right;
     return node;
 }
@@ -405,7 +411,6 @@ uint64_t lookup_map(char * tree_name) {
     return 0;
 }
 
-
 typedef struct Entry {
     char *key;
     char *value;
@@ -416,6 +421,12 @@ typedef struct Stem {
     Entry **buckets;     // now a dynamic array
     size_t table_size;   // store the actual size
     int entries;         // added entries
+    int updated;         // updated entries
+    int reads;           // total reads
+    int readtry;         // tried reads
+    int collisionR;      // re-reads in collision situation
+    int max_chain_depth; // maximum collision depth
+    int collisionW;      // write collisions took place
 } Stem;
 
 Stem *create_stem(size_t table_size) {
@@ -428,8 +439,14 @@ Stem *create_stem(size_t table_size) {
         free(s);
         return NULL;
     }
-
-    return s;
+    s->entries=0;
+    s->collisionW=0;
+    s->collisionR=0;
+    s->reads=0;
+    s->reads=0;
+    s->updated=0;
+    s->max_chain_depth=0;
+  return s;
 }
 
 int put_stem(Stem *s, const char *key, const char *value) {
@@ -437,15 +454,26 @@ int put_stem(Stem *s, const char *key, const char *value) {
     Entry *e = s->buckets[idx];
 
     // Check for existing key
+    int depth = 0;
     while (e) {
         if (strcmp(e->key, key) == 0) {
+            // Existing key, update value — NOT a collision
             free(e->value);
             e->value = strdup(value);
-            return 4;
+            s->updated++;
+            return 4;  // Updated existing key
         }
+        // Mismatch — real collision
+        depth++;
         e = e->next;
     }
-
+    // At this point, we’re inserting a new key
+    if (depth > 0) {
+        s->collisionW++;  // ✅ One collision per collided insert
+    }
+    if (depth + 1 > s->max_chain_depth) {
+        s->max_chain_depth = depth + 1;
+    }
     // Insert new entry
     Entry *new_entry = malloc(sizeof(Entry));
     new_entry->key = strdup(key);
@@ -457,15 +485,19 @@ int put_stem(Stem *s, const char *key, const char *value) {
 }
 
 char *get_stem(Stem *s, const char *key) {
+    int collr=0;
     if (!s || !key) return NULL;
 
     size_t idx = simple_hash64(key)% s->table_size;  // Compute bucket index
     Entry *e = s->buckets[idx];
-
+    s->readtry++;
     while (e) {
         if (strcmp(e->key, key) == 0) {
+            if(collr==0) s->reads++;
             return e->value;  // Found match
         }
+        collr=1;
+        s->collisionR++;
         e = e->next;
     }
 
@@ -486,7 +518,6 @@ void stem_free(Stem *s) {
     free(s->buckets);
     free(s);
 }
-
 
 /* ------------------------------------------------------------------------------------
  * Create a new Tree
@@ -708,12 +739,10 @@ PROCEDURE(stem_iterate) {
     ENDPROC
 }
 
-
-
 PROCEDURE(stem_create) {
     int size=GETINT(ARG0);             // expected number of entries
     if(size<1024) size=1024;
-    size=size*10;                      // *10 keeps the collision probability ~ 0.01%
+    size=size*3;                      // *10 keeps the collision probability ~ 0.01%
     Stem * token = create_stem(size);
     RETURNINTX((long long) token);
     ENDPROC
@@ -739,6 +768,32 @@ PROCEDURE(stem_hi) {
     ENDPROC
 }
 
+PROCEDURE(stem_stats) {
+    long long tokeni = GETINT(ARG0);
+    Stem *token = (Stem *) tokeni;
+    int empty = 0;
+    for (int i = 0; i < token->table_size; ++i) {
+        if (token->buckets[i] == NULL) empty++;
+    }
+    printf("Stem Statistics (%llu)\n", tokeni);
+    printf("-------------------------------\n");
+    printf(" Stem Size         %d\n", token->table_size);
+    printf(" Load Factor       %.3f %\n",(double) 100*token->entries / token->table_size);
+    printf(" Added Entries     %d\n", token->entries);
+    printf(" Updated Entries   %d\n", token->updated);
+    printf(" Direct Inserts    %d\n", token->entries - token->collisionW);
+    printf(" Collision Inserts %d\n", token->collisionW);
+    printf(" Empty Buckets     %d\n", empty);
+    printf(" Read Requests     %d\n", token->readtry);
+    printf(" Direct Reads      %d\n", token->reads);
+    printf(" Chained Reads     %d\n", token->collisionR);
+    printf(" Max Chain Depth   %d\n", token->max_chain_depth);
+    printf(" Avg Probe Depth   %.2f\n", (double)((token->reads + token->collisionR) / token->readtry));
+    printf(" Chain Load (%)    %.2f%%\n", 100.0 * token->collisionW / token->entries);
+    RETURNINTX(0);
+    ENDPROC
+}
+
 
 LOADFUNCS
     ADDPROC(tmap_create,        "treemap.tmcreate",      "b",    ".int","name=''");
@@ -760,5 +815,6 @@ LOADFUNCS
     ADDPROC(stem_put,           "treemap.stemput",        "b",    ".int",    "token=.int, key=.string, value=.string");
     ADDPROC(stem_get,           "treemap.stemget",        "b",    ".string", "token=.int, key=.string");
     ADDPROC(stem_iterate,       "treemap.stemiterate",    "b",    ".int",    "token=.int, expose keys=.string[], expose values=.string[]");
-    ADDPROC(stem_hi,            "treemap.stemmax",        "b",    ".int",    "token=.int");
+    ADDPROC(stem_hi,            "treemap.stemsize",        "b",    ".int",    "token=.int");
+    ADDPROC(stem_stats,         "treemap.stemstats",       "b",    ".int",    "token=.int");
 ENDLOADFUNCS

@@ -13,7 +13,7 @@ static int debug_mode = 1;
 
 // Add these static function declarations at the top with the others
 
-void searchReplace(char *str, char search, char replace) {
+static inline void searchReplace(char *str, char search, char replace) {
     int i;
     for (i = 0; str[i] != '\0'; i++) {  // Loop until the end of the string
         if (str[i] == search) {
@@ -21,7 +21,6 @@ void searchReplace(char *str, char search, char replace) {
         }
     }
 }
-
 /* -------------------------------------------------------------------------------------
  * Shell Sort
  * -------------------------------------------------------------------------------------
@@ -166,7 +165,6 @@ PROCEDURE (copy_array) {
     PROCRETURN
     ENDPROC
 }
-
 /* -------------------------------------------------------------------------------------
  * list contents of an array
  * -------------------------------------------------------------------------------------
@@ -246,9 +244,8 @@ PROCEDURE(writeall) {
     PROCRETURN
     ENDPROC
 }
-char *strcasestr(const char *haystack, const char *needle) {
-    if (!*needle)
-        return (char *)haystack;
+static inline char *strcasestr(const char *haystack, const char *needle) {
+    if (!*needle) return (char *)haystack;
 
     for (; *haystack; ++haystack) {
         const char *h = haystack;
@@ -262,13 +259,12 @@ char *strcasestr(const char *haystack, const char *needle) {
     }
     return NULL;
 }
-
 /* -------------------------------------------------------------------------------------
 * Portable strupr() because that is windows-only
 * -------------------------------------------------------------------------------------
 */
 
-char *strupr_portable(char *s) {
+static inline char *strupr_portable(char *s) {
     char *p = s;
     while (*p) {
         *p = toupper((unsigned char)*p);
@@ -458,7 +454,6 @@ PROCEDURE(fquoted) {
     RETURNINTX(const_count + vname_count);
     ENDPROC
 }
-
 /* -------------------------------------------------------------------------------------
 * search in array a certain string, up to 3 strings are possible
 * -------------------------------------------------------------------------------------

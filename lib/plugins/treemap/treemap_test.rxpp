@@ -1,8 +1,17 @@
 /* Treemap Plugin Test */
-options levelb
 import treemap
-import rxfnsb
+
 ##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+s9=ooCREATE(stem,50)
+do i=1 to 500
+   if s9.PUT("Key "i,"Record "i)>0 then say 'duplicate 'i
+end
+do i=1 to 500
+   x=s9.GET("Key "i)
+end
+call s9.stats()
+exit
+
 
 /* --------- OO Create definition using the stem --- */
 s1=ooCREATE(stem,1024)
@@ -12,7 +21,9 @@ say 'stemput 's1.put("Country.Germany.Berlin", "visited")        ## Put key reco
 say 'stemGET 's1.get("Country.UK.London")                        ## GET record from stem
 say 'stemGET 's1.get("Country.Netherlands.Amsterdam")            ## GET record from stem
 say 'stemGET 's1.get("Country.Germany.Berlin")                   ## GET record from stem
-say 'stemMax 's1.max()
+
+say 'stemSize    's1.size()
+
 keys.1=''
 values.1=''
 say 'stemIterate 's1.iterate(keys,values)
