@@ -9,6 +9,7 @@
  #include <sys/time.h>
  #include <sys/sysctl.h>
  #include <errno.h>
+ #include <string.h>
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #define max(a,b)             \
   ({			     \

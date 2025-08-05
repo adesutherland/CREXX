@@ -1,6 +1,6 @@
 /* REXX */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 8 Jul 2025  at 13:21:26
+ * PRE Compiled on 5 Aug 2025  at 20:05:11
  * ----------------------------------------------------------------------
  */
 options levelb
@@ -86,7 +86,7 @@ say "★ 3 bytes:  "c2xV5("★")
 say "😀 4 bytes: "c2xV5("😀")
 exit
 c2xV1: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -98,7 +98,7 @@ c2xV1: procedure = .string
   end
 return strip(stx)
 c2xV2: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -110,7 +110,7 @@ c2xV2: procedure = .string
   end
 return stx
 c2xV3: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -122,7 +122,7 @@ c2xV3: procedure = .string
   end
 return stx
 c2xV4: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -134,7 +134,7 @@ c2xV4: procedure = .string
   end
 return strip(stx)
 c2xV5: procedure = .string
-  arg from = .string
+arg from = .string
   len=0
   assembler strlen len,from
   if len=0 then return ""

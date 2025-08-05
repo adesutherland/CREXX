@@ -17,6 +17,9 @@ set(use_precomp TRUE)           # TRUE pre compile needed, FALSE if not
 
   plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
+# Create the static link module
+add_static_plugin_target(_system system.c)
+  
 # Enable testing and define the test case
 enable_testing()
 # execute test

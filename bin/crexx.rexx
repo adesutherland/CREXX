@@ -1,5 +1,4 @@
-/* rexx
- * crexx is an executable which controls the phases of the crexx
+/* crexx is an executable which controls the phases of the crexx
  * processor, compiles, assembles and executes rexx programs.
  * It optionally compiles the program to a native executable,
  * for which it needs an operable gcc or clang compiler.
@@ -25,7 +24,6 @@ if fn[0]=0 then do
   call help
   exit
 end
-
 
 /* figure out the path for libraries etc */
 rxpath=''
