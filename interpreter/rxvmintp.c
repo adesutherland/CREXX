@@ -5277,11 +5277,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
         }
 #ifdef __32BIT__
+        hash = hash & 0x7FFFFFFF
         sprintf(str, "%lu", hash);
 #else
-        sprintf(str, "%llu", hash);
+        hash = hash & 0x7FFFFFFFFFFFFFFF;
 #endif
-        set_null_string(op1R, str);
+        op1R->int_value = hash;
      }
 
             DISPATCH
