@@ -1,14 +1,14 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -33,65 +31,73 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Tokens.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
+#ifndef YY_YY_SRC_PARSE_PARSER_H_INCLUDED
+# define YY_YY_SRC_PARSE_PARSER_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     TOKEN_CJUMP = 258,
-     TOKEN_CNEXT = 259,
-     TOKEN_CLIST = 260,
-     TOKEN_CSETUP = 261,
-     TOKEN_CZERO = 262,
-     TOKEN_CLOSESIZE = 263,
-     TOKEN_CODE = 264,
-     TOKEN_CONF = 265,
-     TOKEN_ID = 266,
-     TOKEN_FID = 267,
-     TOKEN_FID_END = 268,
-     TOKEN_LINE_INFO = 269,
-     TOKEN_REGEXP = 270,
-     TOKEN_BLOCK = 271
-   };
+  enum yytokentype
+  {
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    TOKEN_CJUMP = 258,             /* TOKEN_CJUMP  */
+    TOKEN_CNEXT = 259,             /* TOKEN_CNEXT  */
+    TOKEN_CLIST = 260,             /* TOKEN_CLIST  */
+    TOKEN_CSETUP = 261,            /* TOKEN_CSETUP  */
+    TOKEN_CZERO = 262,             /* TOKEN_CZERO  */
+    TOKEN_CLOSESIZE = 263,         /* TOKEN_CLOSESIZE  */
+    TOKEN_CODE = 264,              /* TOKEN_CODE  */
+    TOKEN_CONF = 265,              /* TOKEN_CONF  */
+    TOKEN_ID = 266,                /* TOKEN_ID  */
+    TOKEN_FID = 267,               /* TOKEN_FID  */
+    TOKEN_FID_END = 268,           /* TOKEN_FID_END  */
+    TOKEN_LINE_INFO = 269,         /* TOKEN_LINE_INFO  */
+    TOKEN_REGEXP = 270,            /* TOKEN_REGEXP  */
+    TOKEN_BLOCK = 271              /* TOKEN_BLOCK  */
+  };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
-#define TOKEN_CJUMP 258
-#define TOKEN_CNEXT 259
-#define TOKEN_CLIST 260
-#define TOKEN_CSETUP 261
-#define TOKEN_CZERO 262
-#define TOKEN_CLOSESIZE 263
-#define TOKEN_CODE 264
-#define TOKEN_CONF 265
-#define TOKEN_ID 266
-#define TOKEN_FID 267
-#define TOKEN_FID_END 268
-#define TOKEN_LINE_INFO 269
-#define TOKEN_REGEXP 270
-#define TOKEN_BLOCK 271
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
-#line 33 "../../crexx-develop/re2c/src/parse/parser.ypp"
+union YYSTYPE
 {
+#line 33 "../../re2c/src/parse/parser.ypp"
+
     const re2c::AST *regexp;
     re2c::SemAct    *semact;
     char             op;
     re2c::ASTBounds  bounds;
     std::string     *str;
     re2c::CondList  *clist;
-}
-/* Line 1529 of yacc.c.  */
-#line 90 "src/parse/parser.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+
+#line 89 "src/parse/parser.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
 #endif
+
 
 extern YYSTYPE yylval;
 
+
+int yyparse (re2c::context_t &context);
+
+
+#endif /* !YY_YY_SRC_PARSE_PARSER_H_INCLUDED  */

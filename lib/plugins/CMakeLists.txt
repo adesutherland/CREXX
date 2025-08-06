@@ -16,6 +16,7 @@ add_subdirectory(llist)
 add_subdirectory(treemap)
 
 
+
 if(ENABLE_ODBC)
     add_subdirectory(odbc)
     message(STATUS "Building with ODBC support enabled.")
@@ -30,10 +31,10 @@ else()
     message(STATUS "GTK Gui support is disabled, skipping subdirectory.")
 endif()
 
-if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+#  add_subdirectory(system)
 endif()
-
+  
 if(WIN32)
 	add_subdirectory(rxml)
 #	add_subdirectory(regex)

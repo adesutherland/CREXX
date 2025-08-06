@@ -9,6 +9,9 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 # Create dynamic plugin module
 add_dynamic_plugin_target(_keyaccess keyaccess.c)
 
+# Create static plugin module
+add_static_plugin_target(_keyaccess keyaccess.c)
+
 # Build Test Rexx
 add_custom_command(
         COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc

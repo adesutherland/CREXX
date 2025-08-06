@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -19,9 +19,11 @@ import rxfnsb
  * ------------------------------------------------------------------
  */
 arg command=.string[]
-  internal_testing=0    ## activate only for rxpp internal tests
+internal_testing=0    ## activate only for rxpp internal tests
+verbose=0
+
   ElapsedTime=time('us')
-  say 'CRX0010I ['time('l')'] Pre-Compile started'
+  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
   do i=1 to command.0
      j=i+1
      command.i=upper(command.i)
@@ -43,27 +45,27 @@ end
      exit 8
   end
 
-  say 'Input File:  ' infile
-  say 'Output File: ' outfile
-  say 'Macro Lib:   ' maclib
+  if verbose then say 'Input File:  ' infile
+  if verbose then say 'Output File: ' outfile
+  if verbose then say 'Macro Lib:   ' maclib
 
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
-  say 'CRX0100I ['time('l')'] Pre-Compile pass one'
+  if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   sourceLines=RXPPPassOne(infile,outfile,maclib)    ## load source file and macro library
   ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
      if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
-  say 'CRX0200I ['time('l')'] Pre-Compile pass two'
+  if verbose then say 'CRX0200I ['time('l')'] Pre-Compile pass two'
   call RXPPPassThree outfile                        ## analyse source and expand macros
-  say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
+  if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
   call writeall outbuf,outfile,-1                   ## write generated output to file
-  say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
+  if verbose then say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
   if pos(' vars',cflags)>0 then call printvars
   if pos(' maclist',cflags)>0 then call printmacs
   if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
   elapsedTime=(time('us')-elapsedtime)
-  say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
+  if verbose then say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
 return 0
 /* ------------------------------------------------------------------
  * Pass one load source file and determine preprocessor statements
@@ -74,12 +76,12 @@ RXPPPassOne: procedure = .int
 
   macnum=readSource(maclib)
   if macnum<0 then do
-     say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
+     if verbose then say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
-     say 'CRX0110I ['time('l')'] Maclib loaded:      'source.0' records'
-     say 'CRX0120I ['time('l')'] Macros extracted:   'macros_mname.0
+     if verbose then say 'CRX0110I ['time('l')'] Maclib loaded:      'source.0' records'
+     if verbose then say 'CRX0120I ['time('l')'] Macros extracted:   'macros_mname.0
   end
   ## clear source array, DROP doesn't work as expected
   do i=1 to source.0
@@ -110,12 +112,12 @@ RXPPPassOne: procedure = .int
 
   rexxlines=rexxlines+3
 
-  say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
+  if verbose then say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
-  say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
+  if verbose then say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
   call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
-  say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
+  if verbose then say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
   call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
 
 return rexxlines
@@ -162,9 +164,9 @@ RXPPPassTwo: procedure
   else do i=1 to ifblock.0
      if ifblock.i=0 then iterate
      lnk=ifblock.i
-     say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
+     if verbose then say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
      do j=i+1 to lnk
-        say '? skipped: 'right(j,4,'0')' 'strip(source.j)
+        if verbose then say '? skipped: 'right(j,4,'0')' 'strip(source.j)
      end
   end
 return
@@ -208,8 +210,8 @@ early_flag_pick_up: procedure=.int
   source.i='/* 'source.i' */'
   if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
   if pos(' iflink',cflags)>0 then do
-     say "Pre Source Expansion Pass 1"
-     say "-------------------------------------------------------"
+     if verbose then say "Pre Source Expansion Pass 1"
+     if verbose then say "-------------------------------------------------------"
   end
 return 1
 /* ------------------------------------------------------------------
@@ -230,7 +232,7 @@ findMatchingEndif: procedure=.int
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
   end
-  say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
+  if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
 return 0
 /* ------------------------------------------------------------------
  * Analyse REXX program and expand Macros
@@ -271,7 +273,7 @@ RXPPPassThree: procedure
   end
 
   call writeline ''
-  say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
+  if verbose then say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
 /* ------------------------------------------------------------------
  * Read Rexx Source
@@ -427,13 +429,13 @@ return
  */
 token_print: procedure
   arg template=.string,token=.string[],token_type=.string[]
-  say 'Template='template
-  say time('l')' Compile completed'
-  say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
+  if verbose then say 'Template='template
+  if verbose then say time('l')' Compile completed'
+  if verbose then say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
   do j = 1 to token.0
-     say "Token" j ": '"token.j"' Type:" token_type.j
+     if verbose then say "Token" j ": '"token.j"' Type:" token_type.j
   end
-  say time('l')' Parse String using compiled Template'
+  if verbose then say time('l')' Parse String using compiled Template'
   return
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
@@ -613,8 +615,8 @@ end
 if posStart <= length(line) then
     result = result || substr(line, posStart)
 
-say "Original:   " line
-say "Transformed:" result
+if verbose then say "Original:   " line
+if verbose then say "Transformed:" result
 
 return result
 
@@ -623,6 +625,9 @@ arg line=.string
 line = strip(line)
 result = ''
 posStart = 1
+
+if verbose then say 567 line
+
 do while pos('.', line, posStart) > 0
     dotPos = pos('.', line, posStart)
 
@@ -676,6 +681,8 @@ do while pos('.', line, posStart) > 0
   ##  callText = upperMethod || '_' || upperObject || '(' || object
 
     ooprefix=getvar(object'_prefix')
+    if verbose then say 8888888888 ooprefix
+
     xyprefix=getvar(object'_prefix')
     callText = ooprefix||upperMethod'('object
     if args \= '' then callText = callText || ',' || args

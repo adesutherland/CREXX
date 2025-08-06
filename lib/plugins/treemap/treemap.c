@@ -443,7 +443,7 @@ Stem *create_stem(size_t table_size) {
     s->collisionW=0;
     s->collisionR=0;
     s->reads=0;
-    s->reads=0;
+    s->readtry=0;
     s->updated=0;
     s->max_chain_depth=0;
   return s;
@@ -750,6 +750,8 @@ PROCEDURE(stem_create) {
 PROCEDURE(stem_put) {
     long long tokeni = GETINT(ARG0);
     Stem *token = (Stem *) tokeni;
+    char * key=GETSTRING(ARG1);
+    char * vvalue=GETSTRING(ARG2);
     int rc=put_stem(token, GETSTRING(ARG1),GETSTRING(ARG2));
     RETURNINTX(rc);
     ENDPROC

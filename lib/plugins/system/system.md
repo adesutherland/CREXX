@@ -1,6 +1,7 @@
 # System Functions Documentation
 This documentation includes both system-level functions and file system operations.
-Although most of them are designed to support multiple operating systems, they are currently activated only for Windows.
+Although most of them are designed to support multiple operating systems, they are currently activated only for Windows and macOS.
+
 ## GETENV
 Retrieves the value of a system environment variable.
 

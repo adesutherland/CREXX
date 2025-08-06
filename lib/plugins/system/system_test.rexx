@@ -1,11 +1,12 @@
-/* REXX */
+/* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 8 Jul 2025  at 13:21:26
+ * PRE Compiled on 5 Aug 2025  at 20:25:02
  * ----------------------------------------------------------------------
  */
-options levelb
-import system
 import rxfnsb
+/* dropped import */
+import system
+/* dropped import */
 ##mainargs(allin)
 /* ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */ */
 /* ##define strlen(len,string)                   {len=0;         assembler strlen len,string} D*/
@@ -86,7 +87,7 @@ say "★ 3 bytes:  "c2xV5("★")
 say "😀 4 bytes: "c2xV5("😀")
 exit
 c2xV1: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -98,7 +99,7 @@ c2xV1: procedure = .string
   end
 return strip(stx)
 c2xV2: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -110,7 +111,7 @@ c2xV2: procedure = .string
   end
 return stx
 c2xV3: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -122,7 +123,7 @@ c2xV3: procedure = .string
   end
 return stx
 c2xV4: procedure = .string
-  arg from = .string
+arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -134,7 +135,7 @@ c2xV4: procedure = .string
   end
 return strip(stx)
 c2xV5: procedure = .string
-  arg from = .string
+arg from = .string
   len=0
   assembler strlen len,from
   if len=0 then return ""

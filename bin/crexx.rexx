@@ -1,5 +1,4 @@
-/* rexx
- * crexx is an executable which controls the phases of the crexx
+/* crexx is an executable which controls the phases of the crexx
  * processor, compiles, assembles and executes rexx programs.
  * It optionally compiles the program to a native executable,
  * for which it needs an operable gcc or clang compiler.
@@ -25,7 +24,6 @@ if fn[0]=0 then do
   call help
   exit
 end
-
 
 /* figure out the path for libraries etc */
 rxpath=''
@@ -94,10 +92,18 @@ if verbose>1 then say 'using lpath :' lpath
 out = .string[]
 err = .string[]
 
+/* see if there is a .rxpp file to run the preprocessor against */
+/* while we have no exists(file) function, specify the .rxpp extension */
 do i=1 to words(filenames)
   filename=word(filenames,i)
-  /* see if there is a .rxpp file to run the preprocessor against */
-  
+  dotpos = pos('.',filename)
+  if dotpos > 0 then do
+    if right(filename,4) = 'rxpp'
+    then do /* run the preprocessor */
+      filename = left(filename,dotpos-1)
+      'rxpp -i' filename'.rxpp -o' filename'.rexx'
+    end
+  end
   
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
