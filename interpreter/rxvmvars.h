@@ -61,6 +61,27 @@ RX_INLINE value* value_f() {
     return this;
 }
 
+
+/*
+ * Returns required buffer size - the smallest power of two that's greater or
+ * equal to a given value. A minimum size is enforced.
+ */
+RX_INLINE size_t power_of_two_size(size_t value) {
+    if (value == 0) return 0; // Handle zero input
+    size_t new_size = value > 8 ? value : 8; // Enforce a minimum size of 8
+    new_size--;
+    new_size |= new_size >> 1;
+    new_size |= new_size >> 2;
+    new_size |= new_size >> 4;
+    new_size |= new_size >> 8;
+    new_size |= new_size >> 16;
+#if __SIZEOF_SIZE_T__ == 8
+    new_size |= new_size >> 32;
+#endif
+    new_size++;
+    return new_size;
+}
+
 /* Sets up the required number of attributes */
 RX_INLINE void set_num_attributes(value* v, size_t num) {
     size_t i;
@@ -69,50 +90,65 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     if (num <= v->num_attributes) {
         /* Reducing the number of attributes is easy */
         v->num_attributes = num;
+        return;
     }
 
-    else if (num <= v->max_num_attributes) {
+    if (num <= v->max_num_attributes) {
         /* Just need to reset the recycled attributes */
         for (i = v->num_attributes; i < num; i++) {
             v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
             value_zero(v->attributes[i]);
         }
         v->num_attributes = num;
+        return;
     }
 
-    else {
-        /* We first need to recycle any unused attributes */
-        for (i = v->num_attributes; i < v->max_num_attributes; i++) {
-            v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
-            value_zero(v->attributes[i]);
-        }
+    /* Increasing the number of attributes, we need to allocate more space */
 
-        /* Now we need to make the pointer arrays big enough */
-        if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * num);
-        else v->attributes = malloc(sizeof(value*) * num);
-
-        if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * num);
-        else v->unlinked_attributes = malloc(sizeof(value*) * num);
-
-        v->num_attribute_buffers++;
-        if (v->attribute_buffers) v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * v->num_attribute_buffers);
-        else v->attribute_buffers = malloc(sizeof(value*) * v->num_attribute_buffers);
-
-        /* Create a new buffer */
-        v->attribute_buffers[v->num_attribute_buffers - 1] =
-                malloc(sizeof(value) * (num - v->max_num_attributes));
-
-        /* Initiate the new attributes */
-        a = v->attribute_buffers[v->num_attribute_buffers - 1];
-        for (i = v->max_num_attributes; i < num; i++, a++) {
-            value_init(a);
-            v->attributes[i] = a;
-            v->unlinked_attributes[i] = a;
-        }
-
-        /* Set the new number of attributes */
-        v->num_attributes = v->max_num_attributes = num;
+    /* We first need to recycle any unused attributes */
+    for (i = v->num_attributes; i < v->max_num_attributes; i++) {
+        v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
+        value_zero(v->attributes[i]);
     }
+
+    /* Calculate the new maximum number of attributes using bit-twiddling */
+    size_t new_max = power_of_two_size(num);
+
+    /* Now we need to make the pointer arrays big enough */
+    if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * new_max);
+    else v->attributes = malloc(sizeof(value*) * new_max);
+
+    if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * new_max);
+    else v->unlinked_attributes = malloc(sizeof(value*) * new_max);
+
+    /* We create a buffer for the new attributes separate to the existing buffers. */
+    size_t old_capacity = power_of_two_size(v->num_attribute_buffers);
+    v->num_attribute_buffers++;
+    size_t new_capacity = power_of_two_size(v->num_attribute_buffers);
+
+    // Reallocate only when the required capacity has changed
+    if (new_capacity > old_capacity) {
+        if (v->attribute_buffers) {
+            v->attribute_buffers = realloc(v->attribute_buffers, sizeof(value*) * new_capacity);
+        } else {
+            v->attribute_buffers = malloc(sizeof(value*) * new_capacity);
+        }
+    }
+
+    /* Create a new buffer */
+    v->attribute_buffers[v->num_attribute_buffers - 1] =
+            malloc(sizeof(value) * (new_max - v->max_num_attributes));
+
+    /* Initiate the new attributes */
+    a = v->attribute_buffers[v->num_attribute_buffers - 1];
+    for (i = v->max_num_attributes; i < new_max; i++, a++) {
+        value_init(a);
+        v->attributes[i] = v->unlinked_attributes[i] = a;
+    }
+
+    /* Set the new number of attributes */
+    v->num_attributes = num;
+    v->max_num_attributes = new_max;
 }
 
 /*
@@ -124,10 +160,7 @@ RX_INLINE size_t buffer_size(size_t value) {
     if (value <= SMALLEST_STRING_BUFFER_LENGTH)
         return SMALLEST_STRING_BUFFER_LENGTH;
 
-    --value;
-    for(i = 1; i < sizeof(size_t); i*=2)
-        value |= value >> i;
-    return value+1;
+    return power_of_two_size(value);
 }
 
 RX_INLINE void prep_string_buffer(value *v, size_t length) {

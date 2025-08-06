@@ -2747,13 +2747,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - MINATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
             if (op2RI > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2RI > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, op2RI * 2);
-                }
-                /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2RI);
             }
             DISPATCH
@@ -2764,13 +2757,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - MINATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
             if (op2I > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2I > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, op2I * 2);
-                }
-                /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2I);
             }
             DISPATCH
@@ -2781,12 +2767,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - MINATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
         if (op2RI + op3I > op1R->num_attributes) {
-            /* We need to add attributes */
-            if (op2RI + op3I > op1R->max_num_attributes) {
-                /* We need to increase the size of the buffer */
-                /* Make the buffer double sized by setting the number of attributes */
-                set_num_attributes(op1R, (op2RI + op3I) * 2);
-            }
             /* Set the number of attributes to the requested number */
             set_num_attributes(op1R, op2RI + op3I);
         }
@@ -2798,12 +2778,6 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(MINATTRS_REG_INT_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - MINATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (op2I + op3I > op1R->num_attributes) {
-                /* We need to add attributes */
-                if (op2I + op3I > op1R->max_num_attributes) {
-                    /* We need to increase the size of the buffer */
-                    /* Make the buffer double sized by setting the number of attributes */
-                    set_num_attributes(op1R, (op2I + op3I) * 2);
-                }
                 /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2I + op3I);
             }
