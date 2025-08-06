@@ -2819,6 +2819,19 @@ static walker_result emit_walker(walker_direction direction,
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
 
+                    /* If this is a first use of the array (where it is implicitly defined), then we need to
+                     * clear the register (especially the number of attributes) */
+                    if (node->high_ordinal != -1) { /* Skip if we are a weird optimiser added node */
+                        int symbol_definition_ordinal = sym_lord(node->symbolNode->symbol);
+                        if (symbol_definition_ordinal == node->low_ordinal) {
+                            // This is where the symbol is implicitly defined */
+                            temp1 = mprintf("   null %c%d\n", from_reg_type, from_reg_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        }
+                    }
+
+                    /* Now we need to link the array elements */
                     while (child1) {
                         int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
 
@@ -3095,6 +3108,21 @@ static walker_result emit_walker(walker_direction direction,
                 if (arg3) free(arg3);
             }
             break;
+
+            case DEFINE:
+                /* Add source metadata */
+                comment_meta = get_metaline(node);
+                node->output = output_fs(comment_meta);
+                free(comment_meta);
+
+                /* Add Variable Metadata */
+                add_variable_metadata(node);
+
+                /* For a definition we need to clear the register */
+                temp1 = mprintf("   null %c%d\n", child1->symbolNode->symbol->register_type, child1->symbolNode->symbol->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                break;
 
             case ASSIGN:
                 /* Add source metadata */

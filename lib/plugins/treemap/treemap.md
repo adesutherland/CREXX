@@ -1,10 +1,14 @@
 # TreeMap CREXX Interface Documentation
 
-This document describes the CREXX TreeMap plugin functionality.
+This document describes the CREXX TreeMap plugin which also contains stem functionalityp.  
 Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may be optionally associated with a name at creation time.
+Each Stem is uniquely identified by a 64-bit integer handle (int64) and may be optionally associated with a name at creation time.
+
 ---
 
 ## Function Index
+
+### TreeMap Functions
 - [`tmcreate`](#tmcreate)
 - [`tmlookup`](#tmlookup)
 - [`tmput`](#tmput)
@@ -19,9 +23,17 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 - [`tmsize`](#tmsize)
 - [`tmfree`](#tmfree)
 
+### Stem Functions
+- [`stemcreate`](#stemcreate)
+- [`stemput`](#stemput)
+- [`stemget`](#stemget)
+- [`stemsize`](#stemsize)
+- [`stemiterate`](#stemiterate)
 ---
 
-## `tmcreate`
+## TreeMap Functions
+
+### `tmcreate`
 **Description:** Creates a new TreeMap and registers it with a given name.
 
 **Arguments:**
@@ -32,7 +44,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmlookup`
+### `tmlookup`
 **Description:** Looks up a TreeMap handle by its name.
 
 **Arguments:**
@@ -43,7 +55,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmput`
+### `tmput`
 **Description:** Inserts a key-value pair into the specified TreeMap.
 
 **Arguments:**
@@ -56,7 +68,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmget`
+### `tmget`
 **Description:** Retrieves the value for a given key from the specified TreeMap.
 
 **Arguments:**
@@ -68,7 +80,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmhaskey`
+### `tmhaskey`
 **Description:** Checks if the specified key exists in the TreeMap.
 
 **Arguments:**
@@ -80,7 +92,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmhasvalue`
+### `tmhasvalue`
 **Description:** Searches the TreeMap for a given value.
 
 **Arguments:**
@@ -92,7 +104,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmfirstkey`
+### `tmfirstkey`
 **Description:** Returns the first key (smallest) in the TreeMap.
 
 **Arguments:**
@@ -103,7 +115,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmlastkey`
+### `tmlastkey`
 **Description:** Returns the last key (largest) in the TreeMap.
 
 **Arguments:**
@@ -114,7 +126,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmremove`
+### `tmremove`
 **Description:** Removes a key (and its value) from the TreeMap.
 
 **Arguments:**
@@ -122,12 +134,12 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 - `ARG1`: Key to remove (string).
 
 **Returns:**
-- 0 if remove was successful
-- 4 if entry is not available
+- `0` if remove was successful
+- `4` if entry is not available
 
 ---
 
-## `tmkeys`
+### `tmkeys`
 **Description:** Retrieves all keys in sorted order from the TreeMap.
 
 **Arguments:**
@@ -139,18 +151,7 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmsize`
-**Description:** Returns the number of entries in the TreeMap.
-
-**Arguments:**
-- `ARG0`: TreeMap handle (int64).
-
-**Returns:**
-- numer of tree entries.
-
----
-
-## `tmdump`
+### `tmdump`
 **Description:** Dumps all key-value pairs to Rexx arrays.
 
 **Arguments:**
@@ -163,19 +164,86 @@ Each TreeMap is uniquely identified by a 64-bit integer handle (int64) and may b
 
 ---
 
-## `tmfree`
+### `tmsize`
+**Description:** Returns the number of entries in the TreeMap.
+
+**Arguments:**
+- `ARG0`: TreeMap handle (int64).
+
+**Returns:**
+- Number of tree entries.
+
+---
+
+### `tmfree`
 **Description:** Frees all entries and the memory associated with a TreeMap.
 
 **Arguments:**
 - `ARG0`: TreeMap handle (int64).
 
 **Returns:**
-- Always returns `0`. (No return code from destroy function.)
+- Always returns `0`.
 
 ---
 
-## Notes
-- All string comparisons and lookups are case-insensitive (converted to uppercase).
-- `is_valid_map()` is used in most procedures to guard against invalid handles.
-- `SIGNAL_INVALID_ARGUMENTS` is raised when operations are attempted on an invalid or nonexistent map.
+## Stem Functions
 
+These procedures manage a simple key-value store using the `Stem` structure.
+
+---
+
+# Stem Functions Overview
+
+These procedures manage a simple key-value store using the `Stem` structure.
+
+---
+
+## `stemcreate`
+
+Initializes a new `Stem` structure with the capacity to hold a specified number of entries.
+
+- **Input**: `size` (int) – Expected number of entries. If less than 1024, it is set to 1024. The actual storage size is 10× this value to minimize hash collisions (~0.1% collision probability).
+- **Returns**: A token (int, cast from pointer) representing the created `Stem`.
+
+---
+
+## `stemput`
+
+Stores a key-value pair into the `Stem` structure.
+
+- **Input**:
+    - `token` (int) – The handle returned by `stem_create`.
+    - `key` (string) – The key to store.
+    - `value` (string) – The associated value.
+- **Returns**: Status code (int) indicating success (typically 0 for success).
+
+---
+
+## `stemget`
+
+Retrieves the value associated with a given key from the `Stem`.
+
+- **Input**:
+    - `token` (int) – The handle returned by `stem_create`.
+    - `key` (string) – The key to look up.
+- **Returns**: The value (string) associated with the key, or `NULL` if not found.
+
+---
+
+## `stemsize`
+
+Returns the number of entries currently stored in the `Stem`.
+
+- **Input**: `token` (int) – The handle returned by `stem_create`.
+- **Returns**: Number of entries (int).
+
+### `stemiterate`
+**Description:** Dumps all key-value pairs of the stem into Rexx arrays.
+
+**Arguments:**
+- `ARG0`: TreeMap handle (int64).
+- `ARG1`: Target Rexx array name for keys.
+- `ARG2`: Target Rexx array name for values.
+
+**Returns:**
+- Number of key-value pairs added.

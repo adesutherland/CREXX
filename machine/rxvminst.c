@@ -260,7 +260,7 @@ void init_ops() {
 
     instr_f("link", "Link op2 to op1", OP_REG, OP_REG, OP_NONE);
     instr_f("unlink", "Unlink op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("null", "Null op1", OP_REG, OP_NONE, OP_NONE);
+    instr_f("null", "Null (clear) op1", OP_REG, OP_NONE, OP_NONE);
 
     instr_f("load", "Load op1 with op2", OP_REG, OP_INT, OP_NONE);
     instr_f("load", "Load op1 with op2", OP_REG, OP_FLOAT, OP_NONE);
