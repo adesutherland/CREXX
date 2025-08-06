@@ -32,7 +32,7 @@ else()
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  add_subdirectory(system)
+#  add_subdirectory(system)
 endif()
   
 if(WIN32)

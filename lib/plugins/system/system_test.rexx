@@ -1,11 +1,12 @@
-/* REXX */
+/* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 5 Aug 2025  at 20:05:11
+ * PRE Compiled on 5 Aug 2025  at 20:25:02
  * ----------------------------------------------------------------------
  */
-options levelb
-import system
 import rxfnsb
+/* dropped import */
+import system
+/* dropped import */
 ##mainargs(allin)
 /* ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */ */
 /* ##define strlen(len,string)                   {len=0;         assembler strlen len,string} D*/
