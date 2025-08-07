@@ -5221,7 +5221,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  rxhash  returns hash of a string                                  pej 24. June 2023
+ *  rxhash  returns hash of a string it runs in reverse order         pej 24. June 2023
  *  op1=hash(op2,op3)
  *      op2=string
  *      op3=length(string)
@@ -5232,34 +5232,25 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
     {
 #ifdef __32BIT__
-        uint32_t hash, FNVOffset, FNV_PRIME;
-        FNV_PRIME=16777619;
-        FNVOffset=2166136261U;
+        uint32_t hash=0;
 #else
-        uint64_t hash, FNVOffset, FNV_PRIME;
-        FNV_PRIME = 1099511628211;
-        FNVOffset = 14695981039346656037U;
+        uint64_t hash=0;
 #endif
-        int i1, ch, len;
-        char str[128];
-
-        hash = FNVOffset;
-        GETSTRLEN(len, op2R)
-        for (i1 = 0; i1 < len; i1++) {
-            GETSTRCHAR(ch, op2R, i1)
-            hash = hash ^ (ch);          // xor next byte into the bottom of the hash
-            hash = hash * FNV_PRIME;     // Multiply by prime number found to work well
+        int i1,len;
+        GETSTRLEN(len, op2R);
+        if(len<=0) len=op2R->string_length;
+        else if(op2R->string_length<len) len=op2R->string_length;
+        for (i1 = len - 1; i1 >= 0; i1--) {
+            hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
         }
 #ifdef __32BIT__
         hash = hash & 0x7FFFFFFF
-        sprintf(str, "%lu", hash);
 #else
         hash = hash & 0x7FFFFFFFFFFFFFFF;
 #endif
         op1R->int_value = hash;
      }
-
-            DISPATCH
+     DISPATCH
 /* ------------------------------------------------------------------------------------------
  *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
  *  -----------------------------------------------------------------------------------------
