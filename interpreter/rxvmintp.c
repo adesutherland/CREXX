@@ -5243,6 +5243,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         for (i1 = len - 1; i1 >= 0; i1--) {
             hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
         }
+        hash ^= (hash >> 16);
 #ifdef __32BIT__
         hash = hash & 0x7FFFFFFF
 #else

@@ -20,7 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=0
+verbose=1
 
   ElapsedTime=time('us')
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
@@ -94,6 +94,7 @@ RXPPPassOne: procedure = .int
      say 'CRX0910E+['time('l')'] source file missing: 'infile
      exit 8
   end
+
   linx=ffind(source,1,'options levelb')
   if linx>0 then do
      source.linx='/* dropped import */'
@@ -109,7 +110,6 @@ RXPPPassOne: procedure = .int
   source.2='options levelb'
   source.3='import rxfnsb'
 
-
   rexxlines=rexxlines+3
 
   if verbose then say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
@@ -118,8 +118,6 @@ RXPPPassOne: procedure = .int
   if verbose then say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
   call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
   if verbose then say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
-  call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
-
 return rexxlines
 /* ------------------------------------------------------------------
  * Pass 2 pre-expand certain elements
@@ -365,12 +363,16 @@ return
 
 /* Register macro */
    i = macros_mname.0
-   if macros_mname.i \= '' then i = i + 1
+ ## todo this is a sledgehammer approach, count the entries, if the counter says it is 0
+   if i=0 then do i=1 to 150
+      if macros_mname.i = '' then leave
+      i=i+1
+   end
 
+   if macros_mname.i \= '' then i = i + 1
    macros_mname.i = upper(name)'('
    macros_margs.i = strip(arglist)
    macros_mbody.i = body
-
 return nlino
 /* ------------------------------------------------------------------
  * Count braces to recognise multi line macros
@@ -520,7 +522,7 @@ return
  */
 writeline: procedure
   arg oline=.string
-   oline=injectVariable(oline)
+  oline=injectVariable(oline)
   ## if pos('~',oline) then oline=oo_translate(oline)
    if pos('.',oline) then oline=ooTranslate(oline)
 /* not necessary - I hope
@@ -621,12 +623,13 @@ if verbose then say "Transformed:" result
 return result
 
 ooTranslate: procedure=.string
-arg line=.string
-line = strip(line)
+arg oline=.string
+line = strip(oline)
+if upper(word(line,1))='ARG' then return oline
+prf=substr(line,1,2)
+if prf='##' | prf='/*' then return oline
 result = ''
 posStart = 1
-
-if verbose then say 567 line
 
 do while pos('.', line, posStart) > 0
     dotPos = pos('.', line, posStart)
@@ -638,8 +641,7 @@ do while pos('.', line, posStart) > 0
     do while methodEnd <= length(line) & verify(substr(line, methodEnd, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
         methodEnd = methodEnd + 1
     end
-
-    ##If not followed by a '(', this is a stem access
+  ## If not followed by a '(', this is a stem access
     if substr(line, methodEnd, 1) \= '(' then do
         stemAccess = substr(line, posStart, methodEnd - posStart)
         ##Preserve the stem text
@@ -681,7 +683,6 @@ do while pos('.', line, posStart) > 0
   ##  callText = upperMethod || '_' || upperObject || '(' || object
 
     ooprefix=getvar(object'_prefix')
-    if verbose then say 8888888888 ooprefix
 
     xyprefix=getvar(object'_prefix')
     callText = ooprefix||upperMethod'('object
@@ -769,7 +770,7 @@ return line
        bodyExp = body
        xargs   = translate(args, , ',')
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
-       else bodyExp = replaceFixArg(bodyExp, xargs)
+       bodyExp = replaceFixArg(bodyExp, xargs)
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
        line=insertatc(bodyexp,line,callpos,callLen)
        uline   = upper(line)         /* update uline for repetition */
@@ -803,6 +804,8 @@ replaceFixArg: Procedure=.string
   arg bodyexp=.string,xargs=.string
   wrds=words(xargs)
   do k=1 to wrds
+  ## !? workaround as global array is possibly reset
+      callargs.k=templist('GET',k,"")
       aname = word(xargs, k)
       aval  = callargs.k
       bodyExp = replaceArg(bodyExp, aname, aval)
@@ -895,7 +898,8 @@ fetchArguments: procedure=.string
  * Replace Argument in Macro Call
  * ------------------------------------------------------------------
  */
-replaceArg: procedure=.string
+ /* old Version
+replaceArgx: procedure=.string
   arg str=.string, name=.string, value=.string
 
   posn = 1
@@ -904,7 +908,7 @@ replaceArg: procedure=.string
      before = ''
      if p > 1 then before = substr(str, p - 1, 1)
      after  = substr(str, p + length(name), 1)
-    /* check before and after chars to change only full variable names */
+     /* check before and after chars to change only full variable names */
 	verbb=verify(before, alphaN, 'N')
     verba=verify(after, alphaN, 'N')
     if length(before)=0 then verbb=1
@@ -919,6 +923,53 @@ replaceArg: procedure=.string
     posn = p + length(value)
     ## if posn>length(str) then say 'string exceeds length'
     p = pos(name, str, posn)
+  end
+return str
+*/
+
+/* ------------------------------------------------------------------
+ * Replace Argument in Macro Call
+ *  - Matches bare  name  only at identifier boundaries
+ *  - Also matches   name##   unconditionally and consumes the '##'
+ * ------------------------------------------------------------------ */
+replaceArg: procedure=.string
+  arg str=.string, name=.string, value=.string
+
+  posn = 1
+  p = pos(name, str, posn)
+  nlen=length(name)
+  do while p > 0
+     before = ''
+     if p > 1 then before = substr(str, p - 1, 1)
+
+     after1 = substr(str, p + nlen, 1)          /* next 1 char */
+     after2 = substr(str, p + nlen, 2)          /* next 2 chars */
+
+     /* ---- Fast path: explicit end-of-param "##" right after name ---- */
+     if after2 = '##' then do
+        /* replace NAME## with VALUE (consume the hashes) */
+        str  = insertatc(value, str, p, nlen+2)
+        posn = p + length(value)
+        p    = pos(name, str, posn)
+        iterate
+     end
+
+     /* ---- Original boundary check: only replace full identifiers ---- */
+     verbb = verify(before, alphaN, 'N')  /* 0 => before is [A-Za-z0-9_] */
+     verba = verify(after1, alphaN, 'N')  /* 0 => after  is [A-Za-z0-9_] */
+
+     if length(before) = 0 then verbb = 1
+     if length(after1)  = 0 then verba = 1
+
+     if verbb = 0 | verba = 0 then do   /* Not a standalone identifier (e.g., nameX or Yname); skip ahead */
+        posn = p + 1
+        p    = pos(name, str, posn)   /* BUGFIX: was `p = posn` */
+        iterate
+     end
+     /* ---- Valid standalone `name` ---- */
+     str  = insertatc(value, str, p, nlen)   /* C-function */
+     posn = p + length(value)
+     p    = pos(name, str, posn)
   end
 return str
 /* ------------------------------------------------------------------
@@ -947,6 +998,7 @@ parseArgList: procedure=.int
     if c = ',' & depth = 0 then do
       callargs.i = strip(token)
       token = ''
+      call templist 'PUT',i,callargs.i
       i = i + 1
     end
     else do
@@ -955,7 +1007,10 @@ parseArgList: procedure=.int
       token = token || c
     end
   end
-  if strip(token) <> '' then callargs.i = strip(token)
+  if strip(token) <> '' then do
+     callargs.i = strip(token)
+     call templist 'PUT',i,callargs.i
+  end
 return i
 /* ------------------------------------------------------------------
  * Dump pre-compiler variables

@@ -116,19 +116,70 @@ Or, without arguments:
 ##define MACRONAME {macro body}
 ```
 
-* Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler
-* Multiple REXX statements within a macro must be separated by a semicolon (`;`)
-* The macro body is enclosed in `{}` and treated as replacement text
-* RXPP supports multi-line macro definitions using C-style line continuation syntax!
+* Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler.
+* Multiple REXX statements within a macro must be separated by a semicolon (`;`).
+* The macro body is enclosed in `{}` and treated as replacement text.
+* RXPP supports multi-line macro definitions using C-style line continuation syntax:
 ```rexx
 ##define swap(a,b) {temp=a  \
 a=b     \
 b=temp }
-``` 
-***Note:*** The backslash (\) must be the final character on each continued line. Comments after the backslash are not allowed.
-However, /* ... */-style comments may appear before the backslash. ## comments are not allowed on continued lines, as they indicate the end of line interpretation.
+```
+***Note:*** The backslash (`\`) must be the final character on each continued line. Comments after the backslash are not allowed. However, `/* ... */`-style comments may appear before the backslash. `##` comments are not allowed on continued lines, as they indicate the end of line interpretation.
 
 ---
+
+### 🔤 Parameter Replacement Rules
+
+When expanding a macro, RXPP replaces parameter names in the macro body with the corresponding argument values from the macro call.
+
+By default, a parameter name is only replaced if it appears as a **stand-alone identifier**. This means:
+
+- The character **before** the parameter name (if any) is **not** an alphanumeric character or underscore (`A–Z`, `a–z`, `0–9`, `_`).
+- The character **after** the parameter name (if any) is **not** an alphanumeric character or underscore.
+
+This prevents accidental replacements inside longer identifiers.
+
+**Example (default behavior):**
+```
+name         → replaced
+name_keys    → not replaced
+myname       → not replaced
+```
+
+If you want to join the parameter value directly to another identifier without triggering the boundary check, use the `##` operator immediately after the parameter name.
+
+- `##` is **not output**; it is removed during expansion.
+- The replacement occurs unconditionally, even if the next character is alphanumeric or underscore.
+
+**Example (using `##`):**
+```
+Macro body:   ##define create(name)   {name##_keys}
+Macro call:   create(foo)
+Expansion:    foo_keys
+```
+
+**Before/After Macro Expansion:**
+```rexx
+-- Macro definition:
+##define create(name, size) { \
+  name##_keys.size = ''         \
+  name##_values.size = ''       \ 
+}
+
+-- Source code before preprocessing:
+create(myStem, 10)
+
+-- Expanded code after preprocessing:
+myStem_keys.10 = ''
+myStem_values.10 = ''
+```
+
+**Summary:**
+- Bare parameter names → replaced only at identifier boundaries.
+- Parameter names followed by `##` → replaced always, with `##` removed.
+
+
 
 ## 🤖 Macro Invocation
 

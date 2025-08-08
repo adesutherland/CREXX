@@ -512,6 +512,19 @@ PROCEDURE(fpos) {
     RETURNINT(0); // Return 0 if the substring is not found
     ENDPROC;
 }
+char myArray[10][64] = { { '\0' } };
+PROCEDURE(templist) {
+    char mode = GETSTRING(ARG0)[0];
+    int  index= GETINT(ARG1)-1;
+    char *content = GETSTRING(ARG2);
+    if(mode=='G' || mode=='g')  RETURNSTRX(myArray[index]);
+ // put mode
+    strcpy(myArray[index],content);
+    RETURNSTRX(""); // Return 0 if the substring is not found
+    ENDPROC;
+}
+
+
 LOADFUNCS
     ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
     ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
@@ -530,5 +543,6 @@ LOADFUNCS
     ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
     ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
     ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
+    ADDPROC(templist,     "precomp.templist",   "b",    ".string","mode=.string,index=.int,string=.string");
 ENDLOADFUNCS
 
