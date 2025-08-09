@@ -779,8 +779,8 @@ PROCEDURE(stem_stats) {
     }
     printf("Stem Statistics (%llu)\n", tokeni);
     printf("-------------------------------\n");
-    printf(" Stem Size         %d\n", token->table_size);
-    printf(" Load Factor       %.3f %\n",(double) 100*token->entries / token->table_size);
+    printf(" Stem Size         %u\n", token->table_size);
+    printf(" Load Factor       %.3f%%\n",(double) 100*token->entries / token->table_size);
     printf(" Added Entries     %d\n", token->entries);
     printf(" Updated Entries   %d\n", token->updated);
     printf(" Direct Inserts    %d\n", token->entries - token->collisionW);
@@ -791,7 +791,7 @@ PROCEDURE(stem_stats) {
     printf(" Chained Reads     %d\n", token->collisionR);
     printf(" Max Chain Depth   %d\n", token->max_chain_depth);
     printf(" Avg Probe Depth   %.2f\n", (double)((token->reads + token->collisionR) / token->readtry));
-    printf(" Chain Load (%)    %.2f%%\n", 100.0 * token->collisionW / token->entries);
+    printf(" Chain Load (%%)    %.2f%%\n", 100.0 * token->collisionW / token->entries);
     RETURNINTX(0);
     ENDPROC
 }
