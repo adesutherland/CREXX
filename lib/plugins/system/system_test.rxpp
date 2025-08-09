@@ -2,40 +2,12 @@
 options levelb
 import system
 import rxfnsb
-##mainargs(allin)
+
 ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */
 
-##define strlen(len,string)                   {len=0;         assembler strlen len,string}
+##define strlen(len,string)  {len=0;  assembler strlen len,string}
+say 1234
 
-myString='C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system\abc'
-
-say "'"substr("foobar",8,3)"'"   ## \=   "   "    then
-
-exit
-result=''
-position=8
-mlen=10
-count=1000000
-
-
-start=time('us')
-do i=1 to count
-   result=substro(myString,position)
-end
-elp=(time('us')-start)/1000000
-say "elapsed  "elp
-say 'old SUBSTR "'result'"'
-start=time('us')
-do i=1 to count
-   result=substr(myString,position)
-end
-elp=(time('us')-start)/1000000
-say 'new SUBSTR "'result'"'
-say "elapsed    "elp
-
-exit
-
-/*
 say ' current c2x presentation, do not handle UTF8 > 1 byte'
 say copies('-',100)
 say "René:       "c2x("René")
@@ -152,6 +124,3 @@ c2xV5: procedure = .string
   fz="UTFV2"
   assembler hexchar fz,from,offset
 return fz
-*/
-
-

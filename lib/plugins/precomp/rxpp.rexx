@@ -20,7 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=1
+verbose=0
 
   ElapsedTime=time('us')
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
@@ -60,12 +60,14 @@ end
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
   call writeall outbuf,outfile,-1                   ## write generated output to file
-  if verbose then say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
-  if pos(' vars',cflags)>0 then call printvars
-  if pos(' maclist',cflags)>0 then call printmacs
-  if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
-  elapsedTime=(time('us')-elapsedtime)
-  if verbose then say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
+  if verbose then do
+     say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
+     if pos(' vars',cflags)>0 then call printvars
+     if pos(' maclist',cflags)>0 then call printmacs
+     if pos(' includes',cflags)>0 then call list_array included_files,-1,-1,'Include Files'
+     elapsedTime=(time('us')-elapsedtime)
+     say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
+  end
 return 0
 /* ------------------------------------------------------------------
  * Pass one load source file and determine preprocessor statements
@@ -96,16 +98,13 @@ RXPPPassOne: procedure = .int
   end
 
   linx=ffind(source,1,'options levelb')
-  if linx>0 then do
-     source.linx='/* dropped import */'
-     stype.linx='X'
-  end
+  if linx>0 then stype.linx='X'         /* Skip line */
   linx=ffind(source,1,'import rxfnsb')
-  if linx>0 then do
-     source.linx='/* dropped import */'
-     stype.linx='X'
-  end
+  if linx>0 then stype.linx='X'         /* Skip line */
+  linx=ffind(source,1,'/* REXX */')
+  if linx>0 then stype.linx='X'         /* Skip line */
   call insert_array source,1,3
+  call insert_array stype,1,3
   source.1='/* RXPP */'
   source.2='options levelb'
   source.3='import rxfnsb'
