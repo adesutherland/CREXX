@@ -358,6 +358,7 @@ struct Symbol {
     void *ast_node_array;
     Scope *scope;
     Scope *defines_scope;
+    char needs_default_initiation; /* Set if the compiler should include a default initiator */
     ValueType type;       /* Value Type */
     size_t value_dims;    /* Value dimensions */
     int *dim_base;        /* Array of starting element number for array dimension - malloced or zero */
@@ -370,10 +371,11 @@ struct Symbol {
     char has_vargs;    /* If it has variable arguments (for a procedure) */
     char exposed;      /* Is the symbol exposed */
     char is_arg;       /* Is an argument */
-    char is_ref_arg;   /* Is  reference arg */
+    char is_ref_arg;   /* Is a reference arg */
     char is_opt_arg;   /* Is an optional arg */
     char is_const_arg; /* Is a constant arg */
-    char meta_emitted; /* Has the emitter output the symbol's metadata yet */
+    char meta_emitted; /* Has the emitter output the symbol's metadata */
+    char init_emitted; /* Has the emitter output the symbol's default inititator */
 };
 
 /* Scope Factory */

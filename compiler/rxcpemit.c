@@ -1294,7 +1294,6 @@ static char* type_to_prefix(ValueType value_type) {
 
 /* Adds Symbol metadata */
 static void meta_set_symbol(Symbol *symbol, void *payload) {
-    ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
     char* buffer;
@@ -1368,6 +1367,73 @@ static void add_variable_metadata(ASTNode* node) {
 
     /* Sets the Procedure's Symbols from metadata */
     scp_4all(scope, meta_set_symbol, node);
+}
+
+/* Adds Symbol default initiator */
+static void add_initiator(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+    char *type;
+    SymbolNode *symbol_node;
+
+    if (symbol->needs_default_initiation && !symbol->init_emitted) {
+        symbol->init_emitted = 1;
+
+        if (symbol->symbol_type == CONSTANT_SYMBOL) {
+            /* Ignore symbols that were optimised with constant folding */
+            return;
+        }
+
+        /* Output Variable metadata here - as it is "locked in" and has been initiated */
+        if (symbol->register_num >= 0) { // Should be true
+            symbol_fqn = sym_frnm(symbol);
+            type = sym_2tp(symbol);
+            buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
+                             symbol_fqn,
+                             type,
+                             symbol->register_type, symbol->register_num
+            );
+
+            /* Add the metadata to the output fragment */
+            output_append_text(output,buffer);
+
+            free(buffer);
+            free(type);
+            free(symbol_fqn);
+            symbol->meta_emitted = 1;
+        }
+
+        /* Add source metadata */
+        symbol_node = sym_trnd(symbol, 0);
+        if (symbol_node) {
+            buffer = get_metaline(symbol_node->node->parent);
+            output_append_text(output,buffer);
+            free(buffer);
+        }
+
+        /* We need to clear the register */
+        char* init = mprintf("   null %c%d\n", symbol->register_type, symbol->register_num);
+        output_append_text(output, init);
+        free(init);
+    }
+}
+
+/* Add Initiators for variables in the node's scope  */
+static void add_scope_initiators(ASTNode* node) {
+
+    Scope *scope = node->scope;
+    ASTNode *n = node;
+
+    while (!scope) {
+        n = n->parent;
+        if (!n) return; /* No scope ... ! */
+        scope = n->scope;
+    }
+
+    /* Add Initiators */
+    scp_4all(scope, add_initiator, node);
 }
 
 /* Adds and exposed Global Variable Symbol */
@@ -1641,13 +1707,14 @@ static walker_result emit_walker(walker_direction direction,
     char ret_type;
     int ret_num;
 
+    child1 = node->child;
+    if (child1) child2 = child1->sibling;
+    else child2 = NULL;
+    if (child2) child3 = child2->sibling;
+    else child3 = NULL;
+
     if (direction == out) {
         /* OUT - BOTTOM UP */
-        child1 = node->child;
-        if (child1) child2 = child1->sibling;
-        else child2 = NULL;
-        if (child2) child3 = child2->sibling;
-        else child3 = NULL;
 
         /* Operator and type prefix */
         op = 0;
@@ -1668,7 +1735,8 @@ static walker_result emit_walker(walker_direction direction,
                                     payload->context->file_name,
                                     tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-                node->output = output_fs(buf);
+                if (node->output) output_prepend_text(buf, node->output);
+                else node->output = output_fs(buf);
                 free(buf);
 
                 n = child1;
@@ -1689,7 +1757,8 @@ static walker_result emit_walker(walker_direction direction,
                                     payload->context->file_name,
                                     payload->globals);
 
-                node->output = output_fs(buf);
+                if (node->output) output_prepend_text(buf, node->output);
+                else node->output = output_fs(buf);
                 free(buf);
 
                 /* Add exposed global variables */
@@ -1709,7 +1778,8 @@ static walker_result emit_walker(walker_direction direction,
                 char *buf = mprintf("\n/* Imported Declaration from file: %s */",
                                     node->file_name);
 
-                node->output = output_fs(buf);
+                if (node->output) output_prepend_text(buf, node->output);
+                else node->output = output_fs(buf);
                 free(buf);
 
                 n = child1;
@@ -1749,7 +1819,8 @@ static walker_result emit_walker(walker_direction direction,
                                       args /* Args */
                         );
                     }
-                    node->output = output_fs(buf);
+                    if (node->output) output_prepend_text(buf, node->output);
+                    else node->output = output_fs(buf);
                     free(type);
                     free(args);
                     free(buf);
@@ -1782,7 +1853,8 @@ static walker_result emit_walker(walker_direction direction,
                                       (int) node->node_string_length, node->node_string, /* Function name */
                                       args /* Args */);
                     }
-                    node->output = output_fs(buf);
+                    if (node->output) output_prepend_text(buf, node->output);
+                    else node->output = output_fs(buf);
                     free(type);
                     free(args);
                     free(buf);
@@ -1813,7 +1885,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case ARGS:
             case INSTRUCTIONS:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 n = child1;
                 while (n) {
                     if (n->output) output_concat(node->output, n->output);
@@ -1825,7 +1897,8 @@ static walker_result emit_walker(walker_direction direction,
             case ARG:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
                 if (node->child->node_type == VAR_TARGET || node->child->node_type == VAR_REFERENCE) {
                     /* Add Variable Metadata */
@@ -1967,7 +2040,8 @@ static walker_result emit_walker(walker_direction direction,
             case CALL:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -1986,10 +2060,11 @@ static walker_result emit_walker(walker_direction direction,
                 /* META */
                 /*
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else ode->output = output_fs(comment_meta);
                 free(comment_meta);
                 */
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
 
                 /* Add Variable Metadata */
                 add_variable_metadata(node);
@@ -2092,7 +2167,7 @@ static walker_result emit_walker(walker_direction direction,
                 op="concat";
             case OP_SCONCAT:
                 if (!op) op="sconcat";
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 /* One or other of the operands may be a constant */
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
@@ -2199,7 +2274,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_MOD:
                 if (!op) op="mod";
 
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 /* One or other of the operands may be a constant */
                 /* If the register is not set then the child is a constant */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
@@ -2372,7 +2447,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_AND:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
 
@@ -2468,7 +2543,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_OR:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 if (node->register_num == child1->register_num &&
                     node->register_type == child1->register_type) {
 
@@ -2565,7 +2640,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_ARG_EXISTS:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 temp1 = mprintf("   getandtp %c%d,%c%d,%d\n",
                                 node->register_type,
                                 node->register_num,
@@ -2578,7 +2653,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_ARGS:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 /* Get the total args and subtract the fixed args of the procedure we are in */
                 temp1 = mprintf("   icopy %c%d,a0\n"
                                 "   isub %c%d,%c%d,%d\n",
@@ -2596,7 +2671,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_ARG_VALUE:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
 
                 /* Link the argument */
                 if (child1->register_num == DONT_ASSIGN_REGISTER) {
@@ -2675,7 +2750,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_ARG_IX_EXISTS:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
 
                 /* This is really a compatability operator - if the argument number given is smaller or equal
                  * to the number of variable arguments then it does exist otherwise it doesn't. If smaller than 1
@@ -2741,7 +2816,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_NOT:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 if (child1->output) output_concat(node->output, child1->output);
                 temp1 = mprintf("   not %c%d,%c%d\n",
                                 node->register_type,
@@ -2755,7 +2830,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_NEG:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 if (child1->output) output_concat(node->output, child1->output);
                 if (node->value_type == TP_FLOAT) {
                     temp1 = mprintf("   fsub %c%d,0.0,%c%d\n",
@@ -2785,7 +2860,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_PLUS:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 if (child1->output) output_concat(node->output, child1->output);
                 if (node->register_type != child1->register_type ||
                     node->register_num != child1->register_num) {
@@ -2810,7 +2885,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* If we are a define no code is generated */
                 if (node->parent->node_type == DEFINE) break;
 
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
 
                 if (child1) {
                     /* We are an array */
@@ -2818,18 +2893,6 @@ static walker_result emit_walker(walker_direction direction,
                     char from_reg_type = node->symbolNode->symbol->register_type;
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
-
-                    /* If this is a first use of the array (where it is implicitly defined), then we need to
-                     * clear the register (especially the number of attributes) */
-                    if (node->high_ordinal != -1) { /* Skip if we are a weird optimiser added node */
-                        int symbol_definition_ordinal = sym_lord(node->symbolNode->symbol);
-                        if (symbol_definition_ordinal == node->low_ordinal) {
-                            // This is where the symbol is implicitly defined */
-                            temp1 = mprintf("   null %c%d\n", from_reg_type, from_reg_num);
-                            output_append_text(node->output, temp1);
-                            free(temp1);
-                        }
-                    }
 
                     /* Now we need to link the array elements */
                     while (child1) {
@@ -2989,7 +3052,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case NOVAL:
                 /* Set the node output as null */
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 break;
 
             case CONSTANT:
@@ -3011,7 +3074,8 @@ static walker_result emit_walker(walker_direction direction,
                                     temp2);
 
                     /* Set the node output */
-                    node->output = output_fs(temp1);
+                    if (node->output) output_append_text(node->output, temp1);
+                    else node->output = output_fs(temp1);
                     free(temp1);
                     free(temp2);
 
@@ -3025,7 +3089,8 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3109,25 +3174,11 @@ static walker_result emit_walker(walker_direction direction,
             }
             break;
 
-            case DEFINE:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                /* For a definition we need to clear the register */
-                temp1 = mprintf("   null %c%d\n", child1->symbolNode->symbol->register_type, child1->symbolNode->symbol->register_num);
-                output_append_text(node->output, temp1);
-                free(temp1);
-                break;
-
             case ASSIGN:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3155,14 +3206,15 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case NOP:
-                node->output = output_f();
+                if (!node->output) node->output = output_f();
                 break;
 
             case ADDRESS:
             case SAY:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3191,7 +3243,8 @@ static walker_result emit_walker(walker_direction direction,
             case RETURN:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3221,7 +3274,8 @@ static walker_result emit_walker(walker_direction direction,
             case IF:
                 /* Add source metadata */
                 comment_meta = get_metaline_range(node, child1);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 if (child1->output) output_concat(node->output, child1->output);
@@ -3276,7 +3330,8 @@ static walker_result emit_walker(walker_direction direction,
                 /* child1 is the REPEAT node, child2 is the INSTRUCTIONS */
 
                 comment_meta = get_metaline_token_at(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Init */
@@ -3322,7 +3377,7 @@ static walker_result emit_walker(walker_direction direction,
                  * loopstartchecks = Loop iteration beginning exit checks
                  * loopinc = Loop iteration increments
                  * loopendchecks = Loop iteration end exit checks */
-                node->output = output_f(); /* Assign / init instruction */
+                if (!node->output) node->output = output_f(); /* Assign / init instruction */
                 node->loopstartchecks = output_f(); /* Begin Loop exit checks */
                 node->loopinc = output_f(); /* Loop increments */
                 node->loopendchecks = output_f(); /* End Loop exit checks */
@@ -3362,7 +3417,8 @@ static walker_result emit_walker(walker_direction direction,
                  * loopinc = Loop iteration increments
                  * loopendchecks = Loop iteration end exit checks */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 output_concat(node->output, child1->output);
                 if (child1->register_num != node->register_num ||
                     child1->register_type != node->register_type) {
@@ -3396,7 +3452,8 @@ static walker_result emit_walker(walker_direction direction,
                  * loopendchecks = Loop iteration end exit checks */
 
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 output_concat(node->output, child1->output);
 
                 /* Need to determine the sign of the BY */
@@ -3432,7 +3489,7 @@ static walker_result emit_walker(walker_direction direction,
                     }
                     n = n->sibling;
                 }
-                /* n is set the BY node (or NULL if n*/
+                /* n is set by the BY node */
 
                 /* If the REPEAT has a TO it has an ASSIGN and its register
                  * number will have been set to the ASSIGN Variable */
@@ -3518,7 +3575,8 @@ static walker_result emit_walker(walker_direction direction,
                 if (child1) {
                     /* BY explicitly stated */
                     comment_meta = get_metaline(node);
-                    node->output = output_fs(comment_meta);
+                    if (node->output) output_prepend_text(comment_meta, node->output);
+                    else node->output = output_fs(comment_meta);
                     output_concat(node->output, child1->output);
 
                     node->loopinc = output_fs(comment_meta);
@@ -3612,7 +3670,8 @@ static walker_result emit_walker(walker_direction direction,
                 /* Leave Loop */
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3628,7 +3687,8 @@ static walker_result emit_walker(walker_direction direction,
                 /* Iterate Loop */
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
-                node->output = output_fs(comment_meta);
+                if (node->output) output_prepend_text(comment_meta, node->output);
+                else node->output = output_fs(comment_meta);
                 free(comment_meta);
 
                 /* Add Variable Metadata */
@@ -3641,6 +3701,20 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             default:;
+        }
+    }
+
+    else {
+        /* IN - TOP DOWN */
+
+        switch (node->node_type) {
+            case INSTRUCTIONS:
+                if (!node->output) node->output = output_f();
+                add_scope_initiators(node);
+                break;
+
+            default:
+                break;
         }
     }
 

@@ -401,6 +401,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->dim_base = 0;
     symbol->dim_elements = 0;
     symbol->value_class = 0;
+    symbol->needs_default_initiation = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
     memcpy(symbol->name, name, name_length);
@@ -408,6 +409,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->register_type = 'r';
     symbol->symbol_type = VARIABLE_SYMBOL;
     symbol->meta_emitted = 0;
+    symbol->init_emitted = 0;
     symbol->fixed_args = 0;
     symbol->has_vargs = 0;
     symbol->exposed = 0;
