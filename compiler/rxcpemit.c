@@ -1387,7 +1387,7 @@ static void add_initiator(Symbol *symbol, void *payload) {
         }
 
         /* Output Variable metadata here - as it is "locked in" and has been initiated */
-        if (symbol->register_num >= 0) { // Should be true
+        if (symbol->register_num >= 0 && !symbol->meta_emitted) { // Should be true
             symbol_fqn = sym_frnm(symbol);
             type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",

@@ -1727,6 +1727,12 @@ static void variable_initiation(Symbol *symbol, void *payload) {
 
     if (symbol->symbol_type != VARIABLE_SYMBOL) return; /* Not a variable */
 
+    /* Is this an argument? */
+    if (symbol->is_arg) {
+        /* Arguments are initialized by the caller */
+        return;
+    }
+
     /* Is this a global variable? */
     if ( scope->defining_node->node_type == PROGRAM_FILE) {
         /* Global variable unlike locals these registers are initialised by the VM
@@ -2725,7 +2731,7 @@ static walker_result decimal2float_walker(walker_direction direction,
     else {
         /* OUT - BOTTOM UP */
         switch (node->node_type) {
-            /* TODO remove digits instructons -> NOP as these are irrelevent for float - consider a warning */
+            /* TODO remove digits instructons -> NOP as these are irrelevant for float - consider a warning */
             case DECIMAL:
                 context->changed = 1;
                 node->node_type = FLOAT;
