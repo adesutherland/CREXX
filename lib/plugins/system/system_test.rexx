@@ -1,38 +1,14 @@
 /* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 5 Aug 2025  at 20:25:02
+ * PRE Compiled on 9 Aug 2025  at 14:40:33
  * ----------------------------------------------------------------------
  */
+options levelb
 import rxfnsb
-/* dropped import */
 import system
-/* dropped import */
-##mainargs(allin)
 /* ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */ */
-/* ##define strlen(len,string)                   {len=0;         assembler strlen len,string} D*/
-myString='C:\Users\PeterJ\CLionProjects\CREXX\250623\cmake-build-debug\lib\plugins\system\abc'
-say "'"substr("foobar",8,3)"'"   ## \=   "   "    then
-exit
-result=''
-position=8
-mlen=10
-count=1000000
-start=time('us')
-do i=1 to count
-   result=substro(myString,position)
-end
-elp=(time('us')-start)/1000000
-say "elapsed  "elp
-say 'old SUBSTR "'result'"'
-start=time('us')
-do i=1 to count
-   result=substr(myString,position)
-end
-elp=(time('us')-start)/1000000
-say 'new SUBSTR "'result'"'
-say "elapsed    "elp
-exit
-/*
+/* ##define strlen(len,string)  {len=0;  assembler strlen len,string} D*/
+say 1234
 say ' current c2x presentation, do not handle UTF8 > 1 byte'
 say copies('-',100)
 say "René:       "c2x("René")
@@ -87,7 +63,7 @@ say "★ 3 bytes:  "c2xV5("★")
 say "😀 4 bytes: "c2xV5("😀")
 exit
 c2xV1: procedure = .string
-arg from = .string
+  arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -99,7 +75,7 @@ arg from = .string
   end
 return strip(stx)
 c2xV2: procedure = .string
-arg from = .string
+  arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -111,7 +87,7 @@ arg from = .string
   end
 return stx
 c2xV3: procedure = .string
-arg from = .string
+  arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -123,7 +99,7 @@ arg from = .string
   end
 return stx
 c2xV4: procedure = .string
-arg from = .string
+  arg from = .string
   stx=""
   len=0
   assembler strlen len,from
@@ -135,7 +111,7 @@ arg from = .string
   end
 return strip(stx)
 c2xV5: procedure = .string
-arg from = .string
+  arg from = .string
   len=0
   assembler strlen len,from
   if len=0 then return ""
@@ -143,4 +119,3 @@ arg from = .string
   fz="UTFV2"
   assembler hexchar fz,from,offset
 return fz
-*/

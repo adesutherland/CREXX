@@ -745,6 +745,7 @@ return line
    name    = macros_mname.i
    args    = macros_margs.i
    body    = macros_mbody.i
+
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    do while pos(name, uline, callPos + 1) > 0
@@ -767,14 +768,15 @@ return line
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
        bodyExp = body
-       xargs   = translate(args, , ',')
+     ##  xargs   = translate(args, , ',')
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
-       bodyExp = replaceFixArg(bodyExp, xargs)
+       bodyExp = replaceFixArg(bodyExp, name,args)
+       if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
        line=insertatc(bodyexp,line,callpos,callLen)
        uline   = upper(line)         /* update uline for repetition */
        callPos = callPos - 1        /* set next start point */
-   end
+    end
 return line
 /* ------------------------------------------------------------------
  * Inject pre-compiler variable into line
@@ -800,15 +802,49 @@ return line2change
  * ------------------------------------------------------------------
  */
 replaceFixArg: Procedure=.string
-  arg bodyexp=.string,xargs=.string
+  arg bodyexp=.string,macname=.string, xargs=.string
+  iargs=xargs
+  xargs   = translate(xargs, , ',')
   wrds=words(xargs)
+## First take the positional parameters
+  keypositional=0
   do k=1 to wrds
   ## !? workaround as global array is possibly reset
-      callargs.k=templist('GET',k,"")
+      callargs.k=templist('GET',k,"")       ### +++++++++++ remove
       aname = word(xargs, k)
+      if pos('=',aname)>0 then do
+         keypositional=k
+         iterate
+      end
+      if keypositional>0 then do
+         say 'CRX0960E+['time('l')'] positional parameters must not defined after keyword parameters: 'macname||iargs')'
+         return '+++ SyntaxError: positional argument follows keyword argument 'macname||iargs')'
+      end
       aval  = callargs.k
       bodyExp = replaceArg(bodyExp, aname, aval)
   end
+
+  do k=1 to wrds        ## run through the macroc header definition
+    ## !? workaround as global array is possibly reset
+        aname = word(xargs, k)           ## aname is the keyword definition in the macro header
+        ppmac=pos('=',aname)             ## this identify the they parameter in the macro parm as a keyword having a = sign
+        if ppmac=0 then iterate
+        aname=translate(aname,,'=')
+        adefault=word(aname,2)
+        aname=word(aname,1)
+        if adefault='' then adefault=aname
+        do j=1 to wrds                  ## find the appropriate keyword, sequence is free
+           if pos(aname'=',templist('GET',j,""))>0 then leave    ### +++++++++++ modify
+        end
+        callargs.j=templist('GET',j,"")   ### +++++++++++ remove
+        aval  = callargs.j               ## identifies the call of the macro
+        if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
+        else do                               ## if so check if the keyword call is also in the value clause
+            aval=translate(aval,,'=')
+            aval=word(aval,2)
+        end
+        bodyExp = replaceArg(bodyExp, aname, aval)
+    end
 return bodyExp
 /* ------------------------------------------------------------------
  * Process Variadic macros
@@ -992,12 +1028,18 @@ parseArgList: procedure=.int
   i = 1
   depth = 0
   token = ''
+  ## +++++++++++++++ remove after stem problem solved
+  do k=1 to 16
+     call templist 'PUT',k,''    ### +++++++++++ remove
+  end
+   ## +++++++++++++++ remove after stem problem solved
+  call templist 'PUT',i,callargs.i
   do j = 1 to length(argstr)
     c = substr(argstr, j, 1)
     if c = ',' & depth = 0 then do
       callargs.i = strip(token)
       token = ''
-      call templist 'PUT',i,callargs.i
+      call templist 'PUT',i,callargs.i         ### +++++++++++ remove
       i = i + 1
     end
     else do
@@ -1008,7 +1050,7 @@ parseArgList: procedure=.int
   end
   if strip(token) <> '' then do
      callargs.i = strip(token)
-     call templist 'PUT',i,callargs.i
+     call templist 'PUT',i,callargs.i      ### +++++++++++ remove
   end
 return i
 /* ------------------------------------------------------------------

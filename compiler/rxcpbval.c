@@ -1571,11 +1571,8 @@ static walker_result exposed_symbols_walker(walker_direction direction,
     return result_normal;
 }
 
-/*
- * Step 3 - Validate Symbols
- */
-
-/* This is called for every symbol */
+/* Step 3 - Validate Symbols
+   This is called for every symbol */
 static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     Scope* scope = (Scope*)payload;
     SymbolNode *defining_node_link;
@@ -1719,11 +1716,56 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     }
 }
 
+/* Step 3.1 - Determine if variables need initialisation */
+static void variable_initiation(Symbol *symbol, void *payload) {
+    Scope* scope = (Scope*)payload;
+    SymbolNode *defining_node_link;
+
+    if (symbol->needs_default_initiation) return; /* Already determined */
+
+    if (symbol->type == TP_UNKNOWN) return; /* Not ready to be determined */
+
+    if (symbol->symbol_type != VARIABLE_SYMBOL) return; /* Not a variable */
+
+    /* Is this an argument? */
+    if (symbol->is_arg) {
+        /* Arguments are initialized by the caller */
+        return;
+    }
+
+    /* Is this a global variable? */
+    if ( scope->defining_node->node_type == PROGRAM_FILE) {
+        /* Global variable unlike locals these registers are initialised by the VM
+         * and for complex cases (objects) the initialisation is done by the constructor,
+         * so this is a NOP */
+        return;
+    }
+
+    /* An initialiser is needed if the variable is an array */
+    if (symbol->value_dims > 0) {
+        symbol->needs_default_initiation = 1;
+        return;
+    }
+
+    /* An initialiser is needed if the variable is defined not assigned (x = .int) */
+    defining_node_link = sym_trnd(symbol, 0);
+    if (defining_node_link->node->parent->node_type == DEFINE) {
+        symbol->needs_default_initiation = 1;
+        return;
+    }
+}
+
 static void validate_symbols(Scope* scope) {
     int i;
     if (!scope) return;
 
+    /* Validate Symbol */
     scp_4all(scope, validate_symbol_in_scope, scope);
+
+    /* Handle variable implicit initiation */
+    scp_4all(scope, variable_initiation, scope);
+
+    /* Do sub scopes */
     for (i=0; i < scp_noch(scope); i++) {
         validate_symbols(scp_chd(scope, i));
     }
@@ -2689,7 +2731,7 @@ static walker_result decimal2float_walker(walker_direction direction,
     else {
         /* OUT - BOTTOM UP */
         switch (node->node_type) {
-            /* TODO remove digits instructons -> NOP as these are irrelevent for float - consider a warning */
+            /* TODO remove digits instructons -> NOP as these are irrelevant for float - consider a warning */
             case DECIMAL:
                 context->changed = 1;
                 node->node_type = FLOAT;
@@ -2721,7 +2763,6 @@ void rxcp_val(Context *context) {
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
 
     // Initial checks walker will have set the options
-    if (context->debug_mode) pdot_tree(context->ast, "astgraph00", context->file_name);
     if (context->decimal)  {
         /* decimal option set - this walker converts flaat node types to decimal */
         ast_wlkr(context->ast, float2decimal_walker, (void *) context);
@@ -2729,7 +2770,6 @@ void rxcp_val(Context *context) {
         /* binary option set - this walker converts decimal node types to binary */
         ast_wlkr(context->ast, decimal2float_walker, (void *) context);
     }
-    if (context->debug_mode) pdot_tree(context->ast, "astgraph01", context->file_name);
 
     /* Adds rxsysb library (e.g. for ADDRESS and EXIT) */
     context->current_scope = 0;

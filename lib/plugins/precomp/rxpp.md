@@ -16,6 +16,8 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 * [🔧 What is RXPP?](#-what-is-rxpp)
 * [💪 What RXPP Macros Do](#-what-rxpp-macros-do)
 * [✅ Macro Definition](#-macro-definition)
+* [🔤 Parameter Replacement Rules](#-parameter-replacement-rules)
+* [🆕 Keyword Parameters in Macros](#-keyword-parameters-in-macros)
 * [🤖 Macro Invocation](#-macro-invocation)
 * [📥 Macro Inclusion](#-macro-inclusion)
 * [📊 How It Works Internally](#-how-it-works-internally)
@@ -179,7 +181,137 @@ myStem_values.10 = ''
 - Bare parameter names → replaced only at identifier boundaries.
 - Parameter names followed by `##` → replaced always, with `##` removed.
 
+---
 
+## 🆕 Keyword Parameters in Macros
+
+RXPP now supports **keyword parameters** in macro definitions.  
+These work similarly to keyword arguments in many programming languages:  
+they appear **after** all positional parameters and may have default values.
+
+---
+
+### 📜 Syntax
+
+```rexx
+##define MACRONAME(pos1, pos2, ..., key1=default, key2=) {macro body}
+```
+
+- **Positional parameters**: listed first, no `=` in their declaration.
+- **Keyword parameters**: must follow positional parameters, declared with `=`.
+  - A value after `=` is the **default** if not provided in the macro call.
+  - If nothing follows `=`, the default is an **empty string**.
+
+---
+
+### 📌 Rules
+
+1. **Ordering matters** — all positional parameters must be declared first, followed by all keyword parameters.
+2. In a macro call:
+  - Positional arguments are assigned in order.
+  - Remaining arguments must be `name=value` pairs matching keyword parameters.
+3. Defaults:
+  - If a keyword parameter is not specified in the call, its default value is used.
+  - Defaults can be quoted strings, numbers, or empty.
+4. **Validation**:
+  - Missing positional arguments cause a preprocessor error.
+  - Unknown keyword names cause a preprocessor error.
+  - Positional parameters **cannot** appear after a keyword parameter in the definition.
+
+---
+
+### 📦 Example: Defaults & Overrides
+
+```rexx
+##define myMacro(a,b,c,name='Fred',key=) {len=a; len2=b; mykey=key; len3=c; myname=name}
+
+-- Using defaults:
+myMacro(5,10,54321)
+```
+
+**Expansion:**
+```rexx
+len=5
+len2=10
+mykey=
+len3=54321
+myname='Fred'
+```
+
+---
+
+### 📦 Example: Overriding keywords
+
+```rexx
+myMacro(5,10,54321,key=42,name='George')
+```
+
+**Expansion:**
+```rexx
+len=5
+len2=10
+mykey=42
+len3=54321
+myname='George'
+```
+
+---
+
+### 📦 Example: Mixed order in call
+
+Keyword arguments may appear in any order **after** all positional arguments:
+
+```rexx
+myMacro(5,10,54321,name='Anna',key='X')
+myMacro(5,10,54321,key='X',name='Anna')   -- Same result
+```
+
+---
+
+### 💡 Summary Table
+
+| Definition Form | Allowed? | Notes |
+|-----------------|----------|-------|
+| `##define m(a,b,key=)` | ✅ | 2 positional, 1 keyword |
+| `##define m(a,key=,b)` | ❌ | Positional after keyword not allowed |
+| `##define m(a=1,b=2)`  | ✅ | All keyword parameters (no positional) |
+
+---
+
+## 📊 Parsing Positional vs Keyword Parameters
+
+RXPP parses the `##define` argument list **left-to-right** and builds two sets:
+
+- `positional[]` — parameters without `=`
+- `keywords{name}` — parameters declared with `=` and optional default
+
+Once the parser sees the **first `=`**, it switches into **keyword mode**. From then on, all parameters must be keyword form.
+
+---
+
+
+### 🧪 Valid & Invalid Examples
+
+```rexx
+/* Definition */
+##define myMacro(a,b,c,name='Fred',key=) { ... }
+
+/* ✅ OK */
+myMacro(1,2,3)
+myMacro(1,2,3, name='Ann')
+myMacro(1,2,3, key=99, name='Ann')
+
+/* ❌ Error: positional after keyword */
+myMacro(1,2, name='X', 3)
+
+/* ❌ Error: missing positional */
+myMacro(1,2)
+
+/* ❌ Error: unknown keyword */
+myMacro(1,2,3, who=4)
+```
+
+---
 
 ## 🤖 Macro Invocation
 
