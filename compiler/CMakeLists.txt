@@ -54,7 +54,7 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 
 add_executable(rxc rxc_main.c)
-target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual m)
+target_link_libraries(rxc rxclib machine avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual m ${CMAKE_DL_LIBS}) 
 
 add_custom_target(rxccopy ALL DEPENDS rxc)
 

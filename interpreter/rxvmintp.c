@@ -4897,6 +4897,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 PUTSTRLEN(op1R, length);
 #endif
             noChars:
+		;
             }
             DISPATCH
 

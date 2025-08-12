@@ -33,7 +33,7 @@ set_target_properties(mc_decimal_dynamic PROPERTIES OUTPUT_NAME mc_decimal)
 # Add the decnumber static plugin library - with auto linking and initialising of the plugin
 add_static_rxvmplugin_target(mc_decimal mc_decimal.c)
 target_include_directories(mc_decimal PRIVATE decnumber)
-target_link_libraries(mc_decimal decnumber)
+target_link_libraries(mc_decimal decnumber ${CMAKE_DL_LIBS})
 
 # Add the static test harness executable - with auto linking and initialising of the plugin
 add_executable(mc_decimal_test_harness mc_decimal_sanity_harness_test.c)
@@ -49,12 +49,12 @@ add_executable(mc_decimal_dyn_test_harness mc_decimal_sanity_harness_test.c)
 target_compile_definitions(mc_decimal_dyn_test_harness PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin)
+target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin ${CMAKE_DL_LIBS})
 add_dependencies(mc_decimal_dyn_test_harness mc_decimal_dynamic)
 
 # Add the decnumber static plugin library - with manual linking and initialising
 add_static_rxvmplugin_target(mc_decimal_manual mc_decimal.c)
-target_link_libraries(mc_decimal_manual decnumber)
+target_link_libraries(mc_decimal_manual decnumber ${CMAKE_DL_LIBS})
 # add MANUAL_PLUGIN_LINK to the compile definitions
 target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 
@@ -72,7 +72,7 @@ add_executable(mc_decimal_full_tests mc_decimal_full_tests.c)
 target_compile_definitions(mc_decimal_full_tests PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(mc_decimal_full_tests rxvmplugin)
+target_link_libraries(mc_decimal_full_tests rxvmplugin ${CMAKE_DL_LIBS} )
 add_dependencies(mc_decimal_full_tests mc_decimal_dynamic)
 
 # Enable Testing

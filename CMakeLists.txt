@@ -21,6 +21,9 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 endif ()
 
+find_package(Threads REQUIRED)
+
+
 if(WIN32)
     set(EXE_SUFFIX ".exe")
 else()
