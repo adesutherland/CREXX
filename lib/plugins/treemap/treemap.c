@@ -779,7 +779,7 @@ PROCEDURE(stem_stats) {
     }
     printf("Stem Statistics (%llu)\n", tokeni);
     printf("-------------------------------\n");
-    printf(" Stem Size         %u\n", token->table_size);
+    printf(" Stem Size         %lu\n", token->table_size);
     printf(" Load Factor       %.3f%%\n",(double) 100*token->entries / token->table_size);
     printf(" Added Entries     %d\n", token->entries);
     printf(" Updated Entries   %d\n", token->updated);
