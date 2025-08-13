@@ -493,23 +493,31 @@ PROCEDURE(safe_quote) {
     RETURNSTRX(result);
     ENDPROC
 }
+// this is a case-insensitive version of the pos function
 PROCEDURE(fpos) {
-    char *substring = GETSTRING(ARG0);   // Get the substring to find
-    char *wordstring = GETSTRING(ARG1);  // Get the input string
-    int offset = GETINT(ARG2) - 1;         // Get the offset to start searching
+    char *substring  = strdup(GETSTRING(ARG0));   // Get the substring to find
+    char *wordstring = strdup(GETSTRING(ARG1));  // Get the input string
 
+    int offset = GETINT(ARG2) - 1;         // Get the offset to start searching
+    char *found;
     // Check for NULL input or invalid offset
     if (wordstring == NULL || substring == NULL || offset < 0) {
         RETURNINT(-1); // Return -1 on error
     }
-    if(offset<0) offset=0;
+    if (offset < 0) offset = 0;
     // Adjust the starting point for the search
-    char *found = strstr(wordstring + offset, substring); // Find the first occurrence of the substring
-    if (found != NULL) {
-        RETURNINTX(found - wordstring + 1); // Return the position (1-based index)
-    }
+    substring = strupr_portable(substring);
+    wordstring = strupr_portable(wordstring);
+    if (offset>strlen(wordstring)) found=NULL;
+    else found = strstr(wordstring+offset, substring); // Find the first occurrence of the substring
 
-    RETURNINT(0); // Return 0 if the substring is not found
+    if (found != NULL) {
+         RETURNINT(found - wordstring + 1); // Return the position (1-based index)
+    } else {
+       RETURNINT(0); // Return 0 if the substring is not found
+    }
+    free(substring);
+    free(wordstring);
     ENDPROC;
 }
 char myArray[10][64] = { { '\0' } };
