@@ -1,4 +1,4 @@
-// idlib_api.c — CREXX plugin exposing UUIDv4 + UUIDv7 by including modules
+// id_api.c — CREXX plugin exposing UUIDv4 + UUIDv7 by including modules
 // (-●-●)> dual-licensed WTFPL v2 / MIT
 
 #include <stdio.h>
@@ -183,11 +183,11 @@ PROCEDURE(base58) {
 
 /* --------------------- Registration block --------------------- */
 LOADFUNCS
-    ADDPROC(uuid,   "idlib.uuid",   "b", ".string", "");
-    ADDPROC(uuidt,  "idlib.uuidt",  "b", ".string", "");
-    ADDPROC(uuidv7, "idlib.uuidv7",  "b", ".string", "");
-    ADDPROC(ulid,   "idlib.ulid",    "b", ".string", "");
-    ADDPROC(nanoid, "idlib.nanoid",   "b", ".string", "");
-    ADDPROC(snowflake,"idlib.snowflake","b",".string", "");
-    ADDPROC(base58,"idlib.base58",    "b", ".string", "");
+    ADDPROC(uuid,   "id.uuid",   "b", ".string", "");
+    ADDPROC(uuidt,  "id.uuidt",  "b", ".string", "");
+    ADDPROC(uuidv7, "id.uuidv7",  "b", ".string", "");
+    ADDPROC(ulid,   "id.ulid",    "b", ".string", "");
+    ADDPROC(nanoid, "id.nanoid",   "b", ".string", "");
+    ADDPROC(snowflake,"id.snowflake","b",".string", "");
+    ADDPROC(base58,"id.base58",    "b", ".string", "");
 ENDLOADFUNCS

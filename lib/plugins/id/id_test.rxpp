@@ -1,5 +1,5 @@
 /* Treemap Plugin Test */
-import idlib
+import id
 
 ##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
 
