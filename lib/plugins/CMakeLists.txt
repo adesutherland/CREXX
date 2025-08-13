@@ -14,6 +14,7 @@ add_subdirectory(precomp)
 add_subdirectory(keyaccess)
 add_subdirectory(llist)
 add_subdirectory(treemap)
+add_subdirectory(idlib)
 
 
 
