@@ -22,7 +22,7 @@ essence of REXX:
 CREXX will be targeted to run on VM/370 (a nod to REXX's heritage)
 and it will also run on Linux, Windows, OSX, and z/Architecture.
 
-Please see our [project aims](Project-Aims).
+Please see our [project aims](../../wiki/Project-Aims).
 
 ## Wiki Based Documentation
 
