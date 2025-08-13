@@ -6,9 +6,26 @@
 /* ---------------- time in ms ---------------- */
 #if defined(_WIN32)
 #include <windows.h>
+
+static uint64_t now_ms_snow(void) {
+    FILETIME ft;
+    static void (WINAPI *GetPrecise)(LPFILETIME) = NULL;
+    static int resolved = 0;
+    if (!resolved) {
+        HMODULE h = GetModuleHandleA("kernel32.dll");
+        if (h) GetPrecise = (void (WINAPI*)(LPFILETIME))GetProcAddress(h, "GetSystemTimePreciseAsFileTime");
+        resolved = 1;
+    }
+    if (GetPrecise) GetPrecise(&ft);
+    else GetSystemTimeAsFileTime(&ft);
+    uint64_t t100 = ((uint64_t)ft.dwHighDateTime << 32) | (uint64_t)ft.dwLowDateTime; /* 100ns since 1601 */
+    const uint64_t EPOCH_DIFF_100NS = 116444736000000000ULL;
+    uint64_t ns = (t100 - EPOCH_DIFF_100NS) * 100ULL;
+    return ns / 1000000ULL;
+}
 #else
 #include <sys/time.h>
-  static uint64_t now_ms(void) {
+  static uint64_t now_ms_snow(void) {
     struct timeval tv; gettimeofday(&tv, NULL);
     return (uint64_t)tv.tv_sec * 1000ULL + (uint64_t)(tv.tv_usec / 1000ULL);
   }
@@ -106,7 +123,7 @@ int snowflake_next_u64(uint64_t *out) {
 
     lock_enter();
 
-    uint64_t ms = now_ms();
+    uint64_t ms = now_ms_snow();
     uint64_t rel = (ms >= SNOWFLAKE_EPOCH_MS) ? (ms - SNOWFLAKE_EPOCH_MS) : 0;
 
     /* If clock goes backward, pin to last_ms (monotonic) */
@@ -119,7 +136,7 @@ int snowflake_next_u64(uint64_t *out) {
         g_seq = (uint16_t)((g_seq + 1) & SNOWFLAKE_MAX_SEQ);
         if (g_seq == 0) {
             /* sequence overflow within same ms -> wait next ms */
-            do { ms = now_ms(); } while (ms <= g_last_ms);
+            do { ms = now_ms_snow(); } while (ms <= g_last_ms);
             rel = ms - SNOWFLAKE_EPOCH_MS;
         }
     } else {

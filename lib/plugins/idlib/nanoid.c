@@ -2,24 +2,24 @@
 #include <stdint.h>
 #include <string.h>
 
-/* --------- CSPRNG (Windows / macOS-BSD / Linux / generic) --------- */
+/* --------- csprng_nano (Windows / macOS-BSD / Linux / generic) --------- */
 #if defined(_WIN32)
 #include <windows.h>
 #ifndef RtlGenRandom
 extern BOOLEAN NTAPI SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLength);
 #define RtlGenRandom SystemFunction036
 #endif
-// static int csprng(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }   // defined somewhere else
+static int csprng_nano(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }   // defined somewhere else
 
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include <stdlib.h> /* arc4random_buf */
-  static int csprng(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
+  static int csprng_nano(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
 
 #elif defined(__linux__)
   #include <sys/random.h>
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int csprng_nano(void *buf, size_t len) {
     ssize_t n = getrandom(buf, len, 0);
     if (n == (ssize_t)len) return 1;
     int fd = open("/dev/urandom", O_RDONLY);
@@ -37,7 +37,7 @@ extern BOOLEAN NTAPI SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLen
 #else
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int csprng_nano(void *buf, size_t len) {
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) return 0;
     size_t got = 0;
@@ -70,7 +70,7 @@ static int fill_with_alphabet(char *out, size_t len, const char *alphabet, size_
 
     while (i < len) {
         /* pull fresh randomness */
-        if (!csprng(rnd, sizeof rnd)) return 0;
+        if (!csprng_nano(rnd, sizeof rnd)) return 0;
 
         for (size_t r = 0; r < sizeof rnd && i < len; ++r) {
             uint32_t idx = rnd[r] & mask;

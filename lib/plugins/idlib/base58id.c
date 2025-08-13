@@ -1,24 +1,24 @@
 #include "base58id.h"
 #include <string.h>
 
-/* ----- CSPRNG (Windows / macOS-BSD / Linux / generic) ----- */
+/* ----- csprng_b58 (Windows / macOS-BSD / Linux / generic) ----- */
 #if defined(_WIN32)
 #include <windows.h>
 #ifndef RtlGenRandom
 extern BOOLEAN NTAPI SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLength);
 #define RtlGenRandom SystemFunction036
 #endif
-// static int csprng(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }  // defined somewhere else
+static int csprng_b58(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }  // defined somewhere else
 
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include <stdlib.h>
-  static int csprng(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
+  static int csprng_b58(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
 
 #elif defined(__linux__)
   #include <sys/random.h>
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int csprng_b58(void *buf, size_t len) {
     ssize_t n = getrandom(buf, len, 0);
     if (n == (ssize_t)len) return 1;
     int fd = open("/dev/urandom", O_RDONLY);
@@ -35,7 +35,7 @@ extern BOOLEAN NTAPI SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLen
 #else
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int csprng_b58(void *buf, size_t len) {
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) return 0;
     size_t got = 0;
@@ -101,7 +101,7 @@ static size_t b58_encode(const uint8_t *bytes, size_t len, char *out, size_t out
 int base58id_generate_n(char *out, size_t out_cap, size_t nbytes) {
     if (!out || nbytes == 0 || nbytes > 64) return 0;
     uint8_t buf[64];
-    if (!csprng(buf, nbytes)) return 0;
+    if (!csprng_b58(buf, nbytes)) return 0;
     return b58_encode(buf, nbytes, out, out_cap) > 0;
 }
 
