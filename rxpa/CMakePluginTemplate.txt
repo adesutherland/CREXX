@@ -31,7 +31,7 @@ set(rx_include "\"${CMAKE_BINARY_DIR}/lib/rxfnsb;${CMAKE_CURRENT_BINARY_DIR}\"")
             -I ${REXX_PRE}
             -o ${REXX_SRC}
             -m ${REXX_MACLIB}  > ${REXX_LOG} 2>&1
-            DEPENDS ${REXX_PRE} ${REXX_MACLIB}
+            DEPENDS ${REXX_PRE} ${REXX_MACLIB} rxpp
             WORKING_DIRECTORY ${pluglib}
      )
   endif()
