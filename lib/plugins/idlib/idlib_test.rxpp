@@ -2,12 +2,16 @@
 import idlib
 
 ##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
 do i= 1 to 10
    say 'Loop 'i
    say copies('-',50)
-   say "UUIDV7 "uuidv7()
-   say "UUID   "uuid()   ##
-   say "UUIDT  "uuidt()  ## time based UUID
-   say "ULID   "ulid()   ##
+   say "UUIDV7    "uuidv7()
+   say "UUID      "uuid()   ##
+   say "UUIDT     "uuidt()  ## time based UUID
+   say "ULID      "ulid()   ##
+   say "NANOID    "nanoid()
+   say "SNOWFLAKE "snowflake()
+   say "BASE58    "base58()
    say " "
 end
