@@ -26,4 +26,4 @@ add_test(NAME ${test_rexx}
         )
 
 # Create the static link module
-#add_static_plugin_target(_idlib idlib.c)
+add_static_plugin_target(_idlib idlib.c)
