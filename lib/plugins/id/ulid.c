@@ -10,15 +10,15 @@
 extern BOOLEAN NTAPI SystemFunction036(PVOID RandomBuffer, ULONG RandomBufferLength);
 #define RtlGenRandom SystemFunction036
 #endif
-static int csprng(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }
+static int  csprng_ulid(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) ? 1 : 0; }
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include <stdlib.h> /* arc4random_buf */
-  static int csprng(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
+  static int  csprng_ulid(void *buf, size_t len) { arc4random_buf(buf, len); return 1; }
 #elif defined(__linux__)
   #include <sys/random.h>
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int  csprng_ulid(void *buf, size_t len) {
     ssize_t n = getrandom(buf, len, 0);
     if (n == (ssize_t)len) return 1;
     int fd = open("/dev/urandom", O_RDONLY);
@@ -35,7 +35,7 @@ static int csprng(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) 
 #else
   #include <unistd.h>
   #include <fcntl.h>
-  static int csprng(void *buf, size_t len) {
+  static int  csprng_ulid(void *buf, size_t len) {
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) return 0;
     size_t got = 0;
@@ -50,7 +50,7 @@ static int csprng(void *buf, size_t len) { return RtlGenRandom(buf, (ULONG)len) 
 #endif
 
 /* ---------- time (ms since Unix epoch) ---------- */
-static uint64_t now_ms(void) {
+static uint64_t now_ms_ulid(void) {
 #if defined(_WIN32)
     FILETIME ft;
     static void (WINAPI *GetPrecise)(LPFILETIME) = NULL;
@@ -89,15 +89,15 @@ static int inc_80_be(uint8_t r[10]) {
 int ulid_generate(uint8_t out[16]) {
     if (!out) return 0;
 
-    uint64_t ms = now_ms();
+    uint64_t ms = now_ms_ulid();
 
     if (ms != last_ms) {
-        if (!csprng(last_rand, sizeof last_rand)) return 0;
+        if (! csprng_ulid(last_rand, sizeof last_rand)) return 0;
     } else {
         /* same millisecond: monotonic increment of random field; if overflow, wait next ms and reseed */
         if (!inc_80_be(last_rand)) {
-            do { ms = now_ms(); } while (ms == last_ms);
-            if (!csprng(last_rand, sizeof last_rand)) return 0;
+            do { ms = now_ms_ulid(); } while (ms == last_ms);
+            if (! csprng_ulid(last_rand, sizeof last_rand)) return 0;
         }
     }
     last_ms = ms;

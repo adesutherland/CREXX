@@ -1,4 +1,4 @@
-// idlib_api.c — CREXX plugin exposing UUIDv4 + UUIDv7 by including modules
+// id_api.c — CREXX plugin exposing UUIDv4 + UUIDv7 by including modules
 // (-●-●)> dual-licensed WTFPL v2 / MIT
 
 #include <stdio.h>
@@ -47,6 +47,39 @@
 #include "ulid.h"
 #endif
 #include "ulid.c"
+/* --------------------------------------------------------------------
+   Bring in NANOID API + implementation
+   Files expected next to this file (or in your include path):
+     - nanoid.h
+     - nanoid.c
+-------------------------------------------------------------------- */
+#ifndef NANOID_H
+#include "nanoid.h"
+#endif
+#include "nanoid.c"
+
+/* --------------------------------------------------------------------
+   Bring in SNOWFLAKE API + implementation
+   Files expected next to this file (or in your include path):
+     - snowflake.h
+     - snowflake.c
+-------------------------------------------------------------------- */
+#ifndef SNOWFLAKE_H
+#include "snowflake.h"
+#endif
+#include "snowflake.c"
+
+/* --------------------------------------------------------------------
+   Bring in BASE58 API + implementation
+   Files expected next to this file (or in your include path):
+     - base58.h
+     - base58.c
+-------------------------------------------------------------------- */
+#ifndef BASE58ID_H
+#include "base58id.h"
+#endif
+#include "base58id.c"
+
 
 
 /* ----------------------- CREXX Procedures ----------------------- */
@@ -119,12 +152,42 @@ PROCEDURE(ulid) {
     ENDPROC
 }
 
+PROCEDURE(nanoid) {
+    char s[NANOID_DEFAULT_SIZE + 1];
+    if (nanoid_generate(s)) {
+        RETURNSTR(s);
+    } else {
+        RETURNSTR("ERROR: nanoid_generate failed");
+    }
+    ENDPROC
+}
+PROCEDURE(snowflake) {
+    char s[21];
+    if (snowflake_next_str(s)) {
+        RETURNSTR(s);
+    } else {
+        RETURNSTR("ERROR: snowflake_next failed");
+    }
+    ENDPROC
+}
 
+PROCEDURE(base58) {
+    char s[64]; /* ample room for 16–32 raw bytes */
+    if (base58id_generate(s, sizeof s)) {
+        RETURNSTR(s);
+    } else {
+        RETURNSTR("ERROR: base58id_generate failed");
+    }
+    ENDPROC
+}
 
 /* --------------------- Registration block --------------------- */
 LOADFUNCS
-    ADDPROC(uuid,   "idlib.uuid",   "b", ".string", "");
-    ADDPROC(uuidt,  "idlib.uuidt",  "b", ".string", "");
-    ADDPROC(uuidv7, "idlib.uuidv7",  "b", ".string", "");
-    ADDPROC(ulid,   "idlib.ulid",    "b", ".string", "");
+    ADDPROC(uuid,   "id.uuid",   "b", ".string", "");
+    ADDPROC(uuidt,  "id.uuidt",  "b", ".string", "");
+    ADDPROC(uuidv7, "id.uuidv7",  "b", ".string", "");
+    ADDPROC(ulid,   "id.ulid",    "b", ".string", "");
+    ADDPROC(nanoid, "id.nanoid",   "b", ".string", "");
+    ADDPROC(snowflake,"id.snowflake","b",".string", "");
+    ADDPROC(base58,"id.base58",    "b", ".string", "");
 ENDLOADFUNCS

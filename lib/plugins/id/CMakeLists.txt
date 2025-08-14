@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
-project(idlib_plugin C)
+project(id_plugin C)
 
 set(CMAKE_C_STANDARD 99)
 # -------------------------------------------------------------------------------------------
 # Set plugin_name and test_rexx to match the specific plugin and its corresponding test case.
 # -------------------------------------------------------------------------------------------
-set(plugin_name "idlib")       # add plugin name
-set(test_rexx "idlib_test")    # add rexx to test plugin
+set(plugin_name "id")       # add plugin name
+set(test_rexx "id_test")    # add rexx to test plugin
 set(use_precomp TRUE)            # TRUE pre compile needed, FALSE if not
 
 # ===========================================================================================
@@ -26,4 +26,4 @@ add_test(NAME ${test_rexx}
         )
 
 # Create the static link module
-#add_static_plugin_target(_idlib idlib.c)
+add_static_plugin_target(_id id.c)

@@ -27,3 +27,11 @@ add_test(NAME ${test_rexx}
 
 # Create the static link module
 #add_static_plugin_target(_treemap treemap.c)
+
+# Add include directories - static version
+# target_include_directories(_treemap_static PRIVATE 
+#     ${CMAKE_SOURCE_DIR}/include
+#     ${CMAKE_SOURCE_DIR}/lib/include
+#     ${CMAKE_SOURCE_DIR}/rxpa
+# )
+
