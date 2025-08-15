@@ -8,13 +8,40 @@ import rxfnsb
 /* 1. split string at ',' delimiter */
 say "1. split string at ',' delimiter"
 string='11,2222,3333,44444,555555'
-parse string   with first','second','third','fourth','fifth
+parse  VALUE string   with first','second','third','fourth','fifth','six
 say '1. parm 'first
 say '2. parm 'second
 say '3. parm 'third
 say '4. parm 'fourth
 say '5. parm 'fifth
-say " 123456"
+say '6. parm "'six'"'
+
+parse VAR string  first','second','third','fourth','fifth','six
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+
+/* 1. split string at ',' delimiter */
+say "1. split string at ',' delimiter"
+string='11,2222,3333,44444,555555'
+parse  string   with first','second','third','fourth','fifth','six
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+
+parse string  first','second','third','fourth','fifth','six
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
 
 /* 2. split string at '-' delimiter */
 say "2. split string at '-' delimiter"

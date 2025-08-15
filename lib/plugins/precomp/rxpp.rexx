@@ -1116,21 +1116,29 @@ return i
 
 /* ------------------------------------------------------------------------
  * ##PARSE command, re-parse tokens from template to receive Variable names
+ *   PARSE VAR variable template
+ *   PARSE VALUE 'quoted-value' [WITH] template
+ *   PARSE VALUE variable [WITH] template
  * ------------------------------------------------------------------------
  */
 parsevar: Procedure=.int
   arg lino=.int, parseLine=.string
+  say 123 parseLine
+ ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
+ ##                1w  2w   3w     4w            1w    2w     3w                4w
+ ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
+ ##                1w   2w         3w        1w      2w                         3w
+  pmode=upper(word(parseLine,2))         ## check if we have a VALUE or VAR clause
+  if pmode='VALUE' | pmode= 'VAR' then ppi=wordindex(parseLine,4)  ## set behind VALUE/VAR clause, maybe there is the WITH clause
+  else ppi=wordindex(parseLine,3)  ## no parse mode
+  lhs=substr(parseLine,1,ppi-1)    ## now we have the var/value clause
+  if pmode='VALUE' | pmode= 'VAR' then swi=3   ## drop PARSE VALUE/VAR clause, which is subword 3
+  else swi=2                                   ## drop PARSE clause, which is subword 2
+  lhs=subword(lhs,swi)
+  template=subword(parseLine,swi+1)            ## from 3. or 4. word it is the template, or the WITH clause
+  if fpos('WITH',template,1)=1 then template=subword(template,2)   ## yes, then drop it too!
 
-  with=fpos('with',parseLine,1)
-  if with=0 then return 4
-  template=substr(parseLine,with+4)
-  lhs=substr(parseLine,1,with-1)
-## lhs format 1. PARSE value-string/variable
-##            2. PARSE VALUE value-string/variable
-  valkey=fpos('VALUE ',lhs,1)
-  if valkey>0 then lhs=substr(lhs,valkey+6)
-  else lhs=substr(lhs,wordindex(lhs,2))
-
+## lhs format 1. value-string/variable
   lhs=strip(lhs)
   template=strip(template)
   k = 0
@@ -1210,9 +1218,6 @@ parsevar: Procedure=.int
   inew=inew+1
   source.inew='## ---------- parse variables set ----------'
 return token.0
-
-
-
 
 /* ------------------------------------------------------------------
  * Check for relative or absolute path
