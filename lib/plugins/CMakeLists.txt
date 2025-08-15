@@ -7,13 +7,13 @@ add_subdirectory(arrays)
 add_subdirectory(rxmath)
 add_subdirectory(stack)
 add_subdirectory(cipher)
-add_subdirectory(rxuuid)
 add_subdirectory(strings)
 add_subdirectory(getpi)
 add_subdirectory(precomp)
 add_subdirectory(keyaccess)
 add_subdirectory(llist)
 add_subdirectory(treemap)
+add_subdirectory(id)
 
 
 

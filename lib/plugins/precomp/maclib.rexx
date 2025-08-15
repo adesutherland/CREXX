@@ -93,3 +93,9 @@
 ##define info(msg)          {say 'INFO:    ' msg}
 ##define error(msg)         {say 'ERROR:   ' msg}
 ##define warn(msg)          {say 'WARNING: ' msg}
+
+##define cparse(string,template)  \
+               {_pass_variable.1='' ; _pass_variable_content.1='' \
+                string2Parse=string; parsetemplate=template\
+                call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content \
+               }

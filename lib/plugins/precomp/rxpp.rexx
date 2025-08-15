@@ -20,7 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=0
+verbose=1
 
   ElapsedTime=time('us')
   if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
@@ -34,13 +34,13 @@ verbose=0
      else if command.i='-M' then maclib=command.j
   end
 
-if internal_testing=1 then do
-   infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
-   outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'
-   maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/precomp/Maclib.rexx'
-end
+  if internal_testing=1 then do
+     infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
+     outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'
+     maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/precomp/Maclib.rexx'
+  end
 
-  if strip(infile)='' then do
+ if strip(infile)='' then do
      say 'CRX0100E+['time('l')'] no source file specified'
      exit 8
   end
@@ -130,7 +130,7 @@ RXPPPassTwo: procedure
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
   do while i>0
      if which<3 then condition=word(source.i,2)
-      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
+     else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
      call insert_array source,i,1
@@ -261,7 +261,7 @@ RXPPPassThree: procedure
            lineno=ifblock.lineno
         end
      end
-  ##   else if stype.LineNo='PARSE' then call CMD_parse lineno,line ## doesn't make sense!
+     else if stype.LineNo='PARSE' then call parsevar lineNo,line
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
@@ -292,14 +292,15 @@ GetPrecomp: procedure
       lineMin=max(LineNo-1,1)
       line = source.lineNo
       ucmd=upper(word(line,1))
+      if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
+      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-##    else if ucmd = '##PARSE' then stype.LineNo='PARSE'     ## is not worth it
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -348,19 +349,23 @@ return
          exit 8
       end
       nlen=nlen-1
-      if nlen>1 then body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      if nlen>1 then body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
       else body=strip(source.nlino)
       stype.nlino='D'
    end
    opr=pos('{',body)
    lopr=lastpos('}',body)
    if lopr>0 then body=substr(body,opr+1,lopr-opr-1)
-   if strip(body) = '' | lopr=0 then do
+   body=changestr('; ;',body,';')
+   body=strip(body)
+   if substr(body,1,1)=';' then body=substr(body,2)
+   body=strip(body)
+   if body = '' | lopr=0 then do
       say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
       exit 8
    end
 
-/* Register macro */
+ /* Register macro */
    i = macros_mname.0
  ## todo this is a sledgehammer approach, count the entries, if the counter says it is 0
    if i=0 then do i=1 to 150
@@ -424,20 +429,7 @@ CMD_set: procedure
   vind=setvar(varn,DropComment(subword(incl,3)))
   if varn='cflags' then cflags=word(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
 return
-/* ----------------------------------------------------------------------
- *  Print created tokens
- * ----------------------------------------------------------------------
- */
-token_print: procedure
-  arg template=.string,token=.string[],token_type=.string[]
-  if verbose then say 'Template='template
-  if verbose then say time('l')' Compile completed'
-  if verbose then say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
-  do j = 1 to token.0
-     if verbose then say "Token" j ": '"token.j"' Type:" token_type.j
-  end
-  if verbose then say time('l')' Parse String using compiled Template'
-  return
+
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
  * ------------------------------------------------------------------
@@ -742,23 +734,28 @@ return line
    arg i=.int, line=.string,level=.int
    uline   = upper(line)
    callPos = 0
-   name    = macros_mname.i
-   args    = macros_margs.i
-   body    = macros_mbody.i
+   /* load the macro header and definition */
+   name    = macros_mname.i    ## macro name
+   args    = macros_margs.i    ## macro arguments
+   body    = macros_mbody.i    # macros body {...}
 
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
-   do while pos(name, uline, callPos + 1) > 0
    ## test Macro is variadic
-      isVariadic = 0
-      if pos('...', args,1) > 0 then do
-         isVariadic = 1
-         args = strip(changestr('...', '', args))
-      end
+   if pos('...', args,1) > 0 then do
+      isVariadic = 1
+      args = strip(changestr('...', '', args))
+   end
+   else isVariadic = 0
+
+   do forever
+      callpos=pos(name, uline, callPos + 1)        ## use fpos function to search case-insensitive
+      if callpos=0 then leave
+    ## some logging if wanted
        if printgen_flags='all' then call writeline printGen(strip(line),0)
        else if level=0 & printgen_flags='nnest' then call writeline printGen(strip(line),0)
+    ## handle various parms
        level=level+1     ## increase level in case a second instance of macro is found
-       callPos = pos(name, uline, callPos + 1)
        if callpos>1 then do
           status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
           if status_before=0 then iterate
@@ -768,8 +765,8 @@ return line
        argtext = fetchArguments(remain)
        callargcount = parseArgList(argtext)
        bodyExp = body
-     ##  xargs   = translate(args, , ',')
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
+    /* Here is the non variadic processing */
        bodyExp = replaceFixArg(bodyExp, name,args)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
@@ -778,6 +775,7 @@ return line
        callPos = callPos - 1        /* set next start point */
     end
 return line
+
 /* ------------------------------------------------------------------
  * Inject pre-compiler variable into line
  * ------------------------------------------------------------------
@@ -809,42 +807,35 @@ replaceFixArg: Procedure=.string
 ## First take the positional parameters
   keypositional=0
   do k=1 to wrds
-  ## !? workaround as global array is possibly reset
-      callargs.k=templist('GET',k,"")       ### +++++++++++ remove
-      aname = word(xargs, k)
-      if pos('=',aname)>0 then do
-         keypositional=k
-         iterate
-      end
-      if keypositional>0 then do
-         say 'CRX0960E+['time('l')'] positional parameters must not defined after keyword parameters: 'macname||iargs')'
-         return '+++ SyntaxError: positional argument follows keyword argument 'macname||iargs')'
-      end
-      aval  = callargs.k
-      bodyExp = replaceArg(bodyExp, aname, aval)
+     aname = word(xargs, k)
+     if pos('=',aname)>0 then do
+        if keypositional=0 then keypositional=k
+        iterate
+     end
+     if keypositional>0 then do
+        say 'CRX0960E+['time('l')'] positional parameters must not defined after keyword parameters: 'macname||iargs')'
+        return '+++ SyntaxError: positional argument follows keyword argument 'macname||iargs')'
+     end
+     bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
   end
-
-  do k=1 to wrds        ## run through the macroc header definition
-    ## !? workaround as global array is possibly reset
-        aname = word(xargs, k)           ## aname is the keyword definition in the macro header
-        ppmac=pos('=',aname)             ## this identify the they parameter in the macro parm as a keyword having a = sign
-        if ppmac=0 then iterate
-        aname=translate(aname,,'=')
-        adefault=word(aname,2)
-        aname=word(aname,1)
-        if adefault='' then adefault=aname
-        do j=1 to wrds                  ## find the appropriate keyword, sequence is free
-           if pos(aname'=',templist('GET',j,""))>0 then leave    ### +++++++++++ modify
-        end
-        callargs.j=templist('GET',j,"")   ### +++++++++++ remove
-        aval  = callargs.j               ## identifies the call of the macro
-        if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
-        else do                               ## if so check if the keyword call is also in the value clause
-            aval=translate(aval,,'=')
-            aval=word(aval,2)
-        end
-        bodyExp = replaceArg(bodyExp, aname, aval)
-    end
+  if keypositional=0 then return bodyExp
+  do k=keypositional to wrds        ## run through the macroc header definition
+     aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
+     aname=translate(aname,,'=')
+     adefault=word(aname,2)                        ## 2. word is the default value
+     if adefault='' then adefault="''"             ## if not there, use empty string
+     aname=word(aname,1)                           ## now isolate parameter name
+     do j=1 to wrds                  ## find the appropriate keyword, sequence is free
+        if fpos(aname'=',callargs.j,1)>0 then leave    ### +++++++++++ modify  ## use fpos function to search case-insensitive
+     end
+     aval  = callargs.j               ## identifies the call of the macro
+     if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
+     else do                               ## if so check if the keyword call is also in the value clause
+        aval=translate(aval,,'=')
+        aval=word(aval,2)
+     end
+     bodyExp = replaceArg(bodyExp, aname, aval)
+  end
 return bodyExp
 /* ------------------------------------------------------------------
  * Process Variadic macros
@@ -956,7 +947,6 @@ replaceArgx: procedure=.string
     if p>length(str) then leave
     str=insertatc(value,str,p,length(name))    ## use the C-function
     posn = p + length(value)
-    ## if posn>length(str) then say 'string exceeds length'
     p = pos(name, str, posn)
   end
 return str
@@ -971,8 +961,9 @@ replaceArg: procedure=.string
   arg str=.string, name=.string, value=.string
 
   posn = 1
-  p = pos(name, str, posn)
+  p = fpos(name, str, posn)
   nlen=length(name)
+
   do while p > 0
      before = ''
      if p > 1 then before = substr(str, p - 1, 1)
@@ -985,7 +976,7 @@ replaceArg: procedure=.string
         /* replace NAME## with VALUE (consume the hashes) */
         str  = insertatc(value, str, p, nlen+2)
         posn = p + length(value)
-        p    = pos(name, str, posn)
+        p    = fpos(name, str, posn)
         iterate
      end
 
@@ -998,13 +989,13 @@ replaceArg: procedure=.string
 
      if verbb = 0 | verba = 0 then do   /* Not a standalone identifier (e.g., nameX or Yname); skip ahead */
         posn = p + 1
-        p    = pos(name, str, posn)   /* BUGFIX: was `p = posn` */
+        p    = fpos(name, str, posn)   /* BUGFIX: was `p = posn` */
         iterate
      end
      /* ---- Valid standalone `name` ---- */
      str  = insertatc(value, str, p, nlen)   /* C-function */
      posn = p + length(value)
-     p    = pos(name, str, posn)
+     p    = fpos(name, str, posn)
   end
 return str
 /* ------------------------------------------------------------------
@@ -1024,22 +1015,21 @@ return lhs || needle || rhs
  */
 parseArgList: procedure=.int
   arg argstr=.string
+  callargs.1=''
+  anum=splitargs(argstr,callargs)
+  do j=1 to anum                 ## could also be callargs.0
+     callargs.j=strip(callargs.j)
+  end
+  return callargs.0
   callargs.1 = ''
   i = 1
   depth = 0
   token = ''
-  ## +++++++++++++++ remove after stem problem solved
-  do k=1 to 16
-     call templist 'PUT',k,''    ### +++++++++++ remove
-  end
-   ## +++++++++++++++ remove after stem problem solved
-  call templist 'PUT',i,callargs.i
   do j = 1 to length(argstr)
     c = substr(argstr, j, 1)
     if c = ',' & depth = 0 then do
       callargs.i = strip(token)
       token = ''
-      call templist 'PUT',i,callargs.i         ### +++++++++++ remove
       i = i + 1
     end
     else do
@@ -1050,7 +1040,7 @@ parseArgList: procedure=.int
   end
   if strip(token) <> '' then do
      callargs.i = strip(token)
-     call templist 'PUT',i,callargs.i      ### +++++++++++ remove
+  ##   call templist 'PUT',i,callargs.i      ### +++++++++++ remove
   end
 return i
 /* ------------------------------------------------------------------
@@ -1122,6 +1112,113 @@ setvar: procedure=.int
   macros_varname.i=varname
   macros_varvalue.i=varvalue
 return i
+
+
+/* ------------------------------------------------------------------------
+ * ##PARSE command, re-parse tokens from template to receive Variable names
+ *   PARSE VAR variable template
+ *   PARSE VALUE 'quoted-value' [WITH] template
+ *   PARSE VALUE variable [WITH] template
+ * ------------------------------------------------------------------------
+ */
+parsevar: Procedure=.int
+  arg lino=.int, parseLine=.string
+  say 123 parseLine
+ ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
+ ##                1w  2w   3w     4w            1w    2w     3w                4w
+ ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
+ ##                1w   2w         3w        1w      2w                         3w
+  pmode=upper(word(parseLine,2))         ## check if we have a VALUE or VAR clause
+  if pmode='VALUE' | pmode= 'VAR' then ppi=wordindex(parseLine,4)  ## set behind VALUE/VAR clause, maybe there is the WITH clause
+  else ppi=wordindex(parseLine,3)  ## no parse mode
+  lhs=substr(parseLine,1,ppi-1)    ## now we have the var/value clause
+  if pmode='VALUE' | pmode= 'VAR' then swi=3   ## drop PARSE VALUE/VAR clause, which is subword 3
+  else swi=2                                   ## drop PARSE clause, which is subword 2
+  lhs=subword(lhs,swi)
+  template=subword(parseLine,swi+1)            ## from 3. or 4. word it is the template, or the WITH clause
+  if fpos('WITH',template,1)=1 then template=subword(template,2)   ## yes, then drop it too!
+
+## lhs format 1. value-string/variable
+  lhs=strip(lhs)
+  template=strip(template)
+  k = 0
+  token.1=''
+  do i = 1 to 4096  /* Large upper bound */
+     wrd = word(template, i)
+     if wrd = '' then leave   /* No more words */
+     do while wrd \= ''
+        p1 = pos("'", wrd)
+        p2 = pos('"', wrd)
+        if p1+p2=0 then do
+           k = k + 1
+           token.k = wrd
+           wrd = ''     /* Done with this word */
+           leave
+        end
+        if p2 = 0 | (p1>0 & p1<p2) then quote = "'"
+        else do
+           p1=p2
+           quote = '"'   /* either " exists before ' or only " exists */
+        end
+        if p1 > 1 then do     /* Add left hand side before quote, if any */
+           k = k + 1
+           token.k = substr(wrd, 1, p1 - 1)
+        end
+     /* Find matching closing quote */
+        p2 = pos(quote, wrd, p1 + 1)
+        if p2 = 0 then do
+           say 'Error: unmatched quote in word:' wrd
+           leave
+        end
+      /* Extract quoted segment */
+        k = k + 1
+        plen=p2 - p1+1
+        token.k = substr(wrd, p1,plen )
+        if p2>=length(wrd) then wrd=''   /* Cut off processed part */
+        else wrd = substr(wrd, p2 + 1)
+     end
+  end
+/* ----------------------------------------------------------------------
+ * Classify tokens in token_types
+ * ----------------------------------------------------------------------
+ */
+  j=0
+  do i=1 to token.0
+     quote=substr(token.i,1,1)
+     if quote = "'" | quote = '"' then do
+        token.i=strip(token.i,,quote)       ## drop quotes
+     end
+     else if verify(token.i,'0123456789')=0 then nop
+     else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
+     else do
+        if fpos('parse',token.i,1)>0 then iterate
+        if token.i='.' then iterate
+        j=j+1
+        insert.j=token.i"=_pass_variable_content."j
+     end
+  end
+  imax=insert.0+9
+
+  rc=insert_array(source,lino+1,imax)
+  rc=insert_array(stype,lino+1,imax)
+  inew=lino+1
+  source.inew='cparse('lhs',"'template'")'
+  inew=inew+1
+  if pos(' parse',cflags)>0 then do
+     source.inew='say "#PARSE STRING  : 'lhs'"'
+     inew=inew+1
+     source.inew='say "#PARSE TEMPLATE: 'template'"'
+     inew=inew+1
+  end
+  source.inew='## ---------- set parse variables ----------'
+  do j=1 to insert.0
+     inew=inew+1
+     source.inew=insert.j
+  end
+  inew=inew+1
+  source.inew='## ---------- parse variables set ----------'
+return token.0
+
 /* ------------------------------------------------------------------
  * Check for relative or absolute path
  * ------------------------------------------------------------------
@@ -1213,7 +1310,7 @@ rxppinit: procedure=.string
   wlast=wordindex(syspath,wrds)
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rexxname
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
     call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
