@@ -1126,7 +1126,7 @@ return i
  */
 parsevar: Procedure=.int
   arg lino=.int, parseLine=.string
-  say 123 parseLine
+  if verbose then say 123 parseLine
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
