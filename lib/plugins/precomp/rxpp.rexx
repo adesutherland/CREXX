@@ -130,7 +130,7 @@ RXPPPassTwo: procedure
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
   do while i>0
      if which<3 then condition=word(source.i,2)
-      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
+     else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
      call insert_array source,i,1
@@ -261,7 +261,7 @@ RXPPPassThree: procedure
            lineno=ifblock.lineno
         end
      end
-  ##   else if stype.LineNo='PARSE' then call CMD_parse lineno,line ## doesn't make sense!
+     else if stype.LineNo='PARSE' then call parsevar lineNo,line
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
@@ -292,14 +292,15 @@ GetPrecomp: procedure
       lineMin=max(LineNo-1,1)
       line = source.lineNo
       ucmd=upper(word(line,1))
+      if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
+      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-##    else if ucmd = '##PARSE' then stype.LineNo='PARSE'     ## is not worth it
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -348,7 +349,7 @@ return
          exit 8
       end
       nlen=nlen-1
-      if nlen>1 then body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      if nlen>1 then body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
       else body=strip(source.nlino)
       stype.nlino='D'
    end
@@ -428,20 +429,7 @@ CMD_set: procedure
   vind=setvar(varn,DropComment(subword(incl,3)))
   if varn='cflags' then cflags=word(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
 return
-/* ----------------------------------------------------------------------
- *  Print created tokens
- * ----------------------------------------------------------------------
- */
-token_print: procedure
-  arg template=.string,token=.string[],token_type=.string[]
-  if verbose then say 'Template='template
-  if verbose then say time('l')' Compile completed'
-  if verbose then say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
-  do j = 1 to token.0
-     if verbose then say "Token" j ": '"token.j"' Type:" token_type.j
-  end
-  if verbose then say time('l')' Parse String using compiled Template'
-  return
+
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
  * ------------------------------------------------------------------
@@ -830,7 +818,7 @@ replaceFixArg: Procedure=.string
      end
      bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
   end
-
+  if keypositional=0 then return bodyExp
   do k=keypositional to wrds        ## run through the macroc header definition
      aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
      aname=translate(aname,,'=')
@@ -1027,22 +1015,21 @@ return lhs || needle || rhs
  */
 parseArgList: procedure=.int
   arg argstr=.string
+  callargs.1=''
+  anum=splitargs(argstr,callargs)
+  do j=1 to anum                 ## could also be callargs.0
+     callargs.j=strip(callargs.j)
+  end
+  return callargs.0
   callargs.1 = ''
   i = 1
   depth = 0
   token = ''
-  ## +++++++++++++++ remove after stem problem solved
-##  do k=1 to 16
-  ##   call templist 'PUT',k,''    ### +++++++++++ remove
-##  end
-   ## +++++++++++++++ remove after stem problem solved
-##  call templist 'PUT',i,callargs.i
   do j = 1 to length(argstr)
     c = substr(argstr, j, 1)
     if c = ',' & depth = 0 then do
       callargs.i = strip(token)
       token = ''
- ##     call templist 'PUT',i,callargs.i         ### +++++++++++ remove
       i = i + 1
     end
     else do
@@ -1125,6 +1112,108 @@ setvar: procedure=.int
   macros_varname.i=varname
   macros_varvalue.i=varvalue
 return i
+
+
+/* ------------------------------------------------------------------------
+ * ##PARSE command, re-parse tokens from template to receive Variable names
+ * ------------------------------------------------------------------------
+ */
+parsevar: Procedure=.int
+  arg lino=.int, parseLine=.string
+
+  with=fpos('with',parseLine,1)
+  if with=0 then return 4
+  template=substr(parseLine,with+4)
+  lhs=substr(parseLine,1,with-1)
+## lhs format 1. PARSE value-string/variable
+##            2. PARSE VALUE value-string/variable
+  valkey=fpos('VALUE ',lhs,1)
+  if valkey>0 then lhs=substr(lhs,valkey+6)
+  else lhs=substr(lhs,wordindex(lhs,2))
+
+  lhs=strip(lhs)
+  template=strip(template)
+  k = 0
+  token.1=''
+  do i = 1 to 4096  /* Large upper bound */
+     wrd = word(template, i)
+     if wrd = '' then leave   /* No more words */
+     do while wrd \= ''
+        p1 = pos("'", wrd)
+        p2 = pos('"', wrd)
+        if p1+p2=0 then do
+           k = k + 1
+           token.k = wrd
+           wrd = ''     /* Done with this word */
+           leave
+        end
+        if p2 = 0 | (p1>0 & p1<p2) then quote = "'"
+        else do
+           p1=p2
+           quote = '"'   /* either " exists before ' or only " exists */
+        end
+        if p1 > 1 then do     /* Add left hand side before quote, if any */
+           k = k + 1
+           token.k = substr(wrd, 1, p1 - 1)
+        end
+     /* Find matching closing quote */
+        p2 = pos(quote, wrd, p1 + 1)
+        if p2 = 0 then do
+           say 'Error: unmatched quote in word:' wrd
+           leave
+        end
+      /* Extract quoted segment */
+        k = k + 1
+        plen=p2 - p1+1
+        token.k = substr(wrd, p1,plen )
+        if p2>=length(wrd) then wrd=''   /* Cut off processed part */
+        else wrd = substr(wrd, p2 + 1)
+     end
+  end
+/* ----------------------------------------------------------------------
+ * Classify tokens in token_types
+ * ----------------------------------------------------------------------
+ */
+  j=0
+  do i=1 to token.0
+     quote=substr(token.i,1,1)
+     if quote = "'" | quote = '"' then do
+        token.i=strip(token.i,,quote)       ## drop quotes
+     end
+     else if verify(token.i,'0123456789')=0 then nop
+     else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
+     else do
+        if fpos('parse',token.i,1)>0 then iterate
+        if token.i='.' then iterate
+        j=j+1
+        insert.j=token.i"=_pass_variable_content."j
+     end
+  end
+  imax=insert.0+9
+
+  rc=insert_array(source,lino+1,imax)
+  rc=insert_array(stype,lino+1,imax)
+  inew=lino+1
+  source.inew='cparse('lhs',"'template'")'
+  inew=inew+1
+  if pos(' parse',cflags)>0 then do
+     source.inew='say "#PARSE STRING  : 'lhs'"'
+     inew=inew+1
+     source.inew='say "#PARSE TEMPLATE: 'template'"'
+     inew=inew+1
+  end
+  source.inew='## ---------- set parse variables ----------'
+  do j=1 to insert.0
+     inew=inew+1
+     source.inew=insert.j
+  end
+  inew=inew+1
+  source.inew='## ---------- parse variables set ----------'
+return token.0
+
+
+
+
 /* ------------------------------------------------------------------
  * Check for relative or absolute path
  * ------------------------------------------------------------------
@@ -1216,7 +1305,7 @@ rxppinit: procedure=.string
   wlast=wordindex(syspath,wrds)
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rexxname
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
     call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags

@@ -439,6 +439,150 @@ PROCEDURE(fquoted) {
     RETURNINTX(const_count + vname_count);
     ENDPROC
 }
+
+/*
+ * Splits ARG0 on commas, but ignores commas inside quotes (' or ")
+ * and inside (nested) parentheses. Trims leading/trailing whitespace
+ * per token. Doubled quotes inside a quoted string are treated as
+ * literal quotes and kept (e.g., "He said ""hi""" -> He said "hi").
+ *
+ * OUTPUT:
+ *   - Tokens are written to ARG1 as a sequential array, following the
+ *     same 0-based convention used in your existing code snippet:
+ *         SETSARRAY(ARG1, 0, "first")
+ *         SETSARRAY(ARG1, 1, "second")
+ *         ...
+ *   - The function RETURNs the number of tokens (int).
+ *
+ * If you prefer 1-based "stem" semantics (.1..n and .0=n), set
+ *   #define INDEX_BASE 1
+ * below and see the comment in emit_final_count().
+ */
+
+/* === Your bridge macros (already present in your project) ===
+   GETSTRING(ARGi)       -> const char*
+   SETARRAYHI(ARGi, n)   -> set high bound/capacity
+   SETSARRAY(ARGi, idx, cstr) -> set element (idx) to C string
+   RETURNINTX(n)         -> return int from PROCEDURE
+   PROCEDURE(name) { ... ENDPROC }
+   (Leave includes for those macros as they are in your project.)
+*/
+
+
+/* ---------- small dynamic buffer helpers (C99) ---------- */
+static void append_char(char **buf, int *len, int *cap, char ch) {
+    if (*len + 1 >= *cap) {
+        int newcap = (*cap == 0) ? 128 : (*cap * 2);
+        char *nbuf = (char *)realloc(*buf, (size_t)newcap);
+        if (!nbuf) {
+            /* Out of memory: drop char and keep going, or abort as you prefer */
+            return;
+        }
+        *buf = nbuf;
+        *cap = newcap;
+    }
+    (*buf)[(*len)++] = ch;
+}
+
+static void reset_token(char **buf, int *len) {
+    *len = 0;
+    if (*buf) (*buf)[0] = '\0';
+}
+
+/* Emit trimmed substring of token[0..tlen) into ARG1 at position (INDEX_BASE + *n) */
+static void emit_trimmed(char *token, int tlen, int *n, char * outarg) {
+    int start = 0, end = tlen;
+
+    /* trim left/right whitespace */
+    while (start < end && isspace((unsigned char)token[start])) start++;
+    while (end > start && isspace((unsigned char)token[end - 1])) end--;
+
+    /* if you want to KEEP empty fields (e.g., "a,,b"), remove this guard */
+    if (end <= start) {
+        return; /* drop empty after trimming (matches your REXX default behavior) */
+    }
+
+    int outlen = end - start;
+    char *out = (char *)malloc((size_t)outlen + 1);
+    if (!out) return;
+
+    memcpy(out, token + start, (size_t)outlen);
+    out[outlen] = '\0';
+
+    /* grow high bound and store */
+    int idx = (*n);
+    SETARRAYHI(outarg, idx + 1);
+    SETSARRAY(outarg, idx, out);
+
+    free(out);
+    (*n)++;
+}
+
+/* -------------------- main procedure -------------------- */
+PROCEDURE(splitargs) {
+    const char *s = GETSTRING(ARG0);
+    char *token = NULL;
+    int tlen = 0, tcap = 0;
+
+    int i = 0;
+    int count = 0;     /* number of emitted tokens */
+    int depth = 0;     /* parenthesis nesting */
+    int inq = 0;       /* inside quotes? */
+    char qchar = 0;    /* current quote char */
+
+    while (s[i]) {
+        char c = s[i];
+        if (inq) {
+            /* inside a quoted string: copy verbatim and handle doubled quotes */
+            append_char(&token, &tlen, &tcap, c);
+            if (c == qchar) {
+                if (s[i + 1] == qchar) {
+                    /* doubled quote -> literal quote char; append one more and skip next */
+                    append_char(&token, &tlen, &tcap, qchar);
+                    i += 2;
+                    continue;
+                } else {
+                    inq = 0;
+                    qchar = 0;
+                }
+            }
+            i++;
+            continue;
+        }
+        /* not in quotes */
+        if (c == ',') {
+            if (depth == 0) {
+                /* split point */
+                emit_trimmed(token, tlen, &count, ARG1);
+                reset_token(&token, &tlen);
+                i++;
+                continue;
+            }
+            /* else: literal comma inside parentheses */
+        } else if (c == '\'' || c == '"') {
+            inq = 1;
+            qchar = c;
+        } else if (c == '(') {
+            depth++;
+        } else if (c == ')') {
+            if (depth > 0) depth--; /* ignore stray ')' */
+        }
+
+        append_char(&token, &tlen, &tcap, c);
+        i++;
+    }
+
+    /* flush last token; to KEEP trailing empty fields ("a,b,"), remove the guard in emit_trimmed */
+    emit_trimmed(token, tlen, &count, ARG1);
+
+    if (token) free(token);
+    RETURNINTX(count);
+    ENDPROC
+}
+
+
+
+
 /* -------------------------------------------------------------------------------------
 * search in array a certain string, up to 3 strings are possible
 * -------------------------------------------------------------------------------------
@@ -548,6 +692,7 @@ LOADFUNCS
     ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
     ADDPROC(ffind,        "precomp.ffind",        "b",  ".int",   "expose array=.string[],pos=.int,str1=.string");
     ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
+    ADDPROC(splitargs,    "precomp.splitargs",    "b",  ".int",   "string=.string, expose tokens=.string[]");
     ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
     ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
     ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
