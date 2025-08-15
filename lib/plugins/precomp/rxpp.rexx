@@ -23,7 +23,7 @@ internal_testing=0    ## activate only for rxpp internal tests
 verbose=1
 
   ElapsedTime=time('us')
-  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
+
   do i=1 to command.0
      j=i+1
      command.i=upper(command.i)
@@ -32,8 +32,11 @@ verbose=1
      else if command.i='-O' then outfile=command.j
      else if command.i='-OUT' then outfile=command.j
      else if command.i='-M' then maclib=command.j
+     else if command.i='-VERBOSE0' then verbose=0
   end
 
+  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
+  
   if internal_testing=1 then do
      infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
      outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'

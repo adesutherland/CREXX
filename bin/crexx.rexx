@@ -1,4 +1,6 @@
-/* crexx is an executable which controls the phases of the crexx
+/*
+ * crexx compiler driver - copyright RexxLA, rvjansen 2021-2025
+ * crexx is an executable which controls the phases of the crexx
  * processor, compiles, assembles and executes rexx programs.
  * It optionally compiles the program to a native executable,
  * for which it needs an operable gcc or clang compiler.
@@ -8,6 +10,12 @@
  * sequence, where options need at least one dash at the left
  * of the option string. This determines if the strings fed to
  * it are options or filenames.
+ *
+ * if a filename has a suffix of .rxpp, the crexx precompiler
+ * is invoked to perform it's magic - it produces a .rexx
+ * which then is compiled and executed, or compiled to an
+ * object file which is linked to the interpreter to
+ * form a native executable.
  *
  */           
 
@@ -73,7 +81,7 @@ do i=1 to fn.0
 	lastSlash = lastpos('/',fn.i)
 	libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
 	module[modulenumber] = substr(fn.i, lastSlash + 1)
-	say '---->' module[modulenumber]
+	/* say '---->' module[modulenumber] */
 	libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
 	modulenumber = modulenumber+1
       end
@@ -92,7 +100,7 @@ if verbose>1 then say 'using lpath :' lpath
 out = .string[]
 err = .string[]
 
-/* see if there is a .rxpp file to run the preprocessor against */
+/* see if there is a .rxpp file to run the preprocessor against        */
 /* while we have no exists(file) function, specify the .rxpp extension */
 do i=1 to words(filenames)
   filename=word(filenames,i)
@@ -101,10 +109,13 @@ do i=1 to words(filenames)
     if right(filename,4) = 'rxpp'
     then do /* run the preprocessor */
       filename = left(filename,dotpos-1)
-      'rxpp -i' filename'.rxpp -o' filename'.rexx'
+      'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
     end
   end
-  
+/* here: check the returncode of the precompiler */  
+/* this works temporarily with the specified filename extension */
+
+/* if all is well, we now have a .rexx ready for compilation    */  
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do

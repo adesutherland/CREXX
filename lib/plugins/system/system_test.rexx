@@ -1,121 +1,144 @@
 /* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 13 Aug 2025  at 07:35:40
+ * PRE Compiled on 15 Aug 2025  at 15:04:22
  * ----------------------------------------------------------------------
  */
 options levelb
 import rxfnsb
 import system
-/* ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */ */
-/* ##define strlen(len,string)  {len=0;  assembler strlen len,string} D*/
-say 1234
-say ' current c2x presentation, do not handle UTF8 > 1 byte'
-say copies('-',100)
-say "René:       "c2x("René")
-say "Rene:       "c2x("Rene")
-say "Adrian:     "c2x("Adrian")
-say "Peter:      "c2x("Peter")
-say "★ 3 bytes:  "c2x("★")
-say "😀 4 bytes: "c2x("😀")
-say ' '
-say ' C2X with partial UTF8 support, add bytes depending on UTF8 length, not backward compatible'
-say copies('-',100)
-say "René:       "c2xV3("René")
-say "Rene:       "c2xV3("Rene")
-say "Adrian:     "c2xV3("Adrian")
-say "Peter:      "c2xV3("Peter")
-say "★ 3 bytes:  "c2xV3("★")
-say "😀 4 bytes: "c2xV3("😀")
-say ' '
-say ' C2X with partial UTF8 support, add bytes depending on UTF8 length blank separated, not backward compatible'
-say copies('-',100)
-say "René:       "c2xV4("René")
-say "Rene:       "c2xV4("Rene")
-say "Adrian:     "c2xV4("Adrian")
-say "Peter:      "c2xV4("Peter")
-say "★ 3 bytes:  "c2xV4("★")
-say "😀 4 bytes: "c2xV4("😀")
-say ' '
-say ' UTF8 4 bytes presentation blank separated, backward compatible'
-say copies('-',100)
-say "René:       "c2xV1("René")
-say "Rene:       "c2xV1("Rene")
-say "Adrian:     "c2xV1("Adrian")
-say "Peter:      "c2xV1("Peter")
-say "★ 3 bytes:  "c2xV1("★")
-say "😀 4 bytes: "c2xV1("😀")
-say ' '
-say ' UTF8 4 bytes presentation, backward compatible'
-say copies('-',100)
-say "René:       "c2xV2("René")
-say "Rene:       "c2xV2("Rene")
-say "Adrian:     "c2xV2("Adrian")
-say "Peter:      "c2xV2("Peter")
-say "★ 3 bytes:  "c2xV2("★")
-say "😀 4 bytes: "c2xV2("😀")
-say ' NETREXX approach, just return first (UTF8) character'
-say copies('-',100)
-say "René:       "c2xV5("René")
-say "Rene:       "c2xV5("Rene")
-say "Adrian:     "c2xV5("Adrian")
-say "Peter:      "c2xV5("Peter")
-say "★ 3 bytes:  "c2xV5("★")
-say "😀 4 bytes: "c2xV5("😀")
+/* ##cflags def nset niflink 1buf 2buf 3buf parse nvars nmaclist includes  /* set early stage compiler flags */ */
+##                                       nparse to switch off the parse debug information
+/* 1. split string at ',' delimiter */
+say "1. split string at ',' delimiter"
+string='11,2222,3333,44444,555555'
+/* rxpp: cparse(string,"first','second','third','fourth','fifth','six") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=string; parsetemplate="first','second','third','fourth','fifth','six" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : string"
+say "#PARSE TEMPLATE: first','second','third','fourth','fifth','six"
+## ---------- set parse variables ----------
+first=_pass_variable_content.1
+second=_pass_variable_content.2
+third=_pass_variable_content.3
+fourth=_pass_variable_content.4
+fifth=_pass_variable_content.5
+six=_pass_variable_content.6
+## ---------- parse variables set ----------
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+/* rxpp: cparse(string,"first','second','third','fourth','fifth','six") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=string; parsetemplate="first','second','third','fourth','fifth','six" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : string"
+say "#PARSE TEMPLATE: first','second','third','fourth','fifth','six"
+## ---------- set parse variables ----------
+first=_pass_variable_content.1
+second=_pass_variable_content.2
+third=_pass_variable_content.3
+fourth=_pass_variable_content.4
+fifth=_pass_variable_content.5
+six=_pass_variable_content.6
+## ---------- parse variables set ----------
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+/* 1. split string at ',' delimiter */
+say "1. split string at ',' delimiter"
+string='11,2222,3333,44444,555555'
+/* rxpp: cparse(string,"first','second','third','fourth','fifth','six") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=string; parsetemplate="first','second','third','fourth','fifth','six" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : string"
+say "#PARSE TEMPLATE: first','second','third','fourth','fifth','six"
+## ---------- set parse variables ----------
+first=_pass_variable_content.1
+second=_pass_variable_content.2
+third=_pass_variable_content.3
+fourth=_pass_variable_content.4
+fifth=_pass_variable_content.5
+six=_pass_variable_content.6
+## ---------- parse variables set ----------
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+/* rxpp: cparse(string,"first','second','third','fourth','fifth','six") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=string; parsetemplate="first','second','third','fourth','fifth','six" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : string"
+say "#PARSE TEMPLATE: first','second','third','fourth','fifth','six"
+## ---------- set parse variables ----------
+first=_pass_variable_content.1
+second=_pass_variable_content.2
+third=_pass_variable_content.3
+fourth=_pass_variable_content.4
+fifth=_pass_variable_content.5
+six=_pass_variable_content.6
+## ---------- parse variables set ----------
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+/* 2. split string at '-' delimiter */
+say "2. split string at '-' delimiter"
+s = '2025-08-14'
+/* rxpp: cparse(s,"year '-' . '-' day") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=s; parsetemplate="year '-' . '-' day" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : s"
+say "#PARSE TEMPLATE: year '-' . '-' day"
+## ---------- set parse variables ----------
+year=_pass_variable_content.1
+day=_pass_variable_content.2
+## ---------- parse variables set ----------
+say year month day   ## 2025 08 14
+say " "
+/* 3. split string at ';' delimiter */
+say "3. split string at ';' delimiter"
+s = 'host=example.com;port=5432;user=alice'
+/* rxpp: cparse(s,"'host=' host ';' 'port=' port ';' 'user=' user") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=s; parsetemplate="'host=' host ';' 'port=' port ';' 'user=' user" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : s"
+say "#PARSE TEMPLATE: 'host=' host ';' 'port=' port ';' 'user=' user"
+## ---------- set parse variables ----------
+host=_pass_variable_content.1
+port=_pass_variable_content.2
+user=_pass_variable_content.3
+## ---------- parse variables set ----------
+say host port user   ## example.com 5432 alice
+say " "
+/* 4. split string at certain position */
+say "4. split string at certain position"
+s = 'abcdef'
+/* rxpp: cparse(s,"a 3 b 5 c") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=s; parsetemplate="a 3 b 5 c" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : s"
+say "#PARSE TEMPLATE: a 3 b 5 c"
+## ---------- set parse variables ----------
+a=_pass_variable_content.1
+b=_pass_variable_content.2
+c=_pass_variable_content.3
+## ---------- parse variables set ----------
+say a b c        ## ab cd ef
+say " "
+/* 5. split string at relative position */
+say "5. split string at relative position"
+s = 'abcdef'
+/* rxpp: cparse(s,"a +2 b +2 c") */
+_pass_variable.1='' ; _pass_variable_content.1='' ; string2Parse=s; parsetemplate="a +2 b +2 c" ; call parse string2parse,parsetemplate,_pass_variable,_pass_variable_content ;
+say "#PARSE STRING  : s"
+say "#PARSE TEMPLATE: a +2 b +2 c"
+## ---------- set parse variables ----------
+a=_pass_variable_content.1
+b=_pass_variable_content.2
+c=_pass_variable_content.3
+## ---------- parse variables set ----------
+say a b c        ## ab cd ef
+say " "
 exit
-c2xV1: procedure = .string
-  arg from = .string
-  stx=""
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  do  i=0 to len-1
-      fz="UTFV1"
-      assembler hexchar fz,from,i
-      stx=stx||fz||' '
-  end
-return strip(stx)
-c2xV2: procedure = .string
-  arg from = .string
-  stx=""
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  do  i=0 to len-1
-      fz="UTFV1"
-      assembler hexchar fz,from,i
-      stx=stx||fz
-  end
-return stx
-c2xV3: procedure = .string
-  arg from = .string
-  stx=""
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  do  i=0 to len-1
-      fz="UTFV2"
-      assembler hexchar fz,from,i
-      stx=stx||fz
-  end
-return stx
-c2xV4: procedure = .string
-  arg from = .string
-  stx=""
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  do  i=0 to len-1
-      fz="UTFV2"
-      assembler hexchar fz,from,i
-      stx=stx||fz||' '
-  end
-return strip(stx)
-c2xV5: procedure = .string
-  arg from = .string
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  offset=0
-  fz="UTFV2"
-  assembler hexchar fz,from,offset
-return fz
