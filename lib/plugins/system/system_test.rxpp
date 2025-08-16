@@ -9,6 +9,7 @@ import rxfnsb
 say "1. split string at ',' delimiter"
 string='11,2222,3333,44444,555555'
 parse  VALUE string   with first','second','third','fourth','fifth','six
+say '--- end of parse instruction ---'
 say '1. parm 'first
 say '2. parm 'second
 say '3. parm 'third
@@ -17,6 +18,7 @@ say '5. parm 'fifth
 say '6. parm "'six'"'
 
 parse VAR string  first','second','third','fourth','fifth','six
+say '--- end of parse instruction'
 say '1. parm 'first
 say '2. parm 'second
 say '3. parm 'third
@@ -28,6 +30,7 @@ say '6. parm "'six'"'
 say "1. split string at ',' delimiter"
 string='11,2222,3333,44444,555555'
 parse  string   with first','second','third','fourth','fifth','six
+say '--- end of parse instruction'
 say '1. parm 'first
 say '2. parm 'second
 say '3. parm 'third
@@ -36,6 +39,7 @@ say '5. parm 'fifth
 say '6. parm "'six'"'
 
 parse string  first','second','third','fourth','fifth','six
+say '--- end of parse instruction'
 say '1. parm 'first
 say '2. parm 'second
 say '3. parm 'third
@@ -47,6 +51,7 @@ say '6. parm "'six'"'
 say "2. split string at '-' delimiter"
 s = '2025-08-14'
 parse s with year '-' . '-' day
+say '--- end of parse instruction'
 say year month day   ## 2025 08 14
 say " "
 
@@ -54,6 +59,7 @@ say " "
 say "3. split string at ';' delimiter"
 s = 'host=example.com;port=5432;user=alice'
 parse s  with 'host=' host ';' 'port=' port ';' 'user=' user
+say '--- end of parse instruction'
 say host port user   ## example.com 5432 alice
 say " "
 
@@ -61,6 +67,7 @@ say " "
 say "4. split string at certain position"
 s = 'abcdef'
 parse s with a 3 b 5 c
+say '--- end of parse instruction'
 say a b c        ## ab cd ef
 say " "
 
@@ -68,6 +75,7 @@ say " "
 say "5. split string at relative position"
 s = 'abcdef'
 parse s with a +2 b +2 c
+say '--- end of parse instruction'
 say a b c        ## ab cd ef
 say " "
 

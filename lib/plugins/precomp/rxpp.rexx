@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose imported_funcs
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -47,10 +47,11 @@ verbose=1
      say 'CRX0100E+['time('l')'] no source file specified'
      exit 8
   end
-
-  if verbose then say 'Input File:  ' infile
-  if verbose then say 'Output File: ' outfile
-  if verbose then say 'Macro Lib:   ' maclib
+  if verbose then do
+     say 'Input File:  ' infile
+     say 'Output File: ' outfile
+     say 'Macro Lib:   ' maclib
+  end
 
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
@@ -62,7 +63,8 @@ verbose=1
   call RXPPPassThree outfile                        ## analyse source and expand macros
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
-  call writeall outbuf,outfile,-1                   ## write generated output to file
+  call writeall outbuf,outfile,-1             ## write generated output to file
+  call linkerInfo outfile,imported_funcs      ## linker definition will be calculated out of the normal output file
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
@@ -265,6 +267,13 @@ RXPPPassThree: procedure
         end
      end
      else if stype.LineNo='PARSE' then call parsevar lineNo,line
+     else if stype.LineNo='IMPORT' then do
+        func=word(line,2)
+        if pos("|"func,imported_funcs)=0 then do
+           imported_funcs=imported_funcs"|"func   ## keep track of imported modules
+           call writeline line                    ## also write line, else it gets lost
+        end
+     end
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
@@ -296,6 +305,7 @@ GetPrecomp: procedure
       line = source.lineNo
       ucmd=upper(word(line,1))
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
+      else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
@@ -1126,7 +1136,6 @@ return i
  */
 parsevar: Procedure=.int
   arg lino=.int, parseLine=.string
-  if verbose then say 123 parseLine
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
@@ -1200,27 +1209,59 @@ parsevar: Procedure=.int
         insert.j=token.i"=_pass_variable_content."j
      end
   end
-  imax=insert.0+9
-
+  imax=insert.0+12       ## add 12 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
   rc=insert_array(source,lino+1,imax)
   rc=insert_array(stype,lino+1,imax)
-  inew=lino+1
-  source.inew='cparse('lhs',"'template'")'
-  inew=inew+1
+
+   inew=inject2Source(lino+1,0,'/* 'parseLine' */')
+   inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
+   inew=inject2Source(inew+1,3,'_string2Parse='lhs)
+   inew=inject2Source(inew+1,3,'_parsetemplate="'template'"')
+   inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content')
   if pos(' parse',cflags)>0 then do
-     source.inew='say "#PARSE STRING  : 'lhs'"'
-     inew=inew+1
-     source.inew='say "#PARSE TEMPLATE: 'template'"'
-     inew=inew+1
+     inew=inject2Source(inew+1,3,'say "#PARSE STRING  : 'lhs'"')
+     inew=inject2Source(inew+1,3,'say "#PARSE TEMPLATE: 'template'"')
   end
-  source.inew='## ---------- set parse variables ----------'
+  inew=inject2Source(inew+1,0,'## ---------- set parse variables ----------')
   do j=1 to insert.0
-     inew=inew+1
-     source.inew=insert.j
+     inew=inject2Source(inew+1,3,insert.j)
   end
-  inew=inew+1
-  source.inew='## ---------- parse variables set ----------'
+  inew=inject2Source(inew+1,0,'## ---------- parse variables set ----------')
 return token.0
+
+
+/* ------------------------------------------------------------------
+ * inject a new line into source code, the new lines must have been
+ * prepared prior to the call
+ * returns the line number used
+ * ------------------------------------------------------------------
+ */
+inject2Source: procedure=.int
+  arg lnr=.int,inc=.int,line=.string
+  if source.lnr \='' then say "++++++++++++ parse overflow at line "lnr' contains 'line
+  if inc>0 then source.lnr='   'line
+  else source.lnr=line
+  stype.lnr='R'
+return lnr
+/* ------------------------------------------------------------------
+ * Write Linker information contained includes
+ * ------------------------------------------------------------------
+ */
+linkerInfo: procedure
+  arg outfile=.string, imported=.string
+  userpath=translate(outfile,,'/\')
+  wrds=words(userpath)
+  member=word(userpath,wrds)
+  fmember=translate(member,,'.')
+  member=word(fmember,1)
+  wlast=wordindex(userpath,wrds)
+  userpath=substr(outfile,1,wlast-1)
+  userpath=translate(userpath,'/','/\')
+  linkfile=userpath||member'.inc'
+  linker.1=substr(imported,2)
+  call writeall linker,linkfile,-1
+  if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
+return
 
 /* ------------------------------------------------------------------
  * Check for relative or absolute path
@@ -1302,6 +1343,7 @@ rxppinit: procedure=.string
   macros_varname.1=''
   macros_varvalue.1=''
   included_files.1=''
+  imported_funcs=""
   lino=0
   outbuf.1 = ""
   mexpanded=0
