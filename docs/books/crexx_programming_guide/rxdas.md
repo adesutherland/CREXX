@@ -94,7 +94,7 @@ l7doend:
 ```
 
 The assembler produces an 'rxbin' file from that.
-What follows is the dissassembly from this 'rxbin' file.
+What follows is the disassembly from this 'rxbin' file.
 
 ```rxas <!--sumloop.disasm-->
 * MODULE - sumLoop1000

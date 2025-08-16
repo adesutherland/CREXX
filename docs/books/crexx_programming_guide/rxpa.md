@@ -180,5 +180,5 @@ In **bold**, the import statement loads the namespace meaning that any REXX modu
 
 * Extending the Architecture to support Address environments and variable “pool” access  
 * JSON Remote Plugin Support implementation (aka CREXXSAA)  
-* Additional Core Plugins (e.g.NCurses, SQLLite, Curl, etc)  
+* Additional Core Plugins (e.g.NCurses, SQLite, Curl, etc)  
 * Object and Decimal Support
