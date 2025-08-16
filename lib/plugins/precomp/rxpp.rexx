@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose imported_funcs
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -23,7 +23,7 @@ internal_testing=0    ## activate only for rxpp internal tests
 verbose=1
 
   ElapsedTime=time('us')
-  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
+
   do i=1 to command.0
      j=i+1
      command.i=upper(command.i)
@@ -32,8 +32,11 @@ verbose=1
      else if command.i='-O' then outfile=command.j
      else if command.i='-OUT' then outfile=command.j
      else if command.i='-M' then maclib=command.j
+     else if command.i='-VERBOSE0' then verbose=0
   end
 
+  if verbose then say 'CRX0010I ['time('l')'] Pre-Compile started'
+  
   if internal_testing=1 then do
      infile  = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rxpp'
      outfile = 'C:/Users/PeterJ/CLionProjects/CREXX250701/lib/plugins/system/treemap_test.rexx'
@@ -44,10 +47,11 @@ verbose=1
      say 'CRX0100E+['time('l')'] no source file specified'
      exit 8
   end
-
-  if verbose then say 'Input File:  ' infile
-  if verbose then say 'Output File: ' outfile
-  if verbose then say 'Macro Lib:   ' maclib
+  if verbose then do
+     say 'Input File:  ' infile
+     say 'Output File: ' outfile
+     say 'Macro Lib:   ' maclib
+  end
 
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
@@ -59,7 +63,8 @@ verbose=1
   call RXPPPassThree outfile                        ## analyse source and expand macros
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
-  call writeall outbuf,outfile,-1                   ## write generated output to file
+  call writeall outbuf,outfile,-1             ## write generated output to file
+  call linkerInfo outfile,imported_funcs      ## linker definition will be calculated out of the normal output file
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
@@ -130,7 +135,7 @@ RXPPPassTwo: procedure
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
   do while i>0
      if which<3 then condition=word(source.i,2)
-      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
+     else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
      call insert_array source,i,1
@@ -261,7 +266,14 @@ RXPPPassThree: procedure
            lineno=ifblock.lineno
         end
      end
-  ##   else if stype.LineNo='PARSE' then call CMD_parse lineno,line ## doesn't make sense!
+     else if stype.LineNo='PARSE' then call parsevar lineNo,line
+     else if stype.LineNo='IMPORT' then do
+        func=word(line,2)
+        if pos("|"func,imported_funcs)=0 then do
+           imported_funcs=imported_funcs"|"func   ## keep track of imported modules
+           call writeline line                    ## also write line, else it gets lost
+        end
+     end
      else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
@@ -292,14 +304,16 @@ GetPrecomp: procedure
       lineMin=max(LineNo-1,1)
       line = source.lineNo
       ucmd=upper(word(line,1))
+      if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
+      else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
+      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
-##    else if ucmd = '##PARSE' then stype.LineNo='PARSE'     ## is not worth it
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -348,7 +362,7 @@ return
          exit 8
       end
       nlen=nlen-1
-      if nlen>1 then body=strip(substr(body,1,nlen-1))' ; 'strip(source.nlino)
+      if nlen>1 then body=strip(substr(body,1,nlen))' ; 'strip(source.nlino)
       else body=strip(source.nlino)
       stype.nlino='D'
    end
@@ -428,20 +442,7 @@ CMD_set: procedure
   vind=setvar(varn,DropComment(subword(incl,3)))
   if varn='cflags' then cflags=word(lower(macros_varvalue.vind),1) ## set cflags additionally directly will be used often
 return
-/* ----------------------------------------------------------------------
- *  Print created tokens
- * ----------------------------------------------------------------------
- */
-token_print: procedure
-  arg template=.string,token=.string[],token_type=.string[]
-  if verbose then say 'Template='template
-  if verbose then say time('l')' Compile completed'
-  if verbose then say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
-  do j = 1 to token.0
-     if verbose then say "Token" j ": '"token.j"' Type:" token_type.j
-  end
-  if verbose then say time('l')' Parse String using compiled Template'
-  return
+
 /* ------------------------------------------------------------------
  * Drop comments at the end of a line
  * ------------------------------------------------------------------
@@ -830,7 +831,7 @@ replaceFixArg: Procedure=.string
      end
      bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
   end
-
+  if keypositional=0 then return bodyExp
   do k=keypositional to wrds        ## run through the macroc header definition
      aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
      aname=translate(aname,,'=')
@@ -1027,22 +1028,21 @@ return lhs || needle || rhs
  */
 parseArgList: procedure=.int
   arg argstr=.string
+  callargs.1=''
+  anum=splitargs(argstr,callargs)
+  do j=1 to anum                 ## could also be callargs.0
+     callargs.j=strip(callargs.j)
+  end
+  return callargs.0
   callargs.1 = ''
   i = 1
   depth = 0
   token = ''
-  ## +++++++++++++++ remove after stem problem solved
-##  do k=1 to 16
-  ##   call templist 'PUT',k,''    ### +++++++++++ remove
-##  end
-   ## +++++++++++++++ remove after stem problem solved
-##  call templist 'PUT',i,callargs.i
   do j = 1 to length(argstr)
     c = substr(argstr, j, 1)
     if c = ',' & depth = 0 then do
       callargs.i = strip(token)
       token = ''
- ##     call templist 'PUT',i,callargs.i         ### +++++++++++ remove
       i = i + 1
     end
     else do
@@ -1125,6 +1125,144 @@ setvar: procedure=.int
   macros_varname.i=varname
   macros_varvalue.i=varvalue
 return i
+
+
+/* ------------------------------------------------------------------------
+ * ##PARSE command, re-parse tokens from template to receive Variable names
+ *   PARSE VAR variable template
+ *   PARSE VALUE 'quoted-value' [WITH] template
+ *   PARSE VALUE variable [WITH] template
+ * ------------------------------------------------------------------------
+ */
+parsevar: Procedure=.int
+  arg lino=.int, parseLine=.string
+ ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
+ ##                1w  2w   3w     4w            1w    2w     3w                4w
+ ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
+ ##                1w   2w         3w        1w      2w                         3w
+  pmode=upper(word(parseLine,2))         ## check if we have a VALUE or VAR clause
+  if pmode='VALUE' | pmode= 'VAR' then ppi=wordindex(parseLine,4)  ## set behind VALUE/VAR clause, maybe there is the WITH clause
+  else ppi=wordindex(parseLine,3)  ## no parse mode
+  lhs=substr(parseLine,1,ppi-1)    ## now we have the var/value clause
+  if pmode='VALUE' | pmode= 'VAR' then swi=3   ## drop PARSE VALUE/VAR clause, which is subword 3
+  else swi=2                                   ## drop PARSE clause, which is subword 2
+  lhs=subword(lhs,swi)
+  template=subword(parseLine,swi+1)            ## from 3. or 4. word it is the template, or the WITH clause
+  if fpos('WITH',template,1)=1 then template=subword(template,2)   ## yes, then drop it too!
+
+## lhs format 1. value-string/variable
+  lhs=strip(lhs)
+  template=strip(template)
+  k = 0
+  token.1=''
+  do i = 1 to 4096  /* Large upper bound */
+     wrd = word(template, i)
+     if wrd = '' then leave   /* No more words */
+     do while wrd \= ''
+        p1 = pos("'", wrd)
+        p2 = pos('"', wrd)
+        if p1+p2=0 then do
+           k = k + 1
+           token.k = wrd
+           wrd = ''     /* Done with this word */
+           leave
+        end
+        if p2 = 0 | (p1>0 & p1<p2) then quote = "'"
+        else do
+           p1=p2
+           quote = '"'   /* either " exists before ' or only " exists */
+        end
+        if p1 > 1 then do     /* Add left hand side before quote, if any */
+           k = k + 1
+           token.k = substr(wrd, 1, p1 - 1)
+        end
+     /* Find matching closing quote */
+        p2 = pos(quote, wrd, p1 + 1)
+        if p2 = 0 then do
+           say 'Error: unmatched quote in word:' wrd
+           leave
+        end
+      /* Extract quoted segment */
+        k = k + 1
+        plen=p2 - p1+1
+        token.k = substr(wrd, p1,plen )
+        if p2>=length(wrd) then wrd=''   /* Cut off processed part */
+        else wrd = substr(wrd, p2 + 1)
+     end
+  end
+/* ----------------------------------------------------------------------
+ * Classify tokens in token_types
+ * ----------------------------------------------------------------------
+ */
+  j=0
+  do i=1 to token.0
+     quote=substr(token.i,1,1)
+     if quote = "'" | quote = '"' then do
+        token.i=strip(token.i,,quote)       ## drop quotes
+     end
+     else if verify(token.i,'0123456789')=0 then nop
+     else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
+     else do
+        if fpos('parse',token.i,1)>0 then iterate
+        if token.i='.' then iterate
+        j=j+1
+        insert.j=token.i"=_pass_variable_content."j
+     end
+  end
+  imax=insert.0+12       ## add 12 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
+  rc=insert_array(source,lino+1,imax)
+  rc=insert_array(stype,lino+1,imax)
+
+   inew=inject2Source(lino+1,0,'/* 'parseLine' */')
+   inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
+   inew=inject2Source(inew+1,3,'_string2Parse='lhs)
+   inew=inject2Source(inew+1,3,'_parsetemplate="'template'"')
+   inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content')
+  if pos(' parse',cflags)>0 then do
+     inew=inject2Source(inew+1,3,'say "#PARSE STRING  : 'lhs'"')
+     inew=inject2Source(inew+1,3,'say "#PARSE TEMPLATE: 'template'"')
+  end
+  inew=inject2Source(inew+1,0,'## ---------- set parse variables ----------')
+  do j=1 to insert.0
+     inew=inject2Source(inew+1,3,insert.j)
+  end
+  inew=inject2Source(inew+1,0,'## ---------- parse variables set ----------')
+return token.0
+
+
+/* ------------------------------------------------------------------
+ * inject a new line into source code, the new lines must have been
+ * prepared prior to the call
+ * returns the line number used
+ * ------------------------------------------------------------------
+ */
+inject2Source: procedure=.int
+  arg lnr=.int,inc=.int,line=.string
+  if source.lnr \='' then say "++++++++++++ parse overflow at line "lnr' contains 'line
+  if inc>0 then source.lnr='   'line
+  else source.lnr=line
+  stype.lnr='R'
+return lnr
+/* ------------------------------------------------------------------
+ * Write Linker information contained includes
+ * ------------------------------------------------------------------
+ */
+linkerInfo: procedure
+  arg outfile=.string, imported=.string
+  userpath=translate(outfile,,'/\')
+  wrds=words(userpath)
+  member=word(userpath,wrds)
+  fmember=translate(member,,'.')
+  member=word(fmember,1)
+  wlast=wordindex(userpath,wrds)
+  userpath=substr(outfile,1,wlast-1)
+  userpath=translate(userpath,'/','/\')
+  linkfile=userpath||member'.inc'
+  linker.1=substr(imported,2)
+  call writeall linker,linkfile,-1
+  if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
+return
+
 /* ------------------------------------------------------------------
  * Check for relative or absolute path
  * ------------------------------------------------------------------
@@ -1205,6 +1343,7 @@ rxppinit: procedure=.string
   macros_varname.1=''
   macros_varvalue.1=''
   included_files.1=''
+  imported_funcs=""
   lino=0
   outbuf.1 = ""
   mexpanded=0
@@ -1216,7 +1355,7 @@ rxppinit: procedure=.string
   wlast=wordindex(syspath,wrds)
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rexxname
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
     call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags

@@ -71,7 +71,7 @@ set(BIFS
 		index
 		xrange
 		parsecompile
-		parsetext
+		parsestring
 		parse
 		datatype
 )
