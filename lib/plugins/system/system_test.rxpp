@@ -47,23 +47,33 @@ say '4. parm 'fourth
 say '5. parm 'fifth
 say '6. parm "'six'"'
 
+string='11 2222 3333 44444 555555'
+parse string  first second third fourth fifth six
+say '--- end of parse instruction'
+say '1. parm 'first
+say '2. parm 'second
+say '3. parm 'third
+say '4. parm 'fourth
+say '5. parm 'fifth
+say '6. parm "'six'"'
+
 /* 2. split string at '-' delimiter */
 say "2. split string at '-' delimiter"
 s = '2025-08-14'
 parse s with year '-' . '-' day
 say '--- end of parse instruction'
-say year month day   ## 2025 08 14
+say year day   ## 2025 14
 say " "
 
-/* 3. split string at ';' delimiter */
-say "3. split string at ';' delimiter"
-s = 'host=example.com;port=5432;user=alice'
-parse s  with 'host=' host ';' 'port=' port ';' 'user=' user
+/* 3. split string at complex delimiter */
+say "3. split string at complex delimiter"
+s = 'host=example.com port=5432 user=alice'
+parse s  with 'host=' host 'port=' port 'user=' user
 say '--- end of parse instruction'
 say host port user   ## example.com 5432 alice
 say " "
 
-/* 4. split string at certain position */
+/* 4. split string at certain position     */
 say "4. split string at certain position"
 s = 'abcdef'
 parse s with a 3 b 5 c
@@ -78,5 +88,4 @@ parse s with a +2 b +2 c
 say '--- end of parse instruction'
 say a b c        ## ab cd ef
 say " "
-
 exit
