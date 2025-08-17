@@ -3,7 +3,7 @@ options levelb
 
 namespace rxfnsb expose x2c
 
-/* X2d(hex-string)  returns decimal number of hex string */
+/* X2c(hex-string)  returns character representation of hex string */
 
 x2c: procedure = .string
   arg hex = .string
