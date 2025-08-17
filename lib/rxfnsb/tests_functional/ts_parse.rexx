@@ -14,9 +14,9 @@ import rxfnsb
   template = "dsn'(' member "'")"mode'
   string2Parse = "  ms.mspdm.slib(crexx) SHR"
   say time('l')' Compile Template'
-  rc=parseCompile(template,token,token_type)
+  count=parseCompile(template,token,token_type)
      call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, token, token_type,variable,variable_content
+  call parseString string2Parse, count, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content    ## print variables
 ## 2. Example
 ## ----------
@@ -24,9 +24,9 @@ import rxfnsb
   template = "name 10 job +8 surname 'is-a' skill"
   string2Parse = "René     Captain Jansen is-a REXX wizard"
   say time('l')' Compile Template'
-  rc=parseCompile(template,token,token_type)
+  count=parseCompile(template,token,token_type)
     call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, token, token_type,variable,variable_content
+  call parseString string2Parse, count, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
 ## 3. Example
 ## ----------
@@ -34,9 +34,9 @@ import rxfnsb
   template = "first','second','third','fourth','fifth"
   string2Parse = "1. think,2. overthink,3. redesign,4. code in rexx and pray,5. blame the user"
    say time('l')' Compile Template'
-  rc=parseCompile(template,token,token_type)
+  count=parseCompile(template,token,token_type)
     call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, token, token_type,variable,variable_content
+  call parseString string2Parse, count, token, token_type,variable,variable_content
      call variable_print string2Parse, variable,variable_content   ## print variables
 ## 4. Example
 ## ----------
