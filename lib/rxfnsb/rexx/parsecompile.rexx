@@ -104,13 +104,16 @@ parseCompile: Procedure=.int
       iterate
     end
  /* t == 5 → decide whether to keep it */
+
     lt = 0; rt = 0
-    if i > 1        then lt = token_type.i-1
-    if i < tokenhi  then rt = token_type.i+1
+    ix=i-1
+    if i > 1        then lt = token_type.ix
+    ix=i+1
+    if i < tokenhi  then rt = token_type.ix
     if (lt = 1 & rt = 1) then do  /* VAR ␠ VAR ⇒ keep as word delimiter */
-      out = out + 1
-      token.out      = token.i
-      token_type.out = 5
+       out = out + 1
+       token.out      = token.i
+       token_type.out = 5
     end
  end
 

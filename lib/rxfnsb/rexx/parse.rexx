@@ -12,5 +12,6 @@ parse: Procedure=.int
   token.1=''          ## init token array
   token_type.1=''     ## init types array
   count=parseCompile(template,token,token_type)
+
   call parseString string2Parse, count, token, token_type,variable,variable_content
 return variable.0

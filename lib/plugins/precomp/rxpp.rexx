@@ -20,7 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=1
+verbose=0
 
   ElapsedTime=time('us')
 
@@ -1136,21 +1136,28 @@ return i
  */
 parsevar: Procedure=.int
   arg lino=.int, parseLine=.string
+
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
  ##                1w   2w         3w        1w      2w                         3w
-  pmode=upper(word(parseLine,2))         ## check if we have a VALUE or VAR clause
-  if pmode='VALUE' | pmode= 'VAR' then ppi=wordindex(parseLine,4)  ## set behind VALUE/VAR clause, maybe there is the WITH clause
-  else ppi=wordindex(parseLine,3)  ## no parse mode
-  lhs=substr(parseLine,1,ppi-1)    ## now we have the var/value clause
-  if pmode='VALUE' | pmode= 'VAR' then swi=3   ## drop PARSE VALUE/VAR clause, which is subword 3
-  else swi=2                                   ## drop PARSE clause, which is subword 2
-  lhs=subword(lhs,swi)
-  template=subword(parseLine,swi+1)            ## from 3. or 4. word it is the template, or the WITH clause
-  if fpos('WITH',template,1)=1 then template=subword(template,2)   ## yes, then drop it too!
-## lhs format 1. value-string/variable
+  parseLine=subword(parseLine,2)    ## strip off PARSE command
+  pmode=upper(word(parseLine,1))    ## check if we have a VALUE or VAR clause
+  if pmode='VALUE' | pmode= 'VAR' then parseLine=subword(parseLine,2)   ## set behind VALUE/VAR clause
+
+  sstr=substr(parseLine,1,1)
+  if sstr="'" | sstr='"' then do
+     lhs=Firstword(parseLine)
+     parseLine=substr(parseLine,length(lhs)+1)
+  end
+  else do
+     lhs=word(parseLine,1)
+     ParseLine=subword(ParseLine,2)
+  end
+  if fpos('WITH',parseLine,1)=1 then template=subword(ParseLine,2)   ## yes, then drop it too!
+  else template=ParseLine
   lhs=strip(lhs)
+
   template=preCleanTemplate(template)
   template=strip(template)
   template=preCleanTemplate(template)
@@ -1334,6 +1341,41 @@ preCleanTemplate: procedure=.string
     last_out_char = ch
   end
   return out
+
+/* ------------------------------------------------------------------
+ * Find 1. word if the string is a quoted string
+ * ------------------------------------------------------------------
+ */
+FirstWord: Procedure=.string
+  arg line=string
+  line = strip(line)
+  i = 1
+  quoted = ''
+  llen=length(line)
+  do while i <= llen
+     qchar = substr(line,i,1)
+     if qchar = '"' | qchar = "'" then do
+        i = i + 1
+        part = ''
+        do while i <= llen
+           c = substr(line,i,1)
+           if c = qchar then do
+              if substr(line,i+1,1) \= qchar then leave   /* search for quote */
+              part = part || qchar
+              i = i + 2
+              iterate
+           end
+           part = part || c
+           i = i + 1
+        end
+        quoted = quoted || part
+        i = i + 1
+     end
+     else if qchar = ' ' then leave
+     else leave
+  end
+return "'"quoted"'"
+
 /* ------------------------------------------------------------------
  * inject a new line into source code, the new lines must have been
  * prepared prior to the call

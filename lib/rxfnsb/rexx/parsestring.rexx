@@ -15,7 +15,6 @@ namespace rxfnsb expose parseString
  */
 parsestring: procedure
   arg parse_string=.string, tokenhi=.int, token=.string[],token_type=.string[],expose variable=.string[],expose variable_content=.string[]
-
   /* treat these as whitespace for type=5 */
   WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'A0'x
 
@@ -23,13 +22,15 @@ parsestring: procedure
   j             = 0                 /* count of variables assigned       */
   lastVarIndex  = 0                 /* k index of the last VAR token     */
   L             = length(parse_string)
+
+  remainderpos=0
   do k = 1 to tokenhi
       type = token_type.k
       if type = 1 then do                 /* VAR name */
          j = j + 1
          variable.j = token.k
          lastVarIndex = k
-      end
+       end
       else if type = 3 | type = 4 then do       /* ABS/REL position */
         newpos = token.k
         if type = 4 then newpos = pointer + newpos
@@ -86,16 +87,19 @@ parsestring: procedure
            end
         /* skip the entire whitespace run (treat as a single blank) */
            runEnd = p
+           remainderpos=pointer+2    ## if it the last variable, we set behind the variable and allow 1 blank
            do while runEnd <= lenC & pos(substr(chunk, runEnd, 1), WHITESPACE) > 0
               runEnd = runEnd + 1
            end
            pointer = pointer + runEnd - 1
+
         end
       end
   end
 
   /* final fallback: remaining tail to the last pending variable */
   if lastVarIndex > 0 & token_type.lastVarIndex = 1 then do
+     if remainderpos>0 then pointer=remainderpos
      if pointer <= L then variable_content.j = substr(parse_string, pointer)
      else variable_content.j = ''
      lastVarIndex = 0

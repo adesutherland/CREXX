@@ -89,7 +89,7 @@ This document explains how the RXPP (REXX Preprocessor for CREXX) macro system f
 
 ## 🔧 What is RXPP?
 
-**RXPP** is a precompiler for REXX scripts designed to run within the **CREXX** environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
+**RXPP** is a preprocessor for REXX scripts designed to run within the **CREXX** environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
 
 ---
 
@@ -118,7 +118,7 @@ Or, without arguments:
 ##define MACRONAME {macro body}
 ```
 
-* Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler.
+* Macros must be defined **before** they're used as the preprocessor is a one-pass compiler.
 * Multiple REXX statements within a macro must be separated by a semicolon (`;`).
 * The macro body is enclosed in `{}` and treated as replacement text.
 * RXPP supports multi-line macro definitions using C-style line continuation syntax:
@@ -633,7 +633,7 @@ Use the following flags in `cflags` to control diagnostic output during the pre-
 | **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
 | **1buf**     | Displays the raw source input immediately after it is read from the file.                                                        |
 | **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
-| **3buf**     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
+| **3buf**     | Displays the final source buffer just before it is passed to the preprocessor.                                                   |
 | **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
 | **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
 | **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
@@ -853,7 +853,7 @@ This document illustrates the main routine of the pre-compilation process, showi
 | ------------------------------ | -------------------------------------------------------------------- |
 | ✅ **Nested `##IF`/`##IFN` blocks** | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
 | 🆎 Case                        | Variable names are case-insensitive                                  |
-| 📄 Variable scope              | All variables are global to the precompiler pass                     |
+| 📄 Variable scope              | All variables are global to the preprocessor pass                     |
 | 🔁 Processing stages           | All `##IF`/`##IFN` are evaluated before macro expansion              |
 | 💥 Error handling              | Unmatched `##IF` or `##ENDIF` produces an error                      |
 
@@ -1125,7 +1125,7 @@ conf="L"
 ```bat
 @echo off
 echo Configuration File loaded
-set preCompiler=rxpp
+set preprocessor=rxpp
 set plugin=precomp
 set conf=L
 
@@ -1137,14 +1137,14 @@ set lib=%build%/lib/rxfnsb/library
 set rxc=%build%/compiler
 set rxas=%build%/assembler
 set rxvm=%build%/interpreter
-set rxpre=%pluglib%/%preCompiler%
+set rxpre=%pluglib%/%preprocessor%
 ```
 
 ### rxconfig.sh
 ```bash
 echo "Configuration File loaded"
 
-preCompiler="rxpp"
+preprocessor="rxpp"
 plugin="precomp"
 conf="L"
 
@@ -1156,7 +1156,7 @@ lib="$build/lib/rxfnsb/library"
 rxc="$build/compiler"
 rxas="$build/assembler"
 rxvm="$build/interpreter"
-rxpre="$pluglib/$preCompiler"
+rxpre="$pluglib/$preprocessor"
 ```
 
 ### rxprecomp.bat
