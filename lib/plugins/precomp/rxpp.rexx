@@ -1234,6 +1234,7 @@ parsevar: Procedure=.int
      else if quote = " " then  token_type.i=2     ## blank seperator
      else if verify(token.i,'0123456789')=0 then nop
      else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
+     else if (quote='(') then nop    ## token_type.i=6
      else do
         if fpos('parse',token.i,1)>0 then iterate
         if token.i='.' then iterate

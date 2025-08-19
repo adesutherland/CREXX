@@ -92,29 +92,31 @@ parseCompile: Procedure=.int
     else if quote = " " then  token_type.i=5     ## blank seperator
     else if verify(token.i,'0123456789')=0 then token_type.i=3
     else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then token_type.i=4
+    else if (quote='(') then token_type.i=6
     else token_type.i  = 1
   end
   out = 0
   do i = 1 to tokenhi
-    t = token_type.i
-    if t \= 5 then do
-      out = out + 1
-      token.out      = token.i
-      token_type.out = t
-      iterate
-    end
+     t = token_type.i
+     if t = 6 then token.i=substr(token.i,2,length(token.i)-2)
+     if t \= 5 then do
+        out = out + 1
+        token.out      = token.i
+        token_type.out = t
+        iterate
+     end
  /* t == 5 → decide whether to keep it */
 
-    lt = 0; rt = 0
-    ix=i-1
-    if i > 1        then lt = token_type.ix
-    ix=i+1
-    if i < tokenhi  then rt = token_type.ix
-    if (lt = 1 & rt = 1) then do  /* VAR ␠ VAR ⇒ keep as word delimiter */
-       out = out + 1
-       token.out      = token.i
-       token_type.out = 5
-    end
+     lt = 0; rt = 0
+     ix=i-1
+     if i > 1        then lt = token_type.ix
+     ix=i+1
+     if i < tokenhi  then rt = token_type.ix
+     if (lt = 1 & rt = 1) then do  /* VAR ␠ VAR ⇒ keep as word delimiter */
+        out = out + 1
+        token.out      = token.i
+        token_type.out = 5
+     end
  end
 
 return out
