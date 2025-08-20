@@ -1237,8 +1237,8 @@ parsevar: Procedure=.int
      else if (quote='(') then nop    ## token_type.i=6
      else do
         if fpos('parse',token.i,1)>0 then iterate
-        if token.i='.' then iterate
         j=j+1
+        if token.i='.' then iterate
         insert.j=token.i"=_pass_variable_content."j
      end
   end
