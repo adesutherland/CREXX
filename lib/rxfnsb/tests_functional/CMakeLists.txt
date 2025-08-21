@@ -55,7 +55,8 @@ set(REXXBINS
         ts_sequence.rxbin
         ts_find.rxbin
         ts_index.rxbin
-        ts_parse.rxbin
+        ts_parse.rxbin	
+        ts_parse2.rxbin
         ts_datatype.rxbin
 )
 
