@@ -62,6 +62,11 @@ set(BIFS
 		subword
 		wordlength
 		wordpos
+		qword
+		qwordlength
+		qwords
+		qwordindex
+		qsubword
 		x2b
 		x2c
 		x2d
