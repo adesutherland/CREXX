@@ -18,7 +18,7 @@ namespace rxfnsb expose parseString
  * ---------------------------------------------------------------------- */
 parsestring: procedure
   arg parse_string=.string, tokenhi=.int, token=.string[], token_type=.string[], ,
-      expose variable=.string[], expose variable_content=.string[]
+      expose variable=.string[], expose variable_content=.string[], template="unknown"
 
   /* treat these as whitespace for type=5 */
   WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'A0'x
@@ -32,27 +32,34 @@ parsestring: procedure
   pendingK      = 0              /* token index of that VAR (debug/help)      */
   pendingStart  = 0              /* absolute start of the current field       */
   newpos        = 0
-  debug=0
+  beforeptr     = 0
+  debug = 0       /* 11 detailed debug, 10 just variable setings */
 
   /* Optional “allow one blank” start for final fallback */
   finalAfterOneBlank = 0
 
   /* diagnostics per variable */
-  do zi = 1 to tokenhi
-     token_lastpos.zi = 0
-     if debug=1 then say 'Tokens 'zi "'"token.zi"'" token_type.zi "'"parse_string"'"
-  end
+    if debug >= 10 then do
+       say copies('-',32)
+       say '++ String to Parse "'parse_string"'"
+       say '++ Template "'template"'"
+    end
+
+   do zi = 1 to tokenhi
+      token_lastpos.zi = 0
+      if debug = 11 then say 'Tokens 'zi "'"token.zi"'" token_type.zi "'"parse_string"'"
+   end
 
   /* ---------- main loop ---------- */
   do k = 1 to tokenhi
      type = token_type.k
-     if debug=1 then say 'Fetch next token, Index 'k', Token "'token.k'" type 'type
+     if debug = 11 then say 'Fetch next token, Index 'k', Token "'token.k'" type 'type
 /* -------------------------------------------------------------------
  * VAR opens a new field
  * -------------------------------------------------------------------
  */
      if type = 1 then do
-        if debug=1 then say 'entering Type 'type 'var-number 'j' Pointer 'pointer
+        if debug = 11 then say 'entering Type 'type 'var-number 'j' Pointer 'pointer
         j = j + 1
         variable.j = token.k
         pendingJ     = j
@@ -65,19 +72,34 @@ parsestring: procedure
  * -------------------------------------------------------------------
  */
      else if type = 3 | type = 4 then do
+       if beforeptr>0  then do
+          if debug = 11 then say '** entering Type 'type' Current Pointer 'pointer' has been reset to 'beforeptr
+          pointer=beforeptr
+          pendingStart=pointer
+          beforeptr=0
+        end
+
+        newpos=0
         newpos = token.k
         if type = 4 then newpos = pointer + newpos
         if newpos < 1 then newpos = 1
         if newpos > L + 1 then newpos = L + 1
-        if debug=1 then say 'entering Type 'type' Current Pointer 'pointer' set Pointer to 'token.k' new Pointer 'newpos
+
+        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' set Pointer to 'token.k' new Pointer 'newpos
         if pendingJ > 0 then do
            token_lastpos.pendingJ   = pendingStart
-           if newpos <= pendingStart then variable_content.pendingJ=substr(parse_string, pendingStart)
-           else variable_content.pendingJ = substr(parse_string, pendingStart, newpos - pendingStart)
-           if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-           pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+           if newpos <= pendingStart then do
+              variable_content.pendingJ=substr(parse_string, pendingStart)
+              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" (remainder from 'effStart' due to backward move)'
+           end
+           else do
+              variable_content.pendingJ = substr(parse_string, pendingStart, newpos - pendingStart)
+              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" [slice 'pendingStart'..'newpos-pendingStart']'
+           end
+           pendingJ = 0 ; pendingK = 0 ; pendingStart = 0; beforeptr=0
         end
         pointer = newpos
+        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
         iterate
      end
 /* -------------------------------------------------------------------
@@ -87,14 +109,14 @@ parsestring: procedure
      else if type = 2 then do
         chunk = substr(parse_string, pointer)
         p = pos(token.k, chunk)  /* position of delimiter relative to pointer */
-        if debug=1 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Search pattern "'token.k'" located at 'p
+        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Search pattern "'token.k'" located at 'p
         if p = 0 then do
            /* not found: dump remainder to pending VAR */
            if pendingJ > 0 then do
               token_lastpos.pendingJ    = 0
               variable_content.pendingJ = substr(parse_string, pendingStart)
-              if debug=1 then say 'leaving Type 'type' new Pointer 'pointer' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+              if debug >= 10 then say '>> Variable Set Type 'type' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
+              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
            end
            pointer = L + 1
         end
@@ -103,13 +125,17 @@ parsestring: procedure
               token_lastpos.pendingJ    = pendingStart
               /* slice up to char before delimiter */
               variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-              if debug=1 then say 'leaving Type 'type' new Pointer 'pointer' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+              if debug >= 10 then say '>> Variable Set Type 'type' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
+              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
            end
+           beforeptr = pointer + p  -1   ## just keep beforeptr if there was a variable set
            /* hop past the delimiter */
            pointer = pointer + p - 1 + length(token.k)
         end
-
+        if debug = 11 then do
+           say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
+           if beforeptr>0 then say '.... Alternatively New Pointer 'beforeptr' pointing at "'substr(parse_string,beforeptr)'"'
+        end
         iterate
      end
 /* -------------------------------------------------------------------
@@ -126,7 +152,7 @@ parsestring: procedure
         chunk = substr(parse_string, pointer)
         lenC  = length(chunk)
         /* find first whitespace from current pointer */
-        if debug=1 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Find first WS'
+        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Find first WS'
 
         p = 0
         do xi = 1 to lenC
@@ -140,7 +166,7 @@ parsestring: procedure
            if pendingJ > 0 then do
               token_lastpos.pendingJ    = 0
               variable_content.pendingJ = substr(parse_string, pendingStart)
-              if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" Remaing'
+              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" Remaing'
               pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
            end
            pointer = L + 1
@@ -149,8 +175,8 @@ parsestring: procedure
            if pendingJ > 0 then do
               token_lastpos.pendingJ    = pendingStart
               variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-              if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" from 'PendingStart' up to 'pointer + p - 1
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" from 'PendingStart' up to 'pointer + p - 1
+              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
            end
 
            /* record “allow one blank” position for final fallback (after first blank) */
@@ -163,6 +189,7 @@ parsestring: procedure
            end
            pointer = pointer + runEnd - 1
         end
+        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
         iterate
      end
 /* -------------------------------------------------------------------
@@ -170,7 +197,7 @@ parsestring: procedure
  * -------------------------------------------------------------------
  */
      else if type = 6 then do
-          if debug=1 then say 'entering Type 'type' Search for already set Variable 'token.k
+          if debug = 11 then say 'entering Type 'type' Search for already set Variable 'token.k
           jj=0
           do ii=1 to k-1
              if token_type.ii\=1 then iterate
@@ -185,8 +212,8 @@ parsestring: procedure
              if pendingJ > 0 then do
                 token_lastpos.pendingJ    = 0
                 variable_content.pendingJ = substr(parse_string, pendingStart)
-                if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-                pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+                if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
+                pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
              end
              pointer = L + 1
           end
@@ -194,12 +221,13 @@ parsestring: procedure
              if pendingJ > 0 then do
              /* slice up to char before delimiter */
              variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-             if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-             pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+             if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
+             pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
           end
           /* hop past the delimiter */
            pointer = pointer + p - 1 + length(variable_content.jj)
         end
+        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
         iterate
        end
   end  /* k loop */
@@ -211,11 +239,10 @@ parsestring: procedure
         found by a prior type-5; otherwise use the current pointer. */
      startPos = pointer
      if finalAfterOneBlank > 0 then startPos = finalAfterOneBlank
-     if debug=1 then say 'Pending assignments penddingJ 'startPos L parse_string
      if startPos <= L then variable_content.pendingJ = substr(parse_string, startPos)
                       else variable_content.pendingJ = ''
      token_lastpos.pendingJ = startPos
-     if debug=1 then say 'Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
+     if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
      pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
   end
 return
