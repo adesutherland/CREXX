@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose imported_funcs
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose imported_funcs
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -120,7 +120,7 @@ RXPPPassOne: procedure = .int
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
   if verbose then say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
-  call sort_bylen macros_mname,macros_margs,macros_mbody ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
+  call sort_bylen macros_mname,macros_margs,macros_mbody,macros_mspace ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
   if verbose then say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
 return rexxlines
 /* ------------------------------------------------------------------
@@ -329,8 +329,15 @@ return
    name    = ''
    arglist = ''
    body    = ''
+   dspace=0
+   mtype=upper(word(line,2))
+   if mtype = 'FUNCTION' | mtype='FKT' then def = subword(line, 3)
+   if mtype = 'COMMAND' | mtype='CMD' then do
+      def = subword(line, 3)
+      dspace=1
+   end
+   else def = subword(line, 2)
 
-   def = subword(line, 2)
    wrd=word(def,1)
    ppi = pos('(', wrd,1)    ## must be in macro name, not in later macro body
    if ppi > 1 then do  /* Format: name(arg1, arg2) body */
@@ -340,15 +347,19 @@ return
          say 'CRX0930E+['time('l')'] missing closing parenthesis in macro definition: ' def
          exit 8
       end
-      if ppi2 - ppi - 1>0 then arglist = strip(substr(def, ppi + 1, ppi2 - ppi - 1))
-      else arglist=''
-      body    = strip(substr(def, ppi2 + 1))
+      if ppi2 - ppi - 1<=0 then arglist=''
+      else do
+         arglist = strip(substr(def, ppi + 1, ppi2 - ppi - 1))
+         if dspace=1 then arglist=ConcParms(arglist)
+      end
+      body= strip(substr(def, ppi2 + 1))
    end
    else do /* Format: name body (no arguments) */
-      name = word(def, 1)
+      name = wrd
       body = subword(def, 2)
       arglist=''
    end
+
 /* Remove braces and trim */
    body = strip(body)
    stype.nlino='D'
@@ -387,10 +398,24 @@ return
    end
 
    if macros_mname.i \= '' then i = i + 1
-   macros_mname.i = upper(name)'('
+   if dspace=1 then macros_mname.i = upper(name)' '
+   else macros_mname.i = upper(name)'('
    macros_margs.i = strip(arglist)
    macros_mbody.i = body
+   macros_mspace.i= dspace
 return nlino
+/* ------------------------------------------------------------------
+ * Concatenate all parms by ','
+ * ------------------------------------------------------------------
+ */
+ConcParms: Procedure=.string
+   arg inparm=.string
+   sargs=''
+   do i=1 to words(inparm)
+      sargs=sargs','word(inparm,i)
+   end
+   if sargs='' then return ''
+return substr(sargs,2)
 /* ------------------------------------------------------------------
  * Count braces to recognise multi line macros
  * ------------------------------------------------------------------
@@ -741,16 +766,21 @@ expandLine:  procedure=.string
 return line
 /* ------------------------------------------------------------------
  * Try to resolve macro by available macro definition
+ *     line is input line
+ *     i    contains macro index to resolve line
  * ------------------------------------------------------------------
  */
  resolveMacro: procedure=.string
    arg i=.int, line=.string,level=.int
+   ppl=lastpos('##',line)       ## ending comment, if any
+   if ppl>1 then line=substr(line,1,ppl-1)
    uline   = upper(line)
    callPos = 0
    /* load the macro header and definition */
    name    = macros_mname.i    ## macro name
    args    = macros_margs.i    ## macro arguments
-   body    = macros_mbody.i    # macros body {...}
+   body    = macros_mbody.i    ## macros body {...}
+   mspace  = macros_mspace.i   ## macro type, 1 is a sapce type, 0, normal, parms are separated by ","
 
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
@@ -762,20 +792,22 @@ return line
    else isVariadic = 0
 
    do forever
-      callpos=pos(name, uline, callPos + 1)        ## use fpos function to search case-insensitive
-      if callpos=0 then leave
-    ## some logging if wanted
-       if printgen_flags='all' then call writeline printGen(strip(line),0)
+      callpos=pos(name, uline, callPos + 1)        ## search position of macro in input line
+      if callpos=0 then leave                      ## nothing there, leave
+    ## now we know macro is part of the line
+       if printgen_flags='all' then call writeline printGen(strip(line),0)     ## some logging if wanted
        else if level=0 & printgen_flags='nnest' then call writeline printGen(strip(line),0)
-    ## handle various parms
        level=level+1     ## increase level in case a second instance of macro is found
+    ## check which char is prior the macro call
        if callpos>1 then do
           status_before=verify(substr(uline,callpos-1,1), alphaN, 'N')
           if status_before=0 then iterate
        end
+    ## move remaing line, which is the argument list of the macro
        remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
-     ## extract argument list
+    ## extract argument list
        argtext = fetchArguments(remain)
+       if mspace=1 then argtext=ConcParms(argtext)
        callargcount = parseArgList(argtext)
        bodyExp = body
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
@@ -784,6 +816,7 @@ return line
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
        line=insertatc(bodyexp,line,callpos,callLen)
+
        uline   = upper(line)         /* update uline for repetition */
        callPos = callPos - 1        /* set next start point */
     end
@@ -1487,6 +1520,7 @@ rxppinit: procedure=.string
   source.1=''
   stype.1='R'
   macros_mname.1=''
+  macros_mspace.1=0
   macros_varname.1=''
   macros_varvalue.1=''
   included_files.1=''

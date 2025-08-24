@@ -68,6 +68,7 @@ PROCEDURE (sort_bylen) {
                 SWAPARRAY(ARG0, j, j - gap);
                 SWAPARRAY(ARG1, j, j - gap);
                 SWAPARRAY(ARG2, j, j - gap);
+                SWAPARRAY(ARG3, j, j - gap);
             }
         }
     }
@@ -268,7 +269,8 @@ PROCEDURE (hasmacro) {
     from = GETINT(ARG2)-1;
     if (from<0) from=0;
     if (from>=mmax) RETURNINTX(0);
-    if (strstr(line,"(")==0) RETURNINTX(0);  // there is no need to go over a macro search if there isno macro call having a ( sign
+  //  no more check for ( in macro call as we allow macros without it
+  //  if (strstr(line,"(")==0) RETURNINTX(0);  // there is no need to go over a macro search if there isno macro call having a ( sign
     while (isspace((unsigned char)*line)) {
         line++;
     }
@@ -282,9 +284,11 @@ PROCEDURE (hasmacro) {
     dupline= strupr_portable(dupline);
     for (i = from; i<mmax; i++) {
         if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
+
             RETURNINTX(i + 1);
         }
     }
+    free(dupline);
     RETURNINTX(0);
     PROCRETURN
     ENDPROC
@@ -297,7 +301,7 @@ PROCEDURE (insertat) {
     char * haystack= GETSTRING(ARG1);
     int at =  GETINT(ARG2)-1;
     int len = GETINT(ARG3) ;
-    //   printf("111 needle '%s' haystack '%s' at %d len %d\n",needle,haystack,at,len);
+ //   printf("111 needle '%s' haystack '%s' at %d len %d\n",needle,haystack,at,len);
     int haystack_len = strlen(haystack);
     int needle_len = strlen(needle);
 
@@ -680,7 +684,7 @@ PROCEDURE(templist) {
 LOADFUNCS
     ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
     ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
-    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[]");
+    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[],expose d = .int[]");
     ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
     ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
     ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
