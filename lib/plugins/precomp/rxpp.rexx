@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel ifblock elapsedTime verbose imported_funcs
+namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -130,12 +130,13 @@ return rexxlines
 RXPPPassTwo: procedure
   stack.1 = ''         /* simulate stack using indexed stem */
   depth = 0            /* current depth */
-  ifblock.1=0  ifblock.1=0
+  aifblock.1=0
   which=0
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
   do while i>0
      if which<3 then condition=word(source.i,2)
      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
+
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
      call insert_array source,i,1
@@ -145,6 +146,7 @@ RXPPPassTwo: procedure
      j=i+1
      source.j='##ifn 'condition
      i=fsearch(source,j+1,'##IF ','##IFN ',"",which)   ## search as first word in the source string
+               say 456 i which
   end
 
   which=0
@@ -153,19 +155,22 @@ RXPPPassTwo: procedure
      if which=1 then stype.i='IF'
      else if which=2 then stype.i='IFN'
      lnk=findMatchingEndif(i+1)
-     ifblock.i=lnk
+     say 'endif found, for 'i '->' lnk
+     aifblock.i=lnk
+     say 'LNK 'i' -> 'aifblock.i lnk
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
-  end
+   end
   i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
   do while i>0
      call oocreatedefs i
      i=ffind(source,i+1,'OOCREATE(')   ## search as next word in the source string
   end
   if pos(' iflink',cflags)=0 then return
-  if ifblock.0=0 then say "+++ no Pre Source Expansion occurred"
-  else do i=1 to ifblock.0
-     if ifblock.i=0 then iterate
-     lnk=ifblock.i
+  if aifblock.0=0 then say "+++ no Pre Source Expansion occurred"
+  else do i=1 to aifblock.0
+     say aifblock.0 aifblock.i
+     if aifblock.i=0 then iterate
+     lnk=aifblock.i
      if verbose then say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
      do j=i+1 to lnk
         if verbose then say '? skipped: 'right(j,4,'0')' 'strip(source.j)
@@ -225,6 +230,7 @@ findMatchingEndif: procedure=.int
   nest = 1  /* Start at 1 because the current ##IF is level 1 */
   which = 0
   i = fsearch(source, startline, '##IF ','##IFN ','##END', which)
+  say 'ifx 'startline i which
   do while i > 0
     if which = 1 | which=2 then nest = nest + 1
     else if which = 3 then do
@@ -233,6 +239,7 @@ findMatchingEndif: procedure=.int
       if nest = 0 then return i  /* finally matched ##ENDIF */
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
+      say 'ifx 'i+1 i which
   end
   if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
 return 0
@@ -256,14 +263,14 @@ RXPPPassThree: procedure
      end
      else if stype.LineNo='IF' then do
        ##  call writeLine printGen(line,4)
-       if findvar(word(line,2))=0 & ifblock.lineno>0 then do
-           lineno=ifblock.lineno
+       if findvar(word(line,2))=0 & aifblock.lineno>lineNo then do   ## only forward pointer are permitted, else loop
+           lineno=aifblock.lineno
         end
      end
      else if stype.LineNo='IFN' then do
        ##  call writeLine printGen(line,4)
-        if findvar(word(line,2))>0 & ifblock.lineno>0 then do
-           lineno=ifblock.lineno
+        if findvar(word(line,2))>0 & aifblock.lineno>lineNo then do  ## only forward pointer are permitted, else loop
+           lineno=aifblock.lineno
         end
      end
      else if stype.LineNo='PARSE' then call parsevar lineNo,line
@@ -791,6 +798,10 @@ return line
    end
    else isVariadic = 0
 
+   if mspace=1 then do   ## command macros have stricter rule, they must be the first word of the line and they can't be nested
+      say word(uline,1) "'"name"'"
+      if word(uline,1) \=strip(name) then return line  ## not a valid command macro call
+   end
    do forever
       callpos=pos(name, uline, callPos + 1)        ## search position of macro in input line
       if callpos=0 then leave                      ## nothing there, leave
@@ -812,16 +823,15 @@ return line
        bodyExp = body
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
     /* Here is the non variadic processing */
-       bodyExp = replaceFixArg(bodyExp, name,args)
+       bodyExp = replaceFixArg(bodyExp, name,args,callargcount)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
        line=insertatc(bodyexp,line,callpos,callLen)
-
-       uline   = upper(line)         /* update uline for repetition */
-       callPos = callPos - 1        /* set next start point */
+       if mspace= 1 then leave        /* nesting for command macros are not permitted */
+       uline    = upper(line)         /* update uline for repetition */
+       callPos  = callPos - 1         /* set next start point */
     end
 return line
-
 /* ------------------------------------------------------------------
  * Inject pre-compiler variable into line
  * ------------------------------------------------------------------
@@ -846,11 +856,18 @@ return line2change
  * ------------------------------------------------------------------
  */
 replaceFixArg: Procedure=.string
-  arg bodyexp=.string,macname=.string, xargs=.string
+  arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int
   iargs=xargs
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
-## First take the positional parameters
+  if wrds\=callargcount then do    ## callargs.0 is may be not set properly
+     say wrds callargcount
+     call writeline '## +++++ macro 'macname' call parameters do not match with template'
+     call writeline '## +++++ template 'quote(xargs)
+     say '+++++ macro 'macname' call parameters do not match with template'
+     say '+++++ template 'quote(xargs)
+  end
+ ## First take the positional parameters
   keypositional=0
   do k=1 to wrds
      aname = word(xargs, k)
@@ -863,7 +880,7 @@ replaceFixArg: Procedure=.string
         return '+++ SyntaxError: positional argument follows keyword argument 'macname||iargs')'
      end
      bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
-  end
+   end
   if keypositional=0 then return bodyExp
   do k=keypositional to wrds        ## run through the macroc header definition
      aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
@@ -1005,19 +1022,16 @@ return str
  * ------------------------------------------------------------------ */
 replaceArg: procedure=.string
   arg str=.string, name=.string, value=.string
-
   posn = 1
   p = fpos(name, str, posn)
   nlen=length(name)
-
   do while p > 0
      before = ''
      if p > 1 then before = substr(str, p - 1, 1)
 
      after1 = substr(str, p + nlen, 1)          /* next 1 char */
      after2 = substr(str, p + nlen, 2)          /* next 2 chars */
-
-     /* ---- Fast path: explicit end-of-param "##" right after name ---- */
+  /* ---- Fast path: explicit end-of-param "##" right after name ---- */
      if after2 = '##' then do
         /* replace NAME## with VALUE (consume the hashes) */
         str  = insertatc(value, str, p, nlen+2)
@@ -1029,7 +1043,6 @@ replaceArg: procedure=.string
      /* ---- Original boundary check: only replace full identifiers ---- */
      verbb = verify(before, alphaN, 'N')  /* 0 => before is [A-Za-z0-9_] */
      verba = verify(after1, alphaN, 'N')  /* 0 => after  is [A-Za-z0-9_] */
-
      if length(before) = 0 then verbb = 1
      if length(after1)  = 0 then verba = 1
 
@@ -1063,10 +1076,11 @@ parseArgList: procedure=.int
   arg argstr=.string
   callargs.1=''
   anum=splitargs(argstr,callargs)
-  do j=1 to anum                 ## could also be callargs.0
+  do j=1 to anum                 ## could also be callargs.0, but might be not set correctly due to higher previous macro call
      callargs.j=strip(callargs.j)
   end
-  return callargs.0
+return anum
+/* ------------------- the following sequence is part of the C function splitargs
   callargs.1 = ''
   i = 1
   depth = 0
@@ -1089,6 +1103,7 @@ parseArgList: procedure=.int
   ##   call templist 'PUT',i,callargs.i      ### +++++++++++ remove
   end
 return i
+----------------- */
 /* ------------------------------------------------------------------
  * Dump pre-compiler variables
  * ------------------------------------------------------------------
@@ -1158,8 +1173,14 @@ setvar: procedure=.int
   macros_varname.i=varname
   macros_varvalue.i=varvalue
 return i
-
-
+/* ------------------------------------------------------------------
+ * Helper: quote string
+ * ------------------------------------------------------------------
+ */
+quote: procedure=.string
+  arg line=.string, prefix=''
+  if prefix \= '' then return prefix'={'line'}'
+return "'"line"'"
 /* ------------------------------------------------------------------------
  * ##PARSE command, re-parse tokens from template to receive Variable names
  *   PARSE VAR variable template
@@ -1260,14 +1281,14 @@ parsevar: Procedure=.int
  */
   j=0
   do i=1 to tokenhi
-     quote=substr(token.i,1,1)
-     if quote = "'" | quote = '"' then do
-        token.i=strip(token.i,,quote)       ## drop quotes
+     quotechr=substr(token.i,1,1)
+     if quotechr = "'" | quotechr = '"' then do
+        token.i=strip(token.i,,quotechr)       ## drop quotes
      end
-     else if quote = " " then  token_type.i=2     ## blank seperator
+     else if quotechr = " " then  token_type.i=2     ## blank seperator
      else if verify(token.i,'0123456789')=0 then nop
-     else if (quote='+' | quote='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
-     else if (quote='(') then nop    ## token_type.i=6
+     else if (quotechr='+' | quotechr='-' ) & verify(substr(token.i,2),'0123456789+-')=0 then nop
+     else if (quotechr='(') then nop    ## token_type.i=6
      else do
         if fpos('parse',token.i,1)>0 then iterate
         j=j+1
