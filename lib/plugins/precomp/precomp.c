@@ -181,6 +181,7 @@ PROCEDURE (list_array)  {
     if (from<1) from=1;
     if (from>hi) from=hi;
     if (to>hi || to<1) to=hi;
+    printf("list array %d %d\n",from,hi);
     if (hdr[0]=='\0') printf("      Entries of String Array \n");
     else printf("%s\n",hdr);
     printf("Entry     Data   Range %d-%d\n",from,to);

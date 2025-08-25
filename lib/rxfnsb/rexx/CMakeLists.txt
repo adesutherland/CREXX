@@ -66,6 +66,7 @@ set(BIFS
 		qwordlength
 		qwords
 		qwordindex
+		qwordpos
 		qsubword
 		x2b
 		x2c
