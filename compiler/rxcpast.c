@@ -910,6 +910,12 @@ const char *ast_ndtp(NodeType type) {
             return "CLASS";
         case CONST_SYMBOL:
             return "CONST_SYMBOL";
+        case DEC_DIGITS:
+            return "DEC_DIGITS";
+        case DEC_FUZZ:
+            return "DEC_FUZZ";
+        case DEC_FORM:
+            return "DEC_FORM";
         case DEFINE:
             return "DEFINE";
         case DO:
@@ -1687,6 +1693,9 @@ walker_result pdot_walker_handler(walker_direction direction,
             case ASSIGN:
             case CALL:
             case DEFINE:
+            case DEC_DIGITS:
+            case DEC_FUZZ:
+            case DEC_FORM:
             case ENVIRONMENT:
             case FOR:
             case WHILE:
@@ -1934,6 +1943,47 @@ walker_result pdot_walker_handler(walker_direction direction,
     }
 
     return result_normal;
+}
+
+/* Utility to check if a token (typically an IDENTIFIER) is a certain value */
+/* Case-insensitive and only checks the first 14 characters of the value */
+int tokenis(Token *token, const char* value) {
+    char text_buffer[15];
+    int val;
+    if (!token || !token->token_string || !value) return 0;
+
+    val = (int)strlen(value);
+    if (val > 14) val = 14;
+    strncpy(text_buffer, token->token_string, val);
+    // lowercase the buffer
+    for (int i = 0; i < val; i++) {
+        text_buffer[i] = (char)tolower(text_buffer[i]);
+    }
+    text_buffer[val] = 0;
+
+    if (strcmp(text_buffer, value) == 0) return 1;
+    return 0;
+}
+
+/* Utility to check is a node (typically an IDENTIFIER) is a certain value */
+/* Case-insensitive and only checks the first 14 characters of the value */
+int nodeis(ASTNode *node, const char* value) {
+    char text_buffer[15];
+    int val;
+
+    if (!node || !node->token || !node->token->token_string || !value) return 0;
+
+    val = (int)strlen(value);
+    if (val > 14) val = 14;
+    strncpy(text_buffer, node->token->token_string, val);
+    // lowercase the buffer
+    for (int i = 0; i < val; i++) {
+        text_buffer[i] = (char)tolower(text_buffer[i]);
+    }
+    text_buffer[val] = 0;
+
+    if (strcmp(text_buffer, value) == 0) return 1;
+    return 0;
 }
 
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {

@@ -504,6 +504,8 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_NOP(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CALL(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_NUMERIC(K) error.
+    { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); }
 
 /* Assignments / Defines with invalid LHS */
 assignment(G) ::=  TK_FLOAT(K) TK_EQUAL(T) expression(E).
@@ -548,6 +550,8 @@ keyword_instruction(I) ::= procedure(K). { I = K; }
 keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
+keyword_instruction(I) ::= numeric(K). { I = K; }
+
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
    would explain it, and be a great (undocumented) feature */
@@ -880,6 +884,63 @@ leave(I) ::= TK_LEAVE(T).
     pull ::= 'PULL' t:template_list?
          -> (PARSE (OPTIONS UPPER?) PULL t?);
 */
+
+/* Numeric */
+numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INTEGER(S).
+    {
+    if (tokenis(T,"digits"))
+        { I = ast_f(context, DEC_DIGITS, T); add_ast(I, ast_f(context, INTEGER,S)); }
+    else if (tokenis(T,"form"))
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FORM_VALUE"); }
+    else if (tokenis(T,"fuzz"))
+        { I = ast_f(context, DEC_FUZZ, T); add_ast(I, ast_f(context, INTEGER,S)); }
+    else
+        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
+
+numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_VAR_SYMBOL(S).
+    {
+    if (tokenis(T,"digits"))
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_DIGITS_RANGE"); }
+    else if (tokenis(T,"form"))
+        { I = ast_f(context, DEC_FORM, T); add_ast(I,ast_f(context, LITERAL, S)); }
+    else if (tokenis(T,"fuzz"))
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FUZZ_RANGE"); }
+    else
+        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
+
+numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INHERITED.
+    {
+    if (tokenis(T,"digits"))
+        { I = ast_f(context, DEC_DIGITS, T); }
+    else if (tokenis(T,"form"))
+        { I = ast_f(context, DEC_FORM, T); }
+    else if (tokenis(T,"fuzz"))
+        { I = ast_f(context, DEC_FUZZ, T); }
+    else
+        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
+
+numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_MINUS(S) TK_INTEGER.
+    {
+    if (tokenis(T,"digits"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_DIGITS_RANGE"); }
+    else if (tokenis(T,"form"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FORM_VALUE"); }
+    else if (tokenis(T,"fuzz"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FUZZ_RANGE"); }
+    else
+        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
+
+numeric(I) ::= TK_NUMERIC(N) TK_INHERITED.
+    { ASTNode* _digits = ast_f(context, DEC_DIGITS, N);
+      ASTNode* _fuzz = ast_fstk(context, _digits); _fuzz->node_type = DEC_FUZZ;
+      ASTNode* _forms = ast_fstk(context, _digits); _forms->node_type = DEC_FORM;
+      add_sbtr( _digits, _fuzz );
+      add_sbtr( _digits, _forms );
+      I = _digits; }
 
 /* Return */
 return(I) ::= TK_RETURN(T) expression(E).

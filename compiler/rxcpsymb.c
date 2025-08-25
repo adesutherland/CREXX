@@ -82,6 +82,16 @@ Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
     if (node) node->scope = scope;
     scope->parent = parent;
     scope->symbols_tree = 0;
+    if (parent) {
+        scope->dec_digits = parent->dec_digits;
+        scope->dec_fuzz = parent->dec_fuzz;
+        scope->dec_form = parent->dec_form;
+    }
+    else {
+        scope->dec_digits = DEFAULT_NUMERIC_DIGITS;
+        scope->dec_fuzz = DEFAULT_NUMERIC_FUZZ;
+        scope->dec_form = DEFAULT_NUMERIC_FORM;
+    }
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();

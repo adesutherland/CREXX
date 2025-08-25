@@ -9,6 +9,11 @@
 #include <stdio.h>
 #include "platform.h"
 
+
+#define DEFAULT_NUMERIC_DIGITS 18
+#define DEFAULT_NUMERIC_FUZZ 0
+#define DEFAULT_NUMERIC_FORM 1 // 1 = scientific, 2 = engineering
+
 /* RXC Main Function */
 int rxcmain(int argc, char *argv[]);
 
@@ -107,7 +112,8 @@ Symbol *sym_imfn(Context *context, ASTNode *node);
 void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
-    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL, DEFINE,
+    ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
+    DEC_DIGITS, DEC_FORM, DEC_FUZZ, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, EXIT, FOR, FUNCTION, FUNC_SYMBOL, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, OP_MAKE_ARRAY, DECIMAL,
     NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_ARGS, OP_ARG_VALUE, OP_ARG_EXISTS, OP_ARG_IX_EXISTS,
@@ -209,7 +215,13 @@ void prnt_tok(Token* token);
 const char* tk_tp_nm(int type); /* Get Token Type Name */
 
 /* AST Functions */
-ASTNode* ast_f(Context* context, NodeType type, Token *token);
+/* Utility to check is a node (typically an IDENTIFIER) is a certain value */
+/* Case-insensitive and only checks the first 14 characters of the value */
+int nodeis(ASTNode *node, const char* value);
+/* Utility to check if a token (typically an IDENTIFIER) is a certain value */
+/* Case-insensitive and only checks the first 14 characters of the value */
+int tokenis(Token *token, const char* value);
+ASTNode* ast_f(Context* context, NodeType type, Token *token); /* ASTNode Factory */
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks */
 ASTNode *ast_fstr(Context* context, Token *token);
 /* ASTNode Factory - adds a DECIMAL token removing the trailing d if it exists */
@@ -331,11 +343,21 @@ int prnterrs(Context *context);
 /* Prints warnings and returns the number of warnings in the AST Tree */
 int prntwars(Context *context);
 
+/* Decimal Form Enumerator */
+typedef enum DecimalForm {
+    inherited = 0,
+    scientific,
+    engineering
+} DecimalForm;
+
 /* Scope and Symbols */
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
     char *name; /* Note that the name is free()'d by the destructor */
+    int dec_digits; /* Decimal digits - -1 = inherited */
+    int dec_fuzz;  /* Decimal fuzz - -1 = inherited */
+    DecimalForm dec_form; /* Decimal form - 0 = inherited */
     void *child_array;
     void *symbols_tree;
     size_t num_registers;

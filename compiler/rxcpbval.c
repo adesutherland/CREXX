@@ -348,7 +348,8 @@ static walker_result initial_checks_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
 
-    /* Top down - Move instructions under the right procedure */
+    /* Top down - Move instructions under the right procedure    */
+    /* For this walker the top down is used to re-order children */
     if (direction == in) {
 
         if (node->node_type == PROGRAM_FILE) {
@@ -368,14 +369,14 @@ static walker_result initial_checks_walker(walker_direction direction,
             else return result_normal; /* No instructions at all! */
 
             if (node->child->sibling->node_type != PROCEDURE) {
-                /* If the first instruction is not a PROCEDURE then we need to
+                /* If the first instruction is not a PROCEDURE, then we need to
                 * add an implicit "main" PROCEDURE */
                 child = ast_ftt(context, PROCEDURE, "main:");
                 child->parent = node;
                 child->sibling = node->child->sibling;
                 node->child->sibling = child;
 
-                /* Add function return type */
+                /* Add a function return type */
                 /* To work out the return type we walk the tree from here until we find the first return or a procedure */
                 n = child->sibling;
                 while (1) {
@@ -421,34 +422,77 @@ static walker_result initial_checks_walker(walker_direction direction,
                 /* Move node siblings (aka next instructions) until the next procedure to be node
                  * grand-children under a new INSTRUCTIONS node child */
 
-                /* Process ARG */
+                /* Process ARG, DIGITS, FUZZ and FORM */
                 /* Process each sibling until the next PROCEDURE */
+                char done_digits = 0;
+                char done_fuzz = 0;
+                char done_form = 0;
                 ASTNode *args_node = 0;
                 char first_instruction = 1;
                 next = node->sibling;
+                ASTNode *prev = node;
                 while (next && next->node_type != PROCEDURE) {
-                    if (next->node_type == ARGS) {
-                        if (args_node) {
-                            /* Error - you can only have one arg statement */
-                            mknd_err(next, "REPEATED_ARG");
-                        } else if (!first_instruction) {
-                            /* Error - arg must be the first statement */
-                            mknd_err(next, "ARG_NOT_FIRST_INST");
-                        }
-                        args_node = next;
+                    switch (next->node_type) {
+                        case ARGS:
+                            if (args_node) {
+                                /* Error - you can only have one arg statement */
+                                mknd_err(next, "REPEATED_ARG");
+                            } else if (!first_instruction) {
+                                /* Error - arg must be the first statement */
+                                mknd_err(next, "ARG_NOT_FIRST_INST");
+                            }
+                            first_instruction = 0;
+                            args_node = next;
+                            next = next->sibling;
+                            /* Note that prev is unchanged as args_node is removed */
 
-                        /* Disconnect/remove node from the AST tree */
-                        node->sibling = next->sibling;
-                        next->sibling = 0;
-                        next->parent = 0;
-                        /* And add under the procedure */
-                        add_ast(node, next);
-                        next = node->sibling;
+                            /* Disconnect/remove the args_node from the AST tree */
+                            prev->sibling = args_node->sibling;
+                            args_node->sibling = 0;
+                            args_node->parent = 0;
+                            /* And add it under the procedure node */
+                            add_ast(node, args_node);
+                            break;
+
+                        case DEC_DIGITS:
+                            if (done_digits) {
+                                mknd_err(next, "REPEATED_NUMERIC_DIGITS");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_DIGITS_NOT_FIRST_INST");
+                            }
+                            done_digits = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_FUZZ:
+                            if (done_fuzz) {
+                                mknd_err(next, "REPEATED_NUMERIC_FUZZ");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_FUZZ_NOT_FIRST_INST");
+                            }
+                            done_fuzz = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_FORM:
+                            if (done_form) {
+                                mknd_err(next, "REPEATED_NUMERIC_FORM");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_FORM_NOT_FIRST_INST");
+                            }
+                            done_form = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        default:
+                            first_instruction = 0;
+                            prev = next;
+                            next = next->sibling;
                     }
-                    else {
-                        next = next->sibling;
-                        first_instruction = 0;
-                    }
+
                 }
                 /* Add an empty ARGS node if no arguments have been specified */
                 if (!args_node) {
@@ -463,7 +507,7 @@ static walker_result initial_checks_walker(walker_direction direction,
                 last = NULL;
 
                 /* For each sibling until the next PROCEDURE */
-                while ((next = node->sibling) && next->node_type != PROCEDURE) {
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE) {
                     last = next; /* To check that there is a return */
                     /* 2. Disconnect/remove next node from the AST tree */
                     node->sibling = next->sibling;
@@ -1716,7 +1760,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     }
 }
 
-/* Step 3.1 - Determine if variables need initialisation */
+/* Step 3.1 - Determine if variables need initialization */
 static void variable_initiation(Symbol *symbol, void *payload) {
     Scope* scope = (Scope*)payload;
     SymbolNode *defining_node_link;
@@ -2434,7 +2478,6 @@ static walker_result type_safety_walker(walker_direction direction,
                 if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
                 break;
 
-//            case ADDRESS:
             case SAY:
                 if (child1) set_node_target_type(child1, TP_STRING);
                 break;
@@ -2754,6 +2797,82 @@ static walker_result decimal2float_walker(walker_direction direction,
     return result_normal;
 }
 
+/* decimal_parameters_walker - this walker sets the decimal parameters for each scope
+ *
+ * This is run after all type processing is complete
+ */
+static walker_result decimal_parameters_walker(walker_direction direction,
+                                               ASTNode* node,
+                                               void *payload) {
+
+    Context *context = (Context*)payload;
+    ASTNode *child;
+    int val;
+    char text_buffer[15];
+
+    if (direction == in) {
+        /* IN - TOP DOWN */
+        context->current_scope = node->scope;
+    }
+    else {
+        /* OUT - BOTTOM UP */
+        child = node->child;
+        switch (node->node_type) {
+            case DEC_DIGITS:
+                if (child) {
+                    /* Get the value */
+                    val = node_to_integer(child);
+                    if (val < 1) {
+                        mknd_err(child, "DECIMAL_DIGITS_RANGE"); // Note that the parser captures a negative error beforehand
+                        val = 1;
+                    }
+                }
+                else {
+                    val = -1; // Inherited
+                }
+                node->scope->dec_digits = val;
+                break;
+
+            case DEC_FUZZ:
+                if (child) {
+                    /* Get the value */
+                    val = node_to_integer(child);
+                    if (val < 0) {
+                        mknd_err(child, "DECIMAL_FUZZ_RANGE");  // Note that the parser captures this error beforehand
+                        val = 0;
+                    }
+                }
+                else {
+                    val = -1; // Inherited
+                }
+                node->scope->dec_fuzz = val;
+                break;
+
+            case DEC_FORM:
+                if (child) {
+                    if (nodeis(child, "scientific") == 0) val = scientific;
+                    else if (nodeis(text_buffer, "engineering") == 0) val = engineering;
+                    else if (nodeis(text_buffer, "inherited") == 0) val = inherited;
+                    else {
+                        mknd_err(child, "DECIMAL_FORM_VALUE");
+                        val = 0;
+                    }
+                }
+                else {
+                    val = 0; // Inherited
+                }
+                node->scope->dec_form = val;
+                break;
+
+            default:;
+        }
+
+        context->current_scope = node->scope;
+    }
+
+    return result_normal;
+}
+
 /* Validate AST */
 void rxcp_val(Context *context) {
     int ordinal_counter;
@@ -2829,6 +2948,10 @@ void rxcp_val(Context *context) {
     /* Type Safety for function arguments */
     context->current_scope = 0;
     ast_wlkr(context->ast, func_type_safety_walker, (void *)context);
+
+    /* Set Scope Decimal parameters */
+    context->current_scope = 0;
+    ast_wlkr(context->ast, decimal_parameters_walker, (void *)context);
  }
 
 /* Basic validation for an AST (typically the AST will be attached to a main AST as part of

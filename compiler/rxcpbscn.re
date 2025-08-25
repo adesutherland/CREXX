@@ -141,7 +141,7 @@ int rexbscan(Context* s) {
     'LEAVE' { return(TK_LEAVE); }
     'NAMESPACE' { return(TK_NAMESPACE); }
     'NOP' { return(TK_NOP); }
-  //  'NUMERIC' { return(TK_NUMERIC); }
+    'NUMERIC' { return(TK_NUMERIC); }
   'OPTIONS' { return(TK_OPTIONS); }
   //  'OTHERWISE' { return(TK_OTHERWISE); }
   'OUTPUT' { return(TK_OUTPUT); }
@@ -160,26 +160,20 @@ int rexbscan(Context* s) {
   //  'OFF' { return(TK_OFF); }
   //  'ON' { return(TK_ON); }
     'BY' { return(TK_BY); }
-  //  'DIGITS' { return(TK_DIGITS); }
-  //  'ENGINEERING' { return(TK_ENGINEERING); }
   //  'ERROR' { return(TK_ERROR); }
     'EXPOSE' { return(TK_EXPOSE); }
   //  'FAILURE' { return(TK_FAILURE); }
     'FOR' { return(TK_FOR); }
     'FOREVER' { return(TK_FOREVER); }
-  //  'FORM' { return(TK_FORM); }
-  //  'FUZZ' { return(TK_FUZZ); }
   //  'HALT' { return(TK_HALT); }
   //  'LINEIN' { return(TK_LINEIN); }
   //  'NAME' { return(TK_NAME); }
   //  'NOVALUE' { return(TK_NOVALUE); }
-  //  'SCIENTIFIC' { return(TK_SCIENTIFIC); }
   //  'SOURCE' { return(TK_SOURCE); }
   //  'SYNTAX' { return(TK_SYNTAX); }
     'TO' { return(TK_TO); }
     'UNTIL' { return(TK_UNTIL); }
   //  'UPPER' { return(TK_UPPER); }
-  //  'VALUE' { return(TK_VALUE); }
   //  'VAR' { return(TK_VAR); }
   //  'VERSION' { return(TK_VERSION); }
     'VOID' { return(TK_VOID); }

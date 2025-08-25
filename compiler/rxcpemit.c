@@ -893,7 +893,7 @@ static walker_result register_walker(walker_direction direction,
                 }
                 break;
 
-            case ADDRESS:
+            case ADDRESS: // TODO Does Address make it here - I think it is rewritten to a function call earlier
             case SAY:
                 node->register_num = child1->register_num;
                 node->register_type = child1->register_type;
@@ -1483,7 +1483,7 @@ static void meta_set_global_symbol(Symbol *symbol, void *payload) {
     char* symbol_fqn;
 
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
-        /* Is the global used in the procedure */
+        /* Is the global used in the procedure? */
         if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
             symbol_fqn = sym_frnm(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
@@ -1869,6 +1869,24 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Add Global Variables */
                     add_global_variable_metadata(node);
+
+                    /* If decimal has non-inherited values, set them */
+                    if (node->scope->dec_digits > -1) {
+                        temp1 = mprintf("   setdgts %d\n", node->scope->dec_digits);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->dec_fuzz > -1) {
+                        temp1 = mprintf("/*    setfuzz %d */\n", node->scope->dec_fuzz);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->dec_form > 0) {
+                        /* 1 = SCIENTIFIC, 2 = ENGINEERING */
+                        temp1 = mprintf("/*    setform %d */\n", node->scope->dec_form);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
 
                     n = child2;
                     while (n) {
@@ -3209,7 +3227,6 @@ static walker_result emit_walker(walker_direction direction,
                 if (!node->output) node->output = output_f();
                 break;
 
-            case ADDRESS:
             case SAY:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
