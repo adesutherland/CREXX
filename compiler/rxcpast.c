@@ -1950,13 +1950,14 @@ walker_result pdot_walker_handler(walker_direction direction,
 int tokenis(Token *token, const char* value) {
     char text_buffer[15];
     int val;
+    int i;
     if (!token || !token->token_string || !value) return 0;
 
     val = (int)strlen(value);
     if (val > 14) val = 14;
     strncpy(text_buffer, token->token_string, val);
     // lowercase the buffer
-    for (int i = 0; i < val; i++) {
+    for (i = 0; i < val; i++) {
         text_buffer[i] = (char)tolower(text_buffer[i]);
     }
     text_buffer[val] = 0;
@@ -1970,6 +1971,7 @@ int tokenis(Token *token, const char* value) {
 int nodeis(ASTNode *node, const char* value) {
     char text_buffer[15];
     int val;
+    int i;
 
     if (!node || !node->token || !node->token->token_string || !value) return 0;
 
@@ -1977,7 +1979,7 @@ int nodeis(ASTNode *node, const char* value) {
     if (val > 14) val = 14;
     strncpy(text_buffer, node->token->token_string, val);
     // lowercase the buffer
-    for (int i = 0; i < val; i++) {
+    for (i = 0; i < val; i++) {
         text_buffer[i] = (char)tolower(text_buffer[i]);
     }
     text_buffer[val] = 0;
