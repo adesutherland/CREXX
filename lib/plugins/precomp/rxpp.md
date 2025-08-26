@@ -302,17 +302,16 @@ they appear **after** all positional parameters and may have default values.
 ### 📌 Rules
 
 1. **Ordering matters** — all positional parameters must be declared first, followed by all keyword parameters.
-2. In a macro call:
-- Positional arguments are assigned in order.
-- Remaining arguments must be `name=value` pairs matching keyword parameters.
-3. Defaults:
-- If a keyword parameter is not specified in the call, its default value is used.
-- Defaults can be quoted strings, numbers, or empty.
-4. **Validation**:
+2. **In a macro call**:
+- Remaining arguments must be supplied either as `name=value` pairs (matching keyword parameters) or in TSO-style notation.
+- In TSO-style syntax, a keyword argument is written as `name(value)`, with the value enclosed in parentheses.- Defaults can be quoted strings, numbers, or empty.
+-TSO-style calls also allow passing subparameters as a single grouped value, e.g. keyword(subparm1 subparm2).
+- ⚠️ In the parameter list, keyword parameters must always be declared as keyword=default, even if you plan to call them later in TSO-style (keyword(value)).
+- Default values can be quoted strings, numbers, or empty.
+3. **Validation**:
 - Missing positional arguments cause a preprocessor error.
 - Unknown keyword names cause a preprocessor error.
 - Positional parameters **cannot** appear after a keyword parameter in the definition.
-
 ---
 
 ### 📦 Example: Defaults & Overrides

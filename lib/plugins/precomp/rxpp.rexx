@@ -850,6 +850,16 @@ return line2change
 replaceFixArg: Procedure=.string
   arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int
   iargs=xargs
+
+  do i=1 to callargcount
+     pp1=pos('(',callargs.i)
+     if pp1=0 then iterate
+     pp2=lastpos(')',callargs.i)
+     callargs.i=overlay('=',callargs.i,pp1)
+     if pp2>1 then callargs.i=substr(callargs.i,1,pp2-1)
+     callargs.i=strip(callargs.i)
+  end
+
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
   if wrds\=callargcount then do    ## callargs.0 is may be not set properly
@@ -887,7 +897,7 @@ replaceFixArg: Procedure=.string
      if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
      else do                               ## if so check if the keyword call is also in the value clause
         aval=translate(aval,,'=')
-        aval=word(aval,2)
+        aval=subword(aval,2)
      end
      bodyExp = replaceArg(bodyExp, aname, aval)
   end
