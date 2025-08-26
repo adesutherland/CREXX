@@ -136,7 +136,6 @@ RXPPPassTwo: procedure
   do while i>0
      if which<3 then condition=word(source.i,2)
      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
-
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
      call insert_array source,i,1
@@ -146,7 +145,6 @@ RXPPPassTwo: procedure
      j=i+1
      source.j='##ifn 'condition
      i=fsearch(source,j+1,'##IF ','##IFN ',"",which)   ## search as first word in the source string
-               say 456 i which
   end
 
   which=0
@@ -155,9 +153,7 @@ RXPPPassTwo: procedure
      if which=1 then stype.i='IF'
      else if which=2 then stype.i='IFN'
      lnk=findMatchingEndif(i+1)
-     say 'endif found, for 'i '->' lnk
      aifblock.i=lnk
-     say 'LNK 'i' -> 'aifblock.i lnk
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
    end
   i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
@@ -168,7 +164,6 @@ RXPPPassTwo: procedure
   if pos(' iflink',cflags)=0 then return
   if aifblock.0=0 then say "+++ no Pre Source Expansion occurred"
   else do i=1 to aifblock.0
-     say aifblock.0 aifblock.i
      if aifblock.i=0 then iterate
      lnk=aifblock.i
      if verbose then say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
@@ -230,7 +225,6 @@ findMatchingEndif: procedure=.int
   nest = 1  /* Start at 1 because the current ##IF is level 1 */
   which = 0
   i = fsearch(source, startline, '##IF ','##IFN ','##END', which)
-  say 'ifx 'startline i which
   do while i > 0
     if which = 1 | which=2 then nest = nest + 1
     else if which = 3 then do
@@ -239,7 +233,6 @@ findMatchingEndif: procedure=.int
       if nest = 0 then return i  /* finally matched ##ENDIF */
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
-      say 'ifx 'i+1 i which
   end
   if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
 return 0
@@ -799,7 +792,6 @@ return line
    else isVariadic = 0
 
    if mspace=1 then do   ## command macros have stricter rule, they must be the first word of the line and they can't be nested
-      say word(uline,1) "'"name"'"
       if word(uline,1) \=strip(name) then return line  ## not a valid command macro call
    end
    do forever

@@ -1,79 +1,70 @@
-# RXPP Macro System: How It Works
-
-
 ## RXPP + CREXX Build System Documentation
-
 
 This document combines the functionality of the RXPP macro preprocessor and the full CREXX script processing pipeline, including both Windows batch and Linux shell versions.
 
 ---
+# Table of Contents`
 
-## 💼 Table of Contents
-
-* [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
-* [💼 Table of Contents](#-table-of-contents)
-  * [💼 Overview](#-overview)
-* [🔧 What is RXPP?](#-what-is-rxpp)
-* [💪 What RXPP Macros Do](#-what-rxpp-macros-do)
-* [✅ Macro Definition](#-macro-definition)
-* [🔤 Parameter Replacement Rules](#-parameter-replacement-rules)
-* [🆕 Keyword Parameters in Macros](#-keyword-parameters-in-macros)
-* [🤖 Macro Invocation](#-macro-invocation)
-* [📥 Macro Inclusion](#-macro-inclusion)
-* [📊 How It Works Internally](#-how-it-works-internally)
-  * [1. **Registration**](#1-registration)
-  * [2. **Detection**](#2-detection)
-  * [3. **Substitution**](#3-substitution)
-  * [4. **Variadic Macros**](#4-variadic-macros)
-  * [5. **Emission**](#5-emission)
-* [✨ Example](#-example)
-  * [Input:](#input)
-  * [Output:](#output)
-* [🚀 Benefits](#-benefits)
-* [📊 Common Use Cases](#-common-use-cases)
-* [🧪 Invocation Syntax](#-invocation-syntax)
-* [📚 Sample Macros](#-sample-macros)
-* [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
-  * [`##USE file`](#use-file)
-  * [`##DATA array-name` ](#data-array-name)
-  * [`##SYSxxx`](#sysxxx)
-  * [`##CFLAG values`](#cflag-values)
-  * [`##SET var value`](#set-var-value)
-  * [`##UNSET var`](#unset-var)
-  * [`##INCLUDE file`](#include-file)
-  * [`##IF var`](#if-var)
-  * [`##IFN var`](#ifn-var)
-  * [`##ELSE`](#else)
-  * [`##ENDIF` or `##END`](#endif-or-end)
-* [🧭 Pre-Compilation Flow](#-pre-compilation-flow)
-* [⚙️ Behavior Notes](#-behavior-notes)
-* [🧪 Example with Nesting](#-example-with-nesting)
-* [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
-  * [📦 Overview](#-overview)
-* [🚀 Usage Example](#-usage-example)
-  * [📂 Input/Output Example](#-inputoutput-example)
-* [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
-* [🛠 Troubleshooting Guide](#-troubleshooting-guide)
-  * [📦 Overview](#-overview)
-* [🚀 Usage Example](#-usage-example)
-  * [📂 Input/Output Example](#-inputoutput-example)
-* [📁 Scripts: Windows Batch (.bat) and Linux Shell (.sh)](#-scripts-windows-batch-bat-and-linux-shell-sh)
-  * [rxCREXX.bat](#rxcrexxbat)
-  * [rxCREXX.sh](#rxcrexxsh)
-  * [rxflags.bat](#rxflagsbat)
-  * [rxflags.sh](#rxflagssh)
-  * [rxconfig.bat](#rxconfigbat)
-  * [rxconfig.sh](#rxconfigsh)
-  * [rxprecomp.bat](#rxprecompbat)
-  * [rxprecomp.sh](#rxprecompsh)
-  * [rxcompile.bat](#rxcompilebat)
-  * [rxcompile.sh](#rxcompilesh)
-  * [rxasm.bat](#rxasmbat)
-  * [rxasm.sh](#rxasmsh)
-  * [rxrun.bat](#rxrunbat)
-  * [rxrun.sh](#rxrunsh)
-  * [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
-* [🛠 Troubleshooting Guide](#-troubleshooting-guide)
+- [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation)
+- [🔧 What is RXPP?](#-what-is-rxpp)
+- [💪 What RXPP Macros Do](#-what-rxpp-macros-do)
+- [✅ Macro Definition](#-macro-definition)
+  - [🆕 Command-Style Macros (blank-separated parameters)](#-command-style-macros-blank-separated-parameters)
+- [🔤 Parameter Replacement Rules](#-parameter-replacement-rules)
+- [🆕 Keyword Parameters in Macros](#-keyword-parameters-in-macros)
+- [🤖 Macro Invocation](#-macro-invocation)
+- [📥 Macro Inclusion](#-macro-inclusion)
+- [📊 How It Works Internally](#-how-it-works-internally)
+  - [1. Registration](#1-registration)
+  - [2. Detection](#2-detection)
+  - [3. Substitution](#3-substitution)
+  - [4. Variadic Macros](#4-variadic-macros)
+  - [5. Emission](#5-emission)
+- [✨ Example](#-example)
+  - [Input:](#input)
+  - [Output:](#output)
+- [🚀 Benefits](#-benefits)
+- [📊 Common Use Cases](#-common-use-cases)
+- [🧪 Invocation Syntax](#-invocation-syntax)
+- [📚 Sample Macros](#-sample-macros)
+- [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
+  - [`##USE file`](#use-file)
+  - [`##DATA array-name`](#data-array-name)
+  - [`##SYSxxx`](#sysxxx)
+  - [`##CFLAG values`](#cflag-values)
+  - [`##SET var value`](#set-var-value)
+  - [`##UNSET var`](#unset-var)
+  - [`##INCLUDE file`](#include-file)
+  - [`##IF var`](#if-var)
+  - [`##IFN var`](#ifn-var)
+  - [`##ELSE`](#else)
+  - [`##ENDIF` or `##END`](#endif-or-end)
+- [🧭 Pre-Compilation Flow](#-pre-compilation-flow)
+- [⚙️ Behavior Notes](#-behavior-notes)
+- [🧪 Example with Nesting](#-example-with-nesting)
+- [RXPP + CREXX Build System Documentation](#rxpp--crexx-build-system-documentation-1)
+  - [📦 Overview](#-overview)
+- [🚀 Usage Example](#-usage-example)
+  - [📂 Input/Output Example](#-inputoutput-example)
+- [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram)
+- [🛠 Troubleshooting Guide](#-troubleshooting-guide)
+- [📁 Scripts: Windows Batch (.bat) and Linux Shell (.sh)](#-scripts-windows-batch-bat-and-linux-shell-sh)
+  - [rxCREXX.bat](#rxcrexxbat)
+  - [rxCREXX.sh](#rxcrexxsh)
+  - [rxflags.bat](#rxflagsbat)
+  - [rxflags.sh](#rxflagssh)
+  - [rxconfig.bat](#rxconfigbat)
+  - [rxconfig.sh](#rxconfigsh)
+  - [rxprecomp.bat](#rxprecompbat)
+  - [rxprecomp.sh](#rxprecompsh)
+  - [rxcompile.bat](#rxcompilebat)
+  - [rxcompile.sh](#rxcompilesh)
+  - [rxasm.bat](#rxasmbat)
+  - [rxasm.sh](#rxasmsh)
+  - [rxrun.bat](#rxrunbat)
+  - [rxrun.sh](#rxrunsh)
+  - [🧭 Pipeline Flow Diagram](#-pipeline-flow-diagram-1)
+- [🛠 Troubleshooting Guide](#-troubleshooting-guide-1)
 
 ---
 
@@ -118,23 +109,27 @@ Or, without arguments:
 ##define MACRONAME {macro body}
 ```
 
-* Macros must be defined **before** they're used as the preprocessor is a one-pass compiler.
-* Multiple REXX statements within a macro must be separated by a semicolon (`;`).
-* The macro body is enclosed in `{}` and treated as replacement text.
-* RXPP supports multi-line macro definitions using C-style line continuation syntax:
+* Macros must be defined **before** they are used, since the preprocessor operates as a one-pass compiler.
+* The parameter list is written in parentheses immediately after the macro name.
+* The macro body is enclosed in `{}` and serves as the replacement text.
+* Within the macro body, parameters from the parameter list are substituted with the actual arguments at expansion time.
+* This substitution also applies inside quoted strings—this is intentional and by design.
+* To avoid accidental or unintended replacements, it is recommended to choose parameter names in the parameter list carefully (e.g., using distinctive or less common names).
+* Multiple REXX statements inside a macro must be separated by semicolons (`;`).
+* RXPP supports multi-line macro definitions using C-style line continuation (`\`).
+
 ```rexx
 ##define swap(a,b) {temp=a  \
 a=b     \
 b=temp }
 ```
-***Note:*** The backslash (`\`) must be the final character on each continued line. Comments after the backslash are not allowed. However, `/* ... */`-style comments may appear before the backslash. `##` comments are not allowed on continued lines, as they indicate the end of line interpretation.
+***Note:*** The backslash (\) must be the final character on each continued line. Comments after the backslash are not allowed. However, `/* ... */`-style comments may appear before the backslash. `##` comments are not allowed on continued lines, as they indicate the end of line interpretation.
 
 ---
 
 ### 🔤 Parameter Replacement Rules
 
 When expanding a macro, RXPP replaces parameter names in the macro body with the corresponding argument values from the macro call.
-
 By default, a parameter name is only replaced if it appears as a **stand-alone identifier**. This means:
 
 - The character **before** the parameter name (if any) is **not** an alphanumeric character or underscore (`A–Z`, `a–z`, `0–9`, `_`).
@@ -183,6 +178,106 @@ myStem_values.10 = ''
 
 ---
 
+## 🆕 Command-Style Macros (blank-separated parameters)
+
+In addition to function-style macros with comma-separated arguments (e.g., FOO(a,b)), RXPP also supports command-style macros, which resemble REXX commands: arguments are separated by blanks instead of commas.
+The macro body and substitution rules are identical to those of function-style macros.
+* A command-style call must begin at the start of a statement line; unlike function-style macros, it cannot be invoked within an expression.
+* Command-style macros do not support nested expansion — one command-style macro call cannot expand into another.
+
+### ✍️ Definition
+
+Use `CMD` (or `COMMAND`) as the **first pseudo-parameter** to distinguish a command-style macro:
+
+```rexx
+##define cmd NAME(arg1 arg2 ...) { ... }
+```
+
+- The body is still enclosed in `{}` and may contain **multiple REXX statements** separated by `;`.
+- Line continuations with a trailing backslash (`\`) are supported exactly as elsewhere.
+
+#### Examples
+
+**Factorial as a command:**
+
+```rexx
+##define cmd factorial(var num) {var = 1; do i=1 to num; var = var * i; end}
+
+Factorial result 10          /* expands to a loop that sets result to 10! */
+say "Factorial is="result
+```
+
+**EXECIO + LISTSTEM (command-style):**
+
+```rexx
+##define cmd execio(num DISKX file keyword stem) {stem.1=''; rc=_ExecIO('num','diskx',file,stem)}
+##define cmd liststem(var) {say "List of stem var"; say copies('-',32) \
+                            do i=1 to var.0; \
+                              say right(i,4,'0') var.i; \
+                            end}
+
+ExecIO 12 DISKR 'C:/temp/$ms.jcl' stem fileStem
+say "EXECIO rc="rc
+
+listStem fileStem
+
+/* write Stem to a new file */
+ExecIO * DISKW 'C:/temp/$ms-test.jcl' stem fileStem
+say "EXECIO rc="rc
+
+/* append to a file */
+ExecIO * DISKA 'C:/temp/$ms-test-2.jcl' stem fileStem
+say "EXECIO rc="rc
+```
+
+**Expanded form (illustrative):**
+
+```rexx
+fileStem.1=''; rc=_ExecIO('12','DISKR','C:/temp/$ms.jcl',fileStem)
+say "EXECIO rc="rc
+say "List of stem fileStem"; say copies('-',32) ; do i=1 to fileStem.0; say right(i,4,'0') fileStem.i; end
+...
+```
+
+### ▶️ Invocation
+
+Call a command-style macro like a command: **macro name + space-separated arguments**.  
+Quote any argument that contains spaces, just like in normal REXX command usage.  
+Function-style invocation remains available for traditional macros.
+
+### 🔤 Arguments & Replacement
+
+- **Positional arguments** map left-to-right to the definition’s parameters.
+- **Keyword parameters** are supported after all positionals, using `name=value` tokens—defaults work exactly as with function-style macros.
+- **Variadics**: you can still declare `...` at the end of the parameter list; RXPP will repeat the macro body per extra argument using `$indx` and `arglist.$indx`, same as today.
+- **Replacement rules** (identifier boundaries and `param##suffix` joining) are unchanged.
+
+### 🧭 Parsing Rules
+
+When a macro is defined with `CMD`/`COMMAND`, RXPP recognizes its invocations **without parentheses**:
+
+1. **Detection**: A known `CMD` macro name followed by at least one blank is considered a candidate invocation (previously, detection for function-style looked for `name(`).
+2. **Tokenization**: Arguments are split on blanks; quoted strings are kept intact. `name=value` tokens are treated as keyword arguments (after all positionals).
+3. **Substitution**: RXPP copies the macro body and applies the same parameter replacement logic as with function-style macros.
+
+### ⚠️ Errors & Diagnostics
+
+- **Missing positional** or **unknown keyword** → preprocessor error (consistent with keyword parameter rules).
+- **Variadic misuse** (e.g., non-terminal `...`) → preprocessor error, as with function-style macros.
+- Expansion comments respect `PRINTGEN` settings (`ALL` / `NONE` / `NNEST`) and are emitted the same way as other macro expansions.
+
+### 🔌 Interactions & Notes
+
+- **Inclusion & Libraries**: Command-style macros can live in included macro libraries (`##INCLUDE` or `-m`), just like other macros.
+- **Conditional compilation**: `##IF`/`##IFN` blocks continue to be resolved **before** macro expansion, so command-style invocations inside conditionals work as expected.
+- **Do/End fragments**: Command-style macros may contain incomplete `do` statements exactly like function-style macros; you must close them in the source.
+
+---
+
+#### Why this matters
+
+Switching to a **blank-separated, command-like syntax** enables macros that read like shell/TSO commands, which can be more ergonomic and natural for pipeline-style tasks while preserving all the power of RXPP’s macro system—keyword/default args, variadics, inclusion, and robust replacement semantics.
+
 ## 🆕 Keyword Parameters in Macros
 
 RXPP now supports **keyword parameters** in macro definitions.  
@@ -208,15 +303,15 @@ they appear **after** all positional parameters and may have default values.
 
 1. **Ordering matters** — all positional parameters must be declared first, followed by all keyword parameters.
 2. In a macro call:
-  - Positional arguments are assigned in order.
-  - Remaining arguments must be `name=value` pairs matching keyword parameters.
+- Positional arguments are assigned in order.
+- Remaining arguments must be `name=value` pairs matching keyword parameters.
 3. Defaults:
-  - If a keyword parameter is not specified in the call, its default value is used.
-  - Defaults can be quoted strings, numbers, or empty.
+- If a keyword parameter is not specified in the call, its default value is used.
+- Defaults can be quoted strings, numbers, or empty.
 4. **Validation**:
-  - Missing positional arguments cause a preprocessor error.
-  - Unknown keyword names cause a preprocessor error.
-  - Positional parameters **cannot** appear after a keyword parameter in the definition.
+- Missing positional arguments cause a preprocessor error.
+- Unknown keyword names cause a preprocessor error.
+- Positional parameters **cannot** appear after a keyword parameter in the definition.
 
 ---
 
