@@ -20,7 +20,7 @@ import rxfnsb
  */
 arg command=.string[]
 internal_testing=0    ## activate only for rxpp internal tests
-verbose=0
+verbose=1
 
   ElapsedTime=time('us')
 
@@ -55,7 +55,9 @@ verbose=0
 
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
-  sourceLines=RXPPPassOne(infile,outfile,maclib)    ## load source file and macro library
+  if verbose then say 'CRX0110I ['time('l')'] System Path 'syspath
+
+  sourceLines=RXPPPassOne(infile,outfile,maclib,syspath'/macsys.rexx')    ## load source file and macro library
   ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
      if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
@@ -79,23 +81,39 @@ return 0
  * ------------------------------------------------------------------
  */
 RXPPPassOne: procedure = .int
-  arg expose infile=.string, outfile=.string,maclib=.string
-
+  arg expose infile=.string, outfile=.string,maclib=.string, macsys=.string
+say "****** Read maclib ************"
   macnum=readSource(maclib)
   if macnum<0 then do
      if verbose then say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
-     if verbose then say 'CRX0110I ['time('l')'] Maclib loaded:      'source.0' records'
-     if verbose then say 'CRX0120I ['time('l')'] Macros extracted:   'macros_mname.0
+     if verbose then say 'CRX0120I ['time('l')'] Maclib loaded:      'source.0' records'
+     if verbose then say 'CRX0130I ['time('l')'] Macros extracted:   'macros_mname.0
+     maxmac=macros_mname.0
   end
   ## clear source array, DROP doesn't work as expected
   do i=1 to source.0
      source.i=""
      stype.i='R'
   end
-
+say "****** Read macsys ************"
+  macnum=readSource(macsys)
+  if macnum<0 then do
+     if verbose then say 'CRX0900E+['time('l')'] System Maclib not found, or not accessible: 'macsys
+  end
+  else do
+     call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
+     if verbose then say 'CRX0120I ['time('l')'] System Maclib loaded: 'source.0' records'
+     if verbose then say 'CRX0130I ['time('l')'] Macros extracted:     'macros_mname.0-maxmac
+  end
+  ## clear source array, DROP doesn't work as expected
+    do i=1 to source.0
+       source.i=""
+       stype.i='R'
+    end
+say "****** Read source code ************"
   rexxLines=readSource(infile)
   if rexxLines<0 then do
      say 'CRX0910E+['time('l')'] source file missing: 'infile
@@ -116,12 +134,12 @@ RXPPPassOne: procedure = .int
 
   rexxlines=rexxlines+3
 
-  if verbose then say 'CRX0130I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
+  if verbose then say 'CRX0140I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
-  if verbose then say 'CRX0140I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
+  if verbose then say 'CRX0150I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
   call sort_bylen macros_mname,macros_margs,macros_mbody,macros_mspace ## sort macro names by length do avoid unintented substitution (e.g. quote dquote)
-  if verbose then say 'CRX0150I ['time('l')'] Macros arranged:    'macros_mname.0
+  if verbose then say 'CRX0160I ['time('l')'] Macros arranged:    'macros_mname.0
 return rexxlines
 /* ------------------------------------------------------------------
  * Pass 2 pre-expand certain elements
@@ -303,7 +321,9 @@ GetPrecomp: procedure
       LineNo=LineNo+1
       lineMin=max(LineNo-1,1)
       line = source.lineNo
-      ucmd=upper(word(line,1))
+      ucmd=word(line,1)
+      if ucmd='' then iterate
+      ucmd=upper(ucmd)
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       if substr(ucmd,1,2)\='##' then iterate
@@ -582,7 +602,7 @@ writeline: procedure
       lino = lino + 1
       outbuf.lino=' */'
    end
-
+   if oline='' & outbuf.lino='' then return  ## not more than one blank line
    lino = lino + 1
    outbuf.lino = oline
   return
@@ -851,15 +871,6 @@ replaceFixArg: Procedure=.string
   arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int
   iargs=xargs
 
-  do i=1 to callargcount
-     pp1=pos('(',callargs.i)
-     if pp1=0 then iterate
-     pp2=lastpos(')',callargs.i)
-     callargs.i=overlay('=',callargs.i,pp1)
-     if pp2>1 then callargs.i=substr(callargs.i,1,pp2-1)
-     callargs.i=strip(callargs.i)
-  end
-
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
   if wrds\=callargcount then do    ## callargs.0 is may be not set properly
@@ -884,16 +895,20 @@ replaceFixArg: Procedure=.string
      bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
    end
   if keypositional=0 then return bodyExp
+## now that we know we have keyword paramters, we need to translate tso-style call back to key= syntax
+  do i=1 to callargcount
+       callargs.i=tso2func(callargs.i)
+  end
+## start matching macro definition parm list to calling parameters (keywords only)
   do k=keypositional to wrds        ## run through the macroc header definition
      aname = translate(word(xargs, k),,'=')         ## aname is the keyword definition in the macro header
-     aname=translate(aname,,'=')
      adefault=word(aname,2)                        ## 2. word is the default value
      if adefault='' then adefault="''"             ## if not there, use empty string
      aname=word(aname,1)                           ## now isolate parameter name
      do j=1 to wrds                  ## find the appropriate keyword, sequence is free
         if fpos(aname'=',callargs.j,1)>0 then leave    ### +++++++++++ modify  ## use fpos function to search case-insensitive
      end
-     aval  = callargs.j               ## identifies the call of the macro
+     aval=callargs.j                       ## identifies the call of the macro
      if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
      else do                               ## if so check if the keyword call is also in the value clause
         aval=translate(aval,,'=')
@@ -902,6 +917,18 @@ replaceFixArg: Procedure=.string
      bodyExp = replaceArg(bodyExp, aname, aval)
   end
 return bodyExp
+/* ------------------------------------------------------------------
+ * if necessary translate tso-style call parm list to function-like list
+ * ------------------------------------------------------------------
+ */
+tso2func: procedure=.string
+  arg inparm=.string
+  pp1=pos('(',inparm)
+  if pp1=0 then return inparm
+  pp2=lastpos(')',inparm)
+  inparm=overlay('=',inparm,pp1)
+  if pp2>1 then inparm=substr(inparm,1,pp2-1)
+return strip(inparm)
 /* ------------------------------------------------------------------
  * Process Variadic macros
  * ------------------------------------------------------------------
