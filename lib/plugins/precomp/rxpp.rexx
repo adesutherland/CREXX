@@ -1325,7 +1325,7 @@ parsevar: Procedure=.int
         insert.j=token.i"=_pass_variable_content."j
      end
   end
-  imax=insert.0*2+12        ## add 12 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
+  imax=insert.0*2+15        ## add 15 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
   rc=insert_array(source,lino+1,imax)
   rc=insert_array(stype,lino+1,imax)
 
@@ -1335,8 +1335,10 @@ parsevar: Procedure=.int
    inew=inject2Source(inew+1,3,'_parsetemplate='embed(template))
    inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content')
   if pos(' parse',cflags)>0 then do
-     inew=inject2Source(inew+1,3,'say ">> PARSE Statement: ["'embed(parseSTMT)'"]"')
-     inew=inject2Source(inew+1,3,'say ">> PARSE STRING   : ["' lhs'"]"')                 ## value function doesn't help, if the parm is a variable
+     inew=inject2Source(inew+1,3,'say ">> "copies("-",72)')
+     if substr(lhs,1,1)='x' then lhs=' 'lhs
+     inew=inject2Source(inew+1,3,'say ">> PARSE Statement: ["'lhs'" -- VAR/VALUE WITH --> "' embed(template) '"]"')
+     inew=inject2Source(inew+1,3,'say ">> PARSE STRING   : ["'lhs'"]"')                 ## value function doesn't help, if the parm is a variable
      inew=inject2Source(inew+1,3,'say ">> PARSE TEMPLATE : ["'embed(template)'"]"')
   end
   inew=inject2Source(inew+1,0,'## ---------- set parse variables ----------')
