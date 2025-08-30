@@ -59,12 +59,13 @@ parsestring: procedure
  * -------------------------------------------------------------------
  */
      if type = 1 then do
-        if debug = 11 then say 'entering Type 'type 'var-number 'j' Pointer 'pointer
+        if debug = 11 then say 'entering Type 'type 'Variable 'token.k 'Var-number 'j' Pointer 'pointer
         j = j + 1
         variable.j = token.k
         pendingJ     = j
         pendingK     = k
         pendingStart = pointer
+        finalAfterOneBlank = 0              /* Reset pointer, else we do not pick up the last pending variable if it is empty */
         iterate
      end
 /* -------------------------------------------------------------------

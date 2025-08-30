@@ -82,7 +82,6 @@ return 0
  */
 RXPPPassOne: procedure = .int
   arg expose infile=.string, outfile=.string,maclib=.string, macsys=.string
-say "****** Read maclib ************"
   macnum=readSource(maclib)
   if macnum<0 then do
      if verbose then say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
@@ -98,7 +97,6 @@ say "****** Read maclib ************"
      source.i=""
      stype.i='R'
   end
-say "****** Read macsys ************"
   macnum=readSource(macsys)
   if macnum<0 then do
      if verbose then say 'CRX0900E+['time('l')'] System Maclib not found, or not accessible: 'macsys
@@ -113,7 +111,6 @@ say "****** Read macsys ************"
        source.i=""
        stype.i='R'
     end
-say "****** Read source code ************"
   rexxLines=readSource(infile)
   if rexxLines<0 then do
      say 'CRX0910E+['time('l')'] source file missing: 'infile
@@ -874,7 +871,6 @@ replaceFixArg: Procedure=.string
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
   if wrds\=callargcount then do    ## callargs.0 is may be not set properly
-     say wrds callargcount
      call writeline '## +++++ macro 'macname' call parameters do not match with template'
      call writeline '## +++++ template 'quote(xargs)
      say '+++++ macro 'macname' call parameters do not match with template'
@@ -1219,12 +1215,16 @@ return "'"line"'"
  */
 parsevar: Procedure=.int
   arg lino=.int, parseLine=.string
-
  ## 1. strip off PARSE VAR variable template or PARSE VALUE 'string'/variable [WITH] template
  ##                1w  2w   3w     4w            1w    2w     3w                4w
  ## 2. strip off PARSE variable template or PARSE 'string'/variable [WITH] template
  ##                1w   2w         3w        1w      2w                         3w
   parseLine=subword(parseLine,2)    ## strip off PARSE command
+  parsestmt=parseline               ## save this for adding it later as comment
+  ppi=pos('/*',parseLine)
+  if ppi>1 then parseLine=substr(parseLine,1,ppi-1)
+  ppi=pos('##',parseLine)
+  if ppi>1 then parseLine=substr(parseLine,1,ppi-1)
   pmode=upper(word(parseLine,1))    ## check if we have a VALUE or VAR clause
   if pmode='VALUE' | pmode= 'VAR' then parseLine=subword(parseLine,2)   ## set behind VALUE/VAR clause
 
@@ -1325,25 +1325,30 @@ parsevar: Procedure=.int
         insert.j=token.i"=_pass_variable_content."j
      end
   end
-  imax=insert.0+12       ## add 12 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
+  imax=insert.0*2+12        ## add 12 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
   rc=insert_array(source,lino+1,imax)
   rc=insert_array(stype,lino+1,imax)
 
-   inew=inject2Source(lino+1,0,'/* 'parseLine' */')
+   inew=inject2Source(lino+1,0,'/* PARSE 'parseSTMT' */')
    inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
    inew=inject2Source(inew+1,3,'_string2Parse='lhs)
-   inew=inject2Source(inew+1,3,'_parsetemplate="'template'"')
+   inew=inject2Source(inew+1,3,'_parsetemplate='embed(template))
    inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content')
   if pos(' parse',cflags)>0 then do
-     inew=inject2Source(inew+1,3,'say "#PARSE STRING  : 'lhs'"')      ## value function doesn't help, if the parm is a variable
-     inew=inject2Source(inew+1,3,'say "#PARSE TEMPLATE: 'template'"')
+     inew=inject2Source(inew+1,3,'say ">> PARSE Statement: ["'embed(parseSTMT)'"]"')
+     inew=inject2Source(inew+1,3,'say ">> PARSE STRING   : ["' lhs'"]"')                 ## value function doesn't help, if the parm is a variable
+     inew=inject2Source(inew+1,3,'say ">> PARSE TEMPLATE : ["'embed(template)'"]"')
   end
   inew=inject2Source(inew+1,0,'## ---------- set parse variables ----------')
   do j=1 to insert.0
      inew=inject2Source(inew+1,3,insert.j)
+     if pos(' parse',cflags)>0 then do
+        inew=inject2Source(inew+1,3,'say ">> PARSE Result   : "_pass_variable.'j'"=["_pass_variable_content.'j'"]"')
+     end
   end
   inew=inject2Source(inew+1,0,'## ---------- parse variables set ----------')
 return token.0
+
 flush: procedure=.string
   arg buf=.string, expose token=.string[], expose tokenhi=.int
   if buf = '' then return ''
@@ -1351,6 +1356,11 @@ flush: procedure=.string
   token.tokenhi = buf
   buf = ''
 return buf
+
+embed: procedure=.string
+  arg strx=.string
+  if pos("'",strx,1)>0 then return '"'strx'"'
+return "'"strx"'"
 
 /* -------------------------------------------------
  * preCleanTemplate
