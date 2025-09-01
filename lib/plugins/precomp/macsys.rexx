@@ -1,8 +1,9 @@
 /* --- System Macro Library for RXPP, change only if supervised --- */
 ##define log(msg)           {say time('l') msg}
 
-##define mainargs(stem)    {arg stem=.string[]}
+##define argv(stem)    {arg stem=.string[]; argc=stem.0}
 ##define strlen(len,strg)  {len=0; assembler strlen len,strg}
+##define cmd execio(num DISKX file keyword stem) {if mode='DISKR' | mode='READ' then stem.1='';rc=_ExecIO('num','diskx',file,stem)}
 
 /* Numerical Functions */
 ##define isEven(n)          {n // 2 = 0}
@@ -32,3 +33,6 @@
 ##define isAlnum(str)         {verify(str, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') = 0}
 ##define isSpace(str)         {verify(str, ' ') = 0}
 ##define isEmpty(str)         {str = ''}
+
+##define quote(string2quote)  {'string2quote'}
+##define Dquote(string2quote) {"string2quote"}

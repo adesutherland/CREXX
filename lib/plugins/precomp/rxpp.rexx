@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -123,11 +123,12 @@ RXPPPassOne: procedure = .int
   if linx>0 then stype.linx='X'         /* Skip line */
   linx=ffind(source,1,'/* REXX */')
   if linx>0 then stype.linx='X'         /* Skip line */
-  call insert_array source,1,3
-  call insert_array stype,1,3
+  call insert_array source,1,10         /* insert header, and reserve some lines */
+  call insert_array stype,1,10
   source.1='/* RXPP */'
   source.2='options levelb'
   source.3='import rxfnsb'
+  source.4='/* reserved for namespace definition */'
 
   rexxlines=rexxlines+3
 
@@ -258,16 +259,20 @@ return 0
 RXPPPassThree: procedure
   arg out=.string
   lineNo=0
+  if globaldef='' then source.4=''
+  else source.4='namespace 'rxmodule' expose 'globaldef
+
   do while lineNo<source.0
      lineNo=Lineno+1
      line = source.lineNo
-  	 if stype.LineNo='D' then do
- 	    if pos(' ndef',cflags)>0 then iterate
- 	    call writeLine printGen(line,1)
+     if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
+  	 else if stype.LineNo='D' then do
+ 	    if pos(' ndef',cflags)>0 then iterate     ## ndef    : suppress original definition, just output expanded result
+ 	    call writeLine printGen(line,1)           ## printgen: prints pre-processor line with appropriate suffix comment
   	 end
      else if stype.LineNo='I' then do
-       if pos(' nset',cflags)>0 then iterate
-   	   call writeLine printGen(line,2)
+       if pos(' nset',cflags)>0 then iterate      ## nset    : suppress original definition, just output expanded result
+   	   call writeLine printGen(line,2)            ## printgen: prints pre-processor line with appropriate suffix comment
      end
      else if stype.LineNo='IF' then do
        ##  call writeLine printGen(line,4)
@@ -289,7 +294,14 @@ RXPPPassThree: procedure
            call writeline line                    ## also write line, else it gets lost
         end
      end
-     else if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
+     else if stype.LineNo='ARRAY' then do
+       if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+       call writeLine printGen(line,5)            ## printgen: prints pre-processor line with appropriate suffix comment
+     end
+     else if stype.LineNo='GLOBAL' then do
+       if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+       call writeLine printGen(line,6)            ## printgen: prints pre-processor line with appropriate suffix comment
+     end
      else if strip(line) \='' then do
   	    newline = expandRecursive(line)
    	    call writeline newline
@@ -329,7 +341,9 @@ GetPrecomp: procedure
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
-      else if ucmd = '##PARSE' then stype.LineNo='PARSE'
+      else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
+      else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
+      else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
@@ -471,6 +485,8 @@ printGen: procedure=.string
   if type=2 then return '/* 'line' I*/'   ## INCLUDE clause
   if type=3 then return '/* 'line' S*/'   ## SET clause
   if type=4 then return '/* 'line' IF*/'  ## IF clause
+  if type=5 then return '/* 'line' AR*/'  ## Array clause
+  if type=6 then return '/* 'line' GL*/'  ## Global clause
   else return '/* rxpp: 'line' */'        ## Macro call
 return '/* rxpp: 'line' U*/'
 /* ------------------------------------------------------------------
@@ -490,10 +506,10 @@ return
  * ------------------------------------------------------------------
  */
 dropComment: procedure=.string
-  arg varvalue=.string
-  fp1=pos('##',varvalue,1)
+  arg varvalue=.string,from=1
+  fp1=pos('##',varvalue,from)
   if fp1>1 then varvalue=substr(varvalue,1,fp1-1)
-  fp1=pos('/*',varvalue,1)
+  fp1=pos('/*',varvalue,from)
   if fp1>1 then varvalue=substr(varvalue,1,fp1-1)
 return strip(varvalue)
 /* ------------------------------------------------------------------
@@ -545,6 +561,49 @@ CMD_include: procedure
      insertat=insertat+1
      source.insertat=include.j
   end
+return
+/* ------------------------------------------------------------------
+ * Process ##ARRAY command
+ * Initialises string and int arrays
+ * ------------------------------------------------------------------
+ */
+CMD_array: procedure
+   arg lino=.int,line=.string
+   stype.lino= 'ARRAY'
+   line=translate(line,,',')
+   line=DropComment(line,3)
+   atype=word(line,2)
+   defs=subword(line,3)
+   new=words(defs)                       ## check how many arrays have been defined
+   if new=0 then return
+   rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
+   rc=insert_array(stype, lino+1,new)
+   do i=1 to new                         ## now add the statements
+      def=word(defs,i)
+      source[lino+i]=def'=.'atype'[];'
+   end
+return
+/* ------------------------------------------------------------------
+ * Process ##GLOBAL command
+ * Prepares global string for NameSpace function
+ * ------------------------------------------------------------------
+ */
+CMD_global: procedure
+   arg lino=.int,line=.string
+   stype.lino= 'GLOBAL'
+   line=translate(line,,',')
+   line=DropComment(line,3)
+   atype=word(line,2)
+   defs=subword(line,3)
+   new=words(defs)                       ## check how many arrays have been defined
+   if new=0 then return
+   rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
+   rc=insert_array(stype, lino+1,new)
+   do i=1 to new                         ## now add the statements
+      def=word(defs,i)
+      source[lino+i]=def'=.'atype
+   end
+   globaldef=globaldef' 'subword(line,3)
 return
 /* ------------------------------------------------------------------
  * Process ##DATA command
@@ -1221,6 +1280,13 @@ parsevar: Procedure=.int
  ##                1w   2w         3w        1w      2w                         3w
   parseLine=subword(parseLine,2)    ## strip off PARSE command
   parsestmt=parseline               ## save this for adding it later as comment
+  ww1=upper(word(parseLine,1))
+  uplow=0
+  if ww1='UPPER' | ww1='LOWER' then do
+     if ww1='UPPER' then uplow=1
+     else uplow=2
+     parseLine=subword(parseLine,2)
+  end
   ppi=pos('/*',parseLine)
   if ppi>1 then parseLine=substr(parseLine,1,ppi-1)
   ppi=pos('##',parseLine)
@@ -1333,11 +1399,15 @@ parsevar: Procedure=.int
    inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
    inew=inject2Source(inew+1,3,'_string2Parse='lhs)
    inew=inject2Source(inew+1,3,'_parsetemplate='embed(template))
-   inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content')
+   if pos(' trimparse',cflags)>0 then inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,1,'uplow)
+   else inew=inject2Source(inew+1,3,'call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,0,'uplow)
   if pos(' parse',cflags)>0 then do
      inew=inject2Source(inew+1,3,'say ">> "copies("-",72)')
      if substr(lhs,1,1)='x' then lhs=' 'lhs
-     inew=inject2Source(inew+1,3,'say ">> PARSE Statement: ["'lhs'" -- VAR/VALUE WITH --> "' embed(template) '"]"')
+     upmode=''
+     if uplow=1 then upmode='UPPER '
+     else if uplow=2 then upmode='LOWER '
+     inew=inject2Source(inew+1,3,'say ">> PARSE Statement: 'upmode'["'lhs'" -- VAR/VALUE WITH --> "' embed(template) '"]"')
      inew=inject2Source(inew+1,3,'say ">> PARSE STRING   : ["'lhs'"]"')                 ## value function doesn't help, if the parm is a variable
      inew=inject2Source(inew+1,3,'say ">> PARSE TEMPLATE : ["'embed(template)'"]"')
   end
@@ -1587,17 +1657,19 @@ rxppinit: procedure=.string
   macros_varvalue.1=''
   included_files.1=''
   imported_funcs=""
+  globaldef=''
   lino=0
   outbuf.1 = ""
   mexpanded=0
-  rexxname=translate(rexxname,,'/\')
-  wrds=words(rexxname)
-  rexxname=word(rexxname,wrds)
+  rxmodule=translate(rexxname,,'/\')
+  wrds=words(rxmodule)
+  rxmodule=word(rxmodule,wrds)
   syspath=translate(maclib,,'/\')
   wrds=words(syspath)
   wlast=wordindex(syspath,wrds)
   syspath=substr(maclib,1,wlast-1)
-  call setvar 'rxpp_rexx',rexxname
+  call setvar 'rxpp_rexx',rxmodule
+  rxmodule=word(translate(rxmodule,,'.'),1)
   cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
     call setvar 'cflags',cflags
   printgen_flags='all'
