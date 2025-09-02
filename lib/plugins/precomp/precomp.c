@@ -55,12 +55,9 @@ PROCEDURE (shell_sort) {
 }
 
 PROCEDURE (sort_bylen) {
-    int from, to;
-    int i, j, gap;
-    int val1;
+    int to, i, j, gap, val1;
     to = GETARRAYHI(ARG0);   // number of contained array items
 
-    from = 1;
     for (gap = to / 2; gap > 0; gap /= 2) {
         for (i = gap; i < to; i++) {
             val1 = strlen(GETSARRAY(ARG0, i));
@@ -285,7 +282,6 @@ PROCEDURE (hasmacro) {
     dupline= strupr_portable(dupline);
     for (i = from; i<mmax; i++) {
         if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
-
             RETURNINTX(i + 1);
         }
     }
