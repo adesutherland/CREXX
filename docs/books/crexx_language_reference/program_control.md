@@ -74,3 +74,140 @@ if reply = "YES" then say "OK!"
 ```
 
 <!--splice--confirmation.rexx-->
+
+The instruction `say "OK!"` is only executed if the variable `reply` has the value `YES`. 
+
+The IF instruction introduces a new branch of instructions to process when the `IF`
+expression is true. Programmers often visualize the action of a decision-making
+instruction by using a diagram like this, called a flowchart.
+
+<!-- \begin{wrapfigure}{r}{0.4\linewidth} -->
+\includegraphics[width=400pt]{flowchart_svg.pdf}
+<!-- \end{wrapfigure} -->
+
+The decision-making expression is represented by a diamond. If the expression (here
+REPLY="YES") evaluates as true, then the program branches, or takes a detour,
+through one additional instruction before resuming on the next line.
+
+## Using DO..END for multiple clauses
+
+To put a list of instructions after the THEN, use the DO instruction and the END
+keyword. That turns the whole group into a single instruction. For example:
+
+```rexx <!--doclause2.rexx-->
+IF expression THEN
+DO
+instructionl
+instruction2
+instruction3
+< ... and so on>
+END
+```
+
+With the DO and END keywords bracketing the list, REXX knows to treat the
+listed instructions as a unit to:
+
+- Process all of them if `expression` is true
+- Ignore them all if `expression` is false.
+
+```rexx <!--wakeup.rexx-->
+options levelb
+/* Wake-up call */
+sun = 'shining'
+if sun = "shining"
+then
+  do
+    say "Get up ! "
+    say "Get out ! "
+    say "Meet the sun half way! "
+  end
+```
+
+<!--splice--wakeup.rexx-->
+
+The flowchart diagram would look like this:
+
+\includegraphics[width=400pt]{sun_flowchart_svg.pdf}
+
+In the previous example, if sun = "shining" evaluates as 1 (*true*), then all three SAY
+instructions are processed. But if sun = "shining" evaluates as 0 (*false*), then none
+of the SAY instructions are processed.
+
+The THEN and DO keywords are each on a separate line.
+This is optional. You could also write the program as:
+
+```rexx <!--wakeup2.rexx-->
+options levelb
+/* Wake-up call */
+sun = 'shining'
+if sun = "shining" then
+do
+  say "Get up ! "
+  say "Get out ! "
+  say "Meet the sun half way! "
+end
+```
+
+or
+
+```rexx <!--wakeup3.rexx-->
+options levelb
+/* Wake-up call */
+sun = 'shining'
+if sun = "shining" then do
+  say "Get up ! "
+  say "Get out ! "
+  say "Meet the sun half way! "
+end
+```
+
+## Two paths: ELSE
+
+Used alone, IF ... THEN adds a branch of instructions to process when the
+controlling expression is true. You can also add a second branch of instructions to
+process when the expression is false. The keyword ELSE introduces this alternate
+list. For example:
+
+```rexx <!--ifthenelse.rexx-->
+IF expression
+THEN instructionl
+ELSE instruction2
+```
+
+When IF is used this way, REXX processes only one of these instructions, not the
+other. It will process:
+- Instructionl only if `expression` is true
+- Instructi on2 only if `expression` is false.
+
+The flowchart diagram would look like this:
+
+\includegraphics[width=400pt]{who_flowchart_svg.pdf}
+
+## The SELECT instruction
+
+You are not limited to two choices. You can use the SELECT instruction to have a
+\rexx{} program select one of any number of branches. For example:
+
+```rexx <!--select.rexx-->
+SELECT
+WHEN expression1 THEN instruction1
+WHEN expression2 THEN instruction2
+WHEN expression3 THEN instruction3
+OTHERWISE
+	instruction
+	instruction
+	instruction
+END
+```
+
+- If `expression1` is true, `instruction1` is processed. After this, processing
+continues with the instruction following the `END`.
+- If `expression1` is false, then `expression2` is tested. If it is true, then
+instruction2 is processed and processing continues with the instruction
+following the `END`.
+- If `expression1`, `expression2`, and so on, are all *false*, then processing continues
+with the instruction following the `OTHERWISE`.
+
+`OTHERWISE` is essentially the `SELECT`-equivalent of `ELSE`. If there is any
+possibility that all the `WHEN` expressions could be *false*, there must be an
+`OTHERWISE` clause.

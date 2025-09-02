@@ -109,7 +109,7 @@ entered the phase in which things are stable enough for working on
 specific tasks by a larger team. Everybody is welcome! Lots of things
 can be done in \rexx{}!
 
-## Features of R\textsc{exx}}
+## Features of R\textsc{exx}
 The R\textsc{exx} programming language\footnote{Cowlishaw, M. F., \textbf{The REXX Language} (second edition), ISBN 0-13-780651-5, Prentice-Hall, 1990.} was designed with just one objective: to make programming easier than it was before. The design achieved this by emphasizing readability and usability, with a minimum of special notations and restrictions. It was consciously designed to make life easier for its users, rather than for its implementers.
 
 The great strengths of R\textsc{exx} are its human-oriented features, including
