@@ -3,7 +3,6 @@
   <polygon points="200,80 240,110 200,140 160,110" fill="white" stroke="black" stroke-width="2"/>
   <text x="200" y="108" text-anchor="middle" font-family="Arial" font-size="10" fill="black">sun =</text>
   <text x="200" y="120" text-anchor="middle" font-family="Arial" font-size="10" fill="black">"shining"?</text>
-  
   <!-- Multi-line action box (true branch - to the right) -->
   <rect x="290" y="65" width="120" height="105" fill="white" stroke="black" stroke-width="2"/>
   <text x="350" y="80" text-anchor="middle" font-family="Arial" font-size="11" fill="black">DO</text>
@@ -12,30 +11,21 @@
   <text x="350" y="125" text-anchor="middle" font-family="Arial" font-size="10" fill="black">say "meet the sun</text>
   <text x="350" y="140" text-anchor="middle" font-family="Arial" font-size="10" fill="black">half way!"</text>
   <text x="350" y="155" text-anchor="middle" font-family="Arial" font-size="10" fill="black">END</text>
-  
   <!-- Arrows -->
-  <!-- Decision to action box (true - right with 90° angles) -->
-  <line x1="240" y1="110" x2="260" y2="110" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
-  <line x1="260" y1="110" x2="290" y2="110" stroke="black" stroke-width="2"/>
-  
+  <!-- Decision to action box (true - right with complete connection) -->
+  <line x1="240" y1="110" x2="290" y2="110" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
   <!-- Action box continues down then left to join false path -->
   <line x1="350" y1="170" x2="350" y2="190" stroke="black" stroke-width="2"/>
-  <line x1="350" y1="190" x2="200" y2="190" stroke="black" stroke-width="2" marker-end="url(#leftarrowhead)"/>
-  
+  <line x1="350" y1="190" x2="200" y2="190" stroke="black" stroke-width="2"/>
   <!-- Decision false path (straight down with 90° angles) -->
   <line x1="200" y1="140" x2="200" y2="190" stroke="black" stroke-width="2"/>
   <line x1="200" y1="190" x2="200" y2="220" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
-  
   <!-- Labels for branches -->
   <text x="250" y="105" font-family="Arial" font-size="10" fill="black">true</text>
   <text x="210" y="160" font-family="Arial" font-size="10" fill="black">false</text>
-  
   <!-- Arrow marker definition -->
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
-    </marker>
-    <marker id="leftarrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
     </marker>
   </defs>
