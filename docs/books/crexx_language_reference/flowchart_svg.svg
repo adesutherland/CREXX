@@ -1,0 +1,37 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Decision diamond -->
+  <polygon points="200,80 240,110 200,140 160,110" fill="white" stroke="black" stroke-width="2"/>
+  <text x="200" y="108" text-anchor="middle" font-family="Arial" font-size="10" fill="black">reply =</text>
+  <text x="200" y="120" text-anchor="middle" font-family="Arial" font-size="10" fill="black">"yes"</text>
+  
+  <!-- Say ok box (true branch - to the right) -->
+  <rect x="290" y="95" width="60" height="30" fill="white" stroke="black" stroke-width="2"/>
+  <text x="320" y="115" text-anchor="middle" font-family="Arial" font-size="12" fill="black">say ok</text>
+  
+  <!-- Arrows -->
+  <!-- Decision to Say ok (true - right with 90° angles) -->
+  <line x1="240" y1="110" x2="260" y2="110" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="260" y1="110" x2="290" y2="110" stroke="black" stroke-width="2"/>
+  
+  <!-- Say ok continues down then left to join false path -->
+  <line x1="320" y1="125" x2="320" y2="190" stroke="black" stroke-width="2"/>
+  <line x1="320" y1="190" x2="200" y2="190" stroke="black" stroke-width="2" marker-end="url(#leftarrowhead)"/>
+  
+  <!-- Decision false path (straight down with 90° angles) -->
+  <line x1="200" y1="140" x2="200" y2="190" stroke="black" stroke-width="2"/>
+  <line x1="200" y1="190" x2="200" y2="220" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Labels for branches -->
+  <text x="250" y="105" font-family="Arial" font-size="10" fill="black">true</text>
+  <text x="210" y="160" font-family="Arial" font-size="10" fill="black">false</text>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+    </marker>
+    <marker id="leftarrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+    </marker>
+  </defs>
+</svg>

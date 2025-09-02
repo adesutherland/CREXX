@@ -6,7 +6,7 @@ The `NUMERIC` instruction in CREXX Level B controls the precision, rounding, and
 
 The `NUMERIC` instruction must appear as the **very first instruction** within a procedure, immediately following the procedure's label. It may specify `DIGITS`, `FUZZ`, or `FORM` with a **constant numeric or string value**, or it may explicitly request to inherit these settings from the calling procedure.
 
-```rexx
+```rexx <!--numericsyntax.rexx-->
 procedure_name: procedure = <type> expose <expose_list>
   numeric digits {<constant_value> | inherited}
   numeric fuzz {<constant_value> | inherited}

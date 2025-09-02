@@ -4,31 +4,31 @@ The \crexx{} Project is a comprehensive initiative aimed at advancing the \rexx{
 
 \crexx{} is designed to run on various platforms, including VM/370 (paying homage to \rexx{}'s heritage), Linux, Windows, OSX, and z/Architecture. The project will encompass different levels or flavors of REXX, each serving a specific purpose:
 
-## Level A: PoC Precursor
+### Level A: PoC Precursor
 
 Level A was a proof-of-concept precursor and will not be actively developed further.
 
-## Level B: Foundation for Other \crexx{} Levels
+### Level B: Foundation for Other \crexx{} Levels
 
 Level B serves as the foundational layer for other cREXX levels. It can be viewed as a system language, and many of the cREXX components will be implemented in this level. Level B's approach emphasizes low-level built-in functions directly implemented in the bytecode interpreter. Other levels with complete sets of REXX capabilities and functions will be implemented in REXX Level B.
 
-## Level C: Classic \rexx{}
+### Level C: Classic \rexx{}
 
-Level C embodies "Classic" rexx{}. It aims to adhere as closely as possible to the ANSI standards and the \rexx{} implementation found on the IBM Mainframe family.
+Level C embodies "Classic" \rexx{}. It aims to adhere as closely as possible to the ANSI standards and the \rexx{} implementation found on the IBM Mainframe family.
 
-## Level D: Extended Language Features
+### Level D: Extended Language Features
 
 Level D builds upon Level C by introducing new language features, such as the USE statement, to enhance the capabilities of the language.
 
-## Level E: OO\rexx{}
+### Level E: OO\rexx{}
 
 Level E encompasses OO\rexx{}, an object-oriented extension of \rexx{}. While it is not anticipated to be directly delivered by the \crexx{} project, it acknowledges its significance in the \rexx{} ecosystem.
 
-## Level G: Modern General-Purpose \rexx{}
+### Level G: Modern General-Purpose \rexx{}
 
 Level G represents a modern, general-purpose \rexx{} that extends Level B syntax and offers contemporary language capabilities.
 
-## Level L: Specialist \rexx{} for Language Engineering
+### Level L: Specialist \rexx{} for Language Engineering
 
 Level L is a specialized REXX tailored for computer language engineering. A significant portion of the cREXX components will ultimately be implemented in REXX Level L.
 
