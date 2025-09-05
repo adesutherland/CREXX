@@ -144,10 +144,15 @@ return rexxlines
  * ------------------------------------------------------------------
  */
 RXPPPassTwo: procedure
-  stack.1 = ''         /* simulate stack using indexed stem */
-  depth = 0            /* current depth */
-  aifblock.1=0
+  stack = .string[]     /* simulate stack using indexed stem */
+  depth = 0             /* current depth */
+  aifblock=.int[]
   which=0
+  i=fsearch(source,1,'namespace ','',"",which)            ## find any namespace instruction
+  if i>0 then do
+     globaldef=source.i' 'globaldef
+     source.i=""
+  end
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
   do while i>0
      if which<3 then condition=word(source.i,2)
@@ -171,7 +176,7 @@ RXPPPassTwo: procedure
      lnk=findMatchingEndif(i+1)
      aifblock.i=lnk
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
-   end
+  end
   i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
   do while i>0
      call oocreatedefs i
@@ -260,8 +265,10 @@ RXPPPassThree: procedure
   arg out=.string
   lineNo=0
   if globaldef='' then source.4=''
-  else source.4='namespace 'rxmodule' expose 'globaldef
-
+  else do
+     if fpos('namespace',globaldef,1)>0 then source.4=globaldef
+     else source.4='namespace 'rxmodule' expose 'globaldef
+  end
   do while lineNo<source.0
      lineNo=Lineno+1
      line = source.lineNo
@@ -535,7 +542,7 @@ CMD_include: procedure
   stype.lino= 'I'
   file=word(incl,2)
   file=normalisepath(syspath'/'file)
-  include.1=''
+  include=.string[]
   new=readall(include,file,-1)
   if new<0 then do
       say 'CRX0950E+['time('l')'] missing include file: 'file
@@ -593,17 +600,27 @@ CMD_global: procedure
    stype.lino= 'GLOBAL'
    line=translate(line,,',')
    line=DropComment(line,3)
-   atype=word(line,2)
+   atype=upper(word(line,2))
+   if substr(atype,1,1)='.' then atype=substr(atype,2)
+   if atype='INT' | atype='FLOAT' | atype='STRING' then nop
+   else return
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
+   say 111 defs
+   say 222 new
    rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
    rc=insert_array(stype, lino+1,new)
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
-      source[lino+i]=def'=.'atype
+      vtemp=translate(def,,'=')
+      ivar=word(vtemp,1)
+      ival=word(vtemp,2)
+      if ival='' then source[lino+i]=ivar'=.'atype
+      else source[lino+i]=ivar'=.'atype'; 'def
+      globaldef=globaldef' 'ivar
    end
-   globaldef=globaldef' 'subword(line,3)
+
 return
 /* ------------------------------------------------------------------
  * Process ##DATA command
@@ -1158,14 +1175,14 @@ return lhs || needle || rhs
  */
 parseArgList: procedure=.int
   arg argstr=.string
-  callargs.1=''
+  callargs=.string[]
   anum=splitargs(argstr,callargs)
   do j=1 to anum                 ## could also be callargs.0, but might be not set correctly due to higher previous macro call
      callargs.j=strip(callargs.j)
   end
 return anum
 /* ------------------- the following sequence is part of the C function splitargs
-  callargs.1 = ''
+  callargs=.string[]
   i = 1
   depth = 0
   token = ''
@@ -1316,7 +1333,7 @@ parsevar: Procedure=.int
 
  /* flush pending unquoted text as a token */
   tokenhi=0
-  token.1=''
+  token=.string[]
   L = length(template)
   i = 1
   do while i <= L
@@ -1598,7 +1615,7 @@ normalisePath: procedure=.string
 
   path = translate(rawpath, '/', '\')    /* Convert backslashes to forward slashes */
   /* Split path into components by '/' */
-  components.1=''
+  components=.string[]
   compi = 0
   do while path \= ''
      ppi = pos('/', path)
@@ -1649,17 +1666,17 @@ return normalised
 rxppinit: procedure=.string
   arg rexxname=.string,maclib=.string
   alphaN='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
-  source.1=''
+  source=.string[]
   stype.1='R'
-  macros_mname.1=''
-  macros_mspace.1=0
-  macros_varname.1=''
-  macros_varvalue.1=''
-  included_files.1=''
+  macros_mname=.string[]
+  macros_mspace=.int[]
+  macros_varname=.string[]
+  macros_varvalue=.string[]
+  included_files=.string[]
   imported_funcs=""
   globaldef=''
   lino=0
-  outbuf.1 = ""
+  outbuf=.string[]
   mexpanded=0
   rxmodule=translate(rexxname,,'/\')
   wrds=words(rxmodule)
