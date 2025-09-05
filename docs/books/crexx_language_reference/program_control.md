@@ -44,10 +44,10 @@ say 5 < 4           /* displays '0' - false */
 say 5 = 4           /* displays '0' - false */
 say 5 > 4           /* displays '1' - true  */
 
-reply = "YES"      /* assigns the string "YES"
+reply = "YES"       /* assigns the string "YES"
                       to the variable REPLY */
 
-say reply          /* displays "YES"        */
+say reply           /* displays "YES"       */
 say reply = "MAYBE" /* displays '0' - false */
 say reply = "YES"   /* displays '1' - true  */
 ```
@@ -91,7 +91,7 @@ through one additional instruction before resuming on the next line.
 
 ## Using DO..END for multiple clauses
 
-To put a list of instructions after the THEN, use the DO instruction and the END
+To put a list of instructions after the `THEN`, use the `DO` instruction and the `END`
 keyword. That turns the whole group into a single instruction. For example:
 
 ```rexx <!--doclause2.rexx-->
@@ -104,7 +104,7 @@ instruction3
 END
 ```
 
-With the DO and END keywords bracketing the list, REXX knows to treat the
+With the `DO` and `END` keywords bracketing the list, \rexx{} knows to treat the
 listed instructions as a unit to:
 
 - Process all of them if `expression` is true
@@ -129,11 +129,11 @@ The flowchart diagram would look like this:
 
 \includegraphics[width=400pt]{sun_flowchart_svg.pdf}
 
-In the previous example, if sun = "shining" evaluates as 1 (*true*), then all three SAY
-instructions are processed. But if sun = "shining" evaluates as 0 (*false*), then none
-of the SAY instructions are processed.
+In the previous example, if `sun = "shining"` evaluates as 1 (*true*), then all three `SAY`
+instructions are processed. But if `sun = "shining"` evaluates as 0 (*false*), then none
+of the `SAY` instructions are processed.
 
-The THEN and DO keywords are each on a separate line.
+The `THEN` and `DO` keywords are each on a separate line.
 This is optional. You could also write the program as:
 
 ```rexx <!--wakeup2.rexx-->
@@ -163,9 +163,9 @@ end
 
 ## Two paths: ELSE
 
-Used alone, IF ... THEN adds a branch of instructions to process when the
+Used alone, `IF` ... `THEN` adds a branch of instructions to process when the
 controlling expression is true. You can also add a second branch of instructions to
-process when the expression is false. The keyword ELSE introduces this alternate
+process when the expression is false. The keyword `ELSE` introduces this alternate
 list. For example:
 
 ```rexx <!--ifthenelse.rexx-->
@@ -174,7 +174,7 @@ THEN instructionl
 ELSE instruction2
 ```
 
-When IF is used this way, REXX processes only one of these instructions, not the
+When `IF` is used this way, `REXX` processes only one of these instructions, not the
 other. It will process:
 - Instructionl only if `expression` is true
 - Instructi on2 only if `expression` is false.
@@ -185,7 +185,7 @@ The flowchart diagram would look like this:
 
 ## The SELECT instruction
 
-You are not limited to two choices. You can use the SELECT instruction to have a
+You are not limited to two choices. You can use the `SELECT` instruction to have a
 \rexx{} program select one of any number of branches. For example:
 
 ```rexx <!--select.rexx-->

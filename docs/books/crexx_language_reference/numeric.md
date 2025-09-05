@@ -1,6 +1,6 @@
 # NUMERIC Instruction
 
-The `NUMERIC` instruction in CREXX Level B controls the precision, rounding, and comparison behaviour for all numeric operations within a procedure. To enable performance optimisations, its usage is slightly restricted compared to classic REXX.
+The `NUMERIC` instruction in \crexx{} Level B controls the precision, rounding, and comparison behaviour for all numeric operations within a procedure. To enable performance optimisations, its usage is slightly restricted compared to classic \rexx{}.
 
 ## Syntax:
 
@@ -34,8 +34,8 @@ procedure_name: procedure = <type> expose <expose_list>
 
 ## Motivation:
 
-The primary motivation for these restrictions is **performance optimisation**. REXX's arbitrary-precision decimal arithmetic is computationally intensive. By requiring `NUMERIC` settings to be constant and declared at the beginning of a procedure, 
-the CREXX compiler's constant folding optimiser can **Pre-calculate and embed numeric context values**. The values for precision, fuzz, and form 
+The primary motivation for these restrictions is **performance optimisation**. \rexx{}'s arbitrary-precision decimal arithmetic is computationally intensive. By requiring `NUMERIC` settings to be constant and declared at the beginning of a procedure, 
+the \crexx{} compiler's constant folding optimiser can **Pre-calculate and embed numeric context values**. The values for precision, fuzz, and form 
 can be determined at compile-time and directly incorporated into the bytecode instructions.
 
 When `INHERITED` is used, the numeric settings are not known until runtime (as they depend on the caller). In such cases, the optimiser cannot perform these compile-time constant folding optimisations for decimal arithmetic, 

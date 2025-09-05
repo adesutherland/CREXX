@@ -1,6 +1,6 @@
 # Namespace
 
-In Rexx programming, the ```namespace``` instruction plays an important role in organizing and structuring modules within an application. It allows you to define a unique identifier for a module, enabling multiple modules to coexist within the same program while maintaining their own identity and scope.
+In \rexx{} programming, the ```namespace``` instruction plays an important role in organizing and structuring modules within an application. It allows you to define a unique identifier for a module, enabling multiple modules to coexist within the same program while maintaining their own identity and scope.
 
 The <!--index-->namespace instruction is used after the ```options``` instruction in a \crexx{} program. By specifying a namespace, you define the logical group or category to which a particular <!--index-->module belongs. This helps in organizing related modules together and facilitates their identification and usage from other modules within the program.
 
