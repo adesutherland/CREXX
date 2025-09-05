@@ -27,6 +27,7 @@ set(REXXBINS
         ts_overlay.rxbin
         ts_pos.rxbin
         ts_reverse.rxbin
+        ts_regex.rxbin
         ts_right.rxbin
         ts_sign.rxbin
         ts_space.rxbin

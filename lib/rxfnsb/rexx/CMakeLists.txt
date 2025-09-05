@@ -68,6 +68,7 @@ set(BIFS
 		qwordindex
 		qwordpos
 		qsubword
+		regex
 		x2b
 		x2c
 		x2d
