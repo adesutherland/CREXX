@@ -60,11 +60,86 @@ static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* v
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
 
+/*
+ * Create a number_context of a node
+ * The returned context is a static parameter - do not free it or expect it to be thread safe, etc.
+ */
+static numeric_context* node_to_num_context(ASTNode* node) {
+    static numeric_context num_context;
+    if (!node->scope) {
+        printf("INTERNAL WARNING: node_to_num_context() called with node with no scope. Please report this warning\n");
+        /* Not a numeric context - so use defaults */
+        num_context.digits = DEFAULT_NUMERIC_DIGITS;
+        num_context.fuzz = DEFAULT_NUMERIC_FUZZ;
+        num_context.form = DEFAULT_NUMERIC_FORM;
+        num_context.casetype = DEFAULT_NUMERIC_CASE;
+        num_context.standard = DEFAULT_NUMERIC_STANDARD;
+        return &num_context;
+    }
+    return &(node->scope->num_context);
+}
+
+/*
+ * Create a value from a node
+ * The returned value is a static parameter - do not free it or expect it to be thread safe, etc.
+ * However, it is essential that clear_value() is called on the returned value when it is no longer necessary
+ * to avoid memory leaks
+ */
+static value* node_to_value(ASTNode* node) {
+    static value v;
+    value_zero(&v);
+    switch (node->value_type) {
+        case TP_INTEGER:
+            // v.status.type_int = 1; TODO This will be correct but only when the status values are defined and used correctly
+            v.int_value = node->int_value;
+            break;
+        case TP_FLOAT:
+            // v.status.type_float = 1;
+            v.float_value = node->float_value;
+            break;
+        case TP_DECIMAL:
+            // v.status.type_decimal = 1;
+            if (node->decimal_value) {
+                v.decimal_value = malloc(strlen(node->decimal_value)+1);
+                strcpy(v.decimal_value, node->decimal_value);
+                v.decimal_value_length = strlen(node->decimal_value);
+                v.decimal_buffer_length = v.decimal_value_length;
+            }
+            break;
+        case TP_STRING:
+            v.status.type_string = 1;
+            if (node->node_string && node->node_string_length) {
+                v.string_value = malloc(node->node_string_length+1);
+                memcpy(v.string_value, node->node_string, node->node_string_length);
+                v.string_value[node->node_string_length] = 0; /* Null terminate */
+                v.string_length = node->node_string_length;
+                v.string_buffer_length = v.string_length;
+                v.string_pos = 0;
+#ifdef NUTF8
+                v.string_chars = utf8nlen(v.string_value, v.string_length); /* SLOW! */
+                v.string_char_pos = 0;
+#endif
+            }
+            break;
+        case TP_BOOLEAN:
+            // v.status.type_boolean = 1;
+            v.int_value = node->int_value;
+            break;
+        default:
+            /* Leave it as a zeroed value */
+            break;
+    }
+    return &v;
+}
+
 /* Update the string representation if a CONSTANT node */
 static void update_string(ASTNode* node) {
     char* buffer;
     size_t length;
-    if (ast_hase(node)) return; /* Don't over write error codes */
+    value work_value;
+    value *node_value;
+
+    if (ast_hase(node)) return; /* Don't overwrite error codes */
     switch (node->value_type) {
         case TP_INTEGER:
         case TP_BOOLEAN:
@@ -79,14 +154,18 @@ static void update_string(ASTNode* node) {
             return;
 
         case TP_FLOAT:
-            buffer = malloc(32); /* Large enough for any float */
-#ifdef __CMS__
-            length = snprintf(buffer,32,"%.14g",node->float_value);
-#else
-            length = snprintf(buffer,32,"%.15g",node->float_value);
-#endif
+            /* init the work value */
+            value_init(&work_value);
+            /* Create the node value */
+            node_value = node_to_value(node);
+            /* Convert the float to a string using the numeric context */
+            string_from_float(node_to_num_context(node), &work_value, node_value);
             /* Update the node's string - this also takes ownership of the memory */
-            ast_sstr(node, buffer, length);
+            ast_copy_str(node, node_value->string_value);
+            /* Clear the node value */
+            clear_value(node_value);
+            /* Clear the work value */
+            clear_value(&work_value);
             return;
 
         case TP_DECIMAL:
@@ -102,7 +181,7 @@ static void update_string(ASTNode* node) {
                 Context* context = node->context;
                 decplugin* decplugin = context->decimal_plugin;
                 value* value = value_f();
-                if (node->scope->dec_digits == -1) {
+                if (node->scope->num_context.digits == -1) {
                     /*
                      * Inherited - meaning we don't know the value of digits to use, so we need to assume the biggest
                      * number of digits for this particular value - and an easy way to estimate this is just to use the
@@ -111,7 +190,7 @@ static void update_string(ASTNode* node) {
                      decplugin->setDigits(decplugin, strlen(node->decimal_value));
                 }
                 else {
-                    decplugin->setDigits(decplugin, node->scope->dec_digits);
+                    decplugin->setDigits(decplugin, node->scope->num_context.digits);
                 }
                 decplugin->decimalFromString(decplugin, value, node->decimal_value);
                 char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
@@ -276,17 +355,17 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2) {
         decplugin* decplugin = context->decimal_plugin;
         value* val1 = value_f();
         value* val2 = value_f();
-        effective_digits = node1->scope->dec_digits;
+        effective_digits = node1->scope->num_context.digits;
         if (effective_digits == -1) {
             // Should not happen as we don't do constant folding on inherited digits - add an error
             mknd_err(node1, "INTERNAL_ERROR_OPT_INHERITED_DIGITS");
-            effective_digits = 18; /* Assume default */
+            effective_digits = DEFAULT_NUMERIC_DIGITS; /* Assume default */
         }
-        if (node1->scope->dec_fuzz == -1) {
+        if (node1->scope->num_context.fuzz == -1) {
             // Should not happen as we don't do constant folding on inherited fuzz - add an error
             mknd_err(node1, "INTERNAL_ERROR_OPT_INHERITED_FUZZ");
         }
-        else effective_digits -= node1->scope->dec_fuzz;
+        else effective_digits -= node1->scope->num_context.fuzz;
         if (effective_digits < 1) effective_digits = 1;
         decplugin->setDigits(decplugin, effective_digits);
         decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
@@ -450,18 +529,18 @@ static walker_result opt1_walker(walker_direction direction,
             can_do_code_folding = 1;
             if (child1) {
                 if (child1->node_type != CONSTANT) can_do_code_folding = 0;
-                else if (node->value_type == TP_DECIMAL && node->scope->dec_digits == -1)
+                else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
                     can_do_code_folding = 0; /* Can't fold decimal if digits is inherited */
             }
             if (child2) {
                 if (child2->node_type != CONSTANT) can_do_code_folding = 0;
-                else if (node->value_type == TP_DECIMAL && node->scope->dec_digits == -1)
+                else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
                     can_do_code_folding = 0; /* Can't fold decimal if digits is inherited */
             }
             // Check fuzz for operators
             if (can_do_code_folding) {
                 if (is_comparison_operator(node->node_type)) {
-                    if (node->value_type == TP_DECIMAL && node->scope->dec_fuzz == -1)
+                    if (node->value_type == TP_DECIMAL && node->scope->num_context.fuzz == -1)
                         can_do_code_folding = 0; /* Can't fold decimal operators if fuzz is inherited */
                 }
             }
@@ -577,7 +656,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalAdd(decplugin, result, val1, val2);
@@ -613,7 +692,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalSub(decplugin, result, val1, val2);
@@ -648,7 +727,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalMul(decplugin, result, val1, val2);
@@ -683,7 +762,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalPow(decplugin, result, val1, val2);
@@ -720,7 +799,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
@@ -756,7 +835,7 @@ static walker_result opt1_walker(walker_direction direction,
                             double dresult;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
@@ -794,7 +873,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             // Calculate the integer division first
@@ -836,7 +915,7 @@ static walker_result opt1_walker(walker_direction direction,
                             int result;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, zero, "0");
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             result = decplugin->decimalCompare(decplugin, val1, zero);
@@ -863,7 +942,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->dec_digits);
+                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalNeg(decplugin, val1, val1);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
@@ -890,7 +969,7 @@ static walker_result opt1_walker(walker_direction direction,
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin,node->scope->dec_digits);
+                            decplugin->setDigits(decplugin,node->scope->num_context.digits);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, val1, result_string);
@@ -922,7 +1001,7 @@ static walker_result opt1_walker(walker_direction direction,
                              ( node->parent->node_type == VAR_REFERENCE ||
                                node->parent->node_type == VAR_TARGET ||
                                node->parent->node_type == VAR_SYMBOL ) ) {
-                            /* If the parent is a Variable then the node is an array subscript, and so it must be >=0 */
+                            /* If the parent is a Variable, then the node is an array subscript, and so it must be >=0 */
                             if (node->target_type == TP_INTEGER) { /* This 'must' be true */
                                 index = ast_chdi(node);
                                 if (node->int_value < node->parent->symbolNode->symbol->dim_base[index]) mknd_err(node, "OUT_OF_RANGE");

@@ -27,6 +27,52 @@ typedef int64_t rxinteger; // C99+
 #define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
 #endif //RXINTEGER_T
 
+/* The default number of digits. This constant is also the point at which integers and floating numbers are
+ * truncated. If it is lower than 18, then integers are floats are rounded, if 18 or higher they are not rounded (for performance).
+ * However, when displaying numbers, the digit number is always honored */
+#define DIGITS_STRIKE_POINT 18
+
+/* Default numeric context values */
+#define DEFAULT_NUMERIC_DIGITS DIGITS_STRIKE_POINT
+#define DEFAULT_NUMERIC_FUZZ 0
+#define DEFAULT_NUMERIC_FORM NUMERIC_FORM_SCIENTIFIC
+#define DEFAULT_NUMERIC_CASE CASE_LOWER
+#define DEFAULT_NUMERIC_STANDARD NUMERIC_STANDARD_IEEE
+
+/* Minimum value for digits */
+#define DIGITS_MINIMUM 5
+
+/* Enumeration of numeric display format "form" types - scientific or engineering */
+typedef enum {
+    NUMERIC_FORM_INHERIT = 0,
+    NUMERIC_FORM_SCIENTIFIC,
+    NUMERIC_FORM_ENGINEERING
+} numeric_form;
+
+/* Enumeration of case types for numeric display */
+typedef enum {
+    CASE_INHERIT = 0,
+    CASE_LOWER,
+    CASE_UPPER
+} case_type;
+
+/* Enumeration of the numeric standards */
+typedef enum {
+    NUMERIC_STANDARD_INHERIT = 0,
+    NUMERIC_STANDARD_IEEE,
+    NUMERIC_STANDARD_REXX
+} numeric_standard;
+
+
+/* Structure to hold the numeric context (digits, fuzz, form, etc.) */
+typedef struct numeric_context {
+    int digits;             /* Significant digits, -1 = inherited */
+    int fuzz;               /* Fuzz factor, -1 = inherited */
+    numeric_form form;      /* NUMERIC_FORM_INHERIT, NUMERIC_FORM_SCIENTIFIC, NUMERIC_FORM_ENGINEERING */
+    case_type casetype;     /* CASE_INHERIT, CASE_LOWER, CASE_UPPER */
+    numeric_standard standard; /* NUMERIC_STANDARD_INHERIT, NUMERIC_STANDARD_IEEE, NUMERIC_STANDARD_REXX */
+} numeric_context;
+
 typedef struct value value;
 
 typedef union {

@@ -55,6 +55,7 @@ struct stack_frame {
     size_t number_args;
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
+    numeric_context num_context; /* Numeric context for the procedure */
     struct decplugin *decimal;
     char decimal_loaded_here;
     struct uniplugin *unicode;

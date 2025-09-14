@@ -1,43 +1,137 @@
-# NUMERIC Instruction
+# NUMERIC Instruction: Controlling Arithmetic Behaviour
 
-The `NUMERIC` instruction in \crexx{} Level B controls the precision, rounding, and comparison behaviour for all numeric operations within a procedure. To enable performance optimisations, its usage is slightly restricted compared to classic \rexx{}.
+REXX uses **arbitrary-precision decimal arithmetic**, which requires specific rules for computation. 
+The `NUMERIC` instruction controls the **precision**, **rounding**, and **comparison** for all 
+numeric operations within a procedure. In CREXX Level B, its usage is slightly restricted to enable 
+performance optimizations.
 
-## Syntax:
+This section covers the `NUMERIC` instruction, including the new `STANDARD` sub-option. 
+While `NUMERIC` controls semantic aspects, the `OPTIONS {CLASSICNUMERIC | COMMONNUMERIC}` 
+instruction modifies the parser's behavior for the entire source file, affecting fundamental 
+syntactic aspects like operator precedence. The `NUMERIC` instruction, even with its `STANDARD` 
+sub-option, does **not** change the operator precedence or associativity rules set by the 
+file-level `OPTIONS` instruction.
 
-The `NUMERIC` instruction must appear as the **very first instruction** within a procedure, immediately following the procedure's label. It may specify `DIGITS`, `FUZZ`, or `FORM` with a **constant numeric or string value**, or it may explicitly request to inherit these settings from the calling procedure.
+## Syntax
 
-```rexx <!--numericsyntax.rexx-->
-procedure_name: procedure = <type> expose <expose_list>
-  numeric digits {<constant_value> | inherited}
-  numeric fuzz {<constant_value> | inherited}
-  numeric form {scientific | engineering | inherited}
-  numeric inherited
-  arg <arg_list>
-  -- ... rest of the procedure's code ...
+The `NUMERIC` instruction must be the very first instruction in a procedure, right after the procedure's label, to enable 
+performance optimizations. It can specify `DIGITS`, `FUZZ`, `FORM`, or the new `STANDARD` option 
+with a constant value, or it can explicitly request to inherit settings from the calling procedure.
+
+```rexx
+NUMERIC [ DIGITS [ <constant_value> | INHERITED ] ]
+        [ FORM [ SCIENTIFIC | ENGINEERING | INHERITED ] ]
+        [ FUZZ [ <constant_value> | INHERITED ] ]
+        [ CASE [ UPPER | LOWER | INHERITED ] ]
+        [ STANDARD [ CLASSIC | COMMON | INHERITED ] ]
 ```
 
-*   **`<constant_value>`**: Must be a literal number (e.g., `18`, `0`) or a literal string for `FORM` (e.g., `'SCIENTIFIC'`). Expressions are not permitted.
-*   **`SCIENTIFIC` | `ENGINEERING`**: Keywords defining the exponential notation format.
-*   **`INHERITED`**: A special keyword indicating that the specific numeric setting should be taken from the calling procedure's context.
+* **\<constant\_value\>**: A literal number (e.g., 18, 0).
+* **SCIENTIFIC | ENGINEERING**: Keywords for exponential notation.
+* **CLASSIC | COMMON**: Keywords for arithmetic semantics.
+* **UPPER | LOWER**: Keywords for case sensitivity in numeric conversion (`e`, `inf`, `nan`)
+* **INHERITED**: A special keyword that inherits a specific setting from the caller's context.
 
-## Effect:
+## Effect
 
-1.  **Setting Numeric Behaviour**:
-    *   **`NUMERIC DIGITS <value>`**: Sets the number of significant digits used for all arithmetic calculations and arithmetic built-in functions within this procedure. (Default if not specified or inherited: **18**).
-    *   **`NUMERIC FUZZ <value>`**: Sets the number of digits ignored during numeric comparisons. (Default if not specified or inherited: **0**).
-    *   **`NUMERIC FORM {SCIENTIFIC | ENGINEERING}`**: Sets the preferred exponential notation for results. (Default if not specified or inherited: `SCIENTIFIC`).
-2.  **Uniqueness and Immutability**: Each numeric setting (`DIGITS`, `FUZZ`, `FORM`) can be specified **only once** as a constant within a procedure. Once set, it cannot be changed dynamically within that procedure.
-3.  **Inheritance**:
-    *   If `NUMERIC DIGITS INHERITED` (or `FUZZ INHERITED`, `FORM INHERITED`) is used, the procedure will adopt the respective numeric setting from the procedure that called it. This value is determined at runtime.
-    *   If `NUMERIC INHERITED` is specified, the procedure will inherit all numeric settings from the caller.
-    *   If no `NUMERIC` instruction is present, or if `INHERITED` is not specified for a particular setting, the default values are applied: **DIGITS 18**, **FUZZ 0**, and **FORM SCIENTIFIC**.
+The `NUMERIC` instruction controls numeric behavior for all operations within its procedure. Each setting (`DIGITS`, 
+`FUZZ`, `FORM`, `CASE`, `STANDARD`) can be specified only once with a constant value and cannot be changed 
+dynamically.
 
-## Motivation:
+### 1\. NUMERIC DIGITS
 
-The primary motivation for these restrictions is **performance optimisation**. \rexx{}'s arbitrary-precision decimal arithmetic is computationally intensive. By requiring `NUMERIC` settings to be constant and declared at the beginning of a procedure, 
-the \crexx{} compiler's constant folding optimiser can **Pre-calculate and embed numeric context values**. The values for precision, fuzz, and form 
-can be determined at compile-time and directly incorporated into the bytecode instructions.
+Sets the number of significant digits for all calculations.
 
-When `INHERITED` is used, the numeric settings are not known until runtime (as they depend on the caller). In such cases, the optimiser cannot perform these compile-time constant folding optimisations for decimal arithmetic, 
-leading to potentially slower execution for affected numeric operations within that specific procedure. This design represents a deliberate trade-off, prioritising maximum interpretative performance by default, while allowing 
-flexibility for explicit dynamic behaviour when required.
+* **Default**: 18 for CREXX Level B. Classic REXX default is 9.
+* **Value**: Must be a positive whole number greater than `NUMERIC FUZZ`.
+* **Retrieval**: Use the `DIGITS()` built-in function.
+
+### 2\. NUMERIC FORM
+
+Sets the preferred exponential notation format.
+
+* **Options**: `SCIENTIFIC` (default) or `ENGINEERING`.
+    * **SCIENTIFIC**: One non-zero digit before the decimal point.
+    * **ENGINEERING**: Power of ten is a multiple of three.
+    * **INHERITED**: The procedure inherits the format from the caller's context.
+* **Retrieval**: Use the `FORM()` built-in function.
+
+### 3\. NUMERIC FUZZ
+
+Sets the number of digits to ignore during numeric comparisons.
+
+* **Default**: 0.
+* **Value**: Must be zero or a positive whole number smaller than `NUMERIC DIGITS`.
+* **INHERITED**: The procedure inherits the fuzz value from the caller's context.
+* **Retrieval**: Use the `FUZZ()` built-in function.
+
+### 4\. NUMERIC CASE
+
+Sets the case sensitivity for special numeric literals.
+
+* **Options**: `UPPER` or `LOWER` (default).
+    * **UPPER**: Generates `E`, `INF`, `NAN`.
+    * **LOWER**: Generates `e`, `inf`, `nan`.
+    * **INHERITED**: The procedure inherits the case setting from the caller's context.
+
+### 5\. NUMERIC STANDARD
+
+Selects a predefined set of arithmetic semantic rules. This is a new option.
+
+* **CLASSIC**: Adheres to classic ANSI REXX X3.274-1996 rules. This is the default for CREXX Level C.
+    * **Remainder (`//` or '%')**: The division is calculated at full (digits) division and truncated, then the remainder 
+      is computed, ('a - (TRUNC(a / b) * b)'). 
+    * **Integer Magnitude-Precision Constraint**: The integer quotient for `%` and `//` must fit within 
+      `NUMERIC DIGITS` **without exponential notation**, or a `SYNTAX Error 26.11` is raised.
+    * **Rounding**: Uses traditional "round-half-up."
+    * **Integer Division (`%`)**: The numbers are divided at current precision (digits) and then truncated
+      to an integer towards zero.
+  
+* **COMMON**: Employs semantics closer to other C like languages. This is the default for CREXX 
+  Level B.
+    * **Remainder (`%` or '//')**: The division is calculated at full (digits) division and truncated, then the remainder
+      is computed, ('a - (TRUNC(a / b) * b)').
+    * **Integer Magnitude-Precision Constraint**: Ignored. Quotients can exceed `NUMERIC DIGITS` and use exponential form.
+    * **Rounding**: Uses "round-half-even."
+    * **Division (`/`)**: Where the operands and target are all integers, the result is
+      converted to an integer, raising a signal if the result is not an integer. Otherwise, normal float/decimal 
+      division is performed.
+    * **Integer Division ('%')**: The numbers are converted to integers, divided and truncated to an integer 
+      towards zero.
+
+* **INHERITED**: The procedure inherits arithmetic semantics from the caller's context.
+
+* **Retrieval**: Use the `STANDARD()` built-in function.
+
+## Interaction with OPTIONS
+
+The `OPTIONS {CLASSICNUMERIC | COMMONNUMERIC}` instruction sets the default arithmetic rules for the entire file. 
+It influences how the CREXX parser builds the syntax tree, affecting operator precedence and 
+associativity globally.
+
+**`NUMERIC STANDARD` does not alter these file-level parsing rules.** For example:
+
+* **Associativity (CLASSIC)**
+    * `say -3**2` evaluates as `(-3)**2`, resulting in `9`.
+    * `say 2**2**3` evaluates as `(2**2)**3`, resulting in `64`.
+* **Associativity (COMMON)**
+    * `say -3**2` evaluates as `-(3**2)`, resulting in `-9`.
+    * `say 2**2**3` evaluates as `2**(2**3)`, resulting in `256`.
+* **Remainder token** 
+    * The specific token used for a remainder (`//` vs `%`)
+
+These behaviors, set by `OPTIONS`, are constant for the file, regardless of `NUMERIC STANDARD` settings 
+within procedures.
+
+## Runtime Optimization Considerations
+
+CREXX benefits from knowing arithmetic rules at compile time. Declaring `NUMERIC` settings as constants at the start 
+of a procedure allows the compiler to:
+
+* Embed numeric context values directly into the bytecode.
+* Avoid runtime overhead from dynamic lookups.
+* Enable specialized, optimized code paths.
+
+Using `INHERITED` prevents these compile-time optimizations because the numeric context isn't 
+known until runtime. This is a trade-off for flexibility at the cost of performance.
+

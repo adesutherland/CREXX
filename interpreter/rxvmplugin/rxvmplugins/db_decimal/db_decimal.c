@@ -689,6 +689,28 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     // Format the coefficient string with precision upto digits fractional digits
     sprintf(coefficient, is_negative ? "-%.*Lf" : "%.*Lf", (int)((dbcontext*)(plugin->base.private_context))->digits - 1, coeff);
 
+
+    // Logic to [re-]check for edge case where rounding the coefficient could change the exponent - we look at the string
+    char* abs_start = is_negative ? coefficient + 1 : coefficient;
+
+    // If the coefficient starts with "10." it means rounding has caused it to become >= 10.0 so we need to adjust
+    if (strncmp(abs_start, "10.", 3) == 0) {
+        // Adjust coefficient and exponent but moving the decimal point left
+        abs_start[2] = abs_start[1]; // Move the '0' to replace the '.'
+        abs_start[1] = '.';          // Put the decimal point after the '1'
+        (*exponent)++;               // Increment the exponent
+    }
+    else if (strncmp(abs_start, "0.", 2) == 0) {
+        // If the coefficient starts with "0." it means rounding has caused it to become < 1.0 so we need to adjust
+        if (abs_start[2] != '\0') { // Just in case of malformed string
+            // Adjust coefficient and exponent by moving the decimal point right
+            abs_start[0] = abs_start[2]; // Move the first digit after the '.' to the front
+            // Shift the rest of the string left
+            memmove(abs_start + 2, abs_start + 3, strlen(abs_start + 3) + 1);
+            (*exponent)--;                 // Decrement the exponent
+        }
+    }
+
     /* Trim trailing zeros */
     trim_numeric_trailing_zeros(coefficient);
 }

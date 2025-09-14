@@ -894,6 +894,10 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INTEGER(S).
         { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FORM_VALUE"); }
     else if (tokenis(T,"fuzz"))
         { I = ast_f(context, DEC_FUZZ, T); add_ast(I, ast_f(context, INTEGER,S)); }
+    else if (tokenis(T,"case"))
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_CASE_VALUE"); }
+    else if (tokenis(T,"standard"))
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_STANDARD_VALUE"); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
@@ -906,6 +910,8 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_VAR_SYMBOL(S).
         { I = ast_f(context, DEC_FORM, T); add_ast(I,ast_f(context, LITERAL, S)); }
     else if (tokenis(T,"fuzz"))
         { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FUZZ_RANGE"); }
+    else if (tokenis(T,"case"))
+        { I = ast_f(context, DEC_CASE, T); add_ast(I,ast_f(context, LITERAL, S)); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
@@ -918,6 +924,10 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INHERITED.
         { I = ast_f(context, DEC_FORM, T); }
     else if (tokenis(T,"fuzz"))
         { I = ast_f(context, DEC_FUZZ, T); }
+    else if (tokenis(T,"case"))
+        { I = ast_f(context, DEC_CASE, T); }
+    else if (tokenis(T,"standard"))
+        { I = ast_f(context, DEC_STANDARD, T); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
@@ -930,6 +940,8 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_MINUS(S) TK_INTEGER.
         { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FORM_VALUE"); }
     else if (tokenis(T,"fuzz"))
         { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FUZZ_RANGE"); }
+    else if (tokenis(T,"case"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_CASE_VALUE"); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
@@ -938,8 +950,12 @@ numeric(I) ::= TK_NUMERIC(N) TK_INHERITED.
     { ASTNode* _digits = ast_f(context, DEC_DIGITS, N);
       ASTNode* _fuzz = ast_fstk(context, _digits); _fuzz->node_type = DEC_FUZZ;
       ASTNode* _forms = ast_fstk(context, _digits); _forms->node_type = DEC_FORM;
+      ASTNode* _case = ast_fstk(context, _digits); _forms->node_type = DEC_CASE;
+      ASTNode* _standard = ast_fstk(context, _digits); _standard->node_type = DEC_STANDARD;
+      add_sbtr( _digits, _standard );
       add_sbtr( _digits, _fuzz );
       add_sbtr( _digits, _forms );
+      add_sbtr( _digits, _case );
       I = _digits; }
 
 /* Return */

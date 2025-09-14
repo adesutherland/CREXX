@@ -83,19 +83,23 @@ Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
     scope->parent = parent;
     scope->symbols_tree = 0;
     if (parent) {
-        scope->dec_digits = parent->dec_digits;
-        scope->dec_fuzz = parent->dec_fuzz;
-        scope->dec_form = parent->dec_form;
+        scope->num_context.digits = parent->num_context.digits;
+        scope->num_context.fuzz = parent->num_context.fuzz;
+        scope->num_context.form = parent->num_context.form;
+        scope->num_context.casetype = parent->num_context.casetype;
+        scope->num_context.standard = parent->num_context.standard;
     }
     else {
-        scope->dec_digits = DEFAULT_NUMERIC_DIGITS;
-        scope->dec_fuzz = DEFAULT_NUMERIC_FUZZ;
-        scope->dec_form = DEFAULT_NUMERIC_FORM;
+        scope->num_context.digits = DEFAULT_NUMERIC_DIGITS;
+        scope->num_context.fuzz = DEFAULT_NUMERIC_FUZZ;
+        scope->num_context.form = DEFAULT_NUMERIC_FORM;
+        scope->num_context.casetype = DEFAULT_NUMERIC_CASE;
+        scope->num_context.standard = DEFAULT_NUMERIC_STANDARD;
     }
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();
-    if (scope->parent) dpa_add((dpa*)(parent->child_array), scope);
+    if (parent) dpa_add((dpa*)(parent->child_array), scope);
 
     return scope;
 }

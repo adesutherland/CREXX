@@ -1871,19 +1871,31 @@ static walker_result emit_walker(walker_direction direction,
                     add_global_variable_metadata(node);
 
                     /* If decimal has non-inherited values, set them */
-                    if (node->scope->dec_digits > -1) {
-                        temp1 = mprintf("   setdgts %d\n", node->scope->dec_digits);
+                    if (node->scope->num_context.digits > -1) {
+                        temp1 = mprintf("   setdgts %d\n", node->scope->num_context.digits);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
-                    if (node->scope->dec_fuzz > -1) {
-                        temp1 = mprintf("/*    setfuzz %d */\n", node->scope->dec_fuzz);
+                    if (node->scope->num_context.fuzz > -1) {
+                        temp1 = mprintf("/*    setfuzz %d */\n", node->scope->num_context.fuzz);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
-                    if (node->scope->dec_form > 0) {
+                    if (node->scope->num_context.form > 0) {
                         /* 1 = SCIENTIFIC, 2 = ENGINEERING */
-                        temp1 = mprintf("/*    setform %d */\n", node->scope->dec_form);
+                        temp1 = mprintf("/*    setform %d */\n", node->scope->num_context.form);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.casetype > 0) {
+                        /* 1 = UPPER, 2 = LOWER */
+                        temp1 = mprintf("/*    setcase %d */\n", node->scope->num_context.casetype);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.standard > 0) {
+                        /* 1 = IEEE, 1 = [ANSI]REXX */
+                        temp1 = mprintf("/*    setstandard %d */\n", node->scope->num_context.standard);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }

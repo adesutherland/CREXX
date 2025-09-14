@@ -396,6 +396,9 @@ RX_INLINE stack_frame *frame_f(
         /* VM Plugins */
         this->unicode = parent->unicode;
         this->decimal = parent->decimal;
+
+        /* Copy the numeric context */
+        this->num_context = parent->num_context;
     }
     else {
         /* Set up the default interrupt mask */
@@ -426,6 +429,12 @@ RX_INLINE stack_frame *frame_f(
         /* VM Plugins */
         this->unicode = 0;
         this->decimal = 0;
+
+        /* Default numeric context */
+        this->num_context.digits = DIGITS_STRIKE_POINT;
+        this->num_context.fuzz = 0;
+        this->num_context.form = NUMERIC_FORM_SCIENTIFIC;
+        this->num_context.casetype = CASE_LOWER;
     }
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
@@ -565,6 +574,10 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     stack_frame *current_frame = 0, *temp_frame;
+    // 3 Work Registers
+    value *work1 = value_f();
+    value *work2 = value_f();
+    value *work3 = value_f();
 
     /* Set up the interrupt object array */
     {
@@ -656,8 +669,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
     current_frame->decimal_loaded_here = 1;
 
-    // Set the number of digits in the rxvmplugin context
-    current_frame->decimal->setDigits(current_frame->decimal, 18); // 18 is the max significant digits for the default plugin
+    // Set the number of digits in the rxvmplugin based on the current numeric context
+    current_frame->decimal->setDigits(current_frame->decimal, current_frame->num_context.digits);
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
@@ -1590,6 +1603,7 @@ START_OF_INSTRUCTIONS
  */
     START_INSTRUCTION(SETDGTS_REG) CALC_DISPATCH(1)
     DEBUG("TRACE - SETDGTS R%lu\n", REG_IDX(1));
+    current_frame->num_context.digits = op1R->int_value;
     current_frame->decimal->setDigits(current_frame->decimal, op1R->int_value);
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1598,6 +1612,7 @@ START_OF_INSTRUCTIONS
  */
     START_INSTRUCTION(SETDGTS_INT) CALC_DISPATCH(1)
     DEBUG("TRACE - SETDGTS %d\n", (int)op1I);
+    current_frame->num_context.digits = op1I;
     current_frame->decimal->setDigits(current_frame->decimal, op1I);
     DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -1606,7 +1621,7 @@ START_OF_INSTRUCTIONS
  */
     START_INSTRUCTION(GETDGTS_REG) CALC_DISPATCH(1)
     DEBUG("TRACE - GETDGTS R%lu\n", REG_IDX(1));
-    op1R->int_value = (rxinteger)current_frame->decimal->getDigits(current_frame->decimal);
+    op1R->int_value = (rxinteger)current_frame->num_context.digits;
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_DECIMAL Load op1 with op2
@@ -4170,7 +4185,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOS_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - FTOS R%lu\n", REG_IDX(1));
-            string_from_float(op1R);
+            string_from_float(&(current_frame->num_context), work1, op1R);
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
@@ -4300,7 +4315,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(FEXTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            extract_double_decimal(op1R,op2R,op3R->float_value);
+            extract_double_decimal(&(current_frame->num_context), op1R, op2R, op3R->float_value);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4878,8 +4893,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 //    utf8codepoint(op2R->string_value + byte_pos, &ch);
                 //    int char_len = utf8codepoint_len(ch);
                     int char_len = utf8codepoint_express(op2R->string_value + byte_pos, &ch);
-
-
                     memcpy(op1R->string_value + temp_len, op2R->string_value + byte_pos, char_len);
                     temp_len += char_len;
                     byte_pos += char_len;
@@ -5782,6 +5795,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Free signal value */
     clear_value(signal_value);
     free(signal_value);
+
+    /* Free work registers */
+    clear_value(work1);
+    free(work1);
+    clear_value(work2);
+    free(work2);
+    clear_value(work3);
+    free(work3);
 
     /* Free interrupt argument */
     clear_value(interrupt_arg);

@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <float.h>
 
+/* Forward declarations */
+static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
+static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
     v->status.all_type_flags = 0;
@@ -60,7 +64,6 @@ RX_INLINE value* value_f() {
     value_init(this);
     return this;
 }
-
 
 /*
  * Returns required buffer size - the smallest power of two that's greater or
@@ -211,12 +214,34 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     for (i = 0; i < v->num_attribute_buffers; i++) free(v->attribute_buffers[i]);
 
     /* Free pointer arrays */
-    if (v->attributes) free(v->attributes);
-    if (v->unlinked_attributes) free(v->unlinked_attributes);
-    if (v->attribute_buffers) free(v->attribute_buffers);
+    if (v->attributes) {
+        free(v->attributes);
+        v->attributes = 0;
+    }
+
+    if (v->unlinked_attributes) {
+        free(v->unlinked_attributes);
+        v->unlinked_attributes = 0;
+        v->max_num_attributes = 0;
+    }
+    if (v->attribute_buffers) {
+        free(v->attribute_buffers);
+        v->attribute_buffers = 0;
+        v->num_attribute_buffers = 0;
+    }
 
     /* Free strings */
-    if (v->string_value != v->small_string_buffer) free(v->string_value);
+    if (v->string_value != v->small_string_buffer) {
+        free(v->string_value);
+        v->string_value = v->small_string_buffer;
+        v->string_length = 0;
+        v->string_buffer_length = sizeof(v->small_string_buffer);
+        v->string_pos = 0;
+#ifndef NUTF8
+        v->string_chars = 0;
+        v->string_char_pos = 0;
+#endif
+    }
 
     /* Free decimal */
     if (v->decimal_value) free(v->decimal_value);
@@ -229,6 +254,8 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     v->binary_value = 0;
     v->binary_length = 0;
     v->binary_buffer_length = 0;
+
+    value_zero(v);
 }
 
 /* Int Flag */
@@ -916,15 +943,13 @@ RX_INLINE void string_from_int(value *v) {
 #endif
 }
 
-/* Calculate the string value */
-RX_INLINE void string_from_float(value *v) {
-    prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%.15g",v->float_value);
-    v->string_pos = 0;
-#ifndef NUTF8
-    v->string_char_pos = 0;
-    v->string_chars = v->string_length;
-#endif
+/* Calculate the string value of v from its float value
+ * a numeric context is needed to format the float correctly
+ * and a work buffer, temp, for the conversion
+ */
+RX_INLINE void string_from_float(numeric_context *cnt, value *temp, value *v) {
+    extract_double_decimal(cnt,temp, temp, v->float_value);
+    RexxDecimalFormat(cnt, temp, temp, v);
 }
 
 /* Calculate the integer value from float */
@@ -1144,20 +1169,47 @@ static void trim_numeric_trailing_zeros(char *str) {
 // Function to extract decimal components from a double
 // - coefficient (string) will be set to the coefficient string (or nan, inf, -inf)
 // - exponent (integer) will be set to the exponent
-static void extract_double_decimal(value *coefficient, value *exponent, double value) {
+static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value) {
+
+    // If num_context is NULL, we use a default context
+    if (num_context == NULL) {
+        static numeric_context default_context = { DIGITS_STRIKE_POINT, 0, NUMERIC_FORM_SCIENTIFIC, CASE_LOWER};
+        num_context = &default_context;
+    }
+
+    size_t digits = num_context->digits;
+    if (digits < DIGITS_MINIMUM) digits = DIGITS_MINIMUM;
+    else if (digits > DBL_DIG) digits = DBL_DIG;
+
     // Set Buffer Size in Coefficient Value
-    prep_string_buffer(coefficient, 32);
+    prep_string_buffer(coefficient, digits + 5); // +5 for sign, decimal point, possible rounding digit and null terminator
     exponent->int_value = 0;
 
     // Handle special cases
     if (isnan(value)) {
-        strcpy(coefficient->string_value, "nan");
+        if (num_context->casetype == CASE_UPPER)
+            strcpy(coefficient->string_value, "NAN");
+        else
+            strcpy(coefficient->string_value, "nan");
         coefficient->string_length = 3;
+        coefficient->string_pos = 0;
+#ifndef NUTF8
+        coefficient->string_chars = coefficient->string_length;
+        coefficient->string_char_pos = 0;
+#endif
         return;
     }
     if (isinf(value)) {
-        strcpy(coefficient->string_value, signbit(value) ? "-inf" : "inf");
+        if (num_context->casetype == CASE_UPPER)
+            strcpy(coefficient->string_value, signbit(value) ? "-INF" : "INF");
+        else
+            strcpy(coefficient->string_value, signbit(value) ? "-inf" : "inf");
         coefficient->string_length = signbit(value) ? 4 : 3;
+        coefficient->string_pos = 0;
+#ifndef NUTF8
+        coefficient->string_chars = coefficient->string_length;
+        coefficient->string_char_pos = 0;
+#endif
         return;
     }
 
@@ -1165,6 +1217,11 @@ static void extract_double_decimal(value *coefficient, value *exponent, double v
         // Handle zero
         strcpy(coefficient->string_value, "0");
         coefficient->string_length = 1;
+        coefficient->string_pos = 0;
+#ifndef NUTF8
+        coefficient->string_chars = coefficient->string_length;
+        coefficient->string_char_pos = 0;
+#endif
         return;
     }
 
@@ -1183,6 +1240,7 @@ static void extract_double_decimal(value *coefficient, value *exponent, double v
         coeff /= 10.0;
         exp += 1;
     }
+
     // Adjust if coeff is smaller than 1 due to floating-point inaccuracies
     if (coeff < 1.0) {
         coeff *= 10.0;
@@ -1191,11 +1249,297 @@ static void extract_double_decimal(value *coefficient, value *exponent, double v
 
     exponent->int_value = exp;
 
-    // Format the coefficient string with precision upto DBL_DIG-1 fractional digits
-    snprintf(coefficient->string_value, 32, is_negative ? "-%.*lf" : "%.*lf", DBL_DIG-1, coeff);
+    // Format the coefficient string with precision up to DBL_DIG-1 fractional digits
+    snprintf(coefficient->string_value, digits + 5, is_negative ? "-%.*lf" : "%.*lf", (int)(digits - 1), coeff);
+
+    // Logic to [re-]check for edge case where rounding the coefficient could change the exponent - we look at the string
+    char* abs_start = is_negative ? coefficient->string_value + 1 : coefficient->string_value;
+
+    // If the coefficient starts with "10." it means rounding has caused it to become >= 10.0 so we need to adjust
+    if (strncmp(abs_start, "10.", 3) == 0) {
+        // Adjust coefficient and exponent but moving the decimal point left
+        abs_start[2] = abs_start[1]; // Move the '0' to replace the '.'
+        abs_start[1] = '.';          // Put the decimal point after the '1'
+        (exponent->int_value)++;     // Increment the exponent
+    }
+    else if (strncmp(abs_start, "0.", 2) == 0) {
+        // If the coefficient starts with "0." it means rounding has caused it to become < 1.0 so we need to adjust
+        if (abs_start[2] != '\0') { // Just in case of a malformed string
+            // Adjust coefficient and exponent by moving the decimal point right
+            abs_start[0] = abs_start[2]; // Move the first digit after the '.' to the front
+            // Shift the rest of the string left
+            memmove(abs_start + 2, abs_start + 3, strlen(abs_start + 3) + 1);
+            (exponent->int_value)--;                 // Decrement the exponent
+        }
+    }
 
     trim_numeric_trailing_zeros(coefficient->string_value);
     coefficient->string_length = strlen(coefficient->string_value);
+    coefficient->string_pos = 0;
+#ifndef NUTF8
+    coefficient->string_chars = coefficient->string_length;
+    coefficient->string_char_pos = 0;
+#endif
+}
+
+/* Calculate the number of digits in an integer, including the sign if negative */
+static size_t number_of_digits(rxinteger n) {
+    if (n == 0) {
+        return 1;
+    }
+    size_t digits = 0;
+
+    // By using an unsigned type, we can safely represent the absolute value
+    unsigned long long num;
+
+    if (n < 0) {
+        num = -(unsigned long long)n;
+        digits = 1; // For the negative sign
+    } else {
+        num = n;
+    }
+
+    while (num > 0) {
+        num /= 10;
+        digits++;
+    }
+
+    return digits;
+}
+
+/*
+ * Converts a numeric value represented by a coefficient and exponent into a formatted string.
+ * The formatting can be either scientific or engineering, and the case of the exponent can be upper
+ * or lower.
+ * - the coefficient is a string representing the normalized number (e.g., "-1.2345").
+ * - the exponent is an integer representing the power of ten.
+ *
+ * In the num_conntext:
+ * - the digits parameter specifies the total number of significant digits to consider.
+ * - the form parameter specifies whether to use scientific or engineering notation.
+ * - the casetype parameter specifies whether the exponent should be in upper or lower case.
+ *
+ * The formatted output is written to the formatted_output buffer.
+ *
+ * The function handles special cases like zero, NaN, and infinity.
+ */
+static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value) {
+
+    const char *coef_start;
+    size_t digits_in_coef;
+    int use_exponential;
+    int is_engineering;
+    size_t i;
+    const char *scientific_format;
+    const char *engineering_format;
+    char *coefficient = coefficient_value->string_value;
+    coefficient[coefficient_value->string_length] = 0; // Null-terminate - just in case
+    rxinteger exponent = exponent_value->int_value;
+
+    // If num_context is NULL, we use a default context
+    if (num_context == NULL) {
+        static numeric_context default_context = { DIGITS_STRIKE_POINT, 0, NUMERIC_FORM_SCIENTIFIC, CASE_LOWER};
+        num_context = &default_context;
+    }
+
+    /* Prepare the output buffer */
+    // Calculate the output buffer size which is based on the number of digits and the exponent size from the arguments
+    size_t output_buffer_size = coefficient_value->string_length + number_of_digits(exponent) + 5; // +5 for sign, decimal point, 'e' and null terminator
+    prep_string_buffer(formatted_output_value, output_buffer_size);
+    formatted_output_value->string_length = 0;
+    formatted_output_value->string_value[0] = 0; // Null-terminate - just in case
+    formatted_output_value->string_pos = 0;
+#ifndef NUTF8
+    formatted_output_value->string_chars = formatted_output_value->string_length;
+    formatted_output_value->string_char_pos = 0;
+#endif
+    char *formatted_output = formatted_output_value->string_value;
+
+    /* Case specific Formats */
+    if (num_context->casetype == CASE_UPPER) {
+        scientific_format = "%sE%+lld";
+        engineering_format = "E%+lld";
+    }
+    else {
+        scientific_format = "%se%+lld";
+        engineering_format = "e%+lld";
+    }
+
+    // If exponent is 0, we can use the simple format directly
+    if (exponent == 0) {
+        strcpy(formatted_output, coefficient); // This also handles 0, nan, inf
+        // convert case if the first character isn't a digit or '-'
+
+        /* Detecting a number - funny logic, but we have "-inf" and so on to handle, and it is a normalised x.xxx */
+        /* So, is it a one-digit number, if not check the second character for a decimal point */
+        if (formatted_output[1] != 0 && formatted_output[1] != '.' ) {
+            /* If not a number (e.g. nan, inf, -inf), convert case */
+            if (num_context->casetype == CASE_UPPER) {
+                for (i = 0; formatted_output[i] != 0; i++)
+                    formatted_output[i] = (char)toupper((unsigned char)formatted_output[i]);
+            }
+            else {
+                for (i = 0; formatted_output[i] != 0; i++)
+                    formatted_output[i] = (char)tolower((unsigned char)formatted_output[i]);
+            }
+        }
+        formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+        formatted_output_value->string_pos = 0;
+#ifndef NUTF8
+        formatted_output_value->string_chars = formatted_output_value->string_length;
+        formatted_output_value->string_char_pos = 0;
+#endif
+        return;
+    }
+
+    // Apply the REXX rule to decide on simple vs. exponential format
+    // See ANSI REXX standard, 7.4.10, Floating() routine
+    use_exponential = (exponent + 1 > (rxinteger)(num_context->digits)) || (exponent < -6);
+    if (use_exponential) {
+        is_engineering = (num_context->form == NUMERIC_FORM_ENGINEERING);
+        if (!is_engineering) {
+            // --- SCIENTIFIC NOTATION ---
+            // The number has already been formatted in scientific notation by decimalExtract
+            sprintf(formatted_output, scientific_format, coefficient, exponent);
+            formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+            formatted_output_value->string_pos = 0;
+#ifndef NUTF8
+            formatted_output_value->string_chars = formatted_output_value->string_length;
+            formatted_output_value->string_char_pos = 0;
+#endif
+            return;
+        }
+    }
+
+    // We will need to process the coefficient for simple format or engineering format
+
+    // Remove the negative and decimal point from the coefficient, it has been normalised to [-]x[.xxxxx]
+    // Add the negative to the string output
+    if (coefficient[0] == '-') {
+        coef_start = coefficient + 1;
+        *formatted_output++ = '-';
+    } else {
+        coef_start = coefficient;
+    }
+    digits_in_coef = strlen(coef_start);
+    if (digits_in_coef > 1) {
+        // More than one digit - remove the decimal point
+        digits_in_coef--;
+    }
+
+    if (!use_exponential) {
+        // --- SIMPLE FORMAT ---
+        if (exponent > 0) { // Note: exponent == 0 is handled above
+            // Positive exponent
+            if (exponent < digits_in_coef) {
+                // Insert a decimal point within the coefficient
+                // Copy up to the position of the decimal point
+                // First digit
+                *formatted_output++ = coef_start[0];
+                // Remaining digits before the new decimal point
+                if (coef_start[1] != 0) {
+                    strncpy(formatted_output, coef_start + 2, exponent);
+                    formatted_output += (exponent);
+                }
+                // Insert the decimal point - if we have more digits
+                if (coef_start[exponent + 2] != 0) {
+                    *formatted_output++ = '.';
+                    // Copy the rest of the digits after the decimal point
+                    strcpy(formatted_output, coef_start + exponent + 2);
+                }
+                else {
+                    formatted_output[0] = 0; // Null-terminate
+                }
+            } else {
+                // Append zeros to the end
+                // Copy the coefficient
+                // First digit
+                formatted_output[0] = coef_start[0];
+                // Remaining digits after the decimal point (if any)
+                if (coef_start[1] != 0) {
+                    strcpy(formatted_output + 1, coef_start + 2);
+                }
+                // Append zeros
+                for (i = 0; i < exponent - digits_in_coef + 1; i++) {
+                    formatted_output[i + digits_in_coef] = '0';
+                }
+                formatted_output[i + digits_in_coef] = 0; // Null-terminate
+            }
+        }
+        else {
+            // Negative exponent
+            strcpy(formatted_output, "0.");
+            for (i = 0; i < -exponent - 1; i++) {
+                formatted_output[i + 2] = '0';
+            }
+            // Copy the coefficient after the leading zeros - first digit
+            formatted_output[-exponent + 1] = coef_start[0];
+            // Remaining digits after the decimal point (if any)
+            for (i = 1; i < digits_in_coef; i++) {
+                formatted_output[-exponent + 1 + i] = coef_start[i + 1];
+            }
+            formatted_output[-exponent + 1 + digits_in_coef] = 0;
+        }
+        formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+        formatted_output_value->string_pos = 0;
+#ifndef NUTF8
+            formatted_output_value->string_chars = formatted_output_value->string_length;
+            formatted_output_value->string_char_pos = 0;
+#endif
+        return;
+    }
+
+    // --- EXPONENTIAL FORMAT ---
+    // ENGINEERING form: exponent must be a multiple of 3; 1..3 digits before the decimal point.
+    // Adjust the exponent to a multiple of 3 using a non-negative remainde
+    int rem = (int)(exponent % 3);
+    int k = (rem + 3) % 3;          // how many places to shift the decimal point to the RIGHT
+    rxinteger eng_exp = exponent - k;
+
+    // Build the engineering mantissa by inserting the decimal point after (k+1) digits.
+    size_t need_int = (size_t)k + 1;
+
+    if (digits_in_coef <= need_int) {
+
+        // Not enough digits for a fractional part: pad with zeros up to need_int
+        // Copy first digit
+        formatted_output[0] = coef_start[0];
+        // Copy remaining digits in the coefficient (if any)
+        if (coef_start[1] != 0) {
+            strncpy(formatted_output + 1, coef_start + 2, digits_in_coef - 1);
+        }
+        // Pad with zeros
+        for (i = digits_in_coef; i < need_int; ++i) {
+            formatted_output[i] = '0';
+        }
+        // Move output pointed to the end of the integer part
+        formatted_output += need_int;
+
+    } else {
+
+        // We have more than (k+1) digits: insert decimal point
+        // Copy the first digit
+        formatted_output[0] = coef_start[0];
+        // Copy the next (need_int - 1) digits (skipping the old decimal point)
+        memcpy(formatted_output + 1, coef_start + 2, need_int - 1);
+        formatted_output[need_int] = '.';
+        // Copy the rest of the digits after the decimal point
+        for (i = 0; i < digits_in_coef - need_int; ++i) {
+            formatted_output[need_int + 1 + i] = coef_start[need_int + 1 + i];
+        }
+        // Move output pointed to the end of the integer part
+        formatted_output += 1 + digits_in_coef;
+
+    }
+
+    // Add the exponent
+    sprintf(formatted_output, engineering_format, eng_exp);
+    formatted_output_value->string_length = strlen(formatted_output_value->string_value);
+    formatted_output_value->string_pos = 0;
+#ifndef NUTF8
+    formatted_output_value->string_chars = formatted_output_value->string_length;
+    formatted_output_value->string_char_pos = 0;
+#endif
 }
 
 #endif //CREXX_RXVMVARS_H

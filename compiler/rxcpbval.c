@@ -427,6 +427,8 @@ static walker_result initial_checks_walker(walker_direction direction,
                 char done_digits = 0;
                 char done_fuzz = 0;
                 char done_form = 0;
+                char done_case = 0;
+                char done_standard = 0;
                 ASTNode *args_node = 0;
                 char first_instruction = 1;
                 next = node->sibling;
@@ -483,6 +485,28 @@ static walker_result initial_checks_walker(walker_direction direction,
                                 mknd_err(next, "NUMERIC_FORM_NOT_FIRST_INST");
                             }
                             done_form = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_CASE:
+                            if (done_case) {
+                                mknd_err(next, "REPEATED_NUMERIC_CASE");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_CASE_NOT_FIRST_INST");
+                            }
+                            done_case = 1;
+                            prev = next;
+                            next = next->sibling;
+                            break;
+
+                        case DEC_STANDARD:
+                            if (done_standard) {
+                                mknd_err(next, "REPEATED_NUMERIC_STANDARD");
+                            } else if (!first_instruction) {
+                                mknd_err(next, "NUMERIC_STANDARD_NOT_FIRST_INST");
+                            }
+                            done_standard = 1;
                             prev = next;
                             next = next->sibling;
                             break;
@@ -2830,7 +2854,7 @@ static walker_result decimal_parameters_walker(walker_direction direction,
                 else {
                     val = -1; // Inherited
                 }
-                node->scope->dec_digits = val;
+                node->scope->num_context.digits = val;
                 break;
 
             case DEC_FUZZ:
@@ -2845,23 +2869,52 @@ static walker_result decimal_parameters_walker(walker_direction direction,
                 else {
                     val = -1; // Inherited
                 }
-                node->scope->dec_fuzz = val;
+                node->scope->num_context.fuzz = val;
                 break;
 
             case DEC_FORM:
                 if (child) {
-                    if (nodeis(child, "scientific") == 0) val = scientific;
-                    else if (nodeis(text_buffer, "engineering") == 0) val = engineering;
-                    else if (nodeis(text_buffer, "inherited") == 0) val = inherited;
+                    if (nodeis(child, "scientific") == 0) node->scope->num_context.form = NUMERIC_FORM_SCIENTIFIC;
+                    else if (nodeis(text_buffer, "engineering") == 0) node->scope->num_context.form = NUMERIC_FORM_ENGINEERING;
+                    else if (nodeis(text_buffer, "inherited") == 0) node->scope->num_context.form = NUMERIC_FORM_INHERIT;
                     else {
                         mknd_err(child, "DECIMAL_FORM_VALUE");
-                        val = 0;
+                        node->scope->num_context.form = NUMERIC_FORM_INHERIT;
                     }
                 }
                 else {
-                    val = 0; // Inherited
+                    node->scope->num_context.form = NUMERIC_FORM_INHERIT; // Inherited
                 }
-                node->scope->dec_form = val;
+                break;
+
+           case DEC_CASE:
+                if (child) {
+                    if (nodeis(child, "lower") == 0) node->scope->num_context.casetype = CASE_LOWER;
+                    else if (nodeis(child, "upper") == 0) node->scope->num_context.casetype = CASE_UPPER;
+                    else if (nodeis(child, "inherited") == 0) node->scope->num_context.casetype = CASE_INHERIT;
+                    else {
+                        mknd_err(child, "DECIMAL_CASE_VALUE");
+                        node->scope->num_context.casetype = CASE_INHERIT;
+                    }
+                }
+                else {
+                    node->scope->num_context.casetype = CASE_INHERIT; // Inherited
+                }
+                break;
+
+           case DEC_STANDARD:
+                if (child) {
+                    if (nodeis(child, "ieee") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_IEEE;
+                    else if (nodeis(child, "rexx") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_REXX;
+                    else if (nodeis(child, "inherited") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
+                    else {
+                        mknd_err(child, "DECIMAL_STANDARD_VALUE");
+                        node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
+                    }
+                }
+                else {
+                    node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT; // Inherited
+                }
                 break;
 
             default:;

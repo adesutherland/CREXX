@@ -712,15 +712,6 @@ ASTNode *ast_fdec(Context* context, Token *token) {
     return node;
 }
 
-/* Set the string value of an ASTNode. string must be malloced. memory is
- * then managed by the AST Library (the caller must not free it) */
-void ast_sstr(ASTNode *node, char* string, size_t length) {
-    if (node->free_node_string) free(node->node_string);
-    node->node_string = string;
-    node->node_string_length = length;
-    node->free_node_string = 1; /* So the malloced buffer is freed when cleaning up */
-}
-
 /* ASTNode Factory - With node type and string value */
 ASTNode * ast_ftt(Context* context, NodeType type, char *string) {
     ASTNode *node = ast_ft(context, type);
@@ -854,6 +845,25 @@ void ast_str(ASTNode* node, char *string) {
     node->node_string_length = strlen(string);
 }
 
+/* Set the string value of an ASTNode. string must be malloced. memory is
+ * then managed by the AST Library (the caller must not free it) */
+void ast_sstr(ASTNode *node, char* string, size_t length) {
+    if (node->free_node_string) free(node->node_string);
+    node->node_string = string;
+    node->node_string_length = length;
+    node->free_node_string = 1; /* So the malloced buffer is freed when cleaning up */
+}
+
+/* Set a node string by copying a string */
+void ast_copy_str(ASTNode* node, char *string) {
+    if (node->free_node_string) {
+        free(node->node_string);
+    }
+    node->node_string = strdup(string);
+    node->free_node_string = 1; /* So the malloced buffer is freed when cleaning up */
+    node->node_string_length = strlen(string);
+}
+
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
@@ -910,12 +920,16 @@ const char *ast_ndtp(NodeType type) {
             return "CLASS";
         case CONST_SYMBOL:
             return "CONST_SYMBOL";
+        case DEC_CASE:
+            return "DEC_CASE";
         case DEC_DIGITS:
             return "DEC_DIGITS";
         case DEC_FUZZ:
             return "DEC_FUZZ";
         case DEC_FORM:
             return "DEC_FORM";
+        case DEC_STANDARD:
+            return "DEC_STANDARD";
         case DEFINE:
             return "DEFINE";
         case DO:
@@ -1696,6 +1710,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case DEC_DIGITS:
             case DEC_FUZZ:
             case DEC_FORM:
+            case DEC_STANDARD:
+            case DEC_CASE:
             case ENVIRONMENT:
             case FOR:
             case WHILE:

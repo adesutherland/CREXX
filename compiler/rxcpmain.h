@@ -8,11 +8,7 @@
 
 #include <stdio.h>
 #include "platform.h"
-
-
-#define DEFAULT_NUMERIC_DIGITS 18
-#define DEFAULT_NUMERIC_FUZZ 0
-#define DEFAULT_NUMERIC_FORM 1 // 1 = scientific, 2 = engineering
+#include "rxvalue.h"
 
 /* RXC Main Function */
 int rxcmain(int argc, char *argv[]);
@@ -113,7 +109,7 @@ void sym_imva(Context *context, Symbol *symbol);
 
 typedef enum NodeType {
     ABS_POS=1, ADDRESS, ARG, ARGS, ASSEMBLER, ASSIGN, BY, CALL, CLASS, LITERAL, CONST_SYMBOL,
-    DEC_DIGITS, DEC_FORM, DEC_FUZZ, DEFINE,
+    DEC_DIGITS, DEC_FORM, DEC_FUZZ, DEC_CASE, DEC_STANDARD, DEFINE,
     DO, ENVIRONMENT, ERROR, EXPOSED, EXIT, FOR, FUNCTION, FUNC_SYMBOL, IF, IMPORT, IMPORTED_FILE, INSTRUCTIONS, ITERATE, LABEL, LEAVE,
     FLOAT, INTEGER, OP_MAKE_ARRAY, DECIMAL,
     NAMESPACE, NOP, NOVAL, OP_ADD, OP_MINUS, OP_AND, OP_ARGS, OP_ARG_VALUE, OP_ARG_EXISTS, OP_ARG_IX_EXISTS,
@@ -271,6 +267,8 @@ void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 void ast_sstr(ASTNode *node, char* string, size_t length);
 /* Set a node string to a static value (i.e. the node isn't responsible for
  * freeing it). See also ast_sstr() */
+/* Set a node string by copying a string */
+void ast_copy_str(ASTNode* node, char *string);
 void ast_str(ASTNode* node, char *string);
 /* Replace replaced_node with new_node in the tree
  * note that replaced_node should not be a descendant or direct relation of
@@ -343,21 +341,12 @@ int prnterrs(Context *context);
 /* Prints warnings and returns the number of warnings in the AST Tree */
 int prntwars(Context *context);
 
-/* Decimal Form Enumerator */
-typedef enum DecimalForm {
-    inherited = 0,
-    scientific,
-    engineering
-} DecimalForm;
-
 /* Scope and Symbols */
 struct Scope {
     ASTNode *defining_node;
     Scope *parent;
     char *name; /* Note that the name is free()'d by the destructor */
-    int dec_digits; /* Decimal digits - -1 = inherited */
-    int dec_fuzz;  /* Decimal fuzz - -1 = inherited */
-    DecimalForm dec_form; /* Decimal form - 0 = inherited */
+    numeric_context num_context; /* Numeric context - digite, fuzz, form, case */
     void *child_array;
     void *symbols_tree;
     size_t num_registers;

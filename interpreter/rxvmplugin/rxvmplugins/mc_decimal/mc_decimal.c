@@ -130,6 +130,7 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
     // within a certain range, otherwise it will print it in scientific form.
     decContext *context = (decContext*)(plugin->base.private_context);
 
+    // CREXX %g specifier lower threshold
     #define LOWER_THRESHOLD (-5)
 
     // If a longer buffer is needed, it will be dynamically allocated
