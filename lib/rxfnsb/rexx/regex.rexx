@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose regexmatch REGEXFIND REGEXSPLIT REGEXTEST REGEXFINDALL REGEXREPLACE REGEXREPLACE_LIMIT REGEXDETAILS rxlite_start rxlite_len rxlite_end rxlite_ci
+namespace rxfnsb expose regexmatch REGEXFIND REGEXSPLIT REGEXTEST REGEXFINDALL REGEXREPLACE REGEXREPLACE_LIMIT REGEXDETAILS REGEXSUBSTR rxlite_start rxlite_len rxlite_end rxlite_ci
 /* ----------------------------------------------------------------------------
  * REGEXMATCH external  0: s doesn't contain p, 1: p does
  * ----------------------------------------------------------------------------
@@ -26,11 +26,10 @@ __REGEXMATCH: PROCEDURE=.int
       p = substr(p,5)
   end
   /* --- TOP-LEVEL ALTERNATION --- */
-  alt.1=''
-  cnt = __altSplit(p, alt)
-  if cnt > 1 then do
+  alt=__altSplit(p)
+  if alt.0 > 1 then do
   /* Try each alternative with current CI flag. ^ inside an alt applies to that alt only. */
-     do a = 1 to cnt
+     do a = 1 to alt.0
         q = alt.a
         /* anchored alt? */
         if left(q,1) = '^' then do
@@ -84,48 +83,47 @@ REGEXFIND: PROCEDURE=.int
   end
    /* === BEGIN: TOP-LEVEL ALTERNATION === */
 
-    alt.1=''
-    cnt = __altSplit(p, alt)
+    alt = __altSplit(p)
 
-    if cnt > 1 then do
+    if alt.0 > 1 then do
       /* Scan positions; try each alt at each position.
          For '^' alts, only try at i=1. */
-      do i = fromPos to length(s) + 1
-        do a = 1 to cnt
-          q = alt.a
-          if left(q,1) = '^' then do
-            if i \= 1 then iterate
-            if __matchHere(s, 1, q, 2) then do
-              rxlite_start = 1
-              rxlite_len   = rxlite_end - 1
-              if rxlite_len < 0 then rxlite_len = 0
-              return 1
-            end
+       do i = fromPos to length(s) + 1
+          do a = 1 to alt.0
+             q = alt.a
+             if left(q,1) = '^' then do
+                if i \= 1 then iterate
+                if __matchHere(s, 1, q, 2) then do
+                   rxlite_start = 1
+                   rxlite_len   = rxlite_end - 1
+                   if rxlite_len < 0 then rxlite_len = 0
+                   return 1
+                end
+             end
+             else do
+                if __matchHere(s, i, q, 1) then do
+                   rxlite_start = i
+                   rxlite_len   = rxlite_end - i
+                   if rxlite_len < 0 then rxlite_len = 0
+                   return 1
+                end
+             end
           end
-          else do
-            if __matchHere(s, i, q, 1) then do
-              rxlite_start = i
-              rxlite_len   = rxlite_end - i
-              if rxlite_len < 0 then rxlite_len = 0
-              return 1
-            end
-          end
-        end
-      end
-      return 0
+       end
+       return 0
     end
     /* === END: TOP-LEVEL ALTERNATION === */
 
   /* anchored ^ only valid at pos 1 */
   if left(p,1) = '^' then do
-    if fromPos \= 1 then return 0
-    if __matchHere(s, 1, p, 2) then do
-       rxlite_start = 1
-       rxlite_len   = rxlite_end - 1
-       if rxlite_len < 0 then rxlite_len = 0
-       return 1
-    end
-    return 0
+     if fromPos \= 1 then return 0
+     if __matchHere(s, 1, p, 2) then do
+        rxlite_start = 1
+        rxlite_len   = rxlite_end - 1
+        if rxlite_len < 0 then rxlite_len = 0
+        return 1
+     end
+     return 0
   end
 /* ---- FAST-PATH for a single character class with no anchors/quantifiers ---- */
   if left(p,1)='[' & right(p,1)=']' then do
@@ -149,7 +147,6 @@ REGEXFIND: PROCEDURE=.int
      end
   end
 /* --------------------------------------------------------------------------- */
-
   do i = fromPos to length(s) + 1
      if __matchHere(s, i, p, 1) then do
         rxlite_start = i
@@ -166,12 +163,13 @@ return 0
  *    - optional limit: maximum number of pieces (last piece takes the remainder)
  * ----------------------------------------------------------------------------
  */
-REGEXSPLIT: PROCEDURE=.int
-  arg s=.string, pat=.string, expose outStem=.string[], opts='', limit=0
+REGEXSPLIT: PROCEDURE=.string[]
+  arg s=.string, pat=.string, opts='', limit=0
   /* defaults */
   keepEmpty = 1
   doTrim    = 0
   expand    = 0
+  outstem=.string[]
   if opts \= '' then do
      u = translate(opts)
      if pos('T', u) > 0 then doTrim = 1
@@ -194,7 +192,7 @@ REGEXSPLIT: PROCEDURE=.int
            count = count + 1
            outStem.count = piece
         end
-        return count
+        return outstem
     end
  /* piece before the delimiter */
     piece = substr(s, prev, rxlite_start - prev)
@@ -208,7 +206,7 @@ REGEXSPLIT: PROCEDURE=.int
        if keepEmpty then do
           count = count + 1
           outStem.count = ""       /* extra empty for each extra delimiter char */
-          if limit > 0 & count >= limit then return count
+          if limit > 0 & count >= limit then return outstem
        end
     end
 
@@ -224,7 +222,7 @@ REGEXSPLIT: PROCEDURE=.int
      count = count + 1
      outStem.count = piece
   end
-return count
+return outstem
 /* ----------------------------------------------------------------------------
  * REGEXREPLACE(s, pat, repl) -> new string
  *   Replace all matches. Safe for zero-length patterns (^, $).
@@ -302,12 +300,13 @@ return out
  * limit >0 = stop after that many matches
  * ----------------------------------------------------------------------------
  */
-REGEXFINDALL: PROCEDURE=.int
-  arg s=.string, pat=.string, expose outText=.string[], opts='', limit=0
+REGEXFINDALL: PROCEDURE=.string[]
+  arg s=.string, pat=.string, opts='', limit=0
 
   allowOverlap = 0
   if pos('O', translate(opts)) > 0 then allowOverlap = 1
 
+  outText=.string[]
   count = 0
   pos   = 1
 
@@ -325,7 +324,7 @@ REGEXFINDALL: PROCEDURE=.int
      else pos = rxlite_start + max(1, rxlite_len)
      ok = REGEXFIND(s, pat, pos)
   end
-return count
+return outText
 /* ----------------------------------------------------------------------------
  * REGEXTEST(text, pattern): say a one-line verdict
  * ----------------------------------------------------------------------------
@@ -344,21 +343,29 @@ return
  *    Returns 1 if a match exists, else 0.
  * ----------------------------------------------------------------------------
  */
-REGEXDETAILS: PROCEDURE=.int
-  arg expose outStem=.int[]         /* << stem by reference */
+REGEXDETAILS: PROCEDURE=.int[]
   call regexfinalizeLen ''          /* finalize internally */
 
   if rxlite_start = 0 then do
      outStem.1 = 0
      outStem.2 = 0
      outStem.3 = 0
-     return 0
+     return outstem
   end
 
   outStem.1 = rxlite_start
   outStem.2 = rxlite_len
-  outStem.3 = rxlite_start + rxlite_len
-return 1
+  outStem.3 = rxlite_start + max(1,rxlite_len)
+return outstem
+/* ----------------------------------------------------------------------------
+ * RXSUBSTR(buffer) -> substring of last match in that buffer
+ * ----------------------------------------------------------------------------
+ */
+/*  */
+REGEXSUBSTR: PROCEDURE=.string
+  arg buffer=.string
+  if rxlite_start = 0 | rxlite_len = 0 then return ""
+return substr(buffer, rxlite_start, rxlite_len)
 /* ----------------------------------------------------------------------------
  * Expand $0 (or $&) to the current match, $$ -> literal $.
  *    Called from inside the replace loop, AFTER regexfinalizeLen.
@@ -736,26 +743,24 @@ return
  */
 regexfinalizeLen: PROCEDURE=.int
   arg s=.string
-  /* Only recompute len when rxlite_end is available.
-     Otherwise LEAVE the existing rxlite_len intact. */
+  /* Only recompute len when rxlite_end is available. Otherwise LEAVE the existing rxlite_len intact. */
   if rxlite_end > 0 then rxlite_len = rxlite_end - rxlite_start
-  /* Clear end cursor after consumption */
-  rxlite_end = 0
+  rxlite_end = 0  /* Clear end cursor after consumption */
 return rxlite_len
-
 /* ----------------------------------------------------------------------------
- * __altSplit(p, alts.) -> count
+ * __altSplit(p) -> count
  *   Split on top-level '|' (ignores \| and any '|' inside [...] classes)
  * ----------------------------------------------------------------------------
  */
-__altSplit: PROCEDURE=.int
-  arg p=.string, expose alts=.string[]
+__altSplit: PROCEDURE=.string[]
+  arg p=.string
 
   altmax=0
   L   = length(p)
   i   = 1
   segStart = 1
   inClass  = 0
+  alts=.string[]
 
   do while i <= L
      c = substr(p, i, 1)
@@ -788,4 +793,4 @@ __altSplit: PROCEDURE=.int
   /* tail segment */
   altmax=altmax+1
   alts[altmax] = substr(p, segStart)
-return alts[0]
+return alts

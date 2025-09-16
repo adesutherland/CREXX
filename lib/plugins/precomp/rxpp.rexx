@@ -580,6 +580,7 @@ CMD_array: procedure
    line=translate(line,,',')
    line=DropComment(line,3)
    atype=word(line,2)
+   if substr(atype,1,1)\='.' then atype='.'atype
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
@@ -587,7 +588,7 @@ CMD_array: procedure
    rc=insert_array(stype, lino+1,new)
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
-      source[lino+i]=def'=.'atype'[];'
+      source[lino+i]=def'='atype'[];'
    end
 return
 /* ------------------------------------------------------------------
@@ -602,13 +603,11 @@ CMD_global: procedure
    line=DropComment(line,3)
    atype=upper(word(line,2))
    if substr(atype,1,1)='.' then atype=substr(atype,2)
-   if atype='INT' | atype='FLOAT' | atype='STRING' then nop
+   if atype='INT' | atype='FLOAT' | atype='STRING' | atype='INT[]' | atype='FLOAT[]' | atype='STRING[]'then nop
    else return
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
-   say 111 defs
-   say 222 new
    rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
    rc=insert_array(stype, lino+1,new)
    do i=1 to new                         ## now add the statements
@@ -620,7 +619,6 @@ CMD_global: procedure
       else source[lino+i]=ivar'=.'atype'; 'def
       globaldef=globaldef' 'ivar
    end
-
 return
 /* ------------------------------------------------------------------
  * Process ##DATA command
@@ -752,26 +750,25 @@ prf=substr(line,1,2)
 if prf='##' | prf='/*' then return oline
 result = ''
 posStart = 1
-
+oocall=0
 do while pos('.', line, posStart) > 0
     dotPos = pos('.', line, posStart)
-
     ##Detect method name after the dot
     methodStart = dotPos + 1
     methodEnd = methodStart
-
     do while methodEnd <= length(line) & verify(substr(line, methodEnd, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
         methodEnd = methodEnd + 1
     end
   ## If not followed by a '(', this is a stem access
     if substr(line, methodEnd, 1) \= '(' then do
         stemAccess = substr(line, posStart, methodEnd - posStart)
+
         ##Preserve the stem text
         result = result || substr(line, posStart, methodEnd - posStart)
         posStart = methodEnd
         iterate
     end
-
+    oocall=1
     ##Backtrack to extract the object name
     objEnd = dotPos - 1
     objStart = objEnd
@@ -798,15 +795,23 @@ do while pos('.', line, posStart) > 0
     end
     parenEnd = p - 1
     args = strip(substr(line, parenStart + 1, parenEnd - parenStart - 1))
-
     ##Build the transformed function call
     upperMethod = translate(method)
     upperObject = translate(object)
   ##  callText = upperMethod || '_' || upperObject || '(' || object
 
     ooprefix=getvar(object'_prefix')
-
-    xyprefix=getvar(object'_prefix')
+    if fpos(ooprefix,'stem',1)=1 then do
+       if upperMethod='GET'| upperMethod='PUT' then do
+          ppi=pos(',',args)
+          if ppi=0 then args=changestr(".",args,"'.'")
+          else do
+             arg1=substr(args,1,ppi-1)
+             arg1=changestr(".",arg1,"'.'")
+             args=arg1','substr(args,ppi+1)
+          end
+       end
+    end
     callText = ooprefix||upperMethod'('object
     if args \= '' then callText = callText || ',' || args
     callText = callText || ')'
