@@ -419,6 +419,7 @@ typedef struct Entry {
 
 typedef struct Stem {
     Entry **buckets;     // now a dynamic array
+    char root[32];       // root name max 32 chars
     size_t table_size;   // store the actual size
     int entries;         // added entries
     int updated;         // updated entries
@@ -429,11 +430,14 @@ typedef struct Stem {
     int collisionW;      // write collisions took place
 } Stem;
 
-Stem *create_stem(size_t table_size) {
+Stem *create_stem(size_t table_size,char *root) {
     Stem *s = malloc(sizeof(Stem));
     if (!s) return NULL;
 
     s->table_size = table_size;
+    int slen=strlen(root);
+    if (slen>sizeof(s->root)) slen=sizeof(s->root);
+    strncpy(s->root,root,slen);
     s->buckets = calloc(table_size, sizeof(Entry *));
     if (!s->buckets) {
         free(s);
@@ -486,7 +490,7 @@ int put_stem(Stem *s, const char *key, const char *value) {
 
 char *get_stem(Stem *s, const char *key) {
     int collr=0;
-    if (!s || !key) return NULL;
+    if (!s || !key) return "";
 
     size_t idx = simple_hash64(key)% s->table_size;  // Compute bucket index
     Entry *e = s->buckets[idx];
@@ -501,7 +505,7 @@ char *get_stem(Stem *s, const char *key) {
         e = e->next;
     }
 
-    return NULL;  // Not found
+    return "";  // Not found
 }
 
 void stem_free(Stem *s) {
@@ -738,12 +742,34 @@ PROCEDURE(stem_iterate) {
     RETURNINTX(hi);
     ENDPROC
 }
+// Check if a number is prime
+int is_prime(int n) {
+    if (n <= 1) return 0;
+    if (n <= 3) return 1;
+    if (n % 2 == 0 || n % 3 == 0) return 0;
+
+    // check divisibility by numbers of form 6k ± 1
+    for (int i = 5; i * i <= n; i += 6) {
+        if (n % i == 0 || n % (i + 2) == 0) return 0;
+    }
+    return 1;
+}
+// Find the nearest prime <= max
+int find_nearest_prime(int max) {
+    while (max > 2) {
+        if (is_prime(max)) return max;
+        max--;
+    }
+    return 2; // smallest prime
+}
+
 
 PROCEDURE(stem_create) {
     int size=GETINT(ARG0);             // expected number of entries
     if(size<1024) size=1024;
-    size=size*3;                      // *10 keeps the collision probability ~ 0.01%
-    Stem * token = create_stem(size);
+    size=size+512;
+    size= find_nearest_prime(size);
+    Stem * token = create_stem(size,GETSTRING(ARG1));
     RETURNINTX((long long) token);
     ENDPROC
 }
@@ -813,7 +839,7 @@ LOADFUNCS
     ADDPROC(tmap_free,          "treemap.tmfree",         "b",    ".int",    "map=.int");
     ADDPROC(tmap_keys,          "treemap.tmkeys",         "b",    ".int",    "map=.int, expose list=.string[]");
     ADDPROC(tmap_dump,          "treemap.tmdump",         "b",    ".int",    "map=.int, expose keys=.string[], expose values=.string[]");
-    ADDPROC(stem_create,        "treemap.stemcreate",     "b",    ".int",    "items=.int");
+    ADDPROC(stem_create,        "treemap.stemcreate",     "b",    ".int",    "root=.string,items=.int");
     ADDPROC(stem_put,           "treemap.stemput",        "b",    ".int",    "token=.int, key=.string, value=.string");
     ADDPROC(stem_get,           "treemap.stemget",        "b",    ".string", "token=.int, key=.string");
     ADDPROC(stem_iterate,       "treemap.stemiterate",    "b",    ".int",    "token=.int, expose keys=.string[], expose values=.string[]");

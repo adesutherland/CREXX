@@ -36,3 +36,5 @@
 
 ##define quote(string2quote)  {'string2quote'}
 ##define Dquote(string2quote) {"string2quote"}
+
+##define cmd clear(array)     {assembler SETATTRS array,0}   ## calling syntax must be reset array-name (no function call type)
