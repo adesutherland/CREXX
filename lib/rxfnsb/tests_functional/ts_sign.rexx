@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb numeric_classic # the last test case needs recurive prefix minus operators to work
 import rxfnsb
 
 errors=0

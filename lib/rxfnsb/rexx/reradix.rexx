@@ -4,7 +4,7 @@
  *   Radix range is 2-16.  Conversion is via decimal
  *   After Brian Marks' version 
  */ 
-options levelb
+options levelb numeric_classic
 
 namespace _rxsysb expose reradix
 import rxfnsb

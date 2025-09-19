@@ -43,7 +43,7 @@ int opt_pars(Context *context) {
         Opts_(parser, token_type, token, context);
 
         // Check if we are done
-        if (context->processedComments) {
+        if (context->processedOptions) {
             break;
         }
     }

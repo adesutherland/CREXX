@@ -6,7 +6,7 @@ numeric operations within a procedure. In CREXX Level B, its usage is slightly r
 performance optimizations.
 
 This section covers the `NUMERIC` instruction, including the new `STANDARD` sub-option. 
-While `NUMERIC` controls semantic aspects, the `OPTIONS {CLASSICNUMERIC | COMMONNUMERIC}` 
+While `NUMERIC` controls semantic aspects, the `OPTIONS {NUMERIC_CLASSIC | NUMERIC_COMMON}` 
 instruction modifies the parser's behavior for the entire source file, affecting fundamental 
 syntactic aspects like operator precedence. The `NUMERIC` instruction, even with its `STANDARD` 
 sub-option, does **not** change the operator precedence or associativity rules set by the 
@@ -105,7 +105,7 @@ Selects a predefined set of arithmetic semantic rules. This is a new option.
 
 ## Interaction with OPTIONS
 
-The `OPTIONS {CLASSICNUMERIC | COMMONNUMERIC}` instruction sets the default arithmetic rules for the entire file. 
+The `OPTIONS {NUMERIC_CLASSIC | NUMERIC_COMMON}` instruction sets the default arithmetic rules for the entire file. 
 It influences how the CREXX parser builds the syntax tree, affecting operator precedence and 
 associativity globally.
 

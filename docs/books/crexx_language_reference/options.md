@@ -13,7 +13,7 @@ All settings are specified on a single `OPTIONS` line, with options separated by
 **Example:**
 
 ```rexx
-options levelb commonnumeric slashcomments decimalfloats
+options levelb numeric_common comments_slash floats_decimal
 ```
 
 This example configures the file for Level B, sets the arithmetic rules to align with common standards across 
@@ -26,9 +26,9 @@ This option determines the core feature set, syntax rules, and default behaviour
 
 * `levelb`: The foundational system language for cREXX. It is statically typed, emphasises safety and
   efficiency, and provides direct access to low-level VM capabilities. Its default arithmetic standard 
-  is `COMMONNUMERIC`.
+  is `numeric_common`.
 * `levelc`: Embodies "Classic" REXX, aiming for strict adherence to the ANSI X3.274-1996 standard. Its 
-  default arithmetic standard is `CLASSICNUMERIC`.
+  default arithmetic standard is `numeric_classic`.
 * `leveld`: Extends Level C with new features, such as the `USE` statement.
 * `levelg`: A modern, general-purpose REXX that builds upon Level B syntax.
 * `levell`: A specialised version for language engineering, providing extended `PARSE` capabilities to 
@@ -51,23 +51,23 @@ It has two primary effects:
 
 The options are:
 
-* `classicnumeric`: (Default for `levelc`) Adheres to the classic ANSI REXX rules.
+* `numeric_classic`: (Default for `levelc`) Adheres to the classic ANSI REXX rules.
 
     * **Precedence**: The prefix minus (`-`) has a *higher* priority than the power operator (`**`). 
       `SAY -3**2` evaluates as `(-3)**2`, resulting in `9`.
     * **Associativity**: The power operator is *left-associative*. `SAY 2**2**3` evaluates as `(2**2)**3`, 
       resulting in `64`.
-    * **Remainder Operator**: The reminder operator is ('//').
+    * **Remainder Operator**: The remainder operator is ('//').
     * **Integer Division**: The integer division operator is (`%`).
    
 
-* `commonnumeric`: (Default for `levelb`) Adheres to rules common in C-like languages.
+* `numeric_common`: (Default for `levelb`) Adheres to rules common in C-like languages.
 
     * **Precedence**: The prefix minus (`-`) has a *lower* priority than the power operator (`**`). 
       `SAY -3**2` evaluates as `-(3**2)`, resulting in `-9`.
     * **Associativity**: The power operator is *right-associative*. `SAY 2**2**3` evaluates as 
       `2**(2**3)`, resulting in `256`.
-    * **Remainder Operator**: The reminder operator is ('%').
+    * **Remainder Operator**: The remainder operator is ('%').
     * **Integer Division**: The division operator is ('/'), and integer division is performed if the operands are integers.
 
 *Note: The arithmetic standard is an experimental feature and may be subject to change.*
@@ -76,15 +76,15 @@ The options are:
 
 These options enable or disable specific single-line comment formats.
 
-* `hashcomments` / `nohashcomments`: Controls `#` style comments. This is the **default enabled** format 
+* `comments_hash` / `comments_nohash`: Controls `#` style comments. This is the **default enabled** format 
    and allows for the use of a POSIX `#!` shebang on the first line.
-* `slashcomments` / `noslashcomments`: Controls `//` style comments. The **default is disabled**.
-* `dashcomments` / `nodashcomments`: Controls `--` style comments. The **default is disabled**.
+* `comments_slash` / `comments_noslash`: Controls `//` style comments. The **default is disabled**.
+* `comments_dash` / `comments_nodash`: Controls `--` style comments. The **default is disabled**.
 
 ## Floating-Point Type (Level B)
 
 This option defines how `.float` variables are treated internally in Level B programs.
 
-* `binaryfloats`: (Default) Treats floats as binary floating-point types (e.g., C `double`).
-* `decimalfloats`: Treats floats as decimal floating-point types, using a decimal-native representation 
+* `floats_binary`: (Default) Treats floats as binary floating-point types (e.g., C `double`).
+* `floats_decimal`: Treats floats as decimal floating-point types, using a decimal-native representation 
    for higher precision and to avoid binary conversion artefacts.

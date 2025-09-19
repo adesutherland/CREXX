@@ -154,9 +154,9 @@ All crexx programs can start with an “options’ instruction, which can includ
 
 The supported comment format can also be specified on the options.
 
-*         Dash '--' line comments. Options: dashcomments  or nodashcomments (default)  
-*         Slash '//' line comments. Options: slashcomments  or noslashcomments (default)  
-*         Hash '\#' line comments. Options: hashcomments (default) or nohashcomments
+*         Dash '--' line comments. Options: comments_dash  or comments_nodash (default)  
+*         Slash '//' line comments. Options: comments_slash  or comments_noslash (default)  
+*         Hash '\#' line comments. Options: comments_hash (default) or comments_nohash
 
 The \# comment allows you to add the Posix first line shebang, e.g. 
 
@@ -164,4 +164,4 @@ The \# comment allows you to add the Posix first line shebang, e.g.
 
 *EXAMPLE:*
 
-options levelb slashcomments
+options levelb comments_slash

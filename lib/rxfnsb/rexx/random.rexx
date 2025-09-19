@@ -1,5 +1,5 @@
 /* rexx random */
-options levelb
+options levelb numeric_classic
 
 namespace rxfnsb expose random
 

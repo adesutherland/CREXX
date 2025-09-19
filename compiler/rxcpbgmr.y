@@ -10,7 +10,7 @@
 
 %include {
 /* cREXX Compiler                  */
-/* (c) Adrian Sutherland 2021-2023 */
+/* (c) Adrian Sutherland 2021-2025 */
 /* Grammar                         */
 
 #include <assert.h>
@@ -213,13 +213,18 @@ def_value(D)             ::=   TK_MULT(S).
                              { D = ast_f(context, NOVAL,S); }
 def_value(D)             ::=   TK_MINUS(O) TK_INTEGER(S).
                              { D = ast_f(context, OP_NEG, O); add_ast(D, ast_f(context, INTEGER,S)); }
+def_value(D)             ::=   TK_HIGH_PRIORITY_MINUS(O) TK_INTEGER(S).
+                             { D = ast_f(context, OP_NEG, O); add_ast(D, ast_f(context, INTEGER,S)); }
 /* Common errors if a user tried to use an expression in an array definition */
 def_value(D)             ::=   TK_VAR_SYMBOL(S) error. { D = mknd_err(ast_f(context, VAR_SYMBOL,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_FLOAT(S) error. { D = mknd_err(ast_f(context, FLOAT,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_DECIMAL(S) error. { D = mknd_err(ast_f(context, DECIMAL,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_STRING(S) error. { D = mknd_err(ast_f(context, STRING,S), "INVALID_IN_ARRAY_DEF"); }
 def_value(D)             ::=   TK_PLUS(S) error. { D = mknd_err(ast_f(context, OP_ADD,S), "INVALID_IN_ARRAY_DEF");}
-def_value(D)             ::=   TK_MINUS(S) error. { D = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_MINUS(S) error.
+                               { D = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_IN_ARRAY_DEF"); }
+def_value(D)             ::=   TK_HIGH_PRIORITY_MINUS(S) error.
+                               { D = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_IN_ARRAY_DEF");}
 def_value(D)             ::=   TK_INTEGER ANYTHING(S) error. { D = ast_err(context, "INVALID_IN_ARRAY_DEF", S); }
 
 var_symbol(A)          ::= TK_VAR_SYMBOL(S). { A = ast_f(context, VAR_SYMBOL, S); }
@@ -845,11 +850,17 @@ assembler_arg(A)         ::= TK_DECIMAL(S).
                          { A = ast_f(context, DECIMAL,S); }
 assembler_arg(A)         ::= TK_MINUS(O) TK_FLOAT(S).
                          { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, FLOAT,S)); }
+assembler_arg(A)         ::= TK_HIGH_PRIORITY_MINUS(O) TK_FLOAT(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, FLOAT,S)); }
 assembler_arg(A)         ::= TK_MINUS(O) TK_DECIMAL(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, DECIMAL,S)); }
+assembler_arg(A)         ::= TK_HIGH_PRIORITY_MINUS(O) TK_DECIMAL(S).
                          { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, DECIMAL,S)); }
 assembler_arg(A)         ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
 assembler_arg(A)         ::= TK_MINUS(O) TK_INTEGER(S).
+                         { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, INTEGER,S)); }
+assembler_arg(A)         ::= TK_HIGH_PRIORITY_MINUS(O) TK_INTEGER(S).
                          { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, INTEGER,S)); }
 assembler_arg(A)         ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
@@ -933,6 +944,20 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INHERITED.
     }
 
 numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_MINUS(S) TK_INTEGER.
+    {
+    if (tokenis(T,"digits"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_DIGITS_RANGE"); }
+    else if (tokenis(T,"form"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FORM_VALUE"); }
+    else if (tokenis(T,"fuzz"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FUZZ_RANGE"); }
+    else if (tokenis(T,"case"))
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_CASE_VALUE"); }
+    else
+        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
+
+numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_HIGH_PRIORITY_MINUS(S) TK_INTEGER.
     {
     if (tokenis(T,"digits"))
         { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_DIGITS_RANGE"); }
@@ -1104,27 +1129,33 @@ prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
-prefix_expression(A) ::= TK_MINUS(O) prefix_expression(C). [TK_NOT]
+prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
 power_expression(P)  ::= prefix_expression(E).
                          { P = E; }
 power_expression(A)  ::= power_expression(B) TK_POWER(O) prefix_expression(C).
                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
-multiplication(P)    ::= power_expression(E).
+low_prefix_expression(P) ::= power_expression(E).
+                  { P = E; }
+low_prefix_expression(A) ::= TK_MINUS(O) power_expression(C).
+                  { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+multiplication(P)    ::= low_prefix_expression(E).
                          { P = E; }
-multiplication(A)    ::= multiplication(B) TK_MULT(O) power_expression(C).
+multiplication(A)    ::= multiplication(B) TK_MULT(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
-multiplication(A)    ::= multiplication(B) TK_DIV(O) power_expression(C).
+multiplication(A)    ::= multiplication(B) TK_DIV(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
-multiplication(A)    ::= multiplication(B) TK_IDIV(O) power_expression(C).
+multiplication(A)    ::= multiplication(B) TK_IDIV(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
-multiplication(A)    ::= multiplication(B) TK_MOD(O) power_expression(C).
+multiplication(A)    ::= multiplication(B) TK_MOD(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
 addition(P)          ::= multiplication(E).
                          { P = E; }
 addition(A)          ::= addition(B) TK_PLUS(O) multiplication(C).
                          { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
 addition(A)          ::= addition(B) TK_MINUS(O) multiplication(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+addition(A)          ::= addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
 
 /* These are for expressions "after" a concat defined by a whitespace to avoid
@@ -1153,6 +1184,8 @@ addition_c(P)        ::= multiplication_c(E).
 addition_c(A)        ::= addition_c(B) TK_PLUS(O) multiplication_c(C).
                          { A = ast_f(context, OP_ADD, O); add_ast(A,B); add_ast(A,C); }
 addition_c(A)        ::= addition_c(B) TK_MINUS(O) multiplication_c(C).
+                         { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+addition_c(A)        ::= addition_c(B) TK_HIGH_PRIORITY_MINUS(O) multiplication_c(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
 
 /* Back to normal expressions in the usual unambiguous form */

@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb numeric_classic
 
 namespace _rxsysb expose _jdn
 
