@@ -19,7 +19,7 @@
  *
  */           
 
-options levelb dashcomments
+options levelb comments_dash
 import rxfnsb
 import sysinfo
 

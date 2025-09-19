@@ -1894,7 +1894,7 @@ static walker_result emit_walker(walker_direction direction,
                         free(temp1);
                     }
                     if (node->scope->num_context.standard > 0) {
-                        /* 1 = IEEE, 1 = [ANSI]REXX */
+                        /* 1 = COMMON, 1 = CLASSIC[REXX] */
                         temp1 = mprintf("/*    setstandard %d */\n", node->scope->num_context.standard);
                         output_append_text(node->output, temp1);
                         free(temp1);

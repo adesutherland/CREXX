@@ -692,24 +692,24 @@ static walker_result initial_checks_walker(walker_direction direction,
             while (child) {
                 if (child->node_type == LITERAL) {
                     /* Check the option */
-                    if (is_node_string(child, "decimalfloats")) {
-                        if (context->binary) {
+                    if (is_node_string(child, "floats_decimal")) {
+                        if (context->floats_binary) {
                             /* Error - can't have both decimal and binary floats */
                             mknd_err(child, "INCOMPATIBLE_OPTIONS");
                         }
                         else {
-                            context->decimal = 1;
-                            context->binary = 0;
+                            context->floats_decimal = 1;
+                            context->floats_binary = 0;
                         }
                     }
-                    else if (is_node_string(child, "binaryfloats")) {
-                        if (context->decimal) {
+                    else if (is_node_string(child, "floats_binary")) {
+                        if (context->floats_decimal) {
                          /* Error - can't have bothdecimal and binary floats */
                             mknd_err(child, "INCOMPATIBLE_OPTIONS");
                         }
                         else {
-                            context->decimal = 0;
-                            context->binary = 1;
+                            context->floats_decimal = 0;
+                            context->floats_binary = 1;
                         }
                     }
                 }
@@ -2846,9 +2846,13 @@ static walker_result decimal_parameters_walker(walker_direction direction,
                 if (child) {
                     /* Get the value */
                     val = node_to_integer(child);
-                    if (val < 1) {
+                    if (val < DIGITS_MINIMUM) {
                         mknd_err(child, "DECIMAL_DIGITS_RANGE"); // Note that the parser captures a negative error beforehand
                         val = 1;
+                    }
+                    else if (val <= node->scope->num_context.fuzz) {
+                        mknd_err(child, "DECIMAL_DIGITS_RANGE");
+                        val = node->scope->num_context.fuzz + 1;
                     }
                 }
                 else {
@@ -2864,6 +2868,10 @@ static walker_result decimal_parameters_walker(walker_direction direction,
                     if (val < 0) {
                         mknd_err(child, "DECIMAL_FUZZ_RANGE");  // Note that the parser captures this error beforehand
                         val = 0;
+                    }
+                    else if (val >= node->scope->num_context.digits) {
+                        mknd_err(child, "DECIMAL_FUZZ_RANGE");
+                        val = node->scope->num_context.digits - 1;
                     }
                 }
                 else {
@@ -2904,8 +2912,8 @@ static walker_result decimal_parameters_walker(walker_direction direction,
 
            case DEC_STANDARD:
                 if (child) {
-                    if (nodeis(child, "ieee") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_IEEE;
-                    else if (nodeis(child, "rexx") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_REXX;
+                    if (nodeis(child, "common") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_COMMON;
+                    else if (nodeis(child, "classic") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_CLASSIC;
                     else if (nodeis(child, "inherited") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
                     else {
                         mknd_err(child, "DECIMAL_STANDARD_VALUE");
@@ -2935,10 +2943,10 @@ void rxcp_val(Context *context) {
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
 
     // Initial checks walker will have set the options
-    if (context->decimal)  {
+    if (context->floats_decimal)  {
         /* decimal option set - this walker converts flaat node types to decimal */
         ast_wlkr(context->ast, float2decimal_walker, (void *) context);
-    } else if (context->binary) {
+    } else if (context->floats_binary) {
         /* binary option set - this walker converts decimal node types to binary */
         ast_wlkr(context->ast, decimal2float_walker, (void *) context);
     }

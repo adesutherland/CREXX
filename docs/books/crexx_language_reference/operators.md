@@ -33,12 +33,12 @@ Table: Arithmetic Operators {#tbl:id}
 
 ### Influence of `OPTIONS` on Arithmetic
 
-The `OPTIONS {CLASSICNUMERIC|COMMONNUMERIC}` setting determines which symbols are used for certain operations for the entire source file.
+The `OPTIONS {NUMERIC_CLASSIC|NUMERIC_COMMON}` setting determines which symbols are used for certain operations for the entire source file.
 
-* Under **`OPTIONS CLASSICNUMERIC`**:
+* Under **`OPTIONS NUMERIC_CLASSIC`**:
     * **`%`** performs **integer division**.
     * **`//`** performs the **remainder** operation.
-* Under **`OPTIONS COMMONNUMERIC`**:
+* Under **`OPTIONS NUMERIC_COMMON`**:
     * **`%`** performs the **remainder** operation.
     * **`/`** performs **integer division** if both operands are integers; otherwise, it performs normal division.
     * **`//`** is not strickly a valid operator, however, to support legacy code, it is treated as an alias for `%`.
@@ -86,21 +86,21 @@ Otherwise, they perform a character comparison where the shorter string is padde
 > comparison steps, both strings are first brought into a consistent representation by applying Unicode Normalization 
 > Form C (NFC). 
 
-| Operator(s)   | Description                        |
-|:--------------|:-----------------------------------|
-| `=`           | Equal (numerically or when padded) |
-| `¬=`, `/=`    | Not equal (inverse of `=`)         |
-| `>`           | Greater than                       |
-| `<`           | Less than                          |
-| `< >`         | Not equal (same as `¬=`)           |
-| `>=`          | Greater than or equal              |
-| `¬<`          | Not less than                      |
-| `<=`          | Less than or equal                 |
-| `¬>`          | Not greater than                   |
+| Operator(s)      | Description                        |
+|:-----------------|:-----------------------------------|
+| `=`              | Equal (numerically or when padded) |
+| `¬=`, `\=`, `/=` | Not equal (inverse of `=`)         |
+| `>`              | Greater than                       |
+| `<`              | Less than                          |
+| `< >`            | Not equal (same as `¬=`)           |
+| `>=`             | Greater than or equal              |
+| `¬<`             | Not less than                      |
+| `<=`             | Less than or equal                 |
+| `¬>`             | Not greater than                   |
 
 Table: Standard Comparison Operators {#tbl:id}
 
-### String Comparison (Case-Sensitive)
+### String Comparison (Case-Sensitive) a.k.a. Strict Comparison
 
 These operators perform what is known in other REXX dialects as a **strict** comparison. 
 CREXX refers to them as **string comparisons** to emphasize their semantics: they *always* operate on the string 
@@ -114,16 +114,16 @@ with no padding.
 * strings `'1.0'` and `'1'`, which are not identical. Numeric types are converted to their string representation before comparison,
 * using the current `NUMERIC FORM`, `NUMERIC CASE`, and `NUMERIC DIGITS` settings.
 
-| Operator(s)   | Description                          |
-|:--------------|:-------------------------------------|
-| `==`          | Strictly equal (identical)           |
-| `¬==`, `/==`  | Strictly not equal (inverse of `==`) |
-| `>>`          | Strictly greater than                |
-| `\>>`         | Strictly not greater than            |
-| `<<`          | Strictly less than                   |
-| `\<<`         | Strictly not less than               |
-| `>>=`         | Strictly greater than or equal       |
-| `<<=`         | Strictly less than or equal          |
+| Operator(s)         | Description                          |
+|:--------------------|:-------------------------------------|
+| `==`                | String equal (identical)           |
+| `¬==`, `\==`, `/==` | String not equal (inverse of `==`) |
+| `>>`                | String greater than                |
+| `/>>`               | String not greater than            |
+| `<<`                | String less than                   |
+| `\<<`               | String not less than               |
+| `>>=`               | String greater than or equal       |
+| `<<=`               | String less than or equal          |
 
 Table: String Comparison Operators {#tbl:id}
 
@@ -191,8 +191,8 @@ The order of priority of the operators (from highest to lowest). Note that the `
 | Priority  | Operators                      | Description                         | Notes                                                                                                                                                             |
 |:----------|:-------------------------------|:------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |                                                                                                                                                                   |
-| 2         | Prefix `+` `-` `¬`             | Unary operators                     | **`OPTIONS CLASSICNUMERIC`**: Prefix `-` has higher priority than `**`.                                                                                           |
-| 3         | `**`                           | Exponentiation                      | **`CLASSICNUMERIC`**: Left-associative and has lower priority than Prefix `-`.<br>**`COMMONNUMERIC`**: Right-associative and has higher priority than Prefix `-`. |
+| 2         | Prefix `+` `-` `¬`             | Unary operators                     | **`OPTIONS NUMERIC_CLASSIC`**: Prefix `-` has higher priority than `**`.                                                                                           |
+| 3         | `**`                           | Exponentiation                      | **`NUMERIC_CLASSIC`**: Left-associative and has lower priority than Prefix `-`.<br>**`NUMERIC_COMMON`**: Right-associative and has higher priority than Prefix `-`. |
 | 4         | `*` `/` `%` `//`               | Multiply and divide                 | Which operators are valid depends on `OPTIONS`.                                                                                                                   |
 | 5         | `+` `-`                        | Add and subtract                    |                                                                                                                                                                   |
 | 6         | `\|\|` (space, abuttal)        | Concatenation                       |                                                                                                                                                                   |

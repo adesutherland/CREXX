@@ -32,19 +32,19 @@ program            ::= after_the_options.
 program            ::= error.
                    {
                         if (context->level == UNKNOWN) context->level = LEVELC;
-                        context->processedComments = 1;
+                        context->processedOptions = 1;
                    }
 
 rexx_options       ::= TK_OPTIONS TK_EOC.
                    {
                         if (context->level == UNKNOWN) context->level = LEVELC;
-                        context->processedComments = 1;
+                        context->processedOptions = 1;
                    }
 
 rexx_options       ::= TK_OPTIONS option_list TK_EOC.
                    {
                         if (context->level == UNKNOWN) context->level = LEVELC;
-                        context->processedComments = 1;
+                        context->processedOptions = 1;
                    }
 
 option_list        ::= option.
@@ -56,18 +56,20 @@ option             ::= TK_LEVELC. { context->level = LEVELC; }
 option             ::= TK_LEVELD. { context->level = LEVELD; }
 option             ::= TK_LEVELG. { context->level = LEVELG; }
 option             ::= TK_LEVELL. { context->level = LEVELL; }
-option             ::= TK_HASHCOMMENTS. { context->hashcomments = 1; }
-option             ::= TK_DASHCOMMENTS. { context->dashcomments = 1; }
-option             ::= TK_SLASHCOMMENTS. { context->slashcomments = 1; }
-option             ::= TK_NOHASHCOMMENTS. { context->hashcomments = 0; }
-option             ::= TK_NODASHCOMMENTS. { context->dashcomments = 0; }
-option             ::= TK_NOSLASHCOMMENTS. { context->slashcomments = 0; }
+option             ::= TK_COMMENTS_HASH. { context->comments_hash = 1; }
+option             ::= TK_COMMENTS_DASH. { context->comments_dash = 1; }
+option             ::= TK_COMMENTS_SLASH. { context->comments_slash = 1; }
+option             ::= TK_COMMENTS_NOHASH. { context->comments_hash = 0; }
+option             ::= TK_COMMENTS_NODASH. { context->comments_dash = 0; }
+option             ::= TK_COMMENTS_NOSLASH. { context->comments_slash = 0; }
+option             ::= TK_NUMERIC_COMMON. { context->numeric_standard = 0; } // Common
+option             ::= TK_NUMERIC_CLASSIC. { context->numeric_standard = 1; } // Classic
 option             ::= TK_SYMBOL. /* For some other language processor */
 
 after_the_options  ::= ANYTHING.
                    {
                         if (context->level == UNKNOWN) context->level = LEVELC;
-                        context->processedComments = 1;
+                        context->processedOptions = 1;
                    }
 
 after_the_options  ::= after_the_options ANYTHING.

@@ -48,12 +48,14 @@ int opt_scan(Context* s) {
     'LEVELD' { return(TK_LEVELD); }
     'LEVELG' { return(TK_LEVELG); }
     'LEVELL' { return(TK_LEVELL); }
-    'HASHCOMMENTS' { return(TK_HASHCOMMENTS); }
-    'DASHCOMMENTS' { return(TK_DASHCOMMENTS); }
-    'SLASHCOMMENTS' { return(TK_SLASHCOMMENTS); }
-    'NOHASHCOMMENTS' { return(TK_NOHASHCOMMENTS); }
-    'NODASHCOMMENTS' { return(TK_NODASHCOMMENTS); }
-    'NOSLASHCOMMENTS' { return(TK_NOSLASHCOMMENTS); }
+    'COMMENTS_HASH' { return(TK_COMMENTS_HASH); }
+    'COMMENTS_DASH' { return(TK_COMMENTS_DASH); }
+    'COMMENTS_SLASH' { return(TK_COMMENTS_SLASH); }
+    'COMMENTS_NOHASH' { return(TK_COMMENTS_NOHASH); }
+    'COMMENTS_NODASH' { return(TK_COMMENTS_NODASH); }
+    'COMMENTS_NOSLASH' { return(TK_COMMENTS_NOSLASH); }
+    'NUMERIC_COMMON' { return(TK_NUMERIC_COMMON); }
+    'NUMERIC_CLASSIC' { return(TK_NUMERIC_CLASSIC); }
     symbol { return(TK_SYMBOL); }
     eof { return(TK_EOS); }
     $ { return(TK_EOS); }

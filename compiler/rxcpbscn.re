@@ -59,21 +59,21 @@ int rexbscan(Context* s) {
   dqstr = ["] ((any\["\n\r])|(["]["]))* ["];
   str = sqstr|dqstr;
   ob = [ \t]*;
-  not = [\\] | not_char;
+  not = not_char;
 */
 
 /*!re2c
     // Line Comments
     [#] {
-       if (s->hashcomments) goto skip_line_comment;
+       if (s->comments_hash) goto skip_line_comment;
        else return(TK_UNKNOWN);
     }
     "//" {
-       if (s->slashcomments) goto skip_line_comment;
+       if (s->comments_slash) goto skip_line_comment;
        else return(TK_MOD);
     }
     "--" {
-       if (s->dashcomments) goto skip_line_comment;
+       if (s->comments_dash) goto skip_line_comment;
        else return(TK_MINUSMINUS);
     }
 
@@ -88,10 +88,10 @@ int rexbscan(Context* s) {
 
     "|" ob "|" { return(TK_CONCAT); }
     "+" { return(TK_PLUS); }
-    "-" { return(TK_MINUS); }
+    "-" { return(s->numeric_standard ? TK_HIGH_PRIORITY_MINUS : TK_MINUS); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "*" { return(TK_MULT); }
     "/" { return(TK_DIV); }
-    "%" { return(TK_IDIV); }
+    "%" { return(s->numeric_standard ? TK_IDIV : TK_MOD); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "?" { return(TK_OPTIONAL); }
     "/" ob "/" { return(TK_MOD); }
     "*" ob "*" { return(TK_POWER); }
@@ -112,7 +112,7 @@ int rexbscan(Context* s) {
     "&" { return(TK_AND); }
     "|" { return(TK_OR); }
   //  "&" ob "&" { return(TK_OR); } // TODO Check
-    not { return(TK_NOT); }
+    not { return(TK_NOT); }         // Note that '/' will be treated as divide as it is listed first
     "," { return(TK_COMMA); }
     "..." { return(TK_ELLIPSIS); }
     "(" { return(TK_OPEN_BRACKET); }

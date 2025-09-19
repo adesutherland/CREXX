@@ -131,19 +131,19 @@ Each Object has the following physical attributes. REXX and RXAS programs can us
 Note that all these values can be used concurrently. However \crexx{} protocols need to be understood, for example the object’s string\_value is used for string conversions from the object’s numeric values by the compiler.
 
 * **Status** - 64 bit field to store value status flags. These attributes will be defined here and need to be consistent across the compiler, assembler, virtual machine
-* **Int\_value** - 64 bit integer
-* **Float\_value** - double float
-* **Decimal\_value** - arbitrary precision maths value (TODO)
-* **Decimal\_value\_precision** - precision information on the above (TODO)
-* **String\_value** - text in UTF8. It can be null terminated, and RXAS instructions exist to ensure the text is null terminated where required
-* **String\_length** - text length in bytes
-* **String\_pos** - current text position in bytes from the text start
-* **String\_chars** - text length in UTF codepoints
-* **String\_char\_pos** - current text position in UTF codepoints from the text start
-* **Binary\_value** - Binary data
-* **Binary\_length** - Binary data length in bytes
+* **Int_value** - 64 bit integer
+* **Float_value** - double float
+* **Decimal_value** - arbitrary precision maths value (TODO)
+* **Decimal_value_precision** - precision information on the above (TODO)
+* **String_value** - text in UTF8. It can be null terminated, and RXAS instructions exist to ensure the text is null terminated where required
+* **String_length** - text length in bytes
+* **String_pos** - current text position in bytes from the text start
+* **String_chars** - text length in UTF codepoints
+* **String_char_pos** - current text position in UTF codepoints from the text start
+* **Binary_value** - Binary data
+* **Binary_length** - Binary data length in bytes
 * **Attributes** - An array of child objects (which can be nested to any level). Attributes are the capability used by the compiler to store REXX class logical attributes. They are also used to store members of an array
-* **Num\_attributes** - The number of child objects
+* **Num_attributes** - The number of child objects
 
 ## \crexx{} VM Objects
 
@@ -153,8 +153,8 @@ The following are objects created and used by the Rexx VM.
 
 Both passed to an interrupt handler and also returned by the *metaloadcalleraddr* assembler instruction.
 
-* Attribute 1. int\_value = return module number
-* Attribute 2. int\_value = return instruction address (in module binary space)
+* Attribute 1. int_value = return module number
+* Attribute 2. int_value = return instruction address (in module binary space)
 
 ### Loaded Modules
 
@@ -175,19 +175,19 @@ An array of objects, each object has
 
 Returned by the *metadecodeinst* assembler instruction
 
-* Attribute 1. Int\_value = opcode
-* Attribute 2. String\_value = instruction
-* Attribute 3. String\_value = description
-* Attribute 4. Int\_value = number of operands
-* Attribute 5. Int\_value - operated 1 type
-* Attribute 6. Int\_value - operated 2 type
-* Attribute 7. Int\_value - operated 3 type
+* Attribute 1. Int_value = opcode
+* Attribute 2. String_value = instruction
+* Attribute 3. String_value = description
+* Attribute 4. Int_value = number of operands
+* Attribute 5. Int_value - operated 1 type
+* Attribute 6. Int_value - operated 2 type
+* Attribute 7. Int_value - operated 3 type
 
 ### Procedure Details
 
 Returned by the *metaloadoperand* assembler instruction (TODO review name).
 
-* Int\_value = function name
+* Int_value = function name
 
 TODO needs to do more that get the function name - a function object is needed
 
@@ -197,52 +197,53 @@ Returned by the *metaloaddata* assembler instruction.
 
 An array of objects for all the metadata returned by the instruction, meaning for a code address. The array has the following types of objects
 
-*META\_SRC:*
+*META_SRC:*
 
-* String\_value = ".meta\_src"
-* Attribute 1. Int\_value = source line
-* Attribute 2. Int\_value = source column
-* Attribute 3. String\_value = source code
+* String_value = ".meta_src"
+* Attribute 1. Int_value = source line
+* Attribute 2. Int_value = source column
+* Attribute 3. String_value = source code
 
-*META\_FILE:*
+*META_FILE:*
 
-* String\_value = ".meta\_file"
-* Attribute 1. String\_value = source file name
+* String_value = ".meta_file"
+* Attribute 1. String_value = source file name
 
-*META\_FUNC:*
+*META_FUNC:*
 
-* String\_value = ".meta\_func"
-* Attribute 1. String\_value = function symbol
-* Attribute 2. String\_value = option (e.g. “b”)
-* Attribute 3. String\_value = function return type
-* Attribute 4. String\_value = argos
-* Attribute 5. Int\_value = function pointer
-* Attribute 6. String\_value = inline string
+* String_value = ".meta_func"
+* Attribute 1. String_value = function symbol
+* Attribute 2. String_value = option (e.g. “b”)
+* Attribute 3. String_value = function return type
+* Attribute 4. String_value = argos
+* Attribute 5. Int_value = function pointer
+* Attribute 6. String_value = inline string
 
-*META\_REG:*
+*META_REG:*
 
-* String\_value = ".meta\_reg"
-* Attribute 1. String\_value = variable symbol
-* Attribute 2. String\_value = option (e.g. “b”)
-* Attribute 3. String\_value = variable type
-* Attribute 4. Int\_value = register number
+* String_value = ".meta_reg"
+* Attribute 1. String_value = variable symbol
+* Attribute 2. String_value = option (e.g. “b”)
+* Attribute 3. String_value = variable type
+* Attribute 4. Int_value = register number
 
-*META\_CONST:*
+*META_CONST:*
 
-* String\_value = ".meta\_const"
-* Attribute 1. String\_value = variable (constant) symbol
-* Attribute 2. String\_value = option (e.g. “b”)
-* Attribute 3. String\_value = type
-* Attribute 4. String\_value = constant value
+* String_value = ".meta_const"
+* Attribute 1. String_value = variable (constant) symbol
+* Attribute 2. String_value = option (e.g. “b”)
+* Attribute 3. String_value = type
+* Attribute 4. String_value = constant value
 
-*META\_CLEAR:*
+*META_CLEAR:*
 
-* String\_value = ".meta\_clear"
-* Attribute 1. String\_value = variable symbol (moving out of scope)
+* String_value = ".meta_clear"
+* Attribute 1. String_value = variable symbol (moving out of scope)
 
 ### Redirect(s)
 
-Used by spawn assembler instructions for IO redirects. Each object is a a pointer to an opaque REDIRECT binary structures (e.g. generated by assembler instruction *redrtoarr*)
+Used by spawn assembler instructions for IO redirects. Each object is a pointer to an opaque REDIRECT binary structure 
+(e.g. generated by assembler instruction *redrtoarr*)
 
 The array structure holds three redirects: input, output, error
 

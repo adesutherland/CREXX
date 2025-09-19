@@ -37,7 +37,7 @@ typedef int64_t rxinteger; // C99+
 #define DEFAULT_NUMERIC_FUZZ 0
 #define DEFAULT_NUMERIC_FORM NUMERIC_FORM_SCIENTIFIC
 #define DEFAULT_NUMERIC_CASE CASE_LOWER
-#define DEFAULT_NUMERIC_STANDARD NUMERIC_STANDARD_IEEE
+#define DEFAULT_NUMERIC_STANDARD NUMERIC_STANDARD_COMMON
 
 /* Minimum value for digits */
 #define DIGITS_MINIMUM 5
@@ -59,8 +59,8 @@ typedef enum {
 /* Enumeration of the numeric standards */
 typedef enum {
     NUMERIC_STANDARD_INHERIT = 0,
-    NUMERIC_STANDARD_IEEE,
-    NUMERIC_STANDARD_REXX
+    NUMERIC_STANDARD_COMMON,
+    NUMERIC_STANDARD_CLASSIC
 } numeric_standard;
 
 
@@ -70,7 +70,7 @@ typedef struct numeric_context {
     int fuzz;               /* Fuzz factor, -1 = inherited */
     numeric_form form;      /* NUMERIC_FORM_INHERIT, NUMERIC_FORM_SCIENTIFIC, NUMERIC_FORM_ENGINEERING */
     case_type casetype;     /* CASE_INHERIT, CASE_LOWER, CASE_UPPER */
-    numeric_standard standard; /* NUMERIC_STANDARD_INHERIT, NUMERIC_STANDARD_IEEE, NUMERIC_STANDARD_REXX */
+    numeric_standard standard; /* NUMERIC_STANDARD_INHERIT, NUMERIC_STANDARD_COMMON, NUMERIC_STANDARD_CLASSIC */
 } numeric_context;
 
 typedef struct value value;

@@ -60,20 +60,20 @@ commentary.
 \index{Line comments,}
 The default line comment character in \crexx{} level B is the
 \emph{hash} character \code{\#}, also called \emph{octothorpe}. This is
-associated with the options \code{options hashcomments (default) / nohashcomments}.
+associated with the options \code{options comments_hash (default) / comments_nohash}.
 
 A line comment can also be started by a sequence of two adjacent slashes
 (\code{//}); all characters following that sequence up to the
 end of the line are then ignored by the \crexx{} language processor.
-This is associated with the options \code{Options slashcomments  / noslashcomments (default)}.
-%     Dash '--' line comments. Options dashcomments  / nodashcomments (default)
-%     Slash '//' line comments. Options slashcomments  / noslashcomments (default)
-%     Hash '#' line comments. Options hashcomments (default) / nohashcomments
+This is associated with the options \code{Options comments_slash  / comments_noslash (default)}.
+%     Dash '--' line comments. Options comments_dash  / comments_nodash (default)
+%     Slash '//' line comments. Options comments_slash  / comments_noslash (default)
+%     Hash '#' line comments. Options comments_hash (default) / comments_nohash
 
 A line comment can also be started by a sequence of two adjacent hyphens
 (\doublehyphen{}); all characters following that sequence up to the
 end of the line are then ignored by the \crexx{} language processor.
-This is associated with the options \code{Options dashcomments  / nosdashcomments (default)}.
+This is associated with the options \code{Options comments_dash  / noscomments_dash (default)}.
 
 \textbf{Example:}
 \begin{lstlisting}

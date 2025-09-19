@@ -14,7 +14,7 @@ say 'hello world!'
 
 There is no need to include the starting comment, but by all means include it if you want to.[^1]
 
-[^1]: Level B \crexx{} has a few ```options``` like ```hashcomments```, ```dashcomments``` or ```slashcomments``` to tune the comment format but the starting comment is meant for some operating systems to distinguish \rexx{} from the other, earlier command processors they have, like exec/exec2 for VM, CLIST for TSO on z/OS and the .bat language for DOS and OS/2.
+[^1]: Level B \crexx{} has a few ```options``` like ```comments_hash```, ```comments_dash``` or ```comments_slash``` to tune the comment format but the starting comment is meant for some operating systems to distinguish \rexx{} from the other, earlier command processors they have, like exec/exec2 for VM, CLIST for TSO on z/OS and the .bat language for DOS and OS/2.
 
 \code{say} is a statement of the \rexx{} language and as such built-in. It does not matter if it is expressed as ```say```, ```Say```, or ```SAY````; in other words, the statements of the language are case-insensitive.
 

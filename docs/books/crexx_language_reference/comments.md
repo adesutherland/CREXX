@@ -16,7 +16,7 @@ comment in between are not treated as a single token). These multiline comments 
 
 ## Single line comments
 
-For \crexx{} level B, the *octothorpe* (#), also know as poundsign or hashmark, is the default for single line comments. Other single line comment styles can be chosen by the ```option``` statements ```dashcomments``` and ```slashcomments``` which enable the SQL, \nr{} and Object \rexx{} ```--``` double dash style, and ```slashcomments``` which enable the C++ style ```//``` line comments.
+For \crexx{} level B, the *octothorpe* (#), also know as poundsign or hashmark, is the default for single line comments. Other single line comment styles can be chosen by the ```option``` statements ```comments_dash``` and ```comments_slash``` which enable the SQL, \nr{} and Object \rexx{} ```--``` double dash style, and ```comments_slash``` which enable the C++ style ```//``` line comments.
 
 Note: Although it is good practice to start a program with a comment that describes its purpose, this is not required for \crexx{} programs. On current platforms there is no need to distinguish \crexx{} programs from other languages for the purpose of the shell process.
 

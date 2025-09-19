@@ -46,7 +46,7 @@ typedef struct importable_file importable_file;
 
 /* Compiler Context Object */
 typedef struct Context {
-    struct Context *master_context; /* This points to the context of the file being compilkes (rather than imported files* */
+    struct Context *master_context; /* This points to the context of the file being compiled (rather than imported files* */
     int debug_mode;
     char* location;
     char* file_name;
@@ -74,14 +74,15 @@ typedef struct Context {
     char need_rxsysb;
     char has_rxsysb;
     /* Source Options */
-    char processedComments;
+    char processedOptions;
     RexxLevel level;
-    char hashcomments;
-    char dashcomments;
-    char slashcomments;
+    char comments_hash;
+    char comments_dash;
+    char comments_slash;
     /* Language Options */
-    char decimal;
-    char binary;
+    char floats_decimal;
+    char floats_binary;
+    char numeric_standard; /* 0 = common, 1 = classic */
     void *decimal_plugin; /* Pointer to the decimal plugin */
     /* Optimiser Options */
     int optimise;
