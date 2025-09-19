@@ -12,7 +12,7 @@ All settings are specified on a single `OPTIONS` line, with options separated by
 
 **Example:**
 
-```rexx
+```rexx <!--options.rexx-->
 options levelb commonnumeric slashcomments decimalfloats
 ```
 
@@ -57,7 +57,7 @@ The options are:
       `SAY -3**2` evaluates as `(-3)**2`, resulting in `9`.
     * **Associativity**: The power operator is *left-associative*. `SAY 2**2**3` evaluates as `(2**2)**3`, 
       resulting in `64`.
-    * **Remainder Operator**: The reminder operator is ('//').
+    * **Remainder Operator**: The remainder operator is ('//').
     * **Integer Division**: The integer division operator is (`%`).
    
 
@@ -67,7 +67,7 @@ The options are:
       `SAY -3**2` evaluates as `-(3**2)`, resulting in `-9`.
     * **Associativity**: The power operator is *right-associative*. `SAY 2**2**3` evaluates as 
       `2**(2**3)`, resulting in `256`.
-    * **Remainder Operator**: The reminder operator is ('%').
+    * **Remainder Operator**: The remainder operator is ('%').
     * **Integer Division**: The division operator is ('/'), and integer division is performed if the operands are integers.
 
 *Note: The arithmetic standard is an experimental feature and may be subject to change.*

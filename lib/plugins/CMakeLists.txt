@@ -15,20 +15,18 @@ add_subdirectory(llist)
 add_subdirectory(treemap)
 add_subdirectory(id)
 
-
+if(ENABLE_GTK)
+    add_subdirectory(gui)
+    message(STATUS "Building with GTK Gui support enabled.")
+else()
+    message(STATUS "GTK Gui support is disabled, skipping subdirectory.")
+endif()
 
 if(ENABLE_ODBC)
     add_subdirectory(odbc)
     message(STATUS "Building with ODBC support enabled.")
 else()
     message(STATUS "ODBC support is disabled, skipping subdirectory.")
-endif()
-
-if(ENABLE_GUI)
-    add_subdirectory(gui)
-    message(STATUS "Building with GTK Gui support enabled.")
-else()
-    message(STATUS "GTK Gui support is disabled, skipping subdirectory.")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")

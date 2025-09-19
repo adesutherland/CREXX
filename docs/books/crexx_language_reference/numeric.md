@@ -1,8 +1,8 @@
 # NUMERIC Instruction: Controlling Arithmetic Behaviour
 
-REXX uses **arbitrary-precision decimal arithmetic**, which requires specific rules for computation. 
-The `NUMERIC` instruction controls the **precision**, **rounding**, and **comparison** for all 
-numeric operations within a procedure. In CREXX Level B, its usage is slightly restricted to enable 
+\rexx{} uses *arbitrary-precision decimal arithmetic*, which requires specific rules for computation. 
+The `NUMERIC` instruction controls the *precision*, *rounding*, and *comparison* for all 
+numeric operations within a procedure. In \crexx{} Level B, its usage is slightly restricted to enable 
 performance optimizations.
 
 This section covers the `NUMERIC` instruction, including the new `STANDARD` sub-option. 
@@ -18,7 +18,7 @@ The `NUMERIC` instruction must be the very first instruction in a procedure, rig
 performance optimizations. It can specify `DIGITS`, `FUZZ`, `FORM`, or the new `STANDARD` option 
 with a constant value, or it can explicitly request to inherit settings from the calling procedure.
 
-```rexx
+```rexx <!--numeric1.rexx-->
 NUMERIC [ DIGITS [ <constant_value> | INHERITED ] ]
         [ FORM [ SCIENTIFIC | ENGINEERING | INHERITED ] ]
         [ FUZZ [ <constant_value> | INHERITED ] ]
@@ -38,15 +38,15 @@ The `NUMERIC` instruction controls numeric behavior for all operations within it
 `FUZZ`, `FORM`, `CASE`, `STANDARD`) can be specified only once with a constant value and cannot be changed 
 dynamically.
 
-### 1\. NUMERIC DIGITS
+### NUMERIC DIGITS
 
 Sets the number of significant digits for all calculations.
 
-* **Default**: 18 for CREXX Level B. Classic REXX default is 9.
+* **Default**: 18 for \crexx{} Level B. Classic \rexx{} default is 9.
 * **Value**: Must be a positive whole number greater than `NUMERIC FUZZ`.
 * **Retrieval**: Use the `DIGITS()` built-in function.
 
-### 2\. NUMERIC FORM
+### NUMERIC FORM
 
 Sets the preferred exponential notation format.
 
@@ -56,7 +56,7 @@ Sets the preferred exponential notation format.
     * **INHERITED**: The procedure inherits the format from the caller's context.
 * **Retrieval**: Use the `FORM()` built-in function.
 
-### 3\. NUMERIC FUZZ
+### NUMERIC FUZZ
 
 Sets the number of digits to ignore during numeric comparisons.
 
@@ -65,7 +65,7 @@ Sets the number of digits to ignore during numeric comparisons.
 * **INHERITED**: The procedure inherits the fuzz value from the caller's context.
 * **Retrieval**: Use the `FUZZ()` built-in function.
 
-### 4\. NUMERIC CASE
+### NUMERIC CASE
 
 Sets the case sensitivity for special numeric literals.
 
@@ -74,11 +74,11 @@ Sets the case sensitivity for special numeric literals.
     * **LOWER**: Generates `e`, `inf`, `nan`.
     * **INHERITED**: The procedure inherits the case setting from the caller's context.
 
-### 5\. NUMERIC STANDARD
+### NUMERIC STANDARD
 
 Selects a predefined set of arithmetic semantic rules. This is a new option.
 
-* **CLASSIC**: Adheres to classic ANSI REXX X3.274-1996 rules. This is the default for CREXX Level C.
+* **CLASSIC**: Adheres to classic ANSI \rexx{} X3.274-1996 rules. This is the default for \crexx{} Level C.
     * **Remainder (`//` or '%')**: The division is calculated at full (digits) division and truncated, then the remainder 
       is computed, ('a - (TRUNC(a / b) * b)'). 
     * **Integer Magnitude-Precision Constraint**: The integer quotient for `%` and `//` must fit within 
@@ -87,7 +87,7 @@ Selects a predefined set of arithmetic semantic rules. This is a new option.
     * **Integer Division (`%`)**: The numbers are divided at current precision (digits) and then truncated
       to an integer towards zero.
   
-* **COMMON**: Employs semantics closer to other C like languages. This is the default for CREXX 
+* **COMMON**: Employs semantics closer to other C like languages. This is the default for \crexx{} 
   Level B.
     * **Remainder (`%` or '//')**: The division is calculated at full (digits) division and truncated, then the remainder
       is computed, ('a - (TRUNC(a / b) * b)').
@@ -106,7 +106,7 @@ Selects a predefined set of arithmetic semantic rules. This is a new option.
 ## Interaction with OPTIONS
 
 The `OPTIONS {CLASSICNUMERIC | COMMONNUMERIC}` instruction sets the default arithmetic rules for the entire file. 
-It influences how the CREXX parser builds the syntax tree, affecting operator precedence and 
+It influences how the \crexx{} parser builds the syntax tree, affecting operator precedence and 
 associativity globally.
 
 **`NUMERIC STANDARD` does not alter these file-level parsing rules.** For example:
@@ -125,7 +125,7 @@ within procedures.
 
 ## Runtime Optimization Considerations
 
-CREXX benefits from knowing arithmetic rules at compile time. Declaring `NUMERIC` settings as constants at the start 
+\crexx{} benefits from knowing arithmetic rules at compile time. Declaring `NUMERIC` settings as constants at the start 
 of a procedure allows the compiler to:
 
 * Embed numeric context values directly into the bytecode.

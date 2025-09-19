@@ -22,11 +22,11 @@ The language includes a number of built-in types, which are provided by the lang
 
 The language's type system is **statically typed**, which means that the types of variables and expressions are 
 known at compile time. This helps to ensure that the language is type-safe, preventing many runtime errors. 
-When operations involve different types, CREXX Level B automatically promotes them according to a fixed set of rules.
+When operations involve different types, \crexx{} Level B automatically promotes them according to a fixed set of rules.
 
 ## Type Promotion
 
-When an operator is used with operands of different data types, CREXX automatically converts one or both operands to a 
+When an operator is used with operands of different data types, \crexx{} automatically converts one or both operands to a 
 common, compatible type before performing the operation. This process is called **type promotion** and occurs 
 at compile time.
 
@@ -70,7 +70,7 @@ If a symbol is used as a constant it cannot be subsequently used as a variable:
 
 *EXAMPLE:*
 
-```rexx
+```rexx <!--constants.rexx-->
 SAY CONSTANT_SYM; /* Prints "CONSTANT_SYM" */
 CONSTANT_SYM = 1; /* "CONSTANT_SYM is a constant" error */
 ```
@@ -83,7 +83,7 @@ Designed to be simple and fast and cover many basic use cases.
 
 *EXAMPLE:*
 
-```rexx
+```rexx <!--arraysexample1.rexx-->
 array.1 = "Value"
 array.2 = "Last Value"
 ```
@@ -94,7 +94,7 @@ This usage implicitly declares the array as 1-dimensional, 1-base array, which d
 
 A 2-dimensional array of type float could be implicitly declared with:
 
-```rexx
+```rexx  <!--arraysexample2.rexx-->
 array.1.1 = 0.0
 ```
 
@@ -102,11 +102,11 @@ array.1.1 = 0.0
 
 Square brackets can be used e.g. `array[2]` or `array.2` are equivalent.
 
-### Explicit Declaration {\#explicit-declaration}
+### Explicit Declaration
 
 Arrays can be explicitly declared:
 
-```rexx
+```rexx <!--arraysexample3.rexx-->
 array = .integer[10]            /* 1 Dimensional, 1 base, 10 elements */
 array = .integer[10,10]         /* 2 Dimensional, 1 base, 10x10 elements */
 array = .integer[0 to 10]       /* 1 Dimensional, 0 base, 11 elements */
@@ -116,19 +116,19 @@ array = .string[0 to 5, 4 to 10]
 
 Arrays are Objects (see next and the Classes and Interfaces section) and can be passed to and from functions.
 
-## Objects {\#objects}
+## Objects
 
-CREXX Registers contain objects with certain physical attributes, defined below. In fact all variables, even simple values are stored as objects.
+\crexx{} Registers contain objects with certain physical attributes, defined below. In fact all variables, even simple values are stored as objects.
 
 Classes and Interfaces are templates that define the properties and methods of an object. These templates provide the capability for REXX programs to use objects. See the Classes and Interfaces section for details.
 
-For CREXX Level B the object design is required to ensure that the low level REXX VM capabilities are available to programmers from Level B programs.
+For \crexx{} Level B the object design is required to ensure that the low level REXX VM capabilities are available to programmers from Level B programs.
 
-## Object Physical Attributes {\#object-physical-attributes}
+## Object Physical Attributes
 
 Each Object has the following physical attributes. REXX and RXAS programs can use these physical attributes to create a logical view of an object’s “userland” attributes and methods.
 
-Note that all these values can be used concurrently. However CREXX protocols need to be understood, for example the object’s string\_value is used for string conversions from the object’s numeric values by the compiler.
+Note that all these values can be used concurrently. However \crexx{} protocols need to be understood, for example the object’s string\_value is used for string conversions from the object’s numeric values by the compiler.
 
 * **Status** - 64 bit field to store value status flags. These attributes will be defined here and need to be consistent across the compiler, assembler, virtual machine
 * **Int\_value** - 64 bit integer
@@ -145,33 +145,33 @@ Note that all these values can be used concurrently. However CREXX protocols nee
 * **Attributes** - An array of child objects (which can be nested to any level). Attributes are the capability used by the compiler to store REXX class logical attributes. They are also used to store members of an array
 * **Num\_attributes** - The number of child objects
 
-## CREXX VM Objects {\#crexx-vm-objects}
+## \crexx{} VM Objects
 
 The following are objects created and used by the Rexx VM.
 
-### Caller Address {\#caller-address}
+### Caller Address
 
 Both passed to an interrupt handler and also returned by the *metaloadcalleraddr* assembler instruction.
 
 * Attribute 1. int\_value = return module number
 * Attribute 2. int\_value = return instruction address (in module binary space)
 
-### Loaded Modules {\#loaded-modules}
+### Loaded Modules
 
 Returned by *metaloadedmodules* assembler instruction.
 
 * Array of module names
 
-### Loaded Procedures {\#loaded-procedures}
+### Loaded Procedures
 
 Returned by the *metaloadedprocs* assembler instruction
 
 An array of objects, each object has
 
 * Attribute 1. string\_value = name of the procedure
-* Attribute 2. int\_value = pointer to the private CREXX procedure block
+* Attribute 2. int\_value = pointer to the private \crexx{} procedure block
 
-### Decoded Opcode {\#decoded-opcode}
+### Decoded Opcode 
 
 Returned by the *metadecodeinst* assembler instruction
 
@@ -183,7 +183,7 @@ Returned by the *metadecodeinst* assembler instruction
 * Attribute 6. Int\_value - operated 2 type
 * Attribute 7. Int\_value - operated 3 type
 
-### Procedure Details {\#procedure-details}
+### Procedure Details
 
 Returned by the *metaloadoperand* assembler instruction (TODO review name).
 
@@ -191,7 +191,7 @@ Returned by the *metaloadoperand* assembler instruction (TODO review name).
 
 TODO needs to do more that get the function name - a function object is needed
 
-### Metadata {\#metadata}
+### Metadata
 
 Returned by the *metaloaddata* assembler instruction.
 
@@ -240,15 +240,15 @@ An array of objects for all the metadata returned by the instruction, meaning fo
 * String\_value = ".meta\_clear"
 * Attribute 1. String\_value = variable symbol (moving out of scope)
 
-### Redirect(s) {\#redirect(s)}
+### Redirect(s)
 
 Used by spawn assembler instructions for IO redirects. Each object is a a pointer to an opaque REDIRECT binary structures (e.g. generated by assembler instruction *redrtoarr*)
 
 The array structure holds three redirects: input, output, error
 
-### Signal {\#signal}
+### Signal
 
 Raised signal object
 
-* int\_value == Signal code
+* int\_value = Signal code
 * string\_value = Any other signal context
