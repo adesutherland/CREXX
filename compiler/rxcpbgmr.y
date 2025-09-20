@@ -1131,13 +1131,24 @@ prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
-power_expression(P)  ::= prefix_expression(E).
-                         { P = E; }
-power_expression(A)  ::= power_expression(B) TK_POWER(O) prefix_expression(C).
-                         { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
-low_prefix_expression(P) ::= power_expression(E).
+/*
+ * power_expression contains rules for both left and right-associative power operators.
+ * The lexer ensures only one of TK_POWER_L or TK_POWER_R is present in the
+ * token stream for any given file, so there is no ambiguity.
+ */
+// Rule for the Left-associative power operator - NUMERIC_CLASSIC
+power_expression_L(A) ::= power_expression_L(B) TK_POWER_L(O) prefix_expression(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+power_expression_L(P) ::= prefix_expression(E).  { P = E; }
+// Rule for the Right-associative power operator - NUMERIC_COMMON
+power_expression_R(A) ::= power_expression_L(B) TK_POWER_R(O) power_expression_R(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+power_expression_R(P) ::= power_expression_L(E).  { P = E; }
+
+// Low precedence prefix expression
+low_prefix_expression(P) ::= power_expression_R(E).
                   { P = E; }
-low_prefix_expression(A) ::= TK_MINUS(O) power_expression(C).
+low_prefix_expression(A) ::= TK_MINUS(O) power_expression_R(C).
                   { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
 multiplication(P)    ::= low_prefix_expression(E).
                          { P = E; }
@@ -1165,19 +1176,25 @@ prefix_expression_c(P) ::= bracket(B). { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
-power_expression_c(P)::= prefix_expression_c(E).
+
+// Rule for the Left-associative power operator - NUMERIC_CLASSIC
+power_expression_L_c(A) ::= power_expression_L_c(B) TK_POWER_L(O) prefix_expression_c(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+power_expression_L_c(P) ::= prefix_expression_c(E).  { P = E; }
+// Rule for the Right-associative power operator - NUMERIC_COMMON
+power_expression_R_c(A) ::= power_expression_L_c(B) TK_POWER_R(O) power_expression_R_c(C).
+                          { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
+power_expression_R_c(P) ::= power_expression_L_c(E).  { P = E; }
+
+multiplication_c(P)  ::= power_expression_R_c(E).
                          { P = E; }
-power_expression_c(A)::= power_expression_c(B) TK_POWER(O) prefix_expression_c(C).
-                         { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
-multiplication_c(P)  ::= power_expression_c(E).
-                         { P = E; }
-multiplication_c(A)  ::= multiplication_c(B) TK_MULT(O) power_expression_c(C).
+multiplication_c(A)  ::= multiplication_c(B) TK_MULT(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_MULT, O); add_ast(A,B); add_ast(A,C); }
-multiplication_c(A)  ::= multiplication_c(B) TK_DIV(O) power_expression_c(C).
+multiplication_c(A)  ::= multiplication_c(B) TK_DIV(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_DIV, O); add_ast(A,B); add_ast(A,C); }
-multiplication_c(A)  ::= multiplication_c(B) TK_IDIV(O) power_expression_c(C).
+multiplication_c(A)  ::= multiplication_c(B) TK_IDIV(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
-multiplication_c(A)  ::= multiplication_c(B) TK_MOD(O) power_expression_c(C).
+multiplication_c(A)  ::= multiplication_c(B) TK_MOD(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
 addition_c(P)        ::= multiplication_c(E).
                          { P = E; }
@@ -1237,7 +1254,8 @@ and_expression(E)  ::= TK_MULT(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_DIV(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_IDIV(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_MOD(U) error. { E = ast_err(context, "BADEXPR", U); }
-and_expression(E)  ::= TK_POWER(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_POWER_L(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_POWER_R(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_NEQ(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_GT(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_LT(U) error. { E = ast_err(context, "BADEXPR", U); }

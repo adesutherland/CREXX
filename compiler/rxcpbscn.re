@@ -94,7 +94,7 @@ int rexbscan(Context* s) {
     "%" { return(s->numeric_standard ? TK_IDIV : TK_MOD); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "?" { return(TK_OPTIONAL); }
     "/" ob "/" { return(TK_MOD); }
-    "*" ob "*" { return(TK_POWER); }
+    "*" ob "*" { return(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
     "=" { return(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { return(TK_NEQ); }
