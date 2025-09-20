@@ -12,7 +12,7 @@
  * it are options or filenames.
  *
  * if a filename has a suffix of .rxpp, the crexx precompiler
- * is invoked to perform it's magic - it produces a .rexx
+ * is invoked to perform its magic - it produces a .rexx
  * which then is compiled and executed, or compiled to an
  * object file which is linked to the interpreter to
  * form a native executable.
@@ -33,10 +33,13 @@ if fn[0]=0 then do
   exit
 end
 
-/* figure out the path for libraries etc */
+/* determine the path for libraries etc */
 rxpath=''
 env_wanted='CREXX_HOME'
+/* honour the CREXX_HOME when set */
 assembler getenv rxpath,env_wanted
+
+/* if CREXX_HOME environment variable not set, then */
 if rxpath='' then do
   rxpath=getLoadPath()
   lastSegment=lastpos('/',rxpath)
@@ -44,7 +47,7 @@ if rxpath='' then do
 end
 rxpath=rxpath'/' /* to avoid having to start -l with a slash */
 
-/* defaults for options */
+/* defaults for options for this program */
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
 execute=1;linking=0;compile=1;optimize=1
 
@@ -60,6 +63,7 @@ do i=1 to fn.0
     end
   else
     do
+      /* allow for single- and double dash options */
       if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
       if fn.i = '-help' then call help
       if fn.i = '-noexec' then execute=0
