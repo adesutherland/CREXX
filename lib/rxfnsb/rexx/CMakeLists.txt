@@ -36,6 +36,7 @@ set(BIFS
 		lower
 		max
 		min
+		numeric
 		overlay
 		pos
 		lastpos

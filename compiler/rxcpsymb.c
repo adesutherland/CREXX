@@ -67,7 +67,7 @@ static Symbol* src_symbol(struct avl_tree_node *root, const char* index) {
 }
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
+Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
     char* name;
     Scope *scope = (Scope*) malloc(sizeof(Scope));
     scope->defining_node = node;
@@ -94,7 +94,10 @@ Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol) {
         scope->num_context.fuzz = DEFAULT_NUMERIC_FUZZ;
         scope->num_context.form = DEFAULT_NUMERIC_FORM;
         scope->num_context.casetype = DEFAULT_NUMERIC_CASE;
-        scope->num_context.standard = DEFAULT_NUMERIC_STANDARD;
+        if (context->numeric_standard)
+            scope->num_context.standard = NUMERIC_STANDARD_CLASSIC;
+        else
+            scope->num_context.standard = NUMERIC_STANDARD_COMMON;
     }
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
     scope->free_registers_array = dpa_f();
@@ -543,7 +546,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                 if (!result) {
                     /* Create scope */
                     result = sym_fn(scope, search_name, len);
-                    scope = scp_f(scope, 0, result);
+                    scope = scp_f(root->context, scope, 0, result);
                     result->symbol_type = NAMESPACE_SYMBOL;
                     result->defines_scope = scope;
                     free(search_name);

@@ -803,8 +803,8 @@ test55end:
     sayx "Test 56 (SETDGTS_REG & GETDGTS_REG)"
     inc r2
     load r3,5
-    setdgts r3
-    getdgts r4
+    setnumdgts r3
+    getnumdgts r4
     ieq r0,r4,5
     brt test56end,r0
     inc r1
@@ -817,8 +817,8 @@ test56end:
     say ""
     sayx "Test 57 (SETDGTS_INT & GETDGTS_REG)"
     inc r2
-    setdgts 10
-    getdgts r4
+    setnumdgts 10
+    getnumdgts r4
     ieq r0,r4,10
     brt test57end,r0
     inc r1

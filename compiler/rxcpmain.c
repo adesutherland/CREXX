@@ -119,7 +119,12 @@ Context *cntx_f() {
     context->comments_hash = 1; /* This is the recommended & default line comment style */
     context->floats_decimal = 0; /* Force floats to be decimal */
     context->floats_binary = 0;  /* Force floats to be binary */
+    context->numeric_common = 0;   /* Set if numeric Common Option Explicitly Specified */
+    context->numeric_classic = 0;  /* Set if numeric Classic Option Explicitly Specified */
     context->numeric_standard = 0; /* Common Numeric Standard by default */
+    context->comments_dash_specified = 0; /* Set if Dash comments option explicitly specified */
+    context->comments_hash_specified = 0; /* Set if hash comments option explicitly specified */
+    context->comments_slash_specified = 0; /* Set if Slash comments option explicitly specified */
     context->debug_mode = 0;
     context->optimise = 1; /* Optimise by default */
     context->decimal_plugin = 0; /* No decimal plugin by default */

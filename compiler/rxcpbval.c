@@ -691,7 +691,8 @@ static walker_result initial_checks_walker(walker_direction direction,
             child = node->child;
             while (child) {
                 if (child->node_type == LITERAL) {
-                    /* Check the option */
+                    /* Check the options */
+                    // FLOATS
                     if (is_node_string(child, "floats_decimal")) {
                         if (context->floats_binary) {
                             /* Error - can't have both decimal and binary floats */
@@ -711,6 +712,64 @@ static walker_result initial_checks_walker(walker_direction direction,
                             context->floats_decimal = 0;
                             context->floats_binary = 1;
                         }
+                    }
+                    // NUMERIC
+                    else if (is_node_string(child, "numeric_classic")) {
+                        if (context->numeric_common) {
+                            /* Error - can't have both common and classic numeric */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->numeric_classic = 1;
+                            context->numeric_common = 0;
+                        }
+                    }
+                    else if (is_node_string(child, "numeric_common")) {
+                        if (context->numeric_classic) {
+                            /* Error - can't have both common and classic numeric */
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        else {
+                            context->numeric_classic = 0;
+                            context->numeric_common = 1;
+                        }
+                    }
+                    // COMMENTS
+                    else if (is_node_string(child, "comments_hash)")) {
+                        if (context->comments_hash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_hash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_nohash)")) {
+                        if (context->comments_hash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_hash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_dash)")) {
+                        if (context->comments_dash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_dash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_nodash)")) {
+                        if (context->comments_dash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_dash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_slash)")) {
+                        if (context->comments_slash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_slash_specified = 1;
+                    }
+                    else if (is_node_string(child, "comments_noslash)")) {
+                        if (context->comments_slash_specified) {
+                            mknd_err(child, "INCOMPATIBLE_OPTIONS");
+                        }
+                        context->comments_slash_specified = 1;
                     }
                 }
                 child = child->sibling;
@@ -1226,7 +1285,7 @@ static walker_result build_symbols_walker(walker_direction direction,
 
         if (node->node_type == REXX_UNIVERSE) {
             /* This top level scope will contain the project file scope & imported file scopes */
-            context->current_scope = scp_f(context->current_scope, node, 0);
+            context->current_scope = scp_f(context, context->current_scope, node, 0);
             node->scope = context->current_scope;
         }
 
@@ -1239,7 +1298,7 @@ static walker_result build_symbols_walker(walker_direction direction,
             if (context->namespace) sym_adnd(symbol, context->namespace, 0, 1);
 
             /* Move down to the project file scope */
-            context->current_scope = scp_f(context->current_scope, node, symbol);
+            context->current_scope = scp_f(context, context->current_scope, node, symbol);
             node->scope = context->current_scope;
         }
 
@@ -1274,7 +1333,7 @@ static walker_result build_symbols_walker(walker_direction direction,
             sym_adnd(symbol, node, 0, 1);
 
             /* Move down to the procedure scope */
-            context->current_scope = scp_f(context->current_scope, node, symbol);
+            context->current_scope = scp_f(context, context->current_scope, node, symbol);
             node->scope = context->current_scope;
         }
 
@@ -1290,7 +1349,7 @@ static walker_result build_symbols_walker(walker_direction direction,
                 sym_adnd(symbol, node->child, 0, 1);
 
                 /* New scope scope */
-                context->current_scope = scp_f(namespaces, node->child, symbol);
+                context->current_scope = scp_f(context, namespaces, node->child, symbol);
                 node->scope = context->current_scope;
             }
             else {
@@ -2882,9 +2941,9 @@ static walker_result decimal_parameters_walker(walker_direction direction,
 
             case DEC_FORM:
                 if (child) {
-                    if (nodeis(child, "scientific") == 0) node->scope->num_context.form = NUMERIC_FORM_SCIENTIFIC;
-                    else if (nodeis(text_buffer, "engineering") == 0) node->scope->num_context.form = NUMERIC_FORM_ENGINEERING;
-                    else if (nodeis(text_buffer, "inherited") == 0) node->scope->num_context.form = NUMERIC_FORM_INHERIT;
+                    if (nodeis(child, "scientific")) node->scope->num_context.form = NUMERIC_FORM_SCIENTIFIC;
+                    else if (nodeis(child, "engineering")) node->scope->num_context.form = NUMERIC_FORM_ENGINEERING;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.form = NUMERIC_FORM_INHERIT;
                     else {
                         mknd_err(child, "DECIMAL_FORM_VALUE");
                         node->scope->num_context.form = NUMERIC_FORM_INHERIT;
@@ -2897,9 +2956,9 @@ static walker_result decimal_parameters_walker(walker_direction direction,
 
            case DEC_CASE:
                 if (child) {
-                    if (nodeis(child, "lower") == 0) node->scope->num_context.casetype = CASE_LOWER;
-                    else if (nodeis(child, "upper") == 0) node->scope->num_context.casetype = CASE_UPPER;
-                    else if (nodeis(child, "inherited") == 0) node->scope->num_context.casetype = CASE_INHERIT;
+                    if (nodeis(child, "lower")) node->scope->num_context.casetype = CASE_LOWER;
+                    else if (nodeis(child, "upper")) node->scope->num_context.casetype = CASE_UPPER;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.casetype = CASE_INHERIT;
                     else {
                         mknd_err(child, "DECIMAL_CASE_VALUE");
                         node->scope->num_context.casetype = CASE_INHERIT;
@@ -2912,9 +2971,9 @@ static walker_result decimal_parameters_walker(walker_direction direction,
 
            case DEC_STANDARD:
                 if (child) {
-                    if (nodeis(child, "common") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_COMMON;
-                    else if (nodeis(child, "classic") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_CLASSIC;
-                    else if (nodeis(child, "inherited") == 0) node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
+                    if (nodeis(child, "common")) node->scope->num_context.standard = NUMERIC_STANDARD_COMMON;
+                    else if (nodeis(child, "classic")) node->scope->num_context.standard = NUMERIC_STANDARD_CLASSIC;
+                    else if (nodeis(child, "inherited")) node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;
                     else {
                         mknd_err(child, "DECIMAL_STANDARD_VALUE");
                         node->scope->num_context.standard = NUMERIC_STANDARD_INHERIT;

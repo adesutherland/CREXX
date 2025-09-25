@@ -73,6 +73,8 @@ Sets the case sensitivity for special numeric literals.
     * **UPPER**: Generates `E`, `INF`, `NAN`.
     * **LOWER**: Generates `e`, `inf`, `nan`.
     * **INHERITED**: The procedure inherits the case setting from the caller's context.
+  
+* **Retrieval**: Use the `NUMCASE()` built-in function.
 
 ### NUMERIC STANDARD
 

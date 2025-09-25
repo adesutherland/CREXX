@@ -395,7 +395,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             else {
                 /* Need to make a new symbol */
                 new_symbol = sym_afqn(context->dest, fqname);
-                new_node->scope = scp_f(new_node->parent->scope, new_node, new_symbol);
+                new_node->scope = scp_f(new_node->context, new_node->parent->scope, new_node, new_symbol);
                 new_symbol->symbol_type = NAMESPACE_SYMBOL;
                 new_symbol->defines_scope = new_node->scope;
                 //new_symbol->scope->defining_node
@@ -1983,7 +1983,8 @@ int tokenis(Token *token, const char* value) {
 }
 
 /* Utility to check is a node (typically an IDENTIFIER) is a certain value */
-/* Case-insensitive and only checks the first 14 characters of the value */
+/* Case-insensitive and only checks the first 14 characters of the value   */
+/* Returns 1 if it is, 0 if not */
 int nodeis(ASTNode *node, const char* value) {
     char text_buffer[15];
     int val;

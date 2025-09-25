@@ -902,57 +902,60 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INTEGER(S).
     if (tokenis(T,"digits"))
         { I = ast_f(context, DEC_DIGITS, T); add_ast(I, ast_f(context, INTEGER,S)); }
     else if (tokenis(T,"form"))
-        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FORM_VALUE"); }
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "INVALID_DECIMAL_FORM_VALUE"); }
     else if (tokenis(T,"fuzz"))
         { I = ast_f(context, DEC_FUZZ, T); add_ast(I, ast_f(context, INTEGER,S)); }
     else if (tokenis(T,"case"))
-        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_CASE_VALUE"); }
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "INVALID_DECIMAL_CASE_VALUE"); }
     else if (tokenis(T,"standard"))
-        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_STANDARD_VALUE"); }
+        { I = mknd_err(ast_f(context, TK_INTEGER,S), "INVALID_DECIMAL_STANDARD_VALUE"); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
 
 numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_VAR_SYMBOL(S).
     {
-    if (tokenis(T,"digits"))
-        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_DIGITS_RANGE"); }
-    else if (tokenis(T,"form"))
-        { I = ast_f(context, DEC_FORM, T); add_ast(I,ast_f(context, LITERAL, S)); }
-    else if (tokenis(T,"fuzz"))
-        { I = mknd_err(ast_f(context, TK_INTEGER,S), "DECIMAL_FUZZ_RANGE"); }
-    else if (tokenis(T,"case"))
-        { I = ast_f(context, DEC_CASE, T); add_ast(I,ast_f(context, LITERAL, S)); }
-    else
-        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
-    }
-
-numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_INHERITED.
-    {
-    if (tokenis(T,"digits"))
-        { I = ast_f(context, DEC_DIGITS, T); }
-    else if (tokenis(T,"form"))
-        { I = ast_f(context, DEC_FORM, T); }
-    else if (tokenis(T,"fuzz"))
-        { I = ast_f(context, DEC_FUZZ, T); }
-    else if (tokenis(T,"case"))
-        { I = ast_f(context, DEC_CASE, T); }
-    else if (tokenis(T,"standard"))
-        { I = ast_f(context, DEC_STANDARD, T); }
-    else
-        { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    if (tokenis(S,"inherited"))
+        {
+        if (tokenis(T,"digits"))
+            { I = ast_f(context, DEC_DIGITS, T); }
+        else if (tokenis(T,"form"))
+            { I = ast_f(context, DEC_FORM, T); }
+        else if (tokenis(T,"fuzz"))
+            { I = ast_f(context, DEC_FUZZ, T); }
+        else if (tokenis(T,"case"))
+            { I = ast_f(context, DEC_CASE, T); }
+        else if (tokenis(T,"standard"))
+            { I = ast_f(context, DEC_STANDARD, T); }
+        else
+            { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+        }
+    else {
+        if (tokenis(T,"digits"))
+            { I = mknd_err(ast_f(context, TK_INTEGER,S), "INVALID_DECIMAL_DIGITS_RANGE"); }
+        else if (tokenis(T,"form"))
+            { I = ast_f(context, DEC_FORM, T); add_ast(I,ast_f(context, LITERAL, S)); }
+        else if (tokenis(T,"fuzz"))
+            { I = mknd_err(ast_f(context, TK_INTEGER,S), "INVALID_DECIMAL_FUZZ_RANGE"); }
+        else if (tokenis(T,"case"))
+            { I = ast_f(context, DEC_CASE, T); add_ast(I,ast_f(context, LITERAL, S)); }
+        else if (tokenis(T,"standard"))
+            { I = ast_f(context, DEC_STANDARD, T); add_ast(I,ast_f(context, LITERAL, S)); }
+        else
+            { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+        }
     }
 
 numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_MINUS(S) TK_INTEGER.
     {
     if (tokenis(T,"digits"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_DIGITS_RANGE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_DIGITS_RANGE"); }
     else if (tokenis(T,"form"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FORM_VALUE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_FORM_VALUE"); }
     else if (tokenis(T,"fuzz"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FUZZ_RANGE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_FUZZ_RANGE"); }
     else if (tokenis(T,"case"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_CASE_VALUE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_CASE_VALUE"); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
@@ -960,28 +963,34 @@ numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_MINUS(S) TK_INTEGER.
 numeric(I) ::= TK_NUMERIC TK_VAR_SYMBOL(T) TK_HIGH_PRIORITY_MINUS(S) TK_INTEGER.
     {
     if (tokenis(T,"digits"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_DIGITS_RANGE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_DIGITS_RANGE"); }
     else if (tokenis(T,"form"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FORM_VALUE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_FORM_VALUE"); }
     else if (tokenis(T,"fuzz"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_FUZZ_RANGE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_FUZZ_RANGE"); }
     else if (tokenis(T,"case"))
-        { I = mknd_err(ast_f(context, OP_MINUS,S), "DECIMAL_CASE_VALUE"); }
+        { I = mknd_err(ast_f(context, OP_MINUS,S), "INVALID_DECIMAL_CASE_VALUE"); }
     else
         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
     }
 
-numeric(I) ::= TK_NUMERIC(N) TK_INHERITED.
-    { ASTNode* _digits = ast_f(context, DEC_DIGITS, N);
-      ASTNode* _fuzz = ast_fstk(context, _digits); _fuzz->node_type = DEC_FUZZ;
-      ASTNode* _forms = ast_fstk(context, _digits); _forms->node_type = DEC_FORM;
-      ASTNode* _case = ast_fstk(context, _digits); _forms->node_type = DEC_CASE;
-      ASTNode* _standard = ast_fstk(context, _digits); _standard->node_type = DEC_STANDARD;
-      add_sbtr( _digits, _standard );
-      add_sbtr( _digits, _fuzz );
-      add_sbtr( _digits, _forms );
-      add_sbtr( _digits, _case );
-      I = _digits; }
+numeric(I) ::= TK_NUMERIC(N) TK_VAR_SYMBOL(T).
+    {
+      if (tokenis(T, "inherited")) {
+          ASTNode* _digits = ast_f(context, DEC_DIGITS, N);
+          ASTNode* _fuzz = ast_fstk(context, _digits); _fuzz->node_type = DEC_FUZZ;
+          ASTNode* _forms = ast_fstk(context, _digits); _forms->node_type = DEC_FORM;
+          ASTNode* _case = ast_fstk(context, _digits); _case->node_type = DEC_CASE;
+          ASTNode* _standard = ast_fstk(context, _digits); _standard->node_type = DEC_STANDARD;
+          add_sbtr( _digits, _standard );
+          add_sbtr( _digits, _fuzz );
+          add_sbtr( _digits, _forms );
+          add_sbtr( _digits, _case );
+          I = _digits;
+      }
+      else
+         { I = mknd_err(ast_f(context, LITERAL,T), "INVALID_NUMERIC_OPTION"); }
+    }
 
 /* Return */
 return(I) ::= TK_RETURN(T) expression(E).

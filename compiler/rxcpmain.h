@@ -79,10 +79,17 @@ typedef struct Context {
     char comments_hash;
     char comments_dash;
     char comments_slash;
+    char numeric_standard; /* 0 = common, 1 = classic - this is the mode in use */
     /* Language Options */
     char floats_decimal;
     char floats_binary;
-    char numeric_standard; /* 0 = common, 1 = classic */
+    /* Options validation */
+    char numeric_common;   /* Numeric options - used to check process numeric options specified */
+    char numeric_classic;  /*                   these are set if explicitly specified           */
+    char comments_slash_specified;   /* 1 - slash/no slash specified - for checking inconsistent options  */
+    char comments_dash_specified;    /* 1 - dash/no dash specified - for checking inconsistent options   */
+    char comments_hash_specified;    /* 1 - hash/no hash specified - for checking inconsistent options   */
+    /* Plugins */
     void *decimal_plugin; /* Pointer to the decimal plugin */
     /* Optimiser Options */
     int optimise;
@@ -391,7 +398,7 @@ struct Symbol {
 };
 
 /* Scope Factory */
-Scope *scp_f(Scope *parent, ASTNode *node, Symbol* symbol);
+Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol);
 
 /* Calls the handler for each symbol in scope */
 typedef void (*symbol_worker)(Symbol *symbol, void *payload);

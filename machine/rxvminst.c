@@ -443,12 +443,35 @@ void init_ops() {
     instr_f("ichkrng", "if op1<op2 | op1>op3 signal OUT_OF_RANGE", OP_INT, OP_REG, OP_REG);
 
     // -------------------------------------------------------------------------
+    // Numeric Settings Instructions
+    // -------------------------------------------------------------------------
+    instr_f("setnumdgts", "Set Numeric Digits digits=op1 (>4)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("setnumdgts", "Set Numeric Digits digits=op1 (>4)", OP_INT, OP_NONE, OP_NONE);
+    instr_f("getnumdgts", "Get Numeric Digits op1=digits", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("setnumfuz", "Set Numeric Fuzz digits=op1 (>=0)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("setnumfuz", "Set Numeric Fuzz digits=op1 (>=0)", OP_INT, OP_NONE, OP_NONE);
+    instr_f("getnumfuz", "Get Numeric Fuzz op1=digits", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("setnumfrm", "Set Numeric Form=op1 (1=sci,2=eng)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("setnumfrm", "Set Numeric Form=op1 (1=sci,2=eng)", OP_INT, OP_NONE, OP_NONE);
+    instr_f("getnumfrm", "Get Numeric Form=op1 (1=sci,2=eng)", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("setnumcas", "Set Numeric Case=op1 (1=lower,2=upper)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("setnumcas", "Set Numeric Case=op1 (1=lower,2=upper)", OP_INT, OP_NONE, OP_NONE);
+    instr_f("getnumcas", "Get Numeric Case=op1 (1=lower,2=upper)", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("setnumstd", "Set Numeric Standard=op1 (1=common,2=classic)", OP_REG, OP_NONE, OP_NONE);
+    instr_f("setnumstd", "Set Numeric Standard=op1 (1=common,2=classic)", OP_INT, OP_NONE, OP_NONE);
+    instr_f("getnumstd", "Get Numeric Standard=op1 (1=common,2=classic)", OP_REG, OP_NONE, OP_NONE);
+
+    instr_f("numsci", "Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci", OP_INT, OP_INT, OP_INT);
+    instr_f("numeng", "Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng", OP_INT, OP_INT, OP_INT);
+
+    // -------------------------------------------------------------------------
     // Decimal Plugin Library Instructions
     // -------------------------------------------------------------------------
     instr_f("decplnm", "Get Decimal Plugin Name op1=name op2=description op3=version", OP_REG, OP_REG, OP_REG);
-    instr_f("setdgts", "Set Decimal Digits digits=op1", OP_REG, OP_NONE, OP_NONE);
-    instr_f("setdgts", "Set Decimal Digits digits=op1", OP_INT, OP_NONE, OP_NONE);
-    instr_f("getdgts", "Get Decimal Digits op1=digits", OP_REG, OP_NONE, OP_NONE);
     instr_f("stod", "Convert Decimal String to Decimal Number op1=s2dec(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dtos", "Convert Decimal Number to Decimal String op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);
     instr_f("dtoi", "Convert Decimal Number to Integer op1=dec2s(op2)", OP_REG, OP_NONE, OP_NONE);

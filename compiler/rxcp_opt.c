@@ -73,7 +73,10 @@ static numeric_context* node_to_num_context(ASTNode* node) {
         num_context.fuzz = DEFAULT_NUMERIC_FUZZ;
         num_context.form = DEFAULT_NUMERIC_FORM;
         num_context.casetype = DEFAULT_NUMERIC_CASE;
-        num_context.standard = DEFAULT_NUMERIC_STANDARD;
+        if (node->context->numeric_standard)
+            num_context.standard = NUMERIC_STANDARD_CLASSIC;
+        else
+            num_context.standard = NUMERIC_STANDARD_COMMON;
         return &num_context;
     }
     return &(node->scope->num_context);

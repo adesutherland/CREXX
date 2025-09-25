@@ -1870,32 +1870,32 @@ static walker_result emit_walker(walker_direction direction,
                     /* Add Global Variables */
                     add_global_variable_metadata(node);
 
-                    /* If decimal has non-inherited values, set them */
+                    /* If numeric options have non-inherited values, set them */
                     if (node->scope->num_context.digits > -1) {
-                        temp1 = mprintf("   setdgts %d\n", node->scope->num_context.digits);
+                        temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
                     if (node->scope->num_context.fuzz > -1) {
-                        temp1 = mprintf("/*    setfuzz %d */\n", node->scope->num_context.fuzz);
+                        temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
                     if (node->scope->num_context.form > 0) {
                         /* 1 = SCIENTIFIC, 2 = ENGINEERING */
-                        temp1 = mprintf("/*    setform %d */\n", node->scope->num_context.form);
+                        temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
                     if (node->scope->num_context.casetype > 0) {
-                        /* 1 = UPPER, 2 = LOWER */
-                        temp1 = mprintf("/*    setcase %d */\n", node->scope->num_context.casetype);
+                        /* 1 = LOWER, 2 = UPPER */
+                        temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }
                     if (node->scope->num_context.standard > 0) {
-                        /* 1 = COMMON, 1 = CLASSIC[REXX] */
-                        temp1 = mprintf("/*    setstandard %d */\n", node->scope->num_context.standard);
+                        /* 1 = COMMON, 2 = CLASSIC[REXX] */
+                        temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
                         output_append_text(node->output, temp1);
                         free(temp1);
                     }

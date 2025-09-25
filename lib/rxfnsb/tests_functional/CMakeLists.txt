@@ -32,7 +32,7 @@ set(REXXBINS
         ts_sign.rxbin
         ts_space.rxbin
         ts_strip.rxbin
-	ts_symbol.rxbin
+	    ts_symbol.rxbin
         ts_test.rxbin
         ts_time.rxbin
         ts_translate.rxbin
@@ -51,7 +51,7 @@ set(REXXBINS
         tslastpos.rxbin
         tsubstr.rxbin
         tsword.rxbin
-	ts_words.rxbin
+	    ts_words.rxbin
         ts_reradix.rxbin
         ts_sequence.rxbin
         ts_find.rxbin
@@ -59,6 +59,7 @@ set(REXXBINS
         ts_parse.rxbin	
         ts_parse2.rxbin
         ts_datatype.rxbin
+        ts_numeric.rxbin
 )
 
 set(LIBRPATH ../library)

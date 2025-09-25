@@ -435,6 +435,7 @@ RX_INLINE stack_frame *frame_f(
         this->num_context.fuzz = 0;
         this->num_context.form = NUMERIC_FORM_SCIENTIFIC;
         this->num_context.casetype = CASE_LOWER;
+        this->num_context.standard = NUMERIC_STANDARD_COMMON;
     }
     this->decimal_loaded_here = 0;
     this->unicode_loaded_here = 0;
@@ -1583,9 +1584,223 @@ START_OF_INSTRUCTIONS
             DISPATCH
 
 /* ====================================================================================
+ * Numeric Mode instructions
+ * ==================================================================================== */
+
+/* ------------------------------------------------------------------------------------
+ *  SETNUMDGTS_REG Set Numeric Digits digits=op1 (>4)
+ *  ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMDGTS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMDGTS R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1R->int_value;
+    current_frame->decimal->setDigits(current_frame->decimal, op1R->int_value);
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETNUMDGTS_INT Set Numeric Digits digits=op1 (>4)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMDGTS_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMDGTS %d\n", (int)op1I);
+    if (op1I < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  GETNUMDGTS_REG Get Numeric Digits op1=digits
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMDGTS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMDGTS R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.digits;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFUZ_REG Set Numeric Fuzz digits=op1 (>=0)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFUZ_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFUZ R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+        DISPATCH
+    }
+    current_frame->num_context.fuzz = op1R->int_value;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFUZ_INT Set Numeric Fuzz digits=op1 (>=0)
+ * ----------------------------------------------------------------------------------- */
+START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFUZ %d\n", (int)op1I);
+    if (op1I < 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
+    }
+    current_frame->num_context.fuzz = op1I;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMFUZ_REG Get Numeric Fuzz op1=digits
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMFUZ_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMFUZ R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.fuzz;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFRM_REG Set Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFRM_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFRM R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
+        DISPATCH
+    }
+    current_frame->num_context.form = (int)op1R->int_value;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMFRM_INT Set Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMFRM_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMFRM %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
+        DISPATCH
+    }
+    current_frame->num_context.form = (int)op1I;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMFRM_REG Get Numeric Form=op1 (1=sci,2=eng)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMFRM_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMFRM R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.form;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMCAS_REG Set Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMCAS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMCAS R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    current_frame->num_context.casetype = (int)op1R->int_value;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMCAS_INT Set Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMCAS_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMCAS %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    current_frame->num_context.casetype = (int)op1I;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMCAS_REG Get Numeric Case=op1 (1=lower,2=upper)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMCAS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMCAS R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.casetype;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMSTD_REG Set Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMSTD_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMSTD R%lu\n", REG_IDX(1));
+    if (op1R->int_value < 1 || op1R->int_value > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.standard = (int)op1R->int_value;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * SETNUMSTD_INT Set Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(SETNUMSTD_INT) CALC_DISPATCH(1)
+    DEBUG("TRACE - SETNUMSTD %d\n", (int)op1I);
+    if (op1I < 1 || op1I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.standard = (int)op1I;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * GETNUMSTD_REG Get Numeric Standard=op1 (1=common,2=classic)
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(GETNUMSTD_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - GETNUMSTD R%lu\n", REG_IDX(1));
+    op1R->int_value = (rxinteger)current_frame->num_context.standard;
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * NUMSCI_INT_INT_INT Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(NUMSCI_INT_INT_INT) CALC_DISPATCH(3)
+    DEBUG("TRACE - NUMSCI %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
+    if (op1I < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    if (op2I < 1 || op2I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    if (op3I < 1 || op3I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    current_frame->num_context.fuzz = 0;
+    current_frame->num_context.form = 1; // scientific
+    current_frame->num_context.casetype = (int)op2I;
+    current_frame->num_context.standard = (int)op3I;
+    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ * NUMENG_INT_INT_INT Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng
+ * ----------------------------------------------------------------------------------- */
+    START_INSTRUCTION(NUMENG_INT_INT_INT) CALC_DISPATCH(3)
+    DEBUG("TRACE - NUMENG %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
+    if (op1I < 5) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+        DISPATCH
+    }
+    if (op2I < 1 || op2I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
+        DISPATCH
+    }
+    if (op3I < 1 || op3I > 2) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
+        DISPATCH
+    }
+    current_frame->num_context.digits = op1I;
+    current_frame->num_context.fuzz = 0;
+    current_frame->num_context.form = 2; // engineering
+    current_frame->num_context.casetype = (int)op2I;
+    current_frame->num_context.standard = (int)op3I;
+    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    DISPATCH
+
+/* ====================================================================================
  * Decimal Plugin instructions
- * ====================================================================================
- */
+ * ==================================================================================== */
 
 /* ------------------------------------------------------------------------------------
  * DECPLNM_REG_REG_REG Get Decimal Plugin Name op1=name op2=description op3=version
@@ -1596,32 +1811,6 @@ START_OF_INSTRUCTIONS
     set_null_string(op1R, current_frame->decimal->base.name);
     set_null_string(op2R, current_frame->decimal->base.description);
     set_null_string(op3R, current_frame->decimal->base.version);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  SETDGTS_REG Set Decimal Digits digits=op1
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(SETDGTS_REG) CALC_DISPATCH(1)
-    DEBUG("TRACE - SETDGTS R%lu\n", REG_IDX(1));
-    current_frame->num_context.digits = op1R->int_value;
-    current_frame->decimal->setDigits(current_frame->decimal, op1R->int_value);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  SETDGTS_INT Set Decimal Digits digits=op1"
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(SETDGTS_INT) CALC_DISPATCH(1)
-    DEBUG("TRACE - SETDGTS %d\n", (int)op1I);
-    current_frame->num_context.digits = op1I;
-    current_frame->decimal->setDigits(current_frame->decimal, op1I);
-    DISPATCH
-/* ------------------------------------------------------------------------------------
- *  GETDGTS_REG Get Decimal Digits op1=digits
- *  -----------------------------------------------------------------------------------
- */
-    START_INSTRUCTION(GETDGTS_REG) CALC_DISPATCH(1)
-    DEBUG("TRACE - GETDGTS R%lu\n", REG_IDX(1));
-    op1R->int_value = (rxinteger)current_frame->num_context.digits;
     DISPATCH
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_DECIMAL Load op1 with op2
