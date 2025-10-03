@@ -1,32 +1,192 @@
-<svg width="450" height="300" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="450"
+   height="300"
+   version="1.1"
+   id="svg13"
+   sodipodi:docname="sun_flowchart_svg.svg"
+   inkscape:export-filename="sun_flowchart_svg.pdf"
+   inkscape:export-xdpi="200"
+   inkscape:export-ydpi="200"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview13"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.6094434"
+     inkscape:cx="257.54245"
+     inkscape:cy="127.68389"
+     inkscape:window-width="1104"
+     inkscape:window-height="888"
+     inkscape:window-x="217"
+     inkscape:window-y="38"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg13" />
   <!-- Decision diamond -->
-  <polygon points="200,80 240,110 200,140 160,110" fill="white" stroke="black" stroke-width="2"/>
-  <text x="200" y="108" text-anchor="middle" font-family="Arial" font-size="10" fill="black">sun =</text>
-  <text x="200" y="120" text-anchor="middle" font-family="Arial" font-size="10" fill="black">"shining"?</text>
+  <polygon
+     points="200,80 240,110 200,140 160,110"
+     fill="white"
+     stroke="black"
+     stroke-width="2"
+     id="polygon1" />
+  <text
+     x="200"
+     y="108"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text1">sun =</text>
+  <text
+     x="200"
+     y="120"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text2">&quot;shining&quot;?</text>
   <!-- Multi-line action box (true branch - to the right) -->
-  <rect x="290" y="65" width="120" height="105" fill="white" stroke="black" stroke-width="2"/>
-  <text x="350" y="80" text-anchor="middle" font-family="Arial" font-size="11" fill="black">DO</text>
-  <text x="350" y="95" text-anchor="middle" font-family="Arial" font-size="10" fill="black">say "Get up"</text>
-  <text x="350" y="110" text-anchor="middle" font-family="Arial" font-size="10" fill="black">say "Get out"</text>
-  <text x="350" y="125" text-anchor="middle" font-family="Arial" font-size="10" fill="black">say "meet the sun</text>
-  <text x="350" y="140" text-anchor="middle" font-family="Arial" font-size="10" fill="black">half way!"</text>
-  <text x="350" y="155" text-anchor="middle" font-family="Arial" font-size="10" fill="black">END</text>
+  <rect
+     x="290"
+     y="65"
+     width="120"
+     height="105"
+     fill="white"
+     stroke="black"
+     stroke-width="2"
+     id="rect2" />
+  <text
+     x="350"
+     y="80"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="11"
+     fill="black"
+     id="text3">DO</text>
+  <text
+     x="350"
+     y="95"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text4">say &quot;Get up&quot;</text>
+  <text
+     x="350"
+     y="110"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text5">say &quot;Get out&quot;</text>
+  <text
+     x="350"
+     y="125"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text6">say &quot;meet the sun</text>
+  <text
+     x="350"
+     y="140"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text7">half way!&quot;</text>
+  <text
+     x="350"
+     y="155"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text8">END</text>
   <!-- Arrows -->
   <!-- Decision to action box (true - right with complete connection) -->
-  <line x1="240" y1="110" x2="290" y2="110" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line
+     x1="240"
+     y1="110"
+     x2="290"
+     y2="110"
+     stroke="black"
+     stroke-width="2"
+     marker-end="url(#arrowhead)"
+     id="line8" />
   <!-- Action box continues down then left to join false path -->
-  <line x1="350" y1="170" x2="350" y2="190" stroke="black" stroke-width="2"/>
-  <line x1="350" y1="190" x2="200" y2="190" stroke="black" stroke-width="2"/>
+  <line
+     x1="350"
+     y1="170"
+     x2="350"
+     y2="190"
+     stroke="black"
+     stroke-width="2"
+     id="line9" />
+  <line
+     x1="350"
+     y1="190"
+     x2="200"
+     y2="190"
+     stroke="black"
+     stroke-width="2"
+     id="line10" />
   <!-- Decision false path (straight down with 90° angles) -->
-  <line x1="200" y1="140" x2="200" y2="190" stroke="black" stroke-width="2"/>
-  <line x1="200" y1="190" x2="200" y2="220" stroke="black" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line
+     x1="200"
+     y1="140"
+     x2="200"
+     y2="190"
+     stroke="black"
+     stroke-width="2"
+     id="line11" />
+  <line
+     x1="200"
+     y1="190"
+     x2="200"
+     y2="220"
+     stroke="black"
+     stroke-width="2"
+     marker-end="url(#arrowhead)"
+     id="line12" />
   <!-- Labels for branches -->
-  <text x="250" y="105" font-family="Arial" font-size="10" fill="black">true</text>
-  <text x="210" y="160" font-family="Arial" font-size="10" fill="black">false</text>
+  <text
+     x="250"
+     y="105"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text12">true</text>
+  <text
+     x="210"
+     y="160"
+     font-family="Arial"
+     font-size="10"
+     fill="black"
+     id="text13">false</text>
   <!-- Arrow marker definition -->
-  <defs>
-    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+  <defs
+     id="defs13">
+    <marker
+       id="arrowhead"
+       markerWidth="10"
+       markerHeight="7"
+       refX="10"
+       refY="3.5"
+       orient="auto">
+      <polygon
+         points="0 0, 10 3.5, 0 7"
+         fill="black"
+         id="polygon13" />
     </marker>
   </defs>
 </svg>

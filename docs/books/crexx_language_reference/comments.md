@@ -27,8 +27,8 @@ Note: Although it is good practice to start a program with a comment that descri
 |---|---|---|
 | default |multiline |```/*``` ```*/```   | 
 | default |single line |```#```   | 
-| ```options dashcomment```  | single line  | ```--```  | 
-| ```options slashcomment```  | single line  | ```//```  | 
+| `options comments-dash`  | single line  | `--`  | 
+| `options comments-slash`  | single line  | `//`  | 
 
 
 Table: Comment options. {#tbl:id}
