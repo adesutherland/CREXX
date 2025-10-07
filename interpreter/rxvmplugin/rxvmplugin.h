@@ -41,15 +41,17 @@ struct rxvm_plugin {
 typedef struct decplugin decplugin;
 struct decplugin {
     rxvm_plugin base; // Base plugin information
+    numeric_context *num_context; // Numeric context for the plugin - this is set by the client, and readonly by the plugin
 
     // Functions provided by the framework
     // Function number_to_simple_format as defined in rxvmplugin_framework.h
     void (*number_to_simple_format)(const char *input, char *output);
+    // Function to create formated output from coefficient and exponent values
+    void (*format_number_components)(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
 
     // Functions provided by the plugin
-    size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context
-    void (*setDigits)(decplugin *plugin, size_t digits); // Set the number of digits in the rxvmplugin context
-
+    void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)
+    size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context (maybe smaller than num_context->digits)
     size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
     void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
     void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string

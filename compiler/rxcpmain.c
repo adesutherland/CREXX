@@ -368,10 +368,7 @@ int rxcmain(int argc, char *argv[]) {
     }
     if (context->debug_mode) printf("Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
 
-    // Set the number of digits in the rxvmplugin context
-    ((decplugin*)context->decimal_plugin)->setDigits((decplugin*)context->decimal_plugin, 18); // Default to 18 digits
-
-    /* Create Options parser to work out required language level */
+    /* Create Options parser to work out the required language level */
     opt_pars(context);
 
     /* Deallocate memory and reset context */

@@ -43,6 +43,21 @@ typedef struct dbcontext {
     #define CLEAR_ERRNO
 #endif
 
+/* Update the plugin internals with the Numeric Context */
+ static void syncNumericContext(decplugin *plugin) {
+    numeric_context default_context = {DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON};
+
+    numeric_context *num_context = plugin->num_context;
+    if (!num_context) {
+        num_context = &default_context;
+    }
+
+    if (num_context->digits > ((dbcontext*)(plugin->base.private_context))->max_digits)
+        ((dbcontext*)(plugin->base.private_context))->digits = ((dbcontext*)(plugin->base.private_context))->max_digits; /* Max for this double implementation */
+    else
+        ((dbcontext*)(plugin->base.private_context))->digits = num_context->digits;
+}
+
 // Note that signal_string is set to a static buffer in the check_signal function (or NULL)
 static void check_signal(decplugin *plugin, long double value) {
     plugin->base.signal_number = 0;
@@ -227,16 +242,9 @@ static size_t getDigits(decplugin *plugin) {
     return ((dbcontext*)(plugin->base.private_context))->digits;
 }
 
-/* Set the number of digits in the rxvmplugin context */
-static void setDigits(decplugin *plugin, size_t digits) {
-    if (digits > ((dbcontext*)(plugin->base.private_context))->max_digits)
-        digits = ((dbcontext*)(plugin->base.private_context))->max_digits; /* Max for this double implementation */
-    ((dbcontext*)(plugin->base.private_context))->digits = digits;
-}
-
 /* Get the required string size for the rxvmplugin context */
 static size_t getRequiredStringSize(decplugin *plugin) {
-    return ((dbcontext*)(plugin->base.private_context))->digits + 14;
+    return plugin->num_context->digits + 14;
 }
 
 /* Convert a string to a rxvmplugin number */
@@ -298,7 +306,7 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
-    sprintf(string, "%.*LG", (int)((dbcontext*)(plugin->base.private_context))->digits, value);
+    sprintf(string, "%.*LG", plugin->num_context->digits, value);
 }
 
 /* Convert an int to a rxvmplugin number */
@@ -382,7 +390,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) 
     if (exponent >= (sig_digits - 1)) {
         // The value is an integer
         exponent -= ((rxinteger)sig_digits -1);
-        // Note we are using unsigned ints here because of a edge case where INT64_MAX is exceeded because of rounding
+        // Note we are using unsigned ints here because of an edge case where INT64_MAX is exceeded because of rounding
         uvalue *= int_powers_of_10[exponent];
         if (is_neg) {
             if (-uvalue < INT64_MIN) {
@@ -757,8 +765,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the context */
     dbcontext* context = malloc(sizeof(dbcontext)); // NOLINT
 
-    context->digits = LDBL_DIG; // set precision
     context->max_digits = LDBL_DIG; // set max precision
+    context->digits = context->max_digits; // set precision
 
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
@@ -768,8 +776,8 @@ static rxvm_plugin *new_decplugin() {
     plugin->base.version = "0.1";
     plugin->base.description = "Decimal Plugin based on long double";
     plugin->base.free = destroy_decplugin;
+    plugin->syncNumericContext = syncNumericContext;
     plugin->getDigits = getDigits;
-    plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
     plugin->decimalFromString = decimalFromString;
     plugin->decimalToString = decimalToString;

@@ -18,6 +18,7 @@
 
 /* Forward declarations */
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
+static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
 static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
 
 /* Zeros a register value */
@@ -928,26 +929,38 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
 #endif
 }
 
+/* ****************************************************************************/
+/* Funnctions to support operators for both the interpreter and the optimizer */
+/* ****************************************************************************/
+
 /* Calculate the string value */
-RX_INLINE void string_from_int(value *v) {
-    prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
+RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
+    if (cnt->digits >= DIGITS_STRIKE_POINT) {
+        // Fast path for a large number of digits - just convert the integer to string and set exponent to 0
+        prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
 #ifdef __32BIT__
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)v->int_value);
+        v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)v->int_value);
 #else
-    v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)v->int_value);
+        v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)v->int_value);
 #endif
-    v->string_pos = 0;
+        v->string_pos = 0;
 #ifndef NUTF8
-    v->string_char_pos = 0;
-    v->string_chars = v->string_length;
+        v->string_char_pos = 0;
+        v->string_chars = v->string_length;
 #endif
+        return;
+    }
+
+    extract_integer_decimal(cnt,temp, temp, v->int_value);
+    RexxDecimalFormat(cnt, temp, temp, v);
 }
 
 /* Calculate the string value of v from its float value
- * a numeric context is needed to format the float correctly
- * and a work buffer, temp, for the conversion
+ * cnt - numeric context is needed to ensure the format is correct
+ * temp - a work buffer for the conversion
+ * v - the value to convert (float value -> string value)
  */
-RX_INLINE void string_from_float(numeric_context *cnt, value *temp, value *v) {
+RX_INLINE void float_to_string(numeric_context *cnt, value *temp, value *v) {
     extract_double_decimal(cnt,temp, temp, v->float_value);
     RexxDecimalFormat(cnt, temp, temp, v);
 }
@@ -1171,12 +1184,6 @@ static void trim_numeric_trailing_zeros(char *str) {
 // - exponent (integer) will be set to the exponent
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value) {
 
-    // If num_context is NULL, we use a default context
-    if (num_context == NULL) {
-        static numeric_context default_context = { DIGITS_STRIKE_POINT, 0, NUMERIC_FORM_SCIENTIFIC, CASE_LOWER};
-        num_context = &default_context;
-    }
-
     size_t digits = num_context->digits;
     if (digits < DIGITS_MINIMUM) digits = DIGITS_MINIMUM;
     else if (digits > DBL_DIG) digits = DBL_DIG;
@@ -1335,12 +1342,6 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     char *coefficient = coefficient_value->string_value;
     coefficient[coefficient_value->string_length] = 0; // Null-terminate - just in case
     rxinteger exponent = exponent_value->int_value;
-
-    // If num_context is NULL, we use a default context
-    if (num_context == NULL) {
-        static numeric_context default_context = { DIGITS_STRIKE_POINT, 0, NUMERIC_FORM_SCIENTIFIC, CASE_LOWER};
-        num_context = &default_context;
-    }
 
     /* Prepare the output buffer */
     // Calculate the output buffer size which is based on the number of digits and the exponent size from the arguments
@@ -1539,6 +1540,73 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
 #ifndef NUTF8
     formatted_output_value->string_chars = formatted_output_value->string_length;
     formatted_output_value->string_char_pos = 0;
+#endif
+}
+
+// Function to extract decimal components from an integer
+// - coefficient (string) will be set to the coefficient string (or nan, inf, -inf)
+// - exponent (integer) will be set to the exponent
+static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value) {
+
+    // Handle special case of zero
+    if (value == 0) {
+        strcpy(coefficient->string_value, "0");
+        coefficient->string_length = 1;
+        coefficient->string_pos = 0;
+#ifndef NUTF8
+        coefficient->string_char_pos = 0;
+        coefficient->string_chars = 1;
+#endif
+        exponent->int_value = 0;
+        return;
+    }
+
+    prep_string_buffer(coefficient, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
+#ifdef __32BIT__
+    coefficient->string_length = snprintf(coefficient->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)value);
+#else
+    coefficient->string_length = snprintf(coefficient->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)value);
+#endif
+    coefficient->string_pos = 0;
+
+    // We are converting to coefficient, as an example, from 123456 to 1.23456 (i.e. normalised scientific notation)
+    if (value > 0) {
+        // Positive number logic
+
+        // Calculate the exponent based on the number of digits in the integer
+        // The exponent is the number of digits - 1
+        exponent->int_value = (rxinteger)(coefficient->string_length - 1);
+
+        // Insert the decimal point after the first digit if there are more than 1 digit
+        if (coefficient->string_length > 1) {
+            // Shift the string to the right to make space for the decimal point
+            memmove(coefficient->string_value + 2, coefficient->string_value + 1, coefficient->string_length);
+            coefficient->string_value[1] = '.';
+            coefficient->string_length++;
+            coefficient->string_value[coefficient->string_length] = 0; // Null-terminate
+        }
+    }
+    else {
+        // Negative number logic
+
+        // Calculate the exponent based on the number of digits in the integer
+        // The exponent is the number of digits - 2 (to account for the '-' sign)
+        exponent->int_value = (rxinteger)(coefficient->string_length - 2);
+
+        // Insert the decimal point after the first digit following the '-' sign if there are more than 2 characters
+        if (coefficient->string_length > 2) {
+            // Shift the string to the right to make space for the decimal point
+            memmove(coefficient->string_value + 3, coefficient->string_value + 2, coefficient->string_length - 1);
+            coefficient->string_value[2] = '.';
+            coefficient->string_length++;
+            coefficient->string_value[coefficient->string_length] = 0; // Null-terminate
+        }
+    }
+
+    // Set the utf8 values
+#ifndef NUTF8
+    coefficient->string_char_pos = 0;
+    coefficient->string_chars = coefficient->string_length;
 #endif
 }
 

@@ -36,8 +36,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Set the number of digits in the rxvmplugin context
-    plugin->setDigits(plugin, atoi(argv[1]));
+    // Create a numeric context
+    numeric_context num_context;
+    num_context.digits = atoi(argv[1]);
+    num_context.fuzz = 0;
+    num_context.form = NUMERIC_FORM_SCIENTIFIC;
+    num_context.casetype = CASE_LOWER;
+    num_context.standard = NUMERIC_STANDARD_COMMON;
+    plugin->num_context = &num_context;
+    plugin->syncNumericContext(plugin);
 
     /* Make a string buffer to hold the result */
     char* string = malloc(plugin->getRequiredStringSize(plugin));

@@ -25,6 +25,26 @@
 #include "decNumber.h"
 #include "decNumberLocal.h"
 
+/* Update the plugin internals with the Numeric Context */
+static void syncNumericContext(decplugin *plugin) {
+    numeric_context default_context = {DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM, DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON};
+
+    numeric_context *num_context = plugin->num_context;
+    if (!num_context) {
+        num_context = &default_context;
+    }
+
+    ((decContext*)(plugin->base.private_context))->digits = (int32_t)num_context->digits;
+    if (num_context->standard == NUMERIC_STANDARD_COMMON) {
+        ((decContext*)(plugin->base.private_context))->clamp = 1;
+        ((decContext*)(plugin->base.private_context))->round = DEC_ROUND_HALF_EVEN;
+    }
+    else {
+        ((decContext*)(plugin->base.private_context))->clamp = 0;
+        ((decContext*)(plugin->base.private_context))->round = DEC_ROUND_HALF_UP;
+    }
+}
+
 // Note that signal_string is set to a static buffer in the check_signal function (or NULL)
 static void check_signal(decplugin *plugin) {
     plugin->base.signal_number = 0;
@@ -108,11 +128,6 @@ static void EnsureCapacity(value *number, size_t digits) {
 /* Get the number of digits in the rxvmplugin context */
 static size_t getDigits(decplugin *plugin) {
     return ((decContext*)(plugin->base.private_context))->digits;
-}
-
-/* Set the number of digits in the rxvmplugin context */
-static void setDigits(decplugin *plugin, size_t digits) {
-    ((decContext*)(plugin->base.private_context))->digits = (int32_t)digits;
 }
 
 /* Get the required string size for the rxvmplugin context */
@@ -523,11 +538,12 @@ static void decimalTruncate(decplugin *plugin, value *result, const value *op1) 
 
 /* Round the decimal value to the nearest integer */
 static void decimalRound(decplugin *plugin, value *result, const value *op1) {
+    // TODO Check Rounding Logic & Standard
     EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
     enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
-    decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_HALF_EVEN); // Set rounding to round
+ //   decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_HALF_EVEN); // Set rounding to round
     decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
-    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
+//    decContextSetRounding((decContext*)(plugin->base.private_context), rounding_value); // Restore original rounding
     check_signal(plugin);
 }
 
@@ -553,8 +569,8 @@ static rxvm_plugin *new_decplugin() {
     plugin->base.version = "Plugin:0.1 Library:3.64";
     plugin->base.description = "Decimal Plugin using Mike Cowlishaw's decNumber library";
     plugin->base.free = destroy_decplugin;
+    plugin->syncNumericContext = syncNumericContext;
     plugin->getDigits = getDigits;
-    plugin->setDigits = setDigits;
     plugin->getRequiredStringSize = getRequiredStringSize;
     plugin->decimalFromString = decimalFromString;
     plugin->decimalToString = decimalToString;

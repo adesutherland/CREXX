@@ -399,6 +399,12 @@ RX_INLINE stack_frame *frame_f(
 
         /* Copy the numeric context */
         this->num_context = parent->num_context;
+
+        // Set the numeric context of the decimal plugin
+        if (this->decimal) {
+            this->decimal->num_context = &this->num_context;
+            this->decimal->syncNumericContext(this->decimal);
+        }
     }
     else {
         /* Set up the default interrupt mask */
@@ -670,8 +676,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     }
     current_frame->decimal_loaded_here = 1;
 
-    // Set the number of digits in the rxvmplugin based on the current numeric context
-    current_frame->decimal->setDigits(current_frame->decimal, current_frame->num_context.digits);
+    // Set the numeric context of the decimal plugin
+    current_frame->decimal->num_context = &current_frame->num_context;
+    current_frame->decimal->syncNumericContext(current_frame->decimal);
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
@@ -1597,7 +1604,10 @@ START_OF_INSTRUCTIONS
         DISPATCH
     }
     current_frame->num_context.digits = op1R->int_value;
-    current_frame->decimal->setDigits(current_frame->decimal, op1R->int_value);
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1610,7 +1620,10 @@ START_OF_INSTRUCTIONS
         DISPATCH
     }
     current_frame->num_context.digits = op1I;
-    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1631,6 +1644,10 @@ START_OF_INSTRUCTIONS
         DISPATCH
     }
     current_frame->num_context.fuzz = op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1642,6 +1659,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
     }
     current_frame->num_context.fuzz = op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1662,6 +1683,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.form = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1674,6 +1699,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.form = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1694,6 +1723,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.casetype = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1706,6 +1739,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.casetype = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1726,6 +1763,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.standard = (int)op1R->int_value;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1738,6 +1779,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         DISPATCH
     }
     current_frame->num_context.standard = (int)op1I;
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1770,7 +1815,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     current_frame->num_context.form = 1; // scientific
     current_frame->num_context.casetype = (int)op2I;
     current_frame->num_context.standard = (int)op3I;
-    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -1795,7 +1843,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     current_frame->num_context.form = 2; // engineering
     current_frame->num_context.casetype = (int)op2I;
     current_frame->num_context.standard = (int)op3I;
-    current_frame->decimal->setDigits(current_frame->decimal, op1I);
+    // Sync the numeric context of the decimal plugin
+    if (current_frame->decimal) {
+        current_frame->decimal->syncNumericContext(current_frame->decimal);
+    }
     DISPATCH
 
 /* ====================================================================================
@@ -2535,12 +2586,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
-                if (!current_frame) rc =
-                                            (int) (temp_frame->locals[(pc + 1)
-                                                    ->index])
-                                                    ->int_value; /* Exiting - grab the int rc */
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
+                    rc = (int) (temp_frame->locals[(pc + 1)->index])->int_value; /* Exiting - grab the int rc */
                     /* Free Argument Values a1... */
                     int i, j;
                     /* a0 is the number of args */
@@ -2558,6 +2606,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     free_frame(temp_frame);
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
+                }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
                 CALC_DISPATCH_MANUAL
@@ -2600,6 +2653,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     free_frame(temp_frame);
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
+                }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
                 CALC_DISPATCH_MANUAL
@@ -2644,6 +2702,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     arguments_array = 0; /* We have freed it in the loop above */
                     goto interprt_finished;
                 }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
+                }
                 free_frame(temp_frame);
                 CALC_DISPATCH_MANUAL
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
@@ -2686,6 +2749,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     rc = 0;
                     free_frame(temp_frame);
                     goto interprt_finished;
+                }
+                // Set the numeric context of the decimal plugin
+                if (current_frame->decimal) {
+                    current_frame->decimal->num_context = &current_frame->num_context;
+                    current_frame->decimal->syncNumericContext(current_frame->decimal);
                 }
                 free_frame(temp_frame);
                 CALC_DISPATCH_MANUAL
@@ -4366,7 +4434,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(ITOS_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - ITOS R%lu\n", REG_IDX(1));
-            string_from_int(op1R);
+            int_to_string(&(current_frame->num_context), work1, op1R);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4374,7 +4442,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  -----------------------------------------------------------------------------------*/
         START_INSTRUCTION(FTOS_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - FTOS R%lu\n", REG_IDX(1));
-            string_from_float(&(current_frame->num_context), work1, op1R);
+            float_to_string(&(current_frame->num_context), work1, op1R);
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value

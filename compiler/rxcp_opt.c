@@ -144,7 +144,7 @@ static void update_string(ASTNode* node) {
 
     if (ast_hase(node)) return; /* Don't overwrite error codes */
     switch (node->value_type) {
-        case TP_INTEGER:
+
         case TP_BOOLEAN:
             buffer = malloc(32); /* Large enough for any int */
 #ifdef __32BIT__
@@ -156,13 +156,28 @@ static void update_string(ASTNode* node) {
             ast_sstr(node, buffer, length);
             return;
 
+        case TP_INTEGER:
+            /* init the work value */
+            value_init(&work_value);
+            /* Create the node value */
+            node_value = node_to_value(node);
+            /* Convert the float to a string using the numeric context */
+            int_to_string(node_to_num_context(node), &work_value, node_value);
+            /* Update the node's string - this also takes ownership of the memory */
+            ast_copy_str(node, node_value->string_value);
+            /* Clear the node value */
+            clear_value(node_value);
+            /* Clear the work value */
+            clear_value(&work_value);
+            return;
+
         case TP_FLOAT:
             /* init the work value */
             value_init(&work_value);
             /* Create the node value */
             node_value = node_to_value(node);
             /* Convert the float to a string using the numeric context */
-            string_from_float(node_to_num_context(node), &work_value, node_value);
+            float_to_string(node_to_num_context(node), &work_value, node_value);
             /* Update the node's string - this also takes ownership of the memory */
             ast_copy_str(node, node_value->string_value);
             /* Clear the node value */
@@ -183,18 +198,9 @@ static void update_string(ASTNode* node) {
                 }
                 Context* context = node->context;
                 decplugin* decplugin = context->decimal_plugin;
+                decplugin->num_context = &(node->scope->num_context);
+                decplugin->syncNumericContext(decplugin);
                 value* value = value_f();
-                if (node->scope->num_context.digits == -1) {
-                    /*
-                     * Inherited - meaning we don't know the value of digits to use, so we need to assume the biggest
-                     * number of digits for this particular value - and an easy way to estimate this is just to use the
-                     * length of the current representation which is "bound" to be at least as long as the required digits
-                     */
-                     decplugin->setDigits(decplugin, strlen(node->decimal_value));
-                }
-                else {
-                    decplugin->setDigits(decplugin, node->scope->num_context.digits);
-                }
                 decplugin->decimalFromString(decplugin, value, node->decimal_value);
                 char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                 decplugin->decimalToString(decplugin, value, result_string);
@@ -356,21 +362,10 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2) {
     if (node1->value_type == TP_DECIMAL) {
         Context* context = node1->context;
         decplugin* decplugin = context->decimal_plugin;
+        decplugin->num_context = &(node1->scope->num_context);
+        decplugin->syncNumericContext(decplugin);
         value* val1 = value_f();
         value* val2 = value_f();
-        effective_digits = node1->scope->num_context.digits;
-        if (effective_digits == -1) {
-            // Should not happen as we don't do constant folding on inherited digits - add an error
-            mknd_err(node1, "INTERNAL_ERROR_OPT_INHERITED_DIGITS");
-            effective_digits = DEFAULT_NUMERIC_DIGITS; /* Assume default */
-        }
-        if (node1->scope->num_context.fuzz == -1) {
-            // Should not happen as we don't do constant folding on inherited fuzz - add an error
-            mknd_err(node1, "INTERNAL_ERROR_OPT_INHERITED_FUZZ");
-        }
-        else effective_digits -= node1->scope->num_context.fuzz;
-        if (effective_digits < 1) effective_digits = 1;
-        decplugin->setDigits(decplugin, effective_digits);
         decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
         decplugin->decimalFromString(decplugin, val2, node2->decimal_value);
         int cmp = decplugin->decimalCompare(decplugin, val1, val2);
@@ -659,7 +654,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalAdd(decplugin, result, val1, val2);
@@ -695,7 +691,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalSub(decplugin, result, val1, val2);
@@ -730,7 +727,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalMul(decplugin, result, val1, val2);
@@ -765,7 +763,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalPow(decplugin, result, val1, val2);
@@ -802,7 +801,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
@@ -838,7 +838,8 @@ static walker_result opt1_walker(walker_direction direction,
                             double dresult;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
@@ -876,7 +877,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* result = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             // Calculate the integer division first
@@ -918,7 +920,8 @@ static walker_result opt1_walker(walker_direction direction,
                             int result;
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, zero, "0");
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             result = decplugin->decimalCompare(decplugin, val1, zero);
@@ -945,7 +948,8 @@ static walker_result opt1_walker(walker_direction direction,
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin, node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalNeg(decplugin, val1, val1);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
@@ -967,12 +971,13 @@ static walker_result opt1_walker(walker_direction direction,
                                                           child1->float_value);
                         }
                         else if (node->value_type == TP_DECIMAL) {
-                            /* To ensure correct significant digits we need to
+                            /* To ensure correct significant digits, we need to
                              * convert to a decimal number and back */
                             value* val1 = value_f();
                             Context* context = node->context;
                             decplugin* decplugin = context->decimal_plugin;
-                            decplugin->setDigits(decplugin,node->scope->num_context.digits);
+                            decplugin->num_context = &(node->scope->num_context);
+                            decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
                             decplugin->decimalToString(decplugin, val1, result_string);

@@ -12,6 +12,9 @@
 #include <dlfcn.h> // Linux/OSX
 #endif
 #include "rxvmplugin_framework.h"
+#include "platform.h"
+#include "rxbin.h"
+#include "rxvmvars.h"
 
 // Head of the factory list
 static rxvmplugin_factory_entry *rxvmplugin_factories = 0;
@@ -137,6 +140,8 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
         if (entry->plugin_info->type == RXVM_PLUGIN_DECIMAL) {
             decplugin *plugin = (decplugin *)entry->plugin_info;
             plugin->number_to_simple_format = number_to_simple_format;
+            plugin->format_number_components = RexxDecimalFormat;
+            plugin->num_context = NULL; // The client will set this
         }
     }
     else {

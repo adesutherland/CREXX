@@ -859,7 +859,8 @@ int test_decimalExtract() {
     // Test removal of trailing zeros
     errors += testDecimalExtract("123456789000000000000000000000", "1.23456789", 29);
     // Test Large numbers
-    plugin->setDigits(plugin, 50);
+    plugin->num_context->digits = 50;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("123456789012345678901234567890", "1.2345678901234567890123456789", 29);
     errors += testDecimalExtract("-123456789012345678901234567890", "-1.2345678901234567890123456789", 29);
     // Test Large numbers with exponent
@@ -878,7 +879,8 @@ int test_decimalExtract() {
     errors += testDecimalExtract("123456789012345678901234567890e-30", "1.2345678901234567890123456789", -1);
     errors += testDecimalExtract("-123456789012345678901234567890e-30", "-1.2345678901234567890123456789", -1);
     /* Test Large numbers with smaller digits setting */
-    plugin->setDigits(plugin, 20);
+    plugin->num_context->digits = 20;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("123456789012345678901234567890", "1.234567890123456789", 29);
     errors += testDecimalExtract("-123456789012345678901234567890", "-1.234567890123456789", 29);
     // Test Large numbers with exponent
@@ -907,8 +909,9 @@ int test_decimalExtract() {
     // Test all 9s
     errors += testDecimalExtract("999999999999999999", "9.99999999999999999", 17);
     errors += testDecimalExtract("-999999999999999999", "-9.99999999999999999", 17);
-    // Finally, Test Floating point numbers (positive and negative) with over 100 digits
-    plugin->setDigits(plugin, 200);
+    // Finally, Test Floating point numbers (positive and negative) with over 100 digit
+    plugin->num_context->digits = 200;
+    plugin->syncNumericContext(plugin);
     errors += testDecimalExtract("1234567890123456789012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890e-300",
         "1.23456789012345678901234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789",
         -150);
@@ -1109,8 +1112,15 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Set the number of digits in the rxvmplugin context
-    plugin->setDigits(plugin, 20); // Big enough for 64-bit int
+    // Create the numeric context and set the digits
+    numeric_context num_context;
+    num_context.digits = 20; // Big enough for 64-bit int
+    num_context.fuzz = 0;
+    num_context.form = NUMERIC_FORM_SCIENTIFIC;
+    num_context.casetype = CASE_LOWER;
+    num_context.standard = NUMERIC_STANDARD_COMMON;
+    plugin->num_context = &num_context;
+    plugin->syncNumericContext(plugin);
 
     errors += test_int_tofrom_conversions();
     errors += test_moreDecimalToInteger();

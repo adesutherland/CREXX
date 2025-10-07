@@ -15,6 +15,8 @@
 
 decplugin *plugin;
 
+int max_digits_supported = 18;
+
 // Do test
 int aTestFromToInt(char* expected, int64_t int_input) {
     int64_t int_output;
@@ -90,13 +92,17 @@ static int test_int_tofrom_conversions() {
     // Test with zero
     errors += aTestFromToInt("0", 0);
 
-    // Note digits = 16 hence the rounding
-
     // Test with INT64_MAX (9223372036854775807)
-    errors += aTestFromToInt("9.22337203685477581E+18", INT64_MAX);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("9.22337203685477581E+18", INT64_MAX);
+    else // Assume 15 digits
+        errors += aTestFromToInt("9.22337203685478E+18", INT64_MAX);
 
     // Test with INT64_MIN (-9223372036854775808)
-    errors += aTestFromToInt("-9.22337203685477581E+18", INT64_MIN);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("-9.22337203685477581E+18", INT64_MIN);
+    else // Assume 15 digits
+        errors += aTestFromToInt("-9.22337203685478E+18", INT64_MIN);
 
     // Test with 1
     errors += aTestFromToInt("1", 1);
@@ -117,16 +123,28 @@ static int test_int_tofrom_conversions() {
     errors += aTestFromToInt("-255", -255);
 
     /* Boundary Conditions Around Limits - Near INT64_MAX Test 9223372036854775806 (one less than INT64_MAX). */
-    errors += aTestFromToInt("9.22337203685477581E+18", 9223372036854775806);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("9.22337203685477581E+18", 9223372036854775806);
+    else // Assume 15 digits
+        errors += aTestFromToInt("9.22337203685478E+18", 9223372036854775806);
 
     /* Boundary Conditions Around Limits - Near INT64_MAX Test 9223372036854775800 (close to INT64_MAX but with trailing zeros).*/
-    errors += aTestFromToInt("9.2233720368547758E+18", 9223372036854775800);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("9.2233720368547758E+18", 9223372036854775800);
+    else // Assume 15 digits
+        errors += aTestFromToInt("9.22337203685477E+18", 9223372036854770000);
 
     /* Boundary Conditions Around Limits - Near INT64_MIN: Test -9223372036854775807 (one more than INT64_MIN). */
-    errors += aTestFromToInt("-9.22337203685477581E+18", -9223372036854775807);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("-9.22337203685477581E+18", -9223372036854775807);
+    else // Assume 15 digits
+        errors += aTestFromToInt("-9.22337203685477E+18", -9223372036854770000);
 
     /* Boundary Conditions Around Limits - Near INT64_MIN: Test -9223372036854775800 (close to INT64_MIN but with trailing zeros). */
-    errors += aTestFromToInt("-9.2233720368547758E+18", -9223372036854775800);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("-9.2233720368547758E+18", -9223372036854775800);
+    else // Assume 15 digits
+        errors += aTestFromToInt("-9.22337203685477E+18", -9223372036854770000);
 
     /* Values Just Beyond Limits: 9223372036854775808 - should trigger Invalid_operation. */
     errors += aTestBeyondLimits("9223372036854775808");
@@ -135,10 +153,16 @@ static int test_int_tofrom_conversions() {
     errors += aTestBeyondLimits("-9223372036854775809");
 
     /* Mid-Range Large Values: Positive: 123456789012345678 */
-    errors += aTestFromToInt("123456789012345678", 123456789012345678);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("123456789012345678", 123456789012345678);
+    else
+        errors += aTestFromToInt("123456789012346000", 123456789012346000);
 
     /* Mid-Range Large Values: Negative: -123456789012345678 */
-    errors += aTestFromToInt("-123456789012345678", -123456789012345678);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("-123456789012345678", -123456789012345678);
+    else
+        errors += aTestFromToInt("-123456789012346000", -123456789012346000);
 
     /* Values that are exactly powers of 10: 1000000000 */
     errors += aTestFromToInt("1000000000", 1000000000);
@@ -159,10 +183,16 @@ static int test_int_tofrom_conversions() {
     errors += aTestFromToInt("-10", -10);
 
     /* All 9's: 999999999999999999 */
-    errors += aTestFromToInt("999999999999999999", 999999999999999999);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("999999999999999999", 999999999999999999);
+    else
+        errors += aTestFromToInt("999999999999999", 999999999999999);
 
     /* All 9's: -999999999999999999 */
-    errors += aTestFromToInt("-999999999999999999", -999999999999999999);
+    if (max_digits_supported >= 18)
+        errors += aTestFromToInt("-999999999999999999", -999999999999999999);
+    else
+        errors += aTestFromToInt("-999999999999999", -999999999999999);
 
     /* Loop and Generate a few random 18-digit numbers and test both positive and negative forms */
     input = malloc(40);
@@ -181,9 +211,14 @@ static int test_int_tofrom_conversions() {
         int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
         int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
         int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        // Make sure it is only 18 digits
-        int_input = int_input % 1000000000000000000;
-
+        if (max_digits_supported < 18) {
+            // Make sure it is only 15 digits
+            int_input = int_input % 1000000000000000;
+        }
+        else {
+            // Make sure it is only 18 digits
+            int_input = int_input % 1000000000000000000;
+        }
         sprintf(input, "%lld", int_input);
         errors += aTestFromToInt(input, int_input);
         sprintf(input, "%lld", -int_input);
@@ -478,16 +513,28 @@ int test_moreDecimalToInteger() {
     }
     else printf("OK - signal: decNumber: 1.23456789, Result: %lld\n", result);
 
-    // Test 1234567890123456789
-    plugin->decimalFromString(plugin, &input, "1234567890123456789");
-    plugin->decimalToInt(plugin, &input, &result);
-    if (result != 1234567890123456790) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        // Test 1234567890123456789
+        plugin->decimalFromString(plugin, &input, "1234567890123456789");
+        plugin->decimalToInt(plugin, &input, &result);
+        if (result != 1234567890123456790) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("decNumber: 1234567890123456789 -> 1234567890123456790, Result: %lld (i.e. rounded to 18 digits)\n", result);
     }
-    else printf("OK - ");
-    printf("decNumber: 1234567890123456789 -> 1234567890123456790, Result: %lld (i.e. rounded to 18 digits)\n", result);
-
+    else {
+        // Test 1234567890123456
+        plugin->decimalFromString(plugin, &input, "1234567890123456");
+        plugin->decimalToInt(plugin, &input, &result);
+        if (result != 1234567890123460) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("decNumber: 1234567890123456 -> 1234567890123456, Result: %lld (i.e. rounded to 15 digits)\n", result);
+    }
     return errors;
 }
 
@@ -500,7 +547,8 @@ int test_add() {
     b.decimal_value = NULL;
     result.decimal_value = NULL;
 
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
     plugin->base.signal_number = 0;
 
     printf("\nTesting Add\n");
@@ -530,28 +578,56 @@ int test_add() {
     printf("1.23456789 + 1.23456789 = %s\n", buffer);
 
     // Test plus with large numbers (no loss of precision)
-    plugin->decimalFromString(plugin, &a, "123456789012345678");
-    plugin->decimalFromString(plugin, &b, "987654321098765432");
-    plugin->decimalAdd(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("1.11111111011111111E+18", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "123456789012345678");
+        plugin->decimalFromString(plugin, &b, "987654321098765432");
+        plugin->decimalAdd(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.11111111011111111E+18", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("123456789012345678 + 987654321098765432 = %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("123456789012345678 + 987654321098765432 = %s\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "123456789012345");
+        plugin->decimalFromString(plugin, &b, "987654321098765");
+        plugin->decimalAdd(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1111111110111110", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("123456789012345 + 987654321098765 = %s\n", buffer);
+    }
 
     // Test plus with large numbers (loss of precision)
-    plugin->decimalFromString(plugin, &a, "1234567890123456789");
-    plugin->decimalFromString(plugin, &b, "9876543210987654321");
-    plugin->decimalAdd(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("1.11111111011111111E+19", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "1234567890123456789");
+        plugin->decimalFromString(plugin, &b, "9876543210987654321");
+        plugin->decimalAdd(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.11111111011111111E+19", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1234567890123456789 + 9876543210987654321 = %s (rounded to 18 digits)\n", buffer);
     }
-    else printf("OK - ");
-    printf("1234567890123456789 + 9876543210987654321 = %s (rounded to 18 digits)\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "1234567890123456789");
+        plugin->decimalFromString(plugin, &b, "9876543210987654321");
+        plugin->decimalAdd(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.11111111011111E+19", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1234567890123456789 + 9876543210987654321 = %s (rounded to 18 digits)\n", buffer);
+    }
 
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
@@ -600,7 +676,8 @@ int test_add() {
     else printf("OK - NaN -> Signal\n");
 
     // Test rounding when digits is set to 5
-    plugin->setDigits(plugin, 5);
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     plugin->decimalFromString(plugin, &a, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalFromString(plugin, &b, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalAdd(plugin, &result, &a, &b);
@@ -621,7 +698,9 @@ int test_add() {
     printf("1.23456789 + 1.23456789 = %s (using 5 digits maths)\n", buffer);
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
+
     return errors;
 }
 
@@ -634,7 +713,8 @@ int test_subtract() {
     b.decimal_value = NULL;
     result.decimal_value = NULL;
 
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
     plugin->base.signal_number = 0;
 
     printf("\nTesting subtract\n");
@@ -664,28 +744,56 @@ int test_subtract() {
     printf("9.87654321 - 1.23456789 = %s\n", buffer);
 
     // Test minus with large numbers (no loss of precision)
-    plugin->decimalFromString(plugin, &a, "987654321098765432");
-    plugin->decimalFromString(plugin, &b, "123456789012345678");
-    plugin->decimalSub(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("864197532086419754", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "987654321098765432");
+        plugin->decimalFromString(plugin, &b, "123456789012345678");
+        plugin->decimalSub(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("864197532086419754", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("987654321098765432 - 123456789012345678 = %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("987654321098765432 - 123456789012345678 = %s\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "987654321098765");
+        plugin->decimalFromString(plugin, &b, "123456789012346");
+        plugin->decimalSub(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("864197532086419", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("987654321098765 - 123456789012346 = %s\n", buffer);
+    }
 
     // Test minus with large numbers (loss of precision)
-    plugin->decimalFromString(plugin, &a, "9876543210987654321");
-    plugin->decimalFromString(plugin, &b, "1234567890123456789");
-    plugin->decimalSub(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("8.64197532086419753E+18", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "9876543210987654321");
+        plugin->decimalFromString(plugin, &b, "1234567890123456789");
+        plugin->decimalSub(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.64197532086419753E+18", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9876543210987654321 - 1234567890123456789 = %s (rounded to 18 digits)\n", buffer);
     }
-    else printf("OK - ");
-    printf("9876543210987654321 - 1234567890123456789 = %s (rounded to 18 digits)\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "9876543210987654321");
+        plugin->decimalFromString(plugin, &b, "1234567890123456789");
+        plugin->decimalSub(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.64197532086419E+18", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9876543210987654321 - 1234567890123456789 = %s (rounded to 15 digits)\n", buffer);
+    }
 
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
@@ -735,7 +843,8 @@ int test_subtract() {
     else printf("OK - NaN -> Signal\n");
 
     // Test rounding when digits is set to 5
-    plugin->setDigits(plugin, 5);
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     plugin->decimalFromString(plugin, &a, "9.87654321"); // Rounded to 5 significant digits = 9.8765
     plugin->decimalFromString(plugin, &b, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalSub(plugin, &result, &a, &b);
@@ -756,7 +865,8 @@ int test_subtract() {
     printf("9.87654321 - 1.23456789 = %s (using 5 digits maths)\n", buffer);
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -770,7 +880,8 @@ int test_multiply() {
     b.decimal_value = NULL;
     result.decimal_value = NULL;
 
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
     plugin->base.signal_number = 0;
 
     printf("\nTesting multiply\n");
@@ -788,40 +899,82 @@ int test_multiply() {
     printf("2 * 2 = %s\n", buffer);
 
     // Test with two floating point numbers
-    plugin->decimalFromString(plugin, &a, "1.23456789");
-    plugin->decimalFromString(plugin, &b, "1.23456789");
-    plugin->decimalMul(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("1.5241578750190521", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "1.23456789");
+        plugin->decimalFromString(plugin, &b, "1.23456789");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.5241578750190521", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1.23456789 * 1.23456789 = %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("1.23456789 * 1.23456789 = %s\n", buffer);
+    else { // Assume 15 digits
+        plugin->decimalFromString(plugin, &a, "1.23456789");
+        plugin->decimalFromString(plugin, &b, "1.23456789");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.52415787501905", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1.23456789 * 1.23456789 = %s\n", buffer);
+    }
 
     // Test multiply with large numbers (no loss of precision)
-    plugin->decimalFromString(plugin, &a, "123456789");
-    plugin->decimalFromString(plugin, &b, "987654321");
-    plugin->decimalMul(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("121932631112635269", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "123456789");
+        plugin->decimalFromString(plugin, &b, "987654321");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("121932631112635269", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("123456789 * 987654321 = %s\n (18 digits)", buffer);
     }
-    else printf("OK - ");
-    printf("123456789012345678 * 987654321098765432 = %s\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "123456789");
+        plugin->decimalFromString(plugin, &b, "987654321");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("121932631112635000", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("123456789 * 987654321 = %s (15 digits)\n", buffer);
+    }
 
     // Test multiply with large numbers (loss of precision)
-    plugin->decimalFromString(plugin, &a, "1234567890123456789");
-    plugin->decimalFromString(plugin, &b, "9876543210987654321");
-    plugin->decimalMul(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("1.21932631137021795E+37", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "1234567890123456789");
+        plugin->decimalFromString(plugin, &b, "9876543210987654321");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.21932631137021795E+37", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1234567890123456789 * 9876543210987654321 = %s (rounded to 18 digits)\n", buffer);
     }
-    else printf("OK - ");
-    printf("1234567890123456789 * 9876543210987654321 = %s (rounded to 18 digits)\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "1234567890123456789");
+        plugin->decimalFromString(plugin, &b, "9876543210987654321");
+        plugin->decimalMul(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("1.21932631137022E+37", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("1234567890123456789 * 9876543210987654321 = %s (rounded to 15 digits)\n", buffer);
+    }
 
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
@@ -870,7 +1023,8 @@ int test_multiply() {
     else printf("OK - NaN -> Signal\n");
 
     // Test rounding when digits is set to 5
-    plugin->setDigits(plugin, 5);
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     plugin->decimalFromString(plugin, &a, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalFromString(plugin, &b, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalMul(plugin, &result, &a, &b);
@@ -891,7 +1045,8 @@ int test_multiply() {
     printf("1.23456789 * 1.23456789 = %s (using 5 digits maths)\n", buffer);
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -905,7 +1060,8 @@ int test_divide() {
     b.decimal_value = NULL;
     result.decimal_value = NULL;
 
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
     plugin->base.signal_number = 0;
 
     printf("\nTesting divide\n");
@@ -923,16 +1079,30 @@ int test_divide() {
     printf("4 / 2 = %s\n", buffer);
 
     // Test with two floating point numbers
-    plugin->decimalFromString(plugin, &a, "9.87654321");
-    plugin->decimalFromString(plugin, &b, "1.23456789");
-    plugin->decimalDiv(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("8.00000007290000066", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "9.87654321");
+        plugin->decimalFromString(plugin, &b, "1.23456789");
+        plugin->decimalDiv(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.00000007290000066", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9.87654321 / 1.23456789 = %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("9.87654321 / 1.23456789 = %s\n", buffer);
+    else { // Assume 15 digits
+        plugin->decimalFromString(plugin, &a, "9.87654321");
+        plugin->decimalFromString(plugin, &b, "1.23456789");
+        plugin->decimalDiv(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.0000000729", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9.87654321 / 1.23456789 = %s\n", buffer);
+    }
 
     // Test divide with large numbers (no loss of precision)
     plugin->decimalFromString(plugin, &a, "321572632265607");
@@ -947,16 +1117,30 @@ int test_divide() {
     printf("987654321098765432 / 12345678901234567 = %s\n", buffer);
 
     // Test divide with large numbers (loss of precision)
-    plugin->decimalFromString(plugin, &a, "9876543210987654321");
-    plugin->decimalFromString(plugin, &b, "1234567890123456789");
-    plugin->decimalDiv(plugin, &result, &a, &b);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("8.00000007290000066", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &a, "9876543210987654321");
+        plugin->decimalFromString(plugin, &b, "1234567890123456789");
+        plugin->decimalDiv(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.00000007290000066", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9876543210987654321 / 1234567890123456789 = %s (rounded to 18 digits)\n", buffer);
     }
-    else printf("OK - ");
-    printf("9876543210987654321 / 1234567890123456789 = %s (rounded to 18 digits)\n", buffer);
+    else {
+        plugin->decimalFromString(plugin, &a, "9876543210987654321");
+        plugin->decimalFromString(plugin, &b, "1234567890123456789");
+        plugin->decimalDiv(plugin, &result, &a, &b);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("8.00000007289998", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("9876543210987654321 / 1234567890123456789 = %s (rounded to 15 digits)\n", buffer);
+    }
 
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
@@ -1005,7 +1189,8 @@ int test_divide() {
     else printf("OK - NaN -> Signal\n");
 
     // Test rounding when digits is set to 5
-    plugin->setDigits(plugin, 5);
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     plugin->decimalFromString(plugin, &a, "9.87654321"); // Rounded to 5 significant digits = 9.8765
     plugin->decimalFromString(plugin, &b, "1.23456789"); // Rounded to 5 significant digits = 1.2346
     plugin->decimalDiv(plugin, &result, &a, &b);
@@ -1026,7 +1211,8 @@ int test_divide() {
     printf("9.87654321 / 1.23456789 = %s (using 5 digits maths)\n", buffer);
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -1106,7 +1292,9 @@ int test_decimalCompare() {
     // Test with digits set to 5 and a number that is different after 5 digits
     plugin->decimalFromString(plugin, &a, "1.11111");
     plugin->decimalFromString(plugin, &b, "1.11112");
-    plugin->setDigits(plugin, 5); // Compare should be done with 5 digits
+    // Compare should be done with 5 digits
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     result = plugin->decimalCompare(plugin, &a, &b);
     if (result != 0) {
         printf("Error - ");
@@ -1116,7 +1304,8 @@ int test_decimalCompare() {
     printf("1.11111 == 1.11112 (5 digits)\n");
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -1330,7 +1519,8 @@ int test_decimalPow() {
     printf("2.5^3 = %s\n", buffer);
 
     // Test with floats - loss of precision - 5 digits
-    plugin->setDigits(plugin, 5);
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     plugin->decimalFromString(plugin, &a, "2.5");
     plugin->decimalFromString(plugin, &b, "3.5");
     plugin->decimalPow(plugin, &result, &a, &b);
@@ -1343,7 +1533,8 @@ int test_decimalPow() {
     printf("2.5^3.5 = %s (5 digits)\n", buffer);
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -1416,7 +1607,9 @@ int test_decimalCompareString() {
 
     // Test with digits set to 5 and a number that is different after 5 digits
     plugin->decimalFromString(plugin, &a, "1.11111");
-    plugin->setDigits(plugin, 5); // Compare should be done with 5 digits
+    // Compare should be done with 5 digits
+    plugin->num_context->digits = 5;
+    plugin->syncNumericContext(plugin);
     result = plugin->decimalCompareString(plugin, &a, "1.11112");
     if (result != 0) {
         printf("Error - ");
@@ -1426,7 +1619,8 @@ int test_decimalCompareString() {
     printf("1.11111 == 1.11112 (5 digits)\n");
 
     // Put the digits back to 18
-    plugin->setDigits(plugin, 18);
+    plugin->num_context->digits = 18;
+    plugin->syncNumericContext(plugin);
 
     return errors;
 }
@@ -1473,8 +1667,15 @@ int test_decimalExtract() {
     errors += testDecimalExtract("inf", "inf", 0);
     errors += testDecimalExtract("-inf", "-inf", 0);
     // Test Integer and negative integer
-    errors += testDecimalExtract("123456789012345678", "1.23456789012345678", 17);
-    errors += testDecimalExtract("-123456789012345678", "-1.23456789012345678", 17);
+    if (max_digits_supported >= 18) {
+        errors += testDecimalExtract("123456789012345678", "1.23456789012345678", 17);
+        errors += testDecimalExtract("-123456789012345678", "-1.23456789012345678", 17);
+    }
+    else { // Assume 15 digits
+        errors += testDecimalExtract("123456789012345678", "1.23456789012346", 17);
+        errors += testDecimalExtract("-123456789012345678", "-1.23456789012346", 17);
+    }
+    // Test small integer
     // Test Normalized floating point numbers (positive and negative)
     errors += testDecimalExtract("1.23456789", "1.23456789", 0);
     errors += testDecimalExtract("-1.23456789", "-1.23456789", 0);
@@ -1587,26 +1788,52 @@ int test_decimalTruncate() {
     printf("-1.23456789 -> %s\n", buffer);
 
     // Test 67890123456789.987654321 -> 67890123456789
-    plugin->decimalFromString(plugin, &input, "67890123456789.987654321");
-    plugin->decimalTruncate(plugin, &result, &input);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("67890123456789", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &input, "67890123456789.987654321");
+        plugin->decimalTruncate(plugin, &result, &input);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("67890123456789", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("67890123456789.987654321 -> %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("67890123456789.987654321 -> %s\n", buffer);
+    else { // Assume 15 digits
+        plugin->decimalFromString(plugin, &input, "67890123456789.987654321");
+        plugin->decimalTruncate(plugin, &result, &input);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("67890123456790", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("67890123456789.987654321 -> %s\n", buffer);
+    }
 
     // Test with an exponent
-    plugin->decimalFromString(plugin, &input, "67890123456789.987654321e2");
-    plugin->decimalTruncate(plugin, &result, &input);
-    plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("6789012345678998", buffer) != 0) {
-        printf("Error - ");
-        errors++;
+    if (max_digits_supported >= 18) {
+        plugin->decimalFromString(plugin, &input, "67890123456789.987654321e2");
+        plugin->decimalTruncate(plugin, &result, &input);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("6789012345678998", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("67890123456789.987654321e2 -> %s\n", buffer);
     }
-    else printf("OK - ");
-    printf("67890123456789.987654321e2 -> %s\n", buffer);
+    else { // Assume 15 digits
+        plugin->decimalFromString(plugin, &input, "67890123456789.987654321e2");
+        plugin->decimalTruncate(plugin, &result, &input);
+        plugin->decimalToString(plugin, &result, buffer);
+        if (strcmp("6789012345679000", buffer) != 0) {
+            printf("Error - ");
+            errors++;
+        }
+        else printf("OK - ");
+        printf("67890123456789.987654321e2 -> %s\n", buffer);
+    }
 
     return errors;
 }
@@ -1655,15 +1882,15 @@ int test_decimalRound() {
     printf("67890123456789.987654321 -> %s\n", buffer);
 
     // Test with an exponent
-    plugin->decimalFromString(plugin, &input, "67890123456789.987654321e2");
+    plugin->decimalFromString(plugin, &input, "90123456789.987654321e2");
     plugin->decimalRound(plugin, &result, &input);
     plugin->decimalToString(plugin, &result, buffer);
-    if (strcmp("6789012345678999", buffer) != 0) {
+    if (strcmp("9012345678999", buffer) != 0) {
         printf("Error - ");
         errors++;
     }
     else printf("OK - ");
-    printf("67890123456789.987654321e2 -> %s\n", buffer);
+    printf("90123456789.987654321e2 -> %s\n", buffer);
 
     return errors;
 }
@@ -1687,25 +1914,70 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Set the number of digits in the rxvmplugin context
-    plugin->setDigits(plugin, 18);
+    // Numeric Context
+    numeric_context context;
+    context.digits = 18; // 18 significant digits requested
+    context.fuzz = 0; // No fuzz
+    context.casetype = CASE_LOWER;
+    context.form = NUMERIC_FORM_SCIENTIFIC;
+    context.standard = NUMERIC_STANDARD_COMMON;
 
+    // Map the context
+    plugin->num_context = &context;
+    plugin->syncNumericContext(plugin);
+
+    // Get and print the digits supported
+    max_digits_supported = (int)plugin->getDigits(plugin);
+    printf("Max digits supported = %d\n", max_digits_supported);
+    printf("\n-----------------------\n- test_int_tofrom_conversions()\n");
     errors += test_int_tofrom_conversions();
+
+    printf("\n-----------------------\n- test_moreDecimalToInteger()\n");
     errors += test_moreDecimalToInteger();
+
+    printf("\n-----------------------\n- test_decimalFromDouble()\n");
     errors += test_decimalFromDouble();
+
+    printf("\n-----------------------\n- test_decimalFromString()\n");
     errors += test_decimalToDouble();
+
+    printf("\n-----------------------\n- test_decimalToString() and decimalFromString()\n");
     errors += test_decimalToString_decimalFromString();
+
+    printf("\n-----------------------\n- test_add()\n");
     errors += test_add();
+
+    printf("\n-----------------------\n- test_subtract()\n");
     errors += test_subtract();
+
+    printf("\n-----------------------\n- test_multiply()\n");
     errors += test_multiply();
+
+    printf("\n-----------------------\n- test_divide()\n");
     errors += test_divide();
+
+    printf("\n-----------------------\n- test_decimalCompare()\n");
     errors += test_decimalCompare();
+
+    printf("\n-----------------------\n- test_decimalCompareString()\n");
     errors += test_decimalCompareString();
+
+    printf("\n-----------------------\n- test_decimalNeg()\n");
     errors += test_decimalNeg();
+
+    printf("\n-----------------------\n- test_decimalPow()\n");
     errors += test_decimalPow();
+
+    printf("\n-----------------------\n- test_decimalExtract()\n");
     errors += test_decimalExtract();
+
+    printf("\n-----------------------\n- test_isZero()\n");
     errors += test_isZero();
+
+    printf("\n-----------------------\n- test_decimalTruncate()\n");
     errors += test_decimalTruncate();
+
+    printf("\n-----------------------\n- test_decimalRound()\n");
     errors += test_decimalRound();
 
     plugin->base.free((rxvm_plugin*)plugin);
