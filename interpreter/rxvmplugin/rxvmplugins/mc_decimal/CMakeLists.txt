@@ -41,7 +41,7 @@ target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/i
 target_include_directories(mc_decimal_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
 # Ensure the linker includes the plugin
 configure_linker_for_static_rxvmplugin(mc_decimal_test_harness mc_decimal)
-target_link_libraries(mc_decimal_test_harness rxvmplugin mc_decimal)
+target_link_libraries(mc_decimal_test_harness rxvmplugin mc_decimal m)
 
 # Add the dynamic test harness executable
 add_executable(mc_decimal_dyn_test_harness mc_decimal_sanity_harness_test.c)
@@ -49,12 +49,12 @@ add_executable(mc_decimal_dyn_test_harness mc_decimal_sanity_harness_test.c)
 target_compile_definitions(mc_decimal_dyn_test_harness PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_dyn_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin)
+target_link_libraries(mc_decimal_dyn_test_harness rxvmplugin m)
 add_dependencies(mc_decimal_dyn_test_harness mc_decimal_dynamic)
 
 # Add the decnumber static plugin library - with manual linking and initialising
 add_static_rxvmplugin_target(mc_decimal_manual mc_decimal.c)
-target_link_libraries(mc_decimal_manual decnumber)
+target_link_libraries(mc_decimal_manual decnumber m)
 # add MANUAL_PLUGIN_LINK to the compile definitions
 target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 
@@ -62,7 +62,7 @@ target_compile_definitions(mc_decimal_manual PRIVATE MANUAL_PLUGIN_LINK)
 add_executable(mc_decimal_manual_test_harness mc_decimal_sanity_harness_test.c)
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_manual_test_harness PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(mc_decimal_manual_test_harness rxvmplugin mc_decimal_manual)
+target_link_libraries(mc_decimal_manual_test_harness rxvmplugin mc_decimal_manual m)
 target_compile_definitions(mc_decimal_manual_test_harness PRIVATE MANUAL_PLUGIN_LINK)
 add_dependencies(mc_decimal_manual_test_harness mc_decimal_manual)
 
@@ -72,7 +72,7 @@ add_executable(mc_decimal_full_tests mc_decimal_full_tests.c)
 target_compile_definitions(mc_decimal_full_tests PRIVATE DYNAMIC)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(mc_decimal_full_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(mc_decimal_full_tests rxvmplugin)
+target_link_libraries(mc_decimal_full_tests rxvmplugin m)
 add_dependencies(mc_decimal_full_tests mc_decimal_dynamic)
 
 # Enable Testing
