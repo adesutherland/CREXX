@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb numeric_classic
 import rxfnsb
 
 /* say "Hex to char" */

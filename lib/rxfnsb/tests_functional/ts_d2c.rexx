@@ -1,5 +1,5 @@
 /* D2C */
-options levelb
+options levelb numeric_classic
 import rxfnsb
 
 errors=0

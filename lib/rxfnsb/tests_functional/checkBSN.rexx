@@ -1,4 +1,4 @@
-options levelb
+options levelb numeric_classic
 /* used to check a customs client number ("eori")
  * which must adhere to the BSN-form of the modulo-11 test
  */

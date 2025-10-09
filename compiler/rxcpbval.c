@@ -2114,7 +2114,7 @@ static walker_result set_node_types_walker(walker_direction direction,
             case ASSIGN:
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet - then determine it */
                         if (node->parent->node_type == REPEAT) {
                             /* Special logic for LOOP Assignment - type must be numeric */
@@ -2444,7 +2444,7 @@ static walker_result type_safety_walker(walker_direction direction,
                     mknd_err(child2, "RETURNS_VOID");
                 }
                 else {
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet - then determine it */
                         child1->symbolNode->symbol->type =
                                 node_to_type(child2,
@@ -2457,9 +2457,9 @@ static walker_result type_safety_walker(walker_direction direction,
                             node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
                                          &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
                     }
-                    ast_svtp(child1, child1->symbolNode->symbol);
+                    if (child1->symbolNode) ast_svtp(child1, child1->symbolNode->symbol);
 
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
+                    if (!child1->symbolNode || child1->symbolNode->symbol->type == TP_UNKNOWN) mknd_err(node, "UNKNOWN_TYPE");
 
                     if (ast_nchd(child1)) {
                         /* We have array parameters */

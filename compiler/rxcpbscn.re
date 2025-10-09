@@ -70,7 +70,7 @@ int rexbscan(Context* s) {
     }
     "//" {
        if (s->comments_slash) goto skip_line_comment;
-       else return(TK_MOD);
+       else return(s->numeric_standard ? TK_MOD : TK_UNKNOWN); // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     }
     "--" {
        if (s->comments_dash) goto skip_line_comment;
@@ -93,7 +93,7 @@ int rexbscan(Context* s) {
     "/" { return(TK_DIV); }
     "%" { return(s->numeric_standard ? TK_IDIV : TK_MOD); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "?" { return(TK_OPTIONAL); }
-    "/" ob "/" { return(TK_MOD); }
+    "/" ob "/" { return(s->numeric_standard ? TK_MOD : TK_UNKNOWN); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "*" ob "*" { return(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
     "=" { return(TK_EQUAL); }

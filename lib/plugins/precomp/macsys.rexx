@@ -6,8 +6,8 @@
 ##define cmd execio(num DISKX file keyword stem) {if mode='DISKR' | mode='READ' then stem.1='';rc=_ExecIO('num','diskx',file,stem)}
 
 /* Numerical Functions */
-##define isEven(n)          {n // 2 = 0}
-##define isOdd(n)           {n // 2 \= 0}
+##define isEven(n)          {n % 2 = 0}
+##define isOdd(n)           {n % 2 \= 0}
 ##define isPositive(n)      {n > 0}
 ##define isNegative(n)      {n < 0}
 ##define isZero(n)          {n = 0}

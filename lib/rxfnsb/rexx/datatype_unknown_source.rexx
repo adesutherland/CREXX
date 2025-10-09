@@ -1,7 +1,7 @@
 /*
  * rexx built-in function Datatype
  */
-options levelb
+options levelb numeric_classic
 
 namespace rxfnsb expose datatype
 

@@ -52,7 +52,7 @@
 ##define between(n,a,b)     {n >= a & n <= b}
 ##define inRange(n,a,b)     {between(n,a,b)} /* Alias */
 
-##define isLeapYear(y)      {(y // 4 = 0) & (y // 100 \= 0) | (y // 400 = 0)}
+##define isLeapYear(y)      {(y % 4 = 0) & (y % 100 \= 0) | (y % 400 = 0)}
 
 /* --- Debug & Utilities --- */
 ##define debug(expr)       {say '>>' expr '=' expr}

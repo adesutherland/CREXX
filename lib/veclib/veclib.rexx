@@ -2,7 +2,7 @@
   Mike Beer
 */
 
-options levelb
+options levelb numeric_classic
 namespace veclib expose __size __min __max __quad_io __iota __pick,
    __sum __each __reduce __vec2s __s2vec  __alfasort __numsort  __indexvec
 import rxfnsb

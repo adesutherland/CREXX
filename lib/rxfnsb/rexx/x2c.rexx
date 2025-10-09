@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb numeric_classic
 
 namespace rxfnsb expose x2c
 

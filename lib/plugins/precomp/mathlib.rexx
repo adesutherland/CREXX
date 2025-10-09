@@ -11,7 +11,7 @@ gcd: procedure=.int
   arg a=.int, b=.int
   do while b \= 0
      t = b
-     b = a // b
+     b = a % b
      a = t
   end
 return a
@@ -30,9 +30,9 @@ isPrime: procedure=.int
   arg n=.int
   if n <= 1 then return 0
   if n = 2 then return 1
-  if n // 2 = 0 then return 0
+  if n % 2 = 0 then return 0
   do i = 3 to n % 2 by 2
-     if n // i = 0 then return 0
+     if n % i = 0 then return 0
   end
 return 1
 /* --------------------------------------------------------------------------
@@ -65,7 +65,7 @@ return base**exp
   r = m
   newr = a
   do while newr \= 0
-     q = r // newr
+     q = r % newr
      temp = newt
      newt = t - q * newt
      t = temp
