@@ -43,6 +43,8 @@ if(WIN32)
 #	add_subdirectory(rxshm)
 #	add_subdirectory(system)
 #	add_subdirectory(pick)
+#    add_subdirectory(pipe)
+    add_subdirectory(socket)
 #	add_subdirectory(vpool)
 endif()
 
