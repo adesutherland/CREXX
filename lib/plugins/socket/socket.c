@@ -9,6 +9,15 @@
 #include <ws2tcpip.h>
 #else
 #include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>        // fcntl(), F_GETFL, F_SETFL, O_NONBLOCK
+#include <sys/ioctl.h>    // ioctl(), FIONREAD
+#include <netinet/tcp.h>  // TCP_NODELAY
 #endif
 
 
@@ -220,7 +229,7 @@ PROCEDURE(socketrecv) {
     s->last_error = -5;
     RETURNSTRX("");
 #else
-    int rc = read(s->sock, buf, nbytes < sizeof(buf) ? nbytes : sizeof(buf));
+    int rc = read(s->sock, buffer, nbytes < sizeof(buffer) ? nbytes : sizeof(buffer));
     if (rc < 0) {
        if (errno == EWOULDBLOCK || errno == EAGAIN) SET_SOCK_ERR(s, -7, "recv() timeout");
        else SET_SOCK_ERR(s, -5, "read() failed");

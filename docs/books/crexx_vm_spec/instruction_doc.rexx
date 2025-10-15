@@ -1,11 +1,16 @@
-/* rexx (netrexx) exec to produce the part of the vm specification that deals with rxvm instructions
+/*
+ * rexx (netrexx) exec to produce the part of the vm specification that deals with rxvm instructions
  * uses an sqlite database wherein the instructions are categorized for the purpose
  * of grouping them in the documentation.
  *
- * we select these in the sequence of the 'category'
- * instructions are grouped by mnemonic and have a table for all opcodes (wip) 
+ * we select these in the sequence of the category
+ * instructions are grouped by mnemonic and have a table for all opcodes (wip)
+ * run with:
+ * nrc -exec instruction_doc.rexx
+ * then run the book compile in the tex/book subdirectory
  */
 
+ /* first delete the previous version of the output file */
 'rm instruction_chapter.tex'
 
 --lineout('instruction_chapter.tex','% instruction chapter',1)
