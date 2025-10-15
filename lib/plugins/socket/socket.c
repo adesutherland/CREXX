@@ -21,7 +21,8 @@ typedef struct {
     int sock;
 #endif
     int status;
-    int default_timeout;   // ms, 0 = no timeout
+    int is_server;        // 1 = listening socket, 0 = client or accepted socket
+    int default_timeout;  // ms, 0 = no timeout
     int last_error;
     char last_error_msg[128];
     char * linebuf;  // Line buffer for partial reads
@@ -79,7 +80,6 @@ PROCEDURE(socketcreate) {
     s->linebuf = malloc(LINEBUF_INITIAL );
     s->linebuf_size = LINEBUF_INITIAL ;
     s->linebuf_used = 0;
-
     RETURNINTX(r);
     ENDPROC
 }
@@ -151,6 +151,7 @@ PROCEDURE(socketconnect) {
     s->status = 1;
     s->last_error = 0;
     s->last_error_msg[0] = 0;
+    s->is_server = 0;
     RETURNINTX(0);
     ENDPROC
 }
@@ -511,6 +512,161 @@ PROCEDURE(socketkeepalive) {
     ENDPROC
 }
 
+PROCEDURE(socketsendall) {
+    rxinteger r = GETINT(ARG0);
+    char *data = GETSTRING(ARG1);
+    int len = strlen(data);
+    TcpSocket *s = (TcpSocket *)r;
+
+    if (s->sock < 0) {
+        s->last_error = -6;
+        strcpy(s->last_error_msg, "Socket not connected");
+        RETURNINTX(-6);
+    }
+
+    int total_sent = 0;
+    while (total_sent < len) {
+#ifdef _WIN32
+        int rc = send(s->sock, data + total_sent, len - total_sent, 0);
+        if (rc == SOCKET_ERROR) {
+            int err = WSAGetLastError();
+            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                     "Send failed, WSA error: %d", err);
+            s->last_error = -3;
+            RETURNINTX(-3);
+        }
+#else
+        int rc = write(s->sock, data + total_sent, len - total_sent);
+        if (rc < 0) {
+            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                     "Send failed, errno: %d", errno);
+            s->last_error = -3;
+            RETURNINTX(-3);
+        }
+#endif
+        if (rc == 0) break; // shouldn't happen, but avoid loop
+        total_sent += rc;
+    }
+    s->last_error = 0;
+    s->last_error_msg[0] = 0;
+    RETURNINTX(total_sent);
+    ENDPROC
+}
+
+PROCEDURE(socketsetblocking) {
+    rxinteger r = GETINT(ARG0);
+    int blocking = GETINT(ARG1);
+    TcpSocket *s = (TcpSocket *)r;
+    int rc = 0;
+#ifdef _WIN32
+    u_long mode = blocking ? 0 : 1;
+    rc = ioctlsocket(s->sock, FIONBIO, &mode);
+#else
+    int flags = fcntl(s->sock, F_GETFL, 0);
+    if (flags < 0) RETURNINTX(-1);
+    if (blocking)  flags &= ~O_NONBLOCK;
+    else          flags |= O_NONBLOCK;
+    rc = fcntl(s->sock, F_SETFL, flags);
+#endif
+    RETURNINTX(rc == 0 ? 0 : -1);
+    ENDPROC
+}
+PROCEDURE(socketpendingbytes) {
+    rxinteger r = GETINT(ARG0);
+    TcpSocket *s = (TcpSocket *)r;
+    int count = 0;
+#ifdef _WIN32
+    ioctlsocket(s->sock, FIONREAD, (u_long *)&count);
+#else
+    ioctl(s->sock, FIONREAD, &count);
+#endif
+    RETURNINTX(count);
+    ENDPROC
+}
+PROCEDURE(socketbind) {
+    rxinteger r = GETINT(ARG0);
+    char *ip = GETSTRING(ARG1);   // "" or "0.0.0.0" for any address
+    int port = GETINT(ARG2);
+    TcpSocket *s = (TcpSocket *)r;
+
+#ifdef _WIN32
+    s->sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (s->sock == INVALID_SOCKET) {
+        SET_SOCK_ERR(s, -1, "Cannot create socket");
+        RETURNINTX(-1);
+    }
+#else
+    s->sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (s->sock < 0) {
+        SET_SOCK_ERR(s, -1, "Cannot create socket");
+        RETURNINTX(-1);
+    }
+#endif
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = ip && ip[0] ? inet_addr(ip) : INADDR_ANY;
+
+    int rc = bind(s->sock, (struct sockaddr *)&addr, sizeof(addr));
+    if (rc != 0) {
+        SET_SOCK_ERR(s, -30, "Bind failed");
+#ifdef _WIN32
+        closesocket(s->sock); s->sock = INVALID_SOCKET;
+#else
+        close(s->sock); s->sock = -1;
+#endif
+        RETURNINTX(-30);
+    }
+    s->is_server = 1;
+    RETURNINTX(0);
+    ENDPROC
+}
+PROCEDURE(socketlisten) {
+    rxinteger r = GETINT(ARG0);
+    int backlog = GETINT(ARG1);
+    TcpSocket *s = (TcpSocket *)r;
+    int rc = listen(s->sock, backlog > 0 ? backlog : 5);
+    if (rc != 0) {
+        SET_SOCK_ERR(s, -31, "Listen failed");
+        RETURNINTX(-31);
+    }
+    s->is_server = 1;
+    RETURNINTX(0);
+    ENDPROC
+}
+
+PROCEDURE(socketaccept) {
+    rxinteger r = GETINT(ARG0);
+    TcpSocket *s = (TcpSocket *)r;
+
+    struct sockaddr_in addr;
+#ifdef _WIN32
+    int addrlen = sizeof(addr);
+    SOCKET cs = accept(s->sock, (struct sockaddr*)&addr, &addrlen);
+    if (cs == INVALID_SOCKET) {
+        SET_SOCK_ERR(s, -32, "Accept failed");
+        RETURNINTX(-32);
+    }
+#else
+    socklen_t addrlen = sizeof(addr);
+    int cs = accept(s->sock, (struct sockaddr*)&addr, &addrlen);
+    if (cs < 0) {
+        SET_SOCK_ERR(s, -32, "Accept failed");
+        RETURNINTX(-32);
+    }
+#endif
+    // Create new TcpSocket token for the client
+    TcpSocket *client = malloc(sizeof(TcpSocket));
+    memcpy(client, s, sizeof(TcpSocket)); // Copy settings (linebuf, etc.)
+    client->sock = cs;
+    client->linebuf_used = 0;
+    rxinteger cr = (rxinteger)client;
+    s->is_server = 0;
+    RETURNINTX(cr);
+    ENDPROC
+}
 
 
 // ----------------------------------------------------------------------------
@@ -534,9 +690,12 @@ LOADFUNCS
 ADDPROC(socketcreate,  "socket.socketcreate",  "b",    ".int" ,"");
 ADDPROC(socketconnect, "socket.socketconnect", "b",    ".int" ,"sock=.int,host=.string,port=.int");
 ADDPROC(socketsend,    "socket.socketsend",    "b",    ".int" ,"sock=.int,data=.string");
+ADDPROC(socketsendall, "socket.socketsendall", "b", ".int", "sock=.int,data=.string");
 ADDPROC(socketrecv,    "socket.socketrecv",    "b",    ".string","sock=.int,size=.int");
 ADDPROC(socketrecvline,"socket.socketrecvline", "b",   ".string", "sock=.int");
 ADDPROC(socketclose,   "socket.socketclose",    "b",   ".int" ,"sock=.int");
+ADDPROC(socketsetblocking, "socket.socketsetblocking", "b", ".int", "sock=.int,blocking=.int");
+ADDPROC(socketpendingbytes, "socket.socketpendingbytes", "b", ".int", "sock=.int");
 ADDPROC(socketisconnected, "socket.socketisconnected", "b", ".int", "sock=.int");
 ADDPROC(socketpeerinfo,    "socket.socketpeerinfo",    "b", ".string", "sock=.int");
 ADDPROC(socketpeerinfo,    "socket.socketlocalinfo",   "b", ".string", "sock=.int");
@@ -545,5 +704,10 @@ ADDPROC(socketshutdown, "socket.socketshutdown", "b", ".int", "sock=.int,how=.in
 ADDPROC(socketlasterror,"socket.socketlasterror","b",  ".string","sock=.int");
 ADDPROC(socketnodelay,  "socket.socketnodelay",   "b", ".int", "sock=.int,enable=.int");
 ADDPROC(socketkeepalive,"socket.socketkeepalive", "b", ".int", "sock=.int,enable=.int");
+ADDPROC(socketbind, "socket.socketbind", "b", ".int", "sock=.int,ip=.string,port=.int");
+ADDPROC(socketlisten, "socket.socketlisten", "b", ".int", "sock=.int,backlog=.int");
+ADDPROC(socketaccept, "socket.socketaccept", "b", ".int", "sock=.int");
+
+
 
 ENDLOADFUNCS

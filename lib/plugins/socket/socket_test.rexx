@@ -3,6 +3,7 @@ import rxfnsb
 import socket
 
 ##cflags def nset  3buf  parse
+
 token = socketCreate()
 say 'socket  'token
 say 'connect 'socketConnect(token, 'localhost', 12345)
