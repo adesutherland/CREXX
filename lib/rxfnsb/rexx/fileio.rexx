@@ -104,10 +104,11 @@ arg mmax=.string,mode='R',fname=.string, expose stem=.string[]
      else maxrec=mmax
      line=''
      eof=0
-     stem.1=""
+     assembler SETATTRS stem,0
      do while eof=0 & count<maxrec
         assembler freadline line,fileid
         assembler feof eof,fileid
+        if eof > 0 & line = '' then leave
         count=count+1
         stem.count=line
      end
@@ -116,10 +117,9 @@ arg mmax=.string,mode='R',fname=.string, expose stem=.string[]
     nl = '0a'x
     if mmax='*' then maxrec=stem.0
     else maxrec=min(mmax,stem.0)
-
     do count=1 to maxrec
        assembler fwrite fileid,stem.count
-       assembler fwrite fileid,nl
+       if count<maxrec then assembler fwrite fileid,nl  /* do not write nl for last record, as a last empty record appears */
     end
   end
   rc=0
