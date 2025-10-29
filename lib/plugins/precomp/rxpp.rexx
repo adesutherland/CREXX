@@ -309,10 +309,15 @@ RXPPPassThree: procedure
        if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
        call writeLine printGen(line,6)            ## printgen: prints pre-processor line with appropriate suffix comment
      end
+  	 else if stype.LineNo='WHEN' then do
+       if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+       call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
+   	 end
      else if strip(line) \='' then do
-  	    newline = expandRecursive(line)
+   	    newline = expandRecursive(line)
    	    call writeline newline
- 	 end
+   	 end
+
   end
 
   call writeline ''
@@ -342,6 +347,8 @@ GetPrecomp: procedure
       ucmd=upper(ucmd)
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
+      else if ucmd = 'WHEN'   then call cmd_when lineNo,line
+      else if ucmd = 'CASE'   then call cmd_when lineNo,line
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
@@ -349,6 +356,8 @@ GetPrecomp: procedure
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
       else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
+      else if ucmd = '##WHEN'    then call cmd_when lineNo,line
+      else if ucmd = '##CASE'    then call cmd_when lineNo,line
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
@@ -619,6 +628,21 @@ CMD_global: procedure
       else source[lino+i]=ivar'=.'atype'; 'def
       globaldef=globaldef' 'ivar
    end
+return
+/* ------------------------------------------------------------------
+ * Process ##WHEN command
+ * ------------------------------------------------------------------
+ */
+CMD_when: procedure
+  arg lino=.int,line=.string
+  stype.lino= 'WHEN'
+  rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
+  rc=insert_array(stype, lino+1,1)
+  vvalue=word(line,2)
+  if upper(word(line,3))='THEN' then action=subword(line,4)
+  else action=subword(line,3)
+  source[lino+1]='else if __select='vvalue' then 'action
+  stype[lino+1]=' '
 return
 /* ------------------------------------------------------------------
  * Process ##DATA command
