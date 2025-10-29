@@ -38,5 +38,3 @@
 ##define Dquote(string2quote) {"string2quote"}
 
 ##define cmd clear(array)     {assembler SETATTRS array,0}   ## calling syntax must be reset array-name (no function call type)
-
-##define cmd select(variable) {__select=variable; do; if 1=0 then nop}

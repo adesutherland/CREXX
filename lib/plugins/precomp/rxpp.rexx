@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -313,6 +313,11 @@ RXPPPassThree: procedure
        if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
        call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
    	 end
+   	 else if stype.LineNo='SELECT' then do
+       if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+       call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
+   	 end
+
      else if strip(line) \='' then do
    	    newline = expandRecursive(line)
    	    call writeline newline
@@ -347,6 +352,7 @@ GetPrecomp: procedure
       ucmd=upper(ucmd)
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
+      else if ucmd = 'SELECT' then call cmd_select lineNo,line
       else if ucmd = 'WHEN'   then call cmd_when lineNo,line
       else if ucmd = 'CASE'   then call cmd_when lineNo,line
       if substr(ucmd,1,2)\='##' then iterate
@@ -356,6 +362,7 @@ GetPrecomp: procedure
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
       else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
+      else if ucmd = '##SELECT'  then call cmd_select lineNo,line
       else if ucmd = '##WHEN'    then call cmd_when lineNo,line
       else if ucmd = '##CASE'    then call cmd_when lineNo,line
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
@@ -641,7 +648,21 @@ CMD_when: procedure
   vvalue=word(line,2)
   if upper(word(line,3))='THEN' then action=subword(line,4)
   else action=subword(line,3)
-  source[lino+1]='else if __select='vvalue' then 'action
+  source[lino+1]='else if __select_'select_count'='vvalue' then 'action
+  stype[lino+1]=' '
+return
+/* ------------------------------------------------------------------
+ * Process ##select command
+ * ------------------------------------------------------------------
+ */
+CMD_select: procedure
+  arg lino=.int,line=.string
+  select_count=select_count+1
+  stype.lino= 'SELECT'
+  rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
+  rc=insert_array(stype, lino+1,1)
+  variable=word(line,2)
+  source[lino+1]='__select_'select_count'='variable'; do; if 1=0 then nop'
   stype[lino+1]=' '
 return
 /* ------------------------------------------------------------------
@@ -1705,6 +1726,7 @@ rxppinit: procedure=.string
   imported_funcs=""
   globaldef=''
   lino=0
+  select_count=0
   outbuf=.string[]
   mexpanded=0
   rxmodule=translate(rexxname,,'/\')
