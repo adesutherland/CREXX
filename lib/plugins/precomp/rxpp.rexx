@@ -352,9 +352,12 @@ GetPrecomp: procedure
       ucmd=upper(ucmd)
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
-      else if ucmd = 'SELECT' then call cmd_select lineNo,line
-      else if ucmd = 'WHEN'   then call cmd_when lineNo,line
-      else if ucmd = 'CASE'   then call cmd_when lineNo,line
+      else if ucmd = 'SELECT' then call cmd_select lineNo,line,1
+      else if ucmd = 'SWITCH' then call cmd_select lineNo,line,2
+      else if ucmd = 'WHEN'   then call cmd_when lineNo,line,1
+      else if ucmd = 'OTHERWISE' then call cmd_when lineNo,line,2
+      else if ucmd = 'CASE'    then call cmd_when lineNo,line,3
+      else if ucmd = 'DEFAULT' then call cmd_when lineNo,line,2       ## same as OTHERWISE
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
@@ -362,9 +365,6 @@ GetPrecomp: procedure
       else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
       else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
-      else if ucmd = '##SELECT'  then call cmd_select lineNo,line
-      else if ucmd = '##WHEN'    then call cmd_when lineNo,line
-      else if ucmd = '##CASE'    then call cmd_when lineNo,line
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
@@ -637,10 +637,30 @@ CMD_global: procedure
    end
 return
 /* ------------------------------------------------------------------
- * Process ##WHEN command
+ * Process WHEN command
  * ------------------------------------------------------------------
  */
 CMD_when: procedure
+  arg lino=.int,line=.string,mode=.int
+  stype.lino= 'WHEN'
+  nlino=lino+1
+  rc=insert_array(source,nlino,1)    ## insert new lines, shift buffer
+  rc=insert_array(stype, nlino,1)
+  ifpart2=subword(line,2)
+/* save some vars for CASE and CASEX */
+  vvalue=word(line,2)
+  action=subword(line,4)
+/* check which type is CASE/WHEN */
+  if mode=1      then source[nlino]='  else if 'ifpart2
+  else if mode=2 then source[nlino]='  else 'ifpart2
+  else if mode=3 then source[nlino]='  else if __select_'select_count'='vvalue' then 'action
+  stype[nlino]=' '
+return
+/* ------------------------------------------------------------------
+ * Process CASE command
+ * ------------------------------------------------------------------
+ */
+CMD_case: procedure
   arg lino=.int,line=.string
   stype.lino= 'WHEN'
   rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
@@ -656,13 +676,18 @@ return
  * ------------------------------------------------------------------
  */
 CMD_select: procedure
-  arg lino=.int,line=.string
-  select_count=select_count+1
+  arg lino=.int,line=.string, mode=.int
   stype.lino= 'SELECT'
   rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
   rc=insert_array(stype, lino+1,1)
-  variable=word(line,2)
-  source[lino+1]='__select_'select_count'='variable'; do; if 1=0 then nop'
+  if mode=2 then do         /* switch instruction */
+     select_count=select_count+1
+     variable=word(line,2)
+     source[lino+1]='__select_'select_count'='variable'; do 1; if 1=0 then nop'
+  end
+  else do
+     source[lino+1]='do 1; if 1=0 then nop'
+  end
   stype[lino+1]=' '
 return
 /* ------------------------------------------------------------------
