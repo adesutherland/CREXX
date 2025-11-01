@@ -18,6 +18,10 @@
   #include <ctype.h>
 #endif
 
+#if defined(__APPLE__)
+#include <unistd.h>        // For POSIX systems (Linux/macOS)
+#endif
+
 // ---------------------------------------------------------------------------------------
 // Things to do:
 //
