@@ -21,6 +21,12 @@
 #if defined(__APPLE__)
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #endif
+// Centralized info message macro – allows redirect to stdout if desired
+#define MSGI(num, fmt, ...) fprintf(stdout, "RECV%03dI " fmt, num, ##__VA_ARGS__)
+#define MSGW(num, fmt, ...) fprintf(stdout, "RECV%03dW " fmt, num, ##__VA_ARGS__)
+#define MSGE(num, fmt, ...) fprintf(stdout, "RECV%03dE " fmt, num, ##__VA_ARGS__)
+
+#define member_extension "SRC"   // define extension of received source members
 
 // ---------------------------------------------------------------------------------------
 // Things to do:
@@ -99,8 +105,7 @@ void unpackdate(unsigned char *, int *, int *);
 int	 unpack(int);
 void getblock(int, int);
 void getseg(int);
-int  cmdline(int, char *[]);
-int  parseopt(char *, char *, char *);
+
 void tranmap();
 int  aschex(char *);
 void printhelp();
@@ -140,6 +145,9 @@ char line[];
 char outext[];
 char zsinglemem[];
 char zsinglemempath[];
+int  xmit_init_once=0;
+
+char * array1;
 
 // recv390_globals.c  – provides storage for globals used across modules
 
@@ -175,15 +183,17 @@ int XMIT_INIT(const char *filename)
 {
     // this replaces the old cmdline(argc,argv)
     // It sets up input file and initializes globals for one file.
+ //   if(xmit_init_once) return 0;
     char fn[1024];
     strncpy(fn, filename, sizeof(fn)-1);
     fn[sizeof(fn)-1] = 0;
+    xmit_init_once=1;
 
     // open input, reset state, etc.
     extern FILE *fin;
     fin = fopen(fn, "rb");
     if (!fin) {
-        fprintf(stderr, "recv390: cannot open %s\n", fn);
+        MSGE(500, "cannot open\n", fn);
         return 4;
     }
 
@@ -232,6 +242,7 @@ char opthelpseq = '-';    // don't display SEQ help
 char opthelpbug = '-';    // don't display debugging help
 char optsyntax = '-';     // don't display syntax help
 char optdirhex = '-';     // don't dump directory in hex
+char optdirarray = '-';   // don't dump into array
 char optmap = '-';        // map translate table
 
 // Debugging Options
@@ -245,10 +256,11 @@ char optsnapblock = '-';   // getblock snap data block
 char optsnaphalt = '-';    // snap <press enter> prompt
 char optblock1 = '-';     // dump block 1
 char optblock2 = '-';     // dump block 2
+int fatal = 0;            // 1 = abandon execution (must be reset for any new crexx sub function)
 
 char *program = "recv390"; // program name
 char *notprogram = "       ";  // blanks same length as program
-int fatal = 0;                 // 1 = abandon execution
+
 int unsupported = 0;          // 1 = dataset not supported
 int snapassumeascii = 0;      // 1 = snap() won't xlate display to EBCDIC
 
@@ -256,7 +268,7 @@ FILE *fin = NULL;
 FILE *fout = NULL;
 char FNout[FILENAME_MAX] = "Dummy.txt";
 char FNin[sizeof(FNout)] = "OS390.XMI";
-char outext[FILENAME_MAX] = "ASC";       // eho 20071202
+char outext[FILENAME_MAX] = member_extension; // eho 20071202
 char zsinglemem[8] = "";                 // eho 20071202
 char zsinglemempath[FILENAME_MAX] = "";  // eho 20071202
 int zsinglebyteswritten = 0;             // eho 20071202
@@ -536,13 +548,12 @@ const	int		eyepdse = 0x01ca6d0f;		// IEBCOPY PDSE eyecatcher (someday)
         fatal = 1;
         return fatal;
     }
-    if ( optbinary == '+' )							// 20071205 binary
-        rc = zwritebin();
-    else
-        rc = writemem();
+    rc=0;
+    if (optbinary == '+')  rc = zwritebin();                             // 20071205 binary
+    else rc = writemem();
     if (rc) {
-        fatal = 1;
-        return fatal;
+       fatal = 1;
+       return fatal;
     }
     return rc;
 } /* procdata */
@@ -600,7 +611,7 @@ int writemem( ) {
                 memcpy(zzinmr01,&block[pos+2],6);           // offset +2
                 ebcdic2ascii(zzinmr01,6);
                 if ( !memcmp(zzinmr01,"INMR01",6) )
-                    fprintf(stderr,"RECV031I EmbeddedXMIT  %s . Output is ASCII.\n",FNout);
+                    MSGI(10,"EmbeddedXMIT  %s . Output is ASCII.\n",FNout);
             }
             // * eho 20071207 emedded XMIT *************************************************
 
@@ -789,7 +800,7 @@ int zwritebin( ) {
                     memcpy(zzinmr01,&block[pos+2],6);
                     ebcdic2ascii(zzinmr01,6);
                     if ( !memcmp(zzinmr01,"INMR01",6) )
-                        fprintf(stderr,"RECV030I EmbeddedXMIT  %s . Output is binary.\n",FNout);
+                        MSGI(30, "EmbeddedXMIT  %s . Output is binary.\n", FNout);
                 }
                 // * eho 20071207 emedded XMIT *************************************************
 
@@ -838,7 +849,6 @@ void openout( ) {
     // In other cases fileswritten increment.( SMX will always result in 1 file :-;)
 
     if (optmember == '+' ) {
-        strncpy(zsinglemem,membername,8);
         if (!memcmp(zsinglemem,membername,8)) {
             memset(FNout, 0, sizeof(FNout));
             strcpy(FNout,zsinglemempath);
@@ -855,7 +865,7 @@ void openout( ) {
             else fout = fopen(zzfn, "w");
 
             if (!fout) {
-                fprintf(stderr,"RECV015E File %s . Open error.\n",zsinglemempath);
+                MSGE(510,"File %s . Open error.\n",zsinglemempath);
                 zsingleorc = 1;
                 return;
             }
@@ -863,8 +873,7 @@ void openout( ) {
             fileswritten++;
             return;
         }
-        else
-            return;
+        else return;
     }
     // eho 20071202 ************************************************************************
 
@@ -873,13 +882,10 @@ void openout( ) {
     strcat(dsnmem, "(");
 
     memset(FNout, 0, sizeof(FNout));
-
     memcpy(FNout, membername, 8);
-    for (i = 7; i >= 0; i--) {
-        if (FNout[i] == blank)
-            FNout[i] = '\0';
-        else
-            break;
+    for (i = 7; i >= 0 && i<=7; i--) {
+         if (FNout[i] == blank) FNout[i] = '\0';
+        else break;
     }
 
     strcat(dsnmem, FNout);
@@ -914,7 +920,7 @@ void openout( ) {
         outdirpos = 0xff;							// bad open
         printf("Error opening %s for output\n", FNout);
         if (zxpath[0] != 0x0 )						// eho 20071206 commandline xpath
-            fprintf(stderr,"RECV004E File %s . Open error.\n",zzfn);
+            MSGE(520,"File %s . Open error.\n",zzfn);
     }
     return;
 } /* openout */
@@ -1125,7 +1131,7 @@ void nextmem() {
         char zzb[9];
         memset(zzb,0,9);
         memcpy(zzb,zztrue,8);
-        fprintf(stderr,"RECV020W Alias %s points to Member %s . No extract.\n",zza,zzb);
+        MSGW(130,"Alias %s points to Member %s . No extract.\n",zza,zzb);
 
         dirpos += FIXED_ENTRY_LENGTH;						// Reread until next Basemember
         memcpy(membername, &dir[dirpos], 8);				// new member name
@@ -1190,7 +1196,7 @@ int procdir( ) {
     int	moredir = 1;
     char	work[8];
 
-    if (optdir=='+') {
+    if (optdir=='+'&& optdirarray=='-') {
         printf("\n");
         printf("                                                     ----- LINES -----\n");
         printf("MEMBER      TTR IB VV.MM    CREATED         MODIFIED   CUR  INIT   MOD USERID\n");
@@ -1222,10 +1228,9 @@ int procdir( ) {
           FIXED_ENTRY_LENGTH,
           cmpttr);
 
-    if (optdir=='+') {
+    if (optdir=='+'&& optdirarray=='-') {
         printf("\n");
-        printf("There are %d member(s) in the PDS directory.\n",
-               dirlen / FIXED_ENTRY_LENGTH);
+        printf("There are %d member(s) in the PDS directory.\n", dirlen / FIXED_ENTRY_LENGTH);
     }
     return 0;
 } /* procdir */
@@ -1409,7 +1414,11 @@ int printdirmem() {
             work[8] = 0x00;
             strcat(msg, work);
         }
-        printf("%s\n", msg);
+        if(optdirarray=='-') printf("%s\n", msg);              // >> print directory entry
+        else {
+            int hi= GETARRAYHI(array1);
+            PUSHSARRAY(array1,hi,msg);
+        }
     }
     dirpos += FIXED_ENTRY_LENGTH;
     return entlen;
@@ -1578,8 +1587,8 @@ void getblock(int append, int snapblk) {
     }
     if ((optgetblock=='+') || (optsnapblock=='+')) {
         printf("\n");
-        printf("Getblock: Data Block %.3d length %.6d (0x%.4x) ",
-               datablock, blocklen, blocklen);
+        MSGI(50, "Getblock: Data Block %.3d length %.6d (0x%.4x) ",
+             datablock, blocklen, blocklen);
         if (blocktrailer)
             printf("trailer\n");
         else
@@ -1635,11 +1644,10 @@ void getseg( int snapget) {
     if (getsegstats)	showstats = 1;
     if (optgetseg=='+') showstats = 1;
     if (showstats) {
-        if (segflag & 0x20) {
-            printf("Control segment; seglen %.4d, segflag %.2x\n", seglen, segflag);
-        } else {
-            printf("Data segment; seglen %.4d, segflag %.2x\n", seglen, segflag);
-        }
+        if (segflag & 0x20)
+            MSGI(60, "Control segment; seglen %d, segflag %02x\n", seglen, segflag);
+        else
+            MSGI(70, "Data segment; seglen %d, segflag %02x\n", seglen, segflag);
     }
     for (i = 0; i < seglen; i++) {
         temp = fgetc(fin);
@@ -1693,216 +1701,6 @@ void getseg( int snapget) {
 
 //--------------------------------------------------------------------
 
-//* Process command line: setup options, open input
-
-int cmdline(int argc, char *argv[]) {
-    int		argnum;
-    int		lenarg;
-    int		arghit;
-    int		opthit;
-    char	optchar;
-    char	*arg;
-
-    opthit = 1;										// assume we find + or -
-    for (argnum = 1; ((opthit) && (argnum < argc)); argnum++) {
-        arg = argv[argnum];
-        lenarg = strlen(argv[argnum]);
-        arghit = 0;									// not 0 when we find option match
-        optchar = 0x00;
-        switch (argv[argnum][0]) {
-            case '+':
-                optchar = '+';
-                break;
-            case '-':
-                optchar = '-';
-                break;
-            default:
-                opthit = 0;								// no + or -
-                argnum--;								// we went one too far, back up
-                break;
-        }
-        if (optchar) {
-            arghit += parseopt(arg, "binary",			&optbinary); 	// eho 20071205
-            arghit += parseopt(arg, "member",			&optmember); 	// eho 20071202
-            arghit += parseopt(arg, "tran",				&opttran);
-            arghit += parseopt(arg, "seq",				&optseq);
-            arghit += parseopt(arg, "rdw",				&optrdw);
-            arghit += parseopt(arg, "about",			&optabout);
-            arghit += parseopt(arg, "help",				&opthelp);
-            arghit += parseopt(arg, "syntax",			&optsyntax);
-            arghit += parseopt(arg, "dirhex",			&optdirhex);
-            arghit += parseopt(arg, "helptran",			&opthelptran);
-            arghit += parseopt(arg, "helprdw",			&opthelprdw);
-            arghit += parseopt(arg, "helpseq",			&opthelpseq);
-            arghit += parseopt(arg, "helpbug",			&opthelpbug);
-            arghit += parseopt(arg, "list",				&optlist);
-            arghit += parseopt(arg,	"dumpdir",			&optdumpdir);
-            arghit += parseopt(arg, "getseg",			&optgetseg);
-            arghit += parseopt(arg, "snapseg",			&optsnapseg);
-            arghit += parseopt(arg, "getblock",			&optgetblock);
-            arghit += parseopt(arg, "snapblock",		&optsnapblock);
-            arghit += parseopt(arg, "snaphalt",			&optsnaphalt);
-            arghit += parseopt(arg, "block1",			&optblock1);
-            arghit += parseopt(arg, "block2",			&optblock2);
-            arghit += parseopt(arg, "trim",				&opttrimblank);
-            arghit += parseopt(arg, "dir",				&optdir);
-            arghit += parseopt(arg, "xmisum",			&optxmisum);
-            arghit += parseopt(arg, "dsattr",			&optdsattr);
-            arghit += parseopt(arg, "halt",				&opthalt);
-            arghit += parseopt(arg, "write",			&optwrite);
-            arghit += parseopt(arg, "map",				&optmap);
-            if (arghit == 0) {
-                printf("Option error: %s\n", argv[argnum]);
-                printhelp();
-                fatal = 1;
-                return fatal;
-            }
-        }
-    }
-
-    if ((opthelp=='+')
-        || (optsyntax=='+')
-        || (optabout=='+')
-        || (opthelptran=='+')
-        || (opthelprdw=='+')
-        || (opthelpseq=='+')
-        || (opthelpbug=='+')) {
-        printhelp();
-        fatal = 1;
-        return fatal;
-    }
-    // eho 20071206 cmdline **************************************************************
-    // 1st: switches. (toggles +/-) see above
-    // 2nd: keyword=value parameters. filter kwv out and mark them filtered in argtab.
-    //                                can appear in any order and mixed with positional.
-    //                                must appear after any switch.
-    //                                no prefix must appear. hyphen is burned with switches !!
-    // 3rd: positional.               order is signifkant. can be mixed with kwv, but
-    //                                must appear after any switch.
-    //                  1st: input dataset
-    //                  2nd: output extension
-
-    char zzxp[] = "xpath=";
-    char zzmp[] = "tranmap=";
-    char argtab[32] = "";											// max 32 parameters
-
-    int zzi;
-    int zzj;
-
-    for (zzi = argnum;zzi < argc ;zzi++) {
-        if ( ! strncmp(zzxp,argv[zzi],sizeof(zzxp)-1) ) {
-            strcat(zxpath,argv[zzi]+sizeof(zzxp)-1);
-            argtab[zzi] = 'X';
-            continue;
-        }
-        if ( ! strncmp(zzmp,argv[zzi],sizeof(zzmp)-1) ) {
-            memset(ztranmap, 0, sizeof(ztranmap));
-            strcpy(ztranmap,argv[zzi]+sizeof(zzmp)-1);
-            argtab[zzi] = 'X';
-            continue;
-        }
-    }
-
-    zzj = 0;
-    for (zzi = argnum;zzi < argc ;zzi++) {
-        if (argtab[zzi] == 'X' ) continue ;
-
-        switch (zzj) {
-            case 0:
-                memset(FNin, 0, sizeof(FNin));
-                strcpy(FNin, argv[zzi]);
-
-                fin = fopen(FNin, "rb");
-
-                if (!fin) {
-                    strcat(FNin, ".XMI");
-                    fin = fopen(FNin, "rb");
-                }
-                break;
-            case 1:
-                memset(outext, 0, sizeof(outext));
-                strcpy(outext, argv[zzi]);
-
-                break;
-            default:
-                break;
-        }
-
-        zzj++;
-    }
-
-    if (!fin) fin = fopen(FNin, "rb");
-
-    if (zxpath[0] != 0x00 )
-        fprintf(stderr,"RECV002I ExtractPath is %s .\n",zxpath);
-
-    if ( strcmp(ztranmap,"RECV390.MAP" ))
-        fprintf(stderr,"RECV003I TranslationTable is %s .\n",ztranmap);
-
-    // eho 20071206 cmdline **************************************************************
-
-    /* eho 20071206 ** old code ************************************** *
-    if (argc > argnum) {							// argv[1] = fn[.ext]
-        memset(FNin, 0, sizeof(FNin));
-        strcpy(FNin, argv[argnum]);
-            argnum++;
-        fin = fopen(FNin, "rb");
-        if (!fin) {
-            strcat(FNin, ".XMI");
-            fin = fopen(FNin, "rb");
-        } else { }
-    } else {
-        fin = fopen(FNin, "rb");
-    }
-
-    if (argc > argnum ) {							// argv[2] = output ft
-        memset(outext, 0, sizeof(outext));
-        strcpy(outext, argv[argnum]);
-        argnum++;
-    }
-    * eho 20071206 ** old code ************************************** */
-
-    if (fin == NULL) {
-        printf("Error opening input file %s\n", FNin);
-        printf("Execution will terminate following display of help.\n");
-        halt("Press enter to continue");
-        optsyntax = '+';							// turn on syntax display
-        printhelp();
-        fatal = 1;
-        return fatal;
-    }
-
-    tranmap();									// see if user wants trans updates
-    if (optmap=='+') {
-        snapassumeascii = 1;
-        snapshorthdr = 1;
-        snap(trantab, 256, "EBCDIC to ASCII translation");
-    }
-    if (fatal) {
-        printf("Execution terminated\n");
-        return fatal;
-    }
-    return 0;
-} /* cmdline */
-
-//--------------------------------------------------------------------
-
-//* Parse option
-
-int parseopt(char *parg, char *pvalue, char *flag) {
-
-    if ((strlen(parg) - 1) == strlen(pvalue)) {
-        if (!(memcmp(&parg[1], pvalue, strlen(pvalue)))) {
-            *flag = parg[0];
-            return 1;
-        } else
-            return 0;
-    }
-    return 0;
-} /* parseopt */
-
-//--------------------------------------------------------------------
-
 //* Update trantab from user specifications
 
 void tranmap() {
@@ -1950,7 +1748,7 @@ void tranmap() {
     }
     else {
         if (memcmp(ztranmap,"RECV390.MAP",11 ) )
-            fprintf(stderr,"RECV001E Translationtab %s . Open Error.\n",ztranmap);
+            MSGE(530,"Translationtab %s . Open Error.\n",ztranmap);
     }
     return;
 } /* tranmap */
@@ -2005,7 +1803,7 @@ void printhelp( ) {
         printf("Copyright 2000, 2001, Enhanced Software Services, Inc.\n");
         printf("V1R1M4 - doc & license at http://ensose.com/recv390.html\n");
         printf("Copyright 2007, V1R1M6 - Open Source, Edgar Hofmann. hofmann_e@arcor.de.\n");
-        printf("eho V1R1M6 20071227: Default Extension .ASC\n");
+        printf("eho V1R1M6 20071227: Default Extension .SRC\n");
         printf("eho V1R1M6 20071227: Bug Fix Zero-Bytes Trailer Blocks IEBCOPY\n");
         printf("eho V1R1M5 20071207: Embedded XMIT\n");
         printf("eho V1R1M5 20071206: Path Specification\n");
@@ -2091,9 +1889,9 @@ void printhelp( ) {
         printf("%s +seq -trim Sequence field preserved, trailing blanks preserved\n", program);
         printf("%s            Input file OS390.XMI\n", program);
         printf("%s            Sequence field removed, trailing blanks removed\n", notprogram);
-        printf("%s -member ABC.XMI MEM.ASC\n",program);										// eho 20071102
+        printf("%s -member ABC.XMI MEM.SRC\n",program);										// eho 20071102
         printf("%s            Only member MEM is extracted from ABC.XMI .\n", notprogram);		// eho 20071102
-        printf("%s            filename will be MEM.ASC .\n", notprogram);						// eho 20071202
+        printf("%s            filename will be MEM.SRC .\n", notprogram);						// eho 20071202
         printf("\n");
         halt("Press enter to continue");
         fatal = 1;
@@ -2230,13 +2028,13 @@ void cleanup( ) {
         memcpy(zza,zsinglemem,8);
         if ( fileswritten == 0 ) {
             if (zsingleorc == 0 )
-                fprintf(stderr,"RECV011W Member %s . Not found.\n",zza);
+                MSGW(100,"Member %s . Not found.\n",zza);
 
-            fprintf(stderr,"RECV014W Member %s . No Output.\n",zza);
+            MSGW(110,"Member %s . No Output.\n",zza);
         }
         else {
-            fprintf(stderr,"RECV012I Member %s . Extract Done. File %s .\n",zza,zsinglemempath);
-            fprintf(stderr,"RECV013I Member %s . Stats: %d Bytes, %d Recs.\n",zza,databyteswritten,datarecswritten);
+            MSGW(120,"Member %s . Extract Done. File %s .\n",zza,zsinglemempath);
+            MSGI(130,"Member %s . Stats: %d Bytes, %d Recs.\n",zza,databyteswritten,datarecswritten);
         }
     }
     // eho 20071202 ************************************************************************
@@ -2506,276 +2304,19 @@ int halt(char *msg) {
 
     if (opthalt=='-')
         return 0;
+/*
     if (msg == NULL)
         fprintf(stderr, "Press enter to continue, or type 'x' to exit\n");
     else
         fprintf(stderr, "%s\n", msg);
+*/
+    MSGE(540, "%s\n", msg);
     fgets(buf,sizeof(buf), stdin);
     if (buf[0] == 'x')
         return 1;
     return 0;								// continue
 } /* halt */
 
-
-// -------  MAIN -----------------------------------------------------
-/*
-int main(int argc, char *argv[]) {
-
-    int			i, x, rc;
-    int			segtype;
-    int			blksize;
-    int			templen;
-    int			tempnum;
-    char		orignode[9] = "?";
-    char		origuser[9] = "?";
-    char		targnode[9] = "?";
-    char		targuser[9] = "?";
-    char		origtime[20] = "?";
-    int			numfiles = 0;
-    int			rectype;
-    int			filenum;
-    char		utility[9] = "?";
-
-    rc = cmdline(argc, argv);
-    if ((opthelp == '+') || (rc) || (fatal)) {
-        cleanup();
-        return rc;
-    }
-
-    // eho 20071202 ************************************************************************
-    //
-    // Code inserted here for single member extract
-    // get membername from var outext
-    //  singlememberpath is complete pc path/filename.ext
-    //  singlemem is only the filename w/o .ext in uppercase
-
-    if (zoptmember == '+' ) {
-
-        int zzj = 0;
-        memset( zsinglemem,' ', sizeof(zsinglemem));
-        memset( zsinglemempath, 0, sizeof(zsinglemempath));
-
-        for (i = 0 ; i < strlen(outext); i++ ) {
-            zsinglemempath[i] = outext[i];
-
-            if (outext[i] == '\\' ) { zzj = 0 ; memset( zsinglemem,' ', sizeof(zsinglemem)) ; continue; }
-            if (outext[i] == '\/' ) { zzj = 0 ; memset( zsinglemem,' ', sizeof(zsinglemem)) ; continue; }
-            if (outext[i] == '.'  ) { zzj = 8 ; continue; }
-            if (zzj >= 8 ) continue;
-
-            zsinglemem[zzj] = toupper(outext[i]);
-            zzj++;
-        }
-
-        char zza[9];
-        memset(zza,0,9);
-        memcpy(zza,zsinglemem,8);
-        fprintf(stderr,"RECV010I Member %s . Extract to File %s .\n",zza,zsinglemempath);
-    }
-    // eho 20071202 ************************************************************************
-
-    getseg(ctlsnap);
-    x = memcmp(tranline, "INMR01", 6);
-    if (x != 0) {
-        printf("Input file not a TSO TRANSMIT dataset\n");
-        cleanup();
-        return 4;
-    }
-    while (!feof(fin)) {
-
-// Process the Data segments
-
-        while (! (segflag & 0x20) ) {
-            rc = procdata();								// process Data segments
-            if (rc) {
-                cleanup();
-                return fatal;
-            }
-//			snap(line, seglen, "Segment emitted from procdata");
-        }
-
-// Process the Control segments
-
-        rectype = 0;
-        x = memcmp(tranline, "INMR0", 5);
-        if (x == 0) {
-            rectype = getvbin(&tranline[pos+5], 1);			// what kind of INMR0?
-//			printf("INMR0 record %d\n", rectype);
-            pos = pos + 6;
-            datablock = 0;									// reset data blk ctr
-        }
-
-        if (rectype == '2') {
-            if (optxmisum=='+') {				// show info gathered from INMR01
-                optxmisum = '-';				// only show it once
-                printf("\n");
-                printf("TSO TRANSMIT dataset sent to user %s at node %s\n",
-                       targuser, targnode);
-                printf("from user %s at node %s ", origuser, orignode);
-                printf("on %.2s/%.2s/%.4s at %.2s:%.2s:%.2s\n",
-                       origtime+4, origtime+6, origtime+0,
-                       origtime+8, origtime+10, origtime+12);
-                if (numfiles > 1) {
-                    printf("contains %d files", numfiles);
-                    printf(", the first of which is this message:\n");
-                } else {
-                    printf("contains one file.\n");
-                }
-            }
-            filenum = getvbin(&line[pos], 4);
-            pos = pos + 4;
-        }
-
-// Terminate when trailer found
-
-        if (rectype == '6') {
-            while (!(feof(fin))) {
-                fgetc(fin);			// Read rest of input so stats look OK
-                segbytesread++;
-            }
-            segbytesread--;			// went one too far
-            cleanup();
-            return 0;
-        }
-
-// Deal with stuff in this Control segment
-
-        while (pos < seglen) {
-            segtype = getvbin(&line[pos], 2);
-            pos = pos + 2;
-//			if (rectype != '2') {
-//				printf("Current key %.2x\n", segtype);
-//				printf("Current position %d seglen %d\n", pos, seglen);
-//				snap(&line[pos], seglen, "current position");
-//			}
-
-            switch (segtype) {
-                case 0x1001:		// target node name
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(targnode, sizeof(targnode), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x1002:		// target userid
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(targuser, sizeof(targuser), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x1011:		// origin node name
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(orignode, sizeof(orignode), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x1012:		// origin userid
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(origuser, sizeof(origuser), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x1024:		// origin time stamp
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(origtime, sizeof(origtime), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x102f:		// number of files
-                    templen = getvbin(&line[pos+2], 2);
-                    numfiles = getvbin(&line[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x0042:		// logical record length
-                    templen = getvbin(&line[pos+2], 2);
-                    lrecl = getvbin(&line[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x0030:		// blocksize
-                    templen = getvbin(&line[pos+2], 2);
-                    blksize = getvbin(&line[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x1028:		// utility name
-                    templen = getvbin(&line[pos+2], 2);
-                    strxset(utility, sizeof(utility), &tranline[pos+4], templen);
-                    pos = pos + 4 + templen;
-                    break;
-                case 0x0002:		// dsname
-                    tempnum = getvbin(&line[pos+0], 2);
-                    pos = pos + 2;
-                    memset( dsn, 0, sizeof(dsn));
-                    for (i = 0; i < tempnum; i++) {
-                        templen = getvbin(&line[pos], 2);
-                        pos = pos + 2;
-                        strncat(dsn, &tranline[pos], templen);
-                        pos = pos + templen;
-                        if (i + 1 != tempnum)
-                            strncat(dsn, ".", 1);
-                    }
-                    break;
-                case 0x0028:		// terminal allocation - flag only, count = 0
-                    tempnum = getvbin(&line[pos+0], 2);
-                    pos = pos +2;
-                    msgfile = 1;								// inline MESSAGE
-                    break;
-                case 0x1023:		// origin version number
-                case 0x1025:		// destination time stamp
-                case 0x1026:		// acknowledgement request
-                case 0x1027:		// receive error code
-                case 0x1029:		// user parameter string
-                case 0x102a:		// transmitted record count
-                case 0x0001:		// ddname
-                case 0x0003:		// member name
-                case 0x000b:		// secondary space quantity
-                case 0x000c:		// dir blks
-                case 0x0022:		// expiration date terminal
-                case 0x003c:		// dsorg
-                case 0x0049:		// recfm
-                case 0x1020:		// last ref date
-                case 0x1021:		// last chg date
-                case 0x1022:		// create   date
-                case 0x102c:		// pri space qty
-                case 0x8012:		// dataset type
-                    tempnum = getvbin(&line[pos+0], 2);
-                    pos = pos + 2;
-                    if (tempnum != 1) {
-                        for (i = 0; i < tempnum; i++) {
-                            templen = getvbin(&line[pos], 2);
-                            pos = pos + 2 + templen;
-                        }
-                    } else {
-                        templen = getvbin(&line[pos], 2);
-                        pos = pos + 2 + templen;
-                    }
-                    break;
-                default:
-                    printf("unknown segment key %.2x\n", segtype);
-                    printf("pos %d, seglen %d\n", pos, seglen);
-                    snap(line, seglen, "line");
-                    tempnum = getvbin(&line[pos+0], 2);
-                    pos = pos + 2;
-                    for (i = 0; i < tempnum; i++) {
-                        templen = getvbin(&line[pos], 2);
-                        pos = pos + 2 + templen;		// just ignore it
-                    }
-                    break;
-            }										// switch
-        }											// pos < seglen
-        getseg(ctlsnap);
-    }												// ! eof
-    cleanup();
-    return 0;
-} /* main */
-
-
-//
-// XMIT Unpacker Interface for crexx/pa - Plugin Architecture
-// ----------------------------------------------------------
-// Provides REXX-callable functions for unpacking TSO TRANSMIT (.XMIT)
-// datasets using the RECV390 core logic.
-//
-// To build:
-//    gcc -fPIC -shared -o xmit.so xmit.c recv390.c -I/path/to/crexx/include
-//
-// REXX usage example:
-//    call xmit.unpack "myfile.xmit"
-//    call xmit.cleanup
-//
 
 // -------------------------------------------------------------
 // High-level unpack entry point (replaces the old main())
@@ -2821,7 +2362,7 @@ int recv390_unpack(const char *infile)
         char zza[9];
         memset(zza, 0, 9);
         memcpy(zza, zsinglemem, 8);
-        fprintf(stderr, "RECV010I Member %s . Extract to File %s .\n", zza, zsinglemempath);
+        MSGI(10, "Member %s . Extract to File %s .\n", zza, zsinglemempath);
     }
 
     getseg(ctlsnap);
@@ -2900,7 +2441,7 @@ int recv390_unpack(const char *infile)
                         pos += templen;
 
                         // --- 🔍 Dynamic member hook ---
-                        fprintf(stderr, "DEBUG: Found member %.8s\n", current_member);
+                        MSGI(20, "DEBUG: Found member %.8s\n", current_member);
 
                         if (optmember == '+') {
                             // if no target set yet, record the first match
@@ -2909,7 +2450,7 @@ int recv390_unpack(const char *infile)
 
                             // if this isn’t the requested one, skip processing
                             if (memcmp(current_member, zsinglemem, 8) != 0) {
-                                fprintf(stderr, "DEBUG: Skipping %.8s (not target)\n", current_member);
+                                MSGI(30, "DEBUG: Skipping %.8s (not target)\n", current_member);
                                 continue;   // jump over data for non-target member
                             }
                         }
@@ -2949,20 +2490,78 @@ int recv390_unpack(const char *infile)
     cleanup();
     return 0;
 }
-
-
-// ----------------------------------------------------------
-// Initialize unpacker and open the input XMIT file
-// ----------------------------------------------------------
-PROCEDURE(xmit_init) {
-    char *infile = GETSTRING(ARG0);
-    strncpy(FNin, infile, sizeof(FNin)-1);
-    recv390_infile[sizeof(recv390_infile) - 1] = 0;
-    int rc = XMIT_INIT(infile);    RETURNINT(rc);
-    PROCRETURN
-    ENDPROC
+/* ----------------------------------------------------------------------------------
+ * If there are new options in the prior globals, the setting here must be maintained
+ * -----------------------------------------------------------------------------------
+ */
+void ResetOptions() {
+// Options
+   optbinary = '-';     // eho 20071205: binary
+   optmember = '-';     // eho 20071202: single member
+   opttran = '+';       // translate from EBCDIC to ASCII (makrec)
+   optseq = '-';        // don't preserve sequence numbers
+   opttrimblank = '+';  // trim trailing blanks
+   optrdw = '-';        // no RDW
+   optxmisum = '+';     // display TRANSMIT dataset summary
+   optdsattr = '+';     // display dataset attributes
+   optdir = '+';        // display PDS directory
+   optwrite = '+';      // write output files
+   opthalt = '-';       // halt for <press enter> msg in halt()
+   optabout = '-';      // don't display copyright info
+// char			opthelp			= '-';		// don't display general help
+   opthelptran = '-';   // don't display xlate help
+   opthelprdw = '-';    // don't dispaly RDW help
+   opthelpseq = '-';    // don't display SEQ help
+   opthelpbug = '-';    // don't display debugging help
+   optsyntax = '-';     // don't display syntax help
+   optdirhex = '-';     // don't dump directory in hex
+   optdirarray = '-';   // don't dump into array
+   optmap = '-';        // map translate table
+// Debugging Options
+   optlist = '-';       // list records on stdout
+   optdumpdir = '-';    // dump IEBCOPY dir blocks
+   optgetseg = '-';     // getseg segment info
+   optsnapseg = '-';    // getseg snap
+   optgetblock = '-';   // getblock block info
+   optsnapblock = '-';  // getblock snap data block
+   optsnaphalt = '-';   // snap <press enter> prompt
+   optblock1 = '-';     // dump block 1
+   optblock2 = '-';     // dump block 2
+   fatal = 0;
+   recpos = 0;               // position in rec for makerec
+   block = 0;     // instorage current IEBCOPY block
+   dir = 0;       // instorage PDS directory storage
+   dirpos = 0;               // position in "dir" directory
+   outdirpos = 0;            // openout() dirpos for closeout()
+   assocpos = 0;             // assocmem() dirpos
+   dirlen = 0;               // length of "dir" used
+   dirblkpos = 0;            // position in 256 byte PDS dir block
+   direntries = 0;
+// Statistics
+   ispfstats = 0;            // ISPF stats available (procdir/parsemem)
+   fileswritten = 0;
+   databytesread = 0;        // total bytes of data read
+   databyteswritten = 0;
+   datarecswritten = 0;
+   outmembytes = 0;
+   outrecbytes = 0;          // # bytes output for record (writemem/makerec)
+   membyteswritten = 0;      // # bytes written for member
+   memrecswritten = 0;       // # records written for member
+   warncounts = 0;           // # members whose rec count didn't verify
+   blocklen = 0;             // IEBCOPY block length
+   blocktrailer = 0;         // set by getblock()
+   seglen = 0;               // length of TRANSMIT segment (0 - 253)
+   segflag = 0;              // segment flag
+   pos = 0;                  // position within block or line
+   maxpos = 0;               // position within block set by getblock()
+   datablock = 0;
+   dsorg = 0;                // dataset dsorg
+   recfm = 0;                // dataset recfm
+   blksize = 0;              // dataset blksize
+   lrecl = 0;                // dataset lrecl
+   vbfile = 0;               // 1 = file is V[B] recfm
+   msgfile = 0;              // 1 = process msgfile
 }
-
 // ----------------------------------------------------------
 // Unpack entire XMIT file (equivalent to main())
 // ----------------------------------------------------------
@@ -2970,6 +2569,10 @@ PROCEDURE(xmit_unpack) {
     char *infile = GETSTRING(ARG0);
     char cwd[1024];
     char pathbuf[1024];
+    ResetOptions();
+// set options required for this function
+    optwrite='+';
+    optdir = '-';
 
     get_path(infile, pathbuf, sizeof(pathbuf));
     if(pathbuf[0]!=0) {
@@ -2981,6 +2584,7 @@ PROCEDURE(xmit_unpack) {
     printf("Unpack file(s) into '%s'\n", pathbuf);
 
     int rc = recv390_unpack(infile);
+
     if(pathbuf[0]!=0) {       // reset it to the original work directory
         chdir(cwd);      // works in Windows/Linux/Mac
       //  getcwd(pathbuf, sizeof(pathbuf));
@@ -2990,58 +2594,20 @@ PROCEDURE(xmit_unpack) {
     PROCRETURN
     ENDPROC
 }
-
-// ----------------------------------------------------------
-// Process one Data Segment manually (advanced use)
-// ----------------------------------------------------------
-PROCEDURE(xmit_procdata) {
-    int rc = procdata();
-    RETURNINT(rc);
-    PROCRETURN
-    ENDPROC
-}
-
-// ----------------------------------------------------------
-// Read and snap one Segment (diagnostic)
-// ----------------------------------------------------------
-PROCEDURE(xmit_getseg) {
-    int snap = GETINT(ARG0);
-    getseg(snap);
-    RETURNINT(0);
-    PROCRETURN
-    ENDPROC
-}
-
 // ----------------------------------------------------------
 // Display / parse Directory (without full unpack)
 // ----------------------------------------------------------
 PROCEDURE(xmit_procdir) {
-    int rc = procdir();
-    RETURNINT(rc);
+    char *infile = GETSTRING(ARG0);
+    array1=ARG1;
+    SETARRAYHI(ARG1,0);
+    ResetOptions();
+// set options required for this function
+    optwrite='-';
+    optdirarray='+';
+
+    int rc = recv390_unpack(infile);
     PROCRETURN
-    ENDPROC
-}
-
-PROCEDURE(xmit_setopt) {
-    char *option = GETSTRING(ARG0);
-    char *value = GETSTRING(ARG1);
-
-    if (!option || !value) {
-        RETURNINTX(8);  // invalid parameters
-    }
-
-    // Normalize option to lowercase
-    for (char *p = option; *p; ++p) *p = (char) tolower(*p);
-
-    if (strcmp(option, "help") == 0)        opthelp = (value[0] == '+' ? '+' : '-');
-    else if (strcmp(option, "xmisum") == 0) optxmisum = (value[0] == '+' ? '+' : '-');
-    else if (strcmp(option, "member") == 0) optmember = (value[0] == '+' ? '+' : '-');
-    else if (strcmp(option, "binary") == 0) optbinary = (value[0] == '+' ? '+' : '-');
-    else {
-        printf("Unknown option: %s\n", option);
-        RETURNINTX(4);
-    }
-    RETURNINTX(0);
     ENDPROC
 }
 
@@ -3049,45 +2615,23 @@ PROCEDURE(xmit_setopt) {
 // Extract a single member (sets optmember, outext)
 // ----------------------------------------------------------
 PROCEDURE(xmit_extract) {
-    char *membername = GETSTRING(ARG0);
+    char *infile = GETSTRING(ARG0);
+    char *membername = GETSTRING(ARG1);
 
     // Full unpack mode (reset any single-member settings)
-    optmember = '-';
-    optbinary = '-';
-    optxmisum = '+';
     memset(zsinglemem, 0, sizeof(zsinglemem));
 
-    printf("Starting full unpack of %s\n", recv390_infile);
-
-    if (recv390_infile[0] == '\0') {
-        printf("xmit.extract: No XMIT file initialized. Call xmit.init first.\n");
-        RETURNINT(8);
-        PROCRETURN
-    }
-
+    printf("Starting unpack of a member %s\n", recv390_infile);
     // Prepare single-member extraction mode
     optmember = '+';
     optbinary = '-';
+    optdir = '-';
 
     // Store uppercase member name (padded or truncated to 8 chars)
-    memset(zsinglemem, ' ', sizeof(zsinglemem));
     strncpy(zsinglemem, membername, 8);
-    for (int i = 0; i < 8 && zsinglemem[i]; i++)
-        zsinglemem[i] = (char) toupper((unsigned char) zsinglemem[i]);
-
-    // Construct default output filename: e.g. "C:\Temp\$HELP.ASC"
-    char *slash = strrchr(recv390_infile, '\\');
-    const char *base = slash ? slash + 1 : recv390_infile;
-
-    snprintf(zsinglemempath, sizeof(zsinglemempath),
-             "C:\\Temp\\%.*s.asc", 8, zsinglemem);
-
-    strncpy(outext, "asc", sizeof(outext) - 1);
-    outext[sizeof(outext) - 1] = 0;
-
     fprintf(stderr, "RECV010I Extracting member %.*s to %s\n", 8, zsinglemem, zsinglemempath);
 
-    int rc = recv390_unpack(recv390_infile);
+    int rc = recv390_unpack(infile);
 
     RETURNINT(rc);
     PROCRETURN
@@ -3107,13 +2651,8 @@ PROCEDURE(xmit_cleanup) {
 // Register callable names with CREXX runtime
 // ----------------------------------------------------------
 LOADFUNCS
-    ADDPROC(xmit_init,     "recv390.xmitinit",      "b", ".int",   "infile=.string");
     ADDPROC(xmit_unpack,   "recv390.xmitunpack",    "b", ".int",   "infile=.string");
-    ADDPROC(xmit_setopt,   "recv390.xmitsetopt",    "b", ".int",   "option=.string,value=.string");
-    ADDPROC(xmit_procdata, "recv390.xmitprocdata",  "b", ".int",   "");
-    ADDPROC(xmit_getseg,   "recv390.xmitgetseg",    "b", ".int",   "snap=.int");
-    ADDPROC(xmit_procdir,  "recv390.xmitprocdir",   "b", ".int",   "");
-    ADDPROC(xmit_extract,  "recv390.xmitextract",   "b", ".int",   "memberpath=.string");
+    ADDPROC(xmit_procdir,  "recv390.xmitdirlist",   "b", ".int",   "memberpath=.string,array=.string[]");
+    ADDPROC(xmit_extract,  "recv390.xmitextract",   "b", ".int",   "memberpath=.string,member=.string");
     ADDPROC(xmit_cleanup,  "recv390.xmitcleanup",   "b", ".int",   "");
 ENDLOADFUNCS
-
