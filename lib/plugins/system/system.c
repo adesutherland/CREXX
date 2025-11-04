@@ -878,6 +878,9 @@ PROCEDURE(opsys) {
 #endif
 ENDPROC
 }
+// #define PIPE ON
+#if 0
+/* ++++++++++++++++++++++++++++++ doesn't work in macOS, drop it for the moment
 /* ----------------------------------------------------------------------------
  * PIPE Interface
  * ----------------------------------------------------------------------------
@@ -888,6 +891,7 @@ typedef struct {
     HANDLE hRead;
     int running;
 } ChildProcess;
+
 #else
 typedef struct {
     pid_t pid;
@@ -895,7 +899,6 @@ typedef struct {
     int running;
 } ChildProcess;
 #endif
-
 #define MAX_LINE_LENGTH 1024
 #define MAX_BUFFER_LENGTH (32 * 1024)+1
 /* ----------------------------------------------------------------------------
@@ -930,6 +933,7 @@ int splitBuffer(char *buffer, void *array) {
     }
     return lino;
 }
+/* +++++++++++++++++++++++ PIPE functions dropped from system plugin, for the moment
 /* ----------------------------------------------------------------------------
  * Process captured output
  * 1. read into the maximum avaialable buffer
@@ -1207,6 +1211,8 @@ PROCEDURE(pipeclose) {
     cleanup_child_process(proc);
     free(proc);
 }
+
+#endif
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
  * -------------------------------------------------------------------------------------
@@ -1237,6 +1243,7 @@ LOADFUNCS
     ADDPROC(rxbin_modules,"system.lmodules",   "b",    ".int","source=.string");
     ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
     ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
+/*
     ADDPROC(pipecreate,  "system.pipecreate",  "b",    ".int" ," ");
     ADDPROC(piperun,     "system.pipesend",    "b",    ".int" ,"proc=.int,cmd=.string");
     ADDPROC(pipewait,    "system.pipewait",    "b",    ".int" ,"proc=.int,mwait=10000");
@@ -1244,5 +1251,6 @@ LOADFUNCS
     ADDPROC(pipestatus,  "system.pipestatus",  "b",    ".int" ,"proc=.int");
     ADDPROC(pipecancel,  "system.pipecancel",  "b",    ".int" ,"proc=.int");
     ADDPROC(pipeclose,   "system.pipeclose",   "b",    ".int" ,"proc=.int");
+ */
 ENDLOADFUNCS
 
