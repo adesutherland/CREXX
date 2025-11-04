@@ -18,9 +18,10 @@
   #include <ctype.h>
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__linux__)
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #endif
+
 // Centralized info message macro – allows redirect to stdout if desired
 #define MSGI(num, fmt, ...) fprintf(stdout, "XMI%03dI " fmt, num, ##__VA_ARGS__)
 #define MSGW(num, fmt, ...) fprintf(stdout, "XMI%03dW " fmt, num, ##__VA_ARGS__)
