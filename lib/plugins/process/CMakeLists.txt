@@ -10,7 +10,7 @@ endif()
 # -------------------------------------------------------------------------------------------
 set(plugin_name "process")       # add plugin name
 set(test_rexx "process_test")    # add rexx to test plugin
-set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
+set(use_precomp TRUE)            # TRUE pre compile needed, FALSE if not
 
 # ===========================================================================================
 # The following sequence is generic and does not require modification.

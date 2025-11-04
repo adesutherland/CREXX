@@ -5,9 +5,9 @@ set(CMAKE_C_STANDARD 99)
 # -------------------------------------------------------------------------------------------
 # Set plugin_name and test_rexx to match the specific plugin and its corresponding test case.
 # -------------------------------------------------------------------------------------------
-set(plugin_name "system")       # add plugin name
-set(test_rexx "system_test")    # add rexx to test plugin
-set(use_precomp TRUE)           # TRUE pre compile needed, FALSE if not
+set(plugin_name "pipe")       # add plugin name
+set(test_rexx "pipe_test")    # add rexx to test plugin
+set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
 
 # ===========================================================================================
 # The following sequence is generic and does not require modification.
@@ -25,10 +25,10 @@ add_test(NAME ${test_rexx}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
 # Create the static link module
-#add_static_plugin_target(_system system.c)
+#add_static_plugin_target(_pipe pipe.c)
 
 # Add include directories - static version
-# target_include_directories(_system_static PRIVATE 
+# target_include_directories(_pipe_static PRIVATE 
 #     ${CMAKE_SOURCE_DIR}/include
 #     ${CMAKE_SOURCE_DIR}/lib/include
 #     ${CMAKE_SOURCE_DIR}/rxpa

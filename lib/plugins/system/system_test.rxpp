@@ -1,91 +1,60 @@
-/* REXX */
-options levelb
 import system
-import rxfnsb
+##cflags def nset  3buf  parse def
+##  array=.string[]
 
-##cflags def nset niflink 1buf 2buf 3buf parse nvars nmaclist includes  /* set early stage compiler flags */
-##                                       nparse to switch off the parse debug information
-/* 1. split string at ',' delimiter */
-say "1. split string at ',' delimiter"
-string='11,2222,3333,44444,555555'
-parse  VALUE string   with first','second','third','fourth','fifth','six
-say '--- end of parse instruction ---'
-say '1. parm 'first
-say '2. parm 'second
-say '3. parm 'third
-say '4. parm 'fourth
-say '5. parm 'fifth
-say '6. parm "'six'"'
+myint=7
+Select
+  when myint=1 then do
+    say "value is 1"
+    say "End of when"
+    leave
+  end
+    when myint=2 | myint<8 then say "value is between 2 and 7"
+  when myint=3 then say "value is 3"
+  when myint=4 then say "value is 4"
+  when myint=5 then say "value is 5"
+  otherwise say 'Integer out of range'
+end /* End of Select */
 
-parse VAR string  first','second','third','fourth','fifth','six
-say '--- end of parse instruction'
-say '1. parm 'first
-say '2. parm 'second
-say '3. parm 'third
-say '4. parm 'fourth
-say '5. parm 'fifth
-say '6. parm "'six'"'
 
-/* 1. split string at ',' delimiter */
-say "1. split string at ',' delimiter"
-string='11,2222,3333,44444,555555'
-parse  string   with first','second','third','fourth','fifth','six
-say '--- end of parse instruction'
-say '1. parm 'first
-say '2. parm 'second
-say '3. parm 'third
-say '4. parm 'fourth
-say '5. parm 'fifth
-say '6. parm "'six'"'
+City='Vienna'
+Select
+  when city='Munich' | city='Vienna' then say "our Language is Bairisch"
+  when city='London' then say "value is London"
+  when city='Vienna' then say "value is Vienna"
+  when city='Paris'  then say "value is Paris"
+  otherwise say 'unknown city'
+end /* End of Select */
 
-parse string  first','second','third','fourth','fifth','six
-say '--- end of parse instruction'
-say '1. parm 'first
-say '2. parm 'second
-say '3. parm 'third
-say '4. parm 'fourth
-say '5. parm 'fifth
-say '6. parm "'six'"'
+City='Munich'
+var1='Berlin'
+Switch city
+ case var1 then say "switch label is a variable"
+  case 'Munich' then say "value is Munich"
+  case 'London' then say "value is London"
+  case 'Vienna' then say "value is Vienna"
+  case 'Paris'  then say "value is Paris"
+  default say 'unknown city'
+end /* End of Select */
 
-string='11 2222 3333 44444 555555'
-parse string  first second third fourth fifth six
-say '--- end of parse instruction'
-say '1. parm 'first
-say '2. parm 'second
-say '3. parm 'third
-say '4. parm 'fourth
-say '5. parm 'fifth
-say '6. parm "'six'"'
 
-/* 2. split string at '-' delimiter */
-say "2. split string at '-' delimiter"
-s = '2025-08-14'
-parse s with year '-' . '-' day
-say '--- end of parse instruction'
-say year day   ## 2025 14
-say " "
-
-/* 3. split string at complex delimiter */
-say "3. split string at complex delimiter"
-s = 'host=example.com port=5432 user=alice'
-parse s  with 'host=' host 'port=' port 'user=' user
-say '--- end of parse instruction'
-say host port user   ## example.com 5432 alice
-say " "
-
-/* 4. split string at certain position     */
-say "4. split string at certain position"
-s = 'abcdef'
-parse s with a 3 b 5 c
-say '--- end of parse instruction'
-say a b c        ## ab cd ef
-say " "
-
-/* 5. split string at relative position */
-say "5. split string at relative position"
-s = 'abcdef'
-parse s with a +2 b +2 c
-say '--- end of parse instruction'
-say a b c        ## ab cd ef
-say " "
 exit
+/*
+
+token=pipeCreate()
+say "*** Pipe Token   "token
+say "SEND DIR command "pipeSend(token,'cmd /c dir /b')
+
+## say "RUN "pipeSend(token,'C:\Program Files\rexx.org\Regina\regina.exe "C:\Temp\myrexx.rexx"')
+
+say "Wait for completion "Pipewait(token)
+say "Read array (lines)  "Pipeget(token,array)
+say " CCaptured Results"
+do i=1 to array[0]
+   say i array[i]
+end
+
+call PipeClose(token)
+say 'This is the end'
+return
+*/

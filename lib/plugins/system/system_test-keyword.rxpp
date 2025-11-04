@@ -1,0 +1,101 @@
+/*
+ * crexx RXPP
+ * CREXX Pre Compiler
+ */
+options levelb
+import rxfnsb
+
+
+##set printgen none
+
+##cflags def nset niflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
+
+say 'Compile date {rxpp_date}'
+
+##set abc 1
+
+##if xyz
+/* enter IF DEF clause   */
+  say 'we entered branch IF xyz'
+  ##set printgen none          ## show no precompiler calls in generated rexx
+  ##set printgen all           ## show all nested precompiler calls in generated rexx
+  ##set printgen nnest         ## show only first precompiler call for nested calls (default)
+##else
+  /* enter ELSE IF DEF clause   */
+    say 'we entered branch IFN xyz'
+  ##set printgen none        ## show no precompiler calls in generated rexx
+  ##if abc
+  /* enter IF ABC clause   */
+      say 'we entered branch IF abc'
+       say SQUARE(DOUBLE(4))        ## expand nested macro calls coming from the MACLIB library
+       say quote({rxpp_date})       ## pre defined pre-compiler variable: compilation date/time
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##else
+  /* enter ELSE IF ABC clause   */
+      say 'we entered branch IFN abc'
+       say dQuote({rxpp_rexx})      ## pre defined pre-compiler variable: main rexx name
+  ##endif
+##end
+/* define a macro containing a {variable}, the define instruction is fetched in pass 1, therefore the value doesn't need to be avaliable */
+##define logL                  {say time('l')' log record' ; say '{prefix} something'}
+
+##define Liststem(stem)        {do _indx=1 to stem.0; say stem._indx ; end}
+/* the set instruction is always setup in pass 2 */
+##set prefix 1234
+ logL()                       ## now in pass 2 expand the log macro
+##set prefix "456"             ## change the prefix
+ logL()                       ## and re-expand another log macro
+ say {prefix}                 ## output the current prefix->compiler variable
+##unset prefix
+Setstem(fruits, "apple", "banana", "cherry","pear","melon","kiwi","lemon","grape")
+say hi(fruits)
+do i=1 to hi(fruits)
+   say i fruits.i
+end
+
+##define cmd factorial(var integer=5) {var = 1; do i=1 to integer; var = var * i; end}
+
+##define cmd execio(num DISKX file keyword stem) {stem.1=''; rc=_ExecIO('num', 'diskx', file,stem) }
+
+##define cmd liststem(var) {say "List of stem var"; say copies('-',32) \
+                            do i=1 to var.0; \
+                            say right(i,4,'0') var.i; \
+                            end}
+
+##define CMD zipFolder(src dest) {ADDRESS SYSTEM 'powershell Compress-Archive -Path src -DestinationPath dest -Force; Write-Output "Archive created: dest"'}
+zipFolder "C:\\temp\\blox.rx" "C:\\temp\\bloxLib.zip"
+
+
+##define netCheck(host) {Address SYSTEM 'ping host' }
+##netCheck("google.com")
+
+##define openHere(path) {Address SYSTEM 'explorer path'}
+openHere("C:\\TEMP\\")
+
+
+ExecIO 12 DISKR 'C:/temp/$ms.jcl' stem fileStem     ## Read 12 records of file
+say "EXECIO rc="rc
+
+listStem fileStem          ## list read stem
+
+
+/* write Stem to a new file */
+ExecIO * DISKW 'C:/temp/$ms-test.jcl' stem fileStem
+say "EXECIO rc="rc
+
+/* write Stem to a another file */
+ExecIO * DISKW 'C:/temp/$ms-test-2.jcl' stem fileStem
+say "EXECIO rc="rc
+/* append the file */
+ExecIO * DISKA 'C:/temp/$ms-test-2.jcl' stem fileStem
+say "EXECIO rc="rc
+
+
+Factorial result  integer(33)       ## macro command call factorial of 10
+say "Factorial is="result  ## display result
+
+##define checkRange(value,range=) {rangeLow=word(range,1);rangehi=word(range,2); if value<rangeLow | value>Rangehi then say 'value is out of interval'; else say 'value is within interval'}
+checkRange(47,range(10 51))
+checkRange(1,range(10 51))
+
+exit

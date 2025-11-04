@@ -7,6 +7,7 @@
 #if defined(__APPLE__)
  #include <sys/stat.h>
  #include <sys/time.h>
+ #include <sys/wait.h>
  #include <sys/sysctl.h>
  #include <errno.h>
  #include <string.h>
@@ -74,7 +75,7 @@ void searchReplace(char *str, char search, char replace) {
  * -------------------------------------------------------------------------------------
  */
 PROCEDURE(getEnv) {
-    char *varName = GETSTRING(ARG0);    
+    char *varName = GETSTRING(ARG0);
     if (!varName) {
         RETURNSIGNAL(SIGNAL_FAILURE, "Invalid argument")
     }
@@ -877,7 +878,335 @@ PROCEDURE(opsys) {
 #endif
 ENDPROC
 }
+/* ----------------------------------------------------------------------------
+ * PIPE Interface
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+typedef struct {
+    PROCESS_INFORMATION pi;
+    HANDLE hRead;
+    int running;
+} ChildProcess;
+#else
+typedef struct {
+    pid_t pid;
+    int fd;
+    int running;
+} ChildProcess;
+#endif
 
+#define MAX_LINE_LENGTH 1024
+#define MAX_BUFFER_LENGTH (32 * 1024)+1
+/* ----------------------------------------------------------------------------
+ * Split a received captured buffer into a CREXX array
+ * ----------------------------------------------------------------------------
+ */
+int splitBuffer(char *buffer, void *array) {
+    char line[MAX_LINE_LENGTH];
+    int line_len = 0;
+    int lino = GETARRAYHI(array);
+    char *ptr = buffer;
+    while (*ptr) {
+        while (*ptr && *ptr != '\n' && *ptr != '\r' && line_len < MAX_LINE_LENGTH - 1) {
+            line[line_len++] = *ptr++;
+        }
+        if (*ptr == '\n' || *ptr == '\r') {
+            line[line_len] = '\0';
+            lino++;
+            SETARRAYHI(array, lino);
+            SETSARRAY(array, lino - 1, line);
+            line_len = 0;
+            line[0] = '\0';
+            if (*ptr == '\r' && *(ptr + 1) == '\n') ++ptr;
+            ++ptr;
+        }
+    }
+    if (line_len > 0) {
+        line[line_len] = '\0';
+        lino++;
+        SETARRAYHI(array, lino);
+        SETSARRAY(array, lino - 1, line);
+    }
+    return lino;
+}
+/* ----------------------------------------------------------------------------
+ * Process captured output
+ * 1. read into the maximum avaialable buffer
+ * 2. split it into single lines save them in a CREXX array
+ * 3. repeat until no more data are available
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+int process_lines_from_pipe(HANDLE hRead, void *array) {
+#else
+    int process_lines_from_fd_or_handle(int fd, void *array) {
+#endif
+    int lino = 0;
+    char buffer[MAX_BUFFER_LENGTH];
+    for (;;) {
+#ifdef _WIN32
+        DWORD nRead = 0;
+        BOOL bSuccess = ReadFile(hRead, buffer, sizeof(buffer) - 1, &nRead, NULL);
+        if (bSuccess && nRead > 0) {
+#else
+        ssize_t nRead = read(fd, buffer, sizeof(buffer) - 1);
+        if (nRead > 0) {
+#endif
+        buffer[nRead] = '\0';
+        lino += splitBuffer(buffer, array);  // You probably want splitBuffer to return # lines added
+        } else {
+            break; // Either EOF or error
+        }
+    }
+    return lino;
+}
+/* ----------------------------------------------------------------------------
+ * Create Pipe
+ * ----------------------------------------------------------------------------
+ */
+int start_child_process(const char *cmd, ChildProcess *out_proc) {
+#ifdef _WIN32
+    HANDLE hRead, hWrite;
+    SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return -1;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.hStdOutput = hWrite;
+    si.hStdError  = hWrite;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    ZeroMemory(&pi, sizeof(pi));
+    char cmdline[512];
+    strncpy(cmdline, cmd, sizeof(cmdline)-1);
+    cmdline[sizeof(cmdline)-1] = 0;
+
+    if (!CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi)) {
+        CloseHandle(hRead); CloseHandle(hWrite);
+        return -2;
+    }
+    CloseHandle(hWrite);
+    out_proc->pi = pi;
+    out_proc->hRead = hRead;
+    return 0;
+#else
+    int pipefd[2];
+    if (pipe(pipefd) == -1) return -1;
+    pid_t pid = fork();
+    if (pid == -1) {
+        close(pipefd[0]); close(pipefd[1]);
+        return -2;
+    }
+    if (pid == 0) {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
+        exit(127);
+    }
+    close(pipefd[1]);
+    out_proc->pid = pid;
+    out_proc->fd = pipefd[0];
+    return 0;
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * Cleanup a pipe
+ * ----------------------------------------------------------------------------
+ */
+void cleanup_child_process(ChildProcess *proc) {
+#ifdef _WIN32
+    CloseHandle(proc->hRead);
+    CloseHandle(proc->pi.hProcess);
+    CloseHandle(proc->pi.hThread);
+#else
+    close(proc->fd);
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * WAIT/POLL for a pipe has finished
+ * ----------------------------------------------------------------------------
+ */
+int wait_child_process(ChildProcess *proc, int block) {
+#ifdef _WIN32
+    DWORD result = WaitForSingleObject(proc->pi.hProcess, block ? INFINITE : 0);
+    if (result == WAIT_OBJECT_0) return 1;   // Exited
+    if (result == WAIT_TIMEOUT)  return 0;   // Still running
+    return -1; // Error
+#else
+    int status = 0;
+    pid_t res = waitpid(proc->pid, &status, block ? 0 : WNOHANG);
+    if (res == 0) return 0;     // Still running
+    if (res == proc->pid) return 1; // Exited
+    return -1; // Error
+#endif
+}
+/* ----------------------------------------------------------------------------
+ * Cancel running pipe
+ * ----------------------------------------------------------------------------
+ */
+#ifdef _WIN32
+int cancel_child_process(ChildProcess *proc) {
+    if (proc->running<0) return 0;   // was already cancelled
+    if (proc->running) {
+        BOOL ok = TerminateProcess(proc->pi.hProcess, 1);
+        if (ok) {
+            proc->running = -1;
+            return 0;   // Success
+        } else {
+            return -12; // Error
+        }
+    }
+    return -8; // Not running
+}
+#endif
+#ifndef _WIN32
+#include <signal.h>
+int cancel_child_process(ChildProcess *proc) {
+    if (proc->running) {
+        int ok = kill(proc->pid, SIGKILL);
+        if (ok == 0) {
+            proc->running = 0;
+            return 0; // Success
+        } else {
+            return -12; // Error
+        }
+    }
+    return -8; // Not running
+}
+#endif
+/* ----------------------------------------------------------------------------
+ * CREXX Create pipe
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipecreate) {
+    char * cmd = GETSTRING(ARG0);
+    ChildProcess *proc = malloc(sizeof(ChildProcess)); // Allocate!
+    if (!proc) {
+        RETURNINTX(-8); // Out of memory
+    }
+    rxinteger rproc=(rxinteger) proc;
+    RETURNINTX(rproc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPSEND Send command to a pipe
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(piperun) {
+    rxinteger rproc = GETINT(ARG0);
+    char *cmd = GETSTRING(ARG1);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    if (start_child_process(cmd, proc) != 0) {
+        fprintf(stderr, "Failed to start child process\n");
+        RETURNINTX(-8)
+    }
+    proc->running=1;
+    RETURNINTX(0)
+ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * Wait for ending of a pipe or reach a timeout
+ * ----------------------------------------------------------------------------
+ */
+int waitfor(ChildProcess *proc,int maxsleep) {
+    int msleep=0;
+    int sleepInterval=200;
+    // Async demo: poll for completion
+    while (wait_child_process(proc, 0) == 0) {
+#ifdef _WIN32
+        Sleep(sleepInterval);
+#else
+        usleep(sleepInterval*1000);
+#endif
+        msleep=msleep+sleepInterval;
+        if(msleep>maxsleep) {
+           // printf("Maximum wait reached %d\n",maxsleep);
+            return 4;
+        }
+    }
+  //  printf("Child exited\n");
+    proc->running=0;
+    return 0;
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPEWAIT
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipewait) {
+    rxinteger rproc = GETINT(ARG0);
+    rxinteger maxsleep = GETINT(ARG1);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    int rc=waitfor(proc,maxsleep);
+    RETURNINTX(rc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPEGET
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipeget) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    if (proc->running<=-100){
+        SETARRAYHI(ARG1,1);
+        SETSARRAY(ARG1,0,"No entries available");
+        RETURNINTX(4)
+    }
+#ifdef _WIN32
+    process_lines_from_pipe(proc->hRead, ARG1);
+#else
+    process_lines_from_pipe(proc->fd,ARG1) ;
+#endif
+    RETURNINTX(0);
+ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPESTATUS
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipestatus) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+  //  if(proc->running = -1) RETURNINTX(0);
+    int status = wait_child_process(proc, 0);  // Non-blocking check
+    // Optionally, update your .running flag:
+    if (status == 1 || status == -1) {
+        proc->running = 0;
+        RETURNINTX(0);  // 0=exited or error
+    }
+    RETURNINTX(1); // 1=still running, 0=exited or error
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPECANCEL
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipecancel) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *)rproc;
+    int rc = cancel_child_process(proc);
+    int rc2=waitfor(proc,1000);
+    if(rc2 != 0) rc=rc2;
+    RETURNINTX(rc);
+    ENDPROC
+}
+/* ----------------------------------------------------------------------------
+ * CREXX PIPECLOSE
+ * ----------------------------------------------------------------------------
+ */
+PROCEDURE(pipeclose) {
+    rxinteger rproc = GETINT(ARG0);
+    ChildProcess *proc = (ChildProcess *) rproc;
+    proc->running=0;
+    cleanup_child_process(proc);
+    free(proc);
+}
 /* -------------------------------------------------------------------------------------
  * Expose functions to CREXX
  * -------------------------------------------------------------------------------------
@@ -908,5 +1237,12 @@ LOADFUNCS
     ADDPROC(rxbin_modules,"system.lmodules",   "b",    ".int","source=.string");
     ADDPROC(parse,       "system.parse",       "b",    ".int" ,"string=.string,pattern=.string,expose variable=.string[],expose value=.string[]");
     ADDPROC(parsex,      "system.parsex",      "b",    ".int" ,"string=.string,pattern=.string,expose entries=.string[]");
+    ADDPROC(pipecreate,  "system.pipecreate",  "b",    ".int" ," ");
+    ADDPROC(piperun,     "system.pipesend",    "b",    ".int" ,"proc=.int,cmd=.string");
+    ADDPROC(pipewait,    "system.pipewait",    "b",    ".int" ,"proc=.int,mwait=10000");
+    ADDPROC(pipeget,     "system.pipeget",     "b",    ".int" ,"proc=.int, expose array=.string[]");
+    ADDPROC(pipestatus,  "system.pipestatus",  "b",    ".int" ,"proc=.int");
+    ADDPROC(pipecancel,  "system.pipecancel",  "b",    ".int" ,"proc=.int");
+    ADDPROC(pipeclose,   "system.pipeclose",   "b",    ".int" ,"proc=.int");
 ENDLOADFUNCS
 
