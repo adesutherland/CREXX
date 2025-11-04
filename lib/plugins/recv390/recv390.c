@@ -22,11 +22,11 @@
 #include <unistd.h>        // For POSIX systems (Linux/macOS)
 #endif
 // Centralized info message macro – allows redirect to stdout if desired
-#define MSGI(num, fmt, ...) fprintf(stdout, "RECV%03dI " fmt, num, ##__VA_ARGS__)
-#define MSGW(num, fmt, ...) fprintf(stdout, "RECV%03dW " fmt, num, ##__VA_ARGS__)
-#define MSGE(num, fmt, ...) fprintf(stdout, "RECV%03dE " fmt, num, ##__VA_ARGS__)
+#define MSGI(num, fmt, ...) fprintf(stdout, "XMI%03dI " fmt, num, ##__VA_ARGS__)
+#define MSGW(num, fmt, ...) fprintf(stdout, "XMI%03dW " fmt, num, ##__VA_ARGS__)
+#define MSGE(num, fmt, ...) fprintf(stdout, "XMI%03dE " fmt, num, ##__VA_ARGS__)
 
-#define member_extension "SRC"   // define extension of received source members
+#define member_extension "src"   // define extension of received source members
 
 // ---------------------------------------------------------------------------------------
 // Things to do:
@@ -187,7 +187,6 @@ int XMIT_INIT(const char *filename)
     char fn[1024];
     strncpy(fn, filename, sizeof(fn)-1);
     fn[sizeof(fn)-1] = 0;
-    xmit_init_once=1;
 
     // open input, reset state, etc.
     extern FILE *fin;
@@ -269,8 +268,10 @@ FILE *fout = NULL;
 char FNout[FILENAME_MAX] = "Dummy.txt";
 char FNin[sizeof(FNout)] = "OS390.XMI";
 char outext[FILENAME_MAX] = member_extension; // eho 20071202
+char extract_member[FILENAME_MAX]="";
 char zsinglemem[8] = "";                 // eho 20071202
 char zsinglemempath[FILENAME_MAX] = "";  // eho 20071202
+char exportpath[512] = "";  // eho 20071202
 int zsinglebyteswritten = 0;             // eho 20071202
 int zsinglerecswritten = 0;              // eho 20071202
 int zsingleorc = 0;                      // eho 20071202
@@ -282,7 +283,7 @@ char dsnmem[sizeof(dsn)];
 char *pmem = NULL;            // ptr to ASCII member name
 char membername[8] = "";      // ASCII member name from assocmem
 
-unsigned char *rec;           // record buffer for makerec
+unsigned char *makeRecordptr;           // record buffer for makerec
 unsigned char datestr[80];    // ispf date as char string from ispfdate()
 
 int recpos = 0;               // position in rec for makerec
@@ -488,8 +489,8 @@ const	int		eyepdse = 0x01ca6d0f;		// IEBCOPY PDSE eyecatcher (someday)
 
     if (optdsattr=='+') {
         printf("\n");
-        printf("Dataset %s\n", dsn);
-        printf("Dsorg %s ", txtdsorg);
+        printf("  Dataset %s\n", dsn);
+        printf("    Dsorg %s ", txtdsorg);
         printf("recfm %s ", txtrecfm);
         printf("blksize %d ", blksize);
         printf("lrecl %d\n", lrecl);
@@ -630,7 +631,7 @@ int writemem( ) {
             }
 
             memrecswritten++;
-            bytes = makerec(rec,0,prtoutrec);			// [list &] output rec
+            bytes = makerec(makeRecordptr, 0, prtoutrec);			// [list &] output rec
             if (fatal)
                 return fatal;
             membyteswritten += bytes;					// accum bytes written for mem
@@ -659,36 +660,36 @@ int makerec(char *ptxt, int len, int showrec ) {
 //	char		showbuf[sizeof(line)];
     int			bytesout, i, validseq, x;
 
-    if (rec == NULL) {
-        rec = malloc(lrecl);
-        if (rec == NULL) {
+    if (makeRecordptr == NULL) {
+        makeRecordptr = malloc(lrecl);
+        if (makeRecordptr == NULL) {
             printf("Fatal error; storage allocation failed for %d bytes\n", lrecl);
             fatal = 1;
             return fatal;
         }
     }
     if (ptxt == NULL) {
-        memset(rec, 0, sizeof(rec));				// clear record buffer
+        memset(makeRecordptr, 0, sizeof(makeRecordptr));				// clear record buffer
         recpos = 0;
         return 0;
     }
     // ---------------------------------------------
     if (len == 0) {									// output record
         if (opttran=='+')
-            ebcdic2ascii( rec, lrecl);				// ASCII-ize buffer
+            ebcdic2ascii(makeRecordptr, lrecl);				// ASCII-ize buffer
 
         bytesout = lrecl;
         if ((optseq == '-') && (bytesout > 8)) {	// remove sequence field
             validseq = 1;							// assume seq field valid
             if (vbfile) {
                 for (i=0; i < 8; i++) {
-                    x = rec[i];
+                    x = makeRecordptr[i];
                     if (!isdigit(x))
                         validseq = 0;
                 }
             } else {
                 for (i=lrecl - 1; i >= lrecl - 8; i--) {
-                    x = rec[i];
+                    x = makeRecordptr[i];
                     if (!isdigit(x))
                         validseq = 0;
                 }
@@ -696,18 +697,18 @@ int makerec(char *ptxt, int len, int showrec ) {
             if (validseq) {
                 if (vbfile) {
                     for (i = 0; i < lrecl - 8; i++) {
-                        rec[i] = rec[i+8];				// shove VB line over 8 bytes
+                        makeRecordptr[i] = makeRecordptr[i + 8];				// shove VB line over 8 bytes
                     }
                 } else {
-                    memset(&rec[lrecl-8], ' ', 8);		// blank out sequence field
+                    memset(&makeRecordptr[lrecl - 8], ' ', 8);		// blank out sequence field
                 }
                 bytesout = bytesout - 8;
             }
         }
         if (opttrimblank == '+') {					// trim trailing blanks
             for (i = bytesout - 1; i > 0; i--)
-                if (rec[i] == ' ') {
-                    rec[i] = '\0';
+                if (makeRecordptr[i] == ' ') {
+                    makeRecordptr[i] = '\0';
                     bytesout--;
                 } else
                     break;
@@ -725,11 +726,11 @@ int makerec(char *ptxt, int len, int showrec ) {
         }
         // 20071202
         if (fout) {
-            int written =fprintf(fout, "%.*s\n", bytesout, rec);		// output record
+            int written =fprintf(fout, "%.*s\n", bytesout, makeRecordptr);		// output record
           //  printf("Record size written %d / %d\n ",written,bytesout);
         }
         if (optlist=='+')
-            printf("%.*s\n", bytesout, rec);		// list record
+            printf("%.*s\n", bytesout, makeRecordptr);		// list record
         bytesout = bytesout + 2;						// account for "\r"
         databyteswritten += bytesout;				// total data bytes written
         datarecswritten++;							// total data records written
@@ -737,9 +738,9 @@ int makerec(char *ptxt, int len, int showrec ) {
         return bytesout;							// # bytes written
     }
     //----------------------------------------------
-    memcpy(&rec[recpos], ptxt, len);				// add text to buffer
+    memcpy(&makeRecordptr[recpos], ptxt, len);				// add text to buffer
     if (showrec) {
-        snap( rec, lrecl, "makerec fragmented rec");
+        snap(makeRecordptr, lrecl, "makerec fragmented rec");
     }
     recpos = recpos + len;
     outmembytes = outmembytes + len;
@@ -850,17 +851,24 @@ void openout( ) {
 
     if (optmember == '+' ) {
         if (!memcmp(zsinglemem,membername,8)) {
+            strlwr(membername);
+            strcpy(zzfn,membername);
+            strcat(zzfn,".");
+            strcat(zzfn,member_extension);
             memset(FNout, 0, sizeof(FNout));
-            strcpy(FNout,zsinglemempath);
-            // eho 20071206 cmdline
-            strcpy(zzfn,zxpath);
-            if (zxpath[0] != 0x0) {
-                zza = zxpath[strlen(zxpath)-1];
-                if ( zza != '\\' && zza != '/' )
-                    strcat(zzfn,"/");
-            }
-            strcat(zzfn,FNout);
-
+            strcpy(FNout,membername);
+            /*
+              memset(FNout, 0, sizeof(FNout));
+              strcpy(FNout,zsinglemempath);
+              // eho 20071206 cmdline
+              strcpy(zzfn,zxpath);
+              if (zxpath[0] != 0x0) {
+                  zza = zxpath[strlen(zxpath)-1];
+                  if ( zza != '\\' && zza != '/' )
+                      strcat(zzfn,"/");
+              }
+              strcat(zzfn,FNout);
+            */
             if ( optbinary == '+' ) fout = fopen(zzfn, "wb");               // eho 20071205 binary open
             else fout = fopen(zzfn, "w");
 
@@ -1103,7 +1111,7 @@ char *assocmem(unsigned int memttr) {
 void nextmem() {
 
     dirpos += FIXED_ENTRY_LENGTH;
-    memcpy(membername, &dir[dirpos], 8);				// new member name
+    memcpy(membername, &dir[dirpos], 8);			// new member name
     ebcdic2ascii(membername, 8);						// convert to ASCII
 
     // eho 20071204 Alias **************************************************************************
@@ -1131,7 +1139,7 @@ void nextmem() {
         char zzb[9];
         memset(zzb,0,9);
         memcpy(zzb,zztrue,8);
-        MSGW(130,"Alias %s points to Member %s . No extract.\n",zza,zzb);
+        // MSGW(130,"Alias %s points to Member %s . No extract.\n",zza,zzb);
 
         dirpos += FIXED_ENTRY_LENGTH;						// Reread until next Basemember
         memcpy(membername, &dir[dirpos], 8);				// new member name
@@ -2008,8 +2016,12 @@ void cleanup( ) {
 
     if (fin)	fclose(fin);
     if (fout)	fclose(fout);
-//    if (block)	free(block);   todo memory corruption
-//    if (dir)	free(dir);
+    if (block)	free(block);
+    block=0;
+    if (dir)	free(dir);
+    dir=0;
+    if (makeRecordptr) free(makeRecordptr);
+    makeRecordptr=0;
     fin=0;
     fout=0;
     block=0;
@@ -2036,25 +2048,29 @@ void cleanup( ) {
             MSGW(120,"Member %s . Extract Done. File %s .\n",zza,zsinglemempath);
             MSGI(130,"Member %s . Stats: %d Bytes, %d Recs.\n",zza,databyteswritten,datarecswritten);
         }
+        MSGI(999,"Report/Extract on %s completed\n\n",dsn);
     }
     // eho 20071202 ************************************************************************
 
     if (fatal == 0) {
-        printf("\n");
-        printf("Read %d bytes of %s\n", segbytesread, FNin);
-        printf("Read %d bytes of %s data\n", databytesread, dsn);
-        if ((fileswritten == 0) || (fileswritten > 1))
-            printf("Wrote %d files, %d bytes, %d records\n",
-                   fileswritten, databyteswritten, datarecswritten);
-        else
-            printf("Wrote %d file, %d bytes, %d records\n",
-                   fileswritten, databyteswritten, datarecswritten);
-        if ( (dirlen / FIXED_ENTRY_LENGTH) != fileswritten)
-            printf("Warning - # PDS members vs. # files written mismatch\n");
-        if (warncounts)
-            printf("Warning - %d PDS member(s) appear to have wrong number of records\n",
-                   warncounts);
-        printf("Done\n");
+        //  printf("\n");
+        if(optmember != '+') {
+            printf("Read %d bytes of %s\n", segbytesread, FNin);
+            printf("Read %d bytes of %s data\n", databytesread, dsn);
+            if ((fileswritten == 0) || (fileswritten > 1))
+                printf("Wrote %d files, %d bytes, %d records\n",
+                       fileswritten, databyteswritten, datarecswritten);
+            else
+                printf("Wrote %d file, %d bytes, %d records\n",
+                       fileswritten, databyteswritten, datarecswritten);
+            if ((dirlen / FIXED_ENTRY_LENGTH) != fileswritten)
+                printf("Warning - # PDS members vs. # files written mismatch\n");
+            if (warncounts)
+                printf("Warning - %d PDS member(s) appear to have wrong number of records\n",
+                       warncounts);
+            MSGI(999,"Report/Extract on %s completed\n\n",dsn);
+        }
+
     }
     return;
 } /* cleanup */
@@ -2324,7 +2340,8 @@ int halt(char *msg) {
 int recv390_unpack(const char *infile)
 {
     int rc;
-    printf("File %s\n",infile);
+    printf("XMIT File %s\n",infile);
+    strcpy(dsn,infile);
     rc = XMIT_INIT(infile);
     if ((opthelp == '+') || (rc) || (fatal)) {
         cleanup();
@@ -2344,7 +2361,9 @@ int recv390_unpack(const char *infile)
     char utility[9] = "?";
 
     if (optmember == '+') {
+        printf("  Extract single member '%s' '%s'\n",zsinglemem);
         int i, zzj = 0;
+     /*
         memset(zsinglemem, ' ', sizeof(zsinglemem));
         memset(zsinglemempath, 0, sizeof(zsinglemempath));
 
@@ -2358,12 +2377,12 @@ int recv390_unpack(const char *infile)
             else if (zzj < 8)
                 zsinglemem[zzj++] = toupper(outext[i]);
         }
-
+     */
         char zza[9];
         memset(zza, 0, 9);
         memcpy(zza, zsinglemem, 8);
-        MSGI(10, "Member %s . Extract to File %s .\n", zza, zsinglemempath);
-    }
+        MSGI(20, "Member %s . Extract to File %s .\n", zza, zsinglemempath);
+    } else printf("  Report/Extract on entire XMIT file\n");
 
     getseg(ctlsnap);
     x = memcmp(tranline, "INMR01", 6);
@@ -2494,74 +2513,128 @@ int recv390_unpack(const char *infile)
  * If there are new options in the prior globals, the setting here must be maintained
  * -----------------------------------------------------------------------------------
  */
-void ResetOptions() {
-// Options
-   optbinary = '-';     // eho 20071205: binary
-   optmember = '-';     // eho 20071202: single member
-   opttran = '+';       // translate from EBCDIC to ASCII (makrec)
-   optseq = '-';        // don't preserve sequence numbers
-   opttrimblank = '+';  // trim trailing blanks
-   optrdw = '-';        // no RDW
-   optxmisum = '+';     // display TRANSMIT dataset summary
-   optdsattr = '+';     // display dataset attributes
-   optdir = '+';        // display PDS directory
-   optwrite = '+';      // write output files
-   opthalt = '-';       // halt for <press enter> msg in halt()
-   optabout = '-';      // don't display copyright info
-// char			opthelp			= '-';		// don't display general help
-   opthelptran = '-';   // don't display xlate help
-   opthelprdw = '-';    // don't dispaly RDW help
-   opthelpseq = '-';    // don't display SEQ help
-   opthelpbug = '-';    // don't display debugging help
-   optsyntax = '-';     // don't display syntax help
-   optdirhex = '-';     // don't dump directory in hex
-   optdirarray = '-';   // don't dump into array
-   optmap = '-';        // map translate table
-// Debugging Options
-   optlist = '-';       // list records on stdout
-   optdumpdir = '-';    // dump IEBCOPY dir blocks
-   optgetseg = '-';     // getseg segment info
-   optsnapseg = '-';    // getseg snap
-   optgetblock = '-';   // getblock block info
-   optsnapblock = '-';  // getblock snap data block
-   optsnaphalt = '-';   // snap <press enter> prompt
-   optblock1 = '-';     // dump block 1
-   optblock2 = '-';     // dump block 2
-   fatal = 0;
-   recpos = 0;               // position in rec for makerec
-   block = 0;     // instorage current IEBCOPY block
-   dir = 0;       // instorage PDS directory storage
-   dirpos = 0;               // position in "dir" directory
-   outdirpos = 0;            // openout() dirpos for closeout()
-   assocpos = 0;             // assocmem() dirpos
-   dirlen = 0;               // length of "dir" used
-   dirblkpos = 0;            // position in 256 byte PDS dir block
-   direntries = 0;
-// Statistics
-   ispfstats = 0;            // ISPF stats available (procdir/parsemem)
-   fileswritten = 0;
-   databytesread = 0;        // total bytes of data read
-   databyteswritten = 0;
-   datarecswritten = 0;
-   outmembytes = 0;
-   outrecbytes = 0;          // # bytes output for record (writemem/makerec)
-   membyteswritten = 0;      // # bytes written for member
-   memrecswritten = 0;       // # records written for member
-   warncounts = 0;           // # members whose rec count didn't verify
-   blocklen = 0;             // IEBCOPY block length
-   blocktrailer = 0;         // set by getblock()
-   seglen = 0;               // length of TRANSMIT segment (0 - 253)
-   segflag = 0;              // segment flag
-   pos = 0;                  // position within block or line
-   maxpos = 0;               // position within block set by getblock()
-   datablock = 0;
-   dsorg = 0;                // dataset dsorg
-   recfm = 0;                // dataset recfm
-   blksize = 0;              // dataset blksize
-   lrecl = 0;                // dataset lrecl
-   vbfile = 0;               // 1 = file is V[B] recfm
-   msgfile = 0;              // 1 = process msgfile
+void ResetOptions(void)
+{
+    /* ===== Options ===== */
+    optbinary     = '-';   // binary
+    optmember     = '-';   // single member
+    opttran       = '+';   // translate from EBCDIC to ASCII (makerec)
+    optseq        = '-';   // don't preserve sequence numbers
+    opttrimblank  = '+';   // trim trailing blanks
+    optrdw        = '-';   // no RDW
+    optxmisum     = '+';   // display TRANSMIT dataset summary
+    optdsattr     = '+';   // display dataset attributes
+    optdir        = '+';   // display PDS directory
+    optwrite      = '+';   // write output files
+    opthalt       = '-';   // halt for <press enter> in halt()
+    optabout      = '-';   // don't display copyright
+    opthelptran   = '-';
+    opthelprdw    = '-';
+    opthelpseq    = '-';
+    opthelpbug    = '-';
+    optsyntax     = '-';
+    optdirhex     = '-';
+    optdirarray   = '-';
+    optmap        = '-';
+
+    /* ===== Debugging option toggles ===== */
+    optlist       = '-';
+    optdumpdir    = '-';
+    optgetseg     = '-';
+    optsnapseg    = '-';
+    optgetblock   = '-';
+    optsnapblock  = '-';
+    optsnaphalt   = '-';
+    optblock1     = '-';
+    optblock2     = '-';
+
+    /* ===== Runtime debug flags (must not leak across calls) ===== */
+    ctlsnap       = 0;
+    datasnap      = 0;
+    snapdatablk   = 0;
+    getsegstats   = 0;
+    prtoutrec     = 0;
+    dbugshowclose = 0;
+    dbugshowopen  = 0;
+    showsnapaddr  = 0;
+    snapcr        = 0;
+    snapshorthdr  = 0;
+
+    /* ===== Core state ===== */
+    fatal         = 0;
+    unsupported   = 0;
+    snapassumeascii = 0;
+
+    /* ===== Record buffer =====
+       If your code previously used `rec`, keep that name.
+       Here you used `makeRecordptr`, so free & NULL that.
+    */
+    if (makeRecordptr) { free(makeRecordptr); }
+    makeRecordptr = NULL;
+    recpos        = 0;
+
+    /* ===== In-memory structures / cursors ===== */
+    block         = NULL;
+    dir           = NULL;
+    dirpos        = 0;
+    outdirpos     = 0;
+    assocpos      = 0;
+    dirlen        = 0;
+    dirblkpos     = 0;
+    direntries    = 0;
+
+    /* ===== Statistics ===== */
+    ispfstats         = 0;
+    fileswritten      = 0;
+    databytesread     = 0;
+    databyteswritten  = 0;
+    datarecswritten   = 0;
+    outmembytes       = 0;
+    outrecbytes       = 0;
+    membyteswritten   = 0;
+    memrecswritten    = 0;
+    warncounts        = 0;
+
+    /* ===== Block / segment cursors ===== */
+    blocklen      = 0;
+    blocktrailer  = 0;
+    seglen        = 0;
+    segflag       = 0;
+    pos           = 0;
+    maxpos        = 0;
+    datablock     = 0;
+
+    /* ===== Dataset attributes ===== */
+    dsorg   = 0;
+    recfm   = 0;
+    blksize = 0;
+    lrecl   = 0;
+    vbfile  = 0;
+    msgfile = 0;
+
+    /* ===== File handles and names ===== */
+    fin = NULL;
+    fout = NULL;
+
+    /* Use a safe assignment that guarantees termination */
+    strncpy(FNout, "Dummy.txt", sizeof(FNout));
+    FNout[sizeof(FNout) - 1] = '\0';
+
+    strncpy(FNin, "OS390.XMI", sizeof(FNin));
+    FNin[sizeof(FNin) - 1] = '\0';
+
+    /* ===== Member tracking & paths ===== */
+    memset(extract_member, ' ', sizeof(extract_member));
+    memset(zsinglemem,      0, sizeof(zsinglemem));
+    memset(zsinglemempath,  0, sizeof(zsinglemempath));
+    memset(zxpath,          0, sizeof(zxpath));
+    memset(membername,      0, sizeof(membername));
+
+    zsinglebyteswritten = 0;
+    zsinglerecswritten  = 0;
+    zsingleorc          = 0;
 }
+
 // ----------------------------------------------------------
 // Unpack entire XMIT file (equivalent to main())
 // ----------------------------------------------------------
@@ -2573,6 +2646,7 @@ PROCEDURE(xmit_unpack) {
 // set options required for this function
     optwrite='+';
     optdir = '-';
+   // dbugshowopen='+';
 
     get_path(infile, pathbuf, sizeof(pathbuf));
     if(pathbuf[0]!=0) {
@@ -2582,6 +2656,7 @@ PROCEDURE(xmit_unpack) {
     }
     getcwd(pathbuf, sizeof(pathbuf));
     printf("Unpack file(s) into '%s'\n", pathbuf);
+        strcpy(exportpath,pathbuf);
 
     int rc = recv390_unpack(infile);
 
@@ -2616,23 +2691,38 @@ PROCEDURE(xmit_procdir) {
 // ----------------------------------------------------------
 PROCEDURE(xmit_extract) {
     char *infile = GETSTRING(ARG0);
-    char *membername = GETSTRING(ARG1);
+    char *member = GETSTRING(ARG1);
+    char cwd[1024];
+    char pathbuf[1024];
+    ResetOptions();
 
     // Full unpack mode (reset any single-member settings)
-    memset(zsinglemem, 0, sizeof(zsinglemem));
+    memset(extract_member, 0, sizeof(extract_member));
 
-    printf("Starting unpack of a member %s\n", recv390_infile);
     // Prepare single-member extraction mode
     optmember = '+';
     optbinary = '-';
     optdir = '-';
-
+    optdsattr = '-';
+    optxmisum = '-';
     // Store uppercase member name (padded or truncated to 8 chars)
-    strncpy(zsinglemem, membername, 8);
-    fprintf(stderr, "RECV010I Extracting member %.*s to %s\n", 8, zsinglemem, zsinglemempath);
+        strncpy(extract_member, membername, 8);
+        get_path(infile, pathbuf, sizeof(pathbuf));
+        if(pathbuf[0]!=0) {
+            if (getcwd(cwd, sizeof(cwd)) != NULL) {  // works in Windows/Linux/Mac
+                chdir(pathbuf);     // works in Windows/Linux/Mac
+            }
+        }
+        getcwd(pathbuf, sizeof(pathbuf));
+        printf("Unpack file(s) into '%s'\n", pathbuf);
+        strcpy(exportpath,pathbuf);
+        strcpy(zsinglemem,member);
 
-    int rc = recv390_unpack(infile);
+        int rc = recv390_unpack(infile);
 
+        if(pathbuf[0]!=0) {       // reset it to the original work directory
+            chdir(cwd);      // works in Windows/Linux
+        }
     RETURNINT(rc);
     PROCRETURN
     ENDPROC
@@ -2641,7 +2731,7 @@ PROCEDURE(xmit_extract) {
 // Cleanup environment, close files
 // ----------------------------------------------------------
 PROCEDURE(xmit_cleanup) {
-    cleanup();
+        //   cleanup();
     RETURNINT(0);
     PROCRETURN
     ENDPROC

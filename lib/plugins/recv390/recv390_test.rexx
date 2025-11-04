@@ -1,6 +1,6 @@
 /* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 2 Nov 2025  at 10:10:06
+ * PRE Compiled on 4 Nov 2025  at 17:57:41
  * ----------------------------------------------------------------------
  */
 options levelb
@@ -38,8 +38,6 @@ say ' '
 say time('l')' Unpack 'xmitFile
 rc = xmitunpack(xmitFile)
 say time('l')' Unpack finished with RC=' rc
-/*  --------------- will be next --------------
-rc = xmitextract(xmitFile,"$$$#date")
- */
+/*  --------------- will be next -------------- */
+rc = xmitextract(xmitFile,"$$$#DATE")
 call xmitcleanup
-say 'Cleanup complete.'

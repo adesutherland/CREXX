@@ -7,6 +7,7 @@ import recv390
  * ------------------------------------------------------
  */
 xmitFile = 'C:/Temp/CBT112/FILE112.XMI'   ## XMI file to work with
+
 /* ------------------------------------------------------
  * Create an Array containing the PDS directory
  * ------------------------------------------------------
@@ -24,6 +25,7 @@ say pdsdir[0]' Entries in Directory'
 say copies('.',80)
 say 'End of Directory List'
 say copies('.',80)
+
 say ' '
 /* ------------------------------------------------------
  * Receiving the full PDS from the XMI file
@@ -34,8 +36,7 @@ rc = xmitunpack(xmitFile)
 say time('l')' Unpack finished with RC=' rc
 
 
-/*  --------------- will be next --------------
-rc = xmitextract(xmitFile,"$$$#date")
- */
+/*  --------------- will be next -------------- */
+rc = xmitextract(xmitFile,"$$$#DATE")
+
 call xmitcleanup
-say 'Cleanup complete.'
