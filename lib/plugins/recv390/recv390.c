@@ -851,7 +851,11 @@ void openout( ) {
 
     if (optmember == '+' ) {
         if (!memcmp(zsinglemem,membername,8)) {
-            strlwr(membername);
+            for (i = 0; i < strlen(membername); i++) {
+                c = tolower(membername[i]);
+                membername[i] = (char) c;
+            }
+          //  strlwr(membername);
             strcpy(zzfn,membername);
             strcat(zzfn,".");
             strcat(zzfn,member_extension);
