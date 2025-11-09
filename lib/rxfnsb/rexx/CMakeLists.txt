@@ -39,6 +39,12 @@ set(BIFS
 		numeric
 		overlay
 		pos
+		qpos
+		qsplit
+		qextractall
+		qextractpair
+		qstripcomment
+		qremoveall
 		lastpos
 		left
 		right
