@@ -313,6 +313,10 @@ RXPPPassThree: procedure
        if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
        call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
    	 end
+   	 else if stype.LineNo='FOR' then do
+       if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
+       call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
+     end
    	 else if stype.LineNo='SELECT' then do
        if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
        call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
@@ -354,6 +358,7 @@ GetPrecomp: procedure
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       else if ucmd = 'SELECT' then call cmd_select lineNo,line,1
       else if ucmd = 'SWITCH' then call cmd_select lineNo,line,2
+      else if ucmd = 'FOR'    then call cmd_for lineNo,line
       else if ucmd = 'WHEN'   then call cmd_when lineNo,line,1
       else if ucmd = 'OTHERWISE' then call cmd_when lineNo,line,2
       else if ucmd = 'CASE'    then call cmd_when lineNo,line,3
@@ -635,6 +640,44 @@ CMD_global: procedure
       else source[lino+i]=ivar'=.'atype'; 'def
       globaldef=globaldef' 'ivar
    end
+return
+/* ------------------------------------------------------------------
+ * Process FOR command
+ * ------------------------------------------------------------------
+ */
+CMD_for: procedure
+  arg lino=.int,line=.string
+  line=subword(line,2)
+  stype.lino= 'FOR'
+  nlino=lino+1
+  line=qcomment('/*','*/',line)
+  parts=qsplit(line,';')
+  from=parts.1
+  condc=parts.2
+  step=parts.3
+  fromx=qsplit(from,',')
+  start=''
+  do i=1 to fromx.0
+     start=start||fromx.i';'
+  end
+  stepx=qsplit(step,',')
+  update=''
+  do i=1 to stepx.0
+     update=update||stepx.i';'
+  end
+
+  rc=insert_array(source,nlino,6)    ## insert new lines, shift buffer
+  rc=insert_array(stype, nlino,6)
+  select_count=select_count+1
+  source[lino+1]='__first_'select_count'=1'
+  source[lino+2]=start
+  source[lino+3]='do forever'
+  source[lino+4]='   if __first_'select_count'=1 then __first_'select_count'=0'
+  source[lino+5]='   else do; 'update'; end'
+  source[lino+6]='   if 'condc' then nop; else leave'
+  do i=1 to 6
+     stype[nlino+i]=' '
+  end
 return
 /* ------------------------------------------------------------------
  * Process WHEN command
