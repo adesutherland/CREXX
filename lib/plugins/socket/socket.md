@@ -36,6 +36,26 @@ A lightweight TCP client/server socket API designed for use with `CREXX`, provid
 ---
 
 ## Overview
+---
+
+## TLS / SSL Support
+
+This socket module supports optional **TLS encryption** using OpenSSL.
+
+To enable TLS on a connected socket:
+
+```
+rc = socketenabletls(sock, "hostname")
+```
+
+Once enabled:
+- All `socketsend` calls are encrypted with `SSL_write`
+- All `socketrecv` calls are decrypted with `SSL_read`
+- The TLS session remains active until `socketclose`
+- Certificate hostname validation uses the provided parameter
+
+TLS must be enabled *after* a successful `socketconnect`.
+
 
 This module provides a cross-platform TCP socket interface for CREXX. It allows scripts or applications to create client and server sockets, connect, send and receive data, and handle network events using simple procedural calls.
 
@@ -45,6 +65,9 @@ This module provides a cross-platform TCP socket interface for CREXX. It allows 
 
 ```c
 typedef struct {
+    int use_tls;          // TLS enabled flag (0/1)
+    SSL *ssl;             // OpenSSL SSL session
+    SSL_CTX *ctx;         // OpenSSL SSL context
 #ifdef _WIN32
     SOCKET sock;
 #else
@@ -112,7 +135,34 @@ typedef struct {
 
 ---
 
-### 3. `socketsend`
+
+---
+
+### 3. `socketenabletls`
+
+- **Description:**  
+  Activates TLS on an already connected TCP socket and performs the client-side TLS handshake.
+
+- **Parameters:**
+  - `sock` — socket handle
+  - `hostname` — server hostname used for SNI and certificate validation
+
+- **Returns:**
+  - `0` on success
+  - `<0` on failure (use `socketlasterror`)
+
+- **Notes:**
+  - Must be called after `socketconnect`
+  - Once enabled, all send/recv operations use encrypted TLS channels
+
+- **Example:**
+  ```rexx
+  rc = socketenabletls(sock, "example.com")
+  if rc \= 0 then say socketlasterror(sock)
+  ```
+
+
+### 4. `socketsend`
 
 - **Description:**  
   Sends a string (or byte buffer) to the connected socket. Use for sending messages, commands, or files.
@@ -528,6 +578,11 @@ typedef struct {
 | -30    | Bind failed                    |
 | -31    | Listen failed                  |
 | -32    | Accept failed                  |
+| -40    | TLS handshake failed           |
+| -41    | TLS read error                  |
+| -42    | TLS write error                 |
+| -43    | TLS initialization failed       |
+| -44    | Remote closed TLS session       |
 | 0      | Success                        |
 
 ---
@@ -606,4 +661,22 @@ rc = socketconnect(sock, "doesnotexist.invalid", 80)
 if rc \= 0 then
     say "Error:" socketlasterror(sock)
 call socketclose, sock
+```
+
+
+### Example 4: Secure HTTPS Client
+
+```rexx
+sock = socketcreate()
+if socketconnect(sock, "example.com", 443) = 0 then do
+    if socketenabletls(sock, "example.com") = 0 then do
+        call socketsend sock, "GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n"
+        do forever
+            chunk = socketrecv(sock, 4096)
+            if chunk = "" then leave
+            say chunk
+        end
+    end
+end
+call socketclose sock
 ```

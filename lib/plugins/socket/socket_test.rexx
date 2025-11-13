@@ -4,6 +4,20 @@ import socket
 
 ##cflags def nset  3buf  parse
 
+s = socketCreate()
+call socketconnect s, 'localhost',8080  /* Connect to Server */
+call socketenabletls s,""               /* Enalble TLS */
+call socketsend s, "Hello to Server"    /* Send message to Server */
+do forever                              /* Receive all data from Server */
+    data = socketrecv(s, 4096)
+    if data = "" then leave
+    say "' received data "data"'"
+end
+
+call socketclose s                      /* Close server connection */
+
+exit
+/* ----------  overview of available socket functions
 token = socketCreate()
 say 'socket  'token
 say 'connect 'socketConnect(token, 'localhost', 12345)
@@ -24,5 +38,5 @@ end
 call socketShutdown token, 0     ## No more reads allowed (SHUT_RD)
 ## call socketShutdown token, 1  ## No more sends allowed (SHUT_WR)
 ## call socketShutdown token, 2 ## Fully close (sends FIN, both directions, SHUT_RDWR)
-
   call socketClose token
+*/
