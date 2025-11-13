@@ -1,12 +1,15 @@
 //
-// TCP Socket Client Interface for crexx/pa
+// TCP Socket Client/Server Interface for crexx/pa
+// with optional TLS (OpenSSL) client support
 //
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #ifdef _WIN32
 #include <ws2tcpip.h>
+#include <winsock2.h>
 #else
 #include <netdb.h>
 #include <unistd.h>
@@ -20,8 +23,39 @@
 #include <netinet/tcp.h>  // TCP_NODELAY
 #endif
 
-
 #include "crexxpa.h"  // your framework header
+
+// --------------------------- TLS (OpenSSL) ---------------------------
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
+static int ssl_global_init_done = 0;
+
+static void ensure_openssl_init(void) {
+    if (!ssl_global_init_done) {
+        SSL_library_init();
+        SSL_load_error_strings();
+        OpenSSL_add_all_algorithms();
+        ssl_global_init_done = 1;
+    }
+}
+
+static const char *ssl_err_to_str(SSL *ssl, int rc, char *buf, size_t bufsz) {
+    int e = SSL_get_error(ssl, rc);
+    switch (e) {
+        case SSL_ERROR_WANT_READ:  snprintf(buf, bufsz, "SSL WANT_READ"); break;
+        case SSL_ERROR_WANT_WRITE: snprintf(buf, bufsz, "SSL WANT_WRITE"); break;
+        case SSL_ERROR_ZERO_RETURN:snprintf(buf, bufsz, "SSL closed cleanly"); break;
+        case SSL_ERROR_SYSCALL:    snprintf(buf, bufsz, "SSL SYSCALL err=%d", errno); break;
+        default: {
+            unsigned long le = ERR_get_error();
+            if (le) ERR_error_string_n(le, buf, (unsigned long)bufsz);
+            else snprintf(buf, bufsz, "SSL error %d", e);
+        }
+    }
+    return buf;
+}
+// --------------------------------------------------------------------
 
 typedef struct {
 #ifdef _WIN32
@@ -34,11 +68,15 @@ typedef struct {
     int default_timeout;  // ms, 0 = no timeout
     int last_error;
     char last_error_msg[128];
-    char * linebuf;  // Line buffer for partial reads
+    char * linebuf;       // Line buffer for partial reads
     int linebuf_used;
-    int linebuf_size; // capacity
-} TcpSocket;
+    int linebuf_size;     // capacity
 
+    // TLS
+    int use_tls;          // 1 = TLS active
+    SSL *ssl;             // TLS session
+    SSL_CTX *ctx;         // TLS context
+} TcpSocket;
 
 #define SET_SOCK_ERR(s, code, msg) do { \
     (s)->last_error = (code); \
@@ -53,14 +91,15 @@ typedef struct timeval socktimeout_t;
 #endif
 
 #define LINEBUF_MAX (4*1024*1024) // 4 MB safety
+#define LINEBUF_INITIAL (8192)
 
-int ensure_linebuf(TcpSocket *s, int needfree) {
+static int ensure_linebuf(TcpSocket *s, int needfree) {
     int needed = s->linebuf_used + needfree;
     if (needed <= s->linebuf_size) return 0;
     int newsize = s->linebuf_size ? s->linebuf_size * 2 : 8192;
     while (newsize < needed) newsize *= 2;
     if (newsize > LINEBUF_MAX) return -1;
-    char *p = realloc(s->linebuf, newsize);
+    char *p = (char*)realloc(s->linebuf, (size_t)newsize);
     if (!p) return -2;
     s->linebuf = p;
     s->linebuf_size = newsize;
@@ -70,25 +109,30 @@ int ensure_linebuf(TcpSocket *s, int needfree) {
 // ----------------------------------------------------------------------------
 // Create socket token (does not connect yet)
 // ----------------------------------------------------------------------------
-#define LINEBUF_INITIAL (8192)
 PROCEDURE(socketcreate) {
-        TcpSocket *s = malloc(sizeof(TcpSocket));
-        if (!s) RETURNINTX(-8);
+    TcpSocket *s = (TcpSocket*)malloc(sizeof(TcpSocket));
+    if (!s) RETURNINTX(-8);
 #ifdef _WIN32
-        static int wsa_init = 0;
+    static int wsa_init = 0;
     if (!wsa_init) { WSADATA wsa; WSAStartup(MAKEWORD(2,2), &wsa); wsa_init = 1; }
     s->sock = INVALID_SOCKET;
 #else
-        s->sock = -1;
+    s->sock = -1;
 #endif
     s->status = 0;
     s->default_timeout = 0;
     s->last_error = 0;
     s->last_error_msg[0] = 0;
-    rxinteger r = (rxinteger)s;
-    s->linebuf = malloc(LINEBUF_INITIAL );
-    s->linebuf_size = LINEBUF_INITIAL ;
+    s->linebuf = (char*)malloc(LINEBUF_INITIAL);
+    s->linebuf_size = LINEBUF_INITIAL;
     s->linebuf_used = 0;
+    s->is_server = 0;
+
+    s->use_tls = 0;
+    s->ssl = NULL;
+    s->ctx = NULL;
+
+    rxinteger r = (rxinteger)s;
     RETURNINTX(r);
     ENDPROC
 }
@@ -135,7 +179,7 @@ PROCEDURE(socketconnect) {
         RETURNINTX(-4);
     }
 
-    rc = connect(s->sock, res->ai_addr, res->ai_addrlen);
+    rc = connect(s->sock, res->ai_addr, (socklen_t)res->ai_addrlen);
 #ifdef _WIN32
     if (rc == SOCKET_ERROR) {
         int err = WSAGetLastError();
@@ -166,35 +210,118 @@ PROCEDURE(socketconnect) {
 }
 
 // ----------------------------------------------------------------------------
+// Enable TLS (client-side). Arg1: hostname for SNI (optional but recommended)
+// ----------------------------------------------------------------------------
+PROCEDURE(socketenabletls) {
+    rxinteger r = GETINT(ARG0);
+    char *servername = GETSTRING(ARG1); // may be ""
+    TcpSocket *s = (TcpSocket *)r;
+
+    if (s->use_tls) {
+        SET_SOCK_ERR(s, -200, "TLS already enabled");
+        RETURNINTX(-200);
+    }
+
+    ensure_openssl_init();
+
+    s->ctx = SSL_CTX_new(TLS_client_method());
+    if (!s->ctx) {
+        SET_SOCK_ERR(s, -201, "Failed to create SSL_CTX");
+        RETURNINTX(-201);
+    }
+
+    // (Optional) You can set verification here later via SSL_CTX_set_verify(...)
+    // For now, no CA bundle is loaded (no verification). Add a separate API if needed.
+
+    s->ssl = SSL_new(s->ctx);
+    if (!s->ssl) {
+        SSL_CTX_free(s->ctx);
+        s->ctx = NULL;
+        SET_SOCK_ERR(s, -202, "Failed to create SSL object");
+        RETURNINTX(-202);
+    }
+
+    if (servername && servername[0]) {
+        // SNI + enables hostname-based selection in virtual-hosted servers
+        SSL_set_tlsext_host_name(s->ssl, servername);
+    }
+
+    SSL_set_fd(s->ssl, s->sock);
+   int rc=SSL_connect(s->ssl);
+   if (rc <= 0) {
+        ERR_print_errors_fp(stderr);
+    } else {
+        printf("TLS handshake complete with %s\n", SSL_get_cipher(s->ssl));
+    }
+
+    if (rc != 1) {
+        char ebuf[128];
+        ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
+        snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                 "TLS handshake failed: %s", ebuf);
+        s->last_error = -203;
+        SSL_free(s->ssl);   s->ssl = NULL;
+        SSL_CTX_free(s->ctx); s->ctx = NULL;
+        RETURNINTX(-203);
+    }
+
+    s->use_tls = 1;
+    s->last_error = 0;
+    s->last_error_msg[0] = 0;
+    RETURNINTX(0);
+    ENDPROC
+}
+
+// ----------------------------------------------------------------------------
 // Send data (string) to socket
 // ----------------------------------------------------------------------------
 PROCEDURE(socketsend) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
     char *data = GETSTRING(ARG1);
-    int len = strlen(data);
+    int len = (int)strlen(data);
+#ifdef _WIN32
+    if (s->sock == INVALID_SOCKET) {
+        SET_SOCK_ERR(s, -6, "Socket not connected");
+        RETURNINTX(-6);
+    }
+#else
     if (s->sock < 0) {
         SET_SOCK_ERR(s, -6, "Socket not connected");
         RETURNINTX(-6);
     }
-#ifdef _WIN32
-    int rc = send(s->sock, data, len, 0);
-    if (rc == SOCKET_ERROR) {
-        int err = WSAGetLastError();
-        snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                 "Send failed, WSA error: %d", err);
-        s->last_error = -3;
-        RETURNINTX(-3);
-    }
-#else
-    int rc = write(s->sock, data, len);
-    if (rc < 0) {
-        snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                 "Send failed, errno: %d", errno);
-        s->last_error = -3;
-        RETURNINTX(-3);
-    }
 #endif
+
+    int rc;
+    if (s->use_tls) {
+        rc = SSL_write(s->ssl, data, len);
+        if (rc <= 0) {
+            char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
+            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                     "SSL_write failed: %s", ebuf);
+            s->last_error = -3;
+            RETURNINTX(-3);
+        }
+    } else {
+#ifdef _WIN32
+        rc = send(s->sock, data, len, 0);
+        if (rc == SOCKET_ERROR) {
+            int err = WSAGetLastError();
+            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                     "Send failed, WSA error: %d", err);
+            s->last_error = -3;
+            RETURNINTX(-3);
+        }
+#else
+        rc = (int)write(s->sock, data, (size_t)len);
+        if (rc < 0) {
+            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                     "Send failed, errno: %d", errno);
+            s->last_error = -3;
+            RETURNINTX(-3);
+        }
+#endif
+    }
     s->last_error = 0;
     s->last_error_msg[0] = 0;
     RETURNINTX(rc);
@@ -202,70 +329,178 @@ PROCEDURE(socketsend) {
 }
 
 // ----------------------------------------------------------------------------
-// Receive data (returns string, up to 4096 bytes)
+// Send all data (loop until complete)
+// ----------------------------------------------------------------------------
+PROCEDURE(socketsendall) {
+    rxinteger r = GETINT(ARG0);
+    char *data = GETSTRING(ARG1);
+    int len = (int)strlen(data);
+    TcpSocket *s = (TcpSocket *)r;
+
+#ifdef _WIN32
+    if (s->sock == INVALID_SOCKET) {
+        s->last_error = -6;
+        strcpy(s->last_error_msg, "Socket not connected");
+        RETURNINTX(-6);
+    }
+#else
+    if (s->sock < 0) {
+        s->last_error = -6;
+        strcpy(s->last_error_msg, "Socket not connected");
+        RETURNINTX(-6);
+    }
+#endif
+
+    int total_sent = 0;
+    while (total_sent < len) {
+        int rc;
+        if (s->use_tls) {
+            rc = SSL_write(s->ssl, data + total_sent, len - total_sent);
+            if (rc <= 0) {
+                char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
+                snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                         "SSL_write failed: %s", ebuf);
+                s->last_error = -3;
+                RETURNINTX(-3);
+            }
+        } else {
+#ifdef _WIN32
+            rc = send(s->sock, data + total_sent, len - total_sent, 0);
+            if (rc == SOCKET_ERROR) {
+                int err = WSAGetLastError();
+                snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                         "Send failed, WSA error: %d", err);
+                s->last_error = -3;
+                RETURNINTX(-3);
+            }
+#else
+            rc = (int)write(s->sock, data + total_sent, (size_t)(len - total_sent));
+            if (rc < 0) {
+                snprintf(s->last_error_msg, sizeof(s->last_error_msg),
+                         "Send failed, errno: %d", errno);
+                s->last_error = -3;
+                RETURNINTX(-3);
+            }
+#endif
+        }
+        if (rc == 0) break; // shouldn't happen, but avoid loop
+        total_sent += rc;
+    }
+    s->last_error = 0;
+    s->last_error_msg[0] = 0;
+    RETURNINTX(total_sent);
+    ENDPROC
+}
+
+// ----------------------------------------------------------------------------
+// Receive data (returns string, up to 4096 bytes requested)
 // ----------------------------------------------------------------------------
 PROCEDURE(socketrecv) {
     rxinteger r = GETINT(ARG0);
     int nbytes = GETINT(ARG1);
-
     TcpSocket *s = (TcpSocket *)r;
 
-    char buffer[4096];
+    char buffer[4096 + 1];
+
+#ifdef _WIN32
+    if (s->sock == INVALID_SOCKET) {
+        SET_SOCK_ERR(s, -6, "Socket not connected");
+        RETURNSTRX("");
+    }
+#else
     if (s->sock < 0) {
         SET_SOCK_ERR(s, -6, "Socket not connected");
         RETURNSTRX("");
     }
-#ifdef _WIN32
-    int rc = recv(s->sock, buffer, nbytes < sizeof(buffer) ? nbytes : sizeof(buffer), 0);
-
-    int err = WSAGetLastError();
-    if (rc == SOCKET_ERROR) {
-        if (err == WSAETIMEDOUT) SET_SOCK_ERR(s, -7, "recv() timeout");
-        else SET_SOCK_ERR(s, -5, "recv() failed");
-        RETURNSTRX("");
-    }
-    snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                 "Recv failed, WSA error: %d", err);
-    s->last_error = -5;
-    RETURNSTRX("");
-#else
-    int rc = read(s->sock, buffer, nbytes < sizeof(buffer) ? nbytes : sizeof(buffer));
-    if (rc < 0) {
-       if (errno == EWOULDBLOCK || errno == EAGAIN) SET_SOCK_ERR(s, -7, "recv() timeout");
-       else SET_SOCK_ERR(s, -5, "read() failed");
-       RETURNSTRX("")
-    }
 #endif
+
+    int want = nbytes < (int)sizeof(buffer) ? nbytes : (int)sizeof(buffer) - 1;
+    int rc = 0;
+
+    if (s->use_tls) {
+        SSL_set_mode(s->ssl, SSL_MODE_AUTO_RETRY);
+        rc = SSL_read(s->ssl, buffer, want);
+        fprintf(stderr, "SSL_read rc=%d\n", rc);
+
+        if (rc <= 0) {
+            int err = SSL_get_error(s->ssl, rc);
+
+            if (err == SSL_ERROR_ZERO_RETURN) {
+                // ✅ Clean TLS shutdown (EOF)
+                SET_SOCK_ERR(s, 0, "TLS connection closed cleanly by remote");
+                RETURNSTRX("");
+            }
+            else if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+                // 🔄 Non-blocking or timeout condition
+                SET_SOCK_ERR(s, -7, "recv() timeout (TLS)");
+                RETURNSTRX("");
+            }
+            else {
+                // ❌ Real TLS or I/O error
+                unsigned long ecode = ERR_get_error();
+                const char *msg = ERR_reason_error_string(ecode);
+                if (!msg) msg = "Unknown SSL error";
+
+                char ebuf[256];
+                snprintf(ebuf, sizeof(ebuf),
+                         "SSL_read failed (code=%d, reason=%s)", err, msg);
+                fprintf(stderr, "%s\n", ebuf);
+                SET_SOCK_ERR(s, -5, ebuf);
+                RETURNSTRX("");
+            }
+        }
+    } else {
+#ifdef _WIN32
+        rc = recv(s->sock, buffer, want, 0);
+        if (rc == SOCKET_ERROR) {
+            int err = WSAGetLastError();
+            if (err == WSAETIMEDOUT) SET_SOCK_ERR(s, -7, "recv() timeout");
+            else SET_SOCK_ERR(s, -5, "recv() failed");
+            RETURNSTRX("");
+        }
+#else
+        rc = (int)read(s->sock, (void *)buffer, (size_t)want);
+        if (rc < 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN)
+                SET_SOCK_ERR(s, -7, "recv() timeout");
+            else
+                SET_SOCK_ERR(s, -5, "read() failed");
+            RETURNSTRX("");
+        }
+#endif
+    }
+
     if (rc == 0) {
         SET_SOCK_ERR(s, 0, "Connection closed by remote");
         RETURNSTRX("");
     }
+
     buffer[rc] = 0;
     s->last_error = 0;
     s->last_error_msg[0] = 0;
     RETURNSTRX(buffer);
     ENDPROC
 }
-// ----------------------------------------------------------------------------
-// Receive single line
-// ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+// Receive single line (handles CRLF/LF, grows buffer as needed)
+// ----------------------------------------------------------------------------
 PROCEDURE(socketrecvline) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
     char *newline;
 
     while (1) {
-        // 1. Always check for newline in the buffer first!
-        newline = memchr(s->linebuf, '\n', s->linebuf_used);
+        // 1. Check for newline in the buffer first
+        newline = (char*)memchr(s->linebuf, '\n', (size_t)s->linebuf_used);
         if (newline) {
             int linelen = (int)(newline - s->linebuf) + 1;
-            char *result = malloc(linelen + 1);
-            memcpy(result, s->linebuf, linelen);
+            char *result = (char*)malloc((size_t)linelen + 1);
+            memcpy(result, s->linebuf, (size_t)linelen);
             result[linelen] = 0;
             // Move leftover to start of buffer
             int remaining = s->linebuf_used - linelen;
-            if (remaining > 0) memmove(s->linebuf, s->linebuf + linelen, remaining);
+            if (remaining > 0) memmove(s->linebuf, s->linebuf + linelen, (size_t)remaining);
             s->linebuf_used = remaining;
             // Trim trailing \r\n
             int trimlen = linelen;
@@ -274,10 +509,11 @@ PROCEDURE(socketrecvline) {
             s->last_error = 0;
             s->last_error_msg[0] = 0;
             RETURNSTRX(result);
-            free(result);
+            // (REXX runtime copies the string; we can free after RETURNSTRX if required,
+            // but to be safe, we won't free result here.)
         }
 
-        // 2. Buffer full, but still no newline? Grow buffer!
+        // 2. Buffer near full? Grow buffer
         if (s->linebuf_used >= s->linebuf_size - 4096) {
             if (ensure_linebuf(s, 4096) < 0) {
                 SET_SOCK_ERR(s, -10, "Line too long for buffer");
@@ -287,40 +523,79 @@ PROCEDURE(socketrecvline) {
 
         // 3. Need to read more data
 #ifdef _WIN32
-        int rc = recv(s->sock, s->linebuf + s->linebuf_used,
+        int rc;
+        if (s->use_tls) {
+            rc = SSL_read(s->ssl, s->linebuf + s->linebuf_used,
+                          s->linebuf_size - s->linebuf_used - 1);
+            if (rc <= 0) {
+                int e = SSL_get_error(s->ssl, rc);
+                if (e == SSL_ERROR_WANT_READ || e == SSL_ERROR_WANT_WRITE) {
+                    // Check if line already complete
+                    newline = (char*)memchr(s->linebuf, '\n', (size_t)s->linebuf_used);
+                    if (newline) continue;
+                    SET_SOCK_ERR(s, -7, "recv() timeout (TLS)");
+                    rc = 0;
+                } else {
+                    char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
+                    SET_SOCK_ERR(s, -5, ebuf);
+                    RETURNSTRX("");
+                }
+            }
+        } else {
+            rc = recv(s->sock, s->linebuf + s->linebuf_used,
                       s->linebuf_size - s->linebuf_used - 1, 0);
-        int err = WSAGetLastError();
-        if (rc == SOCKET_ERROR) {
-            if (err == WSAETIMEDOUT) {
-                newline = memchr(s->linebuf, '\n', s->linebuf_used);
-                if (newline) continue;
-                SET_SOCK_ERR(s, -7, "recv() timeout");
-                rc = 0;
-            } else {
-                SET_SOCK_ERR(s, -5, "recv() failed or closed");
-                RETURNSTRX("");
+            if (rc == SOCKET_ERROR) {
+                int err = WSAGetLastError();
+                if (err == WSAETIMEDOUT) {
+                    newline = (char*)memchr(s->linebuf, '\n', (size_t)s->linebuf_used);
+                    if (newline) continue;
+                    SET_SOCK_ERR(s, -7, "recv() timeout");
+                    rc = 0;
+                } else {
+                    SET_SOCK_ERR(s, -5, "recv() failed or closed");
+                    RETURNSTRX("");
+                }
             }
         }
 #else
-        int rc = read(s->sock, s->linebuf + s->linebuf_used,
-                      s->linebuf_size - s->linebuf_used - 1);
-        if (rc < 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN) {
-                newline = memchr(s->linebuf, '\n', s->linebuf_used);
-                if (newline) continue;
-                SET_SOCK_ERR(s, -7, "recv() timeout");
-                rc = 0;
-            } else {
-                SET_SOCK_ERR(s, -5, "read() failed or closed");
-                RETURNSTRX("");
+        int rc;
+        if (s->use_tls) {
+            rc = SSL_read(s->ssl, s->linebuf + s->linebuf_used,
+                          s->linebuf_size - s->linebuf_used - 1);
+            if (rc <= 0) {
+                int e = SSL_get_error(s->ssl, rc);
+                if (e == SSL_ERROR_WANT_READ || e == SSL_ERROR_WANT_WRITE) {
+                    newline = (char*)memchr(s->linebuf, '\n', (size_t)s->linebuf_used);
+                    if (newline) continue;
+                    SET_SOCK_ERR(s, -7, "recv() timeout (TLS)");
+                    rc = 0;
+                } else {
+                    char ebuf[128]; ssl_err_to_str(s->ssl, rc, ebuf, sizeof(ebuf));
+                    SET_SOCK_ERR(s, -5, ebuf);
+                    RETURNSTRX("");
+                }
+            }
+        } else {
+            rc = (int)read(s->sock, s->linebuf + s->linebuf_used,
+                           (size_t)(s->linebuf_size - s->linebuf_used - 1));
+            if (rc < 0) {
+                if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                    newline = (char*)memchr(s->linebuf, '\n', (size_t)s->linebuf_used);
+                    if (newline) continue;
+                    SET_SOCK_ERR(s, -7, "recv() timeout");
+                    rc = 0;
+                } else {
+                    SET_SOCK_ERR(s, -5, "read() failed or closed");
+                    RETURNSTRX("");
+                }
             }
         }
 #endif
         if (rc == 0) {
-            // Connection closed. If buffer has any data, return it as a "final line"
+            // Connection closed OR timeout. If buffer has any data, return it as a "final line"
             if (s->linebuf_used > 0) {
-                char *result = malloc(s->linebuf_used + 1);
-                memcpy(result, s->linebuf, s->linebuf_used);
+                char *result = (char*)malloc((size_t)s->linebuf_used + 1);
+                memcpy(result, s->linebuf, (size_t)s->linebuf_used);
                 result[s->linebuf_used] = 0;
                 s->linebuf_used = 0;
                 int trimlen = (int)strlen(result);
@@ -328,28 +603,42 @@ PROCEDURE(socketrecvline) {
                     result[--trimlen] = 0;
                 s->last_error = 0;
                 s->last_error_msg[0] = 0;
-                free(result);
                 RETURNSTRX(result);
             }
-            SET_SOCK_ERR(s, 0, "Connection closed by remote");
+            SET_SOCK_ERR(s, 0, "Connection closed by remote or timeout");
             RETURNSTRX("");
         }
         s->linebuf_used += rc;
-        // Go back to top of loop to check for newlines!
+        // loop to check for newline again
     }
     ENDPROC
 }
 
 // ----------------------------------------------------------------------------
-// Close socket and free token
-// ----------------------------------------------------------------------------
 PROCEDURE(socketclose) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
 #ifdef _WIN32
-    if (s->sock != INVALID_SOCKET) closesocket(s->sock);
+    if (s->sock != INVALID_SOCKET) {
+        // TLS cleanup first
+        if (s->use_tls && s->ssl) {
+            SSL_shutdown(s->ssl);
+            SSL_free(s->ssl);
+            s->ssl = NULL;
+        }
+        if (s->ctx) { SSL_CTX_free(s->ctx); s->ctx = NULL; }
+        closesocket(s->sock);
+    }
 #else
-    if (s->sock >= 0) close(s->sock);
+    if (s->sock >= 0) {
+        if (s->use_tls && s->ssl) {
+            SSL_shutdown(s->ssl);
+            SSL_free(s->ssl);
+            s->ssl = NULL;
+        }
+        if (s->ctx) { SSL_CTX_free(s->ctx); s->ctx = NULL; }
+        close(s->sock);
+    }
 #endif
     if (s->linebuf) free(s->linebuf);
     free(s);
@@ -357,6 +646,7 @@ PROCEDURE(socketclose) {
     ENDPROC
 }
 
+// ----------------------------------------------------------------------------
 PROCEDURE(socketisconnected) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
@@ -384,7 +674,7 @@ PROCEDURE(socketisconnected) {
     if (rc < 0) RETURNINTX(0);
     if (rc == 0) RETURNINTX(1); // No data, but still connected
     char tmp;
-    rc = recv(s->sock, &tmp, 1, MSG_PEEK | MSG_DONTWAIT);
+    rc = (int)recv(s->sock, &tmp, 1, MSG_PEEK | MSG_DONTWAIT);
     if (rc == 0) RETURNINTX(0); // Disconnected
     RETURNINTX(1);
 #endif
@@ -414,23 +704,6 @@ PROCEDURE(socketpeerinfo) {
     ENDPROC
 }
 
-PROCEDURE(socketsettimeout) {
-    rxinteger r = GETINT(ARG0);
-    int ms = GETINT(ARG1);
-    TcpSocket *s = (TcpSocket *)r;
-    if (!s) RETURNINTX(-8);
-    if (ms < 0) ms = 0;
-    s->default_timeout = ms;
-#ifdef _WIN32
-    setsockopt(s->sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&ms, sizeof(ms));
-#else
-    struct timeval tv = { ms/1000, (ms%1000)*1000 };
-    setsockopt(s->sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-#endif
-    RETURNINTX(0);
-    ENDPROC
-}
-
 PROCEDURE(socketlocalinfo) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
@@ -451,6 +724,25 @@ PROCEDURE(socketlocalinfo) {
     }
 #endif
     RETURNSTRX("");
+    ENDPROC
+}
+
+PROCEDURE(socketsettimeout) {
+    rxinteger r = GETINT(ARG0);
+    int ms = GETINT(ARG1);
+    TcpSocket *s = (TcpSocket *)r;
+    if (!s) RETURNINTX(-8);
+    if (ms < 0) ms = 0;
+    s->default_timeout = ms;
+#ifdef _WIN32
+    setsockopt(s->sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&ms, sizeof(ms));
+    setsockopt(s->sock, SOL_SOCKET, SO_SNDTIMEO, (const char*)&ms, sizeof(ms));
+#else
+    struct timeval tv = { ms/1000, (ms%1000)*1000 };
+    setsockopt(s->sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    setsockopt(s->sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+#endif
+    RETURNINTX(0);
     ENDPROC
 }
 
@@ -476,6 +768,7 @@ PROCEDURE(socketshutdown) {
     }
     ENDPROC
 }
+
 PROCEDURE(socketnodelay) {
     rxinteger r = GETINT(ARG0);
     int enable = GETINT(ARG1);  // 1 = ON, 0 = OFF
@@ -498,6 +791,7 @@ PROCEDURE(socketnodelay) {
     }
     ENDPROC
 }
+
 PROCEDURE(socketkeepalive) {
     rxinteger r = GETINT(ARG0);
     int enable = GETINT(ARG1);  // 1 = ON, 0 = OFF
@@ -521,47 +815,6 @@ PROCEDURE(socketkeepalive) {
     ENDPROC
 }
 
-PROCEDURE(socketsendall) {
-    rxinteger r = GETINT(ARG0);
-    char *data = GETSTRING(ARG1);
-    int len = strlen(data);
-    TcpSocket *s = (TcpSocket *)r;
-
-    if (s->sock < 0) {
-        s->last_error = -6;
-        strcpy(s->last_error_msg, "Socket not connected");
-        RETURNINTX(-6);
-    }
-
-    int total_sent = 0;
-    while (total_sent < len) {
-#ifdef _WIN32
-        int rc = send(s->sock, data + total_sent, len - total_sent, 0);
-        if (rc == SOCKET_ERROR) {
-            int err = WSAGetLastError();
-            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                     "Send failed, WSA error: %d", err);
-            s->last_error = -3;
-            RETURNINTX(-3);
-        }
-#else
-        int rc = write(s->sock, data + total_sent, len - total_sent);
-        if (rc < 0) {
-            snprintf(s->last_error_msg, sizeof(s->last_error_msg),
-                     "Send failed, errno: %d", errno);
-            s->last_error = -3;
-            RETURNINTX(-3);
-        }
-#endif
-        if (rc == 0) break; // shouldn't happen, but avoid loop
-        total_sent += rc;
-    }
-    s->last_error = 0;
-    s->last_error_msg[0] = 0;
-    RETURNINTX(total_sent);
-    ENDPROC
-}
-
 PROCEDURE(socketsetblocking) {
     rxinteger r = GETINT(ARG0);
     int blocking = GETINT(ARG1);
@@ -574,12 +827,13 @@ PROCEDURE(socketsetblocking) {
     int flags = fcntl(s->sock, F_GETFL, 0);
     if (flags < 0) RETURNINTX(-1);
     if (blocking)  flags &= ~O_NONBLOCK;
-    else          flags |= O_NONBLOCK;
+    else           flags |= O_NONBLOCK;
     rc = fcntl(s->sock, F_SETFL, flags);
 #endif
     RETURNINTX(rc == 0 ? 0 : -1);
     ENDPROC
 }
+
 PROCEDURE(socketpendingbytes) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
@@ -592,6 +846,7 @@ PROCEDURE(socketpendingbytes) {
     RETURNINTX(count);
     ENDPROC
 }
+
 PROCEDURE(socketbind) {
     rxinteger r = GETINT(ARG0);
     char *ip = GETSTRING(ARG1);   // "" or "0.0.0.0" for any address
@@ -615,8 +870,8 @@ PROCEDURE(socketbind) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = ip && ip[0] ? inet_addr(ip) : INADDR_ANY;
+    addr.sin_port = htons((uint16_t)port);
+    addr.sin_addr.s_addr = (ip && ip[0]) ? inet_addr(ip) : INADDR_ANY;
 
     int rc = bind(s->sock, (struct sockaddr *)&addr, sizeof(addr));
     if (rc != 0) {
@@ -632,6 +887,7 @@ PROCEDURE(socketbind) {
     RETURNINTX(0);
     ENDPROC
 }
+
 PROCEDURE(socketlisten) {
     rxinteger r = GETINT(ARG0);
     int backlog = GETINT(ARG1);
@@ -660,28 +916,35 @@ PROCEDURE(socketaccept) {
     }
 #else
     socklen_t addrlen = sizeof(addr);
-    int cs = accept(s->sock, (struct sockaddr*)&addr, &addrlen);
+    int cs = (int)accept(s->sock, (struct sockaddr*)&addr, &addrlen);
     if (cs < 0) {
         SET_SOCK_ERR(s, -32, "Accept failed");
         RETURNINTX(-32);
     }
 #endif
-    // Create new TcpSocket token for the client
-    TcpSocket *client = malloc(sizeof(TcpSocket));
-    memcpy(client, s, sizeof(TcpSocket)); // Copy settings (linebuf, etc.)
+    // Create new TcpSocket token for the client; copy settings
+    TcpSocket *client = (TcpSocket*)malloc(sizeof(TcpSocket));
+    if (!client) RETURNINTX(-8);
+    memcpy(client, s, sizeof(TcpSocket)); // copies default_timeout, etc.
     client->sock = cs;
+    client->is_server = 0;
+    client->linebuf = (char*)malloc(LINEBUF_INITIAL);
+    client->linebuf_size = LINEBUF_INITIAL;
     client->linebuf_used = 0;
+
+    // TLS is not active on accepted sockets by default (server TLS not implemented)
+    client->use_tls = 0;
+    client->ssl = NULL;
+    client->ctx = NULL;
+
     rxinteger cr = (rxinteger)client;
-    s->is_server = 0;
     RETURNINTX(cr);
     ENDPROC
 }
 
-
 // ----------------------------------------------------------------------------
 // Report last error
 // ----------------------------------------------------------------------------
-
 PROCEDURE(socketlasterror) {
     rxinteger r = GETINT(ARG0);
     TcpSocket *s = (TcpSocket *)r;
@@ -691,32 +954,31 @@ PROCEDURE(socketlasterror) {
     ENDPROC
 }
 
-
 // ----------------------------------------------------------------------------
 // Registration Table (for ADDPROC system)
 // ----------------------------------------------------------------------------
 LOADFUNCS
-ADDPROC(socketcreate,  "socket.socketcreate",  "b",    ".int" ,"");
-ADDPROC(socketconnect, "socket.socketconnect", "b",    ".int" ,"sock=.int,host=.string,port=.int");
-ADDPROC(socketsend,    "socket.socketsend",    "b",    ".int" ,"sock=.int,data=.string");
-ADDPROC(socketsendall, "socket.socketsendall", "b", ".int", "sock=.int,data=.string");
-ADDPROC(socketrecv,    "socket.socketrecv",    "b",    ".string","sock=.int,size=.int");
-ADDPROC(socketrecvline,"socket.socketrecvline", "b",   ".string", "sock=.int");
-ADDPROC(socketclose,   "socket.socketclose",    "b",   ".int" ,"sock=.int");
-ADDPROC(socketsetblocking, "socket.socketsetblocking", "b", ".int", "sock=.int,blocking=.int");
-ADDPROC(socketpendingbytes, "socket.socketpendingbytes", "b", ".int", "sock=.int");
-ADDPROC(socketisconnected, "socket.socketisconnected", "b", ".int", "sock=.int");
-ADDPROC(socketpeerinfo,    "socket.socketpeerinfo",    "b", ".string", "sock=.int");
-ADDPROC(socketpeerinfo,    "socket.socketlocalinfo",   "b", ".string", "sock=.int");
-ADDPROC(socketsettimeout, "socket.socketsettimeout",    "b", ".int", "sock=.int,timeout=.int");
-ADDPROC(socketshutdown, "socket.socketshutdown", "b", ".int", "sock=.int,how=.int");
-ADDPROC(socketlasterror,"socket.socketlasterror","b",  ".string","sock=.int");
-ADDPROC(socketnodelay,  "socket.socketnodelay",   "b", ".int", "sock=.int,enable=.int");
-ADDPROC(socketkeepalive,"socket.socketkeepalive", "b", ".int", "sock=.int,enable=.int");
-ADDPROC(socketbind, "socket.socketbind", "b", ".int", "sock=.int,ip=.string,port=.int");
-ADDPROC(socketlisten, "socket.socketlisten", "b", ".int", "sock=.int,backlog=.int");
-ADDPROC(socketaccept, "socket.socketaccept", "b", ".int", "sock=.int");
+    ADDPROC(socketcreate,          "socket.socketcreate",          "b", ".int", "");
+    ADDPROC(socketconnect,         "socket.socketconnect",         "b", ".int", "sock=.int,host=.string,port=.int");
+    ADDPROC(socketsend,            "socket.socketsend",            "b", ".int", "sock=.int,data=.string");
+    ADDPROC(socketsendall,         "socket.socketsendall",         "b", ".int", "sock=.int,data=.string");
+    ADDPROC(socketrecv,            "socket.socketrecv",            "b", ".string", "sock=.int,size=.int");
+    ADDPROC(socketrecvline,        "socket.socketrecvline",        "b", ".string", "sock=.int");
+    ADDPROC(socketclose,           "socket.socketclose",           "b", ".int", "sock=.int");
+    ADDPROC(socketsetblocking,     "socket.socketsetblocking",     "b", ".int", "sock=.int,blocking=.int");
+    ADDPROC(socketpendingbytes,    "socket.socketpendingbytes",    "b", ".int", "sock=.int");
+    ADDPROC(socketisconnected,     "socket.socketisconnected",     "b", ".int", "sock=.int");
+    ADDPROC(socketpeerinfo,        "socket.socketpeerinfo",        "b", ".string", "sock=.int");
+    ADDPROC(socketlocalinfo,       "socket.socketlocalinfo",       "b", ".string", "sock=.int");
+    ADDPROC(socketsettimeout,      "socket.socketsettimeout",      "b", ".int", "sock=.int,timeout=.int");
+    ADDPROC(socketshutdown,        "socket.socketshutdown",        "b", ".int", "sock=.int,how=.int");
+    ADDPROC(socketlasterror,       "socket.socketlasterror",       "b", ".string", "sock=.int");
+    ADDPROC(socketnodelay,         "socket.socketnodelay",         "b", ".int", "sock=.int,enable=.int");
+    ADDPROC(socketkeepalive,       "socket.socketkeepalive",       "b", ".int", "sock=.int,enable=.int");
+    ADDPROC(socketbind,            "socket.socketbind",            "b", ".int", "sock=.int,ip=.string,port=.int");
+    ADDPROC(socketlisten,          "socket.socketlisten",          "b", ".int", "sock=.int,backlog=.int");
+    ADDPROC(socketaccept,          "socket.socketaccept",          "b", ".int", "sock=.int");
 
-
-
+// New TLS procedure (client-side)
+    ADDPROC(socketenabletls,       "socket.socketenabletls",       "b", ".int", "sock=.int,hostname=.string");
 ENDLOADFUNCS
