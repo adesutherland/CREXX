@@ -5219,7 +5219,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
 #ifndef NUTF8
                 rxinteger byte_pos = op2R->string_pos;   //  pointer must be externally set by SETSTRPOS string1,start
-
+#if ASCII_FAST_PATH       // fast path substr for ASCII strings only
+                if (op2R->string_chars==op2R->string_length) {
+                   prep_string_buffer(op1R, (size_t)length + 1);
+                   memcpy(op1R->string_value, op2R->string_value + byte_pos, (size_t)length);
+                   PUTSTRLEN(op1R, length);
+                   goto noChars;
+                }
+#endif
                 prep_string_buffer(op1R, 4 * length + 1);
                 int temp_len = 0;
                 for (i = 0; i < length; i++) {
