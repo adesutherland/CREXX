@@ -69,8 +69,9 @@ if option='L' | option='B' then do   /* check leading blanks */
    nbpos=0
    assembler FNDNBLNK nbpos,instr,nbpos
    if nbpos<0 then return "-y"       /* <0 no non blank char found  */
+   if nbpos=0 then return instr
    hlen = hlen - nbpos               /* calculate usable length after positioning */
-   if nbpos>0 then assembler SETSTRPOS instr, nbpos
+   assembler SETSTRPOS instr, nbpos
    instr2=""                         /* setup new variable, substring instruction doesn't work on same string */
    assembler substring instr2, instr, hlen /* left trim string */
    return instr2                     /* return trimmed string */
