@@ -559,6 +559,53 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     (cp) == 0x205F || \
     (cp) == 0x3000 )
 
+/* -------------------------------------------------------------------------
+ * Inline helper: forward ASCII non-blank scan.
+ * Returns index (0-based) of first non-blank, or -len if none found.
+ * -------------------------------------------------------------------------
+ */
+#define ASCII_FAST_PATH 1    // 1. activate ASCII fast path, 0: run normal mode
+#if  ASCII_FAST_PATH
+static inline rxinteger ascii_fwd_nonblank(const unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    for (i = start; i < len; i++) {
+        ch = (unsigned char)s[i];
+       if (!IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in forward scan */
+}
+static inline rxinteger ascii_back_nonblank( unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    if (len <= 0) return -1;
+    for (i = start; i >= 0; --i) {
+        ch = (unsigned char)s[i];
+        if (!IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in reverse scan */
+}
+
+static inline rxinteger ascii_fwd_blank(const unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    for (i = start; i < len; i++) {
+        ch = (unsigned char)s[i];
+        if (IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in forward scan */
+}
+static inline rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteger len) {
+    rxinteger i;
+    int ch;
+    if (len <= 0) return -1;
+    for (i = start; i >= 0; --i) {
+        ch = (unsigned char)s[i];
+        if (IS_UNICODE_WHITESPACE(ch)) return i;
+    }
+    return -1;  /* Not found in reverse scan */
+}
+#endif
 
 /* Interpreter */
 RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
@@ -4960,6 +5007,20 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 int ch;
 #ifndef NUTF8
                 len = (rxinteger) op2R->string_chars;
+#if ASCII_FAST_PATH
+                if (len==op2R->string_length) {  // it is plain ASCII
+                    if (op3R->int_value>=0) {
+                        result = ascii_fwd_blank(op2R->string_value, op3R->int_value, len);
+                        goto blankfound;
+                    } else {
+                        result = -op3R->int_value;   // Convert to positive index
+                        if (result >= len) result = len - 1;  // Clamp to valid range
+                        result = ascii_back_blank(op2R->string_value, result, len);
+                        goto blankfound;
+                    }
+                }
+#endif
+
 #else
                 len = (rxinteger) op2R->string_length;
 #endif
@@ -4974,6 +5035,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 }
                 result = -len;
             blankfound:
+             // printf("FBlank %d %d\n",fresult,result);
                 REG_RETURN_INT(result)
             }
             DISPATCH
@@ -4993,7 +5055,20 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 int ch;
 
 #ifndef NUTF8
-                len = (rxinteger)op2R->string_chars;
+             len = (rxinteger)op2R->string_chars;
+#if ASCII_FAST_PATH
+             if (len==op2R->string_length) {  // it is plain ASCII
+                   if (op3R->int_value>=0) {
+                        result = ascii_fwd_nonblank(op2R->string_value, op3R->int_value, len);
+                        goto nonblankfound;
+                    } else {
+                        result = -op3R->int_value;   // Convert to positive index
+                        if (result >= len) result = len - 1;  // Clamp to valid range
+                        result = ascii_back_nonblank(op2R->string_value, result, len);
+                        goto nonblankfound;
+                    }
+             }
+#endif
 #else
                 len = (rxinteger)op2R->string_length;
 #endif
@@ -5025,6 +5100,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     result = -1;  // Not found in reverse scan
                 }
                 nonblankfound:
+         //       printf("FnBLANK %d %d\n",fresult,result);
                 REG_RETURN_INT(result)
             }
             DISPATCH
@@ -5143,7 +5219,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
 #ifndef NUTF8
                 rxinteger byte_pos = op2R->string_pos;   //  pointer must be externally set by SETSTRPOS string1,start
-
+#if ASCII_FAST_PATH       // fast path substr for ASCII strings only
+                if (op2R->string_chars==op2R->string_length) {
+                   prep_string_buffer(op1R, (size_t)length + 1);
+                   memcpy(op1R->string_value, op2R->string_value + byte_pos, (size_t)length);
+                   PUTSTRLEN(op1R, length);
+                   goto noChars;
+                }
+#endif
                 prep_string_buffer(op1R, 4 * length + 1);
                 int temp_len = 0;
                 for (i = 0; i < length; i++) {
