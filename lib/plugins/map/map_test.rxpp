@@ -19,7 +19,7 @@ import map
 /* ------------------------------------------------------------------ */
 /* Configuration                                                      */
 /* ------------------------------------------------------------------ */
-numEntries = 11000000
+numEntries = 110000
 
 say "=== CREXX Stem Engine Demo (Robin Hood open addressing) ==="
 say

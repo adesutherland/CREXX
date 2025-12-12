@@ -6,6 +6,8 @@
 #include <time.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
+#define ENOENTRY 12
+
 #if defined(__APPLE__)
   #include <string.h>
 #endif
@@ -122,7 +124,7 @@ rhmap_rehash(rhmap_t *m, size_t new_capacity)
 
     rhmap_slot_t *new_slots = calloc(new_capacity, sizeof(rhmap_slot_t));
     if (!new_slots) {
-        return -ENOMEM;
+        return -ENOENTRY;
     }
 
     rhmap_slot_t *old_slots    = m->slots;
@@ -282,7 +284,7 @@ rhmap_put_ptr(rhmap_t *m, const char *key, void *value)
             if (!item.key) {
                 item.key = strdup(key);
                 if (!item.key) {
-                    return -ENOMEM;
+                    return -ENOENTRY;
                 }
             }
             *s = item;
@@ -314,7 +316,7 @@ rhmap_put_ptr(rhmap_t *m, const char *key, void *value)
             if (!item.key) {
                 item.key = strdup(key);
                 if (!item.key) {
-                    return -ENOMEM;
+                    return -ENOENTRY;
                 }
             }
             rhmap_slot_t tmp = *s;
@@ -542,14 +544,14 @@ stem_put_value(stem_map_t *m, const char *index, const char *value)
     if (old_val) {
         /* update existing: free old, store new */
         char *new_val = strdup(src_val);
-        if (!new_val) return -ENOMEM;
+        if (!new_val) return -ENOENTRY;
         free(old_val);
         return rhmap_put_ptr(m, index, new_val);
     }
 
     /* new key */
     char *new_val = strdup(src_val);
-    if (!new_val) return -ENOMEM;
+    if (!new_val) return -ENOENTRY;
 
     /* rhmap_put_ptr will own the key copy (strdup internally) */
     int rc = rhmap_put_ptr(m, index, new_val);
