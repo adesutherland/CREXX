@@ -7,7 +7,8 @@
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
 #define ENOENTRY 12
-
+#define ENOVALUE 22
+#define ENOENTRY 32
 #if defined(__APPLE__)
   #include <string.h>
 #endif
@@ -258,7 +259,7 @@ static int
 rhmap_put_ptr(rhmap_t *m, const char *key, void *value)
 {
     if (!m || !key) {
-        return -EINVAL;
+        return -ENOVALUE;
     }
 
     int rc = rhmap_ensure_capacity(m);
@@ -387,7 +388,7 @@ static int
 rhmap_remove_key(rhmap_t *m, const char *key)
 {
     if (!m || !key || m->capacity == 0) {
-        return -ENOENT;
+        return -ENOENTRY;
     }
 
     uint32_t hash = hash_fnv1a(key);
@@ -398,12 +399,12 @@ rhmap_remove_key(rhmap_t *m, const char *key)
     for (;;) {
         rhmap_slot_t *s = &m->slots[idx];
         if (!s->used) {
-            return -ENOENT;
+            return -ENOENTRY;
         }
 
         size_t s_dist = probe_distance(idx, s->hash, cap);
         if (s_dist < dist) {
-            return -ENOENT;
+            return -ENOENTRY;
         }
 
         if (s->hash == hash && s->key && strcmp(s->key, key) == 0) {
@@ -487,7 +488,7 @@ static int drop_stem_internal(const char *stem_name)
 {
     stem_map_t *m = (stem_map_t *)rhmap_get_ptr(&g_root_map, stem_name);
     if (!m) {
-        return -ENOENT;  /* no such stem */
+        return -ENOENTRY;  /* no such stem */
     }
 
     /* free the stem map (keys + values + slots + struct) */
@@ -536,7 +537,7 @@ find_stem_map(const char *stem_name)
 static int
 stem_put_value(stem_map_t *m, const char *index, const char *value)
 {
-    if (!m || !index) return -EINVAL;
+    if (!m || !index) return -ENOVALUE;
     const char *src_val = value ? value : "";
 
     /* check if key exists */
@@ -576,12 +577,12 @@ stem_get_value(const stem_map_t *m, const char *index)
 static int
 stem_remove_value(stem_map_t *m, const char *index)
 {
-    if (!m || !index) return -EINVAL;
+    if (!m || !index) return -ENOVALUE;
 
     /* find current value */
     char *val = (char *)rhmap_get_ptr(m, index);
     if (!val) {
-        return -ENOENT;   /* no such entry */
+        return -ENOENTRY;   /* no such entry */
     }
 
     /* free the value string (we own it at stem layer) */
