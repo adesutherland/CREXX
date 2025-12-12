@@ -786,7 +786,7 @@ PROCEDURE(dropentry) {
     }
 
     int rc = stem_remove_value(m, stem_index);
-    if (rc == -ENOENT) {
+    if (rc == -ENOENTRY) {
         /* element not defined */
         last_rhmap_rc = STEM_MSG_UNDEFINED_ELEM;
         RETURNINTX(-11);
