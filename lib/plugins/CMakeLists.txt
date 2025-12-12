@@ -15,6 +15,7 @@ add_subdirectory(llist)
 add_subdirectory(treemap)
 add_subdirectory(id)
 add_subdirectory(recv390)
+add_subdirectory(map)
 
 if(ENABLE_GTK)
     add_subdirectory(gui)
