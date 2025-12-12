@@ -28,7 +28,7 @@ else()
 endif()
 
 option(ENABLE_ODBC "Enable ODBC support" OFF)
-option(ENABLE_GUI  "Enable GUI support"  OFF)
+option(ENABLE_GTK  "Enable GTK support"  OFF)
 
 include(CTest)
 add_subdirectory(re2c)
