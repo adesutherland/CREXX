@@ -1,0 +1,176 @@
+/* RXPP
+ * ----------------------------------------------------------------------
+ *  CREXX Stem Engine / Robin Hood Hash Demo
+ *
+ *  Demonstrates:
+ *    - Multi-level stems (a.b.c.n)
+ *    - setstem / getstem
+ *    - stemstat / liststems
+ *    - dropstem / dropEntry and error messages via getstemmsg
+ *    - Iteration via getstemtail / getall / getalltails
+ *    - clonestem (deep copy of a stem)
+ *
+ * ----------------------------------------------------------------------
+ */
+options levelb
+import rxfnsb
+import map
+
+/* ------------------------------------------------------------------ */
+/* Configuration                                                      */
+/* ------------------------------------------------------------------ */
+numEntries = 110000
+
+say "=== CREXX Stem Engine Demo (Robin Hood open addressing) ==="
+say
+
+/* ------------------------------------------------------------------ */
+/* 1) Populate two stems: Fred. and Mary. with multi-level keys       */
+/* ------------------------------------------------------------------ */
+say ">> Populating stems 'Fred' and 'Mary' with" numEntries "records..."
+stemname="Fred"
+do i = 1 to numEntries
+   call setstem stemname, 'a.b.c.'i,  'Line'   i
+/*   call setstem 'Mary', 'a.b.c.'i,  'Record' i */
+end
+
+say "stemname is "stemname
+
+say "   Done."
+say
+
+/* ------------------------------------------------------------------ */
+/* 2) Show statistics for both stems                                  */
+/* ------------------------------------------------------------------ */
+say ">> stemstat() after initial load"
+say "   Fred : " stemstat("Fred")
+say "   Mary : " stemstat("Mary")
+say
+Exit
+/* ------------------------------------------------------------------ */
+/* 3) Sample lookups                                                  */
+/* ------------------------------------------------------------------ */
+say ">> Sample lookups (every 100th entry)"
+do i = 1 to numEntries by 50000
+   say "   Fred.a.b.c."i" =" getstem('Fred', 'a.b.c.'i)
+   say "   Mary.a.b.c."i" =" getstem('Mary', 'a.b.c.'i)
+end
+say
+
+/* ------------------------------------------------------------------ */
+/* 4) Drop one stem and show error handling                           */
+/* ------------------------------------------------------------------ */
+say ">> Dropping stem 'Mary' and demonstrating error reporting"
+call dropstem "Mary"
+
+i = 100
+say "   After dropstem('Mary'): getstem('Mary','a.b.c."i"') =>"
+say "      Value: " getstem('Mary', 'a.b.c.'i)
+say "      Msg  : " getstemmsg()
+say
+
+/* ------------------------------------------------------------------ */
+/* 5) Accessing a non-existing path in an existing stem               */
+/* ------------------------------------------------------------------ */
+say ">> Accessing non-existing path in 'Fred'"
+path = 'a.xyz.c.'i
+say "   getstem('Fred','"path"') =>"
+say "      Value: " getstem('Fred', path)
+say "      Msg  : " getstemmsg()
+say
+
+/* ------------------------------------------------------------------ */
+/* 6) Iteration using getstemtail()                                   */
+/* ------------------------------------------------------------------ */
+say ">> First 20 tails of 'Fred' using getstemtail()"
+do i = 1 to 110000 by 5000     ## run beyond known boundary
+   tail = getstemtail('Fred', i)
+   if tail = "" then leave
+   say "   "right(i,3)". "tail
+end
+say
+
+/* ------------------------------------------------------------------ */
+/* 7) Bulk retrieval using getall()                                   */
+/* ------------------------------------------------------------------ */
+say ">> getall('Fred', tails, vals) – showing first 10 entries, they are unsorted"
+
+tails = .string[]
+vals  = .string[]
+
+call getall 'Fred', tails, vals
+
+maxShow = min(10000, tails.0)
+do i = 1 to maxShow
+   say "   "right(i,3)". "tails[i]" = '"vals[i]"'"
+end
+say "   (total entries reported by getall: "tails.0")"
+say
+
+/* ------------------------------------------------------------------ */
+/* 8) getalltails() for key enumeration                               */
+/* ------------------------------------------------------------------ */
+say ">> getalltails('Fred', tails) – showing first 10 tails"
+
+call getalltails 'Fred', tails
+
+maxShow = min(10, tails.0)
+do i = 1 to maxShow
+   say "   "right(i,3)". "tails[i]
+end
+say "   (total tails reported by getalltails: "tails.0")"
+say
+
+/* ------------------------------------------------------------------ */
+/* 9) dropEntry() on a single key                                     */
+/* ------------------------------------------------------------------ */
+dropKey = 'a.b.c.123'
+
+say ">> dropEntry('Fred','"dropKey"')"
+say "   Before: " getstem('Fred', dropKey)
+call dropEntry "Fred", dropKey
+say "   After : " getstem('Fred', dropKey)
+say "   Msg   : " getstemmsg()
+say
+
+/* ------------------------------------------------------------------ */
+/* 10) clonestem(): clone Fred -> Mike                                */
+/* ------------------------------------------------------------------ */
+say ">> Cloning stem 'Fred' -> 'Mike'"
+call clonestem 'Fred', 'Mike'
+
+say "   stemstat('Fred') = " stemstat("Fred")
+say "   stemstat('Mike') = " stemstat("Mike")
+say
+
+say ">> Sample entries from cloned stem 'Mike' (every 100th)"
+do i = 1 to numEntries by 5000
+   say "   Mike.a.b.c."i" =" getstem('Mike', 'a.b.c.'i)
+end
+say
+
+/* ------------------------------------------------------------------ */
+/* 11) liststems(): show all active stems                             */
+/* ------------------------------------------------------------------ */
+say ">> liststems(allstems)"
+
+allstems = .string[]
+count = liststems(allstems)
+
+say "   Number of active stems: " count
+do i = 1 to allstems.0
+   say "   - "allstems.i
+end
+say
+
+/* ------------------------------------------------------------------ */
+/* Final stats                                                        */
+/* ------------------------------------------------------------------ */
+say ">> Final stemstat()"
+say "   Fred : " stemstat("Fred")
+say "   Mike : " stemstat("Mike")
+say
+
+say "=== End of CREXX Stem Engine Demo ==="
+return 0
+
