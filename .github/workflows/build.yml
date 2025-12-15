@@ -50,27 +50,23 @@ jobs:
 
       - name: Get Executables
         run: |
-        mkdir -p "${{ runner.temp }}/exe"
-        mkdir -p "${{ runner.temp }}/exe/release"
-        mkdir -p "${{ runner.temp }}/exe/release/bin"
-        mkdir -p "${{ runner.temp }}/exe/release/lib"
-        mkdir -p "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/crexx"          "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/rxpp"           "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release/lib"
-          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release/lib"
+          mkdir -p "${{ runner.temp }}/exe"
+          mkdir -p "${{ runner.temp }}/exe/release"
+          mkdir -p "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release"          
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/debugger/rxdb"        "${{ runner.temp }}/exe/debug"
+          cp "${{ runner.temp }}/debug/debugger/rxdb"        "${{ runner.temp }}/exe/debug"          
           cp "${{ runner.temp }}/debug/interpreter/rxvm"     "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/rxbvm"    "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/rxvme"    "${{ runner.temp }}/exe/debug"
@@ -86,14 +82,14 @@ jobs:
       - name: Sanity Check
         working-directory: ${{ runner.temp }}/exe
         run: |
-          ./release/bin/rxc -v
-          ./release/bin/rxas -v
-          ./release/bin/rxdas -v
-          ./release/bin/rxdb -v
-          ./release/bin/rxvm -v
-          ./release/bin/rxbvm -v
-          ./release/bin/rxvme -v
-          ./release/bin/rxbvme -v
+          ./release/rxc -v
+          ./release/rxas -v
+          ./release/rxdas -v
+          ./release/rxdb -v
+          ./release/rxvm -v
+          ./release/rxbvm -v
+          ./release/rxvme -v
+          ./release/rxbvme -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
@@ -113,8 +109,6 @@ jobs:
             ${{ runner.temp }}/exe
             ${{ runner.temp }}/exe/debug
             ${{ runner.temp }}/exe/release
-            ${{ runner.temp }}/exe/release/bin
-            ${{ runner.temp }}/exe/release/lib
 
       - name: Upload instrmiss.h
         uses: actions/upload-artifact@v4
@@ -200,7 +194,7 @@ jobs:
         pacboy: >-
           toolchain:p
           cmake:p
-          ninja:p
+          ninja:p    
 
     - name: Determine Release Name
       run: |
@@ -248,71 +242,55 @@ jobs:
 
     - name: Get Executable
       run: |
-          mkdir -p "${{ runner.temp }}/exe"
-          mkdir -p "${{ runner.temp }}/exe/release"
-          mkdir -p "${{ runner.temp }}/exe/release/bin"
-          mkdir -p "${{ runner.temp }}/exe/release/lib"
-          mkdir -p "${{ runner.temp }}/exe/debug"      
-          cp "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/debugger/rxdb.exe"      "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvm.exe"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvme.exe"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvme.exe" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/crexx.exe"          "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/rxpp.exe"           "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release/lib"
-          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release/lib"
-          cp "${{ runner.temp }}/debug/compiler/rxc.exe"         "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/debugger/rxdb.exe"        "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxbvm.exe"    "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxvme.exe"    "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/rxbvme.exe"   "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
-          cp LICENSE     "${{ runner.temp }}/exe"
-          cp README.md   "${{ runner.temp }}/exe"
-          cp SECURITY.md "${{ runner.temp }}/exe"
-          cp history.txt "${{ runner.temp }}/exe"
+        mkdir -p "${{ runner.temp }}/exe"
+        mkdir -p "${{ runner.temp }}/exe/release"
+        mkdir -p "${{ runner.temp }}/exe/debug"      
+        cp "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/debugger/rxdb.exe"      "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxbvm.exe"  "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxvme.exe"  "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/rxbvme.exe" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/librxbvml.a" "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/release/interpreter/librxvml.a"  "${{ runner.temp }}/exe/release"
+        cp "${{ runner.temp }}/debug/compiler/rxc.exe"         "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/assembler/rxas.exe"       "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/disassembler/rxdas.exe"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/debugger/rxdb.exe"        "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxvm.exe"     "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxbvm.exe"    "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxvme.exe"    "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/rxbvme.exe"   "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
+        cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
+        cp LICENSE "${{ runner.temp }}/exe"
+        cp README.md "${{ runner.temp }}/exe"
+        cp SECURITY.md "${{ runner.temp }}/exe"
+        cp history.txt "${{ runner.temp }}/exe"
       shell: bash
 
-      - name: Sanity Check
-        working-directory: ${{ runner.temp }}/exe
-        run: |
-          ./release/bin/rxc -v
-          ./release/bin/rxas -v
-          ./release/bin/rxdas -v
-          ./release/bin/rxdb -v
-          ./release/bin/rxvm -v
-          ./release/bin/rxbvm -v
-          ./release/bin/rxvme -v
-          ./release/bin/rxbvme -v
-          ./debug/rxc -v
-          ./debug/rxas -v
-          ./debug/rxdas -v
-          ./debug/rxdb -v
-          ./debug/rxvm -v
-          ./debug/rxbvm -v
-          ./debug/rxvme -v
-          ./debug/rxbvme -v
-        shell: bash
-
-      - name: Upload Executable
-        if: env.RELEASE_ID
-        uses: actions/upload-artifact@v4
-        with:
-          name: CREXX-Ubuntu
-          path: |
-            ${{ runner.temp }}/exe
-            ${{ runner.temp }}/exe/debug
-            ${{ runner.temp }}/exe/release
-            ${{ runner.temp }}/exe/release/bin
-            ${{ runner.temp }}/exe/release/lib
+    - name: Sanity Check
+      working-directory: ${{ runner.temp }}/exe
+      run: |
+        ./release/rxc -v
+        ./release/rxas -v
+        ./release/rxdas -v
+        ./release/rxdb -v
+        ./release/rxvm -v
+        ./release/rxbvm -v
+        ./release/rxvme -v
+        ./release/rxbvme -v
+        ./debug/rxc -v
+        ./debug/rxas -v
+        ./debug/rxdas -v
+        ./debug/rxdb -v
+        ./debug/rxvm -v
+        ./debug/rxbvm -v
+        ./debug/rxvme -v
+        ./debug/rxbvme -v
+      shell: bash
 
     - name: Upload Executable
       if: env.RELEASE_ID
@@ -376,25 +354,22 @@ jobs:
           # Select the build configuration, typically Debug or Release.
           cmakeBuildType: MinSizeRel # optional, default is Debug
           buildDirectory: "${{ runner.temp }}/release"
-      - name: Get Executables
+
+      - name: Get Executable
         run: |
           mkdir -p "${{ runner.temp }}/exe"
           mkdir -p "${{ runner.temp }}/exe/release"
-          mkdir -p "${{ runner.temp }}/exe/release/bin"
-          mkdir -p "${{ runner.temp }}/exe/release/lib"
           mkdir -p "${{ runner.temp }}/exe/debug"
-          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/crexx"          "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/bin/rxpp"           "${{ runner.temp }}/exe/release/bin"
-          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release/lib"
-          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release/lib"
+          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/release"
+          cp "${{ runner.temp }}/release/interpreter/librxvml.a"   "${{ runner.temp }}/exe/release"
           cp "${{ runner.temp }}/debug/compiler/rxc"         "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/assembler/rxas"       "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/disassembler/rxdas"   "${{ runner.temp }}/exe/debug"
@@ -405,8 +380,8 @@ jobs:
           cp "${{ runner.temp }}/debug/interpreter/rxbvme"   "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/librxbvml.a"  "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/debug/interpreter/librxvml.a"   "${{ runner.temp }}/exe/debug"
-          cp LICENSE     "${{ runner.temp }}/exe"
-          cp README.md   "${{ runner.temp }}/exe"
+          cp LICENSE "${{ runner.temp }}/exe"
+          cp README.md "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
           cp history.txt "${{ runner.temp }}/exe"
         shell: bash
@@ -414,14 +389,14 @@ jobs:
       - name: Sanity Check
         working-directory: ${{ runner.temp }}/exe
         run: |
-          ./release/bin/rxc -v
-          ./release/bin/rxas -v
-          ./release/bin/rxdas -v
-          ./release/bin/rxdb -v
-          ./release/bin/rxvm -v
-          ./release/bin/rxbvm -v
-          ./release/bin/rxvme -v
-          ./release/bin/rxbvme -v
+          ./release/rxc -v
+          ./release/rxas -v
+          ./release/rxdas -v
+          ./release/rxdb -v
+          ./release/rxvm -v
+          ./release/rxbvm -v
+          ./release/rxvme -v
+          ./release/rxbvme -v
           ./debug/rxc -v
           ./debug/rxas -v
           ./debug/rxdas -v
@@ -436,13 +411,11 @@ jobs:
         if: env.RELEASE_ID
         uses: actions/upload-artifact@v4
         with:
-          name: CREXX-Ubuntu
+          name: CREXX-MacOS
           path: |
             ${{ runner.temp }}/exe
             ${{ runner.temp }}/exe/debug
             ${{ runner.temp }}/exe/release
-            ${{ runner.temp }}/exe/release/bin
-            ${{ runner.temp }}/exe/release/lib
 
   #**************************************************#
   # This job runs after all builds are successful
