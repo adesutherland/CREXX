@@ -1,18 +1,21 @@
 /* RXPP */
 /* ----------------------------------------------------------------------
- * PRE Compiled on 4 Nov 2025  at 22:59:26
+ * PRE Compiled on 15 Dec 2025  at 13:31:21
  * ----------------------------------------------------------------------
  */
 options levelb
 import rxfnsb
+
 import recv390
 /* ##cflags def nset  3buf  parse def */
 ##  array=.string[]
+
 /* ------------------------------------------------------
  * extract a file from the CBT library
  * ------------------------------------------------------
  */
 xmitFile = 'C:/Temp/CBT112/FILE112.XMI'   ## XMI file to work with
+
 /* ------------------------------------------------------
  * Create an Array containing the PDS directory
  * ------------------------------------------------------
@@ -30,6 +33,7 @@ say pdsdir[0]' Entries in Directory'
 say copies('.',80)
 say 'End of Directory List'
 say copies('.',80)
+
 say ' '
 /* ------------------------------------------------------
  * Receiving the full PDS from the XMI file
@@ -38,6 +42,8 @@ say ' '
 say time('l')' Unpack 'xmitFile
 rc = xmitunpack(xmitFile)
 say time('l')' Unpack finished with RC=' rc
+
 /*  --------------- will be next -------------- */
 rc = xmitextract(xmitFile,"$$$#DATE")
+
 call xmitcleanup
