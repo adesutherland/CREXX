@@ -252,7 +252,7 @@ jobs:
           mkdir -p "${{ runner.temp }}/exe/release"
           mkdir -p "${{ runner.temp }}/exe/release/bin"
           mkdir -p "${{ runner.temp }}/exe/release/lib"
-          mkdir -p "${{ runner.temp }}/exe/debug"
+          mkdir -p "${{ runner.temp }}/exe/debug"      
           cp "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/release/bin"
           cp "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/release/bin"
           cp "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/release/bin"
