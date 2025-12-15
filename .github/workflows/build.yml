@@ -52,8 +52,8 @@ jobs:
         run: |
           mkdir -p "${{ runner.temp }}/exe"
           mkdir -p "${{ runner.temp }}/exe/release"
-        mkdir -p "${{ runner.temp }}/exe/release/bin"
-        mkdir -p "${{ runner.temp }}/exe/release/lib"
+          mkdir -p "${{ runner.temp }}/exe/release/bin"
+          mkdir -p "${{ runner.temp }}/exe/release/lib"
           mkdir -p "${{ runner.temp }}/exe/debug"
           cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/release/bin"
           cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/release/bin"
