@@ -16,10 +16,201 @@ options levelb
 import rxfnsb
 import map
 
+##cflags 1buf 2buf 3buf
+
+/* =======================================================================
+ * CREXX Preprocessor STEM Demo (All-in-One) — matches CURRENT semantics
+ *
+ * Current semantics:
+ *   Record.customer.addr
+ *     - segment "customer" is substituted with the VALUE of variable customer
+ *       IF the variable customer exists, else it remains literal "customer"
+ *
+ * This demo:
+ *   1) Defines 2 customers and 2 orders using dynamic segments (via existing vars)
+ *   2) Shows “join” lookup: Order.1001.cust -> Customer.<cust>.name
+ *   3) Uses SUBSTR on a stem value
+ *   4) Uses concatenation (||) and quoted strings
+ *   5) Shows comparisons and a small “derived key” example
+ * ======================================================================= */
+
+##stem Order.indx= 'IBM'
+
+##stem A=1
+##stem if a=1 then say "A is "a
+
+say '--- STEM DEMO START ---'
+
+/* -----------------------------------------------------------------------
+ * 0) Master data (“table”)
+ * ----------------------------------------------------------------------- */
+ customer = 'IBM'
+ orderid  = '123'
+ customer2 = 'MS'
+ orderid2  = '9001'
+/*
+Customer.customer.name = 'International Business Machines'
+Customer.customer.city = 'Armonk'
+Customer.customer2.name  = 'Microsoft'
+Customer.customer2.city  = 'Redmond'
+ */
+##stem Customer.customer.name = 'International Business Machines'
+##stem Customer.customer.city = 'Armonk'
+##stem Customer.customer2.name  = 'Microsoft'
+##stem Customer.customer2.city  = 'Redmond'
+
+
+
+/* -----------------------------------------------------------------------
+ * 1. Create 2 orders using dynamic segments
+ *    Here, customer and orderid ARE variables, so segments become dynamic.
+ * ----------------------------------------------------------------------- */
+say "----- 1. Create 2 orders using dynamic segments"
+
+
+##stem Order.customer.orderid.date   = '2025-12-20'
+##stem Order.customer.orderid.amount = '149.95'
+##stem Order.customer.orderid.status = 'OPEN'
+
+##stem Order.customer2.orderid2.date   = '2025-12-21'
+##stem Order.customer2.orderid2.amount = '399.00'
+##stem Order.customer2.orderid2.status = 'CLOSED'
+
+/* -----------------------------------------------------------------------
+ * 2) Read back the two orders, show join to Customer.<cust>.name/city
+ * ----------------------------------------------------------------------- */
+say "----- 2. Read back the two orders, show join to Customer.<cust>.name/city"
+
+customer = 'IBM'
+orderid  = '123'
+
+##stem say 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
+
+customer = 'MS'
+orderid  = '9001'
+
+##stem say 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
+/* -----------------------------------------------------------------------
+ * 3) Join-style lookup via foreign key stored in a stem:
+ *    Order.1001.cust = 'IBM' then Customer.<that>.name
+ *
+ * IMPORTANT: Here we avoid a variable named "cust" being mistaken elsewhere;
+ * we *do* want cust to be dynamic, so we use variable custref and then use it.
+ * ----------------------------------------------------------------------- */
+say "----- 3. Join-style lookup via foreign key stored in a stem"
+##stem Order.1001.cust = 'IBM'
+##stem Order.1001.sum  = '888.00'
+/* custref is a variable so Customer.custref.name becomes Customer.<value>.name */
+##stem custref = Order.1001.cust
+say "Cust-REF='"custref"'"
+##stem say 'Join demo: Order 1001 belongs to ' Customer.custref.name', city=' Customer.custref.city', total=' Order.1001.sum
+
+/* -----------------------------------------------------------------------
+ * 4) Function usage (no nesting): SUBSTR on a stem value
+ * ----------------------------------------------------------------------- */
+say "----- 4. Function usage (no nesting): SUBSTR on a stem value"
+
+##stem Log.1.msg = '2025-12-19 12:31:10|WARN|disk usage 93%'
+##stem Log.2.msg = '2025-12-20 12:31:11|INFO|cleanup done'
+
+##stem date1 = substr(Log.1.msg, 1, 10)
+##stem lev1  = substr(Log.1.msg, 21, 4)
+##stem say 'Log.1 date=' date1 ' level=' lev1 ' msg="' Log.1.msg '"'
+
+/* -----------------------------------------------------------------------
+ * 5) Comparisons on stem values
+ * ----------------------------------------------------------------------- */
+say "----- 5.  Comparisons on stem values"
+
+customer='IBM'
+orderid='123'
+##stem if Order.customer.orderid.status = 'OPEN' then say 'Order is OPEN -> process' ; else say 'Order not open'
+
+customer='IBM'
+orderid='123'
+customer2='MS'
+orderid2='9001'
+
+##stem if Order.customer.orderid.amount = Order.customer2.orderid2.amount then say 'Amounts equal (unlikely)' ; else say 'Amounts differ (expected)'
+
+/* -----------------------------------------------------------------------
+ * 6) Derived key: count by status (simple demo)
+ * NOTE: this is “demo grade” (overwrites), but shows grouping keys.
+ * ----------------------------------------------------------------------- */
+ say "----- 6. Derived key: count by status (simple demo)"
+
+customer='IBM'
+orderid='123'
+##stem st = Order.customer.orderid.status
+##stem Summary.st.count = '1'
+
+customer='MS'
+orderid='9001'
+##stem st = Order.customer.orderid.status
+##stem Summary.st.count = '1'
+
+##stem say 'Summary OPEN count=' Summary.OPEN.count ' CLOSED count=' Summary.CLOSED.count
+
+/* ------------------------------------------------------------------ */
+/* 7. liststems(): show all active stems                             */
+/* ------------------------------------------------------------------ */
+say ">> 7. liststems(allstems)"
+
+allstems = .string[]
+say "   Number of active stems: "liststems(allstems)
+
+do i = 1 to allstems.0
+   say "   - "allstems.i
+end
+say ' '
+
+/* ------------------------------------------------------------------ */
+/* 7) Bulk retrieval using getall()                                   */
+/* ------------------------------------------------------------------ */
+tails = .string[]
+vals  = .string[]
+say ">> 7. getall('Customer', tails, vals) – showing first 10 entries, they are unsorted"
+say getall('Customer.', tails, vals)
+maxShow = min(10000, tails.0)
+do i = 1 to maxShow
+   say "   "right(i,3)". "tails[i]" = '"vals[i]"'"
+end
+say "   (total entries reported by getall: "tails.0")"
+
+say ">> 7. getall('Order', tails, vals) – showing first 10 entries, they are unsorted"
+say getall('Order.', tails, vals)
+
+maxShow = min(10000, tails.0)
+do i = 1 to maxShow
+   say "   "right(i,3)". "tails[i]" = '"vals[i]"'"
+end
+say "   (total entries reported by getall: "tails.0")"
+
+say
+
+/* ------------------------------------------------------------------ */
+/* 8) getalltails() for key enumeration                               */
+/* ------------------------------------------------------------------ */
+say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
+
+call getalltails 'Fred.', tails
+
+maxShow = min(10, tails.0)
+do i = 1 to maxShow
+   say "   "right(i,3)". "tails[i]
+end
+say "   (total tails reported by getalltails: "tails.0")"
+say
+
+say '--- STEM DEMO END ---'
+exit
+
+
+/* ####
 /* ------------------------------------------------------------------ */
 /* Configuration                                                      */
 /* ------------------------------------------------------------------ */
-numEntries = 110000
+numEntries = 255
 
 say "=== CREXX Stem Engine Demo (Robin Hood open addressing) ==="
 say
@@ -27,14 +218,12 @@ say
 /* ------------------------------------------------------------------ */
 /* 1) Populate two stems: Fred. and Mary. with multi-level keys       */
 /* ------------------------------------------------------------------ */
-say ">> Populating stems 'Fred' and 'Mary' with" numEntries "records..."
+say ">> 1. Populating stems 'Fred' and 'Mary' with" numEntries "records..."
 stemname="Fred"
 do i = 1 to numEntries
-   call setstem stemname, 'a.b.c.'i,  'Line'   i
-/*   call setstem 'Mary', 'a.b.c.'i,  'Record' i */
+   call setstem 'Fred.a.b.c.'i,  'Line'   i
+   call setstem 'Mary.a.b.c.'i,  'Record' i
 end
-
-say "stemname is "stemname
 
 say "   Done."
 say
@@ -42,49 +231,54 @@ say
 /* ------------------------------------------------------------------ */
 /* 2) Show statistics for both stems                                  */
 /* ------------------------------------------------------------------ */
-say ">> stemstat() after initial load"
-say "   Fred : " stemstat("Fred")
-say "   Mary : " stemstat("Mary")
+say ">> 2. stemstat() after initial load"
+say "   Fred : " stemstat("Fred.")
+say "   Mary : " stemstat("Mary.")
 say
-Exit
+
 /* ------------------------------------------------------------------ */
 /* 3) Sample lookups                                                  */
 /* ------------------------------------------------------------------ */
-say ">> Sample lookups (every 100th entry)"
-do i = 1 to numEntries by 50000
-   say "   Fred.a.b.c."i" =" getstem('Fred', 'a.b.c.'i)
-   say "   Mary.a.b.c."i" =" getstem('Mary', 'a.b.c.'i)
+say ">> 3. Sample lookups (every 100th entry)"
+say "   notThere.a.b.c."i" =" getstem('nottherea.b.c.'i)
+say "   not available   : "getstemmsg()
+say "   this_is_no_STEM = "getstem('this_is_no_stem')
+say "   this_is_no_STEM : "getstemmsg()
+do i = 1 to numEntries by 100
+   say "   Fred.a.b.c."i" =" getstem('Fred.a.b.c.'i)
+   say "   Mary.a.b.c."i" =" getstem('Mary.a.b.c.'i)
 end
 say
 
 /* ------------------------------------------------------------------ */
 /* 4) Drop one stem and show error handling                           */
 /* ------------------------------------------------------------------ */
-say ">> Dropping stem 'Mary' and demonstrating error reporting"
-call dropstem "Mary"
+say ">> 4. Dropping stem 'Mary' and demonstrating error reporting"
+call dropstem "Mary."
+say "  dropMsg  : " getstemmsg()
 
-i = 100
-say "   After dropstem('Mary'): getstem('Mary','a.b.c."i"') =>"
-say "      Value: " getstem('Mary', 'a.b.c.'i)
+i = 155
+say "   After dropstem('Mary'): getstem('Mary.a.b.c.'i) =>"
+say "      Value: " getstem('Mary.a.b.c.'i)
 say "      Msg  : " getstemmsg()
 say
 
 /* ------------------------------------------------------------------ */
 /* 5) Accessing a non-existing path in an existing stem               */
 /* ------------------------------------------------------------------ */
-say ">> Accessing non-existing path in 'Fred'"
+say ">> 5. Accessing non-existing path in 'Fred'"
 path = 'a.xyz.c.'i
-say "   getstem('Fred','"path"') =>"
-say "      Value: " getstem('Fred', path)
+say "   getstem('Fred.'path) =>"
+say "      Value: " getstem('Fred.'path)
 say "      Msg  : " getstemmsg()
 say
 
 /* ------------------------------------------------------------------ */
 /* 6) Iteration using getstemtail()                                   */
 /* ------------------------------------------------------------------ */
-say ">> First 20 tails of 'Fred' using getstemtail()"
-do i = 1 to 110000 by 5000     ## run beyond known boundary
-   tail = getstemtail('Fred', i)
+say ">> 6. First 20 tails of 'Fred' using getstemtail()"
+do i = 1 to numEntries
+   tail = getstemtail('Fred.', i)
    if tail = "" then leave
    say "   "right(i,3)". "tail
 end
@@ -93,7 +287,7 @@ say
 /* ------------------------------------------------------------------ */
 /* 7) Bulk retrieval using getall()                                   */
 /* ------------------------------------------------------------------ */
-say ">> getall('Fred', tails, vals) – showing first 10 entries, they are unsorted"
+say ">> 7. getall('Fred', tails, vals) – showing first 10 entries, they are unsorted"
 
 tails = .string[]
 vals  = .string[]
@@ -110,7 +304,7 @@ say
 /* ------------------------------------------------------------------ */
 /* 8) getalltails() for key enumeration                               */
 /* ------------------------------------------------------------------ */
-say ">> getalltails('Fred', tails) – showing first 10 tails"
+say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
 
 call getalltails 'Fred', tails
 
@@ -126,17 +320,17 @@ say
 /* ------------------------------------------------------------------ */
 dropKey = 'a.b.c.123'
 
-say ">> dropEntry('Fred','"dropKey"')"
-say "   Before: " getstem('Fred', dropKey)
+say ">> 9. dropEntry('Fred.'dropKey)"
+say "   Before: " getstem('Fred.'dropKey)
 call dropEntry "Fred", dropKey
-say "   After : " getstem('Fred', dropKey)
+say "   After : " getstem('Fred.'dropKey)
 say "   Msg   : " getstemmsg()
 say
 
 /* ------------------------------------------------------------------ */
 /* 10) clonestem(): clone Fred -> Mike                                */
 /* ------------------------------------------------------------------ */
-say ">> Cloning stem 'Fred' -> 'Mike'"
+say ">> 10. Cloning stem 'Fred' -> 'Mike'"
 call clonestem 'Fred', 'Mike'
 
 say "   stemstat('Fred') = " stemstat("Fred")
@@ -145,17 +339,17 @@ say
 
 say ">> Sample entries from cloned stem 'Mike' (every 100th)"
 do i = 1 to numEntries by 5000
-   say "   Mike.a.b.c."i" =" getstem('Mike', 'a.b.c.'i)
+   say "   Mike.a.b.c."i" =" getstem('Mike.a.b.c.'i)
 end
 say
 
 /* ------------------------------------------------------------------ */
 /* 11) liststems(): show all active stems                             */
 /* ------------------------------------------------------------------ */
-say ">> liststems(allstems)"
+say ">> 11. liststems(allstems)"
 
 allstems = .string[]
-count = liststems(allstems)
+say  liststems(allstems)
 
 say "   Number of active stems: " count
 do i = 1 to allstems.0
@@ -173,4 +367,6 @@ say
 
 say "=== End of CREXX Stem Engine Demo ==="
 return 0
+
+ ###### */
 
