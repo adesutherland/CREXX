@@ -58,5 +58,9 @@ if strip(" foo bar",,'r') \= " foo ba" then do
   errors=errors+1
   say 'STRIP failed in test 11 '
 end
+if strip('') \= '' then do
+  errors=errors+1
+  say 'STRIP failed in test 12'
+end
 
 return errors<>0

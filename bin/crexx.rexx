@@ -59,7 +59,8 @@ do i=1 to fn.0
   if left(fn.i,1)<>'-' then
     do /* it is not a flag but a filename */
       filename=fn.i
-      filenames=strip(filenames) strip(filename)
+	  -- filenames=strip(filenames) strip(filename)
+	  filenames=filenames filename
     end
   else
     do
@@ -108,7 +109,7 @@ err = .string[]
 /* while we have no exists(file) function, specify the .rxpp extension */
 do i=1 to words(filenames)
   filename=word(filenames,i)
-  dotpos = pos('.',filename)
+    dotpos = pos('.',filename)
   if dotpos > 0 then do
     if right(filename,4) = 'rxpp'
     then do /* run the preprocessor */
@@ -116,16 +117,17 @@ do i=1 to words(filenames)
       'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
     end
   end
-/* here: check the returncode of the precompiler */  
-/* this works temporarily with the specified filename extension */
 
-/* if all is well, we now have a .rexx ready for compilation    */  
+  /* here: check the returncode of the precompiler */  
+  /* this works temporarily with the specified filename extension */
+  
+  /* if all is well, we now have a .rexx ready for compilation    */  
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do
       if compile then say 'rxc command:' rxcmd
-      if compile=0 then
-	do
+	if compile=0 then
+	  do
 	  say 'rxc does not compile due to --nocompile option'
 	  RC = 0
 	end
