@@ -349,7 +349,17 @@ GetPrecomp: procedure
    lineNo = 0
    do while lineNo < source.0      ## array might grow, so while is more reliable
       LineNo=LineNo+1
-      lineMin=max(LineNo-1,1)
+      if stype[LineNO] ='noexp' then iterate
+      depth = CommentDepth(lineNo, 0)
+      if depth>0 then do
+         stype[lineNo] = 'noexp'
+         do until depth=0
+            lineNo=LineNo+1
+            if lino>source[0] then leave
+            depth = CommentDepth(lineNo, depth)
+         end
+         if lino>source[0] then leave
+      end
       line = source.lineNo
       ucmd=word(line,1)
       if ucmd='' then iterate
@@ -372,6 +382,7 @@ GetPrecomp: procedure
       else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
+      else if ucmd = '##STEM'    then call cmd_stem lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
@@ -396,7 +407,6 @@ return
       dspace=1
    end
    else def = subword(line, 2)
-
    wrd=word(def,1)
    ppi = pos('(', wrd,1)    ## must be in macro name, not in later macro body
    if ppi > 1 then do  /* Format: name(arg1, arg2) body */
@@ -575,14 +585,12 @@ CMD_include: procedure
   included_files.imax=file
 
   if mode=1 then do
-     rc=insert_array(source,lino+1,new)
-     rc=insert_array(stype,lino+1,new)
+     rc= insert_source(lino+1,new)
      insertat=lino
   end
   else do
      linc=source.0
-     rc=insert_array(source,linc+1,new)
-     rc=insert_array(stype,linc+1,new)
+     rc= insert_source(linc+1,new)
      insertat=linc
   end
   do j=1 to new
@@ -605,8 +613,7 @@ CMD_array: procedure
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
-   rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
-   rc=insert_array(stype, lino+1,new)
+   rc= insert_source(lino+1,new)    ## insert new lines, shift buffer
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
       source[lino+i]=def'='atype'[];'
@@ -629,8 +636,7 @@ CMD_global: procedure
    defs=subword(line,3)
    new=words(defs)                       ## check how many arrays have been defined
    if new=0 then return
-   rc=insert_array(source,lino+1,new)    ## insert new lines, shift buffer
-   rc=insert_array(stype, lino+1,new)
+   rc= insert_source(lino+1,new)    ## insert new lines, shift buffer
    do i=1 to new                         ## now add the statements
       def=word(defs,i)
       vtemp=translate(def,,'=')
@@ -642,6 +648,167 @@ CMD_global: procedure
    end
 return
 /* ------------------------------------------------------------------
+ * Process ##STEM command
+ * Identifies a line containing stem operations (temporary for testing)
+ * ------------------------------------------------------------------
+ */
+CMD_stem: procedure
+   arg lino=.int,line=.string
+   oldhi=source.0
+   oldlino=lino
+   stype.lino= 'STEM'
+   wrd1=upper(word(line,1))
+   if wrd1='##DEFINE' then return
+   if wrd1='##STEM' then line=subword(line,2)
+   else source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
+   nstmt=qstripComment("/*","*/",line)
+   wrd1=upper(word(nstmt,1))
+   if wrd1='IF' | wrd1='SAY' | wrd1='CALL' then do
+      lhs=''
+      rhs=nstmt
+   end
+   else do
+      stmts=qsplit(nstmt,"=")
+      lhs=stmts.1
+      rhs=stmts.2
+   end
+   if words(rhs)=1 & isStem(rhs)=0 then do             ## moves single string or number to a stem
+      if isStem(lhs)=1 then do
+         lhs=stemquote(lhs)
+         rc= insert_source(lino+1,1,'noexp'  )    ## insert new lines, shift buffer
+         source[lino+1]='src=putstem('lhs','rhs')'
+      end
+   end
+   else do
+      rhs=splitRHS(rhs,lino)
+      if rhs\=''  then do                    ## rhs unchanged, no need to do something
+         call insert_source lino+1,1,'noexp'   ## insert new lines, shift buffer
+         if lhs='' then source[lino+1]=rhs
+         else if pos('.',lhs)>0 then do
+           lhs=stemquote(lhs)
+           source[lino+1]='src=putstem('lhs','rhs')'
+         end
+         else source[lino+1]=lhs'='rhs
+     end
+   end
+return
+/* ------------------------------------------------------------------
+ * Split the RHS of a statement into its stem components
+ * ------------------------------------------------------------------
+ */
+splitRHS: procedure=.string
+   arg rhs=.string,expose lino=.int
+   position=.int[]
+   start=1
+   nstem=findstem(rhs,start,position)
+   if nstem.0=0 then return rhs
+   new=nstem.0+1
+   call insert_source lino+1,new,'noexp'        ## insert new lines, shift buffer
+   do i=1 to nstem.0
+      temp=stemquote(nstem.i)
+      lino=lino+1
+      source[lino]="_v"i'=getstem('temp')'
+   end
+   do i = nstem.0 to 1 by -1
+      rhs = replaceOnce(nstem.i, rhs, "_v"i, position.i)
+   end
+return rhs
+/* ------------------------------------------------------------------
+ * Change a string by a new string at a certain position
+ * ------------------------------------------------------------------
+ */
+replaceOnce: procedure=.string
+  arg needle=.string,haystack=.string,newstring=.string,position=.int
+  if position<=0 then return haystack
+return substr(haystack,1,position-1) || newstring || substr(haystack,position+length(needle))
+/* ------------------------------------------------------------------
+ * Find all STEMs in a statemnet, and return stem name and position
+ * ------------------------------------------------------------------
+ */
+findStem: procedure=.string[]
+  arg s=.string, start=1, expose position=.int[]
+  len = length(s)
+  rstem=.string[]
+  indx=0
+  do forever
+     p = qpos('.', s, start)   ## find a dot outside any quoted text
+     if p = 0 then leave       ## nothing found, end analysis
+  /* expand left, find root of stem candidate */
+     l = p-1
+     do while l>=1 & isStemChar(substr(s,l,1))
+        l = l-1
+     end
+  /* position of l is now at the position, which doesn't belong to the stem candidate anymore
+    step now forward to find end of stem candidate */
+     l = l+1   ## first stem char
+     r = p+1   ## expand after first '.' right */
+     do while r<=len & isStemChar(substr(s,r,1))
+        r = r+1
+     end
+  /* position of r is now at the position, that doesn't belong to the stem candidate anymore */
+     r = r-1   ## set it back to last stem character
+  /* Now we have the stem candidate  */
+     stem=substr(s,l,r-l+1)
+     if IsStem(stem)>0 then do    ## =1 is a stem
+        indx=indx+1               ## add it to the list of found stems
+        rstem[indx]=stem          ## keep also the start position, to allow a precise replacement
+        position[indx]=l          ## for the temporary variable
+     end
+     start=r+1                    ## set to next char after stem, to find another stem
+  end
+return rstem
+/* ------------------------------------------------------------------
+ * Test for valid stem characters in a string
+ * ------------------------------------------------------------------
+ */
+isStemChar: procedure=.int
+  arg c=.string
+  if c='' then return 0
+  if c='.' then return 1
+  if c='_' then return 1
+  if datatype(c,'A') then return 1
+  if datatype(c,'N') then return 1
+return 0
+/* ---------------------------------------------------------------
+ * isStem(s)
+ *
+ * Returns:
+ *   1  -> string looks like a stem
+ *   0  -> not a stem
+ * ---------------------------------------------------------------
+ */
+isStem: procedure=.int
+  arg s=.string
+  s = strip(s)
+  if s = '' then return 0
+  allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$.'
+  /* must contain at least two dots: root + 2 tails */
+  if countstr('.', s) < 2 then return 0 ## require at least 2 tails to not be confused with crexx arrays
+  if left(s,1)='.' | right(s,1)='.' then return 0   /* must not start or end with dot */
+  if pos(' ', s)  > 0 then return 0     ## no whitespace allowed
+  if pos('..', s) > 0 then return 0     ## sub-tails need at least one character
+  c=left(s,1)
+  if datatype(c,'N')>0 then return 0    ## first char numeric not allowed
+  if datatype(c,'M')>0 then return 1    ## first char A-Z, a-z
+  if c='_' then return 1                ## special allowed first char
+  if c='$' then return 1
+  if verify(s, allowed) \= 0 then return 0 ## returns 0 if all chars are in allowed; otherwise position of first bad char
+return 0
+/* ------------------------------------------------------------------
+ * Insert empty line(s) in source array and shift current item(s) accordingly
+ * the line number is the first which is shifted,
+ * !! it does not mean add empty line after provided at position !!
+ * ------------------------------------------------------------------
+ */
+insert_source: Procedure=.int
+  arg at=.int,new=.int,expand=''
+  rc=insert_array(source,at,new)    ## insert new lines, shift buffer
+  rc=insert_array(stype, at,new)
+  do i=0 to new-1                   ## in some cases you want special
+     stype[at+i]=expand             ## treatment of the new entry for
+  end                               ## example: no further inspection
+return 0                            ## when line is inspected afterwards
+/* ------------------------------------------------------------------
  * Process FOR command
  * ------------------------------------------------------------------
  */
@@ -650,7 +817,7 @@ CMD_for: procedure
   line=subword(line,2)
   stype.lino= 'FOR'
   nlino=lino+1
-  line=qcomment('/*','*/',line)
+  line=qstripcomment('/*','*/',line)
   parts=qsplit(line,';')
   from=parts.1
   condc=parts.2
@@ -666,8 +833,8 @@ CMD_for: procedure
      update=update||stepx.i';'
   end
 
-  rc=insert_array(source,nlino,6)    ## insert new lines, shift buffer
-  rc=insert_array(stype, nlino,6)
+  call insert_source nlino,6         ## insert new lines, shift buffer
+
   select_count=select_count+1
   source[lino+1]='__first_'select_count'=1'
   source[lino+2]=start
@@ -687,8 +854,7 @@ CMD_when: procedure
   arg lino=.int,line=.string,mode=.int
   stype.lino= 'WHEN'
   nlino=lino+1
-  rc=insert_array(source,nlino,1)    ## insert new lines, shift buffer
-  rc=insert_array(stype, nlino,1)
+  rc= insert_source(nlino,1)    ## insert new lines, shift buffer
   ifpart2=subword(line,2)
 /* save some vars for CASE and CASEX */
   vvalue=word(line,2)
@@ -706,8 +872,7 @@ return
 CMD_case: procedure
   arg lino=.int,line=.string
   stype.lino= 'WHEN'
-  rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
-  rc=insert_array(stype, lino+1,1)
+  rc= insert_source(lino+1,1)    ## insert new lines, shift buffer
   vvalue=word(line,2)
   if upper(word(line,3))='THEN' then action=subword(line,4)
   else action=subword(line,3)
@@ -721,8 +886,7 @@ return
 CMD_select: procedure
   arg lino=.int,line=.string, mode=.int
   stype.lino= 'SELECT'
-  rc=insert_array(source,lino+1,1)    ## insert new lines, shift buffer
-  rc=insert_array(stype, lino+1,1)
+  rc= insert_source(lino+1,1)    ## insert new lines, shift buffer
   if mode=2 then do         /* switch instruction */
      select_count=select_count+1
      variable=word(line,2)
@@ -1527,8 +1691,7 @@ parsevar: Procedure=.int
      end
   end
   imax=insert.0*2+15        ## add 15 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
-  rc=insert_array(source,lino+1,imax)
-  rc=insert_array(stype,lino+1,imax)
+  rc= insert_source(lino+1,imax)
 
    inew=inject2Source(lino+1,0,'/* PARSE 'parseSTMT' */')
    inew=inject2Source(inew+1,3,"_pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */ ")
@@ -1777,6 +1940,38 @@ normalisePath: procedure=.string
   end
   if normalised = '' then normalised = '/'
 return normalised
+/* ---------------------------------------------------------------
+ * CommentDepth(lino, depth)
+ *
+ * depth = 0  => not in comment
+ * depth > 0  => inside nested block comments
+ *
+ * Uses QPOS() so markers inside quotes are ignored.
+ * ---------------------------------------------------------------
+ */
+CommentDepth: procedure=.int
+  arg lino=.int, depth=.int
+  line = source[lino]
+  pos = 1
+  do forever
+     po = qpos('/*', line, pos)
+     pc = qpos('*/', line, pos)
+     if po = 0 & pc = 0 then return depth
+    /* choose the earliest marker */
+    if pc = 0 | (po > 0 & po < pc) then do
+       depth = depth + 1
+       pos = po + 2
+       iterate
+    end
+    else do
+       if depth > 0 then depth = depth - 1
+       pos = pc + 2
+       iterate
+    end
+  end
+  say 1111 depth
+return depth
+
 /* ------------------------------------------------------------------
  * Init RXPP environment
  * ------------------------------------------------------------------
@@ -1807,8 +2002,8 @@ rxppinit: procedure=.string
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
   cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
-    call setvar 'cflags',cflags
+  call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
   call setvar 'rxpp_date',date()' 'time()
- return strip(syspath)
+return strip(syspath)

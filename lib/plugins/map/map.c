@@ -8,10 +8,28 @@
 
 #define ENOENTRY 12
 #define ENOVALUE 22
-#define ENOENTRY 32
+
 #if defined(__APPLE__)
   #include <string.h>
 #endif
+
+#define SPLITSTEM()                           \
+        char *full_ = GETSTRING(ARG0);        \
+        char *stem_name=NULL;                 \
+        char *stem_index=NULL;                \
+        char *stem_ptr  = strchr(full_, '.'); \
+        if (stem_ptr==NULL) last_rhmap_rc = STEM_MSG_NOT_A_STEM; \
+        else { /* is not a stem  */           \
+           *stem_ptr = '\0';                  \
+           stem_name  = full_;                \
+           stem_index = stem_ptr + 1;         \
+           str2upper(stem_name) ;             \
+        }
+#define GETROOT() \
+        char *stem_name=GETSTRING(ARG0);      \
+        char *stem  = strchr(stem_name, '.'); \
+        if (stem) *stem='\0';                 \
+        str2upper(stem_name);
 
 static inline void str2upper(char* str) {
     while (*str) {
@@ -39,6 +57,7 @@ enum {
     STEM_MSG_OK               = 0,
     STEM_MSG_UNDEFINED_STEM   = 10,
     STEM_MSG_UNDEFINED_ELEM   = 11,
+    STEM_MSG_NOT_A_STEM       = 12,
     STEM_MSG_INTERNAL_ERROR   = 99
 };
 
@@ -332,7 +351,7 @@ rhmap_put_ptr(rhmap_t *m, const char *key, void *value)
 
 /* Lookup; returns value pointer or NULL. */
 static void *
-rhmap_get_ptr(const rhmap_t *m, const char *key)
+rhmap_get_ptr(rhmap_t *m, const char *key)
 {
     if (!m || !key || m->capacity == 0) {
         return NULL;
@@ -565,7 +584,7 @@ stem_put_value(stem_map_t *m, const char *index, const char *value)
 
 /* get value string from per-stem map; returns NULL if missing */
 static char *
-stem_get_value(const stem_map_t *m, const char *index)
+stem_get_value(stem_map_t *m, const char *index)
 {
     if (!m || !index) return NULL;
     return (char *)rhmap_get_ptr(m, index);
@@ -592,7 +611,6 @@ stem_remove_value(stem_map_t *m, const char *index)
     return rhmap_remove_key(m, index);
 }
 
-
 /* ============================================================
  * CREXX/PA procedures: GETSTEM / SETSTEM / rehash
  * ============================================================ */
@@ -600,17 +618,18 @@ stem_remove_value(stem_map_t *m, const char *index)
 /* ---------- GETSTEM(name, index) -> string ---------- */
 
 PROCEDURE(getstem) {
-    char *stem_name  = GETSTRING(ARG0);
-    char *stem_index = GETSTRING(ARG1);
-    str2upper(stem_name);
+    // printf("GETSTEM '%s'\n",GETSTRING(ARG0));
+    SPLITSTEM()
     stem_map_t *m = find_stem_map(stem_name);
-    if (!m) {
-        str2upper(stem_index);
-        char stem[512];
-        snprintf(stem, sizeof(stem), "%s.%s", stem_name, stem_index);
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNSTRX(stem);  /* stem not defined -> return upper case stem name */
-    }
+   if (!m || stem_ptr==0) {
+       char stem[512]="undefined";  // STEM_MSG_NO_STEM is set in SPLITSTEM
+       if(stem_ptr) {
+          str2upper(stem_index);
+          snprintf(stem, sizeof(stem), "%s.%s", stem_name, stem_index);
+          last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
+       }
+       RETURNSTRX(stem);  /* stem not defined -> return upper case stem name */
+   }
 
     char *val = stem_get_value(m, stem_index);
     if (!val) {
@@ -628,16 +647,14 @@ PROCEDURE(getstem) {
 /* ---------- SETSTEM(name, index, value) ---------- */
 
 PROCEDURE(setstem) {
-
-    char *stem_name  = GETSTRING(ARG0);
-    char *stem_index = GETSTRING(ARG1);
-    char *value      = GETSTRING(ARG2);
-    str2upper(stem_name);
-
+    // printf("SETSTEM '%s' = '%s'\n",GETSTRING(ARG0),GETSTRING(ARG1));
+    SPLITSTEM()
+    char *value   = GETSTRING(ARG1);
     stem_map_t *m = get_or_create_stem_map(stem_name);
+    if (stem_ptr==0) RETURNINTX(-last_rhmap_rc) ;  // rc set in SPLITSTEM
     if (!m) {
         last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
-        RETURNINTX(-10);    /* allocation or internal error */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     int rc = stem_put_value(m, stem_index, value);
@@ -651,15 +668,14 @@ PROCEDURE(setstem) {
 }
 
 PROCEDURE(dropstem) {
-    char *stem_name = GETSTRING(ARG0);
-    str2upper(stem_name);
+    int rc=0;
+    SPLITSTEM()
+    if (stem_ptr>0) rc = drop_stem_internal(stem_name);
 
-    int rc = drop_stem_internal(stem_name);
-
-    /* Semantics: no error if stem does not exist, just return 0. */
-    if (rc < 0) {
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNINTX(-8);
+    if (stem_ptr==0) RETURNINTX(-last_rhmap_rc) ;  // rc set in SPLITSTEM
+    if (rc<0) {
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     last_rhmap_rc = STEM_MSG_OK;  /* reset global rhmap RC */
@@ -674,6 +690,7 @@ PROCEDURE(getstemmsg) {
         case STEM_MSG_OK: RETURNSTRX("OK");
         case STEM_MSG_UNDEFINED_STEM: RETURNSTRX("Stem not defined");
         case STEM_MSG_UNDEFINED_ELEM: RETURNSTRX("Stem element not defined");
+        case STEM_MSG_NOT_A_STEM    : RETURNSTRX("is not a Stem");
         case STEM_MSG_INTERNAL_ERROR: RETURNSTRX("Internal error");
         default: RETURNSTRX("Unknown stem error");
     }
@@ -691,19 +708,18 @@ PROCEDURE(getstemmsg) {
  */
 
 PROCEDURE(gettail) {
-    char *stem_name = GETSTRING(ARG0);
+    SPLITSTEM()
     int ordinal           = GETINT(ARG1);
-    str2upper(stem_name);
-
     if (ordinal <= 0) {
         last_rhmap_rc=STEM_MSG_UNDEFINED_ELEM;
         RETURNSTRX("");
     }
 
     stem_map_t *m = find_stem_map(stem_name);
+    if (stem_ptr==0) RETURNINTX(-last_rhmap_rc) ;  // rc set in SPLITSTEM
     if (!m) {
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNSTRX("");     /* stem not defined at all */
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     int count = 0;
@@ -729,13 +745,11 @@ PROCEDURE(gettail) {
 }
 
 PROCEDURE(getall) {
-    char *stem_name = GETSTRING(ARG0);
-    str2upper(stem_name);
-
-     stem_map_t *m = find_stem_map(stem_name);
-    if (!m) {
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNINTX(-1);     /* stem not defined at all */
+   GETROOT();
+   stem_map_t *m = find_stem_map(stem_name);
+   if (!m) {
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     int hi = 0;
@@ -752,13 +766,12 @@ PROCEDURE(getall) {
     ENDPROC
 }
 PROCEDURE(getalltails) {
-    char *stem_name = GETSTRING(ARG0);
-    str2upper(stem_name);
-
+    GETROOT();
+    SETARRAYHI(ARG1,0);
     stem_map_t *m = find_stem_map(stem_name);
     if (!m) {
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNINTX(-1);     /* stem not defined at all */
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     int hi = 0;
@@ -774,15 +787,12 @@ PROCEDURE(getalltails) {
     ENDPROC
 }
 PROCEDURE(dropentry) {
-    char *stem_name  = GETSTRING(ARG0);
-    char *stem_index = GETSTRING(ARG1);
-    str2upper(stem_name);
-
+    SPLITSTEM()
     stem_map_t *m = find_stem_map(stem_name);
+    if (stem_ptr==0) RETURNINTX(-last_rhmap_rc) ;  // rc set in SPLITSTEM
     if (!m) {
-        /* stem not defined */
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNINTX(-10);
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     int rc = stem_remove_value(m, stem_index);
@@ -885,16 +895,14 @@ PROCEDURE(liststems) {
  */
 
 PROCEDURE(statsstem) {
-    char *stem_name = GETSTRING(ARG0);
-    str2upper(stem_name);
-
+    SPLITSTEM()
     char buf[256];
 
     stem_map_t *m = find_stem_map(stem_name);
+    if (stem_ptr==0) RETURNINTX(-last_rhmap_rc) ;  // rc set in SPLITSTEM
     if (!m) {
-        snprintf(buf, sizeof(buf), "STEM %s: (undefined)", stem_name);
-        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM;
-        RETURNSTRX(buf);
+        last_rhmap_rc = STEM_MSG_UNDEFINED_STEM; /* message number: stem not defined */
+        RETURNINTX(-last_rhmap_rc);    /* allocation or internal error */
     }
 
     double load = 0.0;
@@ -931,15 +939,102 @@ PROCEDURE(statsstem) {
     RETURNSTRX(buf);
     ENDPROC
 }
+/*
+ * Transform:
+ *   Fred.bert.name.indx
+ * into:
+ *   "Fred."bert"."name"."indx"
+ *
+ * Contract:
+ *   - returns heap-allocated string (caller must free), or NULL on invalid input
+ *   - never returns borrowed pointer
+ */
 
+static char *quote_stem_path(char *in) {
+    size_t in_len = strlen(in);
+    if (in_len == 0) return NULL;
+
+ /* One-shot allocation: worst case <= about 2*in_len + small constant */
+    size_t cap = in_len * 2 + 8;
+    char *out = (char *) malloc(cap);
+    if (!out) return NULL;
+
+    size_t w = 0;
+    const char *dot = strchr(in, '.');
+    if (!dot) return in;
+
+    /* Root before first '.' */
+    size_t root_len = (size_t) (dot - in);
+    if (root_len == 0) {
+        free(out);
+        return NULL;
+    } /* ".a" invalid */
+
+    /* Prefix: "Root." (dot belongs to root, never variable) */
+    out[w++] = '"';
+    memcpy(out + w, in, root_len);
+    w += root_len;
+    out[w++] = '.';
+    out[w++] = '"';
+
+    /* Tail segments */
+    const char *p = dot + 1;
+    int first = 1;
+
+    while (*p) {
+        const char *next = strchr(p, '.');
+        size_t seg_len = next ? (size_t) (next - p) : strlen(p);
+
+        if (seg_len == 0) {
+            free(out);
+            return NULL;
+        } /* "a..b" or "a." */
+
+        if (first) {
+            /* First tail: no opening quote, only closing quote => bert" */
+            memcpy(out + w, p, seg_len);
+            w += seg_len;
+            out[w++] = '"';
+            first = 0;
+        } else {
+            /* Others: ."seg" */
+            out[w++] = '.';
+            out[w++] = '"';
+            memcpy(out + w, p, seg_len);
+            w += seg_len;
+            out[w++] = '"';
+        }
+
+        if (!next) break;
+        p = next + 1;
+    }
+
+    out[w - 1] = '\0';
+    return out;
+}
+
+
+PROCEDURE(stemquote)
+{
+    char *input = GETSTRING(ARG0);
+    if (!input || !*input) RETURNSTRX("");    // no input no stem
+
+    char *out = quote_stem_path(input);
+    if (!out) {
+        RETURNSTRX(input); // invalid path: return and let rxpp decided what to do
+    }
+    RETURNSTR(out);
+    if(input != out) free(out);
+    ENDPROC
+}
 
 /* ============================================================
  * Standard CREXX/PA export table
  * ============================================================ */
 
 LOADFUNCS
-    ADDPROC(getstem,            "map.getstem",        "b",     ".string","stem=.string,key=.string");
-    ADDPROC(setstem,            "map.setstem",        "b",     ".int",   "stem=.string,key=.string, value=.string");
+    ADDPROC(getstem,            "map.getstem",        "b",     ".string","stem=.string");
+    ADDPROC(setstem,            "map.putstem",        "b",     ".int",   "stem=.string,value=.string");
     ADDPROC(dropstem,           "map.dropstem",       "b",     ".int",   "stem=.string");
     ADDPROC(getstemmsg,         "map.getstemmsg",     "b",     ".string"," ");
     ADDPROC(gettail,            "map.getstemtail",    "b",     ".string","stem=.string,ordinal=.int");
@@ -949,4 +1044,5 @@ LOADFUNCS
     ADDPROC(liststems,          "map.liststems",      "b",     ".int",   "expose stems=.string[]");
     ADDPROC(clonestem,          "map.clonestem",      "b",     ".int",   "source=.string,target=.string");
     ADDPROC(statsstem,          "map.stemstat",       "b",     ".string","stem=.string");
+    ADDPROC(stemquote,          "map.stemquote",      "b",     ".string","path=.string");
 ENDLOADFUNCS

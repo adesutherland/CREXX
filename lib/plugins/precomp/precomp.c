@@ -116,6 +116,7 @@ PROCEDURE (drop_array) {
  * Insert empty item(s) in an array and shift elements accordingly
  * the line number is the first which is shifted,
  * this means the empty lines are added prior to this line
+ * !! it does not mean add empty line after lino !!
  * -------------------------------------------------------------------------------------
  */
 PROCEDURE (insert_array) {
@@ -677,6 +678,96 @@ PROCEDURE(templist) {
     ENDPROC;
 }
 
+/*
+ * Transform:
+ *   Fred.bert.name.indx
+ * into:
+ *   "Fred."bert"."name"."indx"
+ *
+ * Contract:
+ *   - returns heap-allocated string (caller must free), or NULL on invalid input
+ *   - never returns borrowed pointer
+ */
+
+static char *quote_stem_path(char *in) {
+    size_t in_len = strlen(in);
+    if (in_len == 0) return NULL;
+
+    /* One-shot allocation: worst case <= about 2*in_len + small constant */
+    size_t cap = in_len * 2 + 8;
+    char *out = (char *) malloc(cap);
+    if (!out) return NULL;
+
+    size_t w = 0;
+    const char *dot = strchr(in, '.');
+    if (!dot) return in;
+
+    /* Root before first '.' */
+    size_t root_len = (size_t) (dot - in);
+    if (root_len == 0) {
+        free(out);
+        return NULL;
+    } /* ".a" invalid */
+
+    /* Prefix: "Root." (dot belongs to root, never variable) */
+    out[w++] = '"';
+    memcpy(out + w, in, root_len);
+    w += root_len;
+    out[w++] = '.';
+    out[w++] = '"';
+
+    /* Tail segments */
+    const char *p = dot + 1;
+    int first = 1;
+
+    while (*p) {
+        const char *next = strchr(p, '.');
+        size_t seg_len = next ? (size_t) (next - p) : strlen(p);
+
+        if (seg_len == 0) {
+            free(out);
+            return NULL;
+        } /* "a..b" or "a." */
+
+        if (first) {
+            /* First tail: no opening quote, only closing quote => bert" */
+            memcpy(out + w, p, seg_len);
+            w += seg_len;
+            out[w++] = '"';
+            first = 0;
+        } else {
+            /* Others: ."seg" */
+            out[w++] = '.';
+            out[w++] = '"';
+            memcpy(out + w, p, seg_len);
+            w += seg_len;
+            out[w++] = '"';
+        }
+
+        if (!next) break;
+        p = next + 1;
+    }
+
+    out[w - 1] = '\0';
+  return out;
+}
+
+
+PROCEDURE(stemquote)
+{
+    // ARG0: input string
+    char *input = GETSTRING(ARG0);
+    if (!input || !*input) RETURNSTRX("");    // no input no stem
+
+    char *out = quote_stem_path(input);
+    if (!out) {
+        RETURNSTRX(input); // invalid path: return and let rxpp decided what to do
+    }
+    RETURNSTR(out);
+    if(input != out) free(out);   // if input=output ptr don't removee it
+    ENDPROC
+}
+
 
 LOADFUNCS
     ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
@@ -697,6 +788,7 @@ LOADFUNCS
     ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
     ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
     ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
-    ADDPROC(templist,     "precomp.templist",   "b",    ".string","mode=.string,index=.int,string=.string");
+    ADDPROC(templist,     "precomp.templist",     "b",  ".string","mode=.string,index=.int,string=.string");
+    ADDPROC(stemquote,    "precomp.stemquote",    "b",  ".string","path=.string");
 ENDLOADFUNCS
 

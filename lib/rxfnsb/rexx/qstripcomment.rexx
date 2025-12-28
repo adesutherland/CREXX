@@ -1,7 +1,7 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose qcomment
+namespace rxfnsb expose qstripcomment
 
 /* ------------------------------------------------------------------
  *   Function:  QCOMMENT
@@ -24,7 +24,7 @@ namespace rxfnsb expose qcomment
  *     - Handles unterminated block comments gracefully.
  *  ------------------------------------------------------------------
  */
-qcomment: procedure=.string
+qstripcomment: procedure=.string
   arg open=.string, close='', text=.string
   if close = '' then xclose = 0          /* 0 means line comment mode */
   else xclose=1

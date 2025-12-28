@@ -57,19 +57,19 @@ assembler strlen hlen,instr          /* this is the total string length */
 if option='T' | option='B' then do  /* check trailing blanks */
    nbpos=-hlen                      /* negative value means, reverse search beginning at nbpos */
    assembler FNDNBLNK nbpos,instr,nbpos
-   if nbpos<0 then return "-x"         /* <0 no non blank char found  */
-   nbpos=nbpos+1
-   if nbpos<hlen then do             /* found non white space character prior end of string */
-      assembler substcut instr,nbpos /* strip off at this positions */
-      hlen=nbpos                     /* set new length of right trimmed string */
+   if nbpos>=0 then do               /* <0 no non blank char found  */
+      nbpos=nbpos+1
+      if nbpos<hlen then do             /* found non white space character prior end of string */
+         assembler substcut instr,nbpos /* strip off at this positions */
+         hlen=nbpos                     /* set new length of right trimmed string */
+      end
    end
 end
 /* now perform Left Trim */
 if option='L' | option='B' then do   /* check leading blanks */
    nbpos=0
    assembler FNDNBLNK nbpos,instr,nbpos
-   if nbpos<0 then return "-y"       /* <0 no non blank char found  */
-   if nbpos=0 then return instr
+   if nbpos<=0 then return instr
    hlen = hlen - nbpos               /* calculate usable length after positioning */
    assembler SETSTRPOS instr, nbpos
    instr2=""                         /* setup new variable, substring instruction doesn't work on same string */

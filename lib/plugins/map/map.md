@@ -40,7 +40,7 @@ Meaning:
 - **Very cache‐friendly** due to contiguous storage
 
 ### Why it works well for stems
-- GETSTEM and SETSTEM become consistently fast
+- GETSTEM and PUTSTEM become consistently fast
 - Few rehashes needed, even for tens of thousands of elements
 - No pointer chasing (unlike chained hash tables)
 
@@ -133,7 +133,7 @@ The module exports the following functions:
 | CREXX Name               | Purpose |
 |--------------------------|---------|
 | `getstem`        | Get a stem element |
-| `setstem`        | Set a stem element |
+| `putstem`        | Set a stem element |
 | `dropstem`       | Delete entire stem |
 | `clonestem`      | Clone stem A → B |
 | `getstemmsg`     | Retrieve message text |
@@ -152,7 +152,7 @@ All procedures work with the CREXX/PA calling conventions.
 
 ### 6.1 Setting Stem Values
 ```rexx
-call setstem "Fred", "A.B", "Hello"
+call putstem "Fred", "A.B", "Hello"
 ```
 Internally stored as:
 ```

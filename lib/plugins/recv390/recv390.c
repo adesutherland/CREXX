@@ -2670,9 +2670,8 @@ PROCEDURE(xmit_unpack) {
       //  getcwd(pathbuf, sizeof(pathbuf));
       //  printf("CWD reset to %s\n", pathbuf);
     }
-    RETURNINT(0);
-    PROCRETURN
-    ENDPROC
+    RETURNINTX(-rc);
+ ENDPROC
 }
 // ----------------------------------------------------------
 // Display / parse Directory (without full unpack)
@@ -2687,7 +2686,7 @@ PROCEDURE(xmit_procdir) {
     optdirarray='+';
 
     int rc = recv390_unpack(infile);
-    PROCRETURN
+    RETURNINTX(-rc);
     ENDPROC
 }
 
@@ -2728,9 +2727,8 @@ PROCEDURE(xmit_extract) {
         if(pathbuf[0]!=0) {       // reset it to the original work directory
             chdir(cwd);      // works in Windows/Linux
         }
-    RETURNINT(rc);
-    PROCRETURN
-    ENDPROC
+    RETURNINTX(-rc);
+ ENDPROC
 }
 // ----------------------------------------------------------
 // Cleanup environment, close files
