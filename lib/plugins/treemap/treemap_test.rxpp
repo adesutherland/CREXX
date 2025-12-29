@@ -3,7 +3,8 @@
 ##define stemhash(key)            {1+(5381+fnv(key))}
 
 import treemap
-
+return 0
+/* --------------- Hash algorithm obsolete, separate MAPP plugin now
 /* --------- OO Create definition using the stem --- */
 s1=ooCREATE(stem,"Date",1024)
 cdate=date()
@@ -19,3 +20,5 @@ do i=1 to keys.0
    say i "<"keys.i"'>='"values.i"'"
 end
 return
+*/
+
