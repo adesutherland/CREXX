@@ -618,7 +618,7 @@ stem_remove_value(stem_map_t *m, const char *index)
 /* ---------- GETSTEM(name, index) -> string ---------- */
 
 PROCEDURE(getstem) {
-    // printf("GETSTEM '%s'\n",GETSTRING(ARG0));
+    // printf("++GETSTEM '%s'\n",GETSTRING(ARG0));
     SPLITSTEM()
     stem_map_t *m = find_stem_map(stem_name);
    if (!m || stem_ptr==0) {
@@ -639,6 +639,7 @@ PROCEDURE(getstem) {
         last_rhmap_rc = STEM_MSG_UNDEFINED_ELEM; /* message number: entry not defined */
         RETURNSTRX(stem);  /* stem not defined -> return upper case stem name */
     }
+  //  printf("** GetStem '%s' '%s'\n",GETSTRING(ARG0),val);
     last_rhmap_rc = STEM_MSG_OK;
     RETURNSTRX(val);
     ENDPROC
@@ -647,7 +648,7 @@ PROCEDURE(getstem) {
 /* ---------- SETSTEM(name, index, value) ---------- */
 
 PROCEDURE(setstem) {
-    // printf("SETSTEM '%s' = '%s'\n",GETSTRING(ARG0),GETSTRING(ARG1));
+   // printf("SETSTEM '%s' = '%s'\n",GETSTRING(ARG0),GETSTRING(ARG1));
     SPLITSTEM()
     char *value   = GETSTRING(ARG1);
     stem_map_t *m = get_or_create_stem_map(stem_name);

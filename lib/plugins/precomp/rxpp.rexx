@@ -77,11 +77,16 @@ verbose=1
   end
 return 0
 /* ------------------------------------------------------------------
- * Pass one load source file and determine preprocessor statements
+ * Pre Processor Pass One
+ * 1. Load (and sort) Macros
+ * 2. Load Source File
+ * 3. Determine Pre-Processor Statements
  * ------------------------------------------------------------------
  */
 RXPPPassOne: procedure = .int
   arg expose infile=.string, outfile=.string,maclib=.string, macsys=.string
+
+/* ---- 1a. Load Macros from MACLIB  */
   macnum=readSource(maclib)
   if macnum<0 then do
      if verbose then say 'CRX0900E+['time('l')'] Maclib not found, or not accessible: 'maclib
@@ -92,11 +97,11 @@ RXPPPassOne: procedure = .int
      if verbose then say 'CRX0130I ['time('l')'] Macros extracted:   'macros_mname.0
      maxmac=macros_mname.0
   end
-  ## clear source array, DROP doesn't work as expected
-  do i=1 to source.0
-     source.i=""
-     stype.i='R'
-  end
+## clear source array
+  call drop_Array source
+  call drop_Array stype
+
+/* ---- 1b. Load System Macros from MACSYS  */
   macnum=readSource(macsys)
   if macnum<0 then do
      if verbose then say 'CRX0900E+['time('l')'] System Maclib not found, or not accessible: 'macsys
@@ -106,16 +111,22 @@ RXPPPassOne: procedure = .int
      if verbose then say 'CRX0120I ['time('l')'] System Maclib loaded: 'source.0' records'
      if verbose then say 'CRX0130I ['time('l')'] Macros extracted:     'macros_mname.0-maxmac
   end
-  ## clear source array, DROP doesn't work as expected
-    do i=1 to source.0
-       source.i=""
-       stype.i='R'
-    end
+## clear source array
+  call drop_Array source
+  call drop_Array stype
+
+/* ---- 1c. Load file to compile */
   rexxLines=readSource(infile)
   if rexxLines<0 then do
      say 'CRX0910E+['time('l')'] source file missing: 'infile
      exit 8
   end
+
+/* ---- 2. find levelb, import and other option stuff  */
+  which=0
+  /* now pickup the flags, they might be used in PRECOMP */
+  i=fsearch(source,1,"##CFLAG","","",which)   ## pickup CFLAG
+  if i>0 then flagsset=early_flag_pick_up(i)
 
   linx=ffind(source,1,'options levelb')
   if linx>0 then stype.linx='X'         /* Skip line */
@@ -129,10 +140,10 @@ RXPPPassOne: procedure = .int
   source.2='options levelb'
   source.3='import rxfnsb'
   source.4='/* reserved for namespace definition */'
-
   rexxlines=rexxlines+3
-
   if verbose then say 'CRX0140I ['time('l')'] Rexx Source loaded: 'rexxLines' records'
+
+/* ---- 3. Pre-Compile source file,  */
   maclibm=macros_mname.0
   call GetPreComp rexxlines              ## analyse source, source lines needed keep them
   if verbose then say 'CRX0150I ['time('l')'] Macros extracted:   'macros_mname.0-maclibm
@@ -141,6 +152,8 @@ RXPPPassOne: procedure = .int
 return rexxlines
 /* ------------------------------------------------------------------
  * Pass 2 pre-expand certain elements
+ * !! Macro expansions already took place in Pass one step 3 !!
+ * create ##IF/##IFN/##ELSE/##ENDIF reference table
  * ------------------------------------------------------------------
  */
 RXPPPassTwo: procedure
@@ -154,6 +167,10 @@ RXPPPassTwo: procedure
      source.i=""
   end
   i=fsearch(source,1,'##IF ','##IFN ',"##CFLAG",which)   ## search as first word in the source string
+
+/* 1. ##ELSE becomes    Translate ELSE clause
+        ##ENDIF         close previous ##IF
+        ##IFN condition open else as ##IFN    */
   do while i>0
      if which<3 then condition=word(source.i,2)
      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
@@ -168,6 +185,7 @@ RXPPPassTwo: procedure
      i=fsearch(source,j+1,'##IF ','##IFN ',"",which)   ## search as first word in the source string
   end
 
+/* 2. ##IF / ##IFN build cross reference  */
   which=0
   i=fsearch(source,1,'##IF ','##IFN ',"",which)   ## search as first word in the source string
   do while i>0
@@ -177,88 +195,35 @@ RXPPPassTwo: procedure
      aifblock.i=lnk
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
   end
+
+/* 3. Build OO definition table */
   i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
   do while i>0
      call oocreatedefs i
      i=ffind(source,i+1,'OOCREATE(')   ## search as next word in the source string
   end
+
+/* 4. output ##IF ##IFN / ##ENDIF Reference table */
+  if verbose=0 then return
   if pos(' iflink',cflags)=0 then return
   if aifblock.0=0 then say "+++ no Pre Source Expansion occurred"
   else do i=1 to aifblock.0
      if aifblock.i=0 then iterate
      lnk=aifblock.i
-     if verbose then say right(i,4,'0')' 'left(strip(source.i),16)' --> linked to --> 'right(lnk,4,'0')' 'source.lnk'   <+++ following lines skipped based on condition +++>'
-     do j=i+1 to lnk
-        if verbose then say '? skipped: 'right(j,4,'0')' 'strip(source.j)
+     say right(i,4,'0')' 'left(strip(source.i),15)' linked to --> ' right(lnk,4,'0') ' ' strip(source.lnk)'  <+++ PASS2: IF/ENDIF linked; PASS3 decides emit or skip>'
+     do j=i+1 to lnk-1
+        say '? controlled by IF: 'right(j,4,'0')' 'strip(source.j)
      end
+     say right(lnk,4,'0')' 'left(strip(source.lnk),15)' (block end)'
   end
 return
 /* ------------------------------------------------------------------
- * Create the OOCreate definition
- * ------------------------------------------------------------------
- */
-oocreatedefs: procedure
-  arg lino=.int
-  ipi=pos('=',source.lino)
-  if ipi<=1 then return           ## no valid pointer=OOCREATE() statement
-  lhs=strip(substr(source.lino,1,ipi-1))
-  rhs=strip(substr(source.lino,ipi+1))
-  parenPos = POS("(", rhs)        ## Find the opening parenthesis
-  funcName = STRIP(SUBSTR(rhs, 1, parenPos-1))
-  ## Extract parameter list (between parentheses)
-  paramStr = STRIP(SUBSTR(rhs,parenPos + 1))
-  paramStr = LEFT(paramStr, LENGTH(paramStr)- 1)    ## Remove closing ')'
-/* drop first parameter, it's the prefix for the function calls */
-  ppi=pos(',',paramStr)
-  if ppi=0 then do
-     prefix=paramstr
-     paramstr=''
-  end
-  else do
-     prefix=substr(paramstr,1,ppi-1)
-     paramstr=substr(paramstr,ppi+1)
-  end
-  call setvar lhs'_prefix',prefix                 ## save the object handle: e.g. map=OOCREATE(tm) it will be map_prefix=tm
-  source.lino=lhs'='prefix'CREATE('paramstr')'    ## for now the call function must be CREATE with the provided prefix
-return
-/* ------------------------------------------------------------------
- * Pick up the compiler flg setup in an early stage
- * ------------------------------------------------------------------
- */
-early_flag_pick_up: procedure=.int
-  arg i=.int
-  source.i=lower(source.i)
-  cflags=' '||subword(source.i,2)   ## add blank to later search for ' flags', this avoids unwanted hit of e.g. 1buf in n1buf
-  call setvar 'cflags',cflags
-  source.i='/* 'source.i' */'
-  if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
-  if pos(' iflink',cflags)>0 then do
-     if verbose then say "Pre Source Expansion Pass 1"
-     if verbose then say "-------------------------------------------------------"
-  end
-return 1
-/* ------------------------------------------------------------------
- * for ##IF / ##IFN find associated ##ENDIF
- * ------------------------------------------------------------------
- */
-findMatchingEndif: procedure=.int
-  arg startline=.int
-  nest = 1  /* Start at 1 because the current ##IF is level 1 */
-  which = 0
-  i = fsearch(source, startline, '##IF ','##IFN ','##END', which)
-  do while i > 0
-    if which = 1 | which=2 then nest = nest + 1
-    else if which = 3 then do
-      nest = nest - 1
-      stype.i = 'X'  /* mark for removal or annotation */
-      if nest = 0 then return i  /* finally matched ##ENDIF */
-    end
-    i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
-  end
-  if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
-return 0
-/* ------------------------------------------------------------------
- * Analyse REXX program and expand Macros
+ *  Pass 3 Build Final Output Buffer
+ *    1. activate ##IF /##IFN block if condition is true
+ *    2. not active blocks are dropped stype.LineNo='X'
+ *    3. handle ##PARSE, why ? maybe belongs to Pass one
+ *    4. Write or Dropm Macro and pre-compiler statements
+ *       to show original pre-process call
  * ------------------------------------------------------------------
  */
 RXPPPassThree: procedure
@@ -321,17 +286,79 @@ RXPPPassThree: procedure
        if pos(' ndef',cflags)>0 then iterate      ## ndef    : suppress original definition, just output expanded result
        call writeLine printGen(line,3)            ## printgen: prints pre-processor line with appropriate suffix comment
    	 end
-
      else if strip(line) \='' then do
    	    newline = expandRecursive(line)
    	    call writeline newline
    	 end
-
   end
-
   call writeline ''
   if verbose then say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
+/* ------------------------------------------------------------------
+ * Create the OOCreate definition
+ * ------------------------------------------------------------------
+ */
+oocreatedefs: procedure
+  arg lino=.int
+  ipi=pos('=',source.lino)
+  if ipi<=1 then return           ## no valid pointer=OOCREATE() statement
+  lhs=strip(substr(source.lino,1,ipi-1))
+  rhs=strip(substr(source.lino,ipi+1))
+  parenPos = POS("(", rhs)        ## Find the opening parenthesis
+  funcName = STRIP(SUBSTR(rhs, 1, parenPos-1))
+  ## Extract parameter list (between parentheses)
+  paramStr = STRIP(SUBSTR(rhs,parenPos + 1))
+  paramStr = LEFT(paramStr, LENGTH(paramStr)- 1)    ## Remove closing ')'
+/* drop first parameter, it's the prefix for the function calls */
+  ppi=pos(',',paramStr)
+  if ppi=0 then do
+     prefix=paramstr
+     paramstr=''
+  end
+  else do
+     prefix=substr(paramstr,1,ppi-1)
+     paramstr=substr(paramstr,ppi+1)
+  end
+  call setvar lhs'_prefix',prefix                 ## save the object handle: e.g. map=OOCREATE(tm) it will be map_prefix=tm
+  source.lino=lhs'='prefix'CREATE('paramstr')'    ## for now the call function must be CREATE with the provided prefix
+return
+/* ------------------------------------------------------------------
+ * Pick up the compiler flg setup in an early stage
+ * ------------------------------------------------------------------
+ */
+early_flag_pick_up: procedure=.int
+  arg i=.int
+  if i=0 then return 0
+  source.i=lower(source.i)
+  cflags=' '||subword(source.i,2)   ## add blank to later search for ' flags', this avoids unwanted hit of e.g. 1buf in n1buf
+  call setvar 'cflags',cflags
+  source.i='/* 'source.i' */'
+  if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
+  if pos(' iflink',cflags)>0 then do
+     if verbose then say "Pre Source Expansion Pass 1"
+     if verbose then say "-------------------------------------------------------"
+  end
+return 1
+/* ------------------------------------------------------------------
+ * for ##IF / ##IFN find associated ##ENDIF
+ * ------------------------------------------------------------------
+ */
+findMatchingEndif: procedure=.int
+  arg startline=.int
+  nest = 1  /* Start at 1 because the current ##IF is level 1 */
+  which = 0
+  i = fsearch(source, startline, '##IF ','##IFN ','##END', which)
+  do while i > 0
+    if which = 1 | which=2 then nest = nest + 1
+    else if which = 3 then do
+      nest = nest - 1
+      stype.i = 'X'  /* mark for removal or annotation */
+      if nest = 0 then return i  /* finally matched ##ENDIF */
+    end
+    i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
+  end
+  if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
+return 0
 /* ------------------------------------------------------------------
  * Read Rexx Source
  * ------------------------------------------------------------------
@@ -349,21 +376,31 @@ GetPrecomp: procedure
    lineNo = 0
    do while lineNo < source.0      ## array might grow, so while is more reliable
       LineNo=LineNo+1
-      if stype[LineNO] ='noexp' then iterate
-      depth = CommentDepth(lineNo, 0)
-      if depth>0 then do
-         stype[lineNo] = 'noexp'
-         do until depth=0
-            lineNo=LineNo+1
-            if lino>source[0] then leave
-            depth = CommentDepth(lineNo, depth)
+      if stype[LineNO]='noexp' | stype[LineNO]='cmt' then iterate
+      hit=0
+      depth = CommentScan(lineNo,0,hit)
+      if hit then do
+         cmtbeg=LineNo
+         stype[lineNo] = 'cmt'
+      /* if still inside a block comment, mark subsequent lines too */
+         do while depth > 0 & lineNo < source.0
+            lineNo = lineNo + 1
+            stype[lineNo] = 'cmt'
+            depth=CommentScan(lineNo, depth,hit)  /* hit will be 1 anyway because depth>0 at BOL, but keep it consistent */
          end
-         if lino>source[0] then leave
+         if pos(' cmtblk',cflags)> 0 & LineNo-cmtbeg>15 then do ci=cmtbeg+1 to lineNo-1
+            source[ci]='*>'source[ci]
+         end
       end
       line = source.lineNo
       ucmd=word(line,1)
       if ucmd='' then iterate
       ucmd=upper(ucmd)
+
+      if \(ucmd='##STEM' | ucmd='##DEFINE') & countstr('.',line)>=2 then do
+         if cmd_isstem(lineNo,line)>0 then iterate    ## deeper check if stem, if so start stem handling
+      end
+
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       else if ucmd = 'SELECT' then call cmd_select lineNo,line,1
@@ -648,47 +685,83 @@ CMD_global: procedure
    end
 return
 /* ------------------------------------------------------------------
+ * Test if line is a line containing STEMs
+ * ------------------------------------------------------------------
+ */
+CMD_isstem: procedure=.int
+   arg lino=.int,line=.string
+   candidate=0
+   tline=qstripComment('##','',line)
+   tline=qstripComment('/*','*/',tline)
+   tline=translate(tline,,'=;,')
+   do i=1 to qwords(tline)
+      tw=qword(tline,i)
+      if countstr('.',tw)>=2 then do
+         if left(tw,1)\='.' & right(tw,1)\='.' then do
+            candidate=1
+            leave
+         end
+      end
+   end
+   if candidate=1 then call cmd_stem lino,line, mode=1
+return candidate
+/* ------------------------------------------------------------------
  * Process ##STEM command
  * Identifies a line containing stem operations (temporary for testing)
  * ------------------------------------------------------------------
  */
 CMD_stem: procedure
-   arg lino=.int,line=.string
+   arg lino=.int,line=.string,mode=0
    oldhi=source.0
    oldlino=lino
    stype.lino= 'STEM'
    wrd1=upper(word(line,1))
    if wrd1='##DEFINE' then return
+/* if we are called via the ##stem prefix, we need to drop it */
    if wrd1='##STEM' then line=subword(line,2)
-   else source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
-   nstmt=qstripComment("/*","*/",line)
-   wrd1=upper(word(nstmt,1))
-   if wrd1='IF' | wrd1='SAY' | wrd1='CALL' then do
-      lhs=''
-      rhs=nstmt
+   else do  /* else we need to comment out the stem line */
+      if mode=0 then source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
+      source[lino]='/* -- stem 'line' */'
    end
-   else do
-      stmts=qsplit(nstmt,"=")
-      lhs=stmts.1
+/* now strip block comments from the line */
+   nstmt=qstripComment("/*","*/",line)
+/* identify the type of statement, if, say, call else it is a normal set statement */
+   wrd1=upper(word(nstmt,1))
+   lhs=''
+   if wrd1='IF' | wrd1='SAY' | wrd1='CALL' then rhs=nstmt
+   else do                      ## else it is a normal set statement
+      stmts=qsplit(nstmt,"=")   ## split the set at = sign
+      lhs=stmts.1               ## you get LHS and RHS
       rhs=stmts.2
    end
-   if words(rhs)=1 & isStem(rhs)=0 then do             ## moves single string or number to a stem
-      if isStem(lhs)=1 then do
-         lhs=stemquote(lhs)
-         rc= insert_source(lino+1,1,'noexp'  )    ## insert new lines, shift buffer
-         source[lino+1]='src=putstem('lhs','rhs')'
+/* here we have a single RHS which is not a STEM */
+   if words(rhs)=1 & isStem(rhs)=0 then do         ## moves single string or number to a stem
+      if isStem(lhs)=0 then source[lino]=line      ## LHS & RHS are not a stems, just keep the line
+      else do                                  ## LHS is a stem / RHS not
+         lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
+         rc= insert_source(lino+1,1,'noexp')       ## insert new lines, shift buffer
+         source[lino+1]='src=putstem('lhs','rhs')' ## place identified stem in putstem function
       end
    end
+/* here we have the rest ?? */
    else do
-      rhs=splitRHS(rhs,lino)
-      if rhs\=''  then do                    ## rhs unchanged, no need to do something
-         call insert_source lino+1,1,'noexp'   ## insert new lines, shift buffer
-         if lhs='' then source[lino+1]=rhs
-         else if pos('.',lhs)>0 then do
+     oldLino=lino                 ## keep old lino to determine if splitRHS has added enough lines
+     rhs=splitRHS(rhs,lino)
+      if rhs\=''  then do                      ## rhs unchanged, no need to do something
+         if oldlino=lino then do
+            call insert_source lino+1,1,'noexp'   ## insert new lines, if RHSsplit hasn't done it
+         end
+         if lhs='' then do
+            if isStem(rhs)=1 then source[lino+1]=rhs    ## we don't
+            else source[lino]=rhs              ## rhs is no stem, re-apply old line, inserted line remains empty
+         end
+         else if pos('.',lhs)>0 &  isStem(lhs)>0 then do
            lhs=stemquote(lhs)
            source[lino+1]='src=putstem('lhs','rhs')'
          end
-         else source[lino+1]=lhs'='rhs
+         else do
+           source[lino+1]=lhs'='rhs
+         end
      end
    end
 return
@@ -702,13 +775,15 @@ splitRHS: procedure=.string
    start=1
    nstem=findstem(rhs,start,position)
    if nstem.0=0 then return rhs
-   new=nstem.0+1
+   new=nstem.0+5        ## add line for each rhs + 1 for final replacement line
    call insert_source lino+1,new,'noexp'        ## insert new lines, shift buffer
    do i=1 to nstem.0
       temp=stemquote(nstem.i)
       lino=lino+1
       source[lino]="_v"i'=getstem('temp')'
+      ## in case of debug results ##source[lino]=source[lino]  ##   source[lino]=source[lino]'; say "VX <"_v'i"'>'"
    end
+   lino=lino+1
    do i = nstem.0 to 1 by -1
       rhs = replaceOnce(nstem.i, rhs, "_v"i, position.i)
    end
@@ -771,7 +846,6 @@ isStemChar: procedure=.int
 return 0
 /* ---------------------------------------------------------------
  * isStem(s)
- *
  * Returns:
  *   1  -> string looks like a stem
  *   0  -> not a stem
@@ -1971,6 +2045,35 @@ CommentDepth: procedure=.int
   end
   say 1111 depth
 return depth
+
+/* ---------------------------------------------------------------
+ * CommentScan(lino, depth)
+ * Returns: "depth_out hit"
+ * hit=1 if ANY portion of this line is in a /* */ block comment
+ * --------------------------------------------------------------- */
+CommentScan: procedure=.int
+  arg lino=.int, depth=.int, expose hit=.int
+  line = source[lino]
+  pos  = 1
+  hit = (depth > 0)          /* already inside a comment at BOL */
+  do forever
+     po = qpos('/*', line, pos)
+     pc = qpos('*/', line, pos)
+     if po = 0 & pc = 0 then leave
+     /* choose earliest marker */
+     if pc = 0 | (po > 0 & po < pc) then do  /* opening marker */
+        hit = 1
+        depth = depth + 1
+        pos = po + 2
+     end
+     else do  /* closing marker: the region up to here is comment iff depth>0 */
+        if depth > 0 then hit = 1
+        if depth > 0 then depth = depth - 1
+        pos = pc + 2
+     end
+  end
+  return depth
+
 
 /* ------------------------------------------------------------------
  * Init RXPP environment
