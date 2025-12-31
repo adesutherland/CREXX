@@ -25,7 +25,7 @@ add_subdirectory(map)
 #
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   add_subdirectory(system)
-  add_subdirectory(console)
+#  add_subdirectory(console) probably misses xwindows libs
 endif()
 
 #
