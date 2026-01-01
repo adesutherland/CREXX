@@ -15,7 +15,8 @@
 options levelb
 import rxfnsb
 import map
-
+mary=31
+fred=39
 ##cflags nbuf nbuf nbuf
 
 /* =======================================================================
@@ -60,29 +61,39 @@ say 1.6 1..10
   customer2 = 'MS'
   orderid2  = '9001'
   customer3 = 'Unamed'
-
+Customer.(abc||4711).name = 'Microsoft'
 Customer.customer.name = 'International Business Machines'
+/* ----------------------------------------------------------------- */
 say 2. 'Customer 'Customer.customer.name
 Customer.customer.name='International Business Machines'
 Customer.customer.name    =    'International Business Machines'
 Customer.customer.name3 = Customer.customer2.name
+/* ----------------------------------------------------------------- */
 say 3. "stem to stem "Customer.customer.name
 Customer.customer2.name = 'Microsoft'
 Customer.123.name = 'OrderName'
 
 /* say/if on valid stems with several variations */
+/* ----------------------------------------------------------------- */
 say 4. Customer.customer.name
 if Customer.customer.name = 'IBM' then say 3. 'ok'
+/* ----------------------------------------------------------------- */
 say 5. Customer.customer.name Customer.customer.city
+/* ----------------------------------------------------------------- */
 k = Customer.customer.name
 say 6. 'by set of k   'k
+/* ----------------------------------------------------------------- */
 say 7. 'direct say  'Customer.customer.name
+/* ----------------------------------------------------------------- */
 say 8. "Customer.customer.name"
+/* ----------------------------------------------------------------- */
 say 9. Customer.customer.name 'Customer.customer.city'
+/* ----------------------------------------------------------------- */
 say 10. 'He said "Customer.customer.name" today'
+/* ----------------------------------------------------------------- */
 say 11. Customer.customer.name /* Customer.customer.city */
+/* ----------------------------------------------------------------- */
 say 12. '/* Customer.customer.name */'
-
 
 say '+++ STEM DEMO START +++'
 say '-----------------------'
@@ -228,14 +239,21 @@ say
 /* 8) getalltails() for key enumeration                               */
 /* ------------------------------------------------------------------ */
 say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
-
 call getalltails 'Fred.', tails
-
 do i = 1 to tails.0
    say "   "right(i,3)". "tails[i]
 end
 say "   (total tails reported by getalltails: "tails.0")"
 say
+
+say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
+call getalltails 'List.', tails
+do i = 1 to tails.0
+   say "   "right(i,3)". "tails[i]
+end
+say "   (total tails reported by getalltails: "tails.0")"
+say
+
 
 say '--- STEM DEMO END ---'
 exit

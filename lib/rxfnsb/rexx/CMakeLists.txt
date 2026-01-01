@@ -41,6 +41,7 @@ set(BIFS
 		pos
 		qpos
 		qsplit
+		qsplitsafe
 		qextractall
 		qextractpair
 		qstripcomment

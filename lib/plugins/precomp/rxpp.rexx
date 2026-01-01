@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count stem_scount rxpp_lrc
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -236,8 +236,10 @@ RXPPPassThree: procedure
   end
   do while lineNo<source.0
      lineNo=Lineno+1
+     curLino=LineNo           ## save into global current LineNo
      line = source.lineNo
      if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
+     if pos('/* reserved',line)>0 then iterate
   	 else if stype.LineNo='D' then do
  	    if pos(' ndef',cflags)>0 then iterate     ## ndef    : suppress original definition, just output expanded result
  	    call writeLine printGen(line,1)           ## printgen: prints pre-processor line with appropriate suffix comment
@@ -712,19 +714,27 @@ return candidate
  */
 CMD_stem: procedure
    arg lino=.int,line=.string,mode=0
+   stemlog=0
    oldhi=source.0
    oldlino=lino
    stype.lino= 'STEM'
+   rxpp_lrc=''
    wrd1=upper(word(line,1))
    if wrd1='##DEFINE' then return
 /* if we are called via the ##stem prefix, we need to drop it */
    if wrd1='##STEM' then line=subword(line,2)
    else do  /* else we need to comment out the stem line */
       if mode=0 then source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
-      source[lino]='/* -- stem 'line' */'
+      source[lino]='/* ++ stem 'line' */'
    end
 /* now strip block comments from the line */
    nstmt=qstripComment("/*","*/",line)
+   if stemlog=1 then do
+      say copies('-',72)
+      say "Stem line   "right(lino,4,'0') line
+      say "     line+1 "right(lino+1,4,'0') source[lino+1]
+      say copies('-',72)
+   end
 /* identify the type of statement, if, say, call else it is a normal set statement */
    wrd1=upper(word(nstmt,1))
    lhs=''
@@ -734,35 +744,71 @@ CMD_stem: procedure
       lhs=stmts.1               ## you get LHS and RHS
       rhs=stmts.2
    end
-/* here we have a single RHS which is not a STEM */
+   if stemlog=1 then say 1 lino "'"stype[lino]"'" "'"line"'"
+   /* here we have a single RHS which is not a STEM */
    if words(rhs)=1 & isStem(rhs)=0 then do         ## moves single string or number to a stem
-      if isStem(lhs)=0 then source[lino]=line      ## LHS & RHS are not a stems, just keep the line
+      if stemlog=1 then say 1.1 line
+      if isStem(lhs)=0 then source[lino]=line  ## LHS & RHS are not a stems, just keep the line
       else do                                  ## LHS is a stem / RHS not
+         if stemlog=1 then say 1.2 line
+         lhs=resolveStem(lhs,lino,stemlog)
          lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
+         if stemlog=1 then say 1.2.1 lhs
          rc= insert_source(lino+1,1,'noexp')       ## insert new lines, shift buffer
-         source[lino+1]='src=putstem('lhs','rhs')' ## place identified stem in putstem function
+         lino=insert_line(lino+1,'src=putstem('lhs','rhs')') ## place identified stem in putstem function
       end
    end
 /* here we have the rest ?? */
    else do
      oldLino=lino                 ## keep old lino to determine if splitRHS has added enough lines
-     rhs=splitRHS(rhs,lino)
-      if rhs\=''  then do                      ## rhs unchanged, no need to do something
-         if oldlino=lino then do
-            call insert_source lino+1,1,'noexp'   ## insert new lines, if RHSsplit hasn't done it
-         end
-         if lhs='' then do
-            if isStem(rhs)=1 then source[lino+1]=rhs    ## we don't
-            else source[lino]=rhs              ## rhs is no stem, re-apply old line, inserted line remains empty
-         end
-         else if pos('.',lhs)>0 &  isStem(lhs)>0 then do
+     rhs=splitRHS(rhs,lino,stemlog)
+     if stemlog=1 then say 2.1 line' LHS 'lhs' RHS 'rhs
+     if rhs\=''  then do                      ## rhs unchanged, no need to do something
+        if oldlino=lino then do
+           call insert_source lino+1,1,'noexp'   ## insert new lines, if RHSsplit hasn't done it
+        end
+     ##   rhs=splitRHS(rhs,lino,stemlog)
+        if lhs='' | isStem(lhs)=0 then do
+           if stemlog=1 then say 2.2 line' LHS 'lhs' RHS 'rhs
+           if isStem(rhs)=1 then do
+              if stemlog=1 then say 2.2.1 rhs lino
+              rhs=resolveStem(rhs,lino,stemlog)
+              if stemlog=1 then say 2.2.2 rhs lino
+              rhs=stemquote(rhs)
+              if stemlog=1 then say 2.2.3 rhs lino "*** "lhs
+              if lhs='' then lino=insert_line(lino+1,rhs)
+              else lino=insert_line(lino+1,lhs'='rhs)
+           end
+           else do
+              if lhs='' then lino=insert_line(lino+1,rhs)
+              else lino=insert_line(lino+1,lhs'='rhs)
+           end
+           ##   source[lino]=rhs              ## rhs is no stem, re-apply old line, inserted line remains empty
+
+        end
+        else if pos('.',lhs)>0 &  isStem(lhs)>0 then do
+           if stemlog=1 then say 2.3 lhs
+           lhs=resolveStem(lhs,lino,stemlog)
            lhs=stemquote(lhs)
-           source[lino+1]='src=putstem('lhs','rhs')'
-         end
-         else do
-           source[lino+1]=lhs'='rhs
-         end
+           lino=insert_line(lino+1,'src=putstem('lhs','rhs')')
+        end
+        else do
+           if stemlog=1 then say 2.4 lhs rhs
+           lino=insert_line(lino+1,lhs'='rhs)
+        end
      end
+     else if stemlog=1 then say "Should not happen"
+   end
+   if stemlog=1 then do i=oldlino to lino+1
+      say '9.'i' added "'stype[i]'"' source[i]
+   end
+   if stemlog=1 then do i=lino+2 to lino+5
+      say '9.'i' ???? "'stype[i]'"' source[i]
+   end
+   if rxpp_lrc\='' then do
+      say '\\\\\ Stem expansion error: 'rxpp_lrc
+      rc=  insert_source(lino+1,1,'noexp')       ## insert new lines, shift buffer
+      lino=insert_line(lino+1,'/* \\\\\ Stem expansion error: 'rxpp_lrc' */') ## place identified stem in putstem function
    end
 return
 /* ------------------------------------------------------------------
@@ -770,70 +816,117 @@ return
  * ------------------------------------------------------------------
  */
 splitRHS: procedure=.string
-   arg rhs=.string,expose lino=.int
+   arg rhs=.string,expose lino=.int,stemlog=.int
    position=.int[]
    start=1
    nstem=findstem(rhs,start,position)
    if nstem.0=0 then return rhs
-   new=nstem.0+5        ## add line for each rhs + 1 for final replacement line
+   new=nstem.0+1        ## add line for each rhs + 1 for final replacement line
    call insert_source lino+1,new,'noexp'        ## insert new lines, shift buffer
+
+   tempvar=.string[]
+   foundstem=.string[]
    do i=1 to nstem.0
+      foundstem.i=nstem.i
+      nstem.i=resolveStem(nstem.i,lino,stemlog)
       temp=stemquote(nstem.i)
       lino=lino+1
-      source[lino]="_v"i'=getstem('temp')'
-      ## in case of debug results ##source[lino]=source[lino]  ##   source[lino]=source[lino]'; say "VX <"_v'i"'>'"
+      stem_scount=stem_scount+1
+      tempvar[i]=stem_scount
+      lino=insert_line(lino,"_tmp_rxpp_"tempvar[i]'=getstem('temp')')
+      ## in case of debug results ##source[lino]=source[lino]  ##   source[lino]=source[lino]'; say "VX <"_tmp_rxpp_'temp[i]"'>'"
    end
    lino=lino+1
    do i = nstem.0 to 1 by -1
-      rhs = replaceOnce(nstem.i, rhs, "_v"i, position.i)
+      rhs = replaceOnce(foundstem.i, rhs, "_tmp_rxpp_"tempvar[i], position.i)
    end
 return rhs
+/* ------------------------------------------------------------------
+ * Check if stem name contains expressions which must be evaluated first
+ * ------------------------------------------------------------------
+ */
+ResolveStem: procedure=.string
+  arg stemstring=.string,expose lino=.int,stemlog=.int       ## updated lino must be exposed to reflect inserted expression lines
+  ## expressions=qextractAll('.(', ')',stemstring)
+   expressions = qextractall_dotparen(stemstring)
+  if stemlog=1 then say "Resolve 1 "stemstring lino
+  if expressions.0=0 then return stemstring
+  if stemlog=1 then say "Resolve 2, expressions found "expressions.0
+  call insert_source lino+1,expressions.0+1,'noexp'        ## insert lines for each expression+ 1 for concatenated instruction, shift buffer
+  do i=expressions.0 to 1 by -1
+     lino=lino+1
+     stem_scount=stem_scount+1
+     lino=insert_line(lino,'_expr_'stem_scount'='expressions.i)
+     stemstring=replaceOnce('('expressions.i')',stemstring,'_expr_'stem_scount)
+  end
+  if stemlog=1 then say "Resolve 3, current lino "lino
+return stemstring
 /* ------------------------------------------------------------------
  * Change a string by a new string at a certain position
  * ------------------------------------------------------------------
  */
 replaceOnce: procedure=.string
-  arg needle=.string,haystack=.string,newstring=.string,position=.int
+  arg needle=.string,haystack=.string,newstring=.string,position=0
+  if position=0 then position=pos(needle,haystack)
   if position<=0 then return haystack
 return substr(haystack,1,position-1) || newstring || substr(haystack,position+length(needle))
+
 /* ------------------------------------------------------------------
- * Find all STEMs in a statemnet, and return stem name and position
- * ------------------------------------------------------------------
- */
-findStem: procedure=.string[]
-  arg s=.string, start=1, expose position=.int[]
-  len = length(s)
-  rstem=.string[]
-  indx=0
+ * QEXTRACTALL_DOTPAREN(text [, start])
+ * Extracts ALL computed tail expressions of the form .( ... )
+ * but balances real parentheses ( ... ) including nesting, quote-safe,
+ * by delegating to qextractpair('(',')', ...).
+ *
+ * Returns:
+ *   a stem array expr. where:
+ *     expr.0 = count
+ *     expr.1..expr.n = INNER content (without outer parentheses)
+ * ------------------------------------------------------------------ */
+qextractall_dotparen: procedure=.string[]
+  arg text=.string, start=1
+
+  expr = .string[]
+  idx  = 0
+  pos  = start
+  tlen = length(text)
+
   do forever
-     p = qpos('.', s, start)   ## find a dot outside any quoted text
-     if p = 0 then leave       ## nothing found, end analysis
-  /* expand left, find root of stem candidate */
-     l = p-1
-     do while l>=1 & isStemChar(substr(s,l,1))
-        l = l-1
-     end
-  /* position of l is now at the position, which doesn't belong to the stem candidate anymore
-    step now forward to find end of stem candidate */
-     l = l+1   ## first stem char
-     r = p+1   ## expand after first '.' right */
-     do while r<=len & isStemChar(substr(s,r,1))
-        r = r+1
-     end
-  /* position of r is now at the position, that doesn't belong to the stem candidate anymore */
-     r = r-1   ## set it back to last stem character
-  /* Now we have the stem candidate  */
-     stem=substr(s,l,r-l+1)
-     if IsStem(stem)>0 then do    ## =1 is a stem
-        indx=indx+1               ## add it to the list of found stems
-        rstem[indx]=stem          ## keep also the start position, to allow a precise replacement
-        position[indx]=l          ## for the temporary variable
-     end
-     start=r+1                    ## set to next char after stem, to find another stem
+     p = qpos('.(', text, pos)        /* position of ".(" outside quotes */
+     if p = 0 then leave
+
+     openPos = p + 1                  /* points to '(' */
+     seg = qextractpair('(', ')', text, openPos, 'I')  /* inclusive "(...)" */
+     if seg = '' then leave           /* unmatched -> stop (or signal error) */
+
+     idx = idx + 1
+     /* store inner part, without outer parens */
+     if length(seg) >= 2 then expr[idx] = substr(seg, 2, length(seg)-2)
+     else expr[idx] = ''
+
+     /* continue scanning AFTER the closing ')' */
+     pos = openPos + length(seg)
+     if pos > tlen then leave
   end
-return rstem
+
+return expr
+
 /* ------------------------------------------------------------------
  * Test for valid stem characters in a string
+ * isStemChar(c)
+ *
+ * Purpose (LEXER / TOKEN BOUNDARY):
+ *   Returns 1 if `c` is allowed to appear anywhere inside a *stem token*
+ *   while scanning source text.
+ *
+ *   This is intentionally permissive and includes '.' so that routines
+ *   like findStem() can expand left/right across "root.tail.tail" chains.
+ *
+ * Typical usage:
+ *   - Expand token boundaries around a candidate '.' position.
+ *   - "Rough cut" of a possible stem substring.
+ *
+ * NOT for:
+ *   - Validating ROOT / .name segments (because '.' would be wrong there).
  * ------------------------------------------------------------------
  */
 isStemChar: procedure=.int
@@ -851,23 +944,274 @@ return 0
  *   0  -> not a stem
  * ---------------------------------------------------------------
  */
-isStem: procedure=.int
+isstem:procedure=.int
+  arg s=.string
+  irc=isStemX(s)
+ ## say "ISSTEM '"s"' is RC="irc
+return irc
+
+isStemx: procedure=.int
   arg s=.string
   s = strip(s)
   if s = '' then return 0
-  allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$.'
-  /* must contain at least two dots: root + 2 tails */
-  if countstr('.', s) < 2 then return 0 ## require at least 2 tails to not be confused with crexx arrays
-  if left(s,1)='.' | right(s,1)='.' then return 0   /* must not start or end with dot */
-  if pos(' ', s)  > 0 then return 0     ## no whitespace allowed
-  if pos('..', s) > 0 then return 0     ## sub-tails need at least one character
-  c=left(s,1)
-  if datatype(c,'N')>0 then return 0    ## first char numeric not allowed
-  if datatype(c,'M')>0 then return 1    ## first char A-Z, a-z
-  if c='_' then return 1                ## special allowed first char
-  if c='$' then return 1
-  if verify(s, allowed) \= 0 then return 0 ## returns 0 if all chars are in allowed; otherwise position of first bad char
+  if left(s,1)='.' | right(s,1)='.' then return 0
+ ## if pos(' ', s) > 0 then return 0
+  if pos('..', s) > 0 then return 0
+  len = length(s)
+
+  /* ROOT first char: not numeric; must be A-Z/a-z/_/$ */
+  c = substr(s,1,1)
+  if datatype(c,'N') > 0 then return 0
+  if \ (datatype(c,'M') > 0 | c='_' | c='$') then return 0
+  /* consume ROOT name chars (no dots here) */
+  i = 2
+  do while i <= len
+    ch = substr(s,i,1)
+    if ch='.' then leave
+    if isStemNameChar(ch)=0 then return 0
+    i = i + 1
+  end
+  if i > len | substr(s,i,1) \= '.' then return 0
+  tails = 0
+
+  /* parse .SEGMENT repeating */
+  do while i <= len
+    if substr(s,i,1) \= '.' then return 0
+    i = i + 1
+    if i > len then return 0
+    ch = substr(s,i,1)
+
+    /* computed segment */
+    if ch='(' then do
+      close = matchParen(s, i)
+      if close = 0 then return 0
+      tails = tails + 1
+
+      /* after ')': must be '.' or end (reject bare '(...)' following) */
+      if close < len then do
+        if substr(s, close+1, 1) \= '.' then return 0
+      end
+      i = close + 1
+      iterate
+    end
+   /* name segment: one or more name chars (no '.') */
+    if isStemNameChar(ch)=0 then return 0
+
+    do while i <= len
+      ch = substr(s,i,1)
+      if ch='.' then leave
+     if isStemNameChar(ch)=0 then return 0
+      i = i + 1
+    end
+
+    tails = tails + 1
+    /* loop continues; if i<=len, next must be '.' (it is, due to leave) */
+  end
+  if tails < 2 then return 0
+return 1
+
+/* ------------------------------------------------------------------
+ * isStemNameChar(c)
+ *
+ * Purpose (GRAMMAR / SEGMENT VALIDATION):
+ *   Returns 1 if `c` is allowed inside a *name segment* (ROOT or .name).
+ *
+ *   IMPORTANT: does NOT include '.'.
+ *   Dots are handled structurally by the stem grammar parser:
+ *     ROOT '.' SEGMENT '.' SEGMENT ...
+ *
+ * Typical usage:
+ *   - Validate ROOT characters (excluding the first-char special rules).
+ *   - Consume/validate ".name" segments.
+ *
+ * NOT for:
+ *   - Token boundary scanning (it would stop at '.' and break chains).
+ * ------------------------------------------------------------------ */
+isStemNameChar: procedure=.int
+  arg c=.string
+  if c='' then return 0
+  if c='_' then return 1
+  if datatype(c,'A') then return 1
+  if datatype(c,'N') then return 1
 return 0
+
+/* ------------------------------------------------------------------
+ * Find all STEMs in a statement line and return stem token + position[]
+ *
+ * Strategy:
+ *  1) Use qpos to locate '.' outside quotes and parentheses.
+ *  2) Expand LEFT to find start of ROOT.
+ *  3) Use stemEndBySplit() (QSPLITSAFE-based) to find token end.
+ *  4) Validate with IsStem() and store stem + position.
+ * ------------------------------------------------------------------ */
+findStem: procedure=.string[]
+  arg s=.string, start=1, expose position=.int[]
+  len = length(s)
+  rstem=.string[]
+  stemdebug=0
+  indx=0
+  rxpp_lrc=''
+  do forever
+     p = qpos('.',s, start)
+     if stemdebug=1 then say "stem Locate "indx s p start
+     if p = 0 then leave
+
+     /* dot must have plausible stem-root char to the left */
+     if p=1 | \isStemNameChar(substr(s,p-1,1)) then do
+        start = p + 1
+        iterate
+     end
+
+     /* expand LEFT: find start of ROOT */
+     l = p - 1
+     do while l >= 1 & isStemNameChar(substr(s,l,1))
+        l = l - 1
+     end
+     l = l + 1
+
+     /* determine RIGHT end via QSPLITSAFE */
+     r = stemEndBySplit(s, l,stemdebug)
+     if stemdebug=1 then say "stemEndBySplit l="l" -> r="r 'MSG 'rxpp_lrc
+
+     if r = 0 then do          /* not a stem chain from this root; continue search */
+        start = p + 1
+        iterate
+     end
+
+     stem = substr(s, l, r-l+1)
+     if stemdebug=1 then say "stem candidate '"stem"'"
+
+     if IsStem(stem) > 0 then do
+        indx = indx + 1
+        rstem[indx] = stem
+        position[indx] = l
+        if stemdebug=1 then say "New stem found "stem
+     end
+     start = r + 1
+  end
+
+return rstem
+
+
+/* ------------------------------------------------------------------
+ * stemEndBySplit(s, l)
+ * Determine the end position of a stem token starting at root position l.
+ *
+ * Uses QSPLITSAFE on the substring from l, splitting by '.' while ignoring
+ * dots inside quotes and balanced ().
+ *
+ * Returns:
+ *   absolute end position r (>=l) of stem token
+ *   or 0 if it cannot form a valid stem chain shape.
+ *
+ * Behavior:
+ * - Accepts computed segments if the segment (after strip) is exactly "(...)".
+ * - Accepts name segments consisting of isStemNameChar().
+ * - Stops the token at the first non-name char in a name segment (e.g. "\=''" etc).
+ * - Requires at least ROOT + 2 tails (>= 3 split parts) to match your IsStem policy.
+ * ------------------------------------------------------------------ */
+stemEndBySplit: procedure=.int
+  arg s=.string, l=.int,stemlog=.int
+  rxpp_lrc = ''          /* clear */
+
+  if stemlog=1 then say 'stemEndSplit 's l
+  tail = substr(s, l)
+  if tail = '' then do
+     rxpp_lrc = rxpp_lrc' empty-tail'
+     return 0
+  end
+
+  parts = qsplitsafe(tail, '.', 1, '()')
+
+  if parts.0 < 3 then do
+     rxpp_lrc = rxpp_lrc' too-few-tails'
+     return 0
+  end
+
+  if isPlainStemName(parts[1]) = 0 then do
+     rxpp_lrc = rxpp_lrc' bad-root'
+     return 0
+  end
+
+  rrel = length(parts[1])
+
+  do i = 2 to parts.0
+     seg = parts[i]
+     segs = strip(seg, 'L')
+
+     if left(segs,1) = '(' then do
+        block = qextractpair('(', ')', segs, 1, 'I')
+        if block = '' then do
+           rxpp_lrc = rxpp_lrc' unmatched-paren'
+           return 0
+        end
+
+        rrel = rrel + 1 + (pos(block, segs) + length(block) - 1)
+
+        afterPos = (pos(block, segs) + length(block))
+        if afterPos <= length(segs) then do
+           nextch = substr(segs, afterPos, 1)
+           if nextch = '(' then do
+              rxpp_lrc = rxpp_lrc' bare-parens-after-computed'
+              return 0
+           end
+           if nextch \= '.' then leave
+        end
+        iterate
+     end
+
+     j = 1
+     do while j <= length(seg) & isStemNameChar(substr(seg,j,1))
+        j = j + 1
+     end
+
+     if j = 1 then do
+        rxpp_lrc = rxpp_lrc' bad-name-segment'
+        return 0
+     end
+
+     rrel = rrel + 1 + (j-1)
+     if j <= length(seg) then leave
+  end
+
+return l + rrel - 1
+
+
+/* ------------------------------------------------------------------
+ * isPlainStemName(t)
+ * True if every character is a stem-name char (no dots, no spaces, etc.)
+ * ------------------------------------------------------------------ */
+isPlainStemName: procedure=.int
+  arg t=.string
+  if t = '' then return 0
+  do i = 1 to length(t)
+     if isStemNameChar(substr(t,i,1)) = 0 then return 0
+  end
+return 1
+
+/* ------------------------------------------------------------------
+ * matchParen(s, openPos)
+ * Return position of matching ')' for s[openPos]='(' (balanced).
+ * This allows nested parentheses inside computed expressions.
+ * ------------------------------------------------------------------ */
+matchParen: procedure=.int
+  arg s=.string, openPos=.int
+  len = length(s)
+  if openPos<1 | openPos>len | substr(s,openPos,1) \= '(' then return 0
+
+  depth = 1
+  i = openPos + 1
+  do while i <= len
+    ch = substr(s,i,1)
+    if ch='(' then depth = depth + 1
+    else if ch=')' then do
+      depth = depth - 1
+      if depth = 0 then return i
+    end
+    i = i + 1
+  end
+return 0
+
 /* ------------------------------------------------------------------
  * Insert empty line(s) in source array and shift current item(s) accordingly
  * the line number is the first which is shifted,
@@ -879,9 +1223,20 @@ insert_source: Procedure=.int
   rc=insert_array(source,at,new)    ## insert new lines, shift buffer
   rc=insert_array(stype, at,new)
   do i=0 to new-1                   ## in some cases you want special
+     source[at+i]='/* reserved 'at+i i' */'
      stype[at+i]=expand             ## treatment of the new entry for
   end                               ## example: no further inspection
 return 0                            ## when line is inspected afterwards
+/* ------------------------------------------------------------------
+ * Insert line and cross check if entry is a newly inserted line
+ * ------------------------------------------------------------------
+ */
+insert_line: procedure=.int
+  arg nlino=.int, newline=.string
+  if pos('/* reserved',source[nlino])>0 then nop
+  else say '++++ 'right(nlino,4,'0')' potential overwrite: 'source[nlino]
+  source[nlino]=newline
+return nlino
 /* ------------------------------------------------------------------
  * Process FOR command
  * ------------------------------------------------------------------
@@ -995,7 +1350,7 @@ writeline: procedure
   arg oline=.string
   oline=injectVariable(oline)
   ## if pos('~',oline) then oline=oo_translate(oline)
-   if pos('.',oline) then oline=ooTranslate(oline)
+   if qpos('.',oline) then oline=ooTranslate(oline)
 /* not necessary - I hope
   do while oline \= ''
      oline=injectVariable(oline)
@@ -1098,12 +1453,14 @@ arg oline=.string
 line = strip(oline)
 if upper(word(line,1))='ARG' then return oline
 prf=substr(line,1,2)
-if prf='##' | prf='/*' then return oline
+if prf='##' | prf='/*'  then return oline
+if stype[curlino]='cmt' | stype[curlino]='noexp' then return oline
 result = ''
 posStart = 1
 oocall=0
-do while pos('.', line, posStart) > 0
-    dotPos = pos('.', line, posStart)
+do forever
+    dotPos = qpos('.', line, posStart)
+    if dotPos<=0 then leave
     ##Detect method name after the dot
     methodStart = dotPos + 1
     methodEnd = methodStart
@@ -1111,9 +1468,8 @@ do while pos('.', line, posStart) > 0
         methodEnd = methodEnd + 1
     end
   ## If not followed by a '(', this is a stem access
-    if substr(line, methodEnd, 1) \= '(' then do
+    if substr(line, methodEnd, 1) \= '(' | substr(line, methodEnd-1, 2)='.(' then do
         stemAccess = substr(line, posStart, methodEnd - posStart)
-
         ##Preserve the stem text
         result = result || substr(line, posStart, methodEnd - posStart)
         posStart = methodEnd
@@ -2043,7 +2399,6 @@ CommentDepth: procedure=.int
        iterate
     end
   end
-  say 1111 depth
 return depth
 
 /* ---------------------------------------------------------------
@@ -2093,6 +2448,7 @@ rxppinit: procedure=.string
   globaldef=''
   lino=0
   select_count=0
+  stem_scount=0
   outbuf=.string[]
   mexpanded=0
   rxmodule=translate(rexxname,,'/\')
