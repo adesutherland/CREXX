@@ -5553,7 +5553,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #elif defined(_WIN32)
         strcpy(vers, "windows ");
 #elif defined(__APPLE__)
-        strcpy(vers, "macosx ");
+        strcpy(vers, "macOS ");
 #elif defined(__CMS__)
         strcpy(vers, "cms ");
 #else
