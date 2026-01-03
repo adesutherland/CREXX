@@ -40,8 +40,10 @@ qword: procedure = .string
 
   /* Look for either double or single quotes in the string. */
   qch = '"'
+  n1=1
   assembler strpos n1, qch, line
   qch = "'"
+  n2=1
   assembler strpos n2, qch, line
 
   /* If neither quote exists, we can use native WORD() directly.
