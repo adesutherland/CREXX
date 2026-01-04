@@ -23,6 +23,7 @@ options levelb comments_dash
 import rxfnsb
 import sysinfo
 
+/* procedure main is what is run when crexx starts execution */
 main: procedure = .int
 arg fn = .string[]
 module = .string[]
@@ -36,10 +37,10 @@ end
 /* determine the path for libraries etc */
 rxpath=''
 env_wanted='CREXX_HOME'
-/* honour the CREXX_HOME when set */
+/* honour CREXX_HOME environment variable when set */
 assembler getenv rxpath,env_wanted
 
-/* if CREXX_HOME environment variable not set, then */
+/* if not set, then */
 if rxpath='' then do
   rxpath=getLoadPath()
   lastSegment=lastpos('/',rxpath)
@@ -59,8 +60,7 @@ do i=1 to fn.0
   if left(fn.i,1)<>'-' then
     do /* it is not a flag but a filename */
       filename=fn.i
-	  -- filenames=strip(filenames) strip(filename)
-	  filenames=filenames filename
+	  filenames=strip(filenames) strip(filename)
     end
   else
     do
