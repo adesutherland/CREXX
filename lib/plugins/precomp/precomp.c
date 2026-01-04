@@ -107,7 +107,7 @@ PROCEDURE (drop_array) {
     for (i = 1; i < hi; ++i) {
         REMOVEATTR(ARG0, i);
     }
-    SETARRAYHI(ARG0, 1);  // reset arrayhi
+    SETARRAYHI(ARG0, 0);  // reset arrayhi
     RETURNINTX(hi);
     ENDPROC
 

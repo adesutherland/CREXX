@@ -1,21 +1,8 @@
 ##cflags def nset iflink 1buf 2buf 3buf nvars nmaclist includes  /* set early stage compiler flags */
 
 ##define stemhash(key)            {1+(5381+fnv(key))}
+/* --------------- Hash algorithm obsolete, separate MAPP plugin now */
+return 0
 
-import treemap
 
-/* --------- OO Create definition using the stem --- */
-s1=ooCREATE(stem,"Date",1024)
-cdate=date()
-time=time()
-say 'stemPUT 's1.put(cdate.day.time,date('E')'-'time('l'))
-## s1.put(Fred) = s1.get(cdate.day.time)
 
-keys.1=''
-values.1=''
-say 'stemIterate 's1.iterate(keys,values)
-say keys.0
-do i=1 to keys.0
-   say i "<"keys.i"'>='"values.i"'"
-end
-return

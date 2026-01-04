@@ -5295,8 +5295,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         DISPATCH
 /* ------------------------------------------------------------------------------------
  *  find substring in string                                           pej 27 June 2025
- *  returned is the offset 1-based
- *  0 mean nothing found
+ *  the initial offset is in R1: it is 1-based
+ *  returned is the offset 1-based both for better performance in calling REXX scripts
+ *  0 means nothing found
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(STRPOS_REG_REG_REG) CALC_DISPATCH(3)
@@ -5552,7 +5553,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #elif defined(_WIN32)
         strcpy(vers, "windows ");
 #elif defined(__APPLE__)
-        strcpy(vers, "macosx ");
+        strcpy(vers, "macOS ");
 #elif defined(__CMS__)
         strcpy(vers, "cms ");
 #else
