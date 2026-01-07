@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count stem_scount rxpp_lrc
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count stem_scount stem_tempvar rxpp_lrc
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -399,10 +399,11 @@ GetPrecomp: procedure
       if ucmd='' then iterate
       ucmd=upper(ucmd)
 
-      if \(ucmd='##STEM' | ucmd='##DEFINE') & countstr('.',line)>=2 then do
-         if cmd_isstem(lineNo,line)>0 then iterate    ## deeper check if stem, if so start stem handling
+      if \(ucmd='##STEM' | ucmd='##DEFINE') then do
+         if pos('.',line) then do
+             if cmd_isstem(lineNo,line)>0 then iterate    ## deeper check if stem, if so start stem handling
+         end
       end
-
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
       else if ucmd = 'SELECT' then call cmd_select lineNo,line,1
@@ -696,9 +697,12 @@ CMD_isstem: procedure=.int
    tline=qstripComment('##','',line)
    tline=qstripComment('/*','*/',tline)
    tline=translate(tline,,'=;,')
+   if pos(' dotisstem',cflags)>0 then mtails=1
+   else mtails=2
+
    do i=1 to qwords(tline)
       tw=qword(tline,i)
-      if countstr('.',tw)>=2 then do
+      if countstr('.',tw)>=mtails then do
          if left(tw,1)\='.' & right(tw,1)\='.' then do
             candidate=1
             leave
@@ -719,16 +723,20 @@ CMD_stem: procedure
    oldlino=lino
    stype.lino= 'STEM'
    rxpp_lrc=''
+
+   if isStemCandidate(line)=0 then return
    wrd1=upper(word(line,1))
    if wrd1='##DEFINE' then return
+   assembler SETATTRS stem_tempvar,0
 /* if we are called via the ##stem prefix, we need to drop it */
    if wrd1='##STEM' then line=subword(line,2)
    else do  /* else we need to comment out the stem line */
       if mode=0 then source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
-      source[lino]='/* ++ stem 'line' */'
+      source[lino]='/* 'copies('+',16)' 'line' */'
    end
 /* now strip block comments from the line */
    nstmt=qstripComment("/*","*/",line)
+   nstmt=qstripComment("##",,nstmt)
    if stemlog=1 then do
       say copies('-',72)
       say "Stem line   "right(lino,4,'0') line
@@ -745,8 +753,8 @@ CMD_stem: procedure
       rhs=stmts.2
    end
    if stemlog=1 then say 1 lino "'"stype[lino]"'" "'"line"'"
-   /* here we have a single RHS which is not a STEM */
-   if words(rhs)=1 & isStem(rhs)=0 then do         ## moves single string or number to a stem
+/* here we have a single RHS which is not a STEM */
+   if words(rhs)=1 & isStemCandidate(rhs)=0 then do         ## moves single string or number to a stem
       if stemlog=1 then say 1.1 line
       if isStem(lhs)=0 then source[lino]=line  ## LHS & RHS are not a stems, just keep the line
       else do                                  ## LHS is a stem / RHS not
@@ -754,7 +762,7 @@ CMD_stem: procedure
          lhs=resolveStem(lhs,lino,stemlog)
          lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
          if stemlog=1 then say 1.2.1 lhs
-         rc= insert_source(lino+1,1,'noexp')       ## insert new lines, shift buffer
+         rc= insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
          lino=insert_line(lino+1,'src=putstem('lhs','rhs')') ## place identified stem in putstem function
       end
    end
@@ -765,10 +773,9 @@ CMD_stem: procedure
      if stemlog=1 then say 2.1 line' LHS 'lhs' RHS 'rhs
      if rhs\=''  then do                      ## rhs unchanged, no need to do something
         if oldlino=lino then do
-           call insert_source lino+1,1,'noexp'   ## insert new lines, if RHSsplit hasn't done it
+           call insert_source lino+1,1,'noexp',stemlog   ## insert new lines, if RHSsplit hasn't done it
         end
-     ##   rhs=splitRHS(rhs,lino,stemlog)
-        if lhs='' | isStem(lhs)=0 then do
+        if lhs='' | isStemCandidate(lhs)=0 then do
            if stemlog=1 then say 2.2 line' LHS 'lhs' RHS 'rhs
            if isStem(rhs)=1 then do
               if stemlog=1 then say 2.2.1 rhs lino
@@ -780,13 +787,20 @@ CMD_stem: procedure
               else lino=insert_line(lino+1,lhs'='rhs)
            end
            else do
-              if lhs='' then lino=insert_line(lino+1,rhs)
-              else lino=insert_line(lino+1,lhs'='rhs)
+              if stemlog=1 then say 2.2.9 "'"lhs"'" lino "*** ""'"rhs"'"
+              if line=rhs then do
+                 source[lino]=line
+              end
+              else do
+                 call insert_source lino+1,1,'noexp',stemlog
+                 if lhs='' then lino=insert_line(lino+1,rhs)
+                 else lino=insert_line(lino+1,lhs'='rhs)
+              end
            end
            ##   source[lino]=rhs              ## rhs is no stem, re-apply old line, inserted line remains empty
 
         end
-        else if pos('.',lhs)>0 &  isStem(lhs)>0 then do
+        else if pos('.',lhs)>0 &  isStemCandidate(lhs)>0 then do
            if stemlog=1 then say 2.3 lhs
            lhs=resolveStem(lhs,lino,stemlog)
            lhs=stemquote(lhs)
@@ -799,16 +813,17 @@ CMD_stem: procedure
      end
      else if stemlog=1 then say "Should not happen"
    end
-   if stemlog=1 then do i=oldlino to lino+1
-      say '9.'i' added "'stype[i]'"' source[i]
+   if stemlog=1 then do i=oldlino to lino
+      if i=oldLino then say '9.'i' == "'stype[i]'"' source[i]
+      else say '9.'i' ++ "'stype[i]'"' source[i]
    end
-   if stemlog=1 then do i=lino+2 to lino+5
-      say '9.'i' ???? "'stype[i]'"' source[i]
+   if stemlog=1 then do i=lino+1 to lino+5
+      say '9.'i' >> "'stype[i]'"' source[i]
    end
    if rxpp_lrc\='' then do
-      say '\\\\\ Stem expansion error: 'rxpp_lrc
-      rc=  insert_source(lino+1,1,'noexp')       ## insert new lines, shift buffer
-      lino=insert_line(lino+1,'/* \\\\\ Stem expansion error: 'rxpp_lrc' */') ## place identified stem in putstem function
+      say '\\\\\ Stem expansion warning: 'rxpp_lrc
+      rc=  insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
+      lino=insert_line(lino+1,'/* \\\\\ Stem expansion warning: 'rxpp_lrc' */') ## place identified stem in putstem function
    end
 return
 /* ------------------------------------------------------------------
@@ -822,8 +837,7 @@ splitRHS: procedure=.string
    nstem=findstem(rhs,start,position)
    if nstem.0=0 then return rhs
    new=nstem.0+1        ## add line for each rhs + 1 for final replacement line
-   call insert_source lino+1,new,'noexp'        ## insert new lines, shift buffer
-
+   call insert_source lino+1,new,'noexp',stemlog        ## insert new lines, shift buffer
    tempvar=.string[]
    foundstem=.string[]
    do i=1 to nstem.0
@@ -833,6 +847,7 @@ splitRHS: procedure=.string
       lino=lino+1
       stem_scount=stem_scount+1
       tempvar[i]=stem_scount
+      stem_tempvar[stem_tempvar[0]+1]="_tmp_rxpp_"tempvar[i]
       lino=insert_line(lino,"_tmp_rxpp_"tempvar[i]'=getstem('temp')')
       ## in case of debug results ##source[lino]=source[lino]  ##   source[lino]=source[lino]'; say "VX <"_tmp_rxpp_'temp[i]"'>'"
    end
@@ -840,27 +855,92 @@ splitRHS: procedure=.string
    do i = nstem.0 to 1 by -1
       rhs = replaceOnce(foundstem.i, rhs, "_tmp_rxpp_"tempvar[i], position.i)
    end
+   /* lino refers at the last added line */
 return rhs
 /* ------------------------------------------------------------------
  * Check if stem name contains expressions which must be evaluated first
  * ------------------------------------------------------------------
  */
 ResolveStem: procedure=.string
-  arg stemstring=.string,expose lino=.int,stemlog=.int       ## updated lino must be exposed to reflect inserted expression lines
-  ## expressions=qextractAll('.(', ')',stemstring)
-   expressions = qextractall_dotparen(stemstring)
+  arg stemstring=.string, expose lino=.int, stemlog=.int
+/* lino current line number will be maintained here */
+  expressions = qextractall_dotparen_flat(stemstring)
+
   if stemlog=1 then say "Resolve 1 "stemstring lino
   if expressions.0=0 then return stemstring
-  if stemlog=1 then say "Resolve 2, expressions found "expressions.0
-  call insert_source lino+1,expressions.0+1,'noexp'        ## insert lines for each expression+ 1 for concatenated instruction, shift buffer
-  do i=expressions.0 to 1 by -1
-     lino=lino+1
-     stem_scount=stem_scount+1
-     lino=insert_line(lino,'_expr_'stem_scount'='expressions.i)
-     stemstring=replaceOnce('('expressions.i')',stemstring,'_expr_'stem_scount)
+
+  if stemlog=1 then do
+     say "Resolve 2, expressions found "expressions.0
+     do j=1 to expressions.0
+        say "Expression: "j expressions.j
+     end
   end
-  if stemlog=1 then say "Resolve 3, current lino "lino
+
+  /* reserve lines: 1 per expression + 1 extra */
+  call insert_source lino+1, expressions.0+1, 'noexp', stemlog
+
+  anchor = lino     /* all inserts go AFTER anchor */
+
+  do i = 1 to expressions.0
+     stem_tempvar[stem_tempvar[0]+1] = "_expr_"i
+
+     /* rewrite stems inside this expression FIRST,
+        inserting _tmp_rxpp_* lines immediately after anchor */
+     changed.i = rewriteStemsInExpr(expressions.i, anchor, stemlog)
+
+     /* now insert _expr_i AFTER those tmp lines */
+     anchor = anchor + 1
+     anchor = insert_line(anchor, '_expr_'i'='changed.i'""')   /* ++ use brute force to ensure result is a string */
+
+     /* replace original ( ... ) with _expr_i in the stemstring */
+     stemstring = replaceOnce('('expressions.i')', stemstring, '_expr_'i)
+  end
+
+  /* move lino to last inserted line */
+  lino = anchor
+
+  if stemlog=1 then say "Resolve 3, current lino "lino stemstring
 return stemstring
+
+/* ------------------------------------------------------------------
+ * rewriteStemsInExpr(expr, anchor)
+ * Inserts required _tmp_rxpp_N lines immediately AFTER `anchor`,
+ * and returns expr with stem tokens replaced by those tmp vars.
+ * ------------------------------------------------------------------ */
+rewriteStemsInExpr: procedure=.string
+  arg expr=.string, expose anchor=.int, stemlog=.int
+
+  position = .int[]
+  stems = findStem(expr, 1, position)
+
+  if stems.0 = 0 then return expr
+
+  tempvar = .int[]
+  found   = .string[]
+
+  do i = 1 to stems.0
+     found[i] = stems[i]
+     temp = stemquote(stems[i])
+
+     stem_scount = stem_scount + 1
+     tempvar[i] = stem_scount
+     stem_tempvar[stem_tempvar[0]+1] = "_tmp_rxpp_"tempvar[i]
+
+     /* insert BEFORE _expr_i: right after anchor */
+     anchor = anchor + 1
+     anchor = insert_line(anchor, "_tmp_rxpp_"tempvar[i]'=getstem('temp')')
+
+     if stemlog=1 then say 'ExprStem: 'stems[i]' -> _tmp_rxpp_'tempvar[i]
+  end
+
+  /* replace from right to left to keep positions stable */
+  do i = stems.0 to 1 by -1
+     expr = replaceOnce(found[i], expr, "_tmp_rxpp_"tempvar[i], position[i])
+  end
+
+return expr
+
+
 /* ------------------------------------------------------------------
  * Change a string by a new string at a certain position
  * ------------------------------------------------------------------
@@ -870,6 +950,42 @@ replaceOnce: procedure=.string
   if position=0 then position=pos(needle,haystack)
   if position<=0 then return haystack
 return substr(haystack,1,position-1) || newstring || substr(haystack,position+length(needle))
+
+/* ------------------------------------------------------------------
+ * qextractall_dotparen_flat(text)
+ * Collect ALL nested .( ... ) inner expressions, deepest-first.
+ * Strategy:
+ *   - find the RIGHTMOST unquoted ".(" in the current work string
+ *   - match its ')' with qextractpair (nest/quote aware)
+ *   - record its inner expression
+ *   - replace that whole "(...)" with a hole and repeat
+ * ------------------------------------------------------------------ */
+qextractall_dotparen_flat: procedure=.string[]
+  arg text=.string,delim='.('
+  flat = .string[]
+  work = text
+  dlen=length(delim)
+
+  do forever
+     /* find rightmost ".(" outside quotes */
+     p = qpos(delim, work, 1)
+     if p = 0 then leave
+     lastp = p
+     do forever
+        p2 = qpos(delim, work, lastp + dlen)
+        if p2 = 0 then leave
+        lastp = p2
+     end
+  /* lastp points to '.' of ".(" ; '(' is at lastp+1 */
+     inner = qextractpair('(', ')', work, lastp+1, 'X')   /* exclusive: returns inside only */
+     if inner = '' then leave   /* unmatched, should not happen if grammar is correct */
+     indx=flat[0]+1
+  /* add deepest-rightmost */
+     flat[indx] = inner
+  /* replace this "(inner...)" occurrence with hole */
+     work = replaceOnce('('inner')', work, '_expr_'indx)
+  end
+return flat
 
 /* ------------------------------------------------------------------
  * QEXTRACTALL_DOTPAREN(text [, start])
@@ -1007,8 +1123,43 @@ isStemx: procedure=.int
     tails = tails + 1
     /* loop continues; if i<=len, next must be '.' (it is, due to leave) */
   end
-  if tails < 2 then return 0
+ /* based on definition stems may have 2 or at least 2 tails */
+   if pos(' dotisstem',cflags) > 0 then do
+     if tails < 1 then return 0
+     else return 1
+   end
+   else if tails < 2 then return 0
 return 1
+
+/* ---------------------------------------------------------------
+ * isStemCandidate(s)
+ * Relaxed stem candidate detector for TOP-LEVEL routing.
+ * Does NOT fully validate; just says "worth trying stemEndBySplit()".
+ * --------------------------------------------------------------- */
+isStemCandidate: procedure=.int
+  arg s=.string
+  s = strip(s)
+  if s = '' then return 0
+
+  /* fast dot presence */
+  if qpos('.', s) = 0 then return 0
+  if left(s,1)='.' then return 0
+
+  /* root first char */
+  c = substr(s,1,1)
+  if datatype(c,'N') > 0 then return 0
+  if \ (datatype(c,'M') > 0 | c='_' | c='$') then return 0
+
+  /* DOT_IS_STEM gating: need >=1 or >=2 dots */
+  dots = countstr('.', s)
+  if pos(' dotisstem', cflags) > 0 then do
+     if dots < 1 then return 0
+  end
+  else if dots < 2 then return 0
+
+  /* allow anything else here (operators, parentheses, etc.) */
+return 1
+
 
 /* ------------------------------------------------------------------
  * isStemNameChar(c)
@@ -1089,7 +1240,6 @@ findStem: procedure=.string[]
      end
      start = r + 1
   end
-
 return rstem
 
 
@@ -1117,19 +1267,22 @@ stemEndBySplit: procedure=.int
   if stemlog=1 then say 'stemEndSplit 's l
   tail = substr(s, l)
   if tail = '' then do
-     rxpp_lrc = rxpp_lrc' empty-tail'
+     rxpp_lrc = rxpp_lrc' empty-tail: 's
      return 0
   end
 
   parts = qsplitsafe(tail, '.', 1, '()')
 
-  if parts.0 < 3 then do
-     rxpp_lrc = rxpp_lrc' too-few-tails'
+  if pos(' dotisstem',cflags) > 0 then mintails=1
+  else mintails=2
+
+  if parts.0 <= mintails then do
+     rxpp_lrc = rxpp_lrc' too-few-tails: 's
      return 0
   end
 
   if isPlainStemName(parts[1]) = 0 then do
-     rxpp_lrc = rxpp_lrc' bad-root'
+     rxpp_lrc = rxpp_lrc' bad-root: 's
      return 0
   end
 
@@ -1142,7 +1295,7 @@ stemEndBySplit: procedure=.int
      if left(segs,1) = '(' then do
         block = qextractpair('(', ')', segs, 1, 'I')
         if block = '' then do
-           rxpp_lrc = rxpp_lrc' unmatched-paren'
+           rxpp_lrc = rxpp_lrc' unmatched-paren: 's
            return 0
         end
 
@@ -1152,7 +1305,7 @@ stemEndBySplit: procedure=.int
         if afterPos <= length(segs) then do
            nextch = substr(segs, afterPos, 1)
            if nextch = '(' then do
-              rxpp_lrc = rxpp_lrc' bare-parens-after-computed'
+              rxpp_lrc = rxpp_lrc' bare-parens-after-computed: 's
               return 0
            end
            if nextch \= '.' then leave
@@ -1166,7 +1319,7 @@ stemEndBySplit: procedure=.int
      end
 
      if j = 1 then do
-        rxpp_lrc = rxpp_lrc' bad-name-segment'
+        rxpp_lrc = rxpp_lrc' bad-name-segment: 's
         return 0
      end
 
@@ -1219,13 +1372,24 @@ return 0
  * ------------------------------------------------------------------
  */
 insert_source: Procedure=.int
-  arg at=.int,new=.int,expand=''
+  arg at=.int,new=.int,expand='',stemlog=0
+  stemlog=0
   rc=insert_array(source,at,new)    ## insert new lines, shift buffer
   rc=insert_array(stype, at,new)
   do i=0 to new-1                   ## in some cases you want special
      source[at+i]='/* reserved 'at+i i' */'
      stype[at+i]=expand             ## treatment of the new entry for
   end                               ## example: no further inspection
+  if stemlog=0 then return 0
+  say 'Insert 'new' lines at 'at
+  say '----------------------------------'
+  if at>2 then say '<< 'right(at-2,4,'0') source[at-2]
+  if at>1 then say '== 'right(at-1,4,'0') source[at-1]
+  do i=at to at+new-1
+     say '++ 'right(i,4,'0') source[i]
+  end
+  say '>> 'right(i,4,'0') source[i]
+  say '>> 'right(i+1,4,'0') source[i+1]
 return 0                            ## when line is inspected afterwards
 /* ------------------------------------------------------------------
  * Insert line and cross check if entry is a newly inserted line
@@ -1234,8 +1398,15 @@ return 0                            ## when line is inspected afterwards
 insert_line: procedure=.int
   arg nlino=.int, newline=.string
   if pos('/* reserved',source[nlino])>0 then nop
-  else say '++++ 'right(nlino,4,'0')' potential overwrite: 'source[nlino]
+  else do
+     call insert_source nlino,1,'noexp',0
+     if pos('/* reserved',source[nlino])=0 then do
+        say '++ 'right(nlino,4,'0')' 'newline' overwrites'
+        say '++ 'right(nlino,4,'0')' 'source[nlino]
+     end
+  end
   source[nlino]=newline
+
 return nlino
 /* ------------------------------------------------------------------
  * Process FOR command
@@ -2429,7 +2600,6 @@ CommentScan: procedure=.int
   end
   return depth
 
-
 /* ------------------------------------------------------------------
  * Init RXPP environment
  * ------------------------------------------------------------------
@@ -2444,6 +2614,7 @@ rxppinit: procedure=.string
   macros_varname=.string[]
   macros_varvalue=.string[]
   included_files=.string[]
+  stem_tempvar=.string[]
   imported_funcs=""
   globaldef=''
   lino=0
@@ -2460,7 +2631,7 @@ rxppinit: procedure=.string
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse ndotisstem'
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
