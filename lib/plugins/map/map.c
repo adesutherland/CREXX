@@ -61,7 +61,6 @@ enum {
     STEM_MSG_INTERNAL_ERROR   = 99
 };
 
-
 typedef struct rhmap_slot {
     uint32_t   hash;
     char      *key;    /* owned by map; NULL = unused */
@@ -92,12 +91,83 @@ typedef rhmap_t stem_map_t;
 
 /* last GETSTEM rc when no stem map exists */
 static int last_rhmap_rc = 0;
+static int mapflag;
+
+/* ---- forward declarations (needed because functions are defined later) ---- */
+static inline int rhmap_ensure_capacity(rhmap_t *m);
+static uint32_t hash_common(const char *s);
+static inline size_t ideal_index(uint32_t hash, size_t capacity);
+static inline size_t probe_distance(size_t slot_index, uint32_t hash, size_t capacity);
+static inline int rhmap_ensure_capacity(rhmap_t *m);
+static int rhmap_rehash(rhmap_t *m, size_t new_capacity);
 
 /* ---------- hashing ---------- */
 
-static uint32_t
-hash_fnv1a(const char *s)
+/* Insert or replace; returns:
+ *  0 on success
+ *  <0 on error
+ * If replaced, *old_value_out is set (caller owns it); else NULL.
+ */
+static int
+rhmap_put_ptr_replace(rhmap_t *m, const char *key, void *value, void **old_value_out)
 {
+    if (old_value_out) *old_value_out = NULL;
+    if (!m || !key) return -ENOVALUE;
+
+    int rc = rhmap_ensure_capacity(m);
+    if (rc < 0) return rc;
+
+    uint32_t hash = hash_common(key);
+    size_t cap = m->capacity;
+    size_t idx = ideal_index(hash, cap);
+    size_t dist = 0;
+
+    rhmap_slot_t item = { .hash=hash, .key=NULL, .value=value, .used=true };
+
+    for (;;) {
+        rhmap_slot_t *s = &m->slots[idx];
+
+        if (!s->used) {
+            if (!item.key) {
+                item.key = strdup(key);
+                if (!item.key) return -ENOENTRY;
+            }
+            *s = item;
+            m->size++;
+
+            m->num_inserts++;
+            m->total_insert_probes += dist;
+            if (dist > m->max_probe_len) m->max_probe_len = dist;
+            return 0;
+        }
+
+        if (s->hash == hash && s->key && strcmp(s->key, key) == 0) {
+            if (old_value_out) *old_value_out = s->value;
+            s->value = value;
+
+            m->num_inserts++;
+            m->total_insert_probes += dist;
+            if (dist > m->max_probe_len) m->max_probe_len = dist;
+            return 0;
+        }
+
+        size_t s_dist = probe_distance(idx, s->hash, cap);
+        if (s_dist < dist) {
+            if (!item.key) {
+                item.key = strdup(key);
+                if (!item.key) return -ENOENTRY;
+            }
+            rhmap_slot_t tmp = *s;
+            *s = item;
+            item = tmp;
+        }
+
+        idx = (idx + 1) & (cap - 1);
+        dist++;
+    }
+}
+/* fnv1a */
+uint32_t hash_common(const char *s){
     uint32_t h = 2166136261u;
     const unsigned char *p = (const unsigned char *)s;
 
@@ -107,6 +177,37 @@ hash_fnv1a(const char *s)
     }
     return h;
 }
+
+/* hash_jenkins
+static inline uint32_t
+hash_common(const char *s)
+{
+    uint32_t h = 0;
+    while (*s) {
+        h += (unsigned char)*s++;
+        h += h << 10;
+        h ^= h >> 6;
+    }
+    h += h << 3;
+    h ^= h >> 11;
+    h += h << 15;
+    return h;
+}
+*/
+
+/* hash_fast32
+static inline uint32_t
+hash_common(const char *s)
+{
+    uint32_t h = 0x9e3779b1U;
+    while (*s) {
+        h ^= (unsigned char)*s++;
+        h *= 0x85ebca6bU;
+        h ^= h >> 13;
+    }
+    return h;
+}
+ */
 
 int round_up_power_of_two(int x)
 {
@@ -120,8 +221,7 @@ int round_up_power_of_two(int x)
 }
 
 static inline size_t
-ideal_index(uint32_t hash, size_t capacity)
-{
+ideal_index(uint32_t hash, size_t capacity){
     return (size_t)(hash & (uint32_t)(capacity - 1));
 }
 
@@ -210,7 +310,7 @@ rhmap_rehash(rhmap_t *m, size_t new_capacity)
     }
     clock_gettime(CLOCK_MONOTONIC, &end);    // End time
     m->rehash_time+=elapsed_time(start,end);
-    printf("Rehash Time %f %d %d\n",m->rehash_time,old_capacity,new_capacity);
+    if(mapflag==2) printf("Rehash Time %f %d %d\n",m->rehash_time,old_capacity,new_capacity);
     free(old_slots);
     return 0;
 }
@@ -284,7 +384,7 @@ rhmap_put_ptr(rhmap_t *m, const char *key, void *value)
     int rc = rhmap_ensure_capacity(m);
     if (rc < 0) return rc;
 
-    uint32_t hash = hash_fnv1a(key);
+    uint32_t hash = hash_common(key);
     size_t   cap  = m->capacity;
     size_t   idx  = ideal_index(hash, cap);
     size_t   dist = 0;
@@ -365,7 +465,7 @@ rhmap_get_ptr(rhmap_t *m, const char *key)
     /* writable alias for stats */
     rhmap_t *mw = (rhmap_t *)m;
 
-    uint32_t hash = hash_fnv1a(key);
+    uint32_t hash = hash_common(key);
     size_t   cap  = m->capacity;
     size_t   idx  = ideal_index(hash, cap);
     size_t   dist = 0;
@@ -410,7 +510,7 @@ rhmap_remove_key(rhmap_t *m, const char *key)
         return -ENOENTRY;
     }
 
-    uint32_t hash = hash_fnv1a(key);
+    uint32_t hash = hash_common(key);
     size_t   cap  = m->capacity;
     size_t   idx  = ideal_index(hash, cap);
     size_t   dist = 0;
@@ -558,27 +658,17 @@ stem_put_value(stem_map_t *m, const char *index, const char *value)
 {
     if (!m || !index) return -ENOVALUE;
     const char *src_val = value ? value : "";
-
-    /* check if key exists */
-    char *old_val = (char *)rhmap_get_ptr(m, index);
-    if (old_val) {
-        /* update existing: free old, store new */
-        char *new_val = strdup(src_val);
-        if (!new_val) return -ENOENTRY;
-        free(old_val);
-        return rhmap_put_ptr(m, index, new_val);
-    }
-
-    /* new key */
     char *new_val = strdup(src_val);
+
     if (!new_val) return -ENOENTRY;
 
-    /* rhmap_put_ptr will own the key copy (strdup internally) */
-    int rc = rhmap_put_ptr(m, index, new_val);
+    void *oldp = NULL;
+    int rc = rhmap_put_ptr_replace(m, index, new_val, &oldp);
     if (rc < 0) {
         free(new_val);
         return rc;
     }
+    if (oldp) free(oldp);  /* old value owned at stem layer */
     return 0;
 }
 
@@ -594,8 +684,7 @@ stem_get_value(stem_map_t *m, const char *index)
  * returns 0 on success, -ENOENT if not found, <0 on other errors
  */
 static int
-stem_remove_value(stem_map_t *m, const char *index)
-{
+stem_remove_value(stem_map_t *m, const char *index) {
     if (!m || !index) return -ENOVALUE;
 
     /* find current value */
@@ -618,7 +707,7 @@ stem_remove_value(stem_map_t *m, const char *index)
 /* ---------- GETSTEM(name, index) -> string ---------- */
 
 PROCEDURE(getstem) {
-    // printf("++GETSTEM '%s'\n",GETSTRING(ARG0));
+    if(mapflag==1) printf("++GETSTEM '%s'\n",GETSTRING(ARG0));
     SPLITSTEM()
     stem_map_t *m = find_stem_map(stem_name);
    if (!m || stem_ptr==0) {
@@ -643,12 +732,13 @@ PROCEDURE(getstem) {
     last_rhmap_rc = STEM_MSG_OK;
     RETURNSTRX(val);
     ENDPROC
+    if(mapflag==1)  printf(">>GETSTEM RC='%s' \n",_rxpa_context->getstring(RETURN));
 }
 
 /* ---------- SETSTEM(name, index, value) ---------- */
 
 PROCEDURE(setstem) {
-   // printf("SETSTEM '%s' = '%s'\n",GETSTRING(ARG0),GETSTRING(ARG1));
+    if(mapflag==1)  printf("++SETSTEM '%s' = '%s'\n",GETSTRING(ARG0),GETSTRING(ARG1));
     SPLITSTEM()
     char *value   = GETSTRING(ARG1);
     stem_map_t *m = get_or_create_stem_map(stem_name);
@@ -666,6 +756,7 @@ PROCEDURE(setstem) {
     last_rhmap_rc = STEM_MSG_OK;
     RETURNINTX(0);
     ENDPROC
+    if(mapflag==1)  printf(">>SETSTEM RC='%jd' \n",_rxpa_context->getint(RETURN));
 }
 
 PROCEDURE(dropstem) {
@@ -1029,6 +1120,12 @@ PROCEDURE(stemquote)
     ENDPROC
 }
 
+PROCEDURE(mapflagset) {
+    mapflag = GETINT(ARG0);
+    RETURNINTX(0);
+    ENDPROC
+}
+
 /* ============================================================
  * Standard CREXX/PA export table
  * ============================================================ */
@@ -1046,4 +1143,5 @@ LOADFUNCS
     ADDPROC(clonestem,          "map.clonestem",      "b",     ".int",   "source=.string,target=.string");
     ADDPROC(statsstem,          "map.stemstat",       "b",     ".string","stem=.string");
     ADDPROC(stemquote,          "map.stemquote",      "b",     ".string","path=.string");
+    ADDPROC(mapflagset,         "map.mapflag",        "b",     ".string","flag=.int");
 ENDLOADFUNCS

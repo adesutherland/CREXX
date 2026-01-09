@@ -15,9 +15,25 @@
 options levelb
 import rxfnsb
 import map
-mary=31
-fred=39
-##cflags nbuf nbuf nbuf
+
+##cflags nbuf nbuf nbuf dotisstem docstem
+
+
+/* (1) Two stems on one line: condition + then-part */
+if List.(213+4711).(harry||rose)\='' then say "OK is "List.(213+4711).(harry||Mary)
+say "'"_expr_2"'"
+say "End of Stem Test 1"
+/* (2) Nested computed tail */
+say a.(b.(c.d)).e.f
+say "End of Stem Test 2"
+/* (3) Function call with dots inside computed tail */
+say stem.(substr(another.tail1.xyz,7,9)).tail.xend
+say "End of Stem Test 3"
+/*
+/* (4) Illegal: bare parentheses after computed tail (must reject) */
+say stem.(abc)(def).x.y
+say "End of Stem Test 4"
+*/
 
 /* =======================================================================
  * CREXX Preprocessor STEM Demo (All-in-One) — matches CURRENT semantics
@@ -43,17 +59,17 @@ fred=39
 ## Customer.customer.name = 'IBM'     ## stem within comments
 
 indx=1
-##stem Order.indx= 'IBM'              ## this is standard CREXX Array root +1 tail
+Order.indx= 'IBM'              ## this is standard CREXX Array root +1 tail
 
 /* test stem statements which are not stems */
 say '+++ STEM Edge Tests +++'
 say '-----------------------'
-say 1.1 'wait...'
-say 1.2 '1.2.3'
-say 1.3 192.168.0.1
-say 1.4 'my.data.file.txt'
-say 1.5 3.14159
-say 1.6 1..10
+say '1.1' 'wait...'
+say '1.2' '1.2.3'
+say '1.3' 192.168.0.1
+say '1.4' 'my.data.file.txt'
+say '1.5' 3.14159
+say '1.6' 1..10
 
 /* now set valid stems with several variations */
   customer = 'IBM'
@@ -64,36 +80,36 @@ say 1.6 1..10
 Customer.(abc||4711).name = 'Microsoft'
 Customer.customer.name = 'International Business Machines'
 /* ----------------------------------------------------------------- */
-say 2. 'Customer 'Customer.customer.name
+say '2.' 'Customer 'Customer.customer.name
 Customer.customer.name='International Business Machines'
 Customer.customer.name    =    'International Business Machines'
 Customer.customer.name3 = Customer.customer2.name
 /* ----------------------------------------------------------------- */
-say 3. "stem to stem "Customer.customer.name
+say '3.' "stem to stem "Customer.customer.name
 Customer.customer2.name = 'Microsoft'
 Customer.123.name = 'OrderName'
 
 /* say/if on valid stems with several variations */
 /* ----------------------------------------------------------------- */
-say 4. Customer.customer.name
+say '4.' Customer.customer.name
 if Customer.customer.name = 'IBM' then say 3. 'ok'
 /* ----------------------------------------------------------------- */
-say 5. Customer.customer.name Customer.customer.city
+say '5.' Customer.customer.name Customer.customer.city
 /* ----------------------------------------------------------------- */
 k = Customer.customer.name
-say 6. 'by set of k   'k
+say '6.' 'by set of k   'k
 /* ----------------------------------------------------------------- */
-say 7. 'direct say  'Customer.customer.name
+say '7.' 'direct say  'Customer.customer.name
 /* ----------------------------------------------------------------- */
-say 8. "Customer.customer.name"
+say '8.' "Customer.customer.name"
 /* ----------------------------------------------------------------- */
-say 9. Customer.customer.name 'Customer.customer.city'
+say '9.' Customer.customer.name 'Customer.customer.city'
 /* ----------------------------------------------------------------- */
-say 10. 'He said "Customer.customer.name" today'
+say '10.' 'He said "Customer.customer.name" today'
 /* ----------------------------------------------------------------- */
-say 11. Customer.customer.name /* Customer.customer.city */
+say '11.' Customer.customer.name /* Customer.customer.city */
 /* ----------------------------------------------------------------- */
-say 12. '/* Customer.customer.name */'
+say '12.' '/* Customer.customer.name */'
 
 say '+++ STEM DEMO START +++'
 say '-----------------------'
@@ -133,12 +149,12 @@ say "----- 2. Read back the two orders, show join to Customer.<cust>.name/city"
 customer = 'IBM'
 orderid  = '123'
 
-say 2.1 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
+say '2.1' 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
 
 customer = 'MS'
 orderid  = '9001'
 
-say 2.2 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
+say '2.2' 'Order ' orderid' for 'Customer.customer.name' ( 'Customer.customer.city' ) date='Order.customer.orderid.date' amount='Order.customer.orderid.amount' status=' Order.customer.orderid.status
 
 /* -----------------------------------------------------------------------
  * 3) Join-style lookup via foreign key stored in a stem:
@@ -152,8 +168,8 @@ Order.1001.cust = 'IBM'
 Order.1001.sum  = '888.00'
 /* custref is a variable so Customer.custref.name becomes Customer.<value>.name */
 custref = Order.1001.cust
-say 3.1 "Cust-REF='"custref"'"
-say 3.2 'Join demo: Order 1001 belongs to ' Customer.custref.name', city=' Customer.custref.city', total=' Order.1001.sum
+say '3.1' "Cust-REF='"custref"'"
+say '3.2' 'Join demo: Order 1001 belongs to ' Customer.custref.name', city=' Customer.custref.city', total=' Order.1001.sum
 
 /* -----------------------------------------------------------------------
  * 4) Function usage (no nesting): SUBSTR on a stem value
@@ -165,7 +181,7 @@ Log.2.msg = '2025-12-20 12:31:11|INFO|cleanup done'
 
 date1 = substr(Log.1.msg, 1, 10)
 lev1  = substr(Log.1.msg, 21, 4)
- say 4.1 'Log.1 date=' date1 ' level=' lev1 ' msg="' Log.1.msg '"'
+ say '4.1' 'Log.1 date=' date1 ' level=' lev1 ' msg="' Log.1.msg '"'
 
 /* -----------------------------------------------------------------------
  * 5) Comparisons on stem values
@@ -206,8 +222,8 @@ say ">> 7. liststems(allstems)"
 allstems = .string[]
 say "   Number of active stems: "liststems(allstems)
 
-do i = 1 to allstems.0
-   say "   - "allstems.i
+do i = 1 to allstems[0]
+   say "   - "allstems[i]
 end
 say ' '
 
@@ -218,20 +234,20 @@ tails = .string[]
 vals  = .string[]
 say ">> 7. getall('Customer', tails, vals) – showing first 10 entries, they are unsorted"
 say getall('Customer.', tails, vals)
-maxShow = min(10000, tails.0)
+maxShow = min(10000, tails[0])
 do i = 1 to maxShow
    say "   "right(i,3)". "tails[i]" = '"vals[i]"'"
 end
-say "   (total entries reported by getall: "tails.0")"
+say "   (total entries reported by getall: "tails[0]")"
 
 say ">> 7. getall('Order', tails, vals) – showing first 10 entries, they are unsorted"
 say getall('Order.', tails, vals)
 
-maxShow = min(10000, tails.0)
+maxShow = min(10000, tails[0])
 do i = 1 to maxShow
    say "   "right(i,3)". "tails[i]" = '"vals[i]"'"
 end
-say "   (total entries reported by getall: "tails.0")"
+say "   (total entries reported by getall: "tails[0]")"
 
 say
 
@@ -240,20 +256,19 @@ say
 /* ------------------------------------------------------------------ */
 say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
 call getalltails 'Fred.', tails
-do i = 1 to tails.0
+do i = 1 to tails[0]
    say "   "right(i,3)". "tails[i]
 end
-say "   (total tails reported by getalltails: "tails.0")"
+say "   (total tails reported by getalltails: "tails[0]")"
 say
 
 say ">> 8. getalltails('Fred', tails) – showing first 10 tails"
 call getalltails 'List.', tails
-do i = 1 to tails.0
+do i = 1 to tails[0]
    say "   "right(i,3)". "tails[i]
 end
-say "   (total tails reported by getalltails: "tails.0")"
+say "   (total tails reported by getalltails: "tails[0]")"
 say
-
 
 say '--- STEM DEMO END ---'
 exit
