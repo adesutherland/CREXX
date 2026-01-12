@@ -56,17 +56,28 @@ verbose=1
   syspath=rxppinit(infile,maclib)                   ## init global and environment variables
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   if verbose then say 'CRX0110I ['time('l')'] System Path 'syspath
-
+/* --------------------------------------------------------------------
+ * Pass One. Load Macros, Load Source, Expand Macros of Source
+ * --------------------------------------------------------------------
+ */
   sourceLines=RXPPPassOne(infile,outfile,maclib,syspath'/macsys.rexx')    ## load source file and macro library
   ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
+/* ------------------------------------------------------------------
+ * Pass Two create ##IF/##IFN/##ELSE/##ENDIF reference table
+ * ------------------------------------------------------------------
+ */
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
      if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
   if verbose then say 'CRX0200I ['time('l')'] Pre-Compile pass two'
+/* ------------------------------------------------------------------
+ *  Pass 3 keep/drop ##IF /##IFN blocks, build Final Output Buffer
+ * ------------------------------------------------------------------
+ */
   call RXPPPassThree outfile                        ## analyse source and expand macros
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
-  call writeall outbuf,outfile,-1             ## write generated output to file
-  call linkerInfo outfile,imported_funcs      ## linker definition will be calculated out of the normal output file
+  call writeall outbuf,outfile,-1                   ## write generated output to file
+  call linkerInfo outfile,imported_funcs            ## linker definition will be calculated out of the normal output file
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
@@ -76,6 +87,7 @@ verbose=1
      say 'CRX0101I ['time('l')'] Elapsed Time 'elapsedTime/1000000' seconds, 'elapsedTime/1000' milliseconds'
   end
 return 0
+
 /* ------------------------------------------------------------------
  * Pre Processor Pass One
  * 1. Load (and sort) Macros
@@ -325,7 +337,7 @@ oocreatedefs: procedure
   source.lino=lhs'='prefix'CREATE('paramstr')'    ## for now the call function must be CREATE with the provided prefix
 return
 /* ------------------------------------------------------------------
- * Pick up the compiler flg setup in an early stage
+ * Early_flag_pick_up: Reads ##CFLAG early and updates runtime flags used during subsequent passes.
  * ------------------------------------------------------------------
  */
 early_flag_pick_up: procedure=.int
@@ -342,7 +354,7 @@ early_flag_pick_up: procedure=.int
   end
 return 1
 /* ------------------------------------------------------------------
- * for ##IF / ##IFN find associated ##ENDIF
+ * for ##IF / ##IFN find associated ##ENDIF, handling nesting.
  * ------------------------------------------------------------------
  */
 findMatchingEndif: procedure=.int
@@ -362,7 +374,7 @@ findMatchingEndif: procedure=.int
   if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
 return 0
 /* ------------------------------------------------------------------
- * Read Rexx Source
+ * Read Rexx Source file into the global source[] buffer.
  * ------------------------------------------------------------------
  */
 ReadSource: procedure=.int
@@ -370,7 +382,8 @@ ReadSource: procedure=.int
   i=readall(source,file,-1)
 return i
 /* ------------------------------------------------------------------
- * Read inline Macros
+ * Scans source for pre-compiler directives and macro definitions,
+ * dispatches command handlers.
  * ------------------------------------------------------------------
  */
 GetPrecomp: procedure
@@ -430,10 +443,10 @@ GetPrecomp: procedure
 return
 /* ------------------------------------------------------------------
  * Process ##DEFINE command
- * Parses a macro definition and stores it in the macro tables
+ * Parses a macro definition and registers the macro in the macro tables.
  * ------------------------------------------------------------------
  */
- CMD_define: procedure=.int
+CMD_define: procedure=.int
    arg lino=.int,line=.string
    nlino=lino
    name    = ''
@@ -514,7 +527,7 @@ return
    macros_mspace.i= dspace
 return nlino
 /* ------------------------------------------------------------------
- * Concatenate all parms by ','
+ * Concatenate all parameters into a comma-separated list.
  * ------------------------------------------------------------------
  */
 ConcParms: Procedure=.string
@@ -526,34 +539,7 @@ ConcParms: Procedure=.string
    if sargs='' then return ''
 return substr(sargs,2)
 /* ------------------------------------------------------------------
- * Count braces to recognise multi line macros
- * ------------------------------------------------------------------
- */
-countBraces: procedure=.int
-  arg str=.string
-  leftBraces = 0
-  rightBraces = 0
-  inQuote = ''
-  len=length(str)
-  i = 1
-  do while i <= len
-    ch = substr(str, i, 1)
-    if inQuote = '' then do
-       if ch = '"' | ch = "'" then inQuote = ch
-       else if ch = '{' then leftBraces = leftBraces + 1
-       else if ch = '}' then rightBraces = rightBraces + 1
-    end
-    else do
-       if ch = inQuote then inQuote = ''  /* close quote */
-       else if ch = '\' then do  /* skip escaped quote if next char matches */
-          if i+1 <= len & substr(str, i+1, 1) = inQuote then i = i + 1
-       end
-    end
-    i = i + 1
-  end
-  return leftBraces - rightBraces
-/* ------------------------------------------------------------------
- * Print pre compiler statements and Macro Calls
+ * Formats pre-compiler statements/macros into annotated comment lines for traceability.
  * ------------------------------------------------------------------
  */
 printGen: procedure=.string
@@ -568,7 +554,7 @@ printGen: procedure=.string
   else return '/* rxpp: 'line' */'        ## Macro call
 return '/* rxpp: 'line' U*/'
 /* ------------------------------------------------------------------
- * Process ##SET command
+ * Implements ##SET: assigns a pre-compiler variable and updates internal flags if needed.
  * ------------------------------------------------------------------
  */
 CMD_set: procedure
@@ -580,7 +566,7 @@ CMD_set: procedure
 return
 
 /* ------------------------------------------------------------------
- * Drop comments at the end of a line
+ * Removes trailing line (##) or block (/*..*/) comments from a value.
  * ------------------------------------------------------------------
  */
 dropComment: procedure=.string
@@ -591,7 +577,7 @@ dropComment: procedure=.string
   if fp1>1 then varvalue=substr(varvalue,1,fp1-1)
 return strip(varvalue)
 /* ------------------------------------------------------------------
- * Process ##UNSET command
+ * CMD_unset: Implements ##UNSET: clears a pre-compiler variable (with exemptions for protected vars).
  * ------------------------------------------------------------------
  */
 CMD_unset: procedure
@@ -605,7 +591,7 @@ CMD_unset: procedure
   i=setvar(varn,'')  ## reset flag
 return
 /* ------------------------------------------------------------------
- * Process ##INCLUDE command
+ * CMD_include: Implements ##INCLUDE / ##USE: reads and inserts the included file into the source buffer.
  * ------------------------------------------------------------------
  */
 CMD_include: procedure
@@ -639,8 +625,7 @@ CMD_include: procedure
   end
 return
 /* ------------------------------------------------------------------
- * Process ##ARRAY command
- * Initialises string and int arrays
+ * CMD_array: Implements ##ARRAY: expands array declarations into initialization statements.
  * ------------------------------------------------------------------
  */
 CMD_array: procedure
@@ -660,8 +645,7 @@ CMD_array: procedure
    end
 return
 /* ------------------------------------------------------------------
- * Process ##GLOBAL command
- * Prepares global string for NameSpace function
+ * CMD_global: Implements ##GLOBAL: expands globals and accumulates namespace exposure list.
  * ------------------------------------------------------------------
  */
 CMD_global: procedure
@@ -688,7 +672,7 @@ CMD_global: procedure
    end
 return
 /* ------------------------------------------------------------------
- * Test if line is a line containing STEMs
+ * CMD_isstem: Fast detector to decide whether a line should be processed for stem expansion.
  * ------------------------------------------------------------------
  */
 CMD_isstem: procedure=.int
@@ -712,7 +696,7 @@ CMD_isstem: procedure=.int
    if candidate=1 then call cmd_stem lino,line, mode=1
 return candidate
 /* ------------------------------------------------------------------
- * Process ##STEM command
+ * CMD_stem: Main stem preprocessor: rewrites stem reads/writes into getstem()/putstem() and temp variables.
  * Identifies a line containing stem operations (temporary for testing)
  * ------------------------------------------------------------------
  */
@@ -731,7 +715,6 @@ CMD_stem: procedure
 /* if we are called via the ##stem prefix, we need to drop it */
    if wrd1='##STEM' then line=subword(line,2)
    else do  /* else we need to comment out the stem line */
-      if mode=0 then source[lino]='##stem 'line                /* direct stem call add as ##stem for doc purposes */
       source[lino]='/* 'copies('+',16)' 'line' */'
    end
 /* now strip block comments from the line */
@@ -754,58 +737,15 @@ CMD_stem: procedure
    end
    if stemlog=1 then say 1 lino "'"stype[lino]"'" "'"line"'"
 /* here we have a single RHS which is not a STEM */
-   if words(rhs)=1 & isStemCandidate(rhs)=0 then do         ## moves single string or number to a stem
-      if stemlog=1 then say 1.1 line
-      if isStem(lhs)=0 then source[lino]=line  ## LHS & RHS are not a stems, just keep the line
-      else do                                  ## LHS is a stem / RHS not
-         if stemlog=1 then say 1.2 line
-         lhs=resolveStem(lhs,lino,stemlog)
-         lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
-         if stemlog=1 then say 1.2.1 lhs
-         rc= insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
-         lino=insert_line(lino+1,'src=putstem('lhs','rhs')') ## place identified stem in putstem function
-      end
-   end
-/* here we have the rest ?? */
-   else do
-     oldLino=lino                 ## keep old lino to determine if splitRHS has added enough lines
-     rhs=splitRHS(rhs,lino,stemlog)
+   if words(rhs)=1 & isStemCandidate(rhs)=0 then lino=lhsStem(lhs,rhs,lino,line,stemlog)   ## moves single string or number to a stem
+   else do               ## here we we do what need to be done */
+     rhs=splitRHS(rhs,lino,stemlog)   ## Split RHS, if possible
      if stemlog=1 then say 2.1 line' LHS 'lhs' RHS 'rhs
-     if rhs\=''  then do                      ## rhs unchanged, no need to do something
-        if oldlino=lino then do
-           call insert_source lino+1,1,'noexp',stemlog   ## insert new lines, if RHSsplit hasn't done it
-        end
-        if lhs='' | isStemCandidate(lhs)=0 then do
-           if stemlog=1 then say 2.2 line' LHS 'lhs' RHS 'rhs
-           if isStem(rhs)=1 then do
-              if stemlog=1 then say 2.2.1 rhs lino
-              rhs=resolveStem(rhs,lino,stemlog)
-              if stemlog=1 then say 2.2.2 rhs lino
-              rhs=stemquote(rhs)
-              if stemlog=1 then say 2.2.3 rhs lino "*** "lhs
-              if lhs='' then lino=insert_line(lino+1,rhs)
-              else lino=insert_line(lino+1,lhs'='rhs)
-           end
-           else do
-              if stemlog=1 then say 2.2.9 "'"lhs"'" lino "*** ""'"rhs"'"
-              if line=rhs then do
-                 source[lino]=line
-              end
-              else do
-                 call insert_source lino+1,1,'noexp',stemlog
-                 if lhs='' then lino=insert_line(lino+1,rhs)
-                 else lino=insert_line(lino+1,lhs'='rhs)
-              end
-           end
-           ##   source[lino]=rhs              ## rhs is no stem, re-apply old line, inserted line remains empty
-
-        end
-        else if pos('.',lhs)>0 &  isStemCandidate(lhs)>0 then do
-           if stemlog=1 then say 2.3 lhs
-           lhs=resolveStem(lhs,lino,stemlog)
-           lhs=stemquote(lhs)
-           lino=insert_line(lino+1,'src=putstem('lhs','rhs')')
-        end
+     if rhs\=''  then do
+        if oldlino=lino then call insert_source lino+1,1,'noexp',stemlog   ## insert new lines, if RHSsplit hasn't done it
+        lhscan=isStemCandidate(lhs)
+        if lhs='' | lhsCan=0 then lino=lhsnoStem(lhs,rhs,lino,line,stemlog)
+        else if pos('.',lhs)>0 &  lhsCan>0 then lino=lhsisStem(lhs,rhs,lino,line,stemlog)
         else do
            if stemlog=1 then say 2.4 lhs rhs
            lino=insert_line(lino+1,lhs'='rhs)
@@ -813,12 +753,14 @@ CMD_stem: procedure
      end
      else if stemlog=1 then say "Should not happen"
    end
-   if stemlog=1 then do i=oldlino to lino
-      if i=oldLino then say '9.'i' == "'stype[i]'"' source[i]
-      else say '9.'i' ++ "'stype[i]'"' source[i]
-   end
-   if stemlog=1 then do i=lino+1 to lino+5
-      say '9.'i' >> "'stype[i]'"' source[i]
+   if stemlog=1 then do
+      do i=oldlino to lino
+         if i=oldLino then say '9.'i' == "'stype[i]'"' source[i]
+         else say '9.'i' ++ "'stype[i]'"' source[i]
+      end
+      do i=lino+1 to lino+3
+         say '9.'i' >> "'stype[i]'"' source[i]
+      end
    end
    if rxpp_lrc\='' then do
       say '\\\\\ Stem expansion warning: 'rxpp_lrc
@@ -827,7 +769,64 @@ CMD_stem: procedure
    end
 return
 /* ------------------------------------------------------------------
- * Split the RHS of a statement into its stem components
+ * lhsStem: Handles assignments where LHS may be a stem and RHS is a single non-stem token.
+ * ------------------------------------------------------------------
+ */
+lhsStem: procedure=.int
+   arg lhs=.string,rhs=.string,lino=.int,line=.string,stemlog=.int
+   if stemlog=1 then say 1.1 line
+   if isStem(lhs)=0 then source[lino]=line  ## LHS & RHS are not a stems, just keep the line
+   else do                                  ## LHS is a stem / RHS not
+      if stemlog=1 then say 1.2 line
+      lhs=resolveStem(lhs,lino,stemlog)
+      lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
+      if stemlog=1 then say 1.2.1 lhs
+      rc= insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
+      lino=insert_line(lino+1,'src=putstem('lhs','rhs')') ## place identified stem in putstem function
+   end
+return lino
+
+/* ------------------------------------------------------------------
+ * lhsnoStem: Handles assignments where LHS is not a stem and RHS may contain a stem or scalar value.
+ * ------------------------------------------------------------------
+ */
+lhsnoStem: procedure=.int
+   arg lhs=.string,rhs1=.string,lino=.int,line=.string,stemlog=.int
+   if stemlog=1 then say 2.2 line' LHS 'lhs' RHS 'rhs
+   if isStem(rhs1)=1 then do                  /* RHS is a stem */
+      rhs2=resolveStem(rhs1,lino,stemlog)
+      rhs3=stemquote(rhs2)
+      if lhs='' then lino=insert_line(lino+1,rhs3)
+      else lino=insert_line(lino+1,lhs'='rhs3)
+      if stemlog=1 then do
+         say 2.2.1 rhs1 lino
+         say 2.2.2 rhs2 lino
+         say 2.2.3 rhs3 lino "*** "lhs
+      end
+      return lino
+   end
+/* RHS is not a stem */
+   if stemlog=1 then say 2.2.9 "'"lhs"'" lino "*** ""'"rhs1"'"
+   if line=rhs1 then source[lino]=line
+   else do
+      call insert_source lino+1,1,'noexp',stemlog
+      if lhs='' then lino=insert_line(lino+1,rhs1)
+      else lino=insert_line(lino+1,lhs'='rhs1)
+   end
+return lino
+/* ------------------------------------------------------------------
+ * lhsisStem: Handles assignments where LHS is a stem and RHS is an expression/value.
+ * ------------------------------------------------------------------
+ */
+lhsisStem: procedure=.int
+  arg lhs=.string,rhs=.string,lino=.int,line=.string,stemlog=.int
+  if stemlog=1 then say 2.3 lhs
+  lhs=resolveStem(lhs,lino,stemlog)
+  lhs=stemquote(lhs)
+  lino=insert_line(lino+1,'src=putstem('lhs','rhs')')
+return lino
+/* ------------------------------------------------------------------
+ * splitRHS: Splits RHS containing multiple stems into temporaries and returns the rewritten RHS.
  * ------------------------------------------------------------------
  */
 splitRHS: procedure=.string
@@ -858,7 +857,7 @@ splitRHS: procedure=.string
    /* lino refers at the last added line */
 return rhs
 /* ------------------------------------------------------------------
- * Check if stem name contains expressions which must be evaluated first
+ * ResolveStem: Resolves computed stem tails (.()) by evaluating expressions first and substituting placeholders.
  * ------------------------------------------------------------------
  */
 ResolveStem: procedure=.string
@@ -903,7 +902,7 @@ ResolveStem: procedure=.string
 return stemstring
 
 /* ------------------------------------------------------------------
- * rewriteStemsInExpr(expr, anchor)
+ * rewriteStemsInExpr: Rewrites stems inside an expression into temporaries inserted after an anchor line.
  * Inserts required _tmp_rxpp_N lines immediately AFTER `anchor`,
  * and returns expr with stem tokens replaced by those tmp vars.
  * ------------------------------------------------------------------ */
@@ -939,10 +938,8 @@ rewriteStemsInExpr: procedure=.string
   end
 
 return expr
-
-
 /* ------------------------------------------------------------------
- * Change a string by a new string at a certain position
+ * replaceOnce: Replaces one occurrence of a substring at a given position (or first occurrence).
  * ------------------------------------------------------------------
  */
 replaceOnce: procedure=.string
@@ -987,74 +984,8 @@ qextractall_dotparen_flat: procedure=.string[]
   end
 return flat
 
-/* ------------------------------------------------------------------
- * QEXTRACTALL_DOTPAREN(text [, start])
- * Extracts ALL computed tail expressions of the form .( ... )
- * but balances real parentheses ( ... ) including nesting, quote-safe,
- * by delegating to qextractpair('(',')', ...).
- *
- * Returns:
- *   a stem array expr. where:
- *     expr.0 = count
- *     expr.1..expr.n = INNER content (without outer parentheses)
- * ------------------------------------------------------------------ */
-qextractall_dotparen: procedure=.string[]
-  arg text=.string, start=1
-
-  expr = .string[]
-  idx  = 0
-  pos  = start
-  tlen = length(text)
-
-  do forever
-     p = qpos('.(', text, pos)        /* position of ".(" outside quotes */
-     if p = 0 then leave
-
-     openPos = p + 1                  /* points to '(' */
-     seg = qextractpair('(', ')', text, openPos, 'I')  /* inclusive "(...)" */
-     if seg = '' then leave           /* unmatched -> stop (or signal error) */
-
-     idx = idx + 1
-     /* store inner part, without outer parens */
-     if length(seg) >= 2 then expr[idx] = substr(seg, 2, length(seg)-2)
-     else expr[idx] = ''
-
-     /* continue scanning AFTER the closing ')' */
-     pos = openPos + length(seg)
-     if pos > tlen then leave
-  end
-
-return expr
-
-/* ------------------------------------------------------------------
- * Test for valid stem characters in a string
- * isStemChar(c)
- *
- * Purpose (LEXER / TOKEN BOUNDARY):
- *   Returns 1 if `c` is allowed to appear anywhere inside a *stem token*
- *   while scanning source text.
- *
- *   This is intentionally permissive and includes '.' so that routines
- *   like findStem() can expand left/right across "root.tail.tail" chains.
- *
- * Typical usage:
- *   - Expand token boundaries around a candidate '.' position.
- *   - "Rough cut" of a possible stem substring.
- *
- * NOT for:
- *   - Validating ROOT / .name segments (because '.' would be wrong there).
- * ------------------------------------------------------------------
- */
-isStemChar: procedure=.int
-  arg c=.string
-  if c='' then return 0
-  if c='.' then return 1
-  if c='_' then return 1
-  if datatype(c,'A') then return 1
-  if datatype(c,'N') then return 1
-return 0
 /* ---------------------------------------------------------------
- * isStem(s)
+ * isstem: Validates whether a string is a syntactically valid stem.
  * Returns:
  *   1  -> string looks like a stem
  *   0  -> not a stem
@@ -1066,6 +997,10 @@ isstem:procedure=.int
  ## say "ISSTEM '"s"' is RC="irc
 return irc
 
+/* ------------------------------------------------------------------
+ * isStemx: Full stem grammar validation including computed segments and tail count policy.
+ * ------------------------------------------------------------------
+ */
 isStemx: procedure=.int
   arg s=.string
   s = strip(s)
@@ -1132,7 +1067,7 @@ isStemx: procedure=.int
 return 1
 
 /* ---------------------------------------------------------------
- * isStemCandidate(s)
+ * isStemCandidate: Heuristic filter: quickly decides if a string is worth attempting stem parsing.
  * Relaxed stem candidate detector for TOP-LEVEL routing.
  * Does NOT fully validate; just says "worth trying stemEndBySplit()".
  * --------------------------------------------------------------- */
@@ -1160,9 +1095,8 @@ isStemCandidate: procedure=.int
   /* allow anything else here (operators, parentheses, etc.) */
 return 1
 
-
 /* ------------------------------------------------------------------
- * isStemNameChar(c)
+ *isStemNameChar: Returns true if a character is valid within a stem name segment.
  *
  * Purpose (GRAMMAR / SEGMENT VALIDATION):
  *   Returns 1 if `c` is allowed inside a *name segment* (ROOT or .name).
@@ -1187,7 +1121,7 @@ isStemNameChar: procedure=.int
 return 0
 
 /* ------------------------------------------------------------------
- * Find all STEMs in a statement line and return stem token + position[]
+ * findStem: Finds stem tokens in an expression and returns stems + start positions.
  *
  * Strategy:
  *  1) Use qpos to locate '.' outside quotes and parentheses.
@@ -1242,9 +1176,8 @@ findStem: procedure=.string[]
   end
 return rstem
 
-
 /* ------------------------------------------------------------------
- * stemEndBySplit(s, l)
+ * stemEndBySplit: Determines the end of a stem token using safe split on '.' (quote/paren aware).
  * Determine the end position of a stem token starting at root position l.
  *
  * Uses QSPLITSAFE on the substring from l, splitting by '.' while ignoring
@@ -1328,10 +1261,8 @@ stemEndBySplit: procedure=.int
   end
 
 return l + rrel - 1
-
-
 /* ------------------------------------------------------------------
- * isPlainStemName(t)
+ * isPlainStemName: Validates that a segment contains only stem-name characters.
  * True if every character is a stem-name char (no dots, no spaces, etc.)
  * ------------------------------------------------------------------ */
 isPlainStemName: procedure=.int
@@ -1343,10 +1274,11 @@ isPlainStemName: procedure=.int
 return 1
 
 /* ------------------------------------------------------------------
- * matchParen(s, openPos)
+ * matchParen: Finds the matching ')' for an opening '(' with nesting support.
  * Return position of matching ')' for s[openPos]='(' (balanced).
  * This allows nested parentheses inside computed expressions.
- * ------------------------------------------------------------------ */
+ * ------------------------------------------------------------------
+ */
 matchParen: procedure=.int
   arg s=.string, openPos=.int
   len = length(s)
@@ -1366,7 +1298,7 @@ matchParen: procedure=.int
 return 0
 
 /* ------------------------------------------------------------------
- * Insert empty line(s) in source array and shift current item(s) accordingly
+ * insert_source: Inserts reserved lines into source[]/stype[] and shifts following lines down.
  * the line number is the first which is shifted,
  * !! it does not mean add empty line after provided at position !!
  * ------------------------------------------------------------------
@@ -1392,7 +1324,8 @@ insert_source: Procedure=.int
   say '>> 'right(i+1,4,'0') source[i+1]
 return 0                            ## when line is inspected afterwards
 /* ------------------------------------------------------------------
- * Insert line and cross check if entry is a newly inserted line
+ * Insert_line: Writes a line into a reserved slot
+ * inserts a reserved line first if needed.
  * ------------------------------------------------------------------
  */
 insert_line: procedure=.int
@@ -1409,7 +1342,7 @@ insert_line: procedure=.int
 
 return nlino
 /* ------------------------------------------------------------------
- * Process FOR command
+ * CMD_for: Expands a FOR pseudo-construct into an equivalent REXX looping sequence.
  * ------------------------------------------------------------------
  */
 CMD_for: procedure
@@ -1447,7 +1380,8 @@ CMD_for: procedure
   end
 return
 /* ------------------------------------------------------------------
- * Process WHEN command
+ * CMD_when: Expands WHEN / OTHERWISE / CASE(DEFAULT) into corresponding REXX clauses.
+ * This applies the REXX syntax
  * ------------------------------------------------------------------
  */
 CMD_when: procedure
@@ -1466,21 +1400,8 @@ CMD_when: procedure
   stype[nlino]=' '
 return
 /* ------------------------------------------------------------------
- * Process CASE command
- * ------------------------------------------------------------------
- */
-CMD_case: procedure
-  arg lino=.int,line=.string
-  stype.lino= 'WHEN'
-  rc= insert_source(lino+1,1)    ## insert new lines, shift buffer
-  vvalue=word(line,2)
-  if upper(word(line,3))='THEN' then action=subword(line,4)
-  else action=subword(line,3)
-  source[lino+1]='else if __select_'select_count'='vvalue' then 'action
-  stype[lino+1]=' '
-return
-/* ------------------------------------------------------------------
- * Process ##select command
+ * CMD_select: Expands SELECT / SWITCH constructs and initializes selector state.
+ * This applies the C syntax
  * ------------------------------------------------------------------
  */
 CMD_select: procedure
@@ -1498,7 +1419,7 @@ CMD_select: procedure
   stype[lino+1]=' '
 return
 /* ------------------------------------------------------------------
- * Process ##DATA command
+ * CMD_data: Implements ##DATA blocks: converts lines into array assignments until ##END.
  * ------------------------------------------------------------------
  */
 CMD_data: procedure
@@ -1514,7 +1435,8 @@ CMD_data: procedure
   stype.i='D'   ## set D for ##END
 return
 /* ------------------------------------------------------------------
- * Write a line to the output buffer, splitting on backslashes (\)
+ * writeline: Appends a line to outbuf[] after variable injection and OO translation.
+ * splitting on backslashes (\)
  * ------------------------------------------------------------------
  */
 writeline: procedure
@@ -1555,7 +1477,7 @@ writeline: procedure
    outbuf.lino = oline
   return
 /* ------------------------------------------------------------------
- * Translate OO Calls
+ * oo_translate_tilde: Legacy translator for object~method(...) syntax
  * ------------------------------------------------------------------
  */
 oo_translate_tilde: procedure=.string
@@ -1619,6 +1541,10 @@ if verbose then say "Transformed:" result
 
 return result
 
+/* ------------------------------------------------------------------
+ * ooTranslate: Translates object.method(...) calls into prefixed function calls.
+ * ------------------------------------------------------------------
+ */
 ooTranslate: procedure=.string
 arg oline=.string
 line = strip(oline)
@@ -1706,7 +1632,7 @@ if posStart <= length(line) then result = result || substr(line, posStart)
 return result
 
 /* ------------------------------------------------------------------
- * Expand recursively
+ * expandRecursive: Expands a line repeatedly until no further macro substitutions occur.
  * ------------------------------------------------------------------
  */
 expandRecursive:  procedure=.string
@@ -1719,7 +1645,7 @@ expandRecursive:  procedure=.string
   end
 return line
 /* ------------------------------------------------------------------
- * Expand single line
+ * expandLine: Expands all macro invocations within a single line (one expansion pass).
  * ------------------------------------------------------------------
  */
 expandLine:  procedure=.string
@@ -1741,12 +1667,12 @@ expandLine:  procedure=.string
   end
 return line
 /* ------------------------------------------------------------------
- * Try to resolve macro by available macro definition
+ * resolveMacro: Expands one macro occurrence by parsing arguments and substituting into the macro body.
  *     line is input line
  *     i    contains macro index to resolve line
  * ------------------------------------------------------------------
  */
- resolveMacro: procedure=.string
+resolveMacro: procedure=.string
    arg i=.int, line=.string,level=.int
    ppl=lastpos('##',line)       ## ending comment, if any
    if ppl>1 then line=substr(line,1,ppl-1)
@@ -1801,7 +1727,7 @@ return line
     end
 return line
 /* ------------------------------------------------------------------
- * Inject pre-compiler variable into line
+ * injectVariable: Injects pre-compiler variables ({var}) into text lines.
  * ------------------------------------------------------------------
  */
 injectVariable: procedure=.string
@@ -1820,7 +1746,7 @@ injectVariable: procedure=.string
   end
 return line2change
 /* ------------------------------------------------------------------
- * Replace fixed define arguments
+ * replaceFixArg: Substitutes fixed macro parameters with supplied call arguments (positional + keyword).
  * ------------------------------------------------------------------
  */
 replaceFixArg: Procedure=.string
@@ -1873,7 +1799,7 @@ replaceFixArg: Procedure=.string
   end
 return bodyExp
 /* ------------------------------------------------------------------
- * if necessary translate tso-style call parm list to function-like list
+ * tso2func: Normalizes TSO-style keyword arguments to function-style key=value syntax.
  * ------------------------------------------------------------------
  */
 tso2func: procedure=.string
@@ -1885,7 +1811,7 @@ tso2func: procedure=.string
   if pp2>1 then inparm=substr(inparm,1,pp2-1)
 return strip(inparm)
 /* ------------------------------------------------------------------
- * Process Variadic macros
+ * variadic: Expands variadic macros (macros with ... arguments) into repeated generated statements.
  * ------------------------------------------------------------------
  */
 variadic: procedure=.string
@@ -1933,7 +1859,7 @@ variadic: procedure=.string
   return ''
   ## return lhs '=' varCount   ## set variable.0 not allowed in level b
 /* ------------------------------------------------------------------
- * Debug routine
+ * debugArgs: Debug helper to print macro call arguments (usually disabled).
  * ------------------------------------------------------------------
  */
 debugArgs:  procedure
@@ -1948,7 +1874,7 @@ debugArgs:  procedure
   say 'Before Replace: ' body
 return
 /* ------------------------------------------------------------------
- * Extract full argument list from macro call (handles nested parentheses)
+ * fetchArguments: Extracts a macro argument list, handling nested parentheses.
  * ------------------------------------------------------------------
  */
 fetchArguments: procedure=.string
@@ -2000,7 +1926,8 @@ return str
 */
 
 /* ------------------------------------------------------------------
- * Replace Argument in Macro Call
+ * replaceArg: Replaces a parameter occurrence respecting identifier boundaries
+ * also supports NAME## terminator.
  *  - Matches bare  name  only at identifier boundaries
  *  - Also matches   name##   unconditionally and consumes the '##'
  * ------------------------------------------------------------------ */
@@ -2042,7 +1969,7 @@ replaceArg: procedure=.string
   end
 return str
 /* ------------------------------------------------------------------
- * Insert/replace string in string
+ * InsertAt: Pure string insert/replace helper (legacy).
  * ------------------------------------------------------------------
  */
 InsertAt: Procedure=.string
@@ -2053,7 +1980,7 @@ arg needle=.string,haystack=.string,at=.int,len=.int
   else lhs=''
 return lhs || needle || rhs
 /* ------------------------------------------------------------------
- * Determine argument list
+ * parseArgList: Splits a macro argument list into callargs[] and returns the argument count.
  * ------------------------------------------------------------------
  */
 parseArgList: procedure=.int
@@ -2114,7 +2041,7 @@ printmacs: procedure
   say macros_mname.0' macros defined'
 return
 /* ------------------------------------------------------------------
- * Return pre-compiler variable index
+ * getvarindx: Returns the index of a pre-compiler variable in the variable table.
  * ------------------------------------------------------------------
  */
 getvarindx: procedure=.int
@@ -2125,7 +2052,7 @@ getvarindx: procedure=.int
   end
   return 0
 /* ------------------------------------------------------------------
- * Return pre-compiler variable content
+ * findvar: Checks whether a pre-compiler variable exists (returns index or 0).
  * ------------------------------------------------------------------
  */
 findvar: procedure=.string
@@ -2134,7 +2061,7 @@ findvar: procedure=.string
   index=getvarindx(varname)
 return index
 /* ------------------------------------------------------------------
- * Return pre-compiler variable content
+ * getvar: Returns the value of a pre-compiler variable.
  * ------------------------------------------------------------------
  */
 getvar: procedure=.string
@@ -2145,7 +2072,7 @@ getvar: procedure=.string
   if i>0 then vvalue=macros_varvalue.i
 return vvalue
 /* ------------------------------------------------------------------
- * Set pre-compiler variable
+ * setvar: Sets a pre-compiler variable (stored as {name}).
  * ------------------------------------------------------------------
  */
 setvar: procedure=.int
@@ -2158,7 +2085,7 @@ setvar: procedure=.int
   macros_varvalue.i=varvalue
 return i
 /* ------------------------------------------------------------------
- * Helper: quote string
+ * quote: Quotes a string value for code generation.
  * ------------------------------------------------------------------
  */
 quote: procedure=.string
@@ -2166,6 +2093,7 @@ quote: procedure=.string
   if prefix \= '' then return prefix'={'line'}'
 return "'"line"'"
 /* ------------------------------------------------------------------------
+ * parsevar: Implements ##PARSE by generating runtime parsing code and variable assignments.
  * ##PARSE command, re-parse tokens from template to receive Variable names
  *   PARSE VAR variable template
  *   PARSE VALUE 'quoted-value' [WITH] template
@@ -2320,6 +2248,10 @@ parsevar: Procedure=.int
   inew=inject2Source(inew+1,0,'## ---------- parse variables set ----------')
 return token.0
 
+/* ------------------------------------------------------------------
+ * flush: Flushes buffered text into token[] as a single token.
+ * ------------------------------------------------------------------
+ */
 flush: procedure=.string
   arg buf=.string, expose token=.string[], expose tokenhi=.int
   if buf = '' then return ''
@@ -2327,7 +2259,10 @@ flush: procedure=.string
   token.tokenhi = buf
   buf = ''
 return buf
-
+/* ------------------------------------------------------------------
+ * embed: Quotes a string using ' or \" depending on content.
+ * ------------------------------------------------------------------
+ */
 embed: procedure=.string
   arg strx=.string
   if pos("'",strx,1)>0 then return '"'strx'"'
@@ -2339,7 +2274,8 @@ return "'"strx"'"
  *  - Remove whitespace only if it directly neighbors a quote
  *  - No suppression around numbers, +/-, punctuation, etc.
  *  - Supports doubled quotes inside literals ('' and "")
- * ------------------------------------------------- */
+ * -------------------------------------------------
+ */
 preCleanTemplate: procedure=.string
   arg template=.string
 
@@ -2408,7 +2344,7 @@ preCleanTemplate: procedure=.string
   return out
 
 /* ------------------------------------------------------------------
- * Find 1. word if the string is a quoted string
+ * FirstWord: Extracts the first token from a string, respecting quoted string rules.
  * ------------------------------------------------------------------
  */
 FirstWord: Procedure=.string
@@ -2442,6 +2378,7 @@ FirstWord: Procedure=.string
 return "'"quoted"'"
 
 /* ------------------------------------------------------------------
+ * inject2Source: Writes a prepared line into a reserved source slot and marks it as generated.
  * inject a new line into source code, the new lines must have been
  * prepared prior to the call
  * returns the line number used
@@ -2455,7 +2392,7 @@ inject2Source: procedure=.int
   stype.lnr='R'
 return lnr
 /* ------------------------------------------------------------------
- * Write Linker information contained includes
+ * linkerInfo: Writes an include file containing imported module names for linking.
  * ------------------------------------------------------------------
  */
 linkerInfo: procedure
@@ -2473,20 +2410,6 @@ linkerInfo: procedure
   call writeall linker,linkfile,-1
   if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
 return
-
-/* ------------------------------------------------------------------
- * Check for relative or absolute path
- * ------------------------------------------------------------------
- */
-isAbsolutePath: procedure=.int
-  arg path=.string
-  path = translate(path, '/', '\')      /* Normalize slashes */
-  if left(path, 1) = '/' then return 1  /* Check for Unix-style absolute path */
-  if length(path) >= 2 then do          /* Check for Windows drive-letter absolute path (e.g. C:/folder) */
-     if verify(substr(path, 1, 1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')=0 & substr(path, 2, 1) = ':' then return 1
-  end
-  if left(path, 2) = '//' then return 1 /* Check for UNC path (Windows): starts with double backslash */
-return 0
 /* ------------------------------------------------------------------
  * normalizePath: resolves ../, ./ and slashes in mixed paths to normalised UNIX-style
  * Example: normalizePath("C:\\Users\\Peter/../Docs/./file.txt") -> "C:/Users/Docs/file.txt"
@@ -2542,37 +2465,7 @@ normalisePath: procedure=.string
   if normalised = '' then normalised = '/'
 return normalised
 /* ---------------------------------------------------------------
- * CommentDepth(lino, depth)
- *
- * depth = 0  => not in comment
- * depth > 0  => inside nested block comments
- *
- * Uses QPOS() so markers inside quotes are ignored.
- * ---------------------------------------------------------------
- */
-CommentDepth: procedure=.int
-  arg lino=.int, depth=.int
-  line = source[lino]
-  pos = 1
-  do forever
-     po = qpos('/*', line, pos)
-     pc = qpos('*/', line, pos)
-     if po = 0 & pc = 0 then return depth
-    /* choose the earliest marker */
-    if pc = 0 | (po > 0 & po < pc) then do
-       depth = depth + 1
-       pos = po + 2
-       iterate
-    end
-    else do
-       if depth > 0 then depth = depth - 1
-       pos = pc + 2
-       iterate
-    end
-  end
-return depth
-
-/* ---------------------------------------------------------------
+ * CommentScan: Scans a line to update block-comment nesting and reports comment intersection.*
  * CommentScan(lino, depth)
  * Returns: "depth_out hit"
  * hit=1 if ANY portion of this line is in a /* */ block comment
@@ -2599,9 +2492,8 @@ CommentScan: procedure=.int
      end
   end
   return depth
-
 /* ------------------------------------------------------------------
- * Init RXPP environment
+ * rxppinit: Initializes RXPP global state, arrays, counters, module name, system path, and default flags.
  * ------------------------------------------------------------------
  */
 rxppinit: procedure=.string
