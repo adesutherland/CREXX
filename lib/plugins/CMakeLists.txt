@@ -18,13 +18,13 @@ add_subdirectory(llist)
 add_subdirectory(treemap)
 add_subdirectory(id)
 add_subdirectory(recv390)
-
+add_subdirectory(map)
 
 #
 # These are the plugins that are additionally built for Linux
 #
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  add_subdirectory(map)
+  # add_subdirectory(map)
 #  add_subdirectory(console) probably misses xwindows libs
 endif()
 
@@ -54,7 +54,7 @@ if(WIN32)
 #       add_subdirectory(process)
 #       add_subdirectory(subtask)
 #	add_subdirectory(vpool)
-        add_subdirectory(map)
+        # add_subdirectory(map)
 endif()
 
 #
