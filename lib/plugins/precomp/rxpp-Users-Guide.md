@@ -646,6 +646,23 @@ END
 ```
 
 This makes control flow explicit and avoids hidden fall-through semantics.
+At the same time, it allows multiple CASE labels to intentionally share a single action block, which is useful when different values should be handled in the same way without duplicating code.
+```rexx
+SWITCH status
+  CASE "OPEN"
+  CASE "PENDING"
+     say "Order is active"
+     LEAVE
+  CASE "CLOSED"
+     say "Order is closed"
+     LEAVE
+END
+```
+
+Here, both "OPEN" and "PENDING" are handled by the same rule through deliberate fall-through, and execution stops explicitly with LEAVE.
+
+As in C, CASE branches do not terminate automatically.
+This allows deliberate fall-through, but requires an explicit LEAVE to stop execution at the desired point.
 
 ---
 
@@ -769,7 +786,6 @@ Warnings appear as comments and indicate ambiguous stem expressions.
 - Think source-to-source, not runtime magic
 - Prefer clarity over compactness
 - Keep macros simple and intentional
-- Use `##STEM` explicitly when needed
 - Regularly inspect generated output
 
 ---
