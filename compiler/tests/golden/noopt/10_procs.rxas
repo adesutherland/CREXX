@@ -1,0 +1,45 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 10_procs.rexx
+ * BUILT                  : 2026-01-21 12:12:14
+ */
+
+.srcfile="10_procs.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "10_procs.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="say \"Main Start\""
+   say "Main Start"
+   .src 4:1="call MyProc 10"
+   load r1,1
+   load r2,10
+   call r3,MyProc(),r1
+   .src 5:1="say \"Main End\""
+   say "Main End"
+   .src 6:1="return"
+   ret
+
+MyProc() .locals=3
+   .meta "10_procs.myproc"="b" ".void" MyProc() "x=.int" ""
+   .src 8:1="MyProc: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 9:7="x = .int"
+   .meta "10_procs.myproc.x"="b" ".int" r1
+   icopy r1,a1
+   .src 10:3="say \"Inside Proc\" x"
+   itos r1
+   sconcat r2,"Inside Proc",r1
+   say r2
+   .src 11:3="return"
+   ret
+   .meta "10_procs.myproc.x"

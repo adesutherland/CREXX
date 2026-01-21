@@ -61,3 +61,5 @@ add_custom_target(rxccopy ALL DEPENDS rxc)
 add_custom_command(TARGET rxccopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/compiler/rxc${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
 )
+
+add_subdirectory(tests)
