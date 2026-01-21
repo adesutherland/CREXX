@@ -23,33 +23,41 @@ options levelb comments_dash
 import rxfnsb
 import sysinfo
 
+/* procedure main is what is run when crexx starts execution */
 main: procedure = .int
 arg fn = .string[]
 module = .string[]
 
+/* defaults for options for this program */
+native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
+execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0
+
+  ANSI_RESET      = '\u001B[0m'
+  ANSI_BLUE       = '\u001B[34m'
+  ANSI_RED        = '\u001B[31m'
+  ANSI_YELLOW     = '\u001B[33m'
+  ANSI_LINE_CLEAR = '\x1b[2K'
+  ANSI_LINE_UP    = '\033[1A'
+
 /* when there are no commandline arguments found, display help */
 if fn[0]=0 then do
-  call help
+  ret = help(nocolor)
   exit
 end
 
 /* determine the path for libraries etc */
 rxpath=''
 env_wanted='CREXX_HOME'
-/* honour the CREXX_HOME when set */
+/* honour CREXX_HOME environment variable when set */
 assembler getenv rxpath,env_wanted
 
-/* if CREXX_HOME environment variable not set, then */
+/* if not set, then */
 if rxpath='' then do
   rxpath=getLoadPath()
   lastSegment=lastpos('/',rxpath)
   rxpath=substr(rxpath,1,lastSegment-1)
 end
 rxpath=rxpath'/' /* to avoid having to start -l with a slash */
-
-/* defaults for options for this program */
-native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0;compile=1;optimize=1
 
 libraries='/lib/rxfnsb'
 
@@ -59,25 +67,26 @@ do i=1 to fn.0
   if left(fn.i,1)<>'-' then
     do /* it is not a flag but a filename */
       filename=fn.i
-	  -- filenames=strip(filenames) strip(filename)
-	  filenames=filenames filename
+	  filenames=strip(filenames) strip(filename)
     end
   else
     do
       /* allow for single- and double dash options */
       if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
-      if fn.i = '-help' then call help
-      if fn.i = '-noexec' then execute=0
-      if fn.i = '-native' then native=1
-      if fn.i = '-version' then version=1
-      if fn.i = '-verbose' then verbose=1
+      if fn.i = '-help'     then ret = help(nocolor)
+      if fn.i = '-noexec'   then execute=0
+      if fn.i = '-native'   then native=1
+      if fn.i = '-version'  then version=1
+      if fn.i = '-verbose'  then verbose=1
       if fn.i = '-verbose0' then verbose=0
       if fn.i = '-verbose1' then verbose=1
       if fn.i = '-verbose2' then verbose=2
       if fn.i = '-verbose3' then verbose=3
-      if fn.i = '-noexec' then execute=0
+      if fn.i = '-noexec'   then execute=0
       if fn.i = '-nooptimize' then optimize=0
-      if fn.i = '-nocompile' then compile=0
+      if fn.i = '-nocolor'  then nocolor=1
+      if fn.i = '-nocolour' then nocolor=1
+      if fn.i = '-keep' then keep=1
       if left(fn.i,2)= '-l' then do
 	if left(fn.i,1)=' ' then do
 	  fn.i=fn.i||fn.i+1
@@ -94,7 +103,7 @@ do i=1 to fn.0
 end -- do i
 
 
-if version then call logo
+if version then ret = logo(nocolor)
 if verbose>1 then say 'using rxpath:' rxpath
 
 lpath = libraries
@@ -214,8 +223,9 @@ end   -- do i
 
   return 0
   
-help: procedure 
-call logo
+help: procedure = .string
+arg nocolor = .string  
+ret = logo(nocolor)
 say
 say 'Arguments are: in_file_specification... [--option]...'
 say
@@ -226,20 +236,31 @@ say '-version         -- display the version number'
 say '-exec            -- execute (default)'
 say '-compile         -- compile to rxbin (default)'
 say '-native          -- compile to native executable; implies noexec; default nonative'
-say '-verbose[0-3]    -- report on progress; default verbose0'
+say '-verbose[0-4]    -- report on progress; default verbose0'
+say '-color           -- use color (default)'
+say '-colour          -- use colour (default)'
+say '-keep            -- keep .rxas source (default nokeep)'
 say '-l[library path] -- use import library'
 say
 say 'all options can also be prefixed with --'
-return
+return 'help done'
 
-logo: procedure
+logo: procedure = .string
+arg nocolor = .string
 rversion = ''
 /* note that for brevity we use an assembler directive to get to the version */
 assembler rxvers rversion
-say 'cRexx compiler driver' rversion
+rvers = word(rversion,1) word(rversion,2) word(rversion,4)
+esc = '1b'x
+if nocolor then do
+  say 'crexx compiler driver' rvers
+end
+else do
+  say esc'[33mcrexx compiler driver' esc'[34m'rvers esc'[0m'
+end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
-return
+return 'logo done'
 
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
