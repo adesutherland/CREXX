@@ -81,6 +81,8 @@ char* get_comment(ASTNode *node, char* prefix);
 char* get_comment_line_number_only(ASTNode *node, char* comment_text);
 
 void type_promotion(ASTNode *node);
+void add_variable_metadata(ASTNode* node);
+void emit_expression(ASTNode *node, void *payload);
 int is_constant(ASTNode* node);
 char* format_constant(ValueType type, ASTNode* node);
 char* type_to_prefix(ValueType value_type);

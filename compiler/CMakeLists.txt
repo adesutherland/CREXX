@@ -39,7 +39,7 @@ add_library(rxclib STATIC
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_val_check.c rxcp_val_orch.c rxcpsymb.c
-        rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit.h rxcp_opt.c
+        rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
         ../utf8/utf.h rxcpfunc.c
 )
