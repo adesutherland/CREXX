@@ -85,12 +85,7 @@ struct Context {
     int optimise;
 };
 
-/* Output Marshalling */
-struct OutputFragment {
-    OutputFragment *before;
-    OutputFragment *after;
-    char *output;
-};
+#include "rxcp_emit.h"
 
 /*  Importable Functions and Variables */
 struct imported_func {
@@ -171,7 +166,6 @@ int prntwars(Context *context);
 /* Emit Assembler */
 void emit(Context *context, FILE *output_file);
 
-void f_output(OutputFragment *output);
 
 /* printf - but returns a malloced buffer with the result */
 char* mprintf(const char* format, ...);
