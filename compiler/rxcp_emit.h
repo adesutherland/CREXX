@@ -31,6 +31,27 @@
 
 #include "rxcp_types.h"
 
+#define UNSET_REGISTER (-1)
+#define DONT_ASSIGN_REGISTER (-2)
+
+/* Register Type Flag Byte Values */
+/* Used for optional arguments ONLY
+ * set (1) means the register has a specified value */
+#define REGTP_VAL 1
+
+/* Used for "pass be value" large (strings, objects) registers ONLY
+ * set (2) means that it is not a symbol so does not need copying as even if it is
+ * changed the caller will not use its original value
+ * Note: Small registers (int, float) are always copied as this is faster than
+ *       setting and checking this flag anyway */
+#define REGTP_NOTSYM 2
+
+typedef struct walker_payload {
+    Context *context;
+    int globals;
+    FILE *file;
+} walker_payload;
+
 /* Output Marshalling */
 struct OutputFragment {
     OutputFragment *before;
@@ -60,7 +81,13 @@ char* get_comment(ASTNode *node, char* prefix);
 char* get_comment_line_number_only(ASTNode *node, char* comment_text);
 
 void type_promotion(ASTNode *node);
+int is_constant(ASTNode* node);
 char* format_constant(ValueType type, ASTNode* node);
 char* type_to_prefix(ValueType value_type);
+
+/* Register Allocation Pass */
+walker_result register_walker(walker_direction direction,
+                              ASTNode* node,
+                              void *pl);
 
 #endif //CREXX_RXCP_EMIT_H

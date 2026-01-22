@@ -426,3 +426,21 @@ char* type_to_prefix(ValueType value_type) {
             return "";
     }
 }
+
+/* Tests if a node is a constant */
+int is_constant(ASTNode* node) {
+    switch (node->node_type) {
+        case CONSTANT: /* This is what the optimiser changes all constants to */
+        case CONST_SYMBOL: /* Should not be being used in the AST at this stage - but for safety */
+        case STRING: /* This and the following will exist if the optimiser has not been run */
+        case FLOAT:
+        case DECIMAL:
+        case INTEGER:
+            if (node->value_type == node->target_type)
+                return 1; /* No type promotion - so a constant */
+            else
+                return 0; /* Type promotion needed - so not a constant */
+        default:
+            return 0;
+    }
+}
