@@ -11,4 +11,9 @@
 #include "rxcp_ast.h"
 #include "rxcp_ctx.h"
 
+/* Validation API */
+void validate_ast(Context *context);
+void rxcp_val(Context *context);
+void rxcp_bvl(Context *context);
+
 #endif //CREXX_RXCPMAIN_H
