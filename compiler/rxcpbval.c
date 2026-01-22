@@ -628,41 +628,51 @@ static walker_result initial_checks_walker(walker_direction direction,
             /* This is a leaf without a token - so need to estimate a position */
             ASTNode *older = 0;
 
-            /* In case we fail to estimate */
-            node->source_start = 0;
-            node->source_end = 0;
-            node->line = -1;
-            node->column = -1;
-
-            /* Older Sibling ? */
-            n = node->parent->child;
-            while (n != node) {
-                if (!n) {
-                    /* Internal Error - bail */
-                    fprintf(stderr, "Internal Error: Node is not one of its parent's children\n");
-                    exit(1);
-                }
-                older = n;
-                n = n->sibling;
-            }
-            if (older && older->line != -1) { /* Check if the older has valid line number (it should!) */
-                node->source_start = older->source_end + 1;
-                node->source_end = node->source_start ? (node->source_start - 1) : 0;
-                node->line = older->line;
-                node->column = older->column + (int)(older->source_end - older->source_start) + 1;
+            if (node->node_type == ERROR || node->node_type == WARNING) {
+                node->line = node->parent->line;
+                node->column = node->parent->column;
+                node->source_start = node->parent->source_start;
+                node->source_end = node->parent->source_end;
+                node->token_start = node->parent->token_start;
+                node->token_end = node->parent->token_end;
             }
             else {
-                /* No older sibling - use the parent, grandparent, until we find a token */
-                n = node->parent;
-                while (n) {
-                    if (n->token) {
-                        node->source_start = n->token->token_string + n->token->length;
-                        node->source_end = node->source_start ? (node->source_start - 1) : 0;
-                        node->line = n->token->line;
-                        node->column = n->token->column + n->token->length;
-                        break;
+                /* In case we fail to estimate */
+                node->source_start = 0;
+                node->source_end = 0;
+                node->line = -1;
+                node->column = -1;
+
+                /* Older Sibling ? */
+                n = node->parent->child;
+                while (n != node) {
+                    if (!n) {
+                        /* Internal Error - bail */
+                        fprintf(stderr, "Internal Error: Node is not one of its parent's children\n");
+                        exit(1);
                     }
-                    n = n->parent;
+                    older = n;
+                    n = n->sibling;
+                }
+                if (older && older->line != -1) { /* Check if the older has valid line number (it should!) */
+                    node->source_start = older->source_end + 1;
+                    node->source_end = node->source_start ? (node->source_start - 1) : 0;
+                    node->line = older->line;
+                    node->column = older->column + (int)(older->source_end - older->source_start) + 1;
+                }
+                else {
+                    /* No older sibling - use the parent, grandparent, until we find a token */
+                    n = node->parent;
+                    while (n) {
+                        if (n->token) {
+                            node->source_start = n->token->token_string + n->token->length;
+                            node->source_end = node->source_start ? (node->source_start - 1) : 0;
+                            node->line = n->token->line;
+                            node->column = n->token->column + n->token->length;
+                            break;
+                        }
+                        n = n->parent;
+                    }
                 }
             }
         }

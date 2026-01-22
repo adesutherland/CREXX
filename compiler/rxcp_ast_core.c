@@ -1,3 +1,6 @@
+/* cREXX Phase 0 (PoC) Compiler */
+/* (c) Adrian Sutherland 2021   */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,42 +8,6 @@
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
-
-static void print_error(ASTNode* node, FILE* stream, char* prefix) {
-    /* Try and set error position if not already set */
-    if (node->token) {
-        if (node->line == -1) node->line = node->token->line;
-        if (node->column == -1) node->column = node->token->column;
-        if (!node->source_start) node->source_start = node->token->token_string;
-        if (!node->source_end) node->source_end = node->token->token_string + node->token->length - 1;
-    }
-    if (node->child && node->child->token) {
-        if (node->line == -1) node->line = node->child->token->line;
-        if (node->column == -1) node->column = node->child->token->column;
-        if (!node->source_start) node->source_start = node->child->token->token_string;
-        if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
-    }
-
-    /* Print error - truncate source to one line */
-    int len = (int) (node->source_end - node->source_start + 1);
-    int i;
-    for (i=0; i<len; i++) {
-        if (!node->source_start || node->source_start[i] == '\n') {
-            len = i;
-            break;
-        }
-    }
-    if (len) {
-        fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
-        prt_unex(stream, node->source_start, len);
-        fprintf(stream, "\"\n");
-    }
-    else {
-        fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
-    }
-}
 
 /* Token Factory */
 Token *token_f(Context *context, int type) {
@@ -247,107 +214,78 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
  * - Ordinals
  */
 ASTNode *ast_dup(Context* new_context, ASTNode *node) {
-    ASTNode *new_node = malloc(sizeof(ASTNode));
-    new_node->context = new_context;
-    new_node->token = node->token;
-    new_node->node_type = node->node_type;
+    ASTNode *new_node = ast_ft(new_context, node->node_type);
+
+    /* Context and Node Number already set by ast_ft */
     new_node->value_type = node->value_type;
     new_node->value_dims = node->value_dims;
-    if (new_node->value_dims) {
-        new_node->value_dim_base = malloc(sizeof(int) * new_node->value_dims);
-        memcpy(new_node->value_dim_base, node->value_dim_base, sizeof(int) * new_node->value_dims);
-        new_node->value_dim_elements = malloc(sizeof(int) * new_node->value_dims);
-        memcpy(new_node->value_dim_elements, node->value_dim_elements, sizeof(int) * new_node->value_dims);
+    if (node->value_dim_base) {
+        new_node->value_dim_base = malloc(sizeof(int) * node->value_dims);
+        memcpy(new_node->value_dim_base, node->value_dim_base, sizeof(int) * node->value_dims);
     }
-    else {
-        new_node->value_dim_base = 0;
-        new_node->value_dim_elements = 0;
+    if (node->value_dim_elements) {
+        new_node->value_dim_elements = malloc(sizeof(int) * node->value_dims);
+        memcpy(new_node->value_dim_elements, node->value_dim_elements, sizeof(int) * node->value_dims);
     }
     if (node->value_class) {
         new_node->value_class = malloc(strlen(node->value_class) + 1);
-        strcpy(new_node->value_class,node->value_class);
-    } else new_node->value_class = 0;
+        strcpy(new_node->value_class, node->value_class);
+    }
+
     new_node->target_type = node->target_type;
     new_node->target_dims = node->target_dims;
-    if (new_node->target_dims) {
-        new_node->target_dim_base = malloc(sizeof(int) * new_node-> target_dims);
-        memcpy(new_node->target_dim_base, node->target_dim_base, sizeof(int) * new_node->target_dims);
-        new_node->target_dim_elements = malloc(sizeof(int) * new_node->target_dims);
-        memcpy(new_node->target_dim_elements, node->target_dim_elements, sizeof(int) * new_node->target_dims);
+    if (node->target_dim_base) {
+        new_node->target_dim_base = malloc(sizeof(int) * node->target_dims);
+        memcpy(new_node->target_dim_base, node->target_dim_base, sizeof(int) * node->target_dims);
     }
-    else {
-        new_node->target_dim_base = 0;
-        new_node->target_dim_elements = 0;
+    if (node->target_dim_elements) {
+        new_node->target_dim_elements = malloc(sizeof(int) * node->target_dims);
+        memcpy(new_node->target_dim_elements, node->target_dim_elements, sizeof(int) * node->target_dims);
     }
     if (node->target_class) {
         new_node->target_class = malloc(strlen(node->target_class) + 1);
-        strcpy(new_node->target_class,node->target_class);
-    } else new_node->target_class = 0;
-    new_node->file_name = node->file_name;
-    new_node->int_value = node->int_value;
-    new_node->bool_value = node->bool_value;
-    new_node->float_value = node->float_value;
+        strcpy(new_node->target_class, node->target_class);
+    }
+
     new_node->register_num = node->register_num;
     new_node->register_type = node->register_type;
     new_node->additional_registers = node->additional_registers;
     new_node->num_additional_registers = node->num_additional_registers;
+
     new_node->is_ref_arg = node->is_ref_arg;
-    new_node->is_const_arg = node->is_const_arg;
     new_node->is_opt_arg = node->is_opt_arg;
+    new_node->is_const_arg = node->is_const_arg;
+    new_node->is_varg = node->is_varg;
+
+    new_node->token = node->token;
+    if (node->free_node_string) {
+        new_node->node_string = malloc(node->node_string_length + 1);
+        memcpy(new_node->node_string, node->node_string, node->node_string_length);
+        new_node->node_string[node->node_string_length] = 0;
+        new_node->node_string_length = node->node_string_length;
+        new_node->free_node_string = 1;
+    }
+    else {
+        new_node->node_string = node->node_string;
+        new_node->node_string_length = node->node_string_length;
+        new_node->free_node_string = 0;
+    }
+
+    new_node->int_value = node->int_value;
+    new_node->bool_value = node->bool_value;
+    new_node->float_value = node->float_value;
+    if (node->decimal_value) {
+        new_node->decimal_value = malloc(strlen(node->decimal_value) + 1);
+        strcpy(new_node->decimal_value, node->decimal_value);
+    }
+
     new_node->token_start = node->token_start;
     new_node->token_end = node->token_end;
     new_node->source_start = node->source_start;
     new_node->source_end = node->source_end;
     new_node->line = node->line;
     new_node->column = node->column;
-
-    /* Node String - need to malloc or just point to existing buffer */
-    new_node->free_node_string = node->free_node_string;
-    new_node->node_string_length = node->node_string_length;
-    if (node->free_node_string) {
-        new_node->node_string = malloc(new_node->node_string_length);
-        memcpy(new_node->node_string, node->node_string, new_node->node_string_length);
-    }
-    else {
-        new_node->node_string = node->node_string;
-    }
-
-    /* Decimal Value - need to malloc a new buffer if set */
-    if (node->decimal_value) {
-        new_node->decimal_value = malloc(strlen(node->decimal_value) + 1);
-        strcpy(new_node->decimal_value, node->decimal_value);
-    } else {
-        new_node->decimal_value = 0;
-    }
-
-    /* Scope / Symbol not copied */
-    new_node->scope = 0;
-    new_node->symbolNode = 0;
-
-    /* Association not copied */
-    new_node->association = 0;
-
-    /* Position in new tree not defined / copied */
-    new_node->parent = 0;
-    new_node->child = 0;
-    new_node->sibling = 0;
-
-    /* These are only set when emitting - not copied */
-    new_node->output = 0;
-    new_node->cleanup = 0;
-    new_node->loopstartchecks = 0;
-    new_node->loopinc = 0;
-    new_node->loopendchecks = 0;
-
-    /*  Note that ordinal is only set just before optimisation - new nodes have value -1 */
-    new_node->high_ordinal = -1;
-    new_node->low_ordinal = -1;
-
-    /* Add new node to context free list */
-    new_node->free_list = new_context->free_list;
-    if (new_node->free_list) new_node->node_number = new_node->free_list->node_number + 1;
-    else new_node->node_number = 1;
-    new_context->free_list = new_node;
+    new_node->file_name = node->file_name;
 
     return new_node;
 }
@@ -360,8 +298,7 @@ struct add_dast_context {
 };
 
 walker_result add_dast_walker_handler1(walker_direction direction,
-                                  ASTNode* node,
-                                  void *payload) {
+                                        ASTNode* node, void *payload) {
     ASTNode* new_node;
     struct add_dast_context *context = (struct add_dast_context *)payload;
     char *fqname;
@@ -451,92 +388,6 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     node = context.dest;
     while (node->child) node = node->child;
     return node;
-}
-
-/* Convert one hex digit to an int (-1 = error)*/
-static int hexchar2int(char hexbyte) {
-    int val = -1;
-
-    // transform hex character to the 4bit equivalent number
-    if (hexbyte >= '0' && hexbyte <= '9') val = hexbyte - '0';
-    else if (hexbyte >= 'a' && hexbyte <='f') val = hexbyte - 'a' + 10;
-    else if (hexbyte >= 'A' && hexbyte <='F') val = hexbyte - 'A' + 10;
-
-    return val;
-}
-
-/* Helper Function to turn 4 binary bits to an int (hex) character */
-static int binchar2int(const char* bin) {
-    int result = 0;
-
-    if (bin[0] == '1') result += 8;
-    if (bin[1] == '1') result += 4;
-    if (bin[2] == '1') result += 2;
-    if (bin[3] == '1') result++;
-
-    return result;
-}
-
-/*
- * Escape a character
- * input - character to be escaped
- * Returns a static buffer with the escaped character string
- */
-static char* escape_character(unsigned char c) {
-    static char buffer[5];
-    buffer[0] = '\\';
-    buffer[2] = 0;
-    /* Encode C style */
-    switch (c) {
-        case '\\':
-            buffer[1] = '\\';
-            break;
-        case '\n':
-            buffer[1] = 'n';
-            break;
-        case '\t':
-            buffer[1] = 't';
-            break;
-        case '\a':
-            buffer[1] = 'a';
-            break;
-        case '\b':
-            buffer[1] = 'b';
-            break;
-        case '\f':
-            buffer[1] = 'f';
-            break;
-        case '\r':
-            buffer[1] = 'r';
-            break;
-        case '\v':
-            buffer[1] = 'v';
-            break;
-        case '\'':
-            buffer[1] = '\'';
-            break;
-        case '\"':
-            buffer[1] = '\"';
-            break;
-        case 0:
-            buffer[1] = '0';
-            break;
-        case '\?':
-            buffer[1] = '\?';
-            break;
-        default:
-            /* Should we escape this character? */
-            if (isprint(c)) {
-                buffer[0] = (char)c;
-                buffer[1] = 0;
-            } else {
-                /* Escape as a hex character */
-                buffer[1] = 'x';
-                snprintf(buffer + 2, 3, "%02x", c);
-            }
-            break;
-    }
-    return buffer;
 }
 
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
@@ -754,41 +605,26 @@ ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
     va_start(argptr, error_string);
     needed = vsnprintf(buffer, buffer_size, error_string, argptr);
     va_end(argptr);
-    if (needed < 0) {
-        /* Error - bail */
-        fprintf(stderr,"Internal Error: First vsnprintf() failed in mknd_err()\n");
-        exit(1);
-    }
-    needed++; /* Null terminator */
-    buffer = realloc(buffer,needed); /* Trim or grow */
 
-    if (needed > buffer_size) {
-        /* If grow redo vsnprintf */
+    /* Check if buffer was large enough, if not realloc and try again */
+    if (needed >= buffer_size) {
+        buffer_size = needed + 1;
+        buffer = realloc(buffer, buffer_size);
         va_start(argptr, error_string);
-        needed = vsnprintf(buffer, needed, error_string, argptr);
+        vsnprintf(buffer, buffer_size, error_string, argptr);
         va_end(argptr);
-        if (needed < 0) {
-            /* Error - bail */
-            fprintf(stderr,"Internal Error: Second vsnprintf() failed in mknd_err()\n");
-            exit(1);
-        }
     }
 
-    /* Child node */
-    errNode = ast_ftt(node->context, ERROR, buffer);
-    add_ast(node,  errNode);
-    errNode->token = node->token;
+    errNode = ast_ft(node->context, ERROR);
+    errNode->node_string = buffer;
+    errNode->node_string_length = strlen(buffer);
     errNode->free_node_string = 1;
-    errNode->source_start = node->source_start;
-    errNode->source_end = node->source_end;
-    errNode->line = node->line;
-    errNode->column = node->column;
-    if (node->context->debug_mode) print_error(errNode, stdout, "DEBUG: Error in");
+    add_ast(node, errNode);
 
     return node;
 }
 
-/* Add a warning child node - returns node for chaining */
+/* Add a WARNING node to a node - returns node for chaining */
 ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     va_list argptr;
     size_t buffer_size = 200;
@@ -800,61 +636,43 @@ ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
     va_start(argptr, error_string);
     needed = vsnprintf(buffer, buffer_size, error_string, argptr);
     va_end(argptr);
-    if (needed < 0) {
-        /* Error - bail */
-        fprintf(stderr,"Internal Error: First vsnprintf() failed in mknd_err()\n");
-        exit(1);
-    }
-    needed++; /* Null terminator */
-    buffer = realloc(buffer,needed); /* Trim or grow */
 
-    if (needed > buffer_size) {
-        /* If grow redo vsnprintf */
+    /* Check if buffer was large enough, if not realloc and try again */
+    if (needed >= buffer_size) {
+        buffer_size = needed + 1;
+        buffer = realloc(buffer, buffer_size);
         va_start(argptr, error_string);
-        needed = vsnprintf(buffer, needed, error_string, argptr);
+        vsnprintf(buffer, buffer_size, error_string, argptr);
         va_end(argptr);
-        if (needed < 0) {
-            /* Error - bail */
-            fprintf(stderr,"Internal Error: Second vsnprintf() failed in mknd_err()\n");
-            exit(1);
-        }
     }
 
-    /* Child node */
-    warNode = ast_ftt(node->context, WARNING, buffer);
-    add_ast(node,  warNode);
-    warNode->token = node->token;
+    warNode = ast_ft(node->context, WARNING);
+    warNode->node_string = buffer;
+    warNode->node_string_length = strlen(buffer);
     warNode->free_node_string = 1;
-    warNode->source_start = node->source_start;
-    warNode->source_end = node->source_end;
-    warNode->line = node->line;
-    warNode->column = node->column;
-    if (node->context->debug_mode) print_error(warNode, stdout, "DEBUG: Error in");
+    add_ast(node, warNode);
 
     return node;
 }
 
-/* Set a node string to a static value (i.e. the node isn't responsible for
- * freeing it). See also ast_sstr() */
 void ast_str(ASTNode* node, char *string) {
     if (node->free_node_string) {
         free(node->node_string);
-        node->free_node_string = 0;
     }
     node->node_string = string;
+    node->free_node_string = 0;
     node->node_string_length = strlen(string);
 }
 
-/* Set the string value of an ASTNode. string must be malloced. memory is
- * then managed by the AST Library (the caller must not free it) */
 void ast_sstr(ASTNode *node, char* string, size_t length) {
-    if (node->free_node_string) free(node->node_string);
+    if (node->free_node_string) {
+        free(node->node_string);
+    }
     node->node_string = string;
-    node->node_string_length = length;
     node->free_node_string = 1; /* So the malloced buffer is freed when cleaning up */
+    node->node_string_length = length;
 }
 
-/* Set a node string by copying a string */
 void ast_copy_str(ASTNode* node, char *string) {
     if (node->free_node_string) {
         free(node->node_string);
@@ -996,6 +814,26 @@ const char *ast_ndtp(NodeType type) {
             return "OP_ARG_EXISTS";
         case OP_ARG_IX_EXISTS:
             return "OP_ARG_IX_EXISTS";
+        case OP_CONCAT:
+            return "OP_CONCAT";
+        case OP_MULT:
+            return "OP_MULT";
+        case OP_DIV:
+            return "OP_DIV";
+        case OP_IDIV:
+            return "OP_IDIV";
+        case OP_MOD:
+            return "OP_MOD";
+        case OP_OR:
+            return "OP_OR";
+        case OP_POWER:
+            return "OP_POWER";
+        case OP_NOT:
+            return "OP_NOT";
+        case OP_NEG:
+            return "OP_NEG";
+        case OP_PLUS:
+            return "OP_PLUS";
         case OP_COMPARE_EQUAL:
             return "OP_COMPARE_EQUAL";
         case OP_COMPARE_NEQ:
@@ -1020,26 +858,6 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
-        case OP_CONCAT:
-            return "OP_CONCAT";
-        case OP_MULT:
-            return "OP_MULT";
-        case OP_DIV:
-            return "OP_DIV";
-        case OP_IDIV:
-            return "OP_IDIV";
-        case OP_MOD:
-            return "OP_MOD";
-        case OP_OR:
-            return "OP_OR";
-        case OP_POWER:
-            return "OP_POWER";
-        case OP_NOT:
-            return "OP_NOT";
-        case OP_PLUS:
-            return "OP_PLUS";
-        case OP_NEG:
-            return "OP_NEG";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:
@@ -1054,10 +872,10 @@ const char *ast_ndtp(NodeType type) {
             return "PROGRAM_FILE";
         case PULL:
             return "PULL";
-        case RANGE:
-            return "RANGE";
         case REL_POS:
             return "REL_POS";
+        case RANGE:
+            return "RANGE";
         case REPEAT:
             return "REPEAT";
         case REDIRECT_IN:
@@ -1110,87 +928,6 @@ const char *ast_ndtp(NodeType type) {
     }
 }
 
-walker_result prnt_walker_handler(walker_direction direction,
-                                        ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
-    if (direction == in) {
-        if (node->child) { /* Non-terminal node */
-            printf(" ^(");
-        } else printf(" ");
-        if (node->node_string_length) {
-            printf("%s=", ast_ndtp(node->node_type));
-            printf("\"");
-            prt_unex(stdout, node->node_string,
-                     (int) node->node_string_length);
-            printf("\"");
-        }
-        else {
-            printf("%s", ast_ndtp(node->node_type));
-        }
-    }
-    else {
-        if (node->child) { /* Non-terminal node */
-            printf(")");
-        }
-    }
-    return result_normal;
-}
-
-static walker_result print_error_walker(walker_direction direction,
-                                  ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
-
-    int *errors = (int*)payload;
-
-    if (direction == in) {
-        if (node->node_type == ERROR) {
-            print_error(node, stderr, "Error in");
-            (*errors)++;
-        }
-    }
-    return result_normal;
-}
-
-static walker_result print_warning_walker(walker_direction direction,
-                                        ASTNode* node,
-                                        __attribute__((unused)) void *payload) {
-
-    int *errors = (int*)payload;
-
-    if (direction == in) {
-        if (node->node_type == WARNING) {
-            print_error(node, stderr, "Warning in");
-            (*errors)++;
-        }
-    }
-    return result_normal;
-}
-
-/* Prints errors and returns the number of errors in the AST Tree */
-int prnterrs(Context *context) {
-    int errors = 0;
-    ast_wlkr(context->ast, print_error_walker, &errors);
-    return errors;
-}
-
-/* Prints errors and returns the number of errors in the AST Tree */
-int prntwars(Context *context) {
-    int errors = 0;
-    ast_wlkr(context->ast, print_warning_walker, &errors);
-    return errors;
-}
-
-void prnt_ast(ASTNode *node) {
-    ast_wlkr(node, prnt_walker_handler, NULL);
-}
-
-
-/*
- * ASTNode Line and Column numbers are normally set by the set_source_location walker
- * However nodes (e.g. unspecified optional arguments) can be added after
- * the walker has been run - so we have added logic to add_ast() and add_sbtr()
- * to set these in this situation
- * */
 static void fix_ast_line_number(ASTNode *node) {
     ASTNode *older = 0;
     ASTNode *n;
@@ -1203,6 +940,16 @@ static void fix_ast_line_number(ASTNode *node) {
     if (!node->parent || node->parent->line == -1) return;
 
     /* We need to fix up the line number etc. */
+    if (node->node_type == ERROR || node->node_type == WARNING) {
+        node->line = node->parent->line;
+        node->column = node->parent->column;
+        node->source_start = node->parent->source_start;
+        node->source_end = node->parent->source_end;
+        node->token_start = node->parent->token_start;
+        node->token_end = node->parent->token_end;
+        return;
+    }
+
     /* If we have a token then use it */
     if (node->token) {
         node->token_start = node->token;
@@ -1359,65 +1106,11 @@ void free_ast(Context *context) {
     context->free_list = 0;
 }
 
-void prt_unex(FILE* output, const char *ptr, int len) {
-    int i;
-    if (!ptr) return;
-    for (i = 0; i < len; i++, ptr++) {
-        switch (*ptr) {
-            case '\0':
-                fprintf(output, "\\0");
-                break;
-            case '\a':
-                fprintf(output, "\\a");
-                break;
-            case '\b':
-                fprintf(output, "\\b");
-                break;
-            case '\f':
-                fprintf(output, "\\f");
-                break;
-            case '\n':
-                fprintf(output, "\\n");
-                break;
-            case '\r':
-                fprintf(output, "\\r");
-                break;
-            case '\t':
-                fprintf(output, "\\t");
-                break;
-            case '\v':
-                fprintf(output, "\\v");
-                break;
-            case '\\':
-                fprintf(output, "\\\\");
-                break;
-            case '\?':
-                fprintf(output, "\\?");
-                break;
-            case '\'':
-                fprintf(output, "\\'");
-                break;
-            case '\"':
-                fprintf(output, "\\\"");
-                break;
-            default:
-                /* Should we escape this character? */
-                if (isprint(*ptr)) {
-                    fprintf(output, "%c", *ptr);
-                }
-                else {
-                    /* Escape as a hex character */
-                    fprintf(output, "\\x%02x", *ptr);
-                }
-        }
-    }
-}
-
 /* Returns a malloced string of the array part of a symbols/type
  * (it returns a null terminated string if there is no array part - still needs a free() */
 char *ast_astr(size_t dims, int* base, int* num_elements) {
     char* result;
-    int i, c, x;
+    int i, c;
     if (!dims) {
         result = malloc(1);
         result[0] = 0;
@@ -1512,7 +1205,6 @@ char* ast_n2tp(ASTNode *node) {
 
 /* Returns the source code of a node in a malloced buffer with formatting removed / cleaned */
 char *ast_nsrc(ASTNode *node) {
-    ASTNode *n;
     Token *t;
     size_t buffer_len;
     char *buffer, *b;
@@ -1553,62 +1245,6 @@ char *ast_nsrc(ASTNode *node) {
     *(--b) = 0;
 
     return buffer;
-}
-
-/* Prints to dot file one symbol */
-void pdot_scope(Symbol *symbol, void *payload) {
-    char reg[20];
-    char *arr;
-    char *name;
-    char *clas;
-
-    if (symbol->register_num >= 0)
-        sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
-    else
-        reg[0] = 0;
-
-    name = sym_frnm(symbol);
-
-    arr = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
-
-    if (symbol->value_class)
-        clas = symbol->value_class;
-    else
-        clas = type_nm(symbol->type);
-
-    switch (symbol->symbol_type) {
-        case CLASS_SYMBOL:
-        case NAMESPACE_SYMBOL:
-            fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=green shape=box label=\"%s\"]\n",
-                    (void*)symbol->scope->defining_node->context,
-                    symbol->scope->defining_node->node_number,
-                    symbol->name,
-                    name);
-            break;
-
-        case FUNCTION_SYMBOL:
-            fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=pink shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
-                    (void*)symbol->scope->defining_node->context,
-                    symbol->scope->defining_node->node_number,
-                    symbol->name,
-                    name,
-                    clas, arr,
-                    reg);
-            break;
-        default:
-            fprintf((FILE *) payload,
-                    "\"s%p%d_%s\"[style=filled fillcolor=cyan shape=box label=\"%s\\n(%s%s)\\n%s\"]\n",
-                    (void*)symbol->scope->defining_node->context,
-                    symbol->scope->defining_node->node_number,
-                    symbol->name,
-                    name,
-                    clas, arr,
-                    reg);
-    }
-    free(arr);
-    free(name);
 }
 
 /* Get the child node of a certain type1 or type2 (or null) */
@@ -1659,329 +1295,6 @@ void ast_prnc(ASTNode *node) {
     }
 }
 
-walker_result pdot_walker_handler(walker_direction direction,
-                                  ASTNode* node, void *payload) {
-    FILE* output = (FILE*)payload;
-
-    char *attributes;
-    int only_type = 0;
-    int only_label = 0;
-    int child_index;
-    ASTNode *first_node;
-    char value_type_buffer[200];
-    char* varr;
-    char* vclas;
-    char* tarr;
-    char* tclas;
-
-    if (direction == in) {
-        /* IN - TOP DOWN */
-
-        child_index = ast_chdi(node);
-
-        /* Scope == DOT Subgraph */
-        if (!node->parent || node->scope != node->parent->scope) {
-            if (node->scope) fprintf(output, "subgraph scope_%p{\n", (void*)node->scope);
-        }
-
-        /* Attributes */
-        switch (node->node_type) {
-
-            /* Groupings */
-            case REXX_UNIVERSE:
-            case PROGRAM_FILE:
-            case IMPORTED_FILE:
-            case INSTRUCTIONS:
-            case DO:
-            case BY:
-            case IF:
-            case REXX_OPTIONS:
-            case IMPORT:
-            case NAMESPACE:
-            case EXPOSED:
-            case TO:
-                attributes = "color=blue";
-                only_type = 1;
-                break;
-
-            case ASSIGN:
-            case CALL:
-            case DEFINE:
-            case DEC_DIGITS:
-            case DEC_FUZZ:
-            case DEC_FORM:
-            case DEC_STANDARD:
-            case DEC_CASE:
-            case ENVIRONMENT:
-            case FOR:
-            case WHILE:
-            case UNTIL:
-            case ITERATE:
-            case LEAVE:
-            case NOP:
-            case OPTIONS:
-            case PULL:
-            case RANGE:
-            case REPEAT:
-            case REDIRECT_IN:
-            case REDIRECT_OUT:
-            case REDIRECT_ERROR:
-            case REDIRECT_EXPOSE:
-            case RETURN:
-            case EXIT:
-            case SAY:
-            case UPPER:
-            case PARSE:
-                attributes = "color=green4";
-                only_type = 1;
-                break;
-
-            case ASSEMBLER:
-                attributes = "color=green4";
-                break;
-
-            case FUNCTION:
-            case FUNC_SYMBOL:
-            case PROCEDURE:
-                attributes = "color=pink";
-                break;
-
-                /* Address is often a sign of a parsing error */
-            case ADDRESS:
-                attributes = "style=filled fillcolor=orange";
-                only_type = 1;
-                break;
-
-            case OP_ADD:
-            case OP_MINUS:
-            case OP_AND:
-            case OP_ARGS:
-            case OP_ARG_VALUE:
-            case OP_ARG_EXISTS:
-            case OP_ARG_IX_EXISTS:
-            case OP_CONCAT:
-            case OP_MULT:
-            case OP_DIV:
-            case OP_IDIV:
-            case OP_MOD:
-            case OP_OR:
-            case OP_POWER:
-            case OP_NOT:
-            case OP_PLUS:
-            case OP_NEG:
-            case OP_SCONCAT:
-            case OP_COMPARE_EQUAL:
-            case OP_COMPARE_NEQ:
-            case OP_COMPARE_GT:
-            case OP_COMPARE_LT:
-            case OP_COMPARE_GTE:
-            case OP_COMPARE_LTE:
-            case OP_COMPARE_S_EQ:
-            case OP_COMPARE_S_NEQ:
-            case OP_COMPARE_S_GT:
-            case OP_COMPARE_S_LT:
-            case OP_COMPARE_S_GTE:
-            case OP_COMPARE_S_LTE:
-            case OP_MAKE_ARRAY:
-            case NOVAL:
-                attributes = "color=darkcyan";
-                only_type = 1;
-                break;
-
-            case ARG:
-            case ARGS:
-            case PATTERN:
-            case CLASS:
-            case VOID:
-            case REL_POS:
-            case ABS_POS:
-            case SIGN:
-            case TARGET:
-            case TEMPLATES:
-                attributes = "color=green";
-                break;
-
-            case VAR_SYMBOL:
-            case VAR_TARGET:
-            case VAR_REFERENCE:
-            case VARG_REFERENCE:
-            case VARG:
-            case CONST_SYMBOL:
-            case LITERAL:
-                attributes = "color=cyan3 shape=cds";
-//                only_label = 1;
-                break;
-
-            case STRING:
-            case BINARY:
-            case INTEGER:
-            case FLOAT:
-            case DECIMAL:
-            case CONSTANT:
-                attributes = "color=cyan3 shape=box";
-                only_label = 1;
-                break;
-
-            case LABEL:
-                attributes = "color=green4";
-                break;
-
-                /* Errors */
-            case TOKEN:
-                attributes = "style=filled fillcolor=indianred1";
-                only_label = 1;
-                break;
-
-//            case ERROR:
-//                attributes = "style=filled fillcolor=indianred1";
-//                //           only_type = 1;
-//                break;
-
-            default:
-                attributes = "style=filled fillcolor=indianred1";
-                break;
-        }
-
-        varr = ast_astr(node->value_dims, node->value_dim_base, node->value_dim_elements);
-        tarr = ast_astr(node->target_dims, node->target_dim_base, node->target_dim_elements);
-
-        if (node->value_class) vclas = node->value_class;
-        else vclas = type_nm(node->value_type);
-
-        if (node->target_class) tclas = node->target_class;
-        else if (node->target_type == TP_OBJECT && node->value_class) tclas = node->value_class;
-        else tclas = type_nm(node->target_type);
-
-        if (node->register_num >= 0) {
-            if (node->num_additional_registers)
-                sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
-                        node->register_type, node->register_num,
-                        node->additional_registers,
-                        node->additional_registers + node->num_additional_registers - 1);
-            else
-                sprintf(value_type_buffer,"\n%c%d", node->register_type, node->register_num);
-        }
-        else
-            value_type_buffer[0] = 0;
-
-        if (node->value_type != TP_UNKNOWN || node->value_dims ||
-            node->target_type != TP_UNKNOWN || node->target_dims) {
-            if (node->value_type == node->target_type && strcmp(vclas,tclas) == 0 && strcmp(varr,tarr) == 0) {
-                strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, vclas);
-                strcat(value_type_buffer, varr);
-                strcat(value_type_buffer, ")");
-            } else {
-                strcat(value_type_buffer, "\n(");
-                strcat(value_type_buffer, vclas);
-                strcat(value_type_buffer, varr);
-                strcat(value_type_buffer, "->");
-                strcat(value_type_buffer, tclas);
-                strcat(value_type_buffer, tarr);
-                strcat(value_type_buffer, ")");
-            }
-        }
-
-        free(varr);
-        free(tarr);
-
-        if (only_type) {
-            fprintf(output, "n%p%d[ordering=\"out\" label=\"%s%s", (void*)node->context,node->node_number,
-                    ast_ndtp(node->node_type), value_type_buffer);
-        } else if (only_label) {
-            fprintf(output, "n%p%d[ordering=\"out\" label=\"", (void*)node->context,node->node_number);
-            prt_unex(output, node->node_string,
-                     (int) node->node_string_length);
-            fprintf(output, "%s", value_type_buffer);
-        } else {
-            fprintf(output, "n%p%d[ordering=\"out\" label=\"%s\\n", (void*)node->context,node->node_number,
-                    ast_ndtp(node->node_type));
-            prt_unex(output, node->node_string,
-                     (int) node->node_string_length);
-            fprintf(output, "%s", value_type_buffer);
-        }
-        fprintf(output, "\" %s]\n", attributes);
-
-        /* Link to Parent */
-        if (node->parent) {
-            fprintf(output,"n%p%d -> n%p%d [xlabel=\"%d\"]\n",
-                    (void*)node->parent->context,  node->parent->node_number,
-                    (void*)node->context,node->node_number, child_index);
-        }
-
-        /* Link to Associated Node */
-        if (node->association) {
-            fprintf(output,"n%p%d -> n%p%d [color=red dir=\"forward\"]\n",
-                    (void*)node->context,node->node_number,
-                    (void*)node->association->context,node->association->node_number);
-        }
-
-        /* Link to Symbol */
-        if (node->symbolNode) {
-            if (node->symbolNode->writeUsage && node->symbolNode->readUsage) {
-                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"both\"]\n",
-                        (void*)node->context,node->node_number,
-                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
-                        node->symbolNode->symbol->name);
-            }
-            else if (node->symbolNode->writeUsage) {
-                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"forward\"]\n",
-                        (void*)node->context,node->node_number,
-                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
-                        node->symbolNode->symbol->name);
-            }
-            else if (node->symbolNode->readUsage) {
-                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"back\"]\n",
-                        (void*)node->context,node->node_number,
-                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
-                        node->symbolNode->symbol->name);
-            }
-            else {
-                fprintf(output,"n%p%d -> \"s%p%d_%s\" [color=cyan dir=\"none\"]\n",
-                        (void*)node->context,node->node_number,
-                        (void*)node->symbolNode->symbol->scope->defining_node->context,node->symbolNode->symbol->scope->defining_node->node_number,
-                        node->symbolNode->symbol->name);
-            }
-        }
-    }
-
-    else {
-        /* OUT - Bottom Up */
-        /* Scope Symbols */
-        if (!node->parent || node->scope != node->parent->scope) {
-            if (node->scope) scp_4all(node->scope, pdot_scope, output);
-        }
-
-        /* Scope == DOT Subgraph */
-        if (!node->parent || node->scope != node->parent->scope) {
-            if (node->scope) fprintf(output, "}\n");
-        }
-    }
-
-    return result_normal;
-}
-
-/* Utility to check if a token (typically an IDENTIFIER) is a certain value */
-/* Case-insensitive and only checks the first 14 characters of the value */
-int tokenis(Token *token, const char* value) {
-    char text_buffer[15];
-    int val;
-    int i;
-    if (!token || !token->token_string || !value) return 0;
-
-    val = (int)strlen(value);
-    if (val > 14) val = 14;
-    strncpy(text_buffer, token->token_string, val);
-    // lowercase the buffer
-    for (i = 0; i < val; i++) {
-        text_buffer[i] = (char)tolower(text_buffer[i]);
-    }
-    text_buffer[val] = 0;
-
-    if (strcmp(text_buffer, value) == 0) return 1;
-    return 0;
-}
-
 /* Utility to check is a node (typically an IDENTIFIER) is a certain value */
 /* Case-insensitive and only checks the first 14 characters of the value   */
 /* Returns 1 if it is, 0 if not */
@@ -2004,57 +1317,6 @@ int nodeis(ASTNode *node, const char* value) {
     if (strcmp(text_buffer, value) == 0) return 1;
     return 0;
 }
-
-void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {
-    char dot_filename[250];
-    char command[250];
-    FILE *output;
-
-    snprintf(dot_filename, 250, "%s.%s.dot", prefix, output_file);
-    output = fopen(dot_filename, "w");
-
-    if (tree) {
-        fprintf(output, "digraph REXXAST { pad=0.25\n");
-        ast_wlkr(tree, pdot_walker_handler, (void *) output);
-        fprintf(output, "\n}\n");
-    }
-    fclose(output);
-
-    /* Get dot from https://graphviz.org/download/ */
-    snprintf(command, 250, "dot %s.%s.dot -Tpng -o %s.%s.png", prefix, output_file, prefix, output_file);
-    system(command);
-}
-
-/* AST Walker
- * It returns
- *     result_normal - All OK - normal processing
- *     result_abort - Walk Aborted by handler
- *     result_error - error condition
- */
-walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
-    walker_result r;
-    ASTNode *child;
-
-    if (!tree) return result_error;
-    r = handler(in, tree, payload);
-    if (r == result_abort || r == result_error) return r;
-    else if (r == request_skip) return result_normal;
-
-    if ( (child = tree->child) ) {
-        r = ast_wlkr(child, handler, payload);
-        if (r == result_abort || r == result_error) return r;
-
-        while ( (child = child->sibling) ) {
-            r = ast_wlkr(child, handler, payload);
-            if (r == result_abort || r == result_error) return r;
-        }
-    }
-
-    r = handler(out, tree, payload);
-    if (r == result_abort || r == result_error) return r;
-
-    return result_normal;
-};
 
 /* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol) {
@@ -2242,24 +1504,33 @@ int ast_chdi(ASTNode* node) {
 
 /* Returns the nth child of a parent (or 0 on error), skipping ERROR/WARNING nodes */
 ASTNode* ast_chdn(ASTNode* parent, size_t n) {
-    ASTNode* node = parent->child;
-    size_t i = 0;
-    while (node) {
-        if (node->node_type != ERROR && node->node_type != WARNING) {
-            if (i == n) return node;
+    size_t i;
+    ASTNode* c;
+
+    if (!parent) return 0;
+
+    c = parent->child;
+    for (i = 0; c; c = c->sibling) {
+        if (c->node_type != ERROR && c->node_type != WARNING) {
+            if (i == n) return c;
             i++;
         }
-        node = node->sibling;
     }
+
     return 0;
 }
 
 /* Returns the next sibling a node (or 0 on error), skipping ERROR/WARNING nodes */
 ASTNode* ast_nsib(ASTNode* node) {
-    while (node) {
-        node = node->sibling;
-        if (node && node->node_type != ERROR && node->node_type != WARNING) return node;
+    ASTNode* s;
+
+    if (!node) return 0;
+
+    s = node->sibling;
+    while (s) {
+        if (s->node_type != ERROR && s->node_type != WARNING) return s;
+        s = s->sibling;
     }
+
     return 0;
 }
-

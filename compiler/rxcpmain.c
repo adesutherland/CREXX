@@ -63,51 +63,6 @@ static void license() {
     printf("%s",message);
 }
 
-static void error_and_exit(int rc, char* message) {
-
-    fprintf(stderr, "ERROR: %s - try \"rxc -h\"\n", message);
-    exit(rc);
-}
-
-static const char *get_filename(const char *path)
-{
-    size_t len = strlen(path);
-    size_t i;
-    if (!len) return "";
-
-    for (i = len - 1; i; i--)
-    {
-        if ( path[i] == '\\' || path[i] == '/' )
-        {
-            path = path + i + 1;
-            break;
-        }
-    }
-    return path;
-}
-
-/* TODO Move to Platform */
-/* Gets the directory of a filename in a malloced buffer */
-/* returns null if there is no directory part */
-static char *get_filename_directory(const char *file_name)
-{
-    size_t len = strlen(file_name);
-    if (!len) return 0;
-    char* result;
-
-    for (len--; len; len--)
-    {
-        if (file_name[len] == '\\' || file_name[len] == '/' )
-        {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, file_name, len);
-            return result;
-        }
-    }
-
-    return 0;
-}
 
 /* Context Factory */
 Context *cntx_f() {
