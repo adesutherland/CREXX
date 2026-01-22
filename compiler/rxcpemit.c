@@ -312,7 +312,7 @@ static void meta_clear_symbol(Symbol *symbol, void *payload) {
 }
 
 /* Clear all variable metadata */
-static void clear_variable_metadata(ASTNode *node) {
+void clear_variable_metadata(ASTNode *node) {
 
     Scope *scope = node->scope;
     ASTNode *n = node;
@@ -350,7 +350,7 @@ static void meta_clear_global_symbol(Symbol *symbol, void *payload) {
 
 /* Clear Global Variable Metadata
  * node is the PROCEDURE node*/
-static void clear_global_variable_metadata(ASTNode* node) {
+void clear_global_variable_metadata(ASTNode* node) {
 
     Scope *scope = node->scope;
     ASTNode *n = node;
@@ -674,13 +674,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case ARGS:
             case INSTRUCTIONS:
-                if (!node->output) node->output = output_f();
-                n = child1;
-                while (n) {
-                    if (n->output) output_concat(node->output, n->output);
-                    if (n->cleanup) output_concat(node->output, n->cleanup);
-                    n = n->sibling;
-                }
+                emit_flow(node, pl);
                 break;
 
             case ARG:
@@ -1370,497 +1364,55 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case NOP:
-                if (!node->output) node->output = output_f();
+                emit_flow(node, pl);
                 break;
 
             case SAY:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    /* If the register is not set then the child is a constant
-                     * which we SAY directly. Get the constant string - target type */
-                    temp2 = format_constant(child1->target_type, child1);
-                    temp1 = mprintf("   say %s\n", temp2);
-                    free(temp2);
-                }
-                else {
-                    output_concat(node->output, child1->output);
-                    temp1 = mprintf("   say %c%d\n",
-                                    child1->register_type,
-                                    child1->register_num);
-                }
-                output_append_text(node->output, temp1);
-                free(temp1);
-
-                /* Cleanup child */
-                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                emit_flow(node, pl);
                 break;
 
             case RETURN:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                if (child1 == 0) {
-                    temp1 = mprintf("   ret\n");
-                }
-                else if (child1->register_num == DONT_ASSIGN_REGISTER) {
-                    /* If the register is not set then the child is a constant
-                     * which we RET directly. Get the constant string - target type */
-                    temp2 = format_constant(child1->target_type, child1);
-                    temp1 = mprintf("   ret %s\n", temp2);
-                    free(temp2);
-                }
-                else {
-                    output_concat(node->output, child1->output);
-                    temp1 = mprintf("   ret %c%d\n",
-                                    child1->register_type,
-                                    child1->register_num);
-                    // TODO - Test array element as we have not unlinked
-                }
-                output_append_text(node->output, temp1);
-                free(temp1);
+                emit_flow(node, pl);
                 break;
 
             case IF:
-                /* Add source metadata */
-                comment_meta = get_metaline_range(node, child1);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                if (child1->output) output_concat(node->output, child1->output);
-                comment_meta = get_metaline_token_after(child1);
-                temp1 = mprintf("   brf l%diffalse,%c%d\n%s",
-                                node->node_number,
-                                node->register_type,
-                                node->register_num,
-                                comment_meta);
-                output_append_text(node->output, temp1);
-                free(temp1);
-                free(comment_meta);
-                output_concat(node->output, child2->output);
-                if (child3) {
-                    comment_meta = get_metaline_token_after(child2);
-                    temp1 = mprintf("   br l%difend\n%sl%diffalse:\n",
-                                    node->node_number,
-                                    comment_meta,
-                                    node->node_number);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                    free(comment_meta);
-                    output_concat(node->output, child3->output);
-
-                    temp1 = mprintf("l%difend:\n",
-                                    node->node_number);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
-                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
-                    if (child3->cleanup) output_concat(node->output, child3->cleanup);
-                }
-                else {
-                    temp1 = mprintf("l%diffalse:\n",
-                                    node->node_number);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
-                    if (child2->cleanup) output_concat(node->output, child2->cleanup);
-                }
+                emit_flow(node, pl);
                 break;
 
             case DO: /* DO LOOP */
-                /* Loop Assignments REPEAT->output */
-
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-
-                /* child1 is the REPEAT node, child2 is the INSTRUCTIONS */
-
-                comment_meta = get_metaline_token_at(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Init */
-                output_concat(node->output, child1->output);
-
-                /* Loop Start */
-                temp1 = mprintf("l%ddostart:\n",
-                                node->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
-
-                /* Loop Begin Checks REPEAT->loopstartchecks */
-                output_concat(node->output, child1->loopstartchecks);
-
-                /* Loop Body - instructions */
-                output_concat(node->output, child2->output);
-
-                /* Loop End Checks REPEAT->loopendchecks */
-                temp1 = mprintf("l%ddoinc:\n",
-                                node->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
-                output_concat(node->output, child1->loopendchecks);
-
-                /* Loop increments REPEAT->loopinc */
-                output_concat(node->output, child1->loopinc);
-
-                /* Loop End */
-                comment_meta = get_metaline_token_after(child2);
-
-                output_append_text(node->output, comment_meta);
-                temp1 = mprintf("   br l%ddostart\nl%ddoend:\n",
-                                node->node_number, node->node_number);
-                output_append_text(node->output, temp1);
-                if (child1->cleanup) output_concat(node->output, child1->cleanup);
-                free(temp1);
-                free(comment_meta);
+                emit_flow(node, pl);
                 break;
 
             case REPEAT:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-                if (!node->output) node->output = output_f(); /* Assign / init instruction */
-                node->loopstartchecks = output_f(); /* Begin Loop exit checks */
-                node->loopinc = output_f(); /* Loop increments */
-                node->loopendchecks = output_f(); /* End Loop exit checks */
-                while (child1) {
-                    if (child1->node_type == ASSIGN) {
-                        /* Only output is valid - does not follow convention */
-                        if (child1->output) output_concat(node->output, child1->output);
-                    }
-                    else {
-                        if (child1->output)
-                            output_concat(node->output, child1->output);
-                        if (child1->loopstartchecks)
-                            output_concat(node->loopstartchecks, child1->loopstartchecks);
-                        if (child1->loopinc)
-                            output_concat(node->loopinc, child1->loopinc);
-                        if (child1->loopendchecks)
-                            output_concat(node->loopendchecks, child1->loopendchecks);
-                    }
-                    child1 = child1->sibling;
-                }
-                /* Output Cleanups */
-                child1 = node->child;
-                while (child1) {
-                    if (child1->cleanup) {
-                        if (!node->cleanup) node->cleanup = output_f();
-                        output_concat(node->cleanup, child1->cleanup);
-                    }
-                    child1 = child1->sibling;
-                }
-
+                emit_flow(node, pl);
                 break;
 
             case FOR:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                output_concat(node->output, child1->output);
-                if (child1->register_num != node->register_num ||
-                    child1->register_type != node->register_type) {
-                    temp1 = mprintf("   icopy %c%d,%c%d\n",
-                                    node->register_type,
-                                    node->register_num,
-                                    child1->register_type,
-                                    child1->register_num);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                node->loopstartchecks = output_fs(comment_meta);
-                temp1 = mprintf("   bcf l%ddoend,%c%d\n",
-                                node->parent->parent->node_number,
-                                node->register_type,
-                                node->register_num);
-                output_append_text(node->loopstartchecks, temp1);
-                if (child1->cleanup) {
-                    if (!node->cleanup) node->cleanup = output_f();
-                    output_concat(node->cleanup, child1->cleanup);
-                }
-                free(comment_meta);
-                free(temp1);
+                emit_flow(node, pl);
                 break;
 
             case TO:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                output_concat(node->output, child1->output);
-
-                /* Need to determine the sign of the BY */
-                /* Find the BY */
-                j = 1; /* J is the sign: 1 (default)=positive, -1=negative, 0=dynamic */
-                n = node->parent->child; /* First sibling */
-                while (n) {
-                    if (n->node_type == BY) {
-                        if (n->child) {
-                            if (is_constant(n->child)) {
-                                if (n->child->value_type == n->child->target_type) {
-                                    /* Is a constant */
-                                    if (n->child->value_type == TP_INTEGER) {
-                                        if (n->child->int_value >= 0) j = 1;
-                                        else j = -1;
-                                    }
-                                    else if (n->child->value_type == TP_FLOAT) {
-                                        if (n->child->float_value >= 0.0) j = 1;
-                                        else j = -1;
-                                    }
-                                    else if (n->child->value_type == TP_DECIMAL) {
-                                        if (n->child->decimal_value[0] == '-') j = -1;
-                                        else j = 1;
-                                    }
-                                    else j = 1;
-                                }
-                                else j = 0; /* Not a constant */
-                            }
-                            else j = 0; /* Not a constant */
-                        }
-                        else j = 1; /* Implicit by */
-                        break;
-                    }
-                    n = n->sibling;
-                }
-                /* n is set by the BY node */
-
-                /* If the REPEAT has a TO it has an ASSIGN and its register
-                 * number will have been set to the ASSIGN Variable */
-                node->loopstartchecks = output_fs(comment_meta);
-                switch (j) {
-                    case 1: /* Positive */
-                        temp1 = mprintf("   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
-                                        tp_prefix,
-                                        node->parent->register_type,
-                                        node->parent->register_num,
-                                        node->child->register_type,
-                                        node->child->register_num,
-                                        node->parent->parent->node_number);
-                        break;
-                    case -1: /* Negative */
-                        temp1 = mprintf("   %slt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
-                                        tp_prefix,
-                                        node->parent->register_type,
-                                        node->parent->register_num,
-                                        node->child->register_type,
-                                        node->child->register_num,
-                                        node->parent->parent->node_number);
-                        break;
-                    default: /* Dynamic by value */
-                        /* We need a zero (int or flaot */
-                        if (*tp_prefix == 'i') op = "0";
-                        else op = "0.0";
-                        temp1 = mprintf(
-                                "   %slt r0,%c%d,%s\n" /* Check the by value sign */
-                                "   brt l%ddoneg1,r0\n"    /* JMP to Negative BY (r0 - todo) */
-
-                                "   %sgt r0,%c%d,%c%d\n"   /* Pos BY */
-                                "   brtf l%ddoend,l%ddoneg2,r0\n" /* r0 - todo */
-
-                                "l%ddoneg1:\n"
-                                "   %slt r0,%c%d,%c%d\n"   /* Neg BY */
-                                "   brt l%ddoend,r0\n" /* r0 - todo */
-
-                                "l%ddoneg2:\n",
-
-                                tp_prefix,
-                                n->child->register_type,
-                                n->child->register_num,
-                                op,
-                                node->parent->parent->node_number,
-
-                                tp_prefix,
-                                node->parent->register_type,
-                                node->parent->register_num,
-                                node->child->register_type,
-                                node->child->register_num,
-                                node->parent->parent->node_number,
-                                node->parent->parent->node_number,
-
-                                node->parent->parent->node_number,
-                                tp_prefix,
-                                node->parent->register_type,
-                                node->parent->register_num,
-                                node->child->register_type,
-                                node->child->register_num,
-                                node->parent->parent->node_number,
-                                node->parent->parent->node_number);
-                }
-                output_append_text(node->loopstartchecks, temp1);
-                free(temp1);
-                free(comment_meta);
-                if (child1->cleanup) {
-                    if (!node->cleanup) node->cleanup = output_f();
-                    output_concat(node->cleanup, child1->cleanup);
-                }
+                emit_flow(node, pl);
                 break;
 
             case BY:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-
-                /* If the REPEAT has a BY it has an ASSIGN and its register
-                 * number will have been set to the ASSIGN Variable */
-
-                if (child1) {
-                    /* BY explicitly stated */
-                    comment_meta = get_metaline(node);
-                    if (node->output) output_prepend_text(comment_meta, node->output);
-                    else node->output = output_fs(comment_meta);
-                    output_concat(node->output, child1->output);
-
-                    node->loopinc = output_fs(comment_meta);
-                    temp1 = mprintf(" %sadd %c%d,%c%d,%c%d\n",
-                                    tp_prefix,
-                                    node->parent->register_type,
-                                    node->parent->register_num,
-                                    node->child->register_type,
-                                    node->child->register_num,
-                                    node->parent->register_type,
-                                    node->parent->register_num);
-                    output_append_text(node->loopinc, temp1);
-                    free(comment_meta);
-                    free(temp1);
-                    if (child1->cleanup) {
-                        if (!node->cleanup) node->cleanup = output_f();
-                        output_concat(node->cleanup, child1->cleanup);
-                    }
-                }
-                else {
-                    /* BY Added implicitly - increment by 1 */
-                    /* For the source we can only reference the symbol in the loop assignment node */
-//                    comment_meta = get_comment_line_number_only(node->parent, "{Implicit \"BY 1\"}");
-                    comment_meta = get_metaline_token_at(node->parent->child);
-                    node->loopinc = output_fs(comment_meta);
-                    free(comment_meta);
-
-                    if (*tp_prefix == 'i') {
-                        temp1 = mprintf("   inc %c%d\n",
-                                        node->parent->register_type,
-                                        node->parent->register_num);
-                    }
-                    else {
-                        temp1 = mprintf("   %sadd %c%d,%c%d,1.0\n",
-                                        tp_prefix,
-                                        node->parent->register_type,
-                                        node->parent->register_num,
-                                        node->parent->register_type,
-                                        node->parent->register_num);
-                    }
-                    output_append_text(node->loopinc, temp1);
-                    free(temp1);
-                }
+                emit_flow(node, pl);
                 break;
 
             case WHILE:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-                comment_meta = get_metaline(node);
-                node->loopstartchecks = output_fs(comment_meta);
-                free(comment_meta);
-                output_concat(node->loopstartchecks, child1->output);
-                temp1 = mprintf("   brf l%ddoend,%c%d\n",
-                                node->parent->parent->node_number,
-                                node->register_type,
-                                node->register_num);
-                output_append_text(node->loopstartchecks, temp1);
-                free(temp1);
-                if (child1->cleanup) {
-                    if (!node->cleanup) node->cleanup = output_f();
-                    output_concat(node->cleanup, child1->cleanup);
-                }
+                emit_flow(node, pl);
                 break;
 
             case UNTIL:
-                /* Loop output mapping / convention
-                 * output =  Loop Assign / init instruction
-                 * loopstartchecks = Loop iteration beginning exit checks
-                 * loopinc = Loop iteration increments
-                 * loopendchecks = Loop iteration end exit checks */
-                comment_meta = get_metaline(node);
-                node->loopendchecks = output_fs(comment_meta);
-                free(comment_meta);
-                output_concat(node->loopendchecks, child1->output);
-                temp1 = mprintf("   brt l%ddoend,%c%d\n",
-                                node->parent->parent->node_number,
-                                node->register_type,
-                                node->register_num);
-                output_append_text(node->loopendchecks, temp1);
-                free(temp1);
-                if (child1->cleanup) {
-                    if (!node->cleanup) node->cleanup = output_f();
-                    output_concat(node->cleanup, child1->cleanup);
-                }
+                emit_flow(node, pl);
                 break;
 
             case LEAVE:
-                /* Leave Loop */
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                temp1 = mprintf("   br l%ddoend\n",
-                                node->association->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
+                emit_flow(node, pl);
                 break;
 
             case ITERATE:
-                /* Iterate Loop */
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
-
-                /* Add Variable Metadata */
-                add_variable_metadata(node);
-
-                temp1 = mprintf("   br l%ddoinc\n",
-                                node->association->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
+                emit_flow(node, pl);
                 break;
 
             default:;
