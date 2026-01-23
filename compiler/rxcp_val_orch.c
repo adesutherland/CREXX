@@ -354,46 +354,48 @@ void validate_ast(Context *context) {
         ast_wlkr(context->ast, add_rxsysb_walker, (void *) context);
     }
 
-    /* Builds the Symbol Table */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+    /* Fixed Point Iteration Loop */
+    int iterations = 0;
+    context->after_rewrite = 0;
+    do {
+        context->changed = 0;
 
-    /* Mainly resolve symbols - functions */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
+        /* Set Ordinals */
+        ordinal_counter = 0;
+        ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
 
-    /* Resolve exposed symbols */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
+        /* Builds the Symbol Table */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 
-    /* Validate Symbols */
-    validate_symbols(context->ast->scope);
+        /* Mainly resolve symbols - functions */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
 
-    /* Set Node Types */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+        /* Resolve exposed symbols */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
 
-    /* Re-write ADDRESS Instructions */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+        /* Validate Symbols */
+        validate_symbols(context->ast->scope);
 
-    /* Re-write EXIT Instructions */
-    context->current_scope = 0;
-    ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+        /* Set Node Types */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, set_node_types_walker, (void *) context);
 
-    context->after_rewrite = 1; /* Incremental update of symbols - So walkers can avoid duplicate processing */
+        /* Re-write ADDRESS Instructions */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
 
-    ordinal_counter = 0;
-    ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
-    context->current_scope = 0;
-    ast_wlkr(context->ast, build_symbols_walker, (void *) context);
-    context->current_scope = 0;
-    ast_wlkr(context->ast, resolve_functions_walker, (void *) context);
-    context->current_scope = 0;
-    ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
-    validate_symbols(context->ast->scope);
-    context->current_scope = 0;
-    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+        /* Re-write EXIT Instructions */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
+
+        iterations++;
+        /* Incremental update of symbols - So walkers can avoid duplicate processing */
+        if (iterations == 1) context->after_rewrite = 1;
+
+    } while (context->changed && iterations < 16);
 
     /* Type Safety checks */
     context->current_scope = 0;

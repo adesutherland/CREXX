@@ -69,6 +69,7 @@ walker_result rewrite_exit_walker(walker_direction direction,
 
                 /* Add Function */
                 add_ast(node, function_node);
+                context->changed = 1;
                 break;
 
             default: ;
@@ -100,6 +101,7 @@ walker_result rewrite_address_walker(walker_direction direction,
 
             case ADDRESS:
                 /* Rewrite to an assignment from a function */
+                context->changed = 1;
 
                 /* Assignment node and remember the command */
                 node->node_type = ASSIGN;
@@ -145,6 +147,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     node->node_type = FUNCTION;
                     ast_str(node, "_string2redir");
                 }
+                context->changed = 1;
                 break;
 
             case REDIRECT_OUT:
@@ -165,6 +168,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     node->node_type = FUNCTION;
                     ast_str(node, "_redir2string");
                 }
+                context->changed = 1;
                 break;
 
             case REDIRECT_EXPOSE:
@@ -204,6 +208,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     /* No children / environment variables - delete node */
                     ast_del(node);
                 }
+                context->changed = 1;
                 break;
 
             default:;
