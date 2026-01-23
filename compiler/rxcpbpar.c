@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include "rxcpbgmr.h"
 #include "rxcpmain.h"
+#include "rxcp_util.h"
 
 int rexbpars(Context *context) {
 
@@ -43,7 +44,8 @@ int rexbpars(Context *context) {
     /* Create parser and set up tracing */
     parser = RexxBAlloc(malloc);
 #ifndef NDEBUG
-    RexxBTrace(context->traceFile, "Parser(B) >> ");
+    if (context->debug_mode) RexxBTrace(stderr, "[PARSER] ");
+    else RexxBTrace(context->traceFile, "Parser(B) >> ");
 #endif
 
     peek_token = token_f(context, rexbscan(context));
@@ -103,6 +105,7 @@ int rexbpars(Context *context) {
             RexxB(parser, token_type, t, context);
         }
 
+        if (context->debug_mode) fprintf(stderr, "[GLUE] Line %d: Passing Token %d (%s) to Parser\n", context->line, token_type, token_to_string(token_type));
         RexxB(parser, token_type, token, context);
         last_token_type = token_type;
     }
