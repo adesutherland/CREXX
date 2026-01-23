@@ -1,0 +1,33 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 12_arrays_lvlb.rexx
+ * BUILT                  : 2026-01-21 12:11:28
+ */
+
+.srcfile="12_arrays_lvlb.rexx"
+.globals=0
+
+main() .locals=3
+   .meta "12_arrays_lvlb.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "12_arrays_lvlb.main.ary"="b" ".int[5]" r1
+   .src 3:1="ary = .int[5"
+   null r1
+   .src 4:1="ary[1] = 10"
+   setattrs r1,5
+   linkattr1 r2,r1,1
+   load r2,10
+   unlink r2
+   .src 5:1="say ary[1"
+   setattrs r1,5
+   linkattr1 r2,r1,1
+   itos r2
+   say r2
+   unlink r2
+   .src 5:10=""
+   ret
+   .meta "12_arrays_lvlb.main.ary"

@@ -3256,10 +3256,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             {
                 int i = op1R->string_length - 1;
                 while (i >= 0 && op1R->string_value[i] == ' ') {
-                    op1R->string_value[i] = '\0';
                     i--;
                 }
                 op1R->string_length = i + 1;
+                null_terminate_string_buffer(op1R);
             }
             DISPATCH
 
@@ -3277,12 +3277,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (i >= j) {
                     op1R->string_length = 0;
-                    op1R->string_value[0] = '\0';
+                    null_terminate_string_buffer(op1R);
                 } else {
                     op1R->string_length = op1R->string_length - i;
                     memcpy(op1R->string_value, op1R->string_value + i,
                            op1R->string_length);
-                    op1R->string_value[op1R->string_length] = '\0';
+                    null_terminate_string_buffer(op1R);
                 }
             }
             DISPATCH
@@ -4600,7 +4600,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(FFORMAT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
-            op3R->string_value[op3R->string_length]='\0';    // terminate format string explicitly, rexx vars aren't!
+            null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
             op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
             op1R->string_pos = 0;
   #ifndef NUTF8
@@ -4700,6 +4700,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 int ch, i, bytelen, mode;
                 unsigned char bytebuf[4] = {0, 0, 0, 0};
 
+                null_terminate_string_buffer(op1R);
                 if (strstr(op1R->string_value, "UTFV1") > 0) goto hexm2;
                 if (strstr(op1R->string_value, "UTFV2") > 0) goto hexm3;
 
@@ -4709,6 +4710,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, 3);
                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
                 PUTSTRLEN(op1R, 2)                  // hex length is 2
                 goto hexdispatch;
@@ -4722,6 +4724,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, 9);
                 for (i = 0; i < 4; ++i) {
                     unsigned char b = bytebuf[i];
                     split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
@@ -4735,6 +4738,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
                 ch=op2R->string_value[op3R->int_value];
 #endif
+                prep_string_buffer(op1R, bytelen * 2 + 1);
                 for (i = 0; i < bytelen; ++i) {
                     unsigned char b = start[i];
                     split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
@@ -5309,8 +5313,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 if (offset < 0 || offset >= op3R->string_length) {
                     REG_RETURN_INT(0);  // Or -1, depending on your logic
                 } else {
-                    op2R->string_value[op2R->string_length]=0;
-                    op3R->string_value[op3R->string_length]=0;
+                    null_terminate_string_buffer(op2R);
+                    null_terminate_string_buffer(op3R);
                     charpos = strstr(op3R->string_value + offset, op2R->string_value);
                     if (charpos > 0) offset = charpos - op3R->string_value;
                     else offset = -1;
@@ -5623,8 +5627,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
      HRESULT hrReturnVal;
      rxinteger i1=-16;
     // rxfuncadd(rexxname,module,sysname)
-    op2R->string_value[op2R->string_length]=0;
-    op3R->string_value[op3R->string_length]=0;
+    null_terminate_string_buffer(op2R);
+    null_terminate_string_buffer(op3R);
     printf("Module %s\n",op3R->string_value);
 
     hDLL = LoadLibrary(op2R->string_value);
@@ -5646,8 +5650,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     char *error;
     rxinteger i1=-16;
     // rxfuncadd(rexxname,module,sysname)
-    op2R->string_value[op2R->string_length]=0;
-    op3R->string_value[op3R->string_length]=0;
+    null_terminate_string_buffer(op2R);
+    null_terminate_string_buffer(op3R);
     printf("Module %s\n",op3R->string_value);
     
     /* Open the shared object */

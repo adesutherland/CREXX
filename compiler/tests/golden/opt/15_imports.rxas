@@ -1,0 +1,28 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 15_imports.rexx
+ * BUILT                  : 2026-01-21 12:45:35
+ */
+
+.srcfile="15_imports.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "15_imports.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 6:1="say myfunc(10)"
+   load r1,1
+   load r2,10
+   call r3,myfunc(),r1
+   itos r3
+   say r3
+   .src 6:15=""
+   ret
+
+/* Imported Declaration from file: mymath.rexx */
+myfunc() .expose=mymath.myfunc
+   .meta "mymath.myfunc"="b" ".int" myfunc() "x=.int"

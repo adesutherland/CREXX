@@ -1,0 +1,25 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 01_assign.rexx
+ * BUILT                  : 2026-01-21 11:01:01
+ */
+
+.srcfile="01_assign.rexx"
+.globals=0
+
+main() .locals=2
+   .meta "01_assign.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="a = 10"
+   .meta "01_assign.main.a"="b" ".int" r1
+   load r1,10
+   .src 4:1="say a"
+   itos r1
+   say r1
+   .src 4:6=""
+   ret
+   .meta "01_assign.main.a"

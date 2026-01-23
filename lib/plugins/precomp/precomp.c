@@ -336,60 +336,69 @@ PROCEDURE (insertat) {
 * -------------------------------------------------------------------------------------
 */
 PROCEDURE (fsearch) {
-    int i,mmax, from;
-    mmax = GETARRAYHI(ARG0);   // number of contained array items
-    from = GETINT(ARG1)-1;
-    if (from<0) from=0;
-    if (from>=mmax) RETURNINTX(0);
+    int i, mmax, from;
+    mmax = GETARRAYHI(ARG0);
+    from = GETINT(ARG1) - 1;
+    if (from < 0) from = 0;
+    if (from >= mmax) RETURNINTX(0);
     SETINT(ARG5, 0);
-    char * ustr1= strupr_portable(GETSTRING(ARG2));
-    char * ustr2= strupr_portable(GETSTRING(ARG3));
-    char * ustr3= strupr_portable(GETSTRING(ARG4));
-    char * haystack;
+
+    char *ustr1 = strdup(GETSTRING(ARG2));
+    char *ustr2 = strdup(GETSTRING(ARG3));
+    char *ustr3 = strdup(GETSTRING(ARG4));
+    strupr_portable(ustr1);
+    strupr_portable(ustr2);
+    strupr_portable(ustr3);
+
+    int result = 0;
     for (i = from; i < mmax; i++) {
-        haystack = strupr_portable(strdup(GETSARRAY(ARG0, i)));
+        char *orig_haystack = strdup(GETSARRAY(ARG0, i));
+        char *haystack = orig_haystack;
+        strupr_portable(haystack);
         while (isspace((unsigned char)*haystack)) haystack++;
-        if (ustr1[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG2)) == haystack) {
-                SETINT(ARG5, 1);
-                RETURNINTX(i + 1);
-            }
-        if (ustr2[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG3)) == haystack) {
-                SETINT(ARG5, 2);
-                RETURNINTX(i + 1);
-            }
-        if (ustr3[0] != '\0')
-            if (strstr(haystack, GETSTRING(ARG4)) == haystack) {
-                SETINT(ARG5, 3);
-                RETURNINTX(i + 1);
-            }
+
+        if (ustr1[0] != '\0' && strstr(haystack, ustr1) == haystack) {
+            SETINT(ARG5, 1);
+            result = i + 1;
+        } else if (ustr2[0] != '\0' && strstr(haystack, ustr2) == haystack) {
+            SETINT(ARG5, 2);
+            result = i + 1;
+        } else if (ustr3[0] != '\0' && strstr(haystack, ustr3) == haystack) {
+            SETINT(ARG5, 3);
+            result = i + 1;
+        }
+        free(orig_haystack);
+        if (result != 0) break;
     }
-    RETURNINTX(0);
-    PROCRETURN
+    free(ustr1);
+    free(ustr2);
+    free(ustr3);
+    RETURNINTX(result);
     ENDPROC
 }
 
-/* -------------------------------------------------------------------------------------
-* search in array a certain string, up to 3 strings are possible
-* -------------------------------------------------------------------------------------
-*/
 PROCEDURE (ffind) {
-    int i,mmax, from;
-    mmax = GETARRAYHI(ARG0);   // number of contained array items
-    from = GETINT(ARG1)-1;
-    if (from<0) from=0;
-    if (from>=mmax) RETURNINTX(0);
-    char * ustr= strupr_portable(strdup(GETSTRING(ARG2)));
-    char * haystack;
+    int i, mmax, from;
+    mmax = GETARRAYHI(ARG0);
+    from = GETINT(ARG1) - 1;
+    if (from < 0) from = 0;
+    if (from >= mmax) RETURNINTX(0);
+
+    char *ustr = strdup(GETSTRING(ARG2));
+    strupr_portable(ustr);
+
+    int result = 0;
     for (i = from; i < mmax; i++) {
-        haystack = strupr_portable(strdup(GETSARRAY(ARG0, i)));
-        if (strstr(haystack, ustr)!= NULL) {
-            RETURNINTX(i + 1);
+        char *haystack = strdup(GETSARRAY(ARG0, i));
+        strupr_portable(haystack);
+        if (strstr(haystack, ustr) != NULL) {
+            result = i + 1;
         }
+        free(haystack);
+        if (result != 0) break;
     }
-    RETURNINTX(0);
-    PROCRETURN
+    free(ustr);
+    RETURNINTX(result);
     ENDPROC
 }
 
@@ -617,7 +626,7 @@ int is_properly_quoted(const char* str) {
 PROCEDURE(safe_quote) {
     char* input=GETSTRING(ARG0) ;
     if (is_properly_quoted(input)) {
-        RETURNSTRX(strdup(input));  // return as-is
+        RETURNSTRX(input);  // return as-is
     }
 
     int has_single = strchr(input, '\'') != NULL;
@@ -636,34 +645,34 @@ PROCEDURE(safe_quote) {
     }
     *p++ = quote;
     *p = '\0';
-    RETURNSTRX(result);
-    ENDPROC
+    RETURNSTR(result);
+    free(result);
+    PROCRETURN;
+    ENDPROC;
 }
 // this is a case-insensitive version of the pos function
 PROCEDURE(fpos) {
-    char *substring  = strdup(GETSTRING(ARG0));   // Get the substring to find
-    char *wordstring = strdup(GETSTRING(ARG1));  // Get the input string
+    char *substring  = strdup(GETSTRING(ARG0));
+    char *wordstring = strdup(GETSTRING(ARG1));
+    int offset = GETINT(ARG2) - 1;
+    int result = 0;
 
-    int offset = GETINT(ARG2) - 1;         // Get the offset to start searching
-    char *found;
-    // Check for NULL input or invalid offset
-    if (wordstring == NULL || substring == NULL || offset < 0) {
-        RETURNINT(-1); // Return -1 on error
+    if (substring && wordstring && offset >= 0) {
+        strupr_portable(substring);
+        strupr_portable(wordstring);
+        if (offset < (int)strlen(wordstring)) {
+            char *found = strstr(wordstring + offset, substring);
+            if (found != NULL) {
+                result = (int)(found - wordstring + 1);
+            }
+        }
+    } else if (offset < 0) {
+        result = -1;
     }
-    if (offset < 0) offset = 0;
-    // Adjust the starting point for the search
-    substring = strupr_portable(substring);
-    wordstring = strupr_portable(wordstring);
-    if (offset>strlen(wordstring)) found=NULL;
-    else found = strstr(wordstring+offset, substring); // Find the first occurrence of the substring
 
-    if (found != NULL) {
-         RETURNINT(found - wordstring + 1); // Return the position (1-based index)
-    } else {
-       RETURNINT(0); // Return 0 if the substring is not found
-    }
-    free(substring);
-    free(wordstring);
+    if (substring) free(substring);
+    if (wordstring) free(wordstring);
+    RETURNINTX(result);
     ENDPROC;
 }
 char myArray[10][64] = { { '\0' } };
@@ -671,9 +680,11 @@ PROCEDURE(templist) {
     char mode = GETSTRING(ARG0)[0];
     int  index= GETINT(ARG1)-1;
     char *content = GETSTRING(ARG2);
+    if (index < 0 || index >= 10) RETURNSTRX("");
     if(mode=='G' || mode=='g')  RETURNSTRX(myArray[index]);
  // put mode
-    strcpy(myArray[index],content);
+    strncpy(myArray[index], content, 63);
+    myArray[index][63] = '\0';
     RETURNSTRX(""); // Return 0 if the substring is not found
     ENDPROC;
 }
@@ -693,23 +704,23 @@ static char *quote_stem_path(char *in) {
     size_t in_len = strlen(in);
     if (in_len == 0) return NULL;
 
-    /* One-shot allocation: worst case <= about 2*in_len + small constant */
-    size_t cap = in_len * 2 + 8;
+    const char *dot = strchr(in, '.');
+    if (!dot) {
+        return strdup(in);
+    }
+
+    size_t root_len = (size_t) (dot - in);
+    if (root_len == 0) return NULL; /* ".a" invalid */
+
+    /* Max possible expansion: each segment char stays as-is, each dot becomes ||"."||
+       Plus prefix "root." (root_len + 3)
+    */
+    size_t cap = in_len * 8 + 32;
     char *out = (char *) malloc(cap);
     if (!out) return NULL;
 
     size_t w = 0;
-    const char *dot = strchr(in, '.');
-    if (!dot) return in;
-
-    /* Root before first '.' */
-    size_t root_len = (size_t) (dot - in);
-    if (root_len == 0) {
-        free(out);
-        return NULL;
-    } /* ".a" invalid */
-
-    /* Prefix: "Root." (dot belongs to root, never variable) */
+    /* Prefix: "Root." */
     out[w++] = '"';
     memcpy(out + w, in, root_len);
     w += root_len;
@@ -718,7 +729,6 @@ static char *quote_stem_path(char *in) {
 
     /* Tail segments */
     const char *p = dot + 1;
-    int first = 1;
 
     while (*p) {
         const char *next = strchr(p, '.');
@@ -727,20 +737,20 @@ static char *quote_stem_path(char *in) {
         if (seg_len == 0) {
             free(out);
             return NULL;
-        } /* "a..b" or "a." */
+        }
 
-        if (first) {
-            /* First tail: no opening quote, only closing quote => bert" */
-            memcpy(out + w, p, seg_len);
-            w += seg_len;
+        /* Concatenate segment: ||seg */
+        out[w++] = '|';
+        out[w++] = '|';
+        memcpy(out + w, p, seg_len);
+        w += seg_len;
+
+        if (next) {
+            /* More segments follow, add dot: ||"." */
+            out[w++] = '|';
+            out[w++] = '|';
             out[w++] = '"';
-            first = 0;
-        } else {
-            /* Others: ."seg" */
             out[w++] = '.';
-            out[w++] = '"';
-            memcpy(out + w, p, seg_len);
-            w += seg_len;
             out[w++] = '"';
         }
 
@@ -748,8 +758,8 @@ static char *quote_stem_path(char *in) {
         p = next + 1;
     }
 
-    out[w - 1] = '\0';
-  return out;
+    out[w] = '\0';
+    return out;
 }
 
 

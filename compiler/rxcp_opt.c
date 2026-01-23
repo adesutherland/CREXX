@@ -1,6 +1,29 @@
 /*
- * rxcp_opt.c
- * cREXX Optimisations
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Compiler Optimization Pass
  */
 
 /*
@@ -408,6 +431,57 @@ static int is_comparison_operator(NodeType type) {
     }
 }
 
+/* Static utility to check if a node can be code folded */
+/* children specify how many children of the node should be considered (0, 1, 2 or 3) */
+/* Returns 1 if it can, 0 if it can't */
+/*
+static int can_code_fold(ASTNode* node, int children) {
+    ASTNode *child1 = 0, *child2 = 0, *child3 = 0;
+    Context *context = node->context; // Attributes: fuzz, digits, casetype, form, standard
+
+    if (node->node_type == CONSTANT) return 1; // A constant IS folded
+
+    child1 = node->child;
+    if (child1) child2 = child1->sibling;
+    if (child2) child3 = child2->sibling;
+
+    // Are any of the children missing (0<=children) or CONSTANT?
+    if (children >= 1) {
+        if (!child1 || child1->node_type != CONSTANT) return 0;
+    }
+    if (children >= 2) {
+        if (!child2 || child2->node_type != CONSTANT) return 0;
+    }
+    if (children >= 3) {
+        if (!child3 || child3->node_type != CONSTANT) return 0;
+    }
+
+    // String operators
+
+    // Check comparison operators
+    if (is_comparison_operator(node->node_type)) {
+        if (node->scope->num_context.fuzz == -1 || node->scope->num_context.digits == -1)
+            return 0; // Can't fold operators if digits or fuzz is inherited
+    }
+    // Check for conversion to string scenarios
+
+    // fuzz, digits, casetype, form, standard
+
+
+// If any children aren't constant, then there is no constant folding to be done
+if (child1) {
+    if (child1->node_type != CONSTANT) can_do_code_folding = 0;
+    else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
+        can_do_code_folding = 0; // Can't fold decimal if digits is inherited
+}
+    if (child2) {
+        if (child2->node_type != CONSTANT) can_do_code_folding = 0;
+        else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
+            can_do_code_folding = 0; // Can't fold decimal if digits is inherited
+    }
+}
+*/
+
 /* Step 1
  * - Constant Folding
  */
@@ -419,7 +493,7 @@ static walker_result opt1_walker(walker_direction direction,
     ASTNode *child1, *child2, *child3, *keep_node;
     char* buffer;
     size_t buffer_length;
-    int can_do_code_folding;
+    int can_do_code_folding = 1;
     int compare;
     int index;
 
@@ -524,7 +598,6 @@ static walker_result opt1_walker(walker_direction direction,
             /* 'Normal' Cases */
 
             /* If any children aren't constant, then there is no constant folding to be done */
-            can_do_code_folding = 1;
             if (child1) {
                 if (child1->node_type != CONSTANT) can_do_code_folding = 0;
                 else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
@@ -1005,6 +1078,8 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case CONSTANT:
+                        // TODO - This logic validates that a constant is in range if it is a array subscript - is this this right place for it?
+                        /* Check for array out of range errors */
                         if ( node->parent &&
                              ( node->parent->node_type == VAR_REFERENCE ||
                                node->parent->node_type == VAR_TARGET ||

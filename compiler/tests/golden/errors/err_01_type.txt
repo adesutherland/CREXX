@@ -1,0 +1,2 @@
+Error in err_01_type.rexx @ 4:5 - #BAD_CONVERSION, "\"String\""
+1 error(s) in source file

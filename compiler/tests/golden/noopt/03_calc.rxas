@@ -1,0 +1,33 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 03_calc.rexx
+ * BUILT                  : 2026-01-21 11:01:01
+ */
+
+.srcfile="03_calc.rexx"
+.globals=0
+
+main() .locals=4
+   .meta "03_calc.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="i = 10"
+   .meta "03_calc.main.i"="b" ".int" r1
+   load r1,10
+   .src 4:1="j = 20"
+   .meta "03_calc.main.j"="b" ".int" r2
+   load r2,20
+   .src 5:1="k = i + j"
+   .meta "03_calc.main.k"="b" ".int" r3
+   iadd r3,r1,r2
+   .src 6:1="say k"
+   itos r3
+   say r3
+   .src 6:6=""
+   ret
+   .meta "03_calc.main.i"
+   .meta "03_calc.main.j"
+   .meta "03_calc.main.k"

@@ -34,12 +34,12 @@ add_custom_command(
 
 # Compiler Library - can be used to link plugins to make a extended compiler
 add_library(rxclib STATIC
-        rxcpmain.c rxcpast.c rxcpmain.h
+        rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
-        rxcpbval.c rxcpsymb.c
-        rxcpdary.h rxcpemit.c rxcp_opt.c
+        rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_val_check.c rxcp_val_orch.c rxcpsymb.c
+        rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
         ../utf8/utf.h rxcpfunc.c
 )
@@ -61,3 +61,5 @@ add_custom_target(rxccopy ALL DEPENDS rxc)
 add_custom_command(TARGET rxccopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/compiler/rxc${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
 )
+
+add_subdirectory(tests)

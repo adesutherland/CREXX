@@ -1,0 +1,48 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : 09_nested.rexx
+ * BUILT                  : 2026-01-21 12:00:17
+ */
+
+.srcfile="09_nested.rexx"
+.globals=0
+
+main() .locals=5
+   .meta "09_nested.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="a = 10"
+   .meta "09_nested.main.a"="b" ".int" r1
+   load r1,10
+   .src 4:1="b = 20"
+   .meta "09_nested.main.b"="b" ".int" r2
+   load r2,20
+   .src 5:0="if a > 5"
+   igt r3,r1,5
+   brf l24iffalse,r3
+   .src 5:10="then"
+   .src 6:4="if b < 30"
+   ilt r4,r2,30
+   brf l20iffalse,r4
+   .src 6:15="then"
+   .src 6:20="say \"A>5 B<30\""
+   say "A>5 B<30"
+   br l20ifend
+   .src 7:5="else"
+l20iffalse:
+   .src 7:10="say \"A>5 B>=30\""
+   say "A>5 B>=30"
+l20ifend:
+   br l24ifend
+   .src 8:1="end"
+l24iffalse:
+   .src 9:6="say \"A<=5\""
+   say "A<=5"
+l24ifend:
+   .src 5:96=""
+   ret
+   .meta "09_nested.main.a"
+   .meta "09_nested.main.b"

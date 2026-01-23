@@ -1,5 +1,30 @@
-/* cREXX Phase 0 (PoC) Compiler */
-/* (c) Adrian Sutherland 2021   */
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Compiler Entry Point and CLI Orchestration
+ */
 
 #include <stdio.h>
 #include <ctype.h>
@@ -63,51 +88,6 @@ static void license() {
     printf("%s",message);
 }
 
-static void error_and_exit(int rc, char* message) {
-
-    fprintf(stderr, "ERROR: %s - try \"rxc -h\"\n", message);
-    exit(rc);
-}
-
-static const char *get_filename(const char *path)
-{
-    size_t len = strlen(path);
-    size_t i;
-    if (!len) return "";
-
-    for (i = len - 1; i; i--)
-    {
-        if ( path[i] == '\\' || path[i] == '/' )
-        {
-            path = path + i + 1;
-            break;
-        }
-    }
-    return path;
-}
-
-/* TODO Move to Platform */
-/* Gets the directory of a filename in a malloced buffer */
-/* returns null if there is no directory part */
-static char *get_filename_directory(const char *file_name)
-{
-    size_t len = strlen(file_name);
-    if (!len) return 0;
-    char* result;
-
-    for (len--; len; len--)
-    {
-        if (file_name[len] == '\\' || file_name[len] == '/' )
-        {
-            result = malloc(len + 1);
-            result[len] = 0;
-            memcpy(result, file_name, len);
-            return result;
-        }
-    }
-
-    return 0;
-}
 
 /* Context Factory */
 Context *cntx_f() {

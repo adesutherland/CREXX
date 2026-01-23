@@ -1,0 +1,2 @@
+Error in err_02_syntax.rexx @ 3:1 - #MISSING_END, "do"
+1 error(s) in source file

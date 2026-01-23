@@ -346,7 +346,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             }
         }
         else {
-            file_exists = fileexists(file_name, "rxbin", location);
+            file_exists = fileexists(file_name, "rxplugin", location);
         }
 
         if (file_exists) {

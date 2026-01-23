@@ -1,0 +1,34 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : val_magic_02.rexx
+ * BUILT                  : 2026-01-22 11:25:56
+ */
+
+.srcfile="val_magic_02.rexx"
+.globals=0
+
+main() .locals=1
+   .meta "val_magic_02.main"="b" ".int" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="say \"Testing Implicit Rewrites...\""
+   say "Testing Implicit Rewrites..."
+   .src 14:1="say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
+   .meta "val_magic_02.main.a"="b" ".string" "HelloWorld"
+   say "CONCAT test (a = \"Hello\" || \"World\"): HelloWorld"
+   .src 21:1="say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
+   .meta "val_magic_02.main.b"="b" ".string" "Hello World"
+   say "SCONCAT test (b = \"Hello\" \"World\"): Hello World"
+   .src 31:1="say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
+   .meta "val_magic_02.main.c"="b" ".string" "HelloWorld"
+   say "SCONCAT (diff quotes) test (c = \"Hello\"\'World\'): HelloWorld"
+   .src 37:1="say \"Implicit Rewrites Test PASSED\""
+   say "Implicit Rewrites Test PASSED"
+   .src 38:1="return 0"
+   ret 0
+   .meta "val_magic_02.main.a"
+   .meta "val_magic_02.main.b"
+   .meta "val_magic_02.main.c"
