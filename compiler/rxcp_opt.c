@@ -362,7 +362,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 
 /* Compares two nodes returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
-static int compare_nodes(ASTNode* node1, ASTNode* node2) {
+static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
     rxinteger idiff;
     int effective_digits;
@@ -385,7 +385,7 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2) {
     if (node1->value_type == TP_DECIMAL) {
         Context* context = node1->context;
         decplugin* decplugin = context->decimal_plugin;
-        decplugin->num_context = &(node1->scope->num_context);
+        decplugin->num_context = &(scope->num_context);
         decplugin->syncNumericContext(decplugin);
         value* val1 = value_f();
         value* val2 = value_f();
@@ -431,21 +431,16 @@ static int is_comparison_operator(NodeType type) {
     }
 }
 
-/* Static utility to check if a node can be code folded */
-/* children specify how many children of the node should be considered (0, 1, 2 or 3) */
-/* Returns 1 if it can, 0 if it can't */
-/*
 static int can_code_fold(ASTNode* node, int children) {
     ASTNode *child1 = 0, *child2 = 0, *child3 = 0;
-    Context *context = node->context; // Attributes: fuzz, digits, casetype, form, standard
 
-    if (node->node_type == CONSTANT) return 1; // A constant IS folded
+    if (node->node_type == CONSTANT) return 1; /* A constant IS folded */
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     if (child2) child3 = child2->sibling;
 
-    // Are any of the children missing (0<=children) or CONSTANT?
+    /* Arity Check: Are any of the required children missing or NOT CONSTANT? */
     if (children >= 1) {
         if (!child1 || child1->node_type != CONSTANT) return 0;
     }
@@ -456,31 +451,27 @@ static int can_code_fold(ASTNode* node, int children) {
         if (!child3 || child3->node_type != CONSTANT) return 0;
     }
 
-    // String operators
+    /* Safety Logic for Decimal Arithmetic */
+    int involves_decimal = 0;
+    if (node->value_type == TP_DECIMAL) involves_decimal = 1;
 
-    // Check comparison operators
+    /* Check comparison operators involving decimals */
     if (is_comparison_operator(node->node_type)) {
-        if (node->scope->num_context.fuzz == -1 || node->scope->num_context.digits == -1)
-            return 0; // Can't fold operators if digits or fuzz is inherited
+        if (child1 && child1->value_type == TP_DECIMAL) involves_decimal = 1;
+        if (child2 && child2->value_type == TP_DECIMAL) involves_decimal = 1;
     }
-    // Check for conversion to string scenarios
 
-    // fuzz, digits, casetype, form, standard
+    /* Context Check: If digits or fuzz is inherited (-1), do NOT fold */
+    if (involves_decimal) {
+        if (node->scope->num_context.digits == -1) return 0;
 
-
-// If any children aren't constant, then there is no constant folding to be done
-if (child1) {
-    if (child1->node_type != CONSTANT) can_do_code_folding = 0;
-    else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
-        can_do_code_folding = 0; // Can't fold decimal if digits is inherited
-}
-    if (child2) {
-        if (child2->node_type != CONSTANT) can_do_code_folding = 0;
-        else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
-            can_do_code_folding = 0; // Can't fold decimal if digits is inherited
+        if (is_comparison_operator(node->node_type)) {
+            if (node->scope->num_context.fuzz == -1) return 0;
+        }
     }
+
+    return 1;
 }
-*/
 
 /* Step 1
  * - Constant Folding
@@ -597,92 +588,81 @@ static walker_result opt1_walker(walker_direction direction,
         else {
             /* 'Normal' Cases */
 
-            /* If any children aren't constant, then there is no constant folding to be done */
-            if (child1) {
-                if (child1->node_type != CONSTANT) can_do_code_folding = 0;
-                else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
-                    can_do_code_folding = 0; /* Can't fold decimal if digits is inherited */
-            }
-            if (child2) {
-                if (child2->node_type != CONSTANT) can_do_code_folding = 0;
-                else if (node->value_type == TP_DECIMAL && node->scope->num_context.digits == -1)
-                    can_do_code_folding = 0; /* Can't fold decimal if digits is inherited */
-            }
-            // Check fuzz for operators
-            if (can_do_code_folding) {
-                if (is_comparison_operator(node->node_type)) {
-                    if (node->value_type == TP_DECIMAL && node->scope->num_context.fuzz == -1)
-                        can_do_code_folding = 0; /* Can't fold decimal operators if fuzz is inherited */
-                }
-            }
+            /* Determine arity */
+            int arity = 0;
+            if (child1) arity++;
+            if (child2) arity++;
+            if (child3) arity++;
+
+            can_do_code_folding = can_code_fold(node, arity);
 
             if (can_do_code_folding)
                 switch (node->node_type) {
 
                     case OP_COMPARE_EQUAL:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_NEQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_GT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_GTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;
 
                     case OP_COMPARE_S_EQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_S_NEQ:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_S_GT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_S_LT:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_S_GTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_S_LTE:
-                        compare = compare_nodes(child1, child2);
+                        compare = compare_nodes(child1, child2, node->scope);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;

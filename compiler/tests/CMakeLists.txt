@@ -84,6 +84,7 @@ add_crexx_compiler_test(13_stems rexx_src/13_stems.rexx)
 add_crexx_compiler_test(14_strings rexx_src/14_strings.rexx)
 add_crexx_compiler_test(val_magic_01 rexx_src/val_magic_01.rexx)
 add_crexx_compiler_test(val_magic_02 rexx_src/val_magic_02.rexx)
+add_crexx_compiler_test(opt_decimal_safety rexx_src/opt_decimal_safety.rexx)
 add_crexx_compiler_dep_test(15_imports rexx_src/15_imports.rexx rexx_src/mymath.rexx)
 
 # Negative tests

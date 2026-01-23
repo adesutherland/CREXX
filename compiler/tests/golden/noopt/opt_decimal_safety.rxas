@@ -1,0 +1,111 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : opt_decimal_safety.rexx
+ * BUILT                  : 2026-01-23 16:05:03
+ */
+
+.srcfile="opt_decimal_safety.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "opt_decimal_safety.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="call Case1"
+   load r1,0
+   call r2,Case1(),r1
+   .src 5:1="call Case2"
+   load r1,0
+   call r3,Case2(),r1
+   .src 6:1="call Case3"
+   load r1,0
+   call r4,Case3(),r1
+   .src 7:1="call TestInherited"
+   load r1,0
+   call r5,TestInherited(),r1
+   .src 8:1="return"
+   ret
+
+Case1() .locals=4
+   .meta "opt_decimal_safety.case1"="b" ".void" Case1() "" ""
+   .src 10:1="Case1: procedure"
+   setnumdgts 5
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 12:5="say 1/3"
+   load r2,1
+   itof r2
+   load r3,3
+   itof r3
+   fdiv r3,r2,r3
+   ftos r3
+   say r3
+   .src 13:5="return"
+   ret
+
+Case2() .locals=4
+   .meta "opt_decimal_safety.case2"="b" ".void" Case2() "" ""
+   .src 15:1="Case2: procedure"
+   setnumdgts 9
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 17:5="say 1/3"
+   load r2,1
+   itof r2
+   load r3,3
+   itof r3
+   fdiv r3,r2,r3
+   ftos r3
+   say r3
+   .src 18:5="return"
+   ret
+
+Case3() .locals=4
+   .meta "opt_decimal_safety.case3"="b" ".void" Case3() "" ""
+   .src 20:1="Case3: procedure"
+   setnumdgts 9
+   setnumfuz 1
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 23:4="if 1.00000001 = 1.0"
+   load r3,1.00000001
+   feq r3,r3,1.0
+   brf l48iffalse,r3
+   .src 23:25="then"
+   .src 23:30="say \"Equal with Fuzz\""
+   say "Equal with Fuzz"
+   br l48ifend
+   .src 24:5="else"
+l48iffalse:
+   .src 24:10="say \"Not Equal\""
+   say "Not Equal"
+l48ifend:
+   .src 25:5="return"
+   ret
+
+TestInherited() .locals=3
+   .meta "opt_decimal_safety.testinherited"="b" ".void" TestInherited() "" ""
+   .src 27:1="TestInherited: procedure"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 30:5="say 1/3"
+   load r1,1
+   itof r1
+   load r2,3
+   itof r2
+   fdiv r2,r1,r2
+   ftos r2
+   say r2
+   .src 31:5="return"
+   ret
