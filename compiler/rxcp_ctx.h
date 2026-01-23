@@ -83,6 +83,7 @@ struct Context {
     void *decimal_plugin; /* Pointer to the decimal plugin */
     /* Optimiser Options */
     int optimise;
+    int iterations;
 };
 
 #include "rxcp_emit.h"

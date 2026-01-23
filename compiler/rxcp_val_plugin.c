@@ -46,6 +46,7 @@ walker_result plugin_dispatch_walker(walker_direction direction, ASTNode *node, 
                 pctx.node = node;
                 pctx.scope = node->scope ? node->scope : context->current_scope;
                 pctx.context = context;
+                pctx.iteration = context->iterations;
 
                 PluginStatus status = symbol->compiler_plugin(&pctx, node);
 

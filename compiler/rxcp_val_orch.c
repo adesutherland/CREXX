@@ -355,7 +355,7 @@ void validate_ast(Context *context) {
     }
 
     /* Fixed Point Iteration Loop */
-    int iterations = 0;
+    context->iterations = 0;
     context->after_rewrite = 0;
     do {
         context->changed = 0;
@@ -367,6 +367,9 @@ void validate_ast(Context *context) {
         /* Builds the Symbol Table */
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+
+        /* PoC Symbol Init */
+        sym_init(context);
 
         /* Mainly resolve symbols - functions */
         context->current_scope = 0;
@@ -395,11 +398,11 @@ void validate_ast(Context *context) {
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_exit_walker, (void *) context);
 
-        iterations++;
+        context->iterations++;
         /* Incremental update of symbols - So walkers can avoid duplicate processing */
-        if (iterations == 1) context->after_rewrite = 1;
+        if (context->iterations == 1) context->after_rewrite = 1;
 
-    } while (context->changed && iterations < 16);
+    } while (context->changed && context->iterations < 16);
 
     /* Type Safety checks */
     context->current_scope = 0;

@@ -202,4 +202,7 @@ char* sym_frnm(Symbol *symbol);
 /* Returns the type of a symbol as a text string in a malloced buffer */
 char* sym_2tp(Symbol *symbol);
 
+/* Initialize symbols (PoC) */
+void sym_init(Context *context);
+
 #endif //CREXX_RXCP_SYM_H

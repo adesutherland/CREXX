@@ -41,7 +41,7 @@ add_library(rxclib STATIC
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h rxcpfunc.c
+        ../utf8/utf.h rxcpfunc.c rxcp_poc_plug.c
 )
 
 add_dependencies(rxclib re2c lemon machine avl_tree platform rxaslib rxpa)

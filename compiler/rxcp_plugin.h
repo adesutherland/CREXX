@@ -34,13 +34,16 @@
 typedef enum PluginStatus {
     PLUGIN_CONTINUE,
     PLUGIN_DIRTY,
-    PLUGIN_ERROR
+    PLUGIN_ERROR,
+    PLUGIN_OK,
+    PLUGIN_NEED_MORE
 } PluginStatus;
 
 typedef struct PluginContext {
     ASTNode *node;
     Scope *scope;
     Context *context;
+    int iteration;
 } PluginContext;
 
 typedef PluginStatus (*PluginCallback)(PluginContext* pctx, ASTNode* node);

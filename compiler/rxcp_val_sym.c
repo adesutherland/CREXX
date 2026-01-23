@@ -275,6 +275,11 @@ walker_result resolve_functions_walker(walker_direction direction,
         /* IN - TOP DOWN */
     }
     else {
+        /* DEBUG PoC */
+        if (is_node_string(node, "POCABS") || is_node_string(node, "POCSQUARE")) {
+             printf("DEBUG: resolve_functions_walker sees %s as type %d\n", node->node_string, node->node_type);
+        }
+
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             if (node->symbolNode) return result_normal; /* Already Processed */
             if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
@@ -549,6 +554,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     }
     else {
 
+        if (sym_nond(symbol) == 0) return;
+
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
         if (defining_node_link->node->node_type == PROCEDURE) {
@@ -587,7 +594,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
         }
 
-        else if (symbol->symbol_type != NAMESPACE_SYMBOL) {
+        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
             symbol->type = TP_STRING;
