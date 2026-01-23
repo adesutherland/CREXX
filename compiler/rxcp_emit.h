@@ -84,6 +84,22 @@ void type_promotion(ASTNode *node);
 void add_variable_metadata(ASTNode* node);
 void clear_variable_metadata(ASTNode* node);
 void clear_global_variable_metadata(ASTNode *node);
+
+/* Metadata Helpers */
+void meta_set_symbol(Symbol *symbol, void *payload);
+void add_initiator(Symbol *symbol, void *payload);
+void add_scope_initiators(ASTNode* node);
+void add_global_symbol(Symbol *symbol, void *payload);
+void add_exposed_global_variable(ASTNode* node);
+void meta_set_global_symbol(Symbol *symbol, void *payload);
+void add_global_variable_metadata(ASTNode* node);
+void meta_clear_symbol(Symbol *symbol, void *payload);
+void meta_clear_global_symbol(Symbol *symbol, void *payload);
+char *meta_narg(ASTNode *node);
+
+/* Procedure Emitter */
+void emit_proc(ASTNode *node, void *payload);
+
 void emit_flow(ASTNode *node, void *payload);
 void emit_expression(ASTNode *node, void *payload);
 int is_constant(ASTNode* node);
