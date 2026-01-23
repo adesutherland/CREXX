@@ -451,22 +451,40 @@ static int can_code_fold(ASTNode* node, int children) {
         if (!child3 || child3->node_type != CONSTANT) return 0;
     }
 
-    /* Safety Logic for Decimal Arithmetic */
-    int involves_decimal = 0;
-    if (node->value_type == TP_DECIMAL) involves_decimal = 1;
-
-    /* Check comparison operators involving decimals */
+    /* Strict Numeric Safety Check */
+    /* If the operation is arithmetic (returns number) or comparison,
+       we must respect the numeric context (digits, form, fuzz, etc).
+       If any context setting is INHERITED, we cannot fold because
+       runtime values might differ from build-time defaults. */
+    int check_context = 0;
+    if (node->value_type == TP_DECIMAL ||
+        node->value_type == TP_FLOAT ||
+        node->value_type == TP_INTEGER) {
+        check_context = 1;
+    }
     if (is_comparison_operator(node->node_type)) {
-        if (child1 && child1->value_type == TP_DECIMAL) involves_decimal = 1;
-        if (child2 && child2->value_type == TP_DECIMAL) involves_decimal = 1;
+        check_context = 1;
     }
 
-    /* Context Check: If digits or fuzz is inherited (-1), do NOT fold */
-    if (involves_decimal) {
-        if (node->scope->num_context.digits == -1) return 0;
+    if (check_context) {
+        if (!node->scope) return 0; /* No scope means context unknown -> unsafe */
+        numeric_context *ctx = &(node->scope->num_context);
 
+        /* DIGITS: If digits == -1 (Inherited) -> NO FOLD */
+        if (ctx->digits == -1) return 0;
+
+        /* STANDARD: If standard is Inherited/Unknown -> NO FOLD */
+        if (ctx->standard == NUMERIC_STANDARD_INHERIT) return 0;
+
+        /* FORM: If form is Inherited -> NO FOLD */
+        if (ctx->form == NUMERIC_FORM_INHERIT) return 0;
+
+        /* CASE: If casetype is Inherited -> NO FOLD */
+        if (ctx->casetype == CASE_INHERIT) return 0;
+
+        /* FUZZ: If fuzz == -1 and it is a comparison -> NO FOLD */
         if (is_comparison_operator(node->node_type)) {
-            if (node->scope->num_context.fuzz == -1) return 0;
+            if (ctx->fuzz == -1) return 0;
         }
     }
 

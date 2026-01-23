@@ -1,0 +1,99 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : opt_numeric_safety.rexx
+ * BUILT                  : 2026-01-23 17:20:33
+ */
+
+.srcfile="opt_numeric_safety.rexx"
+.globals=0
+
+main() .locals=6
+   .meta "opt_numeric_safety.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="call ScenarioA"
+   load r1,0
+   call r2,ScenarioA(),r1
+   .src 5:1="call ScenarioB"
+   load r1,0
+   call r3,ScenarioB(),r1
+   .src 6:1="call ScenarioC"
+   load r1,0
+   call r4,ScenarioC(),r1
+   .src 7:1="call ScenarioD"
+   load r1,0
+   call r5,ScenarioD(),r1
+   .src 8:1="return"
+   ret
+
+ScenarioA() .locals=2
+   .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() "" ""
+   .src 10:1="ScenarioA: procedure"
+   setnumdgts 5
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 2
+   setnumstd 1
+   .src 16:5="say 1/3"
+   say "0.33333"
+   .src 17:5="return"
+   ret
+
+ScenarioB() .locals=3
+   .meta "opt_numeric_safety.scenariob"="b" ".void" ScenarioB() "" ""
+   .src 19:1="ScenarioB: procedure"
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 22:5="say 1/3"
+   load r1,1
+   itof r1
+   load r2,3
+   itof r2
+   fdiv r2,r1,r2
+   ftos r2
+   say r2
+   .src 23:5="return"
+   ret
+
+ScenarioC() .locals=3
+   .meta "opt_numeric_safety.scenarioc"="b" ".void" ScenarioC() "" ""
+   .src 25:1="ScenarioC: procedure"
+   setnumdgts 9
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   .src 30:5="say 5 % 2"
+   load r2,2
+   imod r2,5,r2
+   itos r2
+   say r2
+   .src 31:5="return"
+   ret
+
+ScenarioD() .locals=3
+   .meta "opt_numeric_safety.scenariod"="b" ".void" ScenarioD() "" ""
+   .src 33:1="ScenarioD: procedure"
+   setnumdgts 9
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 38:4="if 1.000000001 = 1.0"
+   load r2,1.0
+   feq r2,r2,1.0
+   brf l62iffalse,r2
+   .src 38:26="then"
+   .src 38:31="say \"Equal\""
+   say "Equal"
+   br l62ifend
+   .src 39:5="else"
+l62iffalse:
+   .src 39:10="say \"Unequal\""
+   say "Unequal"
+l62ifend:
+   .src 40:5="return"
+   ret

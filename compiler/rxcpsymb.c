@@ -124,6 +124,9 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
         else
             scope->num_context.standard = NUMERIC_STANDARD_COMMON;
     }
+
+    /* Force inherited context for PROCEDURE nodes - REMOVED */
+    /* Procedures now default to standard numeric context unless explicitly set */
     scope->num_registers = 1; /* r0 is always available as a temp register - TODO get rid of this! */
     scope->free_registers_array = dpa_f();
     scope->child_array  = dpa_f();
