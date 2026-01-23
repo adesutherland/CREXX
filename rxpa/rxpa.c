@@ -73,6 +73,15 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
 // OSX Version
 #elif __APPLE__
     // Load the dylib
+    // A special case for OSX - if it is not an absolute path, load it as a relative path by
+    // prepending "./" to the file name
+    if (full_file_name[0] != '/' && full_file_name[0] != '.') {
+        char* relative_path = malloc(strlen("./") + strlen(full_file_name) + 1);
+        sprintf(relative_path, "./%s", full_file_name);
+        if (free_full_file_name) free(full_file_name);
+        full_file_name = relative_path;
+        free_full_file_name = 1;
+    }
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
         if (free_full_file_name) free(full_file_name);
@@ -82,6 +91,7 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // Get the plugin initializer address and call it
     initfuncs_type init = (initfuncs_type)dlsym(hDll, "_initfuncs");
     if (!init) {
+        dlclose(hDll);
         if (free_full_file_name) free(full_file_name);
         return -2;
     }

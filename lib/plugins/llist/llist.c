@@ -516,7 +516,7 @@ PROCEDURE(nextnode) {
     if (currentEntry == NULL) {
         char endOfListMessage[32];
         sprintf(endOfListMessage, "$END-OF-LLIST-%d$", qname);
-        RETURNSTR(endOfListMessage);
+        RETURNSTRX(endOfListMessage);
     }
 
     // Return the string stored in the current node
@@ -529,6 +529,7 @@ PROCEDURE(nextnode) {
     if (currentEntry->sNext == NULL) {
         llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
     }
+    ENDPROC
 }
 
 
@@ -545,12 +546,13 @@ PROCEDURE(currentnode) {
     if (currentEntry == NULL) {
         char emptyListMsg[32];
         sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", qname);
-        RETURNSTR(emptyListMsg);  // Return empty list marker
+        RETURNSTRX(emptyListMsg);  // Return empty list marker
     }
 
     // Update the last valid node pointer and return the node's string
     llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
     RETURNSTR(currentEntry->String);
+    ENDPROC
 }
 
 PROCEDURE(currentnodeaddr) {
@@ -564,12 +566,13 @@ PROCEDURE(currentnodeaddr) {
 
     // Return 0 if the list is empty
     if (currentEntry == NULL) {
-        RETURNINT(0);
+        RETURNINTX(0);
     }
 
     // Update the last valid node pointer and return the address
     llEntryStub[qname].sStackLastValid = (uintptr_t *)currentEntry;
-    RETURNINT((uintptr_t)currentEntry->sSaddr);
+    RETURNINT( (uintptr_t)currentEntry->sSaddr);
+    ENDPROC
 }
 
 
