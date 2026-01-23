@@ -70,6 +70,7 @@ walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void 
 /* check */
 walker_result initial_checks_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result plugin_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* misc */
 walker_result set_node_ordinals_walker(walker_direction direction, ASTNode* node, void *payload);

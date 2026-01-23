@@ -30,6 +30,7 @@
 #define CREXX_RXCP_SYM_H
 
 #include "rxcp_types.h"
+#include "rxcp_plugin.h"
 
 /* Scope and Symbols */
 struct Scope {
@@ -75,6 +76,7 @@ struct Symbol {
     char is_const_arg; /* Is a constant arg */
     char meta_emitted; /* Has the emitter output the symbol's metadata */
     char init_emitted; /* Has the emitter output the symbol's default inititator */
+    PluginCallback compiler_plugin; /* Plugin callback */
 };
 
 /* Returns string name of a Value type */

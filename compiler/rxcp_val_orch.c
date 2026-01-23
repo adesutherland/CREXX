@@ -379,6 +379,10 @@ void validate_ast(Context *context) {
         /* Validate Symbols */
         validate_symbols(context->ast->scope);
 
+        /* Plugin Dispatch */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, plugin_dispatch_walker, (void *) context);
+
         /* Set Node Types */
         context->current_scope = 0;
         ast_wlkr(context->ast, set_node_types_walker, (void *) context);
