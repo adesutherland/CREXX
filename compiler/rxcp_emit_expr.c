@@ -276,22 +276,25 @@ void emit_expression(ASTNode *node, void *payload) {
             /* If the register is not set then the child is a constant */
             if (child1->register_num == DONT_ASSIGN_REGISTER) {
                 if (child2->output) output_concat(node->output, child2->output);
+                temp2 = format_constant(child1->value_type, child1);
                 temp1 = mprintf("   %s%s %c%d,%s,%c%d\n",
                                 tp_prefix,
                                 op,
                                 node->register_type,
                                 node->register_num,
-                                format_constant(child1->value_type, child1),
+                                temp2,
                                 child2->register_type,
                                 child2->register_num);
                 output_append_text(node->output, temp1);
                 free(temp1);
+                free(temp2);
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
 
             /* If the register is not set then the child is a constant */
             else if (child2->register_num == DONT_ASSIGN_REGISTER) {
                 if (child1->output) output_concat(node->output, child1->output);
+                temp2 = format_constant(child2->value_type, child2);
                 temp1 = mprintf("   %s%s %c%d,%c%d,%s\n",
                                 tp_prefix,
                                 op,
@@ -299,9 +302,10 @@ void emit_expression(ASTNode *node, void *payload) {
                                 node->register_num,
                                 child1->register_type,
                                 child1->register_num,
-                                format_constant(child2->value_type, child2));
+                                temp2);
                 output_append_text(node->output, temp1);
                 free(temp1);
+                free(temp2);
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
             }
 

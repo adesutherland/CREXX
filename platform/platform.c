@@ -159,7 +159,11 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
     if (dir && strlen(dir)) ptr->d = opendir(dir);
     else ptr->d = opendir(".");
 
-    if (!ptr->d) return 0;
+    if (!ptr->d) {
+        free(ptr);
+        *dir_ptr = 0;
+        return 0;
+    }
 
     return dirnxtfl(dir_ptr);
 
