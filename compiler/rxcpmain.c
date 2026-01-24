@@ -179,6 +179,7 @@ int rxcmain(int argc, char *argv[]) {
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
+    int stop_after_parse = 0;
     char *file_name;
     char *location = 0;
     char *import_locations = 0;
@@ -190,6 +191,12 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        /* Check for -dp flag */
+        if (strcmp(argv[i], "-dp") == 0) {
+            stop_after_parse = 1;
+            continue;
+        }
+
         if (strlen(argv[i]) > 2) {
             error_and_exit(2, "Invalid argument");
         }
@@ -329,6 +336,7 @@ int rxcmain(int argc, char *argv[]) {
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);
     context->debug_mode = debug_mode;
+    context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
     if (file_directory) context->location = file_directory;
     else context->location = location;
@@ -387,9 +395,20 @@ int rxcmain(int argc, char *argv[]) {
     }
 #endif
 
+    if (context->stop_after_parse) {
+        ast_dump_text(stdout, context->ast, 0);
+    }
+
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
+        goto finish;
+    }
+
+    if (context->stop_after_parse) {
+        if (debug_mode) {
+            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup (-dp).\n");
+        }
         goto finish;
     }
 

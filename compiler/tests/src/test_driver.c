@@ -96,6 +96,8 @@ int main(int argc, char *argv[]) {
     int line_num_out = 0;
     int line_num_gold = 0;
     int expect_fail = 0;
+    int ast_mode = 0;
+    int update_gold = 0;
     int arg_ptr = 1;
     char *copied_files[100];
     int num_copied = 0;
@@ -103,6 +105,12 @@ int main(int argc, char *argv[]) {
     while (arg_ptr < argc && argv[arg_ptr][0] == '-') {
         if (strcmp(argv[arg_ptr], "--expect-fail") == 0) {
             expect_fail = 1;
+            arg_ptr++;
+        } else if (strcmp(argv[arg_ptr], "--ast") == 0) {
+            ast_mode = 1;
+            arg_ptr++;
+        } else if (strcmp(argv[arg_ptr], "--update-gold") == 0) {
+            update_gold = 1;
             arg_ptr++;
         } else if (strcmp(argv[arg_ptr], "--copy") == 0) {
             arg_ptr++;
@@ -124,7 +132,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc - arg_ptr < 3) {
-        fprintf(stderr, "Usage: %s [--expect-fail] [--copy dep] <golden_file> <output_file> <compiler_cmd_part1> ...\n", argv[0]);
+        fprintf(stderr, "Usage: %s [--expect-fail] [--ast] [--update-gold] [--copy dep] <golden_file> <output_file> <compiler_cmd_part1> ...\n", argv[0]);
         for (i = 0; i < num_copied; i++) remove(copied_files[i]);
         return 1;
     }
@@ -168,25 +176,50 @@ int main(int argc, char *argv[]) {
         strcat(command, "\"");
     }
 
-    /* Redirect stderr to output_file */
-    strcat(command, " 2> ");
-    strcat(command, "\"");
-    strcat(command, output_file);
-    strcat(command, "\"");
+    /* Redirect output */
+    if (ast_mode) {
+        strcat(command, " > \"");
+        strcat(command, output_file);
+        strcat(command, "\" 2>&1");
+    } else {
+        strcat(command, " 2> \"");
+        strcat(command, output_file);
+        strcat(command, "\"");
+    }
 
     ret = system(command);
 
-    if (expect_fail) {
-        if (ret == 0) {
-            fprintf(stderr, "Test failed: Expected compiler to fail, but it succeeded.\n");
+    if (!ast_mode) {
+        if (expect_fail) {
+            if (ret == 0) {
+                fprintf(stderr, "Test failed: Expected compiler to fail, but it succeeded.\n");
+                remove(temp_source_file);
+                remove(temp_rxas);
+                for (i = 0; i < num_copied; i++) remove(copied_files[i]);
+                return 1;
+            }
+        } else {
+            if (ret != 0) {
+                fprintf(stderr, "Compiler failed with exit code %d. See %s for details.\n", ret, output_file);
+                remove(temp_source_file);
+                remove(temp_rxas);
+                for (i = 0; i < num_copied; i++) remove(copied_files[i]);
+                return 1;
+            }
+        }
+    }
+
+    /* Update Gold Logic */
+    if (update_gold) {
+        const char *src_for_gold = (expect_fail || ast_mode) ? output_file : temp_rxas;
+        if (copy_file(src_for_gold, golden_file)) {
+            printf("Updated golden file: %s\n", golden_file);
             remove(temp_source_file);
             remove(temp_rxas);
             for (i = 0; i < num_copied; i++) remove(copied_files[i]);
-            return 1;
-        }
-    } else {
-        if (ret != 0) {
-            fprintf(stderr, "Compiler failed with exit code %d. See %s for details.\n", ret, output_file);
+            return 0;
+        } else {
+            fprintf(stderr, "Failed to update golden file from %s\n", src_for_gold);
             remove(temp_source_file);
             remove(temp_rxas);
             for (i = 0; i < num_copied; i++) remove(copied_files[i]);
@@ -195,7 +228,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Comparison Logic */
-    if (expect_fail) {
+    if (expect_fail || ast_mode) {
         f_out = fopen(output_file, "r");
     } else {
         f_out = fopen(temp_rxas, "r");

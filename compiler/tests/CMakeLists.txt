@@ -66,6 +66,15 @@ macro(add_crexx_compiler_dep_test NAME SOURCE_FILE DEP_FILE)
              $<TARGET_FILE:rxc> ${COMPILER_OPT_FLAG} -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_opt ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
 endmacro()
 
+# Macro to add a parsing test
+macro(add_crexx_parsing_test NAME SOURCE_FILE)
+    add_test(NAME ${NAME}_parse
+             COMMAND crexx_test_driver --ast
+             ${CMAKE_CURRENT_SOURCE_DIR}/golden/parsing/${NAME}.txt
+             ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ast.txt
+             $<TARGET_FILE:rxc> -dp ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE})
+endmacro()
+
 # Example tests
 add_crexx_compiler_test(01_assign rexx_src/01_assign.rexx)
 add_crexx_compiler_test(02_flow rexx_src/02_flow.rexx)
@@ -91,3 +100,15 @@ add_crexx_compiler_dep_test(15_imports rexx_src/15_imports.rexx rexx_src/mymath.
 # Negative tests
 add_crexx_compiler_fail_test(err_01_type rexx_src/err_01_type.rexx err_01_type.txt)
 add_crexx_compiler_fail_test(err_02_syntax rexx_src/err_02_syntax.rexx err_02_syntax.txt)
+
+# Parsing Tests
+add_crexx_parsing_test(expr_abut_01 parsing_src/expr_abut_01.rexx)
+add_crexx_parsing_test(expr_abut_02 parsing_src/expr_abut_02.rexx)
+add_crexx_parsing_test(expr_abut_03 parsing_src/expr_abut_03.rexx)
+add_crexx_parsing_test(expr_abut_04 parsing_src/expr_abut_04.rexx)
+add_crexx_parsing_test(expr_ambig_01 parsing_src/expr_ambig_01.rexx)
+add_crexx_parsing_test(expr_ambig_02 parsing_src/expr_ambig_02.rexx)
+add_crexx_parsing_test(expr_ambig_03 parsing_src/expr_ambig_03.rexx)
+add_crexx_parsing_test(err_struct_01 parsing_src/err_struct_01.rexx)
+add_crexx_parsing_test(err_struct_02 parsing_src/err_struct_02.rexx)
+add_crexx_parsing_test(err_struct_03 parsing_src/err_struct_03.rexx)
