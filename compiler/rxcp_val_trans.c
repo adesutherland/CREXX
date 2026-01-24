@@ -278,3 +278,29 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     return result_normal;
 }
+
+/*
+ * Rewrites IMPLICIT_CMD to ADDRESS
+ */
+walker_result rewrite_implicit_cmd_walker(walker_direction direction,
+                                          ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+    ASTNode *env_node;
+
+    if (direction == in && node->node_type == IMPLICIT_CMD) {
+        /* Create explicit environment "SYSTEM" */
+        env_node = ast_ft(context, STRING);
+        ast_str(env_node, "SYSTEM");
+
+        /* Insert at the beginning of children */
+        env_node->sibling = node->child;
+        if (node->child) node->child->parent = node; /* Ensure parent is set though ast_ft does it usually */
+        node->child = env_node;
+        env_node->parent = node;
+
+        node->node_type = ADDRESS;
+        /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
+        context->changed = 1;
+    }
+    return result_normal;
+}

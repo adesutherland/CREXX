@@ -360,6 +360,10 @@ void validate_ast(Context *context) {
     do {
         context->changed = 0;
 
+        /* Re-write IMPLICIT_CMD Instructions */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
+
         /* Set Ordinals */
         ordinal_counter = 0;
         ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
@@ -392,7 +396,7 @@ void validate_ast(Context *context) {
 
         /* Re-write ADDRESS Instructions */
         context->current_scope = 0;
-        ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
+        /* ast_wlkr(context->ast, rewrite_address_walker, (void *) context); */
 
         /* Re-write EXIT Instructions */
         context->current_scope = 0;

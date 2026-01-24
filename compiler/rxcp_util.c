@@ -498,6 +498,7 @@ const char* node_type_to_string(NodeType type) {
     switch (type) {
         case ABS_POS: return "ABS_POS";
         case ADDRESS: return "ADDRESS";
+        case IMPLICIT_CMD: return "IMPLICIT_CMD";
         case ARG: return "ARG";
         case ARGS: return "ARGS";
         case ASSEMBLER: return "ASSEMBLER";
