@@ -463,6 +463,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_ref_arg = 0;
     symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
+    symbol->compiler_plugin = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8

@@ -162,6 +162,13 @@ void fre_cntx(Context *context)  {
     /* Deallocate Tokens */
     free_tok(context);
 
+    if (context->master_context && context == context->master_context) {
+        if (context->loading_files) {
+            for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);
+            free(context->loading_files);
+        }
+    }
+
     free(context->buff_start);
 
     if (context->traceFile) fclose(context->traceFile);
@@ -316,6 +323,10 @@ int rxcmain(int argc, char *argv[]) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
         exit(-1);
     }
+    context->master_context = context;
+    context->loading_files_count = 1;
+    context->loading_files = malloc(sizeof(char*));
+    context->loading_files[0] = strdup(context->file_name);
 
     /* Open trace file */
 #ifndef NDEBUG

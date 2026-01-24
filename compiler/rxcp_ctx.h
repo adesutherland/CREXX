@@ -85,6 +85,10 @@ struct Context {
     /* Optimiser Options */
     int optimise;
     int iterations;
+
+    /* Recursion Guard for Imports */
+    char** loading_files;
+    size_t loading_files_count;
 };
 
 #include "rxcp_emit.h"
