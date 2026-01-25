@@ -217,6 +217,7 @@ PROCEDURE(readall) {
         lines++;
         amax--;
     }
+    fclose(file);
     SETARRAYHI(ARG0, lines);  // adjust arrayhi
     RETURNINT(lines);
     PROCRETURN
@@ -249,7 +250,7 @@ PROCEDURE(writeall) {
 * -------------------------------------------------------------------------------------
 */
 
-static inline char *strupr_portable(char *s) {
+static char *strupr_portable(char *s) {
     char *p = s;
     while (*p) {
         *p = toupper((unsigned char)*p);
@@ -262,7 +263,8 @@ static inline char *strupr_portable(char *s) {
 * -------------------------------------------------------------------------------------
 */
 PROCEDURE (hasmacro) {
-    int i,mmax, from;
+    int i, mmax, from, result;
+    char * dupline;
     char * line= GETSTRING(ARG0);
     mmax = GETARRAYHI(ARG1);   // number of contained array items
     from = GETINT(ARG2)-1;
@@ -279,29 +281,38 @@ PROCEDURE (hasmacro) {
     if (line[0]=='/' & line[1]=='*') {
         RETURNINTX(0)
     };
-    char * dupline = strdup(line);
+    dupline = strdup(line);
     dupline= strupr_portable(dupline);
+    result = 0;
     for (i = from; i<mmax; i++) {
         if (strstr(dupline, GETSARRAY(ARG1, i)) > 0) {
-            RETURNINTX(i + 1);
+            result = i + 1;
+            break;
         }
     }
     free(dupline);
-    RETURNINTX(0);
+    RETURNINTX(result);
     PROCRETURN
     ENDPROC
 }
 
 // Insert 'needle' into 'haystack' at position 'at', replacing 'len' characters
 PROCEDURE (insertat) {
-// char* insertAt(const char* haystack, const char* needle, int at, int len) {
-    char * needle  = GETSTRING(ARG0);
-    char * haystack= GETSTRING(ARG1);
-    int at =  GETINT(ARG2)-1;
-    int len = GETINT(ARG3) ;
- //   printf("111 needle '%s' haystack '%s' at %d len %d\n",needle,haystack,at,len);
-    int haystack_len = strlen(haystack);
-    int needle_len = strlen(needle);
+    char * needle;
+    char * haystack;
+    int at;
+    int len;
+    int haystack_len;
+    int needle_len;
+    int result_len;
+    char* result;
+
+    needle  = GETSTRING(ARG0);
+    haystack= GETSTRING(ARG1);
+    at =  GETINT(ARG2)-1;
+    len = GETINT(ARG3) ;
+    haystack_len = strlen(haystack);
+    needle_len = strlen(needle);
 
     // Ensure valid indices
     if (at < 0) at = 0;
@@ -313,10 +324,10 @@ PROCEDURE (insertat) {
     if (at + len > haystack_len) len = haystack_len - at;
 
     // Length of resulting string
-    int result_len = haystack_len - len + needle_len;
+    result_len = haystack_len - len + needle_len;
 
     // Allocate result string
-    char* result = malloc(result_len + 1);
+    result = malloc(result_len + 1);
     if (!result) RETURNSTRX("");
 
     // Copy left part
@@ -336,24 +347,27 @@ PROCEDURE (insertat) {
 * -------------------------------------------------------------------------------------
 */
 PROCEDURE (fsearch) {
-    int i, mmax, from;
+    int i, mmax, from, result;
+    char *ustr1, *ustr2, *ustr3;
+    char *orig_haystack, *haystack;
+
     mmax = GETARRAYHI(ARG0);
     from = GETINT(ARG1) - 1;
     if (from < 0) from = 0;
     if (from >= mmax) RETURNINTX(0);
     SETINT(ARG5, 0);
 
-    char *ustr1 = strdup(GETSTRING(ARG2));
-    char *ustr2 = strdup(GETSTRING(ARG3));
-    char *ustr3 = strdup(GETSTRING(ARG4));
+    ustr1 = strdup(GETSTRING(ARG2));
+    ustr2 = strdup(GETSTRING(ARG3));
+    ustr3 = strdup(GETSTRING(ARG4));
     strupr_portable(ustr1);
     strupr_portable(ustr2);
     strupr_portable(ustr3);
 
-    int result = 0;
+    result = 0;
     for (i = from; i < mmax; i++) {
-        char *orig_haystack = strdup(GETSARRAY(ARG0, i));
-        char *haystack = orig_haystack;
+        orig_haystack = strdup(GETSARRAY(ARG0, i));
+        haystack = orig_haystack;
         strupr_portable(haystack);
         while (isspace((unsigned char)*haystack)) haystack++;
 
@@ -378,18 +392,19 @@ PROCEDURE (fsearch) {
 }
 
 PROCEDURE (ffind) {
-    int i, mmax, from;
+    int i, mmax, from, result;
+    char *ustr, *haystack;
     mmax = GETARRAYHI(ARG0);
     from = GETINT(ARG1) - 1;
     if (from < 0) from = 0;
     if (from >= mmax) RETURNINTX(0);
 
-    char *ustr = strdup(GETSTRING(ARG2));
+    ustr = strdup(GETSTRING(ARG2));
     strupr_portable(ustr);
 
-    int result = 0;
+    result = 0;
     for (i = from; i < mmax; i++) {
-        char *haystack = strdup(GETSARRAY(ARG0, i));
+        haystack = strdup(GETSARRAY(ARG0, i));
         strupr_portable(haystack);
         if (strstr(haystack, ustr) != NULL) {
             result = i + 1;
@@ -415,10 +430,12 @@ PROCEDURE(fquoted) {
 
         if (template[i] == '\'' || template[i] == '"') {
             // Quoted separator
-            char quote = template[i++];
-            int start = i;
+            char quote;
+            int start, len;
+            quote = template[i++];
+            start = i;
             while (template[i] && template[i] != quote) i++;
-            int len = i - start;
+            len = i - start;
             if (len > 63) len = 63;
             strncpy(buffer, &template[start], len);
             buffer[len] = '\0';
@@ -432,9 +449,10 @@ PROCEDURE(fquoted) {
             if (template[i]) i++;  // Skip closing quote
         } else if (isalpha(template[i])) {
             // Variable name
-            int start = i;
+            int start, len;
+            start = i;
             while (isalnum(template[i])) i++;
-            int len = i - start;
+            len = i - start;
             if (len > 63) len = 63;
             strncpy(buffer, &template[start], len);
             buffer[len] = '\0';
@@ -483,8 +501,10 @@ PROCEDURE(fquoted) {
 /* ---------- small dynamic buffer helpers (C99) ---------- */
 static void append_char(char **buf, int *len, int *cap, char ch) {
     if (*len + 1 >= *cap) {
-        int newcap = (*cap == 0) ? 128 : (*cap * 2);
-        char *nbuf = (char *)realloc(*buf, (size_t)newcap);
+        int newcap;
+        char *nbuf;
+        newcap = (*cap == 0) ? 128 : (*cap * 2);
+        nbuf = (char *)realloc(*buf, (size_t)newcap);
         if (!nbuf) {
             /* Out of memory: drop char and keep going, or abort as you prefer */
             return;
@@ -503,6 +523,8 @@ static void reset_token(char **buf, int *len) {
 /* Emit trimmed substring of token[0..tlen) into ARG1 at position (INDEX_BASE + *n) */
 static void emit_trimmed(char *token, int tlen, int *n, char * outarg) {
     int start = 0, end = tlen;
+    int outlen, idx;
+    char *out;
 
     /* trim left/right whitespace */
     while (start < end && isspace((unsigned char)token[start])) start++;
@@ -513,15 +535,15 @@ static void emit_trimmed(char *token, int tlen, int *n, char * outarg) {
         return; /* drop empty after trimming (matches your REXX default behavior) */
     }
 
-    int outlen = end - start;
-    char *out = (char *)malloc((size_t)outlen + 1);
+    outlen = end - start;
+    out = (char *)malloc((size_t)outlen + 1);
     if (!out) return;
 
     memcpy(out, token + start, (size_t)outlen);
     out[outlen] = '\0';
 
     /* grow high bound and store */
-    int idx = (*n);
+    idx = (*n);
     SETARRAYHI(outarg, idx + 1);
     SETSARRAY(outarg, idx, out);
 
@@ -542,7 +564,8 @@ PROCEDURE(splitargs) {
     char qchar = 0;    /* current quote char */
 
     while (s[i]) {
-        char c = s[i];
+        char c;
+        c = s[i];
         if (inq) {
             /* inside a quoted string: copy verbatim and handle doubled quotes */
             append_char(&token, &tlen, &tcap, c);
@@ -605,15 +628,18 @@ PROCEDURE (xlog) {
 
 // Helper to check if a string is properly quoted
 int is_properly_quoted(const char* str) {
-    size_t len = strlen(str);
+    size_t len;
+    size_t i;
+    char quote;
+    len = strlen(str);
     if (len < 2) return 0;
 
-    char quote = str[0];
+    quote = str[0];
     if ((quote != '\'' && quote != '"') || str[len - 1] != quote)
         return 0;
 
     // Check for valid escaping inside
-    for (size_t i = 1; i < len - 1; ++i) {
+    for (i = 1; i < len - 1; ++i) {
         if (str[i] == quote) {
             if (i + 1 >= len - 1 || str[i + 1] != quote)
                 return 0;  // not escaped by doubling
@@ -624,22 +650,31 @@ int is_properly_quoted(const char* str) {
 }
 // Quote a string safely for use in REXX
 PROCEDURE(safe_quote) {
-    char* input=GETSTRING(ARG0) ;
+    char* input;
+    int has_single;
+    int has_double;
+    char quote;
+    size_t len;
+    size_t i;
+    char* result;
+    char* p;
+
+    input=GETSTRING(ARG0) ;
     if (is_properly_quoted(input)) {
         RETURNSTRX(input);  // return as-is
     }
 
-    int has_single = strchr(input, '\'') != NULL;
-    int has_double = strchr(input, '"') != NULL;
+    has_single = strchr(input, '\'') != NULL;
+    has_double = strchr(input, '"') != NULL;
 
-    const char quote = has_single && !has_double ? '"' : '\'';  // safest choice
+    quote = has_single && !has_double ? '"' : '\'';  // safest choice
 
     // Estimate worst-case size (every quote gets doubled + outer quotes + null terminator)
-    size_t len = strlen(input);
-    char* result = malloc(2 * len + 3);  // worst case: all quotes doubled + 2 outer + '\0'
-    char* p = result;
+    len = strlen(input);
+    result = malloc(2 * len + 3);  // worst case: all quotes doubled + 2 outer + '\0'
+    p = result;
     *p++ = quote;
-    for (size_t i = 0; i < len; ++i) {
+    for (i = 0; i < len; ++i) {
         if (input[i] == quote) *p++ = quote;  // double the quote
         *p++ = input[i];
     }
@@ -652,16 +687,22 @@ PROCEDURE(safe_quote) {
 }
 // this is a case-insensitive version of the pos function
 PROCEDURE(fpos) {
-    char *substring  = strdup(GETSTRING(ARG0));
-    char *wordstring = strdup(GETSTRING(ARG1));
-    int offset = GETINT(ARG2) - 1;
-    int result = 0;
+    char *substring;
+    char *wordstring;
+    int offset;
+    int result;
+    char *found;
+
+    substring  = strdup(GETSTRING(ARG0));
+    wordstring = strdup(GETSTRING(ARG1));
+    offset = GETINT(ARG2) - 1;
+    result = 0;
 
     if (substring && wordstring && offset >= 0) {
         strupr_portable(substring);
         strupr_portable(wordstring);
         if (offset < (int)strlen(wordstring)) {
-            char *found = strstr(wordstring + offset, substring);
+            found = strstr(wordstring + offset, substring);
             if (found != NULL) {
                 result = (int)(found - wordstring + 1);
             }
@@ -701,25 +742,35 @@ PROCEDURE(templist) {
  */
 
 static char *quote_stem_path(char *in) {
-    size_t in_len = strlen(in);
+    size_t in_len;
+    const char *dot;
+    size_t root_len;
+    size_t cap;
+    char *out;
+    size_t w;
+    const char *p;
+    const char *next;
+    size_t seg_len;
+
+    in_len = strlen(in);
     if (in_len == 0) return NULL;
 
-    const char *dot = strchr(in, '.');
+    dot = strchr(in, '.');
     if (!dot) {
         return strdup(in);
     }
 
-    size_t root_len = (size_t) (dot - in);
+    root_len = (size_t) (dot - in);
     if (root_len == 0) return NULL; /* ".a" invalid */
 
     /* Max possible expansion: each segment char stays as-is, each dot becomes ||"."||
        Plus prefix "root." (root_len + 3)
     */
-    size_t cap = in_len * 8 + 32;
-    char *out = (char *) malloc(cap);
+    cap = in_len * 8 + 32;
+    out = (char *) malloc(cap);
     if (!out) return NULL;
 
-    size_t w = 0;
+    w = 0;
     /* Prefix: "Root." */
     out[w++] = '"';
     memcpy(out + w, in, root_len);
@@ -728,11 +779,11 @@ static char *quote_stem_path(char *in) {
     out[w++] = '"';
 
     /* Tail segments */
-    const char *p = dot + 1;
+    p = dot + 1;
 
     while (*p) {
-        const char *next = strchr(p, '.');
-        size_t seg_len = next ? (size_t) (next - p) : strlen(p);
+        next = strchr(p, '.');
+        seg_len = next ? (size_t) (next - p) : strlen(p);
 
         if (seg_len == 0) {
             free(out);
@@ -765,11 +816,13 @@ static char *quote_stem_path(char *in) {
 
 PROCEDURE(stemquote)
 {
+    char *input;
+    char *out;
     // ARG0: input string
-    char *input = GETSTRING(ARG0);
+    input = GETSTRING(ARG0);
     if (!input || !*input) RETURNSTRX("");    // no input no stem
 
-    char *out = quote_stem_path(input);
+    out = quote_stem_path(input);
     if (!out) {
         RETURNSTRX(input); // invalid path: return and let rxpp decided what to do
     }
