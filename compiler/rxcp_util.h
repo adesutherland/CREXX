@@ -61,4 +61,10 @@ char* escape_character(unsigned char c);
 /* Print characters with escaping for unexpected content */
 void prt_unex(FILE *output, const char *ptr, int len);
 
+/* Convert Token ID to human-readable string */
+const char* token_to_string(int token_id);
+
+/* Convert NodeType to human-readable string */
+const char* node_type_to_string(NodeType type);
+
 #endif //CREXX_RXCP_UTIL_H

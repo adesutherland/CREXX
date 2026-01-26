@@ -1,0 +1,13 @@
+Error in err_struct_03.rexx @ 2:6 - #UNEXPECTED_ELSE, "else"
+Error in err_struct_03.rexx @ 2:11 - #EXTRANEOUS, "say"
+2 error(s) in source file
+[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
+  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
+    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
+      [AST] LITERAL (Type 11) [Line -1] "levelb"
+    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
+      [AST] NOP (Type 39) [Line -1] "nop"
+      [AST] TOKEN (Type 94) [Line -1] "else"
+        [AST] ERROR (Type 21) [Line -1] "UNEXPECTED_ELSE"
+      [AST] TOKEN (Type 94) [Line -1] "say"
+        [AST] ERROR (Type 21) [Line -1] "EXTRANEOUS"

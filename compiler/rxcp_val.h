@@ -63,6 +63,7 @@ walker_result decimal2float_walker(walker_direction direction, ASTNode* node, vo
 
 /* trans */
 walker_result rewrite_exit_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_address_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result needs_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -70,6 +71,7 @@ walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void 
 /* check */
 walker_result initial_checks_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result plugin_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* misc */
 walker_result set_node_ordinals_walker(walker_direction direction, ASTNode* node, void *payload);

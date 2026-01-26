@@ -69,6 +69,7 @@ walker_result rewrite_exit_walker(walker_direction direction,
 
                 /* Add Function */
                 add_ast(node, function_node);
+                context->changed = 1;
                 break;
 
             default: ;
@@ -100,6 +101,7 @@ walker_result rewrite_address_walker(walker_direction direction,
 
             case ADDRESS:
                 /* Rewrite to an assignment from a function */
+                context->changed = 1;
 
                 /* Assignment node and remember the command */
                 node->node_type = ASSIGN;
@@ -145,6 +147,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     node->node_type = FUNCTION;
                     ast_str(node, "_string2redir");
                 }
+                context->changed = 1;
                 break;
 
             case REDIRECT_OUT:
@@ -165,6 +168,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     node->node_type = FUNCTION;
                     ast_str(node, "_redir2string");
                 }
+                context->changed = 1;
                 break;
 
             case REDIRECT_EXPOSE:
@@ -204,6 +208,7 @@ walker_result rewrite_address_walker(walker_direction direction,
                     /* No children / environment variables - delete node */
                     ast_del(node);
                 }
+                context->changed = 1;
                 break;
 
             default:;
@@ -271,5 +276,31 @@ walker_result needs_rxsysb_walker(walker_direction direction,
         }
     }
 
+    return result_normal;
+}
+
+/*
+ * Rewrites IMPLICIT_CMD to ADDRESS
+ */
+walker_result rewrite_implicit_cmd_walker(walker_direction direction,
+                                          ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+    ASTNode *env_node;
+
+    if (direction == in && node->node_type == IMPLICIT_CMD) {
+        /* Create explicit environment "SYSTEM" */
+        env_node = ast_ft(context, STRING);
+        ast_str(env_node, "SYSTEM");
+
+        /* Insert at the beginning of children */
+        env_node->sibling = node->child;
+        if (node->child) node->child->parent = node; /* Ensure parent is set though ast_ft does it usually */
+        node->child = env_node;
+        env_node->parent = node;
+
+        node->node_type = ADDRESS;
+        /* node->node_string = "SYSTEM"; // Not strictly needed by walker but good for debug */
+        context->changed = 1;
+    }
     return result_normal;
 }

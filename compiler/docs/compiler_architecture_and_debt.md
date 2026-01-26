@@ -7,10 +7,10 @@ The cREXX compiler (`rxc`) follows a traditional multi-pass architecture, transf
 2.  **Options Parsing**: A preliminary scan (`rxcposcn.re` / `rxcpopgr.y`) identifies the Rexx language level (e.g., Level B) and other options.
 3.  **Lexical Analysis & Parsing**:
     *   For Level B, the compiler uses `rxcpbscn.re` (re2c) and `rxcpbgmr.y` (Lemon).
-    *   The parser builds an Abstract Syntax Tree (AST) using structures defined in `rxcpmain.h`.
-4.  **Semantic Validation**: `rxcpbval.c` performs type checking, scope validation, and semantic analysis on the AST.
+    *   The parser builds an Abstract Syntax Tree (AST) using structures defined in `rxcp_ast.h`.
+4.  **Semantic Validation**: `rxcp_val_orch.c` orchestrates a multi-pass pipeline (check, sym, type, trans) to validate the AST.
 5.  **Optimization**: `rxcp_opt.c` applies AST-level optimizations (e.g., constant folding, dead code elimination).
-6.  **Code Emission**: `rxcpemit.c` walks the AST and generates `.rxas` assembly instructions.
+6.  **Code Emission**: The modular emitter (`rxcp_emit_*.c`) walks the AST and generates `.rxas` assembly instructions.
 7.  **Assembly (External)**: The resulting `.rxas` file is typically passed to `rxas` to produce the binary `.rxbin`.
 
 ---
@@ -20,35 +20,42 @@ The cREXX compiler (`rxc`) follows a traditional multi-pass architecture, transf
 | File | Description |
 | :--- | :--- |
 | `rxcpmain.c` | CLI entry point, high-level orchestration, and argument handling. |
-| `rxcpmain.h` | **Monolithic Header**. Contains all core data structures (ASTNode, Token, Symbol, Scope, Context). |
-| `rxcpast.c` | **AST Monolith**. Functions for AST node creation, walking, printing, and utility checks (`nodeis`). |
-| `rxcpsymb.c` | Symbol table and Scope management. Uses AVL trees for symbol lookups. |
-| `rxcpemit.c` | **Emitter Monolith**. Translates AST nodes into RXAS instructions. |
-| `rxcpbval.c` | **Validator Monolith**. Complex semantic validation and type inference logic for Level B. |
+| `rxcp_ast.h` | AST Node definitions and related enums. |
+| `rxcp_sym.h` | Symbol table and Scope management. |
+| `rxcp_types.h` | Type-system definitions (`ValueType`). |
+| `rxcp_val_*.c` | Validation pipeline (check, sym, type, trans, orch). |
+| `rxcp_emit_*.c` | Modular Emitter (core, reg, expr, flow, proc, meta). |
 | `rxcp_opt.c` | AST-level optimization passes. |
 | `rxcpbscn.re` | re2c source for the Level B scanner. |
 | `rxcpbgmr.y` | Lemon grammar for the Level B parser. |
-| `rxcpopgr.y` | Lemon grammar for the OPTIONS pass. |
-| `rxcposcn.re` | re2c source for the OPTIONS scanner. |
 
 ---
 
-## 3. Modularization Plan (Proposed Seams)
+## 3. Modular Structure (Resolved)
 
-To reduce technical debt and improve maintainability, the following refactoring is proposed:
+The previously identified technical debt regarding monolithic files has been **RESOLVED**. The compiler logic is now split into the following module categories:
 
-### 3.1 Header Decomposition
-`rxcpmain.h` should be decomposed into:
-*   `rxcp_ast.h`: `ASTNode`, `Token`, and AST-related enums.
-*   `rxcp_sym.h`: `Symbol`, `Scope`, and Symbol Table definitions.
-*   `rxcp_ctx.h`: The `Context` structure.
-*   `rxcp_type.h`: `ValueType` and related type-system definitions.
+### 3.1 AST & Symbols
+*   `rxcp_ast.h`: Defines the `ASTNode` structure and AST-related constants.
+*   `rxcp_sym.h`: Defines `Symbol`, `Scope`, and Symbol Table management.
+*   `rxcp_types.h`: Centralized `ValueType` definitions.
 
-### 3.2 Logic Extraction
-*   **AST Utilities**: Split `rxcpast.c` into `rxcpast_core.c` (creation/deletion), `rxcpast_walk.c` (tree traversal), and `rxcpast_print.c` (debugging).
-*   **Validation**: Break `rxcpbval.c` into `rxcp_val_expr.c` (expression checking), `rxcp_val_stmt.c` (statement checking), and `rxcp_type_inference.c`.
-*   **Emission**: Break `rxcpemit.c` into `rxcp_emit_core.c` and specialized emitters for procedures, control flow, and expressions.
-*   **Common Utilities**: Create `rxcp_util.c/h` for string handling, error reporting, and memory management.
+### 3.2 Validation Pipeline
+The semantic validation logic (formerly `rxcpbval.c`) is now split into a multi-pass pipeline:
+*   `rxcp_val_orch.c`: The orchestrator that runs the pipeline.
+*   `rxcp_val_check.c`: Basic structural and syntax checks.
+*   `rxcp_val_sym.c`: Symbol resolution and scope population.
+*   `rxcp_val_type.c`: Type inference and type checking.
+*   `rxcp_val_trans.c`: AST transformations (e.g., adding implicit conversions).
+
+### 3.3 Modular Emitter
+The code generator (formerly `rxcpemit.c`) is now split into 6 functional modules:
+*   `rxcp_emit_core.c`: Infrastructure, I/O, and conversion matrices.
+*   `rxcp_emit_reg.c`: Register allocation and virtual register management.
+*   `rxcp_emit_expr.c`: Emission logic for math, strings, and operators.
+*   `rxcp_emit_flow.c`: Control flow (IF, DO, SELECT).
+*   `rxcp_emit_proc.c`: Procedures and program-level structure.
+*   `rxcp_emit_meta.c`: Metadata generation.
 
 ---
 
@@ -57,9 +64,9 @@ To reduce technical debt and improve maintainability, the following refactoring 
 The 8-character symbol limit is a legacy constraint rooted in mainframe compatibility (S/370) and older Rexx standards.
 
 ### 4.1 Identified Constraints
-*   **Truncation in `rxcpast.c`**: The functions `nodeis()` and `tokenis()` currently truncate comparisons to **14 characters** (likely an earlier expansion from 8).
+*   **Truncation in AST Utilities**: Functions in the AST modular files (formerly `rxcpast.c`) currently truncate comparisons to **14 characters** (likely an earlier expansion from 8).
 *   **Plugin Limits**: `lib/plugins/recv390/recv390.c` contains several hardcoded `char[8]` and `char[9]` arrays for member names and node IDs, reflecting mainframe constraints.
-*   **Magic Numbers**: Usage of `9` (8 + null) in various Promotion tables and hex-bin buffers throughout `rxcpast.c`, `rxcpbval.c`, and `rxcpemit.c`.
+*   **Magic Numbers**: Usage of `9` (8 + null) in various Promotion tables and hex-bin buffers throughout the modularized Validator and Emitter files.
 
 ### 4.2 Blast Radius of Expansion
 *   **Internal Structures**: `Symbol` and `Token` already use dynamically allocated `char*` names, so they are mostly ready for expansion.
@@ -69,12 +76,12 @@ The 8-character symbol limit is a legacy constraint rooted in mainframe compatib
 
 ---
 
-## 5. Issue Log (Code Smells)
+## 5. Issue Log & Future Work
 
-| Severity | Issue | Description |
-| :--- | :--- | :--- |
-| **High** | Monolithic Files | `rxcpast.c` (>3k lines) and `rxcpemit.c` (>3.7k lines) are difficult to navigate and maintain. |
-| **High** | Static Globals | Extensive use of static globals for state management in `rxcpemit.c` and `rxcpbval.c` prevents reentrancy. |
-| **Medium** | Error Handling | Inconsistent error reporting; often relies on setting flags in `Context` without immediately returning or using structured error objects. |
-| **Medium** | Magic Numbers | Hardcoded limits (like the 14-char limit in `nodeis`) and array sizes (e.g., `promotion[9][9]`). |
-| **Low** | Memory Management | Manual `malloc`/`free` throughout the code without a clear ownership model or pool allocation for AST nodes. |
+| Severity | Issue | Description | Status |
+| :--- | :--- | :--- | :--- |
+| **High** | Monolithic Files | `rxcpast.c` and `rxcpemit.c` were too large. | **RESOLVED** |
+| **High** | Optimizer Refactor | `rxcp_opt.c` needs refactoring to support new decimal types. | Pending |
+| **Medium** | Plugin Interface | Implement "Analyze-Consult-Negotiate" loop in `rxcp_val_orch.c`. | Pending |
+| **Medium** | Static Globals | Extensive use of static globals prevents reentrancy. | In Progress |
+| **Low** | Memory Management | Lack of clear ownership model or pool allocation for AST nodes. | Open |

@@ -162,6 +162,13 @@ void fre_cntx(Context *context)  {
     /* Deallocate Tokens */
     free_tok(context);
 
+    if (context->master_context && context == context->master_context) {
+        if (context->loading_files) {
+            for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);
+            free(context->loading_files);
+        }
+    }
+
     free(context->buff_start);
 
     if (context->traceFile) fclose(context->traceFile);
@@ -179,6 +186,7 @@ int rxcmain(int argc, char *argv[]) {
     int i;
     char *output_file_name = 0;
     int debug_mode = 0;
+    int stop_after_parse = 0;
     char *file_name;
     char *location = 0;
     char *import_locations = 0;
@@ -190,6 +198,12 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        /* Check for -dp flag */
+        if (strcmp(argv[i], "-dp") == 0) {
+            stop_after_parse = 1;
+            continue;
+        }
+
         if (strlen(argv[i]) > 2) {
             error_and_exit(2, "Invalid argument");
         }
@@ -272,7 +286,7 @@ int rxcmain(int argc, char *argv[]) {
         file_directory = file_dir(file_name);
     }
 
-    if (debug_mode) printf("Input file is %s\n", file_name);
+    if (debug_mode) fprintf(stderr, "Input file is %s\n", file_name);
 
     /* Import location list */
     if (import_locations) {
@@ -309,16 +323,15 @@ int rxcmain(int argc, char *argv[]) {
         fprintf(stderr, "Can't open input file: %s\n", file_name);
         exit(-1);
     }
+    context->master_context = context;
+    context->loading_files_count = 1;
+    context->loading_files = malloc(sizeof(char*));
+    context->loading_files[0] = strdup(context->file_name);
 
     /* Open trace file */
 #ifndef NDEBUG
-    if (debug_mode) {
-        context->traceFile = openfile((char*) filename(file_name), "trace", location, "w");
-        if (context->traceFile == NULL) {
-            fprintf(stderr, "Can't open trace file\n");
-            exit(-1);
-        }
-    }
+    // Trace file logic removed to avoid redundant file creation.
+    // Tracing is now redirected to stderr when debug_mode is active.
 #endif
 
     buff_start = file2buf(context->file_pointer, &bytes);
@@ -334,6 +347,7 @@ int rxcmain(int argc, char *argv[]) {
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);
     context->debug_mode = debug_mode;
+    context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
     if (file_directory) context->location = file_directory;
     else context->location = location;
@@ -346,7 +360,7 @@ int rxcmain(int argc, char *argv[]) {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
     }
-    if (context->debug_mode) printf("Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
+    if (context->debug_mode) fprintf(stderr, "Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
 
     /* Create Options parser to work out the required language level */
     opt_pars(context);
@@ -370,7 +384,7 @@ int rxcmain(int argc, char *argv[]) {
 
         case LEVELG:
         case LEVELL:
-            if (debug_mode) printf("REXX Level B/G/L (cREXX)\n");
+            if (debug_mode) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
             rexbpars(context); // Built AST
             break;
 
@@ -386,9 +400,15 @@ int rxcmain(int argc, char *argv[]) {
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph0", context->file_name);
+        fprintf(stderr, "--- RAW AST ---\n");
+        ast_dump_text(stderr, context->ast, 0);
+        // pdot_tree(context->ast, "astgraph0", context->file_name);
     }
 #endif
+
+    if (context->stop_after_parse) {
+        ast_dump_text(stdout, context->ast, 0);
+    }
 
     errors = prnterrs(context);
     if (errors) {
@@ -396,11 +416,18 @@ int rxcmain(int argc, char *argv[]) {
         goto finish;
     }
 
-    if (debug_mode) printf("Validating AST Tree\n");
+    if (context->stop_after_parse) {
+        if (debug_mode) {
+            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup (-dp).\n");
+        }
+        goto finish;
+    }
+
+    if (debug_mode) fprintf(stderr, "Validating AST Tree\n");
     rxcp_val(context);
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph1", context->file_name);
+        // pdot_tree(context->ast, "astgraph1", context->file_name);
     }
 #endif
     errors = prnterrs(context);
@@ -411,11 +438,11 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Optimise AST Tree */
     if (context->optimise) {
-        if (debug_mode) printf("Optimising AST Tree\n");
+        if (debug_mode) fprintf(stderr, "Optimising AST Tree\n");
         optimise(context);
 #ifndef __CMS__
         if (debug_mode) {
-            pdot_tree(context->ast, "astgraph2", context->file_name);
+            // pdot_tree(context->ast, "astgraph2", context->file_name);
         }
 #endif
     }
@@ -426,21 +453,26 @@ int rxcmain(int argc, char *argv[]) {
         goto finish;
     }
 
+    if (debug_mode) {
+        fprintf(stderr, "--- FIXED AST ---\n");
+        ast_dump_text(stderr, context->ast, 0);
+    }
+
     /* Generate Assembler */
     outFile = openfile(output_file_name, "rxas", location, "w");
     if (outFile == NULL) {
         fprintf(stderr, "Can't open output file %s\n", output_file_name);
         exit(-1);
     }
-    if (debug_mode) printf("Generating Assembler file %s\n", output_file_name);
+    if (debug_mode) fprintf(stderr, "Generating Assembler file %s\n", output_file_name);
     emit(context, outFile);
 
 #ifndef __CMS__
     if (debug_mode) {
-        pdot_tree(context->ast, "astgraph3", context->file_name);
+        // pdot_tree(context->ast, "astgraph3", context->file_name);
     }
 #endif
-    if (debug_mode) printf("Compiler Exiting - Success\n");
+    if (debug_mode) fprintf(stderr, "Compiler Exiting - Success\n");
 
     finish:
 

@@ -126,105 +126,107 @@ walker_result build_symbols_walker(walker_direction direction,
         }
 
         else if (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) {
-            node->scope = context->current_scope;
-            /* Find the symbol */
-            if (node->parent->node_type == ARG) /* Only search current scope */
-                symbol = sym_lrsv(context->current_scope, node);
-            else /* Search parent scopes */
-                symbol = sym_rslv(context->current_scope, node);
+            if (node->symbolNode) {
+                node->scope = context->current_scope;
+            } else {
+                node->scope = context->current_scope;
+                /* Find the symbol */
+                if (node->parent->node_type == ARG) /* Only search current scope */
+                    symbol = sym_lrsv(context->current_scope, node);
+                else /* Search parent scopes */
+                    symbol = sym_rslv(context->current_scope, node);
 
-            /* Make a new symbol if it does not exist */
-            if (!symbol) {
-                symbol = sym_f(context->current_scope, node);
-            }
-            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                mknd_err(node, "IS_A_FUNCTION");
-            }
-            else if (symbol->symbol_type == CLASS_SYMBOL) {
-                mknd_err(node, "IS_A_CLASS");
-            }
-            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
-                mknd_err(node, "IS_A_NAMESPACE");
-            }
-            else if (node->parent->node_type == DEFINE) {
-                mknd_err(node, "ALREADY_DECLARED");
-            }
+                /* Make a new symbol if it does not exist */
+                if (!symbol) {
+                    symbol = sym_f(context->current_scope, node);
+                } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
+                    mknd_err(node, "IS_A_FUNCTION");
+                } else if (symbol->symbol_type == CLASS_SYMBOL) {
+                    mknd_err(node, "IS_A_CLASS");
+                } else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                    mknd_err(node, "IS_A_NAMESPACE");
+                } else if (node->parent->node_type == DEFINE) {
+                    mknd_err(node, "ALREADY_DECLARED");
+                }
 
-            /* Set Argument flags - set by the parser grammar */
-            if (node->parent->node_type == ARG) {
-                symbol->is_arg = 1;
-                symbol->is_opt_arg = node->parent->is_opt_arg;
-                symbol->is_ref_arg = node->parent->is_ref_arg;
-                /* Add the count of fixed args for the procedure symbol */
-                ast_proc(node)->symbolNode->symbol->fixed_args++;
-            }
+                /* Set Argument flags - set by the parser grammar */
+                if (node->parent->node_type == ARG) {
+                    symbol->is_arg = 1;
+                    symbol->is_opt_arg = node->parent->is_opt_arg;
+                    symbol->is_ref_arg = node->parent->is_ref_arg;
+                    /* Add the count of fixed args for the procedure symbol */
+                    ast_proc(node)->symbolNode->symbol->fixed_args++;
+                }
 
-            if (node->parent->node_type == ASSIGN) sym_adnd(symbol, node, 0, 1);
-            else sym_adnd(symbol, node, 0, 0);
+                if (node->parent->node_type == ASSIGN) sym_adnd(symbol, node, 0, 1);
+                else sym_adnd(symbol, node, 0, 0);
+            }
         }
 
         else if (node->node_type == VARG || node->node_type == VARG_REFERENCE) {
-            /* Set the procedure symbol has_vargs flag */
-            ast_proc(node)->symbolNode->symbol->has_vargs = 1;
+            if (node->symbolNode) {
+                 /* Already processed */
+            } else {
+                /* Set the procedure symbol has_vargs flag */
+                ast_proc(node)->symbolNode->symbol->has_vargs = 1;
+            }
         }
 
         else if (node->node_type == OP_ARG_EXISTS) {
-            node->scope = context->current_scope;
-            /* Find the symbol */
-            symbol = sym_rslv(context->current_scope, node);
+            if (node->symbolNode) {
+                node->scope = context->current_scope;
+            } else {
+                node->scope = context->current_scope;
+                /* Find the symbol */
+                symbol = sym_rslv(context->current_scope, node);
 
-            /* At this point the arguments will have been processed so no need to attempt to add a symbol */
-            if (!symbol) {
-                mknd_err(node, "UNKNOWN_SYMBOL");
+                /* At this point the arguments will have been processed so no need to attempt to add a symbol */
+                if (!symbol) {
+                    mknd_err(node, "UNKNOWN_SYMBOL");
+                } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
+                    mknd_err(node, "IS_A_FUNCTION");
+                } else if (symbol->symbol_type == CLASS_SYMBOL) {
+                    mknd_err(node, "IS_A_CLASS");
+                } else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                    mknd_err(node, "IS_A_NAMESPACE");
+                } else if (!symbol->is_arg) {
+                    mknd_err(node, "NOT_AN_ARGUMENT");
+                } else if (!symbol->is_opt_arg) {
+                    /* It's not options, so it must always exist (be specified in the call) */
+                    node->node_type = INTEGER;
+                    node->value_type = TP_BOOLEAN;
+                    node->int_value = 1;
+                    node->node_string = "1";
+                    node->node_string_length = 1;
+                } else sym_adnd(symbol, node, 0, 0);
             }
-            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                mknd_err(node, "IS_A_FUNCTION");
-            }
-            else if (symbol->symbol_type == CLASS_SYMBOL) {
-                mknd_err(node, "IS_A_CLASS");
-            }
-            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
-                mknd_err(node, "IS_A_NAMESPACE");
-            }
-            else if (!symbol->is_arg) {
-                mknd_err(node, "NOT_AN_ARGUMENT");
-            }
-            else if (!symbol->is_opt_arg) {
-                /* It's not options, so it must always exist (be specified in the call) */
-                node->node_type = INTEGER;
-                node->value_type = TP_BOOLEAN;
-                node->int_value = 1;
-                node->node_string = "1";
-                node->node_string_length = 1;
-            }
-            else sym_adnd(symbol, node, 0, 0);
         }
 
         else if (node->node_type == VAR_SYMBOL) {
-            node->scope = context->current_scope;
-            /* Find the symbol */
-            symbol = sym_rslv(context->current_scope, node);
+            if (node->symbolNode) {
+                node->scope = context->current_scope;
+            } else {
+                node->scope = context->current_scope;
+                /* Find the symbol */
+                symbol = sym_rslv(context->current_scope, node);
 
-            /* Make a new symbol if it does not exist */
-            if (!symbol) {
-                symbol = sym_f(context->current_scope, node);
-            }
-            else if (symbol->symbol_type == FUNCTION_SYMBOL) {
-                mknd_err(node, "IS_A_FUNCTION");
-            }
-            else if (symbol->symbol_type == CLASS_SYMBOL) {
-                mknd_err(node, "IS_A_CLASS");
-            }
-            else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
-                mknd_err(node, "IS_A_NAMESPACE");
-            }
+                /* Make a new symbol if it does not exist */
+                if (!symbol) {
+                    symbol = sym_f(context->current_scope, node);
+                } else if (symbol->symbol_type == FUNCTION_SYMBOL) {
+                    mknd_err(node, "IS_A_FUNCTION");
+                } else if (symbol->symbol_type == CLASS_SYMBOL) {
+                    mknd_err(node, "IS_A_CLASS");
+                } else if (symbol->symbol_type == NAMESPACE_SYMBOL) {
+                    mknd_err(node, "IS_A_NAMESPACE");
+                }
 
-            if (node->parent->node_type == ASSEMBLER) {
-                /* If an assembler instruction we need to assume read/write
-                 * access - and therefore disable some optimisations */
-                sym_adnd(symbol, node, 1, 1);
+                if (node->parent->node_type == ASSEMBLER) {
+                    /* If an assembler instruction we need to assume read/write
+                     * access - and therefore disable some optimisations */
+                    sym_adnd(symbol, node, 1, 1);
+                } else sym_adnd(symbol, node, 1, 0);
             }
-            else sym_adnd(symbol, node, 1, 0);
         }
 
         else if (node->node_type == TO) {
@@ -273,6 +275,11 @@ walker_result resolve_functions_walker(walker_direction direction,
         /* IN - TOP DOWN */
     }
     else {
+        /* DEBUG PoC */
+        if (is_node_string(node, "POCABS") || is_node_string(node, "POCSQUARE")) {
+             printf("DEBUG: resolve_functions_walker sees %s as type %d\n", node->node_string, node->node_type);
+        }
+
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             if (node->symbolNode) return result_normal; /* Already Processed */
             if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
@@ -547,6 +554,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
     }
     else {
 
+        if (sym_nond(symbol) == 0) return;
+
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
         if (defining_node_link->node->node_type == PROCEDURE) {
@@ -585,7 +594,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
         }
 
-        else if (symbol->symbol_type != NAMESPACE_SYMBOL) {
+        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
             symbol->type = TP_STRING;

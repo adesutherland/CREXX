@@ -609,6 +609,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     Context *context;
     char *buff_start;
     imported_func *global;
+    size_t i;
 
     if (parent_context->debug_mode) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
@@ -677,8 +678,26 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         goto finish;
     }
 
+    /* Recursion Guard - Check if already loading */
+    for (i = 0; i < parent_context->master_context->loading_files_count; i++) {
+        if (strcmp(parent_context->master_context->loading_files[i], file_name) == 0) {
+            if (parent_context->debug_mode) printf("Importing Procedures - File %s already being loaded - skipping to avoid recursion\n", file_name);
+            return;
+        }
+    }
+
+    /* Recursion Guard - Add to loading list */
+    parent_context->master_context->loading_files_count++;
+    parent_context->master_context->loading_files = realloc(parent_context->master_context->loading_files, sizeof(char*) * parent_context->master_context->loading_files_count);
+    parent_context->master_context->loading_files[parent_context->master_context->loading_files_count - 1] = strdup(file_name);
+
     /* Extract Function Definitions  */
-    rxcp_val(context); /* Full validation to ensure procedure types are handled */
+    rxcp_val(context);
+
+    /* Recursion Guard - Remove from loading list */
+    free(parent_context->master_context->loading_files[parent_context->master_context->loading_files_count - 1]);
+    parent_context->master_context->loading_files_count--;
+    /* No need to realloc down, it's fine */
 
 #ifndef __CMS__
     if (parent_context->debug_mode) {
@@ -691,7 +710,6 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     /* Extract Global Variables */
     /* Returns all the symbols in the scope of the PROGRAM_FILE node */
     Symbol **symbols = scp_syms(context->ast->child->scope);
-    int i;
     for (i=0; symbols[i]; i++) {
         if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
             /* import symbol */

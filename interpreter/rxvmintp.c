@@ -463,11 +463,14 @@ RX_INLINE void free_frame(stack_frame *frame) {
 
 /* Clear Stack Frame - deallocating register contents and plugins */
 RX_INLINE void clear_frame(stack_frame *frame) {
-    int i;
-    /* Reset Local Registers */
+    int i, offset;
+    /* Reset Local Registers and a0 */
     for (i = 0; i < frame->procedure->locals; i++) {
         clear_value(frame->baselocals[i]);
     }
+    offset = frame->procedure->locals;
+    if (frame->procedure->binarySpace) offset += frame->procedure->binarySpace->globals;
+    clear_value(frame->baselocals[offset]);
     if (frame->decimal_loaded_here) {
         frame->decimal->base.free((rxvm_plugin*)frame->decimal);
         frame->decimal_loaded_here = 0;
@@ -4695,8 +4698,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                static const char hexconst[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-                                                'e', 'f', 'A', 'B', 'C', 'D', 'E', 'f'};
+                static const char hexconst[] = "0123456789ABCDEF";
                 int ch, i, bytelen, mode;
                 unsigned char bytebuf[4] = {0, 0, 0, 0};
 
@@ -6126,16 +6128,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
     }
 
-    /* Deallocate Globals */
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i;
-        for (i = 0; i < context->modules[mod_index]->segment.globals; i++) {
-            if (!context->modules[mod_index]->globals_dont_free[i]) {
-                clear_value(context->modules[mod_index]->globals[i]);
-                free(context->modules[mod_index]->globals[i]);
-            }
-        }
-    }
 
     /* Free signal value */
     clear_value(signal_value);
@@ -6169,7 +6161,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     }
 
 #ifndef NDEBUG
-    if (context->debug_mode) mprintf("Interpreter Finished\n");
+    if (context->debug_mode) mprintf("Interpreter Finished with rc=%d\n", rc);
 #endif
 
     return rc;

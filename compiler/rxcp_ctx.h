@@ -38,6 +38,7 @@
 struct Context {
     struct Context *master_context; /* This points to the context of the file being compiled (rather than imported files* */
     int debug_mode;
+    int stop_after_parse;
     char* location;
     char* file_name;
     char** import_locations;
@@ -83,6 +84,11 @@ struct Context {
     void *decimal_plugin; /* Pointer to the decimal plugin */
     /* Optimiser Options */
     int optimise;
+    int iterations;
+
+    /* Recursion Guard for Imports */
+    char** loading_files;
+    size_t loading_files_count;
 };
 
 #include "rxcp_emit.h"

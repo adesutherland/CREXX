@@ -168,20 +168,17 @@ rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinte
     printf("Argument INSERTATTR '%d'\n",(int)index);
 #endif
     if (val && index >= 0 && index <= val->num_attributes) {
-        // Increase the max number of attributes
-        set_num_attributes(val, val->num_attributes + 1);
-        val->num_attributes--;
+        rxinteger old_num = val->num_attributes;
+        // Increase the number of attributes
+        set_num_attributes(val, old_num + 1);
+        value* newval = val->attributes[old_num]; // Use the managed value added at the end
 
-        value* newval = value_f();
-        if (newval) {
-            if (index < val->num_attributes) {
-                /* Move the attributes up */
-                memmove(&val->attributes[index+1], &val->attributes[index], (val->num_attributes - index) * sizeof(value*));
-            }
+        if (index < old_num) {
+            /* Move the attributes up */
+            memmove(&val->attributes[index+1], &val->attributes[index], (old_num - index) * sizeof(value*));
             val->attributes[index] = newval;
-            val->num_attributes++;
-            return (rxpa_attribute_value)newval;
         }
+        return (rxpa_attribute_value)newval;
     }
     return NULL;
 }
@@ -196,8 +193,11 @@ void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
         value* oldval = val->attributes[index];
         if (oldval) {
             /* Move the attributes down */
-            memmove(&val->attributes[index], &val->attributes[index+1], (val->num_attributes - index - 1) * sizeof(value*));
+            if (index < val->num_attributes - 1) {
+                memmove(&val->attributes[index], &val->attributes[index+1], (val->num_attributes - index - 1) * sizeof(value*));
+            }
             val->num_attributes--;
+            val->attributes[val->num_attributes] = oldval;
             clear_value(oldval);
         }
     }

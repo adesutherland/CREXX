@@ -50,7 +50,7 @@ void rxinimod(rxvm_context *context) {
 
 /* Free Module Context */
 void rxfremod(rxvm_context *context) {
-    int j;
+    int j, k;
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");
@@ -62,11 +62,25 @@ void rxfremod(rxvm_context *context) {
     /* Free Program Modules */
     for (j=0; j<context->num_modules; j++) {
         free_module(context->modules[j]->file);
-        if (context->modules[j]->globals) free(context->modules[j]->globals);
-        if (context->modules[j]->globals_dont_free) free(context->modules[j]->globals_dont_free);
+        if (context->modules[j]->globals) {
+            value **temp_globals = context->modules[j]->globals;
+            char *temp_dont_free = context->modules[j]->globals_dont_free;
+            int temp_count = context->modules[j]->segment.globals;
+            context->modules[j]->globals = 0;
+            context->modules[j]->globals_dont_free = 0;
+            for (k = 0; k < temp_count; k++) {
+                if (temp_globals[k] && (!temp_dont_free || !temp_dont_free[k])) {
+                    clear_value(temp_globals[k]);
+                    free(temp_globals[k]);
+                }
+            }
+            free(temp_globals);
+            if (temp_dont_free) free(temp_dont_free);
+        }
         free(context->modules[j]);
     }
     free(context->modules);
+    if (context->location) free(context->location);
 }
 
 /* Link a loaded module */
@@ -463,7 +477,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
 // Free statically linked functions list
 static void free_rxpa_context(rxpa_context *context)
 {
-  //  if (context->const_buffer) free(context->const_buffer);
+    if (context->plugin_being_loaded) free_module(context->plugin_being_loaded);
     free(context);
 }
 
@@ -639,6 +653,7 @@ int rxldmodp(rxvm_context *context) {
     n = prep_and_link_module(context, current_rxpa_context->plugin_being_loaded);
 
     // Free the rxpa_context
+    current_rxpa_context->plugin_being_loaded = 0; // It's now owned by the module list
     free_rxpa_context(current_rxpa_context);
     current_rxpa_context = 0;
 

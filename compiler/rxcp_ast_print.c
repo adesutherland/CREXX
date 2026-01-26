@@ -541,3 +541,24 @@ void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {
     snprintf(command, 250, "dot %s.%s.dot -Tpng -o %s.%s.png", prefix, output_file, prefix, output_file);
     system(command);
 }
+
+void ast_dump_text(FILE* out, ASTNode* node, int indent) {
+    int i;
+    if (!node) return;
+
+    for (i = 0; i < indent; i++) fprintf(out, "  ");
+    fprintf(out, "[AST] %s (Type %d) [Line %d]", node_type_to_string(node->node_type), node->node_type, node->line);
+
+    if (node->node_string) {
+         fprintf(out, " \"");
+         prt_unex(out, node->node_string, (int)node->node_string_length);
+         fprintf(out, "\"");
+    }
+    fprintf(out, "\n");
+
+    ASTNode *child = node->child;
+    while (child) {
+        ast_dump_text(out, child, indent + 1);
+        child = child->sibling;
+    }
+}

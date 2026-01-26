@@ -382,7 +382,7 @@ char* format_constant(ValueType type, ASTNode* node) {
         /* Need to make sure the float literal has an ".0" (for the assembler) */
         flag = 1; /* Assume we should add .0 */
         for (i=0; i<node->node_string_length; i++) {
-            if (node->node_string[i] == '.' || node->node_string[i] == 'e') {
+            if (node->node_string[i] == '.' || node->node_string[i] == 'e' || node->node_string[i] == 'E') {
                 /* Already in a float format */
                 flag = 0; /* don't add .0 */
                 break;

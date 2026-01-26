@@ -209,40 +209,46 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     int i;
 
     /* Clear attribute values */
-    for (i = 0; i < v->max_num_attributes; i++) clear_value(v->unlinked_attributes[i]);
+    if (v->unlinked_attributes) {
+        for (i = 0; i < v->max_num_attributes; i++) {
+            if (v->unlinked_attributes[i]) {
+                clear_value(v->unlinked_attributes[i]);
+            }
+        }
+        free(v->unlinked_attributes);
+        v->unlinked_attributes = 0;
+    }
 
     /* Free attribute buffer */
-    for (i = 0; i < v->num_attribute_buffers; i++) free(v->attribute_buffers[i]);
+    if (v->attribute_buffers) {
+        for (i = 0; i < v->num_attribute_buffers; i++) {
+            if (v->attribute_buffers[i]) free(v->attribute_buffers[i]);
+        }
+        free(v->attribute_buffers);
+        v->attribute_buffers = 0;
+        v->num_attribute_buffers = 0;
+    }
 
     /* Free pointer arrays */
     if (v->attributes) {
         free(v->attributes);
         v->attributes = 0;
     }
-
-    if (v->unlinked_attributes) {
-        free(v->unlinked_attributes);
-        v->unlinked_attributes = 0;
-        v->max_num_attributes = 0;
-    }
-    if (v->attribute_buffers) {
-        free(v->attribute_buffers);
-        v->attribute_buffers = 0;
-        v->num_attribute_buffers = 0;
-    }
+    v->max_num_attributes = 0;
+    v->num_attributes = 0;
 
     /* Free strings */
     if (v->string_value != v->small_string_buffer) {
         free(v->string_value);
         v->string_value = v->small_string_buffer;
-        v->string_length = 0;
         v->string_buffer_length = sizeof(v->small_string_buffer);
-        v->string_pos = 0;
-#ifndef NUTF8
-        v->string_chars = 0;
-        v->string_char_pos = 0;
-#endif
     }
+    v->string_length = 0;
+    v->string_pos = 0;
+#ifndef NUTF8
+    v->string_chars = 0;
+    v->string_char_pos = 0;
+#endif
 
     /* Free decimal */
     if (v->decimal_value) free(v->decimal_value);
@@ -542,6 +548,7 @@ RX_INLINE void move_value(value *dest, value *source) {
 
 /* Copy string value */
 RX_INLINE void copy_string_value(value *dest, value *source) {
+    if (dest == source) return;
     if (source->string_length) {
         /* Copy String Data */
         prep_string_buffer(dest, source->string_length);
