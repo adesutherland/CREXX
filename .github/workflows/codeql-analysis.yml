@@ -35,11 +35,6 @@ jobs:
 
     steps:
 
-    - name: Get Regina
-      run: |
-        sudo apt-get install --no-install-recommends -y regina-rexx
-      shell: bash
-
     - name: Checkout repository
       uses: actions/checkout@v2
       with:

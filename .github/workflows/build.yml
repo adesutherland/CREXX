@@ -24,11 +24,6 @@ jobs:
           echo "Skip release"
           fi
 
-      - name: Get Regina
-        run: |
-          sudo apt-get install --no-install-recommends -y regina-rexx
-        shell: bash
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -92,18 +87,6 @@ jobs:
             ${{ runner.temp }}/exe/debug
             ${{ runner.temp }}/exe/release/bin
             ${{ runner.temp }}/exe/release/lib
-
-      - name: Upload instrmiss.h
-        uses: actions/upload-artifact@v4
-        with:
-          name: instrmiss.h
-          path: ${{ runner.temp }}/release/machine/instrmiss.h
-
-      - name: Upload instrset.h
-        uses: actions/upload-artifact@v4
-        with:
-          name: instrset.h
-          path: ${{ runner.temp }}/release/machine/instrset.h
 
       - name: Upload rxasscan.c
         uses: actions/upload-artifact@v4
@@ -199,18 +182,6 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Download instrmiss.h
-      uses: actions/download-artifact@v4
-      with:
-        name: instrmiss.h
-        path: machine
-
-    - name: Download instrset.h
-      uses: actions/download-artifact@v4
-      with:
-        name: instrset.h
-        path: machine
-
     - name: Build Debug
       shell: msys2 {0}
       run: |
@@ -296,18 +267,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-
-      - name: Download instrmiss.h
-        uses: actions/download-artifact@v4
-        with:
-          name: instrmiss.h
-          path: machine
-
-      - name: Download instrset.h
-        uses: actions/download-artifact@v4
-        with:
-          name: instrset.h
-          path: machine
 
       - name: CMAKE Build Debug
         uses: lukka/run-cmake@v3
