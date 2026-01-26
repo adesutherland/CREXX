@@ -31,7 +31,7 @@
 
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
 
 /* Internal validation module header */
 

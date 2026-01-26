@@ -8,8 +8,8 @@ set -e
 mkdir src
 cp ../avl_tree/*.c src
 cp ../avl_tree/*.h src
-cp ../machine/*.c src
-cp ../machine/*.h src
+cp ../binutils/include/*.h src
+cp ../binutils/include/*.c src
 cp ../interpreter/*.c src
 cp ../interpreter/*.h src
 cp ../disassembler/*.c src

@@ -23,8 +23,8 @@ add_custom_command(
 )
 
 add_executable(rxpp rxpp.c)
-target_link_libraries(rxpp precomp_static rxvml rxpa machine avl_tree platform m)
-add_dependencies(rxpp rxvml machine rxpa avl_tree platform)
+target_link_libraries(rxpp precomp_static rxvml rxpa avl_tree platform m)
+add_dependencies(rxpp rxvml rxpa avl_tree platform)
 # This is needed to ensure that the static library is linked into the executable and ** initalized at runtime **
 configure_linker_for_static_lib(rxpp precomp)
 

@@ -4,7 +4,6 @@
 #include <string.h>
 #include "platform.h"
 #include "rxdadism.h"
-#include "rxvminst.h"
 #include "rxbin.h"
 //#include <locale.h>
 #ifdef _WIN32

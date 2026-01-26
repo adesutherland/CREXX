@@ -4,7 +4,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "rxvminst.h"
+#include "platform.h"
+#include "rxas.h"
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
 

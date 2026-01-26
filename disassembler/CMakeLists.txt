@@ -4,13 +4,13 @@ project(Disassembler C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../machine/rxbin.h)
+add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../binutils/include/rxbin.h)
 
-add_dependencies(rxas machine avl_tree platform)
+add_dependencies(rxdas avl_tree platform)
 
-target_link_libraries(rxdas machine avl_tree platform)
+target_link_libraries(rxdas avl_tree platform)
 
-target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../machine ../platform)
+target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../platform ../binutils/include)
 
 add_custom_target(rxdascopy ALL DEPENDS rxdas)
 

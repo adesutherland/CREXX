@@ -181,13 +181,11 @@ do i=1 to words(filenames)
       '-L'rxpath'/interpreter/rxvmplugin',
       '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/db_decimal',
       '-L'rxpath'/interpreter/rxvmplugin/rxvmplugins/mc_decimal',
-      '-L'rxpath'/machine',
       '-L'rxpath'/avl_tree',
       '-L'rxpath'/rxpa',
       '-L'rxpath'/platform',
 	'-lrxvml',
 	'-lrxpa',
-	'-lmachine',
 	'-lavl_tree',
 	'-lplatform',
         '-lm -lrxvmplugin',
@@ -263,6 +261,6 @@ say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
 return 'logo done'
 
 /*
-  /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  machine/libmachine.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
+  /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
   */
 

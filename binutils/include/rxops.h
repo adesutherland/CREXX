@@ -1,4 +1,4 @@
-X(enum, 0, FMT_EMPTY, FLOW_NEXT, 0, "")
+X(INULL, 0, FMT_EMPTY, FLOW_NEXT, 0, "")
 X(IADD_REG_REG_REG, 1, FMT_R_R_R, FLOW_NEXT, 0, "Integer Add (op1=op2+op3)")
 X(IADD_REG_REG_INT, 2, FMT_R_R_I, FLOW_NEXT, 0, "Integer Add (op1=op2+op3)")
 X(ADDI_REG_REG_REG, 3, FMT_R_R_R, FLOW_NEXT, FLG_DEPRECATED, "Convert and Add to Integer (op1=op2+op3) (Deprecated)")

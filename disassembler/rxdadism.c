@@ -7,7 +7,6 @@
 #include <ctype.h>
 #include "platform.h"
 #include "rxas.h"
-#include "rxvminst.h"
 #include "rxdadism.h"
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/opdata.c"

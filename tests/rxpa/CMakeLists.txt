@@ -21,7 +21,7 @@ add_executable(rxc_staticlink "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
 configure_linker_for_decl_lib(rxc_staticlink _rxpalink)
 # Add the dependencies and link libraries
 add_dependencies(rxc_staticlink rxclib _rxpalink_decl rxpa library rxvm)
-target_link_libraries(rxc_staticlink rxclib machine avl_tree platform mc_decimal_manual rxvmplugin rxaslib rxpa _rxpalink_decl m)
+target_link_libraries(rxc_staticlink rxclib avl_tree platform mc_decimal_manual rxvmplugin rxaslib rxpa _rxpalink_decl m)
 
 # Create static link module for rxvm
 # The static definition library
@@ -37,7 +37,7 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/machine/rxbin.h
+        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
@@ -48,12 +48,12 @@ add_executable(testvm
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(testvm _rxpalink)
 # Add the dependencies and link libraries
-add_dependencies(testvm machine avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin machine avl_tree rxpa mc_decimal_manual platform _rxpalink_static m)
+add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
+target_link_libraries(testvm rxvmplugin avl_tree rxpa mc_decimal_manual platform _rxpalink_static m)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-        ${CMAKE_SOURCE_DIR}/machine
+        ${CMAKE_SOURCE_DIR}/binutils/include
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
@@ -124,7 +124,7 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
         ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
         ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/machine/rxbin.h
+        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
@@ -136,12 +136,12 @@ add_executable(funcvm
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
 # Add the dependencies and link libraries
-add_dependencies(funcvm machine avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm machine avl_tree rxpa mc_decimal_manual platform rxvmplugin _testfuncs_static m)
+add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
+target_link_libraries(funcvm avl_tree rxpa mc_decimal_manual platform rxvmplugin _testfuncs_static m)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
-        ${CMAKE_SOURCE_DIR}/machine
+        ${CMAKE_SOURCE_DIR}/binutils/include
         ${CMAKE_SOURCE_DIR}/assembler
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform

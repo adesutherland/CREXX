@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "platform.h"
 #include "rxasassm.h"
-#include "rxvminst.h"
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>

@@ -59,6 +59,33 @@ typedef enum {
     FLOW_TERM
 } FlowType;
 
+/* Operand Types (Legacy machine/rxvminst.h) */
+typedef enum
+{
+    OP_NONE = 0,
+    OP_ID = 1,
+    OP_REG = 2,
+    OP_FUNC = 3,
+    OP_INT = 4,
+    OP_FLOAT = 5,
+    OP_CHAR = 6,
+    OP_STRING = 7,
+    OP_DECIMAL = 8,
+    OP_BINARY = 9
+} OperandType;
+
+/* Instruction Definition (Legacy machine/rxvminst.h) */
+typedef struct Instruction
+{
+    int opcode;
+    char *instruction;
+    char *desc;
+    int operands;
+    OperandType op1_type;
+    OperandType op2_type;
+    OperandType op3_type;
+} Instruction;
+
 /* Instruction Flags */
 typedef enum {
     FLG_NONE = 0,
@@ -81,5 +108,7 @@ typedef enum {
     OP_MAX_INSTRUCTIONS
 } Opcode;
 #undef X
+
+void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 
 #endif // RXDEFS_H

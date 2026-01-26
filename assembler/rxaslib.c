@@ -7,9 +7,9 @@
 #include <string.h>
 #include "rxasgrmr.h"
 #include "rxas.h"
-#include "rxvminst.h"
 #include "rxasassm.h"
 #include "rxbin.h"
+#include "rxdefs.h"
 
 /* Main Assembler Function
  * Returns: 0 on success, -1 on an error
