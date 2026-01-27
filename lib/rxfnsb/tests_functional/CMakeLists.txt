@@ -70,12 +70,28 @@ add_custom_target(testbifs ALL DEPENDS ${REXXBINS})
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
+
+    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
+    set(_rexx_dep "${_basename}.rexx")
+
+    if("${_basename}" STREQUAL "ts_parse2")
+        # Technical Debt: ts_parse2 is pre-compiled from .rxpp
+        set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx")
+        set(_rexx_dep "${_rexx_file}")
+        add_custom_command(
+                OUTPUT ${_rexx_file}
+                COMMAND rxpp -I ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp -O ${_rexx_file} -M ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
+                DEPENDS rxpp ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
+                COMMENT "Pre-compiling ${_basename}.rxpp to ${_rexx_file} (Technical Debt)"
+        )
+    endif()
+
     add_custom_target(${_basename} DEPENDS ${_binfile}) # Create a "virtual target"
 
     add_custom_command(
-            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+            COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -i ${CMAKE_BINARY_DIR}/lib/rxfnsb -o ${_basename} ${_rexx_file}
             COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas ${_basename}
-            DEPENDS rxas rxc library ${_basename}.rexx ${_prev_target}
+            DEPENDS rxas rxc library ${_rexx_dep} ${_prev_target}
             OUTPUT ${_binfile}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
