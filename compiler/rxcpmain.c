@@ -32,7 +32,7 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
 
@@ -380,7 +380,7 @@ int rxcmain(int argc, char *argv[]) {
 
         case LEVELB:
             /* We need the assembler db for ASSEMBLE */
-            init_ops();
+            /* init_ops() removed - now using static opdata */
 
         case LEVELG:
         case LEVELL:
@@ -483,8 +483,6 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Close outfile */
     if (outFile) fclose(outFile);
-
-    if (context->level == LEVELB) free_ops(); // Free Instruction Database
 
     /* Free context */
     free(context->file_name);

@@ -4,7 +4,6 @@
 #include <string.h>
 #include "platform.h"
 #include "rxdadism.h"
-#include "rxvminst.h"
 #include "rxbin.h"
 //#include <locale.h>
 #ifdef _WIN32
@@ -150,7 +149,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    init_ops();
+    /* init_ops(); - NO LONGER NEEDED */
 
     i = 0;
     while (i == 0) {
@@ -189,7 +188,7 @@ int main(int argc, char *argv[]) {
         fclose(output);
     }
 
-    free_ops();
+    /* free_ops(); - NO LONGER NEEDED */
 
     return 0;
 }

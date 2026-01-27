@@ -4,7 +4,96 @@
 #include <stdint.h>
 #include "platform.h"
 #include "rxasassm.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
+#include "../binutils/include/opdata.c"
+#include <ctype.h>
+
+static int get_operand_types(OpFormat format, OperandType *types) {
+    switch (format) {
+        case FMT_EMPTY: return 0;
+        case FMT_C: types[0] = OP_CHAR; return 1;
+        case FMT_F: types[0] = OP_FLOAT; return 1;
+        case FMT_I: types[0] = OP_INT; return 1;
+        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
+        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
+        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L: types[0] = OP_ID; return 1;
+        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
+        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
+        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
+        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
+        case FMT_P: types[0] = OP_FUNC; return 1;
+        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
+        case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
+        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
+        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
+        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
+        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
+        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
+        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
+        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
+        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
+        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
+        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
+        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
+        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
+        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
+        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
+        case FMT_S: types[0] = OP_STRING; return 1;
+        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
+        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
+        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        default: return 0;
+    }
+}
+
+static int match_format(OpFormat format, OperandType t1, OperandType t2, OperandType t3) {
+    OperandType types[3];
+    int num_ops = get_operand_types(format, types);
+    int expected_num_ops = 0;
+    if (t1 != OP_NONE) expected_num_ops = 1;
+    if (t2 != OP_NONE) expected_num_ops = 2;
+    if (t3 != OP_NONE) expected_num_ops = 3;
+
+    if (num_ops != expected_num_ops) return 0;
+    if (num_ops >= 1 && types[0] != t1) return 0;
+    if (num_ops >= 2 && types[1] != t2) return 0;
+    if (num_ops >= 3 && types[2] != t3) return 0;
+    return 1;
+}
+
+static int mnemonic_matches(const char *mnemonic, const char *table_name) {
+    int i = 0;
+    while (mnemonic[i]) {
+        if (toupper((unsigned char)mnemonic[i]) != table_name[i]) return 0;
+        i++;
+    }
+    if (table_name[i] == 0 || table_name[i] == '_') return 1;
+    return 0;
+}
+
+static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandType t2, OperandType t3) {
+    int i;
+    for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (match_format(op_table[i].format, t1, t2, t3)) {
+            if (mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
+                return &op_table[i];
+            }
+        }
+    }
+    return NULL;
+}
 
 #include "rxastree.h"
 #ifndef NUTF8
@@ -90,7 +179,7 @@ static void optimise_labels(Assembler_Context *context) {
     struct string_wrapper *i;
     struct backpatching *patch, *p;
 
-    Instruction *br = src_inst("br", OP_ID, OP_NONE, OP_NONE);
+    const OpInfo *br = find_opcode("br", OP_ID, OP_NONE, OP_NONE);
     int changed = 1;
 
     /* Labels - walk and process the tree of labels */
@@ -354,7 +443,7 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
     centry->global_reg = (int)registerToken->token_value.integer;
 }
 
-static void gen_instr(Assembler_Context *context, Instruction *inst) {
+static void gen_instr(Assembler_Context *context, int opcode, int operands) {
     /* Extend the buffer if we need to */
     size_t new_size;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
@@ -365,8 +454,8 @@ static void gen_instr(Assembler_Context *context, Instruction *inst) {
         context->inst_buffer_size = new_size;
     }
 
-    context->binary.binary[context->binary.inst_size].instruction.opcode = inst->opcode;
-    context->binary.binary[context->binary.inst_size++].instruction.no_ops = inst->operands;
+    context->binary.binary[context->binary.inst_size].instruction.opcode = opcode;
+    context->binary.binary[context->binary.inst_size++].instruction.no_ops = operands;
 }
 
 static size_t add_string_to_pool(Assembler_Context *context, char* string) {
@@ -664,13 +753,13 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
     t2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
     t3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
 
-    // If none of the operands are FLOATs, then we can't promote them
+    /* If none of the operands are FLOATs, then we can't promote them */
     if (t1 != OP_FLOAT && t2 != OP_FLOAT && t3 != OP_FLOAT) return;
 
-    // If the instruction is valid, there is no need to promote the operands
-    if (src_inst(inst, t1, t2, t3)) return;
+    /* If the instruction is valid, there is no need to promote the operands */
+    if (find_opcode(inst, t1, t2, t3)) return;
 
-    // Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs
+    /* Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs */
     int i;
     for (i = 1; i < 8; i++) {
         int try = 0;
@@ -694,14 +783,14 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
         }
 
         if (try) {
-            if (src_inst(inst, t1, t2, t3)) {
-                // Found a valid instruction - promote the operands
+            if (find_opcode(inst, t1, t2, t3)) {
+                /* Found a valid instruction - promote the operands */
                 if (t1 == OP_DECIMAL) convert_float_to_decimal(operand1Token);
                 if (t2 == OP_DECIMAL) convert_float_to_decimal(operand2Token);
                 if (t3 == OP_DECIMAL) convert_float_to_decimal(operand3Token);
                 return;
             }
-            // Reset the types for the next try
+            /* Reset the types for the next try */
             if (t1 == OP_DECIMAL) t1 = OP_FLOAT;
             if (t2 == OP_DECIMAL) t2 = OP_FLOAT;
             if (t3 == OP_DECIMAL) t3 = OP_FLOAT;
@@ -710,33 +799,62 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
     }
 }
 
-static Instruction *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
+static void append_format_description(OpFormat format, char *buffer, size_t buffer_len) {
+    OperandType types[3];
+    int num_ops = get_operand_types(format, types);
+    int i;
+    if (num_ops == 0) {
+        strncat(buffer, "no operands", buffer_len - strlen(buffer) - 1);
+        return;
+    }
+    for (i = 0; i < num_ops; i++) {
+        if (i > 0) strncat(buffer, ", ", buffer_len - strlen(buffer) - 1);
+        switch (types[i]) {
+            case OP_REG: strncat(buffer, "register", buffer_len - strlen(buffer) - 1); break;
+            case OP_INT: strncat(buffer, "integer", buffer_len - strlen(buffer) - 1); break;
+            case OP_FLOAT: strncat(buffer, "float", buffer_len - strlen(buffer) - 1); break;
+            case OP_STRING: strncat(buffer, "string", buffer_len - strlen(buffer) - 1); break;
+            case OP_ID: strncat(buffer, "label", buffer_len - strlen(buffer) - 1); break;
+            case OP_FUNC: strncat(buffer, "procedure", buffer_len - strlen(buffer) - 1); break;
+            case OP_DECIMAL: strncat(buffer, "decimal", buffer_len - strlen(buffer) - 1); break;
+            case OP_CHAR: strncat(buffer, "character", buffer_len - strlen(buffer) - 1); break;
+            case OP_BINARY: strncat(buffer, "binary", buffer_len - strlen(buffer) - 1); break;
+            default: strncat(buffer, "unknown", buffer_len - strlen(buffer) - 1); break;
+        }
+    }
+}
+
+static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
                                          OperandType type1,
                                          OperandType type2,
                                          OperandType type3 ) {
     char errorBuffer[MAX_ERROR_LENGTH];
-    size_t i;
-    Instruction *possible_inst, *next_possible_inst;
-    Instruction *inst = src_inst((char*)instrToken->token_value.string, type1, type2, type3);
+    size_t i_len;
+    int j;
+    int first = 1;
+    const char *mnemonic = (char*)instrToken->token_value.string;
+    const OpInfo *inst = find_opcode(mnemonic, type1, type2, type3);
 
     if (inst) return inst;
 
     /* Make a useful error message */
-    possible_inst = fst_inst((char*)instrToken->token_value.string);
-    if (!possible_inst) rxaserat(context, instrToken, "invalid instruction mnemonic");
-    else {
-        strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
-        i = strlen(errorBuffer);
-        exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
-        possible_inst = nxt_inst(possible_inst);
-        while (possible_inst) {
-            next_possible_inst = nxt_inst(possible_inst);
-            if (next_possible_inst) strncat(errorBuffer,", ", MAX_ERROR_LENGTH - 1);
-            else strncat(errorBuffer," or ", MAX_ERROR_LENGTH - 1);
-            i = strlen(errorBuffer);
-            exp_opds(possible_inst, errorBuffer + i, MAX_ERROR_LENGTH - 1 - i);
-            possible_inst = next_possible_inst;
+    errorBuffer[0] = 0;
+    for (j = 0; op_table[j].mnemonic != NULL; j++) {
+        if (mnemonic_matches(mnemonic, op_table[j].mnemonic)) {
+            if (first) {
+                strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
+            } else {
+                strncat(errorBuffer, " or ", MAX_ERROR_LENGTH - strlen(errorBuffer) - 1);
+            }
+            first = 0;
+            i_len = strlen(errorBuffer);
+            append_format_description(op_table[j].format, errorBuffer + i_len, MAX_ERROR_LENGTH - 1 - i_len);
         }
+    }
+
+    if (first) {
+        rxaserat(context, instrToken, "invalid instruction mnemonic");
+    } else {
         rxaseaft(context, instrToken, errorBuffer);
     }
     return 0;
@@ -744,58 +862,24 @@ static Instruction *validate_instruction(Assembler_Context* context, Assembler_T
 
 /** Generate code for an instruction with no operands */
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           0,
-                                           0,
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-    }
+    rxasgen(context, instrToken, 0, 0, 0);
 }
 
 /** Generate code for an instruction with one operand */
 void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           0,
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-    }
+    rxasgen(context, instrToken, operand1Token, 0, 0);
 }
 
 /** Generate code for an instruction with two operand */
 void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           token_to_operand_type(operand2Token->token_type),
-                                           0 );
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-        gen_operand(context, operand2Token);
-    }
+    rxasgen(context, instrToken, operand1Token, operand2Token, 0);
 }
 
 /** Generate code for an instruction with three operands */
 void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
-
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           token_to_operand_type(operand1Token->token_type),
-                                           token_to_operand_type(operand2Token->token_type),
-                                           token_to_operand_type(operand3Token->token_type));
-    if (inst) {
-        gen_instr(context, inst);
-        gen_operand(context, operand1Token);
-        gen_operand(context, operand2Token);
-        gen_operand(context, operand3Token);
-    }
+    rxasgen(context, instrToken, operand1Token, operand2Token, operand3Token);
 }
 
 /** Generate code for an instruction with up to three operands
@@ -803,15 +887,75 @@ void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
-    Instruction *inst=validate_instruction(context, instrToken,
-                                           operand1Token?token_to_operand_type(operand1Token->token_type):0,
-                                           operand2Token?token_to_operand_type(operand2Token->token_type):0,
-                                           operand3Token?token_to_operand_type(operand3Token->token_type):0);
+    OperandType type1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
+    OperandType type2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
+    OperandType type3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+
+    const OpInfo *inst = validate_instruction(context, instrToken, type1, type2, type3);
+
     if (inst) {
-        gen_instr(context, inst);
-        if (operand1Token) gen_operand(context, operand1Token);
-        if (operand2Token) gen_operand(context, operand2Token);
-        if (operand3Token) gen_operand(context, operand3Token);
+        OperandType types[3];
+        int num_ops = get_operand_types(inst->format, types);
+        gen_instr(context, inst->opcode, num_ops);
+        switch (inst->format) {
+            case FMT_EMPTY:
+                break;
+
+            case FMT_C:
+            case FMT_F:
+            case FMT_I:
+            case FMT_L:
+            case FMT_P:
+            case FMT_R:
+            case FMT_S:
+                gen_operand(context, operand1Token);
+                break;
+
+            case FMT_I_I:
+            case FMT_I_R:
+            case FMT_L_R:
+            case FMT_L_S:
+            case FMT_P_S:
+            case FMT_R_C:
+            case FMT_R_D:
+            case FMT_R_F:
+            case FMT_R_I:
+            case FMT_R_P:
+            case FMT_R_R:
+            case FMT_R_S:
+            case FMT_S_R:
+            case FMT_S_S:
+                gen_operand(context, operand1Token);
+                gen_operand(context, operand2Token);
+                break;
+
+            case FMT_I_I_I:
+            case FMT_I_I_R:
+            case FMT_I_R_R:
+            case FMT_L_L_R:
+            case FMT_L_P_S:
+            case FMT_L_R_I:
+            case FMT_L_R_R:
+            case FMT_R_D_R:
+            case FMT_R_F_I:
+            case FMT_R_F_R:
+            case FMT_R_I_I:
+            case FMT_R_I_R:
+            case FMT_R_P_R:
+            case FMT_R_R_D:
+            case FMT_R_R_F:
+            case FMT_R_R_I:
+            case FMT_R_R_R:
+            case FMT_R_R_S:
+            case FMT_R_S_I:
+            case FMT_R_S_R:
+            case FMT_R_S_S:
+            case FMT_S_S_R:
+                gen_operand(context, operand1Token);
+                gen_operand(context, operand2Token);
+                gen_operand(context, operand3Token);
+                break;
+        }
     }
 }
 

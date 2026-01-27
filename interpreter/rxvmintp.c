@@ -52,7 +52,7 @@
 #include <signal.h>
 #include "platform.h"
 #include "rxas.h"
-#include "rxvminst.h"
+#include "../binutils/include/rxdefs.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
 // #include <complex.h>
@@ -655,7 +655,70 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /*
      * Instruction database - loaded from a generated header file
      */
-#include "instrset.h"  /* Set up void *address_map[], etc. */
+#define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
+#define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
+#define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
+#define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
+#define FMT_I_I_MAP 2, OP_INT, OP_INT, OP_NONE
+#define FMT_I_I_I_MAP 3, OP_INT, OP_INT, OP_INT
+#define FMT_I_I_R_MAP 3, OP_INT, OP_INT, OP_REG
+#define FMT_I_R_MAP 2, OP_INT, OP_REG, OP_NONE
+#define FMT_I_R_R_MAP 3, OP_INT, OP_REG, OP_REG
+#define FMT_L_MAP 1, OP_ID, OP_NONE, OP_NONE
+#define FMT_L_L_R_MAP 3, OP_ID, OP_ID, OP_REG
+#define FMT_L_P_S_MAP 3, OP_ID, OP_FUNC, OP_STRING
+#define FMT_L_R_MAP 2, OP_ID, OP_REG, OP_NONE
+#define FMT_L_R_I_MAP 3, OP_ID, OP_REG, OP_INT
+#define FMT_L_R_R_MAP 3, OP_ID, OP_REG, OP_REG
+#define FMT_L_S_MAP 2, OP_ID, OP_STRING, OP_NONE
+#define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
+#define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
+#define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
+#define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
+#define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
+#define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
+#define FMT_R_F_MAP 2, OP_REG, OP_FLOAT, OP_NONE
+#define FMT_R_F_I_MAP 3, OP_REG, OP_FLOAT, OP_INT
+#define FMT_R_F_R_MAP 3, OP_REG, OP_FLOAT, OP_REG
+#define FMT_R_I_MAP 2, OP_REG, OP_INT, OP_NONE
+#define FMT_R_I_I_MAP 3, OP_REG, OP_INT, OP_INT
+#define FMT_R_I_R_MAP 3, OP_REG, OP_INT, OP_REG
+#define FMT_R_P_MAP 2, OP_REG, OP_FUNC, OP_NONE
+#define FMT_R_P_R_MAP 3, OP_REG, OP_FUNC, OP_REG
+#define FMT_R_R_MAP 2, OP_REG, OP_REG, OP_NONE
+#define FMT_R_R_D_MAP 3, OP_REG, OP_REG, OP_DECIMAL
+#define FMT_R_R_F_MAP 3, OP_REG, OP_REG, OP_FLOAT
+#define FMT_R_R_I_MAP 3, OP_REG, OP_REG, OP_INT
+#define FMT_R_R_R_MAP 3, OP_REG, OP_REG, OP_REG
+#define FMT_R_R_S_MAP 3, OP_REG, OP_REG, OP_STRING
+#define FMT_R_S_MAP 2, OP_REG, OP_STRING, OP_NONE
+#define FMT_R_S_I_MAP 3, OP_REG, OP_STRING, OP_INT
+#define FMT_R_S_R_MAP 3, OP_REG, OP_STRING, OP_REG
+#define FMT_R_S_S_MAP 3, OP_REG, OP_STRING, OP_STRING
+#define FMT_S_MAP 1, OP_STRING, OP_NONE, OP_NONE
+#define FMT_S_R_MAP 2, OP_STRING, OP_REG, OP_NONE
+#define FMT_S_S_MAP 2, OP_STRING, OP_STRING, OP_NONE
+#define FMT_S_S_R_MAP 3, OP_STRING, OP_STRING, OP_REG
+
+const Instruction meta_map[] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+    { OPCODE, #NAME, DESC, FMT##_MAP },
+#include "../binutils/include/rxops.h"
+#undef X
+};
+
+typedef Opcode instructions;
+
+#ifdef NTHREADED
+/* already typedefed */
+#else
+const void *address_map[] = {
+#define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
+    &&NAME,
+#include "../binutils/include/rxops.h"
+#undef X
+};
+#endif
 
     /* Allocate Interrupt Arg */
     interrupt_arg = value_f();
@@ -5200,18 +5263,19 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  SUBSTRING_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
+ *  SUBSTR_REG_REG_REG op1=substr(op2,op3) substring from  offset op3  pej 12 November 2021
  *  -----------------------------------------------------------------------------------
  */
 /* ------------------------------------------------------------------------------------
- *  SUBSTRING_REG_REG_REG op1 = substr(op2, length)
+ *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
  *  Extracts 'length' characters from op2, starting at byte offset op2R->string_pos
  *  Assumes string_set_byte_pos(op2R, offset) was called externally.
  *  pej updated July 2025
  * ----------------------------------------------------------------------------------- */
 
+        START_INSTRUCTION(SUBSTR_REG_REG_REG)
         START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - SUBSTRING R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
+            DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 rxinteger length = op3R->int_value;
                 rxinteger total_len;
@@ -6072,7 +6136,99 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
  *      and scan of this module                              pej 8. April 2021
  * ---------------------------------------------------------------------------
  */
-#include "instrmiss.h"
+
+        START_INSTRUCTION(ADDF_REG_REG_FLOAT)
+        START_INSTRUCTION(ADDF_REG_REG_REG)
+        START_INSTRUCTION(ADDI_REG_REG_INT)
+        START_INSTRUCTION(ADDI_REG_REG_REG)
+        START_INSTRUCTION(DIVF_REG_FLOAT_REG)
+        START_INSTRUCTION(DIVF_REG_REG_FLOAT)
+        START_INSTRUCTION(DIVF_REG_REG_REG)
+        START_INSTRUCTION(DIVI_REG_REG_INT)
+        START_INSTRUCTION(DIVI_REG_REG_REG)
+        START_INSTRUCTION(MULTF_REG_REG_FLOAT)
+        START_INSTRUCTION(MULTF_REG_REG_REG)
+        START_INSTRUCTION(MULTI_REG_REG_INT)
+        START_INSTRUCTION(MULTI_REG_REG_REG)
+        START_INSTRUCTION(SUBF_REG_FLOAT_REG)
+        START_INSTRUCTION(SUBF_REG_REG_FLOAT)
+        START_INSTRUCTION(SUBF_REG_REG_REG)
+        START_INSTRUCTION(SUBI_REG_REG_INT)
+        START_INSTRUCTION(SUBI_REG_REG_REG)
+        START_INSTRUCTION(TRUNC_REG_REG)
+        START_INSTRUCTION(GMAP_REG_REG)
+        START_INSTRUCTION(GMAP_REG_STRING)
+        START_INSTRUCTION(LOAD_REG_CHAR)
+        START_INSTRUCTION(MAP_REG_REG)
+        START_INSTRUCTION(MAP_REG_STRING)
+        START_INSTRUCTION(NSMAP_REG_REG_REG)
+        START_INSTRUCTION(NSMAP_REG_REG_STRING)
+        START_INSTRUCTION(NSMAP_REG_STRING_REG)
+        START_INSTRUCTION(NSMAP_REG_STRING_STRING)
+        START_INSTRUCTION(PMAP_REG_REG)
+        START_INSTRUCTION(PMAP_REG_STRING)
+/* ------------------------------------------------------------------------------------
+ *  TRIMR_REG_REG_REG  Trim right with char                          pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRIMR_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRIMR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger i;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                i = op1R->string_length - 1;
+                while (i >= 0 && op1R->string_value[i] == op3R->string_value[0]) {
+                    i--;
+                }
+                op1R->string_length = i + 1;
+                null_terminate_string_buffer(op1R);
+            }
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  TRIML_REG_REG_REG  Trim left with char                           pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRIML_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRIML R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger i = 0;
+                rxinteger j;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                j = op1R->string_length - 1;
+                while (i <= j && op1R->string_value[i] == op3R->string_value[0]) i++;
+
+                if (i > j) {
+                    op1R->string_length = 0;
+                } else {
+                    op1R->string_length = op1R->string_length - i;
+                    if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
+                }
+                null_terminate_string_buffer(op1R);
+            }
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  TRUNC_REG_REG_REG  Truncate string                              pej updated Jan 2026
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(TRUNC_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - TRUNC R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            {
+                rxinteger len = op3R->int_value;
+                if (op1R != op2R) set_value_string(op1R, op2R);
+                if (len < 0) len = 0;
+                if (len < op1R->string_length) {
+                    op1R->string_length = len;
+                    null_terminate_string_buffer(op1R);
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(RET_CHAR)
+        START_INSTRUCTION(UNMAP_REG)
+            SET_SIGNAL(RXSIGNAL_NOT_IMPLEMENTED);
+            DISPATCH
 
         START_INSTRUCTION(IUNKNOWN)
         START_INSTRUCTION(INULL)

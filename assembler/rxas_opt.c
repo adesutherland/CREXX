@@ -3,7 +3,7 @@
  */
 
 #include "rxasassm.h"
-#include "rxvminst.h"
+#include "rxdefs.h"
 
 #include "string.h"
 

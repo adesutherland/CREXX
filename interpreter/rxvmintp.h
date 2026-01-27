@@ -77,9 +77,9 @@ struct stack_frame {
 
 #ifdef NTHREADED
 
-#define START_OF_INSTRUCTIONS CASE_START:; switch ((enum instructions)(pc->instruction.opcode)) {
+#define START_OF_INSTRUCTIONS CASE_START:; switch ((instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH }
-#define START_INSTRUCTION(inst) case INST_ ## inst:
+#define START_INSTRUCTION(inst) case OP_ ## inst:
 #define START_INTERRUPT INTERRUPT:
 #define END_INTERRUPT goto CASE_START;
 #define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }

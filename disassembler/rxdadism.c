@@ -7,8 +7,68 @@
 #include <ctype.h>
 #include "platform.h"
 #include "rxas.h"
-#include "rxvminst.h"
 #include "rxdadism.h"
+#include "../binutils/include/rxdefs.h"
+#include "../binutils/include/opdata.c"
+
+static int get_operand_types(OpFormat format, OperandType *types) {
+    switch (format) {
+        case FMT_EMPTY: return 0;
+        case FMT_C: types[0] = OP_CHAR; return 1;
+        case FMT_F: types[0] = OP_FLOAT; return 1;
+        case FMT_I: types[0] = OP_INT; return 1;
+        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
+        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
+        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L: types[0] = OP_ID; return 1;
+        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
+        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
+        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
+        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
+        case FMT_P: types[0] = OP_FUNC; return 1;
+        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
+        case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
+        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
+        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
+        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
+        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
+        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
+        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
+        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
+        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
+        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
+        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
+        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
+        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
+        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
+        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
+        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
+        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
+        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
+        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
+        case FMT_S: types[0] = OP_STRING; return 1;
+        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
+        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
+        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
+        default: return 0;
+    }
+}
+
+static void get_mnemonic(char *dest, const char *name) {
+    int i = 0;
+    while (name[i] && name[i] != '_') {
+        dest[i] = (char)tolower((unsigned char)name[i]);
+        i++;
+    }
+    dest[i] = 0;
+}
 
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */
@@ -227,8 +287,8 @@ typedef struct code_line {
         operand=0, normal, show_label, show_proc
     } flags;
     size_t proc_index;
-    Instruction *inst;
-    char *comment;
+    const OpInfo *op;
+    const char *comment;
 } code_line;
 
 
@@ -621,38 +681,21 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     while (i < pgm->inst_size) {
         j = i;
         int opcode = pgm->binary[i++].instruction.opcode;
-        Instruction *inst = get_inst(opcode);
+        const OpInfo *op = &op_table[opcode];
+        OperandType types[3];
+        int num_ops = get_operand_types(op->format, types);
+        int k;
 
-        if (inst->operands != pgm->binary[j].instruction.no_ops) {
+        if (num_ops != pgm->binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
         }
 
-        switch(inst->operands) {
-            case 0:
-                break;
-            case 1:
-                /* Flag the destination (e.g. of a br) to be shown as a label in the listing */
-                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                break;
-            case 2:
-                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                if (inst->op2_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                break;
-            case 3:
-                if (inst->op1_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                if (inst->op2_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                if (inst->op3_type == OP_ID) source[pgm->binary[i].index].flags = show_label;
-                i++;
-                break;
-            default: ;
+        for (k = 0; k < num_ops; k++) {
+            if (types[k] == OP_ID) source[pgm->binary[i].index].flags = show_label;
+            i++;
         }
-        source[j].inst = inst;
-        source[j].comment = inst->desc;
+        source[j].op = op;
+        source[j].comment = op->description;
         if (source[j].flags == operand) source[j].flags = normal;
     }
 
@@ -901,30 +944,25 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
 
         j = i++;
         fprintf(stream, "%-15s",line_buffer);
-        line_len = snprintf(line_buffer, MAX_LINE_SIZE, " %s ", source[j].inst->instruction);
 
-            switch(source[j].inst->operands) {
-                case 0:
-                    break;
-                case 1:
-                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
-                    break;
-                case 2:
-                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
-                    line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
-                    break;
-                case 3:
-                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op1_type, i++, globals, locals);
-                    line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op2_type, i++, globals, locals);
-                    line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len, ",");
-                    disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE-line_len, source[j].inst->op3_type, i++, globals, locals);
-                    break;
-                default:
-                    snprintf(line_buffer + line_len, MAX_LINE_SIZE-line_len,"*INTERNAL_ERROR_NUM_OPS*");
+        {
+            char mnemonic[MAX_LINE_SIZE];
+            get_mnemonic(mnemonic, source[j].op->mnemonic);
+            line_len = snprintf(line_buffer, MAX_LINE_SIZE, " %s ", mnemonic);
+        }
+
+        {
+            OperandType types[3];
+            int num_ops = get_operand_types(source[j].op->format, types);
+            int k;
+            for (k = 0; k < num_ops; k++) {
+                if (k > 0) {
+                    line_len += snprintf(line_buffer + line_len, MAX_LINE_SIZE - line_len, ",");
+                }
+                line_len += disassemble_operand(pgm, line_buffer + line_len, MAX_LINE_SIZE - line_len, types[k], i++, globals, locals);
             }
-        fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].inst->opcode, source[j].comment);
+        }
+        fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].op->opcode, source[j].comment);
     }
 
     /* Final Meta entries at the code address + 1 */
