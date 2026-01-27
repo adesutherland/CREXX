@@ -144,7 +144,7 @@ long segbytesread;
 char tranline[];
 char line[];
 char outext[];
-char zsinglemem[];
+char zsinglemem[9];
 char zsinglemempath[];
 int  xmit_init_once=0;
 
@@ -270,7 +270,7 @@ char FNout[FILENAME_MAX] = "Dummy.txt";
 char FNin[sizeof(FNout)] = "OS390.XMI";
 char outext[FILENAME_MAX] = member_extension; // eho 20071202
 char extract_member[FILENAME_MAX]="";
-char zsinglemem[8] = "";                 // eho 20071202
+char zsinglemem[9] = "";                 // eho 20071202
 char zsinglemempath[FILENAME_MAX] = "";  // eho 20071202
 char exportpath[512] = "";  // eho 20071202
 int zsinglebyteswritten = 0;             // eho 20071202
@@ -282,7 +282,7 @@ char ztranmap[FILENAME_MAX] = "RECV390.MAP"; // eho 20071206
 char dsn[80] = "";
 char dsnmem[sizeof(dsn)];
 char *pmem = NULL;            // ptr to ASCII member name
-char membername[8] = "";      // ASCII member name from assocmem
+char membername[9] = "";      // ASCII member name from assocmem
 
 unsigned char *makeRecordptr;           // record buffer for makerec
 unsigned char datestr[80];    // ispf date as char string from ispfdate()
@@ -1101,6 +1101,7 @@ char *assocmem(unsigned int memttr) {
             p = &dir[scanpos];
             memcpy(membername, p, 8);			// copy member name to return
             ebcdic2ascii( membername, 8);
+            membername[8] = '\0';
             p[12] = (char)0xff;					// show member used (debug)
             assocpos = scanpos;					// tell closeout()
             return membername;
@@ -1118,6 +1119,7 @@ void nextmem() {
     dirpos += FIXED_ENTRY_LENGTH;
     memcpy(membername, &dir[dirpos], 8);			// new member name
     ebcdic2ascii(membername, 8);						// convert to ASCII
+    membername[8] = '\0';
 
     // eho 20071204 Alias **************************************************************************
     // pos 11 is kept previously as Indicator-Byte
@@ -1149,6 +1151,7 @@ void nextmem() {
         dirpos += FIXED_ENTRY_LENGTH;						// Reread until next Basemember
         memcpy(membername, &dir[dirpos], 8);				// new member name
         ebcdic2ascii(membername, 8);						// convert to ASCII
+        membername[8] = '\0';
 
         zzi = getvbin(&dir[dirpos+11], 1);					// Indicator byte
     }
@@ -1179,6 +1182,7 @@ char *zbasemem(char *remem,unsigned int memttr) {
             zzp = &dir[zzpos];
             memcpy(remem, zzp, 8);					// copy member name to return
             ebcdic2ascii(remem, 8);
+            remem[8] = '\0';
             zzp[12] = (char)0xff;					// show member used (debug)
             return remem;
         }
@@ -2366,7 +2370,7 @@ int recv390_unpack(const char *infile)
     char utility[9] = "?";
 
     if (optmember == '+') {
-        printf("  Extract single member '%s' '%s'\n",zsinglemem);
+        printf("  Extract single member '%s' to '%s'\n",zsinglemem, zsinglemempath);
         int i, zzj = 0;
      /*
         memset(zsinglemem, ' ', sizeof(zsinglemem));
@@ -2579,8 +2583,8 @@ void ResetOptions(void)
     recpos        = 0;
 
     /* ===== In-memory structures / cursors ===== */
-    block         = NULL;
-    dir           = NULL;
+    if (block) { free(block); block = NULL; }
+    if (dir)   { free(dir);   dir = NULL; }
     dirpos        = 0;
     outdirpos     = 0;
     assocpos      = 0;
@@ -2710,7 +2714,7 @@ PROCEDURE(xmit_extract) {
     optdsattr = '-';
     optxmisum = '-';
     // Store uppercase member name (padded or truncated to 8 chars)
-        strncpy(extract_member, membername, 8);
+        strncpy(extract_member, member, 8);
         get_path(infile, pathbuf, sizeof(pathbuf));
         if(pathbuf[0]!=0) {
             if (getcwd(cwd, sizeof(cwd)) != NULL) {  // works in Windows/Linux/Mac
@@ -2720,7 +2724,8 @@ PROCEDURE(xmit_extract) {
         getcwd(pathbuf, sizeof(pathbuf));
         printf("Unpack file(s) into '%s'\n", pathbuf);
         strcpy(exportpath,pathbuf);
-        strcpy(zsinglemem,member);
+        strncpy(zsinglemem, member, 8);
+        zsinglemem[8] = '\0';
 
         int rc = recv390_unpack(infile);
 
