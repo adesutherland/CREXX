@@ -359,6 +359,7 @@ RX_INLINE void set_string(value *v, char *value, size_t length) {
 
 /* set value string from null string value */
 RX_INLINE void set_null_string(value *v, const char *from) {
+    if (v->string_value == from) return;
     prep_string_buffer(v, strlen(from));
     memcpy(v->string_value, from, v->string_length);
     v->string_pos = 0;
