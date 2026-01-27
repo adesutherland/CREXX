@@ -65,7 +65,6 @@ parsestring: procedure
         pendingJ     = j
         pendingK     = k
         pendingStart = pointer
-        finalAfterOneBlank = 0              /* Reset pointer, else we do not pick up the last pending variable if it is empty */
         iterate
      end
 /* -------------------------------------------------------------------
@@ -205,9 +204,11 @@ parsestring: procedure
              jj=jj+1
              if token.ii=token.k then leave
           end
-          if token.ii \= token.k then iterate
+          if token.ii \= token.k then jj = 0
           chunk = substr(parse_string, pointer)
-          p = pos(variable_content.jj, chunk)  /* position of delimiter relative to pointer */
+          if jj > 0 then delim = variable_content.jj
+                    else delim = token.k
+          p = pos(delim, chunk)  /* position of delimiter relative to pointer */
           if p = 0 then do
            /* not found: dump remainder to pending VAR */
              if pendingJ > 0 then do
@@ -226,7 +227,7 @@ parsestring: procedure
              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
           end
           /* hop past the delimiter */
-           pointer = pointer + p - 1 + length(variable_content.jj)
+           pointer = pointer + p - 1 + length(delim)
         end
         if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
         iterate
