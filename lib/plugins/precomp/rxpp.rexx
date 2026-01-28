@@ -2203,6 +2203,7 @@ parsevar: Procedure=.int
  * ----------------------------------------------------------------------
  */
   j=0
+  insert=.string[]
   do i=1 to tokenhi
      quotechr=substr(token.i,1,1)
      if quotechr = "'" | quotechr = '"' then do
@@ -2219,7 +2220,8 @@ parsevar: Procedure=.int
         insert.j=token.i"=_pass_variable_content."j
      end
   end
-  imax=insert.0*2+15        ## add 15 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
+  insert_count = j
+  imax=insert_count*2+15        ## add 15 lines to handle all generated lines, maybe too much, but empty lines will be dropped anyway
   rc= insert_source(lino+1,imax)
 
    inew=inject2Source(lino+1,0,'/* PARSE 'parseSTMT' */')
@@ -2239,7 +2241,7 @@ parsevar: Procedure=.int
      inew=inject2Source(inew+1,3,'say ">> PARSE TEMPLATE : ["'embed(template)'"]"')
   end
   inew=inject2Source(inew+1,0,'## ---------- set parse variables ----------')
-  do j=1 to insert.0
+  do j=1 to insert_count
      inew=inject2Source(inew+1,3,insert.j)
      if pos(' parse',cflags)>0 then do
         inew=inject2Source(inew+1,3,'say ">> PARSE Result   : "_pass_variable.'j'"=["_pass_variable_content.'j'"]"')
@@ -2386,7 +2388,7 @@ return "'"quoted"'"
  */
 inject2Source: procedure=.int
   arg lnr=.int,inc=.int,line=.string
-  if source.lnr \='' then say "++++++++++++ parse overflow at line "lnr' contains 'line
+  if source.lnr \='' & pos('/* reserved',source.lnr)=0 then say "++++++++++++ parse overflow at line "lnr' contains 'line
   if inc>0 then source.lnr='   'line
   else source.lnr=line
   stype.lnr='R'

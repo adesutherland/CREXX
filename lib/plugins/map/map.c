@@ -457,7 +457,7 @@ rhmap_rehash(rhmap_t *m, size_t new_capacity)
     if(mapflags & STEM_FLAG_REHASH) {
        clock_gettime(CLOCK_MONOTONIC, &end);    // End time
        m->rehash_time += elapsed_time(start, end);
-       printf("Rehash Time %f %d %d\n", m->rehash_time, old_capacity, new_capacity);
+       printf("Rehash Time %f %zu %zu\n", m->rehash_time, old_capacity, new_capacity);
     }
     free(old_slots);
     return 0;
@@ -845,7 +845,9 @@ static int stem_put_value(stem_map_t *m, const char *index, const char *value)
     int rc = rhmap_put_ptr_replace(m, index, new_val, &oldp);
     if (rc < 0) return rc;
 
-    /* IMPORTANT: do NOT free(oldp) anymore */
+    if (oldp) {
+        /* In this map, values are char* from g_valpool, which aren't freed individually */
+    }
     return 0;
 }
 
@@ -1042,7 +1044,7 @@ PROCEDURE(setstem) {
 }
 
 PROCEDURE(reservestem) {
-    if (mapflags & STEM_FLAG_DEBUG)  printf("++RESERVESTEM '%s' = '%d'\n",GETSTRING(ARG0),GETINT(ARG1));
+    if (mapflags & STEM_FLAG_DEBUG)  printf("++RESERVESTEM '%s' = '%ld'\n",GETSTRING(ARG0),GETINT(ARG1));
     SPLITSTEM()
     int intsize   = GETINT(ARG1);
     stem_map_t *m = create_stem_map(stem_name,intsize);
@@ -1351,12 +1353,12 @@ PROCEDURE(stemquote)
     char *input = GETSTRING(ARG0);
     if (!input || !*input) RETURNSTRX("");    // no input no stem
 
-    char *out = quote_stem_path(input);
-    if (!out) {
+    char *result = quote_stem_path(input);
+    if (!result) {
         RETURNSTRX(input); // invalid path: return and let rxpp decided what to do
     }
-    RETURNSTR(out);
-    if(input != out) free(out);
+    RETURNSTR(result);
+    if (input != result && result != NULL) free(result);
     ENDPROC
 }
 

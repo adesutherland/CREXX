@@ -558,14 +558,14 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
         dest->string_chars = source->string_chars;
         dest->string_char_pos = source->string_char_pos;
 #endif
-        memcpy(dest->string_value, source->string_value, dest->string_length);
+        memcpy(dest->string_value, source->string_value, source->string_length);
     }
     else {
         dest->string_length = 0;
         dest->string_pos = 0;
 #ifndef NUTF8
         dest->string_chars = 0;
-        dest->string_char_pos = 0;;
+        dest->string_char_pos = 0;
 #endif
     }
 }

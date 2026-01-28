@@ -6284,7 +6284,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
     }
 
-
     /* Free signal value */
     clear_value(signal_value);
     free(signal_value);
