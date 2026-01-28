@@ -454,13 +454,6 @@ RX_INLINE stack_frame *frame_f(
     return this;
 }
 
-/* Free Stack Frame */
-RX_INLINE void free_frame(stack_frame *frame) {
-    /* Add to free list */
-    frame->prev_free = *(frame->procedure->frame_free_list);
-    *(frame->procedure->frame_free_list) = frame;
-}
-
 /* Clear Stack Frame - deallocating register contents and plugins */
 RX_INLINE void clear_frame(stack_frame *frame) {
     int i, offset;
@@ -479,6 +472,19 @@ RX_INLINE void clear_frame(stack_frame *frame) {
         frame->unicode->base.free((rxvm_plugin*)frame->unicode);
         frame->unicode_loaded_here = 0;
     }
+}
+
+/* Free Stack Frame */
+RX_INLINE void free_frame(stack_frame *frame) {
+    clear_frame(frame);
+    /* Add to free list */
+    frame->prev_free = *(frame->procedure->frame_free_list);
+    *(frame->procedure->frame_free_list) = frame;
+}
+
+void completely_free_frame(stack_frame *frame) {
+    clear_frame(frame);
+    free(frame);
 }
 
 // Bit field of raised VM interrupts (checked by the interpreter)
@@ -787,7 +793,7 @@ const void *address_map[] = {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
     }
-    current_frame->decimal_loaded_here = 1;
+    current_frame->decimal_loaded_here = 0;
 
     // Set the numeric context of the decimal plugin
     current_frame->decimal->num_context = &current_frame->num_context;

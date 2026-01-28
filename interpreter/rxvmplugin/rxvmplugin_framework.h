@@ -12,6 +12,7 @@ struct rxvmplugin_factory_entry {
     char name[16]; // Plugin Name
     rxvm_plugin *plugin_info; // Plugin Information
     rxvm_plugin_factory factory; // Plugin Factory
+    void *handle; // Handle to the dynamic library
     rxvmplugin_factory_entry *next; // Next plugin
 };
 

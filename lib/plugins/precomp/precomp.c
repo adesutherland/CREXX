@@ -832,6 +832,13 @@ PROCEDURE(stemquote)
 }
 
 
+static void precomp_finalize(void) {
+}
+
+FINALIZER(precomp_fin)
+    precomp_finalize();
+}
+
 LOADFUNCS
     ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
     ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");

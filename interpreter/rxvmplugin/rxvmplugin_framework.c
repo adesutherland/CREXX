@@ -18,6 +18,7 @@
 
 // Head of the factory list
 static rxvmplugin_factory_entry *rxvmplugin_factories = 0;
+static void* current_loading_handle = 0;
 
 // Function to load a dynamic plugin
 int load_rxvmplugin(char* dir, char *name) {
@@ -67,7 +68,9 @@ int load_rxvmplugin(char* dir, char *name) {
         FreeLibrary(hDll);
         return -2;
     }
+    current_loading_handle = hDll;
     init(register_rxvmplugin);
+    current_loading_handle = 0;
     free(full_file_name);
 
 // OSX Version
@@ -91,9 +94,12 @@ int load_rxvmplugin(char* dir, char *name) {
     // Get the plugin initializer address and call it
     rxvmplugin_register_function init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
     if (!init) {
+        dlclose(hDll);
         return -2;
     }
+    current_loading_handle = hDll;
     init(register_rxvmplugin);
+    current_loading_handle = 0;
     free(full_file_name);
 
 // Linux Version
@@ -120,7 +126,9 @@ int load_rxvmplugin(char* dir, char *name) {
         dlclose(hDll);
         return -2;
     }
+    current_loading_handle = hDll;
     init(register_rxvmplugin);
+    current_loading_handle = 0;
     free(full_file_name);
 #endif
     return 0;
@@ -132,6 +140,7 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
     if(entry){
         strncpy(entry->name, factory_name, 16); // Copy the name
         entry->factory = factory; // Set the factory function
+        entry->handle = current_loading_handle; // Store the handle
         entry->plugin_info = factory(); // Get the plugin information from the factory
         entry->next = rxvmplugin_factories; // Add to the head of the list
         rxvmplugin_factories = entry; // Update the head of the list
@@ -158,6 +167,13 @@ void clear_rxvmplugin_factories(){
     while(entry){
         rxvmplugin_factory_entry *next = entry->next; // Save the next entry
         entry->plugin_info->free(entry->plugin_info); // Call the plugin free() function
+        if (entry->handle) {
+#ifdef _WIN32
+            FreeLibrary((HMODULE)entry->handle);
+#else
+            dlclose(entry->handle);
+#endif
+        }
         free(entry); // Free the entry
         entry = next; // Move to the next entry
     }

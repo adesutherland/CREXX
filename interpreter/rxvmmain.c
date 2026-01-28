@@ -225,6 +225,7 @@ int main(int argc, char *argv[]) {
 
     /* Free Memory */
     rxfremod(&context);
+    clear_rxvmplugin_factories();
 
     return rc;
 }
