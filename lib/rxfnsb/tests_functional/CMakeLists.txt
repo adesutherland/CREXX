@@ -7,7 +7,7 @@ enable_testing()
 set(REXXBINS
         tlinesz.rxbin
         ts_abbrev.rxbin
-	ts_address.rxbin
+	    ts_address.rxbin
         ts_c2x.rxbin
         ts_center.rxbin
         ts_changestr.rxbin
