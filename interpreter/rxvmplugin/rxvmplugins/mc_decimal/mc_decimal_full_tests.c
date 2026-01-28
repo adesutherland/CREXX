@@ -44,6 +44,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     printf("expected %lld got %lld for to int\n", int_input, int_output);
 
     free(output);
+    if (a.decimal_value) free(a.decimal_value);
 
     return errors;
 }
@@ -65,6 +66,7 @@ int aTestBeyondLimits(char* input) {
     }
     else printf("OK - ");
     printf("expected signal and got - %d \"%s\"\n", plugin->base.signal_number, plugin->base.signal_string);
+    if (a.decimal_value) free(a.decimal_value);
 
     return errors;
 }
@@ -201,6 +203,7 @@ int test_decimalFromDouble() {
         else printf("OK - ");
         printf("Input: %s, decNumber: %s\n", descriptions[i], buffer);
     }
+        if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -280,6 +283,7 @@ int test_decimalToDouble() {
     else printf("OK - ");
     printf("decNumber: 1.23456789, Result: %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -392,6 +396,7 @@ int test_decimalToString_decimalFromString() {
     else printf("OK - ");
     printf("decNumber: 123456789000000000000000000000 -> 1.23456789E+29, Result: %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -473,6 +478,7 @@ int test_moreDecimalToInteger() {
     else printf("OK - ");
     printf("decNumber: 1234567890123456789, Result: %lld\n", result);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -535,6 +541,9 @@ int test_basic_decimal_functions() {
     else printf("OK - ");
     printf("4 / 2 = %s\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -610,6 +619,8 @@ int test_decimalCompare() {
     else printf("OK - ");
     printf("inf > 1\n");
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
     return errors;
 }
 
@@ -667,6 +678,8 @@ int test_decimalNeg() {
     else printf("OK - ");
     printf("1 -> %s (inplace)\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -729,6 +742,9 @@ int test_decimalPow() {
     else printf("OK - ");
     printf("2^-1 = %s\n", buffer);
 
+        if (a.decimal_value) free(a.decimal_value);
+    if (b.decimal_value) free(b.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -798,6 +814,7 @@ int test_decimalCompareString() {
     else printf("OK - ");
     printf("inf > 1\n");
 
+        if (a.decimal_value) free(a.decimal_value);
     return errors;
 }
 
@@ -978,6 +995,7 @@ int test_isZero() {
     else printf("OK - ");
     printf("decNumber: 1e-10 -> isZero: %d\n", result);
 
+        if (input.decimal_value) free(input.decimal_value);
     return errors;
 }
 
@@ -1035,6 +1053,8 @@ int test_decimalTruncate() {
     else printf("OK - ");
     printf("1234567890123456789.987654321e2 -> %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 
@@ -1092,6 +1112,8 @@ int test_decimalRound() {
     else printf("OK - ");
     printf("1234567890123456789.987654321e2 -> %s\n", buffer);
 
+        if (input.decimal_value) free(input.decimal_value);
+    if (result.decimal_value) free(result.decimal_value);
     return errors;
 }
 

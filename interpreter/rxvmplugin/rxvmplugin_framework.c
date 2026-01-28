@@ -22,125 +22,90 @@ static void* current_loading_handle = 0;
 
 // Function to load a dynamic plugin
 int load_rxvmplugin(char* dir, char *name) {
-
+    int rc = 0;
     // Load the plugin - and run the plugin initialization function
     // Create the filename by appending ".rxvmplugin" to the file name
     char *file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
+    if (!file_name) return -1;
     sprintf(file_name, "%s.rxvmplugin", name);
 
-    // Provide a default current directory
-    //if (!dir) dir = ".";
-
-// Windows Version
-#ifdef _WIN32
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name;
+    char* full_file_name = NULL;
     if (dir) {
         full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-        sprintf(full_file_name, "%s\\%s", dir, file_name);
+        if (full_file_name) {
+#ifdef _WIN32
+            sprintf(full_file_name, "%s\\%s", dir, file_name);
+#else
+            sprintf(full_file_name, "%s/%s", dir, file_name);
+#endif
+        }
     }
     else {
         full_file_name = malloc(strlen(file_name) + 1);
-        sprintf(full_file_name, "%s", file_name);
+        if (full_file_name) {
+            sprintf(full_file_name, "%s", file_name);
+        }
     }
+
+    if (!full_file_name) {
+        free(file_name);
+        return -1;
+    }
+
+// Windows Version
+#ifdef _WIN32
     // Load the DLL
     SetDllDirectory("."); // todo - check this!
     HMODULE hDll = LoadLibrary(TEXT(full_file_name));
     if (!hDll) {
-        DWORD errorCode = GetLastError();
-        LPVOID errorMsg;
-        FormatMessage(
-                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                NULL,
-                errorCode,
-                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (LPTSTR)&errorMsg,
-                0,
-                NULL
-        );
-        LocalFree(errorMsg);
-        return -1;
+        rc = -1;
+    } else {
+        // Get the plugin initializer address and call it
+        rxvmplugin_register_function init = (rxvmplugin_register_function)GetProcAddress(hDll, "_register_rxvm_plugin");
+        if (!init) {
+            FreeLibrary(hDll);
+            rc = -2;
+        } else {
+            current_loading_handle = hDll;
+            init(register_rxvmplugin);
+            current_loading_handle = 0;
+        }
     }
 
-    // Get the plugin initializer address and call it
-    rxvmplugin_register_function init = (rxvmplugin_register_function)GetProcAddress(hDll, "_register_rxvm_plugin");
-    if (!init) {
-        FreeLibrary(hDll);
-        return -2;
-    }
-    current_loading_handle = hDll;
-    init(register_rxvmplugin);
-    current_loading_handle = 0;
-    free(full_file_name);
-
-// OSX Version
-#elif __APPLE__
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name;
-    if (dir) {
-        full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-        sprintf(full_file_name, "%s/%s", dir, file_name);
-    }
-    else {
-        full_file_name = malloc(strlen(file_name) + 1);
-        sprintf(full_file_name, "%s", file_name);
-    }
-    // Load the dylib
-    void* hDll = dlopen(full_file_name, RTLD_LAZY);
-    if (!hDll) {
-        return -1;
-    }
-
-    // Get the plugin initializer address and call it
-    rxvmplugin_register_function init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
-    if (!init) {
-        dlclose(hDll);
-        return -2;
-    }
-    current_loading_handle = hDll;
-    init(register_rxvmplugin);
-    current_loading_handle = 0;
-    free(full_file_name);
-
-// Linux Version
+// OSX / Linux Version
 #else
-    // Create a full file name buffer and append the directory and file name
-    char* full_file_name;
-    if (dir) {
-        full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
-        sprintf(full_file_name, "%s/%s", dir, file_name);
-    }
-    else {
-        full_file_name = malloc(strlen(file_name) + 1);
-        sprintf(full_file_name, "%s", file_name);
-    }
-    // Load the so
+    // Load the dylib/so
     void* hDll = dlopen(full_file_name, RTLD_LAZY);
     if (!hDll) {
-        return -1;
+        rc = -1;
+    } else {
+        // Get the plugin initializer address and call it
+        rxvmplugin_register_function init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
+        if (!init) {
+            dlclose(hDll);
+            rc = -2;
+        } else {
+            current_loading_handle = hDll;
+            init(register_rxvmplugin);
+            current_loading_handle = 0;
+        }
     }
-
-    // Get the plugin initializer address and call it
-    rxvmplugin_register_function init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
-    if (!init) {
-        dlclose(hDll);
-        return -2;
-    }
-    current_loading_handle = hDll;
-    init(register_rxvmplugin);
-    current_loading_handle = 0;
-    free(full_file_name);
 #endif
-    return 0;
+
+    free(full_file_name);
+    free(file_name);
+    return rc;
 }
 
 /* Function to register a plugin factory */
 void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
     rxvmplugin_factory_entry *entry = (rxvmplugin_factory_entry *)malloc(sizeof(rxvmplugin_factory_entry));
     if(entry){
-        strncpy(entry->name, factory_name, 16); // Copy the name
+        strncpy(entry->name, factory_name, 15); // Copy the name
+        entry->name[15] = '\0'; // Ensure null termination
         entry->factory = factory; // Set the factory function
         entry->handle = current_loading_handle; // Store the handle
+        current_loading_handle = 0; // Only store it once
         entry->plugin_info = factory(); // Get the plugin information from the factory
         entry->next = rxvmplugin_factories; // Add to the head of the list
         rxvmplugin_factories = entry; // Update the head of the list
@@ -164,9 +129,15 @@ void register_rxvmplugin(char* factory_name, rxvm_plugin_factory factory) {
 // Function to clear the factory list
 void clear_rxvmplugin_factories(){
     rxvmplugin_factory_entry *entry = rxvmplugin_factories;
+    // Pass 1: Call all plugin free() functions
+    while(entry){
+        entry->plugin_info->free(entry->plugin_info);
+        entry = entry->next;
+    }
+    // Pass 2: Close handles and free entries
+    entry = rxvmplugin_factories;
     while(entry){
         rxvmplugin_factory_entry *next = entry->next; // Save the next entry
-        entry->plugin_info->free(entry->plugin_info); // Call the plugin free() function
         if (entry->handle) {
 #ifdef _WIN32
             FreeLibrary((HMODULE)entry->handle);
