@@ -476,7 +476,6 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
-    clear_frame(frame);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
     *(frame->procedure->frame_free_list) = frame;
