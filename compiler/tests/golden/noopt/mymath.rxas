@@ -1,0 +1,24 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : mymath.rexx
+ * BUILT                  : 2026-01-29 13:58:33
+ */
+
+.srcfile="mymath.rexx"
+.globals=0
+
+myfunc() .locals=2 .expose=mymath.myfunc
+   .meta "mymath.myfunc"="b" ".int" myfunc() "x=.int" ""
+   .src 5:1="myfunc: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 6:7="x = .int"
+   .meta "mymath.myfunc.x"="b" ".int" r0
+   icopy r0,a1
+   .src 7:3="return x * x"
+   imult r1,r0,r0
+   ret r1
+   .meta "mymath.myfunc.x"

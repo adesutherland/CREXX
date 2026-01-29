@@ -1,0 +1,25 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : err_01_type.rexx
+ * BUILT                  : 2026-01-29 13:58:33
+ */
+
+.srcfile="err_01_type.rexx"
+.globals=0
+
+main() .locals=1
+   .meta "err_01_type.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 3:1="i = 10"
+   .meta "err_01_type.main.i"="b" ".int" r0
+   load r0,10
+   .src 4:1="i = \"String\""
+   load r0,"String"
+   stoi r0
+   .src 4:13=""
+   ret
+   .meta "err_01_type.main.i"
