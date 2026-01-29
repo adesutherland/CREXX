@@ -352,61 +352,72 @@ void emit_flow(ASTNode *node, void *pl) {
             node->loopstartchecks = output_fs(comment_meta);
             switch (j) {
                 case 1: /* Positive */
-                    temp1 = mprintf("   %sgt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                    temp1 = mprintf("   %sgt r%d,%c%d,%c%d\n   brt l%ddoend,r%d\n",
                                     tp_prefix,
+                                    node->additional_registers,
                                     node->parent->register_type,
                                     node->parent->register_num,
                                     node->child->register_type,
                                     node->child->register_num,
-                                    node->parent->parent->node_number);
+                                    node->parent->parent->node_number,
+                                    node->additional_registers);
                     break;
                 case -1: /* Negative */
-                    temp1 = mprintf("   %slt r0,%c%d,%c%d\n   brt l%ddoend,r0\n", /* r0 - todo */
+                    temp1 = mprintf("   %slt r%d,%c%d,%c%d\n   brt l%ddoend,r%d\n",
                                     tp_prefix,
+                                    node->additional_registers,
                                     node->parent->register_type,
                                     node->parent->register_num,
                                     node->child->register_type,
                                     node->child->register_num,
-                                    node->parent->parent->node_number);
+                                    node->parent->parent->node_number,
+                                    node->additional_registers);
                     break;
                 default: /* Dynamic by value */
                     /* We need a zero (int or flaot */
                     if (*tp_prefix == 'i') op = "0";
                     else op = "0.0";
                     temp1 = mprintf(
-                            "   %slt r0,%c%d,%s\n" /* Check the by value sign */
-                            "   brt l%ddoneg1,r0\n"    /* JMP to Negative BY (r0 - todo) */
+                            "   %slt r%d,%c%d,%s\n" /* Check the by value sign */
+                            "   brt l%ddoneg1,r%d\n"    /* JMP to Negative BY */
 
-                            "   %sgt r0,%c%d,%c%d\n"   /* Pos BY */
-                            "   brtf l%ddoend,l%ddoneg2,r0\n" /* r0 - todo */
+                            "   %sgt r%d,%c%d,%c%d\n"   /* Pos BY */
+                            "   brtf l%ddoend,l%ddoneg2,r%d\n"
 
                             "l%ddoneg1:\n"
-                            "   %slt r0,%c%d,%c%d\n"   /* Neg BY */
-                            "   brt l%ddoend,r0\n" /* r0 - todo */
+                            "   %slt r%d,%c%d,%c%d\n"   /* Neg BY */
+                            "   brt l%ddoend,r%d\n"
 
                             "l%ddoneg2:\n",
 
                             tp_prefix,
+                            node->additional_registers,
                             n->child->register_type,
                             n->child->register_num,
                             op,
                             node->parent->parent->node_number,
+                            node->additional_registers,
 
                             tp_prefix,
+                            node->additional_registers,
                             node->parent->register_type,
                             node->parent->register_num,
                             node->child->register_type,
                             node->child->register_num,
                             node->parent->parent->node_number,
                             node->parent->parent->node_number,
+                            node->additional_registers,
 
                             node->parent->parent->node_number,
                             tp_prefix,
+                            node->additional_registers,
                             node->parent->register_type,
                             node->parent->register_num,
                             node->child->register_type,
                             node->child->register_num,
                             node->parent->parent->node_number,
+                            node->additional_registers,
+
                             node->parent->parent->node_number);
             }
             output_append_text(node->loopstartchecks, temp1);

@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : opt_numeric_safety.rexx
- * BUILT                  : 2026-01-23 17:20:33
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="opt_numeric_safety.rexx"
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "opt_numeric_safety.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -15,21 +15,21 @@ main() .locals=6
    setnumcas 1
    setnumstd 1
    .src 4:1="call ScenarioA"
-   load r1,0
-   call r2,ScenarioA(),r1
+   load r0,0
+   call r1,ScenarioA(),r0
    .src 5:1="call ScenarioB"
-   load r1,0
-   call r3,ScenarioB(),r1
+   load r0,0
+   call r2,ScenarioB(),r0
    .src 6:1="call ScenarioC"
-   load r1,0
-   call r4,ScenarioC(),r1
+   load r0,0
+   call r3,ScenarioC(),r0
    .src 7:1="call ScenarioD"
-   load r1,0
-   call r5,ScenarioD(),r1
+   load r0,0
+   call r4,ScenarioD(),r0
    .src 8:1="return"
    ret
 
-ScenarioA() .locals=4
+ScenarioA() .locals=3
    .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() "" ""
    .src 10:1="ScenarioA: procedure"
    setnumdgts 5
@@ -38,24 +38,6 @@ ScenarioA() .locals=4
    setnumcas 2
    setnumstd 1
    .src 16:5="say 1/3"
-   load r2,1
-   itof r2
-   load r3,3
-   itof r3
-   fdiv r3,r2,r3
-   ftos r3
-   say r3
-   .src 17:5="return"
-   ret
-
-ScenarioB() .locals=3
-   .meta "opt_numeric_safety.scenariob"="b" ".void" ScenarioB() "" ""
-   .src 19:1="ScenarioB: procedure"
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .src 22:5="say 1/3"
    load r1,1
    itof r1
    load r2,3
@@ -63,10 +45,28 @@ ScenarioB() .locals=3
    fdiv r2,r1,r2
    ftos r2
    say r2
+   .src 17:5="return"
+   ret
+
+ScenarioB() .locals=2
+   .meta "opt_numeric_safety.scenariob"="b" ".void" ScenarioB() "" ""
+   .src 19:1="ScenarioB: procedure"
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 22:5="say 1/3"
+   load r0,1
+   itof r0
+   load r1,3
+   itof r1
+   fdiv r1,r0,r1
+   ftos r1
+   say r1
    .src 23:5="return"
    ret
 
-ScenarioC() .locals=3
+ScenarioC() .locals=2
    .meta "opt_numeric_safety.scenarioc"="b" ".void" ScenarioC() "" ""
    .src 25:1="ScenarioC: procedure"
    setnumdgts 9
@@ -74,14 +74,14 @@ ScenarioC() .locals=3
    setnumfrm 1
    setnumcas 1
    .src 30:5="say 5 % 2"
-   load r2,2
-   imod r2,5,r2
-   itos r2
-   say r2
+   load r1,2
+   imod r1,5,r1
+   itos r1
+   say r1
    .src 31:5="return"
    ret
 
-ScenarioD() .locals=3
+ScenarioD() .locals=2
    .meta "opt_numeric_safety.scenariod"="b" ".void" ScenarioD() "" ""
    .src 33:1="ScenarioD: procedure"
    setnumdgts 9
@@ -89,9 +89,9 @@ ScenarioD() .locals=3
    setnumcas 1
    setnumstd 1
    .src 38:4="if 1.000000001 = 1.0"
-   load r2,1.000000001
-   feq r2,r2,1.0
-   brf l62iffalse,r2
+   load r1,1.000000001
+   feq r1,r1,1.0
+   brf l62iffalse,r1
    .src 38:26="then"
    .src 38:31="say \"Equal\""
    say "Equal"

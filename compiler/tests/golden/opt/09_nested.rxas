@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : 09_nested.rexx
- * BUILT                  : 2026-01-21 12:00:17
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="09_nested.rexx"
 .globals=0
 
-main() .locals=1
+main() .locals=0
    .meta "09_nested.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0

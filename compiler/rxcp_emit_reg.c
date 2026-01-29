@@ -592,6 +592,16 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case TO:
+                /* Set the register number based on child */
+                if (node->child) {
+                    node->register_num = node->child->register_num;
+                    node->register_type = node->child->register_type;
+                }
+                /* Additional register for comparison result (was hardcoded r0) */
+                node->num_additional_registers = 1;
+                node->additional_registers = get_reg(node->scope);
+                break;
+
             case BY:
             case UNTIL:
             case WHILE:
@@ -636,6 +646,9 @@ walker_result register_walker(walker_direction direction,
                 while (c) {
                     if (c->node_type == FOR || (c->child && !use_symbol_reg(c->child))) {
                         ret_reg(node->scope, c->register_num);
+                    }
+                    if (c->node_type == TO && c->num_additional_registers) {
+                        ret_reg(node->scope, c->additional_registers);
                     }
                     c = c->sibling;
                 }

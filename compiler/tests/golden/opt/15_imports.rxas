@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : 15_imports.rexx
- * BUILT                  : 2026-01-21 12:45:35
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="15_imports.rexx"
 .globals=0
 
-main() .locals=4
+main() .locals=3
    .meta "15_imports.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -15,11 +15,11 @@ main() .locals=4
    setnumcas 1
    setnumstd 1
    .src 6:1="say myfunc(10)"
-   load r1,1
-   load r2,10
-   call r3,myfunc(),r1
-   itos r3
-   say r3
+   load r0,1
+   load r1,10
+   call r2,myfunc(),r0
+   itos r2
+   say r2
    .src 6:15=""
    ret
 
