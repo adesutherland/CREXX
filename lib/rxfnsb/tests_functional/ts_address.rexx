@@ -9,4 +9,6 @@ err = .string[]
 address cmd 'echo #42'  output out error err
 if out.1 <> '#42' then errors=errors+1
 
+  'echo #43'
+  
 return errors<>0
