@@ -5736,7 +5736,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     error = dlerror();
     if (error != NULL) {
       printf( "!!! %s\n", error );
-      return (int)i1;
+      rc = (int)i1;
+      goto interprt_finished;
     }
     /* Close the object */
     dlclose( dl_handle );
