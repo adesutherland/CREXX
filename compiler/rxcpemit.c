@@ -683,6 +683,15 @@ static walker_result emit_walker(walker_direction direction,
                 if (!node->output) node->output = output_f();
                 break;
 
+            case CLASS:
+                /* A class literal (e.g. .int) used as a value - this represents the default value
+                 * of that class. For Level B this is always null / zero */
+                if (!node->output) node->output = output_f();
+                temp1 = mprintf("   null %c%d\n", node->register_type, node->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                break;
+
             case CONSTANT:
             case CONST_SYMBOL:
             case STRING:

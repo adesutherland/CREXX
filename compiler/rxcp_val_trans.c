@@ -284,7 +284,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == ADDRESS) {
+        if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
             context->need_rxsysb = 1;
         }
         else if (node->node_type == EXIT) {

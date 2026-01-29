@@ -436,6 +436,7 @@ int is_constant(ASTNode* node) {
         case FLOAT:
         case DECIMAL:
         case INTEGER:
+        case CLASS:
             if (node->value_type == node->target_type)
                 return 1; /* No type promotion - so a constant */
             else
