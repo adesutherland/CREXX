@@ -166,7 +166,10 @@ int main(int argc, char *argv[]) {
             i++; /* Skip -o and its value */
             continue;
         }
-        strcat(command, " \"");
+        if (command[0] != '\0') {
+            strcat(command, " ");
+        }
+        strcat(command, "\"");
         if (i == argc - 1) {
             /* Pass the name without extension so rxc adds .rexx and .rxas correctly */
             strcat(command, temp_source_name);
@@ -187,7 +190,15 @@ int main(int argc, char *argv[]) {
         strcat(command, "\"");
     }
 
+#ifdef _WIN32
+    {
+        char wrapped_command[8200];
+        sprintf(wrapped_command, "\"%s\"", command);
+        ret = system(wrapped_command);
+    }
+#else
     ret = system(command);
+#endif
 
     if (!ast_mode) {
         if (expect_fail) {

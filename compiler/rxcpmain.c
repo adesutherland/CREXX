@@ -407,19 +407,22 @@ int rxcmain(int argc, char *argv[]) {
 #endif
 
     if (context->stop_after_parse) {
+        errors = prnterrs(context);
+        if (errors) {
+            fprintf(stderr,"%d error(s) in source file\n", errors);
+        }
+        fflush(stderr);
         ast_dump_text(stdout, context->ast, 0);
+        fflush(stdout);
+        if (debug_mode) {
+            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup (-dp).\n");
+        }
+        goto finish;
     }
 
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
-        goto finish;
-    }
-
-    if (context->stop_after_parse) {
-        if (debug_mode) {
-            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup (-dp).\n");
-        }
         goto finish;
     }
 

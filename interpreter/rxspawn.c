@@ -202,8 +202,10 @@ int shellspawn (const char *command,
 
 #ifdef _WIN32
 /* Windows does the actual parsing and validating as part of CreateProcess() */
-    data.file_path = malloc(strlen(command) + 1);
-    strcpy(data.file_path, command);
+    /* Prepend "cmd /c " to support built-in commands like echo, dir, etc. */
+    data.file_path = malloc(strlen(command) + 8);
+    strcpy(data.file_path, "cmd /c ");
+    strcat(data.file_path, command);
 #else
     // Parse the command
     char *base_name;
