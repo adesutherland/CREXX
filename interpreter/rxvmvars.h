@@ -483,7 +483,7 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->float_value = source->float_value;
 
     /* Move Decimal Value */
-    if (source->decimal_value_length) {
+    if (source->decimal_value) {
         dest->decimal_value_length = source->decimal_value_length;
         dest->decimal_value = source->decimal_value;
         dest->decimal_buffer_length = source->decimal_buffer_length;
@@ -493,36 +493,28 @@ RX_INLINE void move_value(value *dest, value *source) {
     }
 
     /* Move String */
-    if (source->string_length) {
-        if (source->string_value == source->small_string_buffer) {
-            /* Copy String Data */
-            prep_string_buffer(dest, source->string_length);
-            dest->string_pos = source->string_pos;
+    if (source->string_value != source->small_string_buffer) {
+        /* Move String Data */
+        dest->string_value = source->string_value;
+        dest->string_length = source->string_length;
+        dest->string_buffer_length = source->string_buffer_length;
+        dest->string_pos = source->string_pos;
 #ifndef NUTF8
-            dest->string_chars = source->string_chars;
-            dest->string_char_pos = source->string_char_pos;
+        dest->string_chars = source->string_chars;
+        dest->string_char_pos = source->string_char_pos;
 #endif
+    }
+    else {
+        dest->string_length = source->string_length;
+        dest->string_pos = source->string_pos;
+#ifndef NUTF8
+        dest->string_chars = source->string_chars;
+        dest->string_char_pos = source->string_char_pos;
+#endif
+        if (dest->string_length) {
             memcpy(dest->string_value, source->string_value,
                    dest->string_length);
         }
-        else {
-            /* Move String Data */
-            dest->string_value = source->string_value;
-            dest->string_length = source->string_length;
-            dest->string_pos = source->string_pos;
-#ifndef NUTF8
-            dest->string_chars = source->string_chars;
-            dest->string_char_pos = source->string_char_pos;
-#endif
-        }
-    }
-    else {
-        dest->string_length = 0;
-        dest->string_pos = 0;
-#ifndef NUTF8
-        dest->string_chars = 0;
-        dest->string_char_pos = 0;;
-#endif
     }
 
     /* Move Binary */
