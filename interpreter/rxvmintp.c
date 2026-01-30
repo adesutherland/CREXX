@@ -1,6 +1,6 @@
-//
-// Created by adrian on 29/03/2021.
-//
+/*
+ * Created by adrian on 29/03/2021.
+ */
 
 /*
  * ===================================================================
@@ -55,7 +55,7 @@
 #include "../binutils/include/rxdefs.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
-// #include <complex.h>
+/* #include <complex.h> */
 #include <signal.h>
 
 
@@ -68,12 +68,12 @@
 #define NOMINAL_NUM_ARGS 20
 
 /* Define this to use a safe stack frame recycling mechanism - zeros registers in the stack frame */
-//#define SAFE_RECYCLED_STACKFRAMES
+/*#define SAFE_RECYCLED_STACKFRAMES*/
 #undef SAFE_RECYCLED_STACKFRAMES
 
 /* Misc. Utilities here */
-// Decodes UTF8  Bytes and return number of bytes of character
-static inline int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
+/* Decodes UTF8 Bytes and return number of bytes of character */
+RX_INLINE int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
     uint8_t c0 = p[0];
 
     if ((c0 & 0x80) == 0x00) {
@@ -95,7 +95,7 @@ static inline int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
                      (p[3] & 0x3F);
         return 4;
     } else {
-        *codepoint = 0xFFFD;  // ungültiges Startbyte
+        *codepoint = 0xFFFD;  /* ungültiges Startbyte */
         return -1;
     }
 }
@@ -104,29 +104,29 @@ static inline int utf8codepoint_express(const uint8_t* p, uint32_t* codepoint) {
 /* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
 const char compile_date[8+1] =
         {
-                // yyyy year
+                /* yyyy year */
                 __DATE__[7], __DATE__[8],
                 __DATE__[9], __DATE__[10],
 
-                // First month letter, Oct Nov Dec = '1' otherwise '0'
+                /* First month letter, Oct Nov Dec = '1' otherwise '0' */
                 (__DATE__[0] == 'O' || __DATE__[0] == 'N' || __DATE__[0] == 'D') ? '1' : '0',
 
-                // Second month letter
-                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       // Jan, Jun or Jul
+                /* Second month letter */
+                (__DATE__[0] == 'J') ? ( (__DATE__[1] == 'a') ? '1' :       /* Jan, Jun or Jul */
                                          ((__DATE__[2] == 'n') ? '6' : '7') ) :
-                (__DATE__[0] == 'F') ? '2' :                                // Feb
-                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   // Mar or May
-                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   // Apr or Aug
-                (__DATE__[0] == 'S') ? '9' :                                // Sep
-                (__DATE__[0] == 'O') ? '0' :                                // Oct
-                (__DATE__[0] == 'N') ? '1' :                                // Nov
-                (__DATE__[0] == 'D') ? '2' :                                // Dec
+                (__DATE__[0] == 'F') ? '2' :                                /* Feb */
+                (__DATE__[0] == 'M') ? (__DATE__[2] == 'r') ? '3' : '5' :   /* Mar or May */
+                (__DATE__[0] == 'A') ? (__DATE__[1] == 'p') ? '4' : '8' :   /* Apr or Aug */
+                (__DATE__[0] == 'S') ? '9' :                                /* Sep */
+                (__DATE__[0] == 'O') ? '0' :                                /* Oct */
+                (__DATE__[0] == 'N') ? '1' :                                /* Nov */
+                (__DATE__[0] == 'D') ? '2' :                                /* Dec */
                 0,
 
-                // First day letter, replace space with digit
+                /* First day letter, replace space with digit */
                 __DATE__[4]==' ' ? '0' : __DATE__[4],
 
-                // Second day letter
+                /* Second day letter */
                 __DATE__[5],
 
                 '\0'
@@ -574,7 +574,7 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
  */
 #define ASCII_FAST_PATH 1    // 1. activate ASCII fast path, 0: run normal mode
 #if  ASCII_FAST_PATH
-static inline rxinteger ascii_fwd_nonblank(const unsigned char *s, rxinteger start, rxinteger len) {
+RX_INLINE rxinteger ascii_fwd_nonblank(const unsigned char *s, rxinteger start, rxinteger len) {
     rxinteger i;
     int ch;
     for (i = start; i < len; i++) {
@@ -583,7 +583,7 @@ static inline rxinteger ascii_fwd_nonblank(const unsigned char *s, rxinteger sta
     }
     return -1;  /* Not found in forward scan */
 }
-static inline rxinteger ascii_back_nonblank( unsigned char *s, rxinteger start, rxinteger len) {
+RX_INLINE rxinteger ascii_back_nonblank( unsigned char *s, rxinteger start, rxinteger len) {
     rxinteger i;
     int ch;
     if (len <= 0) return -1;
@@ -594,7 +594,7 @@ static inline rxinteger ascii_back_nonblank( unsigned char *s, rxinteger start, 
     return -1;  /* Not found in reverse scan */
 }
 
-static inline rxinteger ascii_fwd_blank(const unsigned char *s, rxinteger start, rxinteger len) {
+RX_INLINE rxinteger ascii_fwd_blank(const unsigned char *s, rxinteger start, rxinteger len) {
     rxinteger i;
     int ch;
     for (i = start; i < len; i++) {
@@ -603,7 +603,7 @@ static inline rxinteger ascii_fwd_blank(const unsigned char *s, rxinteger start,
     }
     return -1;  /* Not found in forward scan */
 }
-static inline rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteger len) {
+RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteger len) {
     rxinteger i;
     int ch;
     if (len <= 0) return -1;
@@ -620,8 +620,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_constant *procedure;
     proc_constant *step_handler = 0;
     int rc = 0;
-    unsigned int initSeed = 0;   // keep last seed for Random function within REXX run
-    char hasSeed = 0; // no seed set
+    unsigned int initSeed = 0;   /* keep last seed for Random function within REXX run */
+    char hasSeed = 0; /* no seed set */
     bin_code *pc, *next_pc;
     int mod_index;
     value *interrupt_arg;
@@ -636,10 +636,15 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     stack_frame *current_frame = 0, *temp_frame;
-    // 3 Work Registers
+    /* 3 Work Registers */
     value *work1 = value_f();
     value *work2 = value_f();
     value *work3 = value_f();
+#ifdef NTHREADED
+    void *next_inst = 0;
+#else
+    void *next_inst = &&IUNKNOWN;
+#endif
 
     /* Set up the interrupt object array */
     {
@@ -648,14 +653,8 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
             interrupt_object[i] = value_f();
         }
     }
-    // Initialize the native signal handler system
+    /* Initialize the native signal handler system */
     initialize_vm_signals();
-
-#ifdef NTHREADED
-    void *next_inst = 0;
-#else
-    void *next_inst = &&IUNKNOWN;
-#endif
 
     /*
      * Instruction database - loaded from a generated header file
@@ -705,7 +704,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_S_S_MAP 2, OP_STRING, OP_STRING, OP_NONE
 #define FMT_S_S_R_MAP 3, OP_STRING, OP_STRING, OP_REG
 
-const Instruction meta_map[] = {
+const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
     { OPCODE, #NAME, DESC, FMT##_MAP },
 #include "../binutils/include/rxops.h"
@@ -717,7 +716,7 @@ typedef Opcode instructions;
 #ifdef NTHREADED
 /* already typedefed */
 #else
-const void *address_map[] = {
+const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
     &&NAME,
 #include "../binutils/include/rxops.h"
@@ -832,6 +831,8 @@ const void *address_map[] = {
      *      CONV2FLOAT(float-result-variable,value-to-be-converted)
      * ----------------------------------------------------------------------------
      */
+
+#define RESERVED_IMPL(name) START_INSTRUCTION(name) SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH;
 
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
@@ -1186,15 +1187,16 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METALOADMODULE_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
             {
+                int num_modules_before;
                 null_terminate_string_buffer(op2R);
                 /* Load the module */
-                int num_modules_before = (int) context->num_modules;
+                num_modules_before = (int) context->num_modules;
                 op1R->int_value = rxldmod(context, op2R->string_value);
                 if (op1R->int_value > 0) {
                     /* If successfully loaded, thread the binary - must be done in run() */
 #ifndef NTHREADED
-                    DEBUG("Threading\n");
                     int mod;
+                    DEBUG("Threading\n");
                     for (mod = num_modules_before; mod < op1R->int_value; mod++) {
                         size_t i = 0, j;
                         while (i < context->modules[mod]->segment.inst_size) {
@@ -1221,10 +1223,12 @@ START_OF_INSTRUCTIONS
                 /* Threaded Version - basically we are unthreading, finding the
                  * instruction with the corresponding implementation address
                  * (quite slow ... but not an instruction used in normal code */
-                op1R->int_value = 0;
-                void *impl = inst.impl_address;
+                void *impl;
                 size_t a;
-                size_t num_instructions = sizeof(address_map) / sizeof(address_map[0]);
+                size_t num_instructions;
+                op1R->int_value = 0;
+                impl = inst.impl_address;
+                num_instructions = sizeof(address_map) / sizeof(address_map[0]);
                 for (a = 0; a < num_instructions; a++) {
                     if (address_map[a] == impl) {
                         op1R->int_value = (rxinteger)a;
@@ -5082,14 +5086,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #ifndef NUTF8
                 len = (rxinteger) op2R->string_chars;
 #if ASCII_FAST_PATH
-                if (len==op2R->string_length) {  // it is plain ASCII
+                if (len==op2R->string_length) {  /* it is plain ASCII */
                     if (op3R->int_value>=0) {
-                        result = ascii_fwd_blank(op2R->string_value, op3R->int_value, len);
+                        result = ascii_fwd_blank((const unsigned char *)op2R->string_value, op3R->int_value, len);
                         goto blankfound;
                     } else {
-                        result = -op3R->int_value;   // Convert to positive index
-                        if (result >= len) result = len - 1;  // Clamp to valid range
-                        result = ascii_back_blank(op2R->string_value, result, len);
+                        result = -op3R->int_value;   /* Convert to positive index */
+                        if (result >= len) result = len - 1;  /* Clamp to valid range */
+                        result = ascii_back_blank((unsigned char *)op2R->string_value, result, len);
                         goto blankfound;
                     }
                 }
@@ -5131,14 +5135,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #ifndef NUTF8
              len = (rxinteger)op2R->string_chars;
 #if ASCII_FAST_PATH
-             if (len==op2R->string_length) {  // it is plain ASCII
+             if (len==op2R->string_length) {  /* it is plain ASCII */
                    if (op3R->int_value>=0) {
-                        result = ascii_fwd_nonblank(op2R->string_value, op3R->int_value, len);
+                        result = ascii_fwd_nonblank((const unsigned char *)op2R->string_value, op3R->int_value, len);
                         goto nonblankfound;
                     } else {
-                        result = -op3R->int_value;   // Convert to positive index
-                        if (result >= len) result = len - 1;  // Clamp to valid range
-                        result = ascii_back_nonblank(op2R->string_value, result, len);
+                        result = -op3R->int_value;   /* Convert to positive index */
+                        if (result >= len) result = len - 1;  /* Clamp to valid range */
+                        result = ascii_back_nonblank((unsigned char *)op2R->string_value, result, len);
                         goto nonblankfound;
                     }
              }
@@ -5305,9 +5309,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 prep_string_buffer(op1R, 4 * length + 1);
                 int temp_len = 0;
                 for (i = 0; i < length; i++) {
-                //    utf8codepoint(op2R->string_value + byte_pos, &ch);
-                //    int char_len = utf8codepoint_len(ch);
-                    int char_len = utf8codepoint_express(op2R->string_value + byte_pos, &ch);
+                    uint32_t u_ch;
+                    int char_len = utf8codepoint_express((const uint8_t*)(op2R->string_value + byte_pos), &u_ch);
+                    ch = (int)u_ch;
                     memcpy(op1R->string_value + temp_len, op2R->string_value + byte_pos, char_len);
                     temp_len += char_len;
                     byte_pos += char_len;
@@ -5325,6 +5329,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 PUTSTRLEN(op1R, length);
 #endif
             noChars:
+                ;
             }
             DISPATCH
 
@@ -6137,46 +6142,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
         DISPATCH
 
-/* ---------------------------------------------------------------------------
- * load instructions not yet implemented generated from the instruction table
- *      and scan of this module                              pej 8. April 2021
- * ---------------------------------------------------------------------------
- */
-
-        START_INSTRUCTION(ADDF_REG_REG_FLOAT)
-        START_INSTRUCTION(ADDF_REG_REG_REG)
-        START_INSTRUCTION(ADDI_REG_REG_INT)
-        START_INSTRUCTION(ADDI_REG_REG_REG)
-        START_INSTRUCTION(DIVF_REG_FLOAT_REG)
-        START_INSTRUCTION(DIVF_REG_REG_FLOAT)
-        START_INSTRUCTION(DIVF_REG_REG_REG)
-        START_INSTRUCTION(DIVI_REG_REG_INT)
-        START_INSTRUCTION(DIVI_REG_REG_REG)
-        START_INSTRUCTION(MULTF_REG_REG_FLOAT)
-        START_INSTRUCTION(MULTF_REG_REG_REG)
-        START_INSTRUCTION(MULTI_REG_REG_INT)
-        START_INSTRUCTION(MULTI_REG_REG_REG)
-        START_INSTRUCTION(SUBF_REG_FLOAT_REG)
-        START_INSTRUCTION(SUBF_REG_REG_FLOAT)
-        START_INSTRUCTION(SUBF_REG_REG_REG)
-        START_INSTRUCTION(SUBI_REG_REG_INT)
-        START_INSTRUCTION(SUBI_REG_REG_REG)
-        START_INSTRUCTION(TRUNC_REG_REG)
-        START_INSTRUCTION(GMAP_REG_REG)
-        START_INSTRUCTION(GMAP_REG_STRING)
-        START_INSTRUCTION(LOAD_REG_CHAR)
-        START_INSTRUCTION(MAP_REG_REG)
-        START_INSTRUCTION(MAP_REG_STRING)
-        START_INSTRUCTION(NSMAP_REG_REG_REG)
-        START_INSTRUCTION(NSMAP_REG_REG_STRING)
-        START_INSTRUCTION(NSMAP_REG_STRING_REG)
-        START_INSTRUCTION(NSMAP_REG_STRING_STRING)
-        START_INSTRUCTION(PMAP_REG_REG)
-        START_INSTRUCTION(PMAP_REG_STRING)
-        START_INSTRUCTION(RET_CHAR)
-        START_INSTRUCTION(UNMAP_REG)
-    SET_SIGNAL(RXSIGNAL_NOT_IMPLEMENTED);
-    DISPATCH
 
     /* ------------------------------------------------------------------------------------
  *  TRIMR_REG_REG_REG  Trim right with char                          pej updated Jan 2026
@@ -6255,6 +6220,154 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - EXIT R%lu\n", REG_IDX(1));
             rc = op1RI;
             goto interprt_finished;
+
+        RESERVED_IMPL(RESERVED_056)
+        RESERVED_IMPL(RESERVED_057)
+        RESERVED_IMPL(RESERVED_058)
+        RESERVED_IMPL(RESERVED_059)
+        RESERVED_IMPL(RESERVED_060)
+        RESERVED_IMPL(RESERVED_061)
+        RESERVED_IMPL(RESERVED_062)
+        RESERVED_IMPL(RESERVED_063)
+        RESERVED_IMPL(RESERVED_064)
+        RESERVED_IMPL(RESERVED_065)
+        RESERVED_IMPL(RESERVED_066)
+        RESERVED_IMPL(RESERVED_067)
+        RESERVED_IMPL(RESERVED_068)
+        RESERVED_IMPL(RESERVED_069)
+        RESERVED_IMPL(RESERVED_070)
+        RESERVED_IMPL(RESERVED_071)
+        RESERVED_IMPL(RESERVED_072)
+        RESERVED_IMPL(RESERVED_073)
+        RESERVED_IMPL(RESERVED_074)
+        RESERVED_IMPL(RESERVED_075)
+        RESERVED_IMPL(RESERVED_076)
+        RESERVED_IMPL(RESERVED_077)
+        RESERVED_IMPL(RESERVED_078)
+        RESERVED_IMPL(RESERVED_079)
+        RESERVED_IMPL(RESERVED_080)
+        RESERVED_IMPL(RESERVED_081)
+        RESERVED_IMPL(RESERVED_082)
+        RESERVED_IMPL(RESERVED_083)
+        RESERVED_IMPL(RESERVED_084)
+        RESERVED_IMPL(RESERVED_085)
+        RESERVED_IMPL(RESERVED_086)
+        RESERVED_IMPL(RESERVED_087)
+        RESERVED_IMPL(RESERVED_088)
+        RESERVED_IMPL(RESERVED_089)
+        RESERVED_IMPL(RESERVED_090)
+        RESERVED_IMPL(RESERVED_091)
+        RESERVED_IMPL(RESERVED_092)
+        RESERVED_IMPL(RESERVED_093)
+        RESERVED_IMPL(RESERVED_094)
+        RESERVED_IMPL(RESERVED_095)
+        RESERVED_IMPL(RESERVED_096)
+        RESERVED_IMPL(RESERVED_097)
+        RESERVED_IMPL(RESERVED_098)
+        RESERVED_IMPL(RESERVED_099)
+        RESERVED_IMPL(RESERVED_183)
+        RESERVED_IMPL(RESERVED_184)
+        RESERVED_IMPL(RESERVED_185)
+        RESERVED_IMPL(RESERVED_186)
+        RESERVED_IMPL(RESERVED_187)
+        RESERVED_IMPL(RESERVED_188)
+        RESERVED_IMPL(RESERVED_189)
+        RESERVED_IMPL(RESERVED_190)
+        RESERVED_IMPL(RESERVED_191)
+        RESERVED_IMPL(RESERVED_192)
+        RESERVED_IMPL(RESERVED_193)
+        RESERVED_IMPL(RESERVED_194)
+        RESERVED_IMPL(RESERVED_195)
+        RESERVED_IMPL(RESERVED_196)
+        RESERVED_IMPL(RESERVED_197)
+        RESERVED_IMPL(RESERVED_198)
+        RESERVED_IMPL(RESERVED_199)
+        RESERVED_IMPL(RESERVED_263)
+        RESERVED_IMPL(RESERVED_264)
+        RESERVED_IMPL(RESERVED_265)
+        RESERVED_IMPL(RESERVED_266)
+        RESERVED_IMPL(RESERVED_267)
+        RESERVED_IMPL(RESERVED_268)
+        RESERVED_IMPL(RESERVED_269)
+        RESERVED_IMPL(RESERVED_270)
+        RESERVED_IMPL(RESERVED_271)
+        RESERVED_IMPL(RESERVED_272)
+        RESERVED_IMPL(RESERVED_273)
+        RESERVED_IMPL(RESERVED_274)
+        RESERVED_IMPL(RESERVED_275)
+        RESERVED_IMPL(RESERVED_276)
+        RESERVED_IMPL(RESERVED_277)
+        RESERVED_IMPL(RESERVED_278)
+        RESERVED_IMPL(RESERVED_279)
+        RESERVED_IMPL(RESERVED_280)
+        RESERVED_IMPL(RESERVED_281)
+        RESERVED_IMPL(RESERVED_282)
+        RESERVED_IMPL(RESERVED_283)
+        RESERVED_IMPL(RESERVED_284)
+        RESERVED_IMPL(RESERVED_285)
+        RESERVED_IMPL(RESERVED_286)
+        RESERVED_IMPL(RESERVED_287)
+        RESERVED_IMPL(RESERVED_288)
+        RESERVED_IMPL(RESERVED_289)
+        RESERVED_IMPL(RESERVED_290)
+        RESERVED_IMPL(RESERVED_291)
+        RESERVED_IMPL(RESERVED_292)
+        RESERVED_IMPL(RESERVED_293)
+        RESERVED_IMPL(RESERVED_294)
+        RESERVED_IMPL(RESERVED_295)
+        RESERVED_IMPL(RESERVED_296)
+        RESERVED_IMPL(RESERVED_297)
+        RESERVED_IMPL(RESERVED_298)
+        RESERVED_IMPL(RESERVED_299)
+        RESERVED_IMPL(RESERVED_401)
+        RESERVED_IMPL(RESERVED_402)
+        RESERVED_IMPL(RESERVED_403)
+        RESERVED_IMPL(RESERVED_404)
+        RESERVED_IMPL(RESERVED_405)
+        RESERVED_IMPL(RESERVED_406)
+        RESERVED_IMPL(RESERVED_407)
+        RESERVED_IMPL(RESERVED_408)
+        RESERVED_IMPL(RESERVED_409)
+        RESERVED_IMPL(RESERVED_410)
+        RESERVED_IMPL(RESERVED_411)
+        RESERVED_IMPL(RESERVED_412)
+        RESERVED_IMPL(RESERVED_413)
+        RESERVED_IMPL(RESERVED_414)
+        RESERVED_IMPL(RESERVED_415)
+        RESERVED_IMPL(RESERVED_416)
+        RESERVED_IMPL(RESERVED_417)
+        RESERVED_IMPL(RESERVED_418)
+        RESERVED_IMPL(RESERVED_419)
+        RESERVED_IMPL(RESERVED_420)
+        RESERVED_IMPL(RESERVED_421)
+        RESERVED_IMPL(RESERVED_422)
+        RESERVED_IMPL(RESERVED_423)
+        RESERVED_IMPL(RESERVED_424)
+        RESERVED_IMPL(RESERVED_425)
+        RESERVED_IMPL(RESERVED_426)
+        RESERVED_IMPL(RESERVED_427)
+        RESERVED_IMPL(RESERVED_428)
+        RESERVED_IMPL(RESERVED_429)
+        RESERVED_IMPL(RESERVED_430)
+        RESERVED_IMPL(RESERVED_431)
+        RESERVED_IMPL(RESERVED_432)
+        RESERVED_IMPL(RESERVED_433)
+        RESERVED_IMPL(RESERVED_434)
+        RESERVED_IMPL(RESERVED_435)
+        RESERVED_IMPL(RESERVED_436)
+        RESERVED_IMPL(RESERVED_437)
+        RESERVED_IMPL(RESERVED_438)
+        RESERVED_IMPL(RESERVED_439)
+        RESERVED_IMPL(RESERVED_440)
+        RESERVED_IMPL(RESERVED_441)
+        RESERVED_IMPL(RESERVED_442)
+        RESERVED_IMPL(RESERVED_443)
+        RESERVED_IMPL(RESERVED_444)
+        RESERVED_IMPL(RESERVED_445)
+        RESERVED_IMPL(RESERVED_446)
+        RESERVED_IMPL(RESERVED_447)
+        RESERVED_IMPL(RESERVED_448)
+        RESERVED_IMPL(RESERVED_449)
 
     END_OF_INSTRUCTIONS
 

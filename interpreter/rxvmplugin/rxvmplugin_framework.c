@@ -16,20 +16,22 @@
 #include "rxbin.h"
 #include "rxvmvars.h"
 
-// Head of the factory list
+/* Head of the factory list */
 static rxvmplugin_factory_entry *rxvmplugin_factories = 0;
 static void* current_loading_handle = 0;
 
-// Function to load a dynamic plugin
+/* Function to load a dynamic plugin */
 int load_rxvmplugin(char* dir, char *name) {
     int rc = 0;
-    // Load the plugin - and run the plugin initialization function
-    // Create the filename by appending ".rxvmplugin" to the file name
-    char *file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
+    char *file_name;
+    char *full_file_name = NULL;
+
+    /* Load the plugin - and run the plugin initialization function */
+    /* Create the filename by appending ".rxvmplugin" to the file name */
+    file_name = malloc(strlen(name) + strlen(".rxvmplugin") + 1);
     if (!file_name) return -1;
     sprintf(file_name, "%s.rxvmplugin", name);
 
-    char* full_file_name = NULL;
     if (dir) {
         full_file_name = malloc(strlen(dir) + strlen(file_name) + 2);
         if (full_file_name) {
@@ -52,42 +54,50 @@ int load_rxvmplugin(char* dir, char *name) {
         return -1;
     }
 
-// Windows Version
+/* Windows Version */
 #ifdef _WIN32
-    // Load the DLL
-    SetDllDirectory("."); // todo - check this!
-    HMODULE hDll = LoadLibrary(TEXT(full_file_name));
-    if (!hDll) {
-        rc = -1;
-    } else {
-        // Get the plugin initializer address and call it
-        rxvmplugin_register_function init = (rxvmplugin_register_function)GetProcAddress(hDll, "_register_rxvm_plugin");
-        if (!init) {
-            FreeLibrary(hDll);
-            rc = -2;
+    {
+        HMODULE hDll;
+        /* Load the DLL */
+        SetDllDirectory("."); /* todo - check this! */
+        hDll = LoadLibrary(TEXT(full_file_name));
+        if (!hDll) {
+            rc = -1;
         } else {
-            current_loading_handle = hDll;
-            init(register_rxvmplugin);
-            current_loading_handle = 0;
+            rxvmplugin_register_function init;
+            /* Get the plugin initializer address and call it */
+            init = (rxvmplugin_register_function)GetProcAddress(hDll, "_register_rxvm_plugin");
+            if (!init) {
+                FreeLibrary(hDll);
+                rc = -2;
+            } else {
+                current_loading_handle = hDll;
+                init(register_rxvmplugin);
+                current_loading_handle = 0;
+            }
         }
     }
 
-// OSX / Linux Version
+/* OSX / Linux Version */
 #else
-    // Load the dylib/so
-    void* hDll = dlopen(full_file_name, RTLD_LAZY);
-    if (!hDll) {
-        rc = -1;
-    } else {
-        // Get the plugin initializer address and call it
-        rxvmplugin_register_function init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
-        if (!init) {
-            dlclose(hDll);
-            rc = -2;
+    {
+        void* hDll;
+        /* Load the dylib/so */
+        hDll = dlopen(full_file_name, RTLD_LAZY);
+        if (!hDll) {
+            rc = -1;
         } else {
-            current_loading_handle = hDll;
-            init(register_rxvmplugin);
-            current_loading_handle = 0;
+            rxvmplugin_register_function init;
+            /* Get the plugin initializer address and call it */
+            init = (rxvmplugin_register_function)dlsym(hDll, "_register_rxvm_plugin");
+            if (!init) {
+                dlclose(hDll);
+                rc = -2;
+            } else {
+                current_loading_handle = hDll;
+                init(register_rxvmplugin);
+                current_loading_handle = 0;
+            }
         }
     }
 #endif

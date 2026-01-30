@@ -280,6 +280,44 @@ add_test(
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Object and Attribute Instruction Tests
+add_custom_command(
+		OUTPUT tests_objects.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_objects ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_objects
+		DEPENDS tests/tests_objects.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Object Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_objects ALL DEPENDS tests_objects.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasobjecttests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_objects
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Reflection and Introspection Instruction Tests
+add_custom_command(
+		OUTPUT tests_reflection.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_reflection ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_reflection
+		DEPENDS tests/tests_reflection.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Reflection Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_reflection ALL DEPENDS tests_reflection.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasreflectiontests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_reflection
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_custom_target(rxvmcopy ALL DEPENDS rxvm)
 add_custom_target(rxvmecopy ALL DEPENDS rxvme)
 
