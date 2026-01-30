@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : 04_literals.rexx
- * BUILT                  : 2026-01-21 11:39:38
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="04_literals.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "04_literals.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0
@@ -15,27 +15,27 @@ main() .locals=7
    setnumcas 1
    setnumstd 1
    .src 3:1="a = 123"
-   .meta "04_literals.main.a"="b" ".int" r1
-   load r1,123
+   .meta "04_literals.main.a"="b" ".int" r0
+   load r0,123
    .src 4:1="b = \"String\""
-   .meta "04_literals.main.b"="b" ".string" r2
-   load r2,"String"
+   .meta "04_literals.main.b"="b" ".string" r1
+   load r1,"String"
    .src 5:1="c = 'String'"
-   .meta "04_literals.main.c"="b" ".string" r3
-   load r3,"String"
+   .meta "04_literals.main.c"="b" ".string" r2
+   load r2,"String"
    .src 6:1="d = '414243'x"
-   .meta "04_literals.main.d"="b" ".string" r4
-   load r4,"ABC"
+   .meta "04_literals.main.d"="b" ".string" r3
+   load r3,"ABC"
    .src 7:1="e = '1010'b"
-   .meta "04_literals.main.e"="b" ".string" r5
-   load r5,"\n"
+   .meta "04_literals.main.e"="b" ".string" r4
+   load r4,"\n"
    .src 8:1="say a b c d e"
-   itos r1
-   sconcat r6,r1,r2
-   sconcat r6,r6,r3
-   sconcat r6,r6,r4
-   sconcat r6,r6,r5
-   say r6
+   itos r0
+   sconcat r5,r0,r1
+   sconcat r5,r5,r2
+   sconcat r5,r5,r3
+   sconcat r5,r5,r4
+   say r5
    .src 8:14=""
    ret
    .meta "04_literals.main.a"

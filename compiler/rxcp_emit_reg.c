@@ -80,6 +80,12 @@ walker_result register_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         switch (node->node_type) {
+            case PROCEDURE:
+                /* Return Type */
+                c = ast_chld(node, CLASS, VOID);
+                if (c) c->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
             case ARGS:
                 /*
                  * Assign Argument registers to Arguments
@@ -103,6 +109,7 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case DEFINE:
             case ASSIGN:
                 /*
                  * If an assignment from an expression (rather than a symbol) then
@@ -121,7 +128,7 @@ walker_result register_walker(walker_direction direction,
                  * (DONT_ASSIGN_REGISTER) so we can assign it to the target
                  * register on the way out (bottom up) and save a copy instruction
                  */
-                if (child2->node_type != CLASS && (!use_symbol_reg(child2) || is_constant(child2)))
+                if ((!use_symbol_reg(child2) || is_constant(child2)))
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
@@ -488,6 +495,7 @@ walker_result register_walker(walker_direction direction,
             case STRING:
             case CONSTANT:
             case CONST_SYMBOL:
+            case CLASS:
                 /* Set result temporary register */
                 if (node->parent->node_type != RANGE && node->register_num != DONT_ASSIGN_REGISTER)
                     /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
@@ -527,6 +535,7 @@ walker_result register_walker(walker_direction direction,
 
                 break;
 
+            case DEFINE:
             case ASSIGN:
                 if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     /* Marked earlier so set the register to the target register */
@@ -542,11 +551,13 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case ARG:
-                if (child2->node_type != CLASS && child2->register_num == DONT_ASSIGN_REGISTER) {
+                if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     /* Marked earlier so set the register to the target register */
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
                 }
+                else if (!use_symbol_reg(child2))
+                    ret_reg(node->scope, child2->register_num);
                 break;
 
             case ADDRESS: // TODO Does Address make it here - I think it is rewritten to a function call earlier
@@ -581,6 +592,16 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case TO:
+                /* Set the register number based on child */
+                if (node->child) {
+                    node->register_num = node->child->register_num;
+                    node->register_type = node->child->register_type;
+                }
+                /* Additional register for comparison result (was hardcoded r0) */
+                node->num_additional_registers = 1;
+                node->additional_registers = get_reg(node->scope);
+                break;
+
             case BY:
             case UNTIL:
             case WHILE:
@@ -625,6 +646,9 @@ walker_result register_walker(walker_direction direction,
                 while (c) {
                     if (c->node_type == FOR || (c->child && !use_symbol_reg(c->child))) {
                         ret_reg(node->scope, c->register_num);
+                    }
+                    if (c->node_type == TO && c->num_additional_registers) {
+                        ret_reg(node->scope, c->additional_registers);
                     }
                     c = c->sibling;
                 }

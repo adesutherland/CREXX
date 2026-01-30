@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : val_magic_02.rexx
- * BUILT                  : 2026-01-22 11:25:56
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="val_magic_02.rexx"
 .globals=0
 
-main() .locals=1
+main() .locals=0
    .meta "val_magic_02.main"="b" ".int" main() "" ""
    setnumdgts 18
    setnumfuz 0

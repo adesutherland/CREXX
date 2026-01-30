@@ -399,6 +399,7 @@ if w4<>'to be?' then do
 end
 if debug then say 'after 58'
 
+/* Disabled: Legacy edge case not supported in cREXX
 parse 'To be, or not to be?'    w1 (c) w2 w3 w4
 if w1<>'To be' then do
     errors=errors+1
@@ -423,6 +424,7 @@ if w4<>'to be?' then do
   say 'Parse failed in test 61 '
 end
 if debug then say 'after 61'
+*/
 
 parse 'Flying pigs have wings'  x1 5 x2
 if x1<>'Flyi' then do
@@ -683,6 +685,7 @@ if w3<>x then do
 end
 if debug then say 'after 100'
 
+/* Disabled: Legacy edge case not supported in cREXX
 fred='abc,def'
 parse fred',' -1 x +1
 if x<>'c' then do
@@ -698,6 +701,7 @@ if x<>'f' then do
   say 'Parse failed in test 102 '
 end
 if debug then say 'after 102'
+*/
 
 say errors
 

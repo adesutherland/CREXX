@@ -1,0 +1,49 @@
+/*
+ * cREXX COMPILER VERSION : crexx-DEV2507
+ * SOURCE                 : poc_plugin.rexx
+ * BUILT                  : 2026-01-29 13:58:33
+ */
+
+.srcfile="poc_plugin.rexx"
+.globals=0
+
+main() .locals=9
+   .meta "poc_plugin.main"="b" ".void" main() "" ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .src 4:1="i_res = POCABS(i)"
+   .meta "poc_plugin.main.i"="b" ".int" "-10"
+   .meta "poc_plugin.main.i_res"="b" ".int" r0
+   load r1,1
+   load r2,-10
+   call r0,POCABS(),r1
+   .src 8:1="f_res = POCABS(f)"
+   .meta "poc_plugin.main.f"="b" ".float" "-10.5"
+   .meta "poc_plugin.main.f_res"="b" ".float" r2
+   load r3,1
+   load r4,-10.5
+   call r2,POCABS(),r3
+   .src 11:1="nest = POCSQUARE(POCABS(i))"
+   load r5,1
+   .meta "poc_plugin.main.nest"="b" ".int" r4
+   load r7,1
+   load r8,-10
+   call r6,POCABS(),r7
+   call r4,POCSQUARE(),r5
+   .src 13:1="say i_res f_res nest"
+   itos r0
+   ftos r2
+   sconcat r8,r0,r2
+   itos r4
+   sconcat r8,r8,r4
+   say r8
+   .src 13:21=""
+   ret
+   .meta "poc_plugin.main.f"
+   .meta "poc_plugin.main.f_res"
+   .meta "poc_plugin.main.i"
+   .meta "poc_plugin.main.i_res"
+   .meta "poc_plugin.main.nest"

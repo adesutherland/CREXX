@@ -5,13 +5,39 @@
 #include "rxvmintp.h"
 #include "rxvmvars.h"
 
+/* Transient memory pool for RXPA Copy-Out */
+typedef struct rxpa_pool_node {
+    void* ptr;
+    struct rxpa_pool_node* next;
+} rxpa_pool_node;
+
+static rxpa_pool_node* current_pool_head = NULL;
+
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
     rxpa_libfunc native_function = (rxpa_libfunc)function;
     rxpa_attribute_value* arg_values = (rxpa_attribute_value*)argv;
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
     rxpa_attribute_value signal_value = (rxpa_attribute_value)signal;
+
+    /* Save Context */
+    rxpa_pool_node* saved_head = current_pool_head;
+    /* Reset Context */
+    current_pool_head = NULL;
+
+    /* Call */
     native_function(args, arg_values, return_value, signal_value);
+
+    /* Cleanup */
+    while (current_pool_head) {
+        rxpa_pool_node* next = current_pool_head->next;
+        free(current_pool_head->ptr);
+        free(current_pool_head);
+        current_pool_head = next;
+    }
+
+    /* Restore Context */
+    current_pool_head = saved_head;
 }
 
 /* Function to get signal text from a signal code  */
@@ -80,11 +106,29 @@ char* rxpa_getsignaltext(rxsignal signal) {
 char* rxpa_getstring(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
     if (val) {
+        char* ret;
+        rxpa_pool_node* node;
         null_terminate_string_buffer(val);
 #if pluginDEBUG>0
         printf("Argument String '%s'\n",val->string_value);
 #endif
-        return val->string_value;
+        /* Copy-Out */
+        ret = malloc(val->string_length + 1);
+        if (ret) {
+            memcpy(ret, val->string_value, val->string_length);
+            ret[val->string_length] = '\0';
+            /* Track in pool */
+            node = malloc(sizeof(rxpa_pool_node));
+            if (node) {
+                node->ptr = ret;
+                node->next = current_pool_head;
+                current_pool_head = node;
+            } else {
+                /* If we can't track it, we're in trouble, but let's at least not leak it now if we can help it */
+                /* In a real system we'd signal an error */
+            }
+        }
+        return ret;
     }
 #if pluginDEBUG>0
     printf("Argument String ''\n");

@@ -172,6 +172,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define EXPORT
 #endif
 #define LOADFUNCS EXPORT INITIALIZER(_initfuncs)
+#define FINALIZER(f) \
+    static void f(void) __attribute__((destructor)); \
+    static void f(void) {
 
 #else
 
@@ -198,6 +201,9 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define INITIALIZER(f) \
         static void f(void) __attribute__((constructor)); \
+        static void f(void) {
+#define FINALIZER(f) \
+        static void f(void) __attribute__((destructor)); \
         static void f(void) {
 #endif
 

@@ -1,7 +1,7 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : 02_flow.rexx
- * BUILT                  : 2026-01-21 11:01:01
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="02_flow.rexx"
@@ -15,11 +15,11 @@ main() .locals=4
    setnumcas 1
    setnumstd 1
    .src 3:1="a = 5"
-   .meta "02_flow.main.a"="b" ".int" r1
-   load r1,5
+   .meta "02_flow.main.a"="b" ".int" r0
+   load r0,5
    .src 4:0="if a > 3"
-   igt r2,r1,3
-   brf l14iffalse,r2
+   igt r1,r0,3
+   brf l14iffalse,r1
    .src 4:10="then"
    .src 4:15="say \"Big\""
    say "Big"
@@ -31,20 +31,20 @@ l14iffalse:
 l14ifend:
    .src 7:1="do"
    .src 7:4="i = 1"
-   .meta "02_flow.main.i"="b" ".int" r2
-   load r2,1
+   .meta "02_flow.main.i"="b" ".int" r1
+   load r1,1
    .src 7:10="to 3"
-   load r3,3
+   load r2,3
 l15dostart:
    .src 7:10="to 3"
-   igt r0,r2,r3
-   brt l15doend,r0
+   igt r3,r1,r2
+   brt l15doend,r3
    .src 8:5="say i"
-   itos r2
-   say r2
+   itos r1
+   say r1
 l15doinc:
    .src 7:4="i"
-   inc r2
+   inc r1
    .src 9:1="end"
    br l15dostart
 l15doend:

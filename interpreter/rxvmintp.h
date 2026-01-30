@@ -214,6 +214,7 @@ void rxinimod(rxvm_context *context);
 
 /* Free Module Context */
 void rxfremod(rxvm_context *context);
+void completely_free_frame(stack_frame *frame);
 
 /* Loads a new module
  * returns 0  - Error

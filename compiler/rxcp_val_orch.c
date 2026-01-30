@@ -396,7 +396,7 @@ void validate_ast(Context *context) {
 
         /* Re-write ADDRESS Instructions */
         context->current_scope = 0;
-        /* ast_wlkr(context->ast, rewrite_address_walker, (void *) context); */
+        ast_wlkr(context->ast, rewrite_address_walker, (void *) context);
 
         /* Re-write EXIT Instructions */
         context->current_scope = 0;

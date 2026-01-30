@@ -1,13 +1,13 @@
 /*
  * cREXX COMPILER VERSION : crexx-DEV2507
  * SOURCE                 : 05_ops_classic.rexx
- * BUILT                  : 2026-01-21 11:39:38
+ * BUILT                  : 2026-01-29 13:58:33
  */
 
 .srcfile="05_ops_classic.rexx"
 .globals=0
 
-main() .locals=1
+main() .locals=0
    .meta "05_ops_classic.main"="b" ".void" main() "" ""
    setnumdgts 18
    setnumfuz 0

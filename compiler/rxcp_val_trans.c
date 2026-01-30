@@ -87,128 +87,140 @@ walker_result rewrite_address_walker(walker_direction direction,
 
     Context *context = (Context*)payload;
 
-    ASTNode* args_node;
     ASTNode* function_node;
     ASTNode* temp_node;
-    ASTNode* current_child;
-    ASTNode* last_child;
-    ASTNode* next_child;
-    ASTNode* var_name;
+    ASTNode* c;
+    ASTNode* next;
 
     if (direction == out) {
         /* Bottom Up */
         switch (node->node_type) {
 
             case ADDRESS:
+                if (context->debug_mode) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
                 /* Rewrite to an assignment from a function */
                 context->changed = 1;
 
-                /* Assignment node and remember the command */
-                node->node_type = ASSIGN;
+                ASTNode *env = NULL;
+                ASTNode *cmd = NULL;
+                ASTNode *in = NULL;
+                ASTNode *out = NULL;
+                ASTNode *err = NULL;
+                ASTNode *expose_head = NULL;
+                ASTNode *expose_tail = NULL;
 
-                /* Function */
-                function_node = ast_ft(context, FUNCTION);
-                ast_str(function_node, "_address");
-                /* Fix up position for error messages */
-                function_node->column = node->column;
-                function_node->line = node->line;
+                /* Categorize children and remove them from 'node' */
+                c = node->child;
+                int pos = 0;
+                while (c) {
+                    next = c->sibling;
+                    ast_del(c);
 
-                /* Move Params */
-                args_node = node->child;
-                while (args_node) {
-                    ast_del(args_node);
-                    add_ast(function_node,args_node);
-                    args_node = node->child;
+                    if (c->node_type == REDIRECT_IN) {
+                        if (!in) in = c;
+                    }
+                    else if (c->node_type == REDIRECT_OUT) {
+                        if (!out) out = c;
+                    }
+                    else if (c->node_type == REDIRECT_ERROR) {
+                        if (!err) err = c;
+                    }
+                    else if (c->node_type == REDIRECT_EXPOSE) {
+                        /* Gather expose children */
+                        ASTNode *ec = c->child;
+                        while (ec) {
+                            ASTNode *enext = ec->sibling;
+                            ast_del(ec);
+
+                            /* Name string */
+                            ASTNode *name_node = ast_fstk(context, ec);
+                            name_node->node_type = STRING;
+
+                            /* Add name and then the variable */
+                            if (expose_tail) { expose_tail->sibling = name_node; }
+                            else { expose_head = name_node; }
+                            name_node->sibling = ec;
+                            expose_tail = ec;
+                            ec->sibling = NULL;
+
+                            ec = enext;
+                        }
+                    } else {
+                        if (pos == 0) env = c;
+                        else if (pos == 1) cmd = c;
+                        else {
+                            /* Extra children (e.g. from bad_nodes) - just ignore for now or append to expose?
+                             * Better to ignore as they likely have errors. */
+                        }
+                        pos++;
+                    }
+                    c = next;
                 }
+
+                /* Assignment node rc = _address(...) */
+                node->node_type = ASSIGN;
 
                 /* rc is the target */
                 temp_node = ast_ft(context, VAR_TARGET);
                 ast_str(temp_node, "rc");
                 add_ast(node,temp_node);
 
-                /* Add Function */
+                /* Function _address */
+                function_node = ast_ft(context, FUNCTION);
+                ast_str(function_node, "_address");
+                function_node->column = node->column;
+                function_node->line = node->line;
                 add_ast(node,function_node);
+
+                /* 1. Env */
+                if (!env) { env = ast_ft(context, STRING); ast_str(env, "SYSTEM"); }
+                add_ast(function_node, env);
+
+                /* 2. Cmd */
+                if (!cmd) { cmd = ast_ft(context, STRING); ast_str(cmd, ""); }
+                add_ast(function_node, cmd);
+
+                /* Helper to transform redirect node to FUNCTION call */
+                #define TRANS_RED(r, is_in) \
+                if (r) { \
+                    ASTNode *rc = r->child; \
+                    if (!rc || rc->value_type == TP_VOID) { \
+                        if (rc) ast_del(rc); \
+                        r->node_type = FUNCTION; ast_str(r, "_noredir"); \
+                    } else if (is_in) { \
+                        r->node_type = FUNCTION; \
+                        if (rc->value_dims) ast_str(r, "_array2redir"); \
+                        else ast_str(r, "_string2redir"); \
+                    } else { \
+                        r->node_type = FUNCTION; \
+                        if (rc->value_dims) ast_str(r, "_redir2array"); \
+                        else ast_str(r, "_redir2string"); \
+                    } \
+                } else { \
+                    r = ast_ft(context, FUNCTION); ast_str(r, "_noredir"); \
+                } \
+                add_ast(function_node, r);
+
+                TRANS_RED(in, 1);
+                TRANS_RED(out, 0);
+                TRANS_RED(err, 0);
+                #undef TRANS_RED
+
+                /* Add exposed */
+                c = expose_head;
+                while (c) {
+                    next = c->sibling;
+                    c->sibling = NULL;
+                    add_ast(function_node, c);
+                    c = next;
+                }
                 break;
 
             case REDIRECT_IN:
-                if (node->child->value_type == TP_VOID) {
-                    /* Just remove the node and convert to a noredir function */
-                    ast_del(node->child);
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_noredir");
-                }
-                else if (node->child->value_dims) {
-                    /* Array Redirect */
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_array2redir");
-                }
-                else {
-                    /* String Redirect */
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_string2redir");
-                }
-                context->changed = 1;
-                break;
-
             case REDIRECT_OUT:
             case REDIRECT_ERROR:
-                if (node->child->value_type == TP_VOID) {
-                    /* Just remove the node and convert to a noredir function */
-                    ast_del(node->child);
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_noredir");
-                }
-                else if (node->child->value_dims) {
-                    /* Array Redirect */
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_redir2array");
-                }
-                else {
-                    /* String Redirect */
-                    node->node_type = FUNCTION;
-                    ast_str(node, "_redir2string");
-                }
-                context->changed = 1;
-                break;
-
             case REDIRECT_EXPOSE:
-                /* Replace this node with its children (if any)
-                 * Each child turns into a string (name of variable) followed by the variable itself */
-                if (node->child) {
-                    last_child = ast_chdn(node->parent, ast_chdi(node) - 1); /* node's older sibling */
-                    current_child = node->child;
-                    next_child = current_child->sibling;
-                    while (current_child) {
-                        /* Link in new string */
-                        var_name = ast_fstk(context, current_child);
-                        var_name->node_type = STRING;
-                        var_name->parent = node->parent;
-                        if (last_child) last_child->sibling = var_name;
-                        else node->parent->child = var_name;
-
-                        /* Link in current_child - as VAR_SYMBOL */
-                        current_child->parent = node->parent;
-                        var_name->sibling = current_child;
-
-                        /* Next child */
-                        last_child = current_child;
-                        current_child = next_child;
-                        if (current_child) next_child = current_child->sibling;
-                        else next_child = 0;
-                    }
-                    /* Link to the next node */
-                    last_child->sibling = node->sibling;
-
-                    /* Remove NODE safely */
-                    node->sibling = 0;
-                    node->child = 0;
-                    ast_del(node);
-                }
-                else {
-                    /* No children / environment variables - delete node */
-                    ast_del(node);
-                }
-                context->changed = 1;
+                /* Handled by ADDRESS */
                 break;
 
             default:;
@@ -231,15 +243,19 @@ walker_result add_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == REXX_OPTIONS) {
+        if (node->node_type == PROGRAM_FILE) {
             if (context->need_rxsysb && !context->has_rxsysb) {
                 /* we need to import _rxsysb */
                 _rxsysb_import_node = ast_ft(context, IMPORT);
-                add_ast(node,_rxsysb_import_node);
+                /* Insert at the beginning of PROGRAM_FILE's children */
+                _rxsysb_import_node->sibling = node->child;
+                node->child = _rxsysb_import_node;
+                _rxsysb_import_node->parent = node;
 
                 _rxsysb_node = ast_ft(context, LITERAL);
                 ast_str(_rxsysb_node, "_rxsysb");
                 add_ast(_rxsysb_import_node,_rxsysb_node);
+                context->has_rxsysb = 1;
             }
         }
 
@@ -268,7 +284,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
 
     if (direction == out) {
         /* Bottom Up */
-        if (node->node_type == ADDRESS) {
+        if (node->node_type == ADDRESS || node->node_type == IMPLICIT_CMD) {
             context->need_rxsysb = 1;
         }
         else if (node->node_type == EXIT) {

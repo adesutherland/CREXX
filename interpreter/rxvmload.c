@@ -61,6 +61,26 @@ void rxfremod(rxvm_context *context) {
 
     /* Free Program Modules */
     for (j=0; j<context->num_modules; j++) {
+        size_t i = 0;
+        /* Drain procedure stack frame free lists */
+        while (i < context->modules[j]->segment.const_size) {
+            chameleon_constant *c_entry = (chameleon_constant *) (context->modules[j]->segment.const_pool + i);
+            if (c_entry->type == PROC_CONST) {
+                proc_constant *p_entry = (proc_constant *) c_entry;
+                /* Only drain if this module owns the procedure (it's not imported) */
+                if (p_entry->frame_free_list == &(p_entry->frame_free_list_head)) {
+                    stack_frame *f = *p_entry->frame_free_list;
+                    while (f) {
+                        stack_frame *next = f->prev_free;
+                        completely_free_frame(f);
+                        f = next;
+                    }
+                    *p_entry->frame_free_list = 0;
+                }
+            }
+            i += c_entry->size_in_pool;
+        }
+
         free_module(context->modules[j]->file);
         if (context->modules[j]->globals) {
             value **temp_globals = context->modules[j]->globals;

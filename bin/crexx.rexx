@@ -32,12 +32,14 @@ module = .string[]
 native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0
 
-  ANSI_RESET      = '\u001B[0m'
-  ANSI_BLUE       = '\u001B[34m'
-  ANSI_RED        = '\u001B[31m'
-  ANSI_YELLOW     = '\u001B[33m'
-  ANSI_LINE_CLEAR = '\x1b[2K'
-  ANSI_LINE_UP    = '\033[1A'
+esc             = '1b'X
+ANSI_RESET      = '[0m'
+ANSI_GREEN      = '[32m'
+ANSI_BLUE       = '[34m'
+ANSI_RED        = '[31m'
+ANSI_YELLOW     = '[33m'
+ANSI_LINE_CLEAR = '[2K'
+ANSI_LINE_UP    = '[1A'
 
 /* when there are no commandline arguments found, display help */
 if fn[0]=0 then do
@@ -103,12 +105,12 @@ do i=1 to fn.0
 end -- do i
 
 
-if version then ret = logo(nocolor)
-if verbose>1 then say 'using rxpath:' rxpath
+if version then call logo nocolor
+if verbose>1 then say esc||ANSI_GREEN'using CREXX_HOME:'esc||ANSI_RESET rxpath
 
 lpath = libraries
 
-if verbose>1 then say 'using lpath :' lpath
+if verbose>1 then say esc||ANSI_GREEN'using lpath     :'esc||ANSI_RESET lpath
 
 /* Output Arrays for command output */
 out = .string[]
@@ -127,14 +129,15 @@ do i=1 to words(filenames)
     end
   end
 
-  /* here: check the returncode of the precompiler */  
+  /* here: check the returncode of the precompiler */
+  
   /* this works temporarily with the specified filename extension */
   
   /* if all is well, we now have a .rexx ready for compilation    */  
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do
-      if compile then say 'rxc command:' rxcmd
+      if compile then say esc||ANSI_GREEN'rxc command     :'esc||ANSI_RESET rxcmd
 	if compile=0 then
 	  do
 	  say 'rxc does not compile due to --nocompile option'
@@ -149,16 +152,16 @@ do i=1 to words(filenames)
     say '> rxc error: ' err.j
   end
   if verbose then do
-    if RC = 0 then res='OK'
-    else res = RC
-    if compile then say '[ 'res' ] rxc     - Compiled' filename
+    if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+    else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxc      - Compiled ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
     end
   if RC>0 then exit
   'rxas' filename
   if verbose then do
-    if RC = 0 then res='OK'
-    else res = RC
-    if compile then say '[ 'res' ] rxas    - Assembled' filename
+    if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+    else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxas     - Assembled' esc||ANSI_BLUE||filename||esc||ANSI_RESET
   end
   if RC>0 then exit
   
@@ -167,13 +170,13 @@ do i=1 to words(filenames)
     pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
     if verbose>1 then
     do
-      say 'rxcpack command:' pack_cmd
+      say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
       end
     pack_cmd
     if verbose then do
-      if RC = 0 then res='OK'
-      else res = RC
-      say '[ 'res' ] rxcpack - C-Packed' filename
+      if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+      else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+      say '[ 'res' ] rxcpack  - C-Packed ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
     end
 
     cc_command = 'gcc -O3 -DNDEBUG -o' filename ,
@@ -202,9 +205,9 @@ do i=1 to words(filenames)
     
     if verbose then
       do
-	if RC = 0 then res='OK'
-	else res = RC
-	say '[ 'res' ] gcc     - C-Compiled' filename
+	if RC = 0 then res='OK'esc||ANSI_RESET
+	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+	say '[ 'res' ] gcc       - C-Compiled' esc||ANSI_BLUE||filename||esc||ANSI_RESET
 	end
     if RC>0 then exit  
     end
@@ -220,10 +223,11 @@ do i=1 to words(filenames)
 end   -- do i
 
   return 0
-  
+
+/*----------------------------------------------------------------------*/
 help: procedure = .string
 arg nocolor = .string  
-ret = logo(nocolor)
+call logo nocolor 
 say
 say 'Arguments are: in_file_specification... [--option]...'
 say
@@ -243,7 +247,8 @@ say
 say 'all options can also be prefixed with --'
 return 'help done'
 
-logo: procedure = .string
+/*----------------------------------------------------------------------*/
+logo: procedure
 arg nocolor = .string
 rversion = ''
 /* note that for brevity we use an assembler directive to get to the version */
@@ -258,7 +263,15 @@ else do
 end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
-return 'logo done'
+return
+
+/*----------------------------------------------------------------------*/
+printarray: procedure = .string
+arg toprint = .string[]
+loop i=1 to toprint.0
+  say toprint.i
+end
+return 'printed'
 
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a

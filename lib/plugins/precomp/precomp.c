@@ -275,10 +275,10 @@ PROCEDURE (hasmacro) {
     while (isspace((unsigned char)*line)) {
         line++;
     }
-    if (line[0]=='#' & line[1]=='#') {
+    if (line[0] && line[1] && line[0]=='#' && line[1]=='#') {
         RETURNINTX(0)
     };
-    if (line[0]=='/' & line[1]=='*') {
+    if (line[0] && line[1] && line[0]=='/' && line[1]=='*') {
         RETURNINTX(0)
     };
     dupline = strdup(line);
@@ -822,15 +822,22 @@ PROCEDURE(stemquote)
     input = GETSTRING(ARG0);
     if (!input || !*input) RETURNSTRX("");    // no input no stem
 
-    out = quote_stem_path(input);
-    if (!out) {
+    char *result = quote_stem_path(input);
+    if (!result) {
         RETURNSTRX(input); // invalid path: return and let rxpp decided what to do
     }
-    RETURNSTR(out);
-    if(input != out) free(out);   // if input=output ptr don't removee it
+    RETURNSTR(result);
+    if (input != result && result != NULL) free(result);   // if input=output ptr don't removee it
     ENDPROC
 }
 
+
+static void precomp_finalize(void) {
+}
+
+FINALIZER(precomp_fin)
+    precomp_finalize();
+}
 
 LOADFUNCS
     ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");

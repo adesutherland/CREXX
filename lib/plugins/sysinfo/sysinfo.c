@@ -88,21 +88,29 @@ PROCEDURE(getLoadPath) {
 
     // dirname may modify its argument, so copy it
     char *dirbuf = strdup(resolved);
-    /* if (!dirbuf) return NULL; */
-
-    dir = strdup(dirname(dirbuf));
-    free(dirbuf);
+    if (dirbuf) {
+        dir = strdup(dirname(dirbuf));
+        free(dirbuf);
+    }
 
 #elif defined(__linux__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
     ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
-    path[len] = '\0';
-    char *dirbuf = strdup(path);
-    if (!dirbuf) RETURNSTRX("")
-    dir = strdup(dirname(dirbuf));
-    free(dirbuf);
-
+    if (len != -1) {
+        path[len] = '\0';
+        char *dirbuf = strdup(path);
+        if (dirbuf) {
+            dir = strdup(dirname(dirbuf));
+            free(dirbuf);
+        }
+    }
 #endif
-    RETURNSTRX(dir);
+    if (dir) {
+        SETSTRING(RETURN, dir);
+        free(dir);
+    } else {
+        SETSTRING(RETURN, "");
+    }
+    PROCRETURN
 ENDPROC
 }
 
