@@ -85,8 +85,8 @@ target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
 # Value test executable
-add_executable(ts_regvalue_tester ts_regvalue_tester.c rxvalue.h rxvmvars.h)
-target_include_directories(ts_regvalue_tester PRIVATE . ../utf8 ../platform ../binutils/include)
+add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
+target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester m)
 
 # Enable testing
@@ -102,8 +102,8 @@ add_test(
 # Instruction Sanity Tests - Raise uncaptured signal
 add_custom_command(
 		OUTPUT raisesignaltest.rxbin
-		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o raisesignaltest ${CMAKE_CURRENT_SOURCE_DIR}/raisesignaltest
-		DEPENDS raisesignaltest.rxas rxas rxvm mc_decimal_dynamic
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o raisesignaltest ${CMAKE_CURRENT_SOURCE_DIR}/tests/raisesignaltest
+		DEPENDS tests/raisesignaltest.rxas rxas rxvm mc_decimal_dynamic
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "cREXX RXAS Instruction Tests (raise uncaptured signal) ..."
 )
@@ -125,8 +125,8 @@ set_tests_properties(rxasraisesignaltest PROPERTIES
 # Instruction Sanity Tests
 add_custom_command(
 		OUTPUT instructiontests.rxbin
-		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o instructiontests ${CMAKE_CURRENT_SOURCE_DIR}/instructiontests
-		DEPENDS instructiontests.rxas rxas rxvm mc_decimal_dynamic
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o instructiontests ${CMAKE_CURRENT_SOURCE_DIR}/tests/instructiontests
+		DEPENDS tests/instructiontests.rxas rxas rxvm mc_decimal_dynamic
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "cREXX RXAS Instruction Tests ..."
 )
@@ -138,6 +138,120 @@ add_custom_target(run_instructiontests ALL DEPENDS instructiontests.rxbin)
 add_test(
 		NAME rxasinstructiontests
 		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm instructiontests
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Basic Instruction Tests
+add_custom_command(
+		OUTPUT tests_basic.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_basic ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_basic
+		DEPENDS tests/tests_basic.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Basic Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_basic ALL DEPENDS tests_basic.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasbasictests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_basic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Integer Math Instruction Tests
+add_custom_command(
+		OUTPUT tests_int_math.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_int_math ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_int_math
+		DEPENDS tests/tests_int_math.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Integer Math Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasintmathtests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_int_math
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Float Math Instruction Tests
+add_custom_command(
+		OUTPUT tests_float_math.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_float_math ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_float_math
+		DEPENDS tests/tests_float_math.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Float Math Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_float_math ALL DEPENDS tests_float_math.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasfloatmathtests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_float_math
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# String Instruction Tests
+add_custom_command(
+		OUTPUT tests_string.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_string ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_string
+		DEPENDS tests/tests_string.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS String Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_string ALL DEPENDS tests_string.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasstringtests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_string
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Logic and Flow Instruction Tests
+add_custom_command(
+		OUTPUT tests_logic_flow.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_logic_flow ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_logic_flow
+		DEPENDS tests/tests_logic_flow.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Logic and Flow Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_logic_flow ALL DEPENDS tests_logic_flow.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxaslogicflowtests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_logic_flow
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# System and I/O Instruction Tests
+add_custom_command(
+		OUTPUT tests_system_io.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_system_io ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_system_io
+		DEPENDS tests/tests_system_io.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS System and I/O Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxassystemiotests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_system_io
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

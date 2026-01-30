@@ -1,0 +1,97 @@
+/*
+ * interpreter/tests/tests_float_math.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Float Math"
+
+    /* FADD */
+    load r1, 1.5
+    load r2, 2.75
+    fadd r3, r1, r2
+    feq r0, r3, 4.25
+    brt fadd_pass, r0
+    say "FAIL: FADD"
+    br fadd_end
+fadd_pass:
+    say "PASS: FADD"
+fadd_end:
+
+    /* FSUB */
+    load r1, 5.0
+    load r2, 1.25
+    fsub r3, r1, r2
+    feq r0, r3, 3.75
+    brt fsub_pass, r0
+    say "FAIL: FSUB"
+    br fsub_end
+fsub_pass:
+    say "PASS: FSUB"
+fsub_end:
+
+    /* FMULT */
+    load r1, 2.5
+    load r2, 4.0
+    fmult r3, r1, r2
+    feq r0, r3, 10.0
+    brt fmult_pass, r0
+    say "FAIL: FMULT"
+    br fmult_end
+fmult_pass:
+    say "PASS: FMULT"
+fmult_end:
+
+    /* FDIV */
+    load r1, 10.0
+    load r2, 4.0
+    fdiv r3, r1, r2
+    feq r0, r3, 2.5
+    brt fdiv_pass, r0
+    say "FAIL: FDIV"
+    br fdiv_end
+fdiv_pass:
+    say "PASS: FDIV"
+fdiv_end:
+
+    /* FPOW */
+    load r1, 2.0
+    load r2, 3.0
+    fpow r3, r1, r2
+    feq r0, r3, 8.0
+    brt fpow_pass, r0
+    say "FAIL: FPOW"
+    br fpow_end
+fpow_pass:
+    say "PASS: FPOW"
+fpow_end:
+
+    /* FSEX (Negate) */
+    load r1, 123.45
+    fsex r1
+    feq r0, r1, -123.45
+    brt fsex_pass, r0
+    say "FAIL: FSEX"
+    br fsex_end
+fsex_pass:
+    say "PASS: FSEX"
+fsex_end:
+
+    /* FEXTR */
+    load r5, 1234.56
+    fextr r3, r4, r5
+    seq r0, r3, "1.23456"
+    brt fextr_coeff_ok, r0
+    say "FAIL: FEXTR coefficient"
+    br fextr_end
+fextr_coeff_ok:
+    ieq r0, r4, 3
+    brt fextr_pass, r0
+    say "FAIL: FEXTR exponent"
+    br fextr_end
+fextr_pass:
+    say "PASS: FEXTR"
+fextr_end:
+
+    ret 0
