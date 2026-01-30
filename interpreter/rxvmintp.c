@@ -1717,8 +1717,8 @@ START_OF_INSTRUCTIONS
  *  ----------------------------------------------------------------------------------- */
     START_INSTRUCTION(SETNUMDGTS_REG) CALC_DISPATCH(1)
     DEBUG("TRACE - SETNUMDGTS R%lu\n", REG_IDX(1));
-    if (op1R->int_value < 5) {
-        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+    if (op1R->int_value < 1) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
         DISPATCH
     }
     current_frame->num_context.digits = op1R->int_value;
@@ -1733,8 +1733,8 @@ START_OF_INSTRUCTIONS
  * ----------------------------------------------------------------------------------- */
     START_INSTRUCTION(SETNUMDGTS_INT) CALC_DISPATCH(1)
     DEBUG("TRACE - SETNUMDGTS %d\n", (int)op1I);
-    if (op1I < 5) {
-        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
+    if (op1I < 1) {
+        SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
         DISPATCH
     }
     current_frame->num_context.digits = op1I;
@@ -6173,7 +6173,12 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(NSMAP_REG_STRING_STRING)
         START_INSTRUCTION(PMAP_REG_REG)
         START_INSTRUCTION(PMAP_REG_STRING)
-/* ------------------------------------------------------------------------------------
+        START_INSTRUCTION(RET_CHAR)
+        START_INSTRUCTION(UNMAP_REG)
+    SET_SIGNAL(RXSIGNAL_NOT_IMPLEMENTED);
+    DISPATCH
+
+    /* ------------------------------------------------------------------------------------
  *  TRIMR_REG_REG_REG  Trim right with char                          pej updated Jan 2026
  *  -----------------------------------------------------------------------------------
  */
@@ -6229,11 +6234,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
                     null_terminate_string_buffer(op1R);
                 }
             }
-            DISPATCH
-
-        START_INSTRUCTION(RET_CHAR)
-        START_INSTRUCTION(UNMAP_REG)
-            SET_SIGNAL(RXSIGNAL_NOT_IMPLEMENTED);
             DISPATCH
 
         START_INSTRUCTION(IUNKNOWN)

@@ -261,6 +261,25 @@ add_test(
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Conversion and Formatting Instruction Tests
+add_custom_command(
+		OUTPUT tests_conversion.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_conversion ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_conversion
+		DEPENDS tests/tests_conversion.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Conversion Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_conversion ALL DEPENDS tests_conversion.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasconversiontests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_conversion
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_custom_target(rxvmcopy ALL DEPENDS rxvm)
 add_custom_target(rxvmecopy ALL DEPENDS rxvme)
 

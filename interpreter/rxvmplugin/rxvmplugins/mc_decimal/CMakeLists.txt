@@ -94,7 +94,7 @@ set_tests_properties(mc_decimal_test1 PROPERTIES PASS_REGULAR_EXPRESSION
 # Add the second test - 32 digits, with 32 digit arguments and check output
 add_test(mc_decimal_test2 mc_decimal_test_harness 32 10000000000000000000000000000000 20000000000000000000000000000000)
 set_tests_properties(mc_decimal_test2 PROPERTIES PASS_REGULAR_EXPRESSION
-        "ADD:30000000000000000000000000000000:.*SUB:-10000000000000000000000000000000:.*MUL:2E\\+62:.*DIV:0\\.5:")
+        "ADD:30000000000000000000000000000000:.*SUB:-10000000000000000000000000000000:.*MUL:2e\\+62:.*DIV:0\\.5:")
 
 # Add the third test - 100 significant digits, with 100 digit results
 add_test(mc_decimal_test3 mc_decimal_test_harness 100
