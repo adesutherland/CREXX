@@ -318,6 +318,25 @@ add_test(
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Stress and Edge Case Instruction Tests
+add_custom_command(
+		OUTPUT tests_stress.rxbin
+		COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas -o tests_stress ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_stress
+		DEPENDS tests/tests_stress.rxas rxas rxvm mc_decimal_dynamic
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+		COMMENT "cREXX RXAS Stress Instruction Tests ..."
+)
+
+# Create a custom target that depends on the custom command's output
+add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
+
+# Add the test to be executed after the custom command
+add_test(
+		NAME rxasstresstests
+		COMMAND ${CMAKE_BINARY_DIR}/interpreter/rxvm tests_stress
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_custom_target(rxvmcopy ALL DEPENDS rxvm)
 add_custom_target(rxvmecopy ALL DEPENDS rxvme)
 
