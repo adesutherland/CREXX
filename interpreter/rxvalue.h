@@ -39,7 +39,7 @@ typedef int64_t rxinteger; // C99+
 #define DEFAULT_NUMERIC_CASE CASE_LOWER
 
 /* Minimum value for digits */
-#define DIGITS_MINIMUM 5
+#define DIGITS_MINIMUM 1
 
 /* Enumeration of numeric display format "form" types - scientific or engineering */
 typedef enum {

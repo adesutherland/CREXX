@@ -386,15 +386,15 @@ int test_decimalToString_decimalFromString() {
     else printf("OK - ");
     printf("decNumber: 123e-3 -> 0.123, Result: %s\n", buffer);
 
-    // Test 123456789000000000000000000000 -> 1.23456789E+29
+    // Test 123456789000000000000000000000 -> 1.23456789e+29
     plugin->decimalFromString(plugin, &input, "123456789000000000000000000000");
     plugin->decimalToString(plugin, &input, buffer);
-    if (strcmp("1.23456789E+29", buffer) != 0) {
+    if (strcmp("1.23456789e+29", buffer) != 0) {
         printf("Error - ");
         errors++;
     }
     else printf("OK - ");
-    printf("decNumber: 123456789000000000000000000000 -> 1.23456789E+29, Result: %s\n", buffer);
+    printf("decNumber: 123456789000000000000000000000 -> 1.23456789e+29, Result: %s\n", buffer);
 
         if (input.decimal_value) free(input.decimal_value);
     return errors;

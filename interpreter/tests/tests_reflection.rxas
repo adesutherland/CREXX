@@ -1,0 +1,79 @@
+/*
+ * interpreter/tests/tests_reflection.rxas
+ */
+
+.globals=0
+
+main() .locals=10
+    say "Test Suite: Reflection & Introspection"
+
+    /* Test 1: Opcode Decoding (METADECODEINST) */
+    /* Using ID 15 for IADD_REG_REG_REG based on current rxops.h renumbering */
+    load r1, 15
+    metadecodeinst r2, r1
+    
+    /* Attribute 1: Instruction Name */
+    linkattr r3, r2, 1
+    seq r0, r3, "IADD_REG_REG_REG"
+    brt t1_name_pass, r0
+    say "FAIL: METADECODEINST Name"
+    say r3
+    br t1_fail
+t1_name_pass:
+    say "PASS: METADECODEINST Name"
+
+    /* Attribute 3: Operand Count */
+    linkattr r4, r2, 3
+    ieq r0, r4, 3
+    brt t1_ops_pass, r0
+    say "FAIL: METADECODEINST Operand Count"
+    br t1_fail
+t1_ops_pass:
+    say "PASS: METADECODEINST Operand Count"
+    br t2_start
+
+t1_fail:
+    say "FAIL: Test 1 (METADECODEINST)"
+
+t2_start:
+    /* Test 2: Module Introspection (METALOADEDMODULES) */
+    metaloadedmodules r1
+    
+    /* Verify count > 0 */
+    igt r0, r1, 0
+    brt t2_count_pass, r0
+    say "FAIL: METALOADEDMODULES Count"
+    br t2_fail
+t2_count_pass:
+    say "PASS: METALOADEDMODULES Count"
+
+    /* Link first module name (index 0) */
+    linkattr r2, r1, 0
+    sne r0, r2, ""
+    brt t2_name_pass, r0
+    say "FAIL: METALOADEDMODULES First Name"
+    br t2_fail
+t2_name_pass:
+    say "PASS: METALOADEDMODULES First Name"
+    br t3_start
+
+t2_fail:
+    say "FAIL: Test 2 (METALOADEDMODULES)"
+
+t3_start:
+    /* Test 3: Instruction Inspection (METALOADINST) */
+    /* Module 1, Instruction 0 */
+    load r1, 1
+    load r2, 0
+    metaloadinst r4, r1, r2
+    
+    /* Verify opcode >= 0 */
+    igte r0, r4, 0
+    brt t3_pass, r0
+    say "FAIL: METALOADINST"
+    br t3_end
+t3_pass:
+    say "PASS: METALOADINST"
+t3_end:
+
+    ret 0
