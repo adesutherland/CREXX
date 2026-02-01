@@ -1,0 +1,137 @@
+name: Release CREXX for Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build for Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Update Toolchain (MSYS2)
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            git
+            make
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
+
+      - name: Determine Release Name
+        shell: msys2 {0}
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+            echo "RELEASE_ID=release_candidate" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+            echo "RELEASE_ID=dev_snapshot" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+            echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> "$GITHUB_ENV"
+          else
+            echo "Skip release"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Release
+        shell: msys2 {0}
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake --build "${{ runner.temp }}/release"
+
+      - name: Collect executables
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${{ runner.temp }}/exe/bin"
+          mkdir -p "${{ runner.temp }}/exe/lib"
+          mkdir -p "${{ runner.temp }}/exe/lib/rxfnsb"
+
+          # Helper: copy if the file exists
+          cp_if() { [[ -f "$1" ]] && cp "$1" "$2" || true; }
+
+          # Release binaries (try .exe and non-.exe)
+          cp_if "${{ runner.temp }}/release/compiler/rxc.exe"       "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/compiler/rxc"           "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/assembler/rxas.exe"     "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/assembler/rxas"         "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/disassembler/rxdas.exe" "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/disassembler/rxdas"     "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/debugger/rxdb.exe"      "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/debugger/rxdb"          "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/interpreter/rxvm.exe"   "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxvm"       "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvm.exe"  "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvm"      "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/interpreter/rxvme.exe"  "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxvme"      "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvme.exe" "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvme"     "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/bin/crexx.exe"          "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/bin/crexx"              "${{ runner.temp }}/exe/bin/"
+
+          cp_if "${{ runner.temp }}/release/bin/rxpp.exe"           "${{ runner.temp }}/exe/bin/"
+          cp_if "${{ runner.temp }}/release/bin/rxpp"               "${{ runner.temp }}/exe/bin/"
+
+          # Release libs BIF
+          cp_if "${{ runner.temp }}/release/lib/rxfnsb/library.rxbin" "${{ runner.temp }}/exe/lib/rxfnsb/"
+
+          # Release libs (if present) — try common Windows and Unix variants
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvml.lib" "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxvml.lib"  "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxbvml.dll" "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/interpreter/rxvml.dll"  "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/interpreter/librxbvml.a" "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/interpreter/librxvml.a"  "${{ runner.temp }}/exe/lib/"
+
+          # Plugins (these names may or may not differ on Windows; copy if present)
+          cp_if "${{ runner.temp }}/release/lib/plugins/strings/rx_strings.rxplugin"     "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/getpi/rx_getpi.rxplugin"         "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/cipher/rx_cipher.rxplugin"       "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/system/rx_system.rxplugin"       "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/odbc/rx_odbc.rxplugin"           "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/arrays/rx_arrays.rxplugin"       "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/rxmath/rx_rxmath.rxplugin"       "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo_static.a"     "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo.rxplugin"     "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess_static.a" "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess.rxplugin" "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/id/rx_id.rxplugin"               "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/stack/rx_stack.rxplugin"         "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/recv390/rx_recv390.rxplugin"     "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/llist/rx_llist_static.a"         "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/llist/rx_llist.rxplugin"         "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/plugins/treemap/rx_treemap.rxplugin"     "${{ runner.temp }}/exe/lib/"
+          cp_if "${{ runner.temp }}/release/lib/veclib/veclib.rxbin"                     "${{ runner.temp }}/exe/lib/"
+
+          # Docs
+          cp_if "LICENSE"     "${{ runner.temp }}/exe/"
+          cp_if "README.md"   "${{ runner.temp }}/exe/"
+          cp_if "SECURITY.md" "${{ runner.temp }}/exe/"
+          cp_if "history.txt" "${{ runner.temp }}/exe/"
+
+      - name: Upload Executable
+        if: env.RELEASE_ID
+        uses: actions/upload-artifact@v4
+        with:
+          name: CREXX-Windows
+          path: |
+            ${{ runner.temp }}/exe
