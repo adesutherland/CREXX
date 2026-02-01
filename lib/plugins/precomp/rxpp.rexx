@@ -1499,7 +1499,7 @@ do forever
     objectStart = i + 1
     object = strip(substr(line, objectStart, tildePos - objectStart))
 
-    ## Find method and args
+    ## Find method_name and args
     parenOpen = pos('(', line, tildePos)
     if parenOpen = 0 then leave  ## malformed, skip
 
@@ -1514,11 +1514,11 @@ do forever
     end
     parenClose = j - 1
 
-    method = strip(substr(line, tildePos + 1, parenOpen - tildePos - 1))
+    method_name = strip(substr(line, tildePos + 1, parenOpen - tildePos - 1))
     args   = strip(substr(line, parenOpen + 1, parenClose - parenOpen - 1))
 
     ## Build transformed call
-    upperMethod = translate(method)
+    upperMethod = translate(method_name)
     upperObject = translate(object)
  ##   callText = upperMethod || '_' || upperObject || '(' || object
     callText = upperMethod'(' || object
@@ -1584,7 +1584,7 @@ do forever
     objStart = objStart + 1
 
     object = substr(line, objStart, objEnd - objStart + 1)
-    method = substr(line, methodStart, methodEnd - methodStart)
+    method_name = substr(line, methodStart, methodEnd - methodStart)
 
     ##Extract argument list, handle nested parentheses
     parenStart = methodEnd
@@ -1600,7 +1600,7 @@ do forever
     parenEnd = p - 1
     args = strip(substr(line, parenStart + 1, parenEnd - parenStart - 1))
     ##Build the transformed function call
-    upperMethod = translate(method)
+    upperMethod = translate(method_name)
     upperObject = translate(object)
   ##  callText = upperMethod || '_' || upperObject || '(' || object
 

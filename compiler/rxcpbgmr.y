@@ -152,7 +152,7 @@ junk(J)          ::= error.
                      { J = ast_errh(context, "SYNTAX_ERROR"); }
 
 /* Classes / Variables */
-class(C)                 ::= TK_CLASS(T).
+class(C)                 ::= TK_CLASS_TYPE(T).
                              { C = ast_f(context, CLASS, T); }
 type_def(A)              ::= class(S).
                              { A = S; }
@@ -361,7 +361,7 @@ assignment(G)     ::= TK_DO(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_LOOP(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_CLASS(K) TK_EQUAL(T) expression(E).
+assignment(G)     ::= TK_CLASS_TYPE(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_TO(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -421,7 +421,7 @@ define(G)     ::= TK_DO(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_LOOP(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_CLASS(K) TK_EQUAL(T) type_def(E).
+define(G)     ::= TK_CLASS_TYPE(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_TO(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -481,7 +481,7 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_DO(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_LOOP(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CLASS(K) error.
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CLASS_TYPE(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_TO(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
@@ -551,9 +551,10 @@ define(G) ::=  TK_INTEGER(K) TK_EQUAL(T) type_def(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
 
 /* Correct Define and Assignment */
-define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E).
+define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E) opt_with(W).
     {
         I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
+        if (W) add_ast(I,W);
         V->node_type = VAR_TARGET;
     }
 
@@ -580,6 +581,8 @@ keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
 keyword_instruction(I) ::= numeric(K). { I = K; }
+keyword_instruction(I) ::= factory_def(K). { I = K; }
+keyword_instruction(I) ::= method_def(K). { I = K; }
 
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
@@ -603,6 +606,8 @@ group(I) ::= simple_do(K). { I = K; }
 group(I) ::= do(K) TK_EOC. { I = K; }
 group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
+group(I) ::= class_def(K) TK_EOC. { I = K; }
+group(I) ::= class_def(K). { I = K; }
 
 /* Groups */
 
@@ -770,9 +775,9 @@ argument(E)         ::= TK_VAR_SYMBOL(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
-argument(E)         ::= TK_CLASS(S).
+argument(E)         ::= TK_CLASS_TYPE(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
-argument(E)         ::= TK_EXPOSE TK_CLASS(S).
+argument(E)         ::= TK_EXPOSE TK_CLASS_TYPE(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_STEM(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
@@ -1313,3 +1318,59 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 /* Finally set the nodes with the highest precedence */
 %left TK_BADCOMMENT.
 %left TK_EOC.
+
+/* Classes / Factories / Methods */
+
+class_def(C) ::= TK_LABEL(L) TK_CLASS(K) opt_of(O) TK_EOC instruction_list(I) TK_END.
+{
+  C = ast_f(context, CLASS_DEF, K);
+  add_ast(C, ast_f(context, VAR_SYMBOL, L));
+  if (O) add_ast(C, O);
+  add_ast(C, I);
+}
+
+opt_of(O) ::= . { O = NULL; }
+opt_of(O) ::= TK_OF type_def(T). { O = T; }
+
+factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY(K).
+{
+  F = ast_f(context, FACTORY, K);
+  add_ast(F, ast_f(context, VAR_SYMBOL, L));
+}
+
+method_def(M) ::= TK_LABEL(L) TK_METHOD(K) opt_method_return_type(T).
+{
+  M = ast_f(context, METHOD, K);
+  add_ast(M, ast_f(context, VAR_SYMBOL, L));
+  if (T) add_ast(M, T);
+}
+
+opt_method_return_type(T) ::= . { T = NULL; }
+opt_method_return_type(T) ::= TK_EQUAL type_def(D). { T = D; }
+opt_method_return_type(T) ::= TK_EQUAL TK_VOID(V). { T = ast_f(context, VOID, V); }
+
+/* Attribute Mapping */
+opt_with(W) ::= . { W = NULL; }
+opt_with(W) ::= TK_WITH register_mapping(R). { W = R; }
+
+register_mapping(R) ::= TK_REGISTER(K) opt_register_parts(P).
+{
+  R = ast_f(context, REGISTER, K);
+  if (P) add_ast(R, P);
+}
+
+opt_register_parts(P) ::= . { P = NULL; }
+opt_register_parts(P) ::= opt_register_parts(P1) register_part(E).
+{
+  if (P1) P = P1; else P = ast_ft(context, INSTRUCTIONS);
+  add_ast(P, E);
+}
+
+register_part(E) ::= TK_DOT register_sub_part(S). { E = S; }
+register_part(E) ::= TK_STEMVAR(T). { E = ast_f(context, VAR_SYMBOL, T); }
+register_part(E) ::= TK_STEMINT(T). { E = ast_f(context, INTEGER, T); }
+register_part(E) ::= TK_STEMSTRING(T). { E = ast_f(context, STRING, T); }
+
+register_sub_part(S) ::= TK_INTEGER(T). { S = ast_f(context, INTEGER, T); }
+register_sub_part(S) ::= TK_VAR_SYMBOL(T). { S = ast_f(context, VAR_SYMBOL, T); }
+register_sub_part(S) ::= TK_CLASS_TYPE(T). { S = ast_f(context, CLASS, T); }

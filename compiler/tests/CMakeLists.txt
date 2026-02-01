@@ -96,6 +96,7 @@ add_crexx_compiler_test(val_magic_02 rexx_src/val_magic_02.rexx)
 add_crexx_compiler_test(opt_decimal_safety rexx_src/opt_decimal_safety.rexx)
 add_crexx_compiler_test(opt_numeric_safety rexx_src/opt_numeric_safety.rexx)
 add_crexx_compiler_dep_test(15_imports rexx_src/15_imports.rexx rexx_src/mymath.rexx)
+add_crexx_parsing_test(16_classes rexx_src/16_classes.rexx)
 
 # Negative tests
 add_crexx_compiler_fail_test(err_01_type rexx_src/err_01_type.rexx err_01_type.txt)
