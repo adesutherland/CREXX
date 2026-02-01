@@ -1,0 +1,109 @@
+/*
+ * interpreter/tests/tests_stress.rxas
+ */
+
+.globals=0
+
+fib() .locals=15
+    linkarg r1, 1  /* r1 is first argument n */
+    
+    /* if n < 2 return n */
+    ilt r0, r1, 2
+    brt fib_base, r0
+    
+    /* r2 = n - 1 */
+    isub r2, r1, 1
+    
+    /* call r2 = fib(r2) */
+    load r10, 1    /* count = 1 */
+    load r11, r2   /* arg 1 = r2 */
+    call r2, fib(), r10
+    
+    /* r3 = n - 2 */
+    /* Note: r1 might have been affected if fib() had side effects, 
+       but here it's just recursion. However, always safe to linkarg again or use a local copy. */
+    linkarg r1, 1
+    isub r3, r1, 2
+    
+    /* call r3 = fib(r3) */
+    load r10, 1    /* count = 1 */
+    load r11, r3   /* arg 1 = r3 */
+    call r3, fib(), r10
+    
+    /* return r2 + r3 */
+    iadd r0, r2, r3
+    ret r0
+
+fib_base:
+    ret r1
+
+swap_values() .locals=10
+    linkarg r1, 1
+    linkarg r2, 2
+    /* Side-effect swap using copy */
+    copy r3, r1
+    copy r1, r2
+    copy r2, r3
+    /* Return first argument (now contains original second value) */
+    ret r1
+
+main() .locals=20
+    say "Test Suite: Stress & Edge Cases"
+
+    /* Part 1: Recursion Stress (Fibonacci) */
+    say "Testing Part 1: Recursion (Fibonacci 20)..."
+    load r1, 20
+    load r10, 1    /* count */
+    load r11, r1   /* arg 1 */
+    call r2, fib(), r10
+    
+    ieq r0, r2, 6765
+    brt fib_pass, r0
+    say "FAIL: Recursion (fib(20) did not return 6765)"
+    say "Result was:"
+    itos r2
+    say r2
+    br fib_end
+fib_pass:
+    say "PASS: Recursion Stress"
+fib_end:
+
+    /* Part 2: Argument Aliasing (Swap) */
+    say "Testing Part 2: Argument Aliasing (Swap)..."
+    /* We use r11 and r12 as arguments, and r11 as return target */
+    load r11, 10
+    load r12, 20
+    load r10, 2    /* count */
+    /* call r11 = swap_values(r11, r12) */
+    call r11, swap_values(), r10
+    
+    /* After call:
+       Callee r1 links to Caller r11.
+       Callee r2 links to Caller r12.
+       Inside swap_values:
+         copy r3, r1 (r3=10)
+         copy r1, r2 (Caller r11=20)
+         copy r2, r3 (Caller r12=10)
+       Callee ret r1 (which points to Caller r11, now 20).
+       Return value is 20.
+       Caller r11 updated with 20 (it already was 20).
+       Final: r11=20, r12=10.
+    */
+    
+    ieq r0, r11, 20
+    brf swap_fail, r0
+    ieq r0, r12, 10
+    brf swap_fail, r0
+    say "PASS: Argument Aliasing"
+    br swap_end
+swap_fail:
+    say "FAIL: Argument Aliasing"
+    say "r11 (expected 20):"
+    itos r11
+    say r11
+    say "r12 (expected 10):"
+    itos r12
+    say r12
+swap_end:
+
+    ret 0

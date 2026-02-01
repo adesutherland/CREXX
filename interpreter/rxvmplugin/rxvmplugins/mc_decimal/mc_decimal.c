@@ -144,6 +144,9 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
     // if the exponent is within a certain range. This function will print the number in simple form if the exponent is
     // within a certain range, otherwise it will print it in scientific form.
     decContext *context = (decContext*)(plugin->base.private_context);
+    numeric_context *num_context = plugin->num_context;
+    numeric_form form = num_context ? num_context->form : DEFAULT_NUMERIC_FORM;
+    case_type casetype = num_context ? num_context->casetype : DEFAULT_NUMERIC_CASE;
 
     // CREXX %g specifier lower threshold
     #define LOWER_THRESHOLD (-5)
@@ -179,19 +182,41 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
         size_t bufferSize = context->digits + 14;
         if (bufferSize > CONVERSION_BUFFER_LEN) {
             char *temp_buffer = malloc(bufferSize);
-            decNumberToString(number, temp_buffer);
+            if (form == NUMERIC_FORM_ENGINEERING)
+                decNumberToEngString(number, temp_buffer);
+            else
+                decNumberToString(number, temp_buffer);
             plugin->number_to_simple_format(temp_buffer, buffer);
             free(temp_buffer);
         }
         else {
-            decNumberToString(number, conversion_buffer);
+            if (form == NUMERIC_FORM_ENGINEERING)
+                decNumberToEngString(number, conversion_buffer);
+            else
+                decNumberToString(number, conversion_buffer);
             plugin->number_to_simple_format(conversion_buffer, buffer);
         }
     }
 
     else {
         // Exponential notation
-        decNumberToString(number, buffer);
+        if (form == NUMERIC_FORM_ENGINEERING)
+            decNumberToEngString(number, buffer);
+        else
+            decNumberToString(number, buffer);
+    }
+
+    // Handle case
+    if (casetype == CASE_LOWER) {
+        char *p;
+        for (p = buffer; *p; p++) {
+            if (*p == 'E') *p = 'e';
+        }
+    } else if (casetype == CASE_UPPER) {
+        char *p;
+        for (p = buffer; *p; p++) {
+            if (*p == 'e') *p = 'E';
+        }
     }
 }
 

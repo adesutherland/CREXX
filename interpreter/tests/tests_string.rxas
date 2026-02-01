@@ -1,0 +1,178 @@
+/*
+ * interpreter/tests/tests_string.rxas
+ */
+
+.globals=0
+
+main() .locals=15
+    say "Test Suite: Strings"
+
+    /* CONCAT */
+    load r1, "Hello"
+    load r2, "World"
+    concat r3, r1, r2
+    seq r0, r3, "HelloWorld"
+    brt concat_pass, r0
+    say "FAIL: CONCAT"
+    br concat_end
+concat_pass:
+    say "PASS: CONCAT"
+concat_end:
+
+    /* SCONCAT */
+    load r1, "Hello"
+    load r2, "World"
+    sconcat r3, r1, r2
+    seq r0, r3, "Hello World"
+    brt sconcat_pass, r0
+    say "FAIL: SCONCAT"
+    br sconcat_end
+sconcat_pass:
+    say "PASS: SCONCAT"
+sconcat_end:
+
+    /* APPEND */
+    load r1, "Hello"
+    load r2, "World"
+    append r1, r2
+    seq r0, r1, "HelloWorld"
+    brt append_pass, r0
+    say "FAIL: APPEND"
+    br append_end
+append_pass:
+    say "PASS: APPEND"
+append_end:
+
+    /* SAPPEND */
+    load r1, "Hello"
+    load r2, "World"
+    sappend r1, r2
+    seq r0, r1, "Hello World"
+    brt sappend_pass, r0
+    say "FAIL: SAPPEND"
+    br sappend_end
+sappend_pass:
+    say "PASS: SAPPEND"
+sappend_end:
+
+    /* APPENDCHAR */
+    load r1, "ABC"
+    load r2, 68 /* 'D' */
+    appendchar r1, r2
+    seq r0, r1, "ABCD"
+    brt appendchar_pass, r0
+    say "FAIL: APPENDCHAR"
+    br appendchar_end
+appendchar_pass:
+    say "PASS: APPENDCHAR"
+appendchar_end:
+
+    /* STRLEN */
+    load r1, "Testing"
+    strlen r2, r1
+    ieq r0, r2, 7
+    brt strlen_pass, r0
+    say "FAIL: STRLEN"
+    br strlen_end
+strlen_pass:
+    say "PASS: STRLEN"
+strlen_end:
+
+    /* SUBSTR - using SETSTRPOS */
+    load r1, "Hello World"
+    load r2, 6 /* Byte position for 'W' */
+    setstrpos r1, r2
+    load r3, 5 /* Length */
+    substr r4, r1, r3
+    seq r0, r4, "World"
+    brt substr_pass, r0
+    say "FAIL: SUBSTR"
+    br substr_end
+substr_pass:
+    say "PASS: SUBSTR"
+substr_end:
+
+    /* TRIML (3-reg) - Trims the character specified in R3 */
+    load r1, "   TrimMe"
+    load r2, " "
+    triml r3, r1, r2
+    seq r0, r3, "TrimMe"
+    brt triml_pass, r0
+    say "FAIL: TRIML"
+    br triml_end
+triml_pass:
+    say "PASS: TRIML"
+triml_end:
+
+    /* TRIMR (3-reg) */
+    load r1, "TrimMe!!!"
+    load r2, "!"
+    trimr r3, r1, r2
+    seq r0, r3, "TrimMe"
+    brt trimr_pass, r0
+    say "FAIL: TRIMR"
+    br trimr_end
+trimr_pass:
+    say "PASS: TRIMR"
+trimr_end:
+
+    /* STRLOWER */
+    load r1, "MIXED Case"
+    strlower r2, r1
+    seq r0, r2, "mixed case"
+    brt strlower_pass, r0
+    say "FAIL: STRLOWER"
+    br strlower_end
+strlower_pass:
+    say "PASS: STRLOWER"
+strlower_end:
+
+    /* STRUPPER */
+    load r1, "mixed case"
+    strupper r2, r1
+    seq r0, r2, "MIXED CASE"
+    brt strupper_pass, r0
+    say "FAIL: STRUPPER"
+    br strupper_end
+strupper_pass:
+    say "PASS: STRUPPER"
+strupper_end:
+
+    /* STRPOS - R1 is start pos (1-based) AND result */
+    load r1, 1 /* start at pos 1 */
+    load r2, "World"
+    load r3, "Hello World"
+    strpos r1, r2, r3
+    ieq r0, r1, 7
+    brt strpos_pass, r0
+    say "FAIL: STRPOS"
+    br strpos_end
+strpos_pass:
+    say "PASS: STRPOS"
+strpos_end:
+
+    /* FNDBLNK - R1 result, R2 string, R3 start (0-based) */
+    load r2, "One Two Three"
+    load r3, 0
+    fndblnk r1, r2, r3
+    ieq r0, r1, 3
+    brt fndblnk_pass, r0
+    say "FAIL: FNDBLNK"
+    br fndblnk_end
+fndblnk_pass:
+    say "PASS: FNDBLNK"
+fndblnk_end:
+
+    /* Robustness: Whitespace-only strings */
+    load r1, "   "
+    load r2, " "
+    triml r3, r1, r2
+    seq r0, r3, ""
+    brt trim_ws_pass, r0
+    say "FAIL: Trim whitespace-only"
+    br trim_ws_end
+trim_ws_pass:
+    say "PASS: Trim whitespace-only"
+trim_ws_end:
+
+    ret 0
