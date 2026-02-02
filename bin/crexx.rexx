@@ -54,12 +54,17 @@ env_wanted='CREXX_HOME'
 assembler getenv rxpath,env_wanted
 
 /* if not set, then */
+rexx_version = ''
+assembler rxvers rexx_version
+dirsep = '/'
+platform = word(rexx_version,1)
+if  platform = 'windows' then dirsep = '\'
 if rxpath='' then do
   rxpath=getLoadPath()
-  lastSegment=lastpos('/',rxpath)
+  lastSegment=lastpos(dirsep,rxpath)
   rxpath=substr(rxpath,1,lastSegment-1)
 end
-rxpath=rxpath'/' /* to avoid having to start -l with a slash */
+rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
 
 libraries='/lib/rxfnsb'
 
