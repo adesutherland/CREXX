@@ -101,6 +101,9 @@
     (modify-syntax-entry ?\" "\"" st)
     (modify-syntax-entry ?'  "\"" st)
 
+    ;; Backslash is NOT an escape in Rexx strings
+    (modify-syntax-entry ?\\ "." st)
+    
     ;; Word constituents: underscore
     (modify-syntax-entry ?_  "w" st)
 

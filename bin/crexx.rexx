@@ -89,6 +89,7 @@ do i=1 to fn.0
       if fn.i = '-verbose1' then verbose=1
       if fn.i = '-verbose2' then verbose=2
       if fn.i = '-verbose3' then verbose=3
+      if fn.i = '-verbose4' then verbose=4
       if fn.i = '-noexec'   then execute=0
       if fn.i = '-nooptimize' then optimize=0
       if fn.i = '-nocolor'  then nocolor=1
@@ -110,8 +111,10 @@ do i=1 to fn.0
 end -- do i
 
 
-if version then call logo nocolor
-if verbose>1 then say esc||ANSI_GREEN'using CREXX_HOME:'esc||ANSI_RESET rxpath
+  if version then call logo nocolor
+  if verbose>1 then call logo nocolor  
+
+  if verbose>1 then say esc||ANSI_GREEN'using CREXX_HOME:'esc||ANSI_RESET rxpath
 
 lpath = libraries
 
@@ -130,15 +133,32 @@ do i=1 to words(filenames)
     if right(filename,4) = 'rxpp'
     then do /* run the preprocessor */
       filename = left(filename,dotpos-1)
-      'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
+      /* print the file when verbose ibm style output is requested */
+    if verbose>3 then do
+      call printFileToSTDout filename'.rxpp'
+    end
+    
+    'rxpp -i' filename'.rxpp -o' filename'.rexx -m 'rxpath'bin/maclib.rexx -verbose0'
+    if verbose then do
+      if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+	else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+	  if compile then say '[ 'res' ] rxpp     - Preprocessed   ' esc||ANSI_BLUE||filename'.rxpp'||esc||ANSI_RESET
+    end
+  if RC>0 then exit
+
     end
   end
 
-  /* here: check the returncode of the precompiler */
   
   /* this works temporarily with the specified filename extension */
   
   /* if all is well, we now have a .rexx ready for compilation    */  
+
+/* print the file when verbose ibm style output is requested */
+    if verbose>3 then do
+      call printFileToSTDout filename'.rexx'
+    end
+
   rxcmd = 'rxc -i' rxpath||lpath filename
   if verbose>1 then
     do
@@ -159,14 +179,21 @@ do i=1 to words(filenames)
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-    if compile then say '[ 'res' ] rxc      - Compiled ' esc||ANSI_BLUE||filename||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxc      - Compiled       ' esc||ANSI_BLUE||filename'.rexx'||esc||ANSI_RESET
     end
   if RC>0 then exit
+
+
+/* print the file when verbose ibm style output is requested */
+    if verbose>3 then do
+      call printFileToSTDout filename'.rxas'
+    end
+    
   'rxas' filename
   if verbose then do
     if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
     else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-    if compile then say '[ 'res' ] rxas     - Assembled' esc||ANSI_BLUE||filename||esc||ANSI_RESET
+    if compile then say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||filename'.rxas'||esc||ANSI_RESET
   end
   if RC>0 then exit
   
@@ -261,10 +288,10 @@ assembler rxvers rversion
 rvers = word(rversion,1) word(rversion,2) word(rversion,4)
 esc = '1b'x
 if nocolor then do
-  say 'crexx compiler driver' rvers
+  say 'cREXX compiler driver' rvers
 end
 else do
-  say esc'[33mcrexx compiler driver' esc'[34m'rvers esc'[0m'
+  say esc'[33mcREXX compiler driver' esc'[34m'rvers esc'[0m'
 end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
@@ -277,6 +304,17 @@ loop i=1 to toprint.0
   say toprint.i
 end
 return 'printed'
+
+printFileToSTDout: procedure
+arg toread = .string
+do while lines(toread)
+  say linein(toread)
+end
+call lineout toread
+  
+
+
+
 
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
