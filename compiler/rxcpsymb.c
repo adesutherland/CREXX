@@ -899,13 +899,15 @@ char* ast_frnm(ASTNode *node) {
 
 /* PoC Plugins */
 void sym_init(Context *context) {
+/*
     ASTNode *file_node;
     Scope *scope;
     Symbol *s;
 
     if (!context->ast || !context->ast->child) return;
-
+*/
     /* Target the first file scope */
+/*
     file_node = context->ast->child;
     if (!file_node) {
         printf("DEBUG: sym_init - No file node\n");
@@ -917,26 +919,26 @@ void sym_init(Context *context) {
         printf("DEBUG: sym_init - No scope for file node\n");
         return;
     }
-
+*/
     /* Register POCABS */
+/*
     s = sym_fn(scope, "pocabs", 6);
     if (s) {
         s->symbol_type = FUNCTION_SYMBOL;
         s->compiler_plugin = plugin_poc_math;
         s->fixed_args = 1;
         s->has_vargs = 0;
-        /* printf("DEBUG: Registered pocabs in scope %p\n", (void*)scope); */
     } else {
-        /* printf("DEBUG: Failed to register pocabs\n"); */
     }
-
+*/
     /* Register POCSQUARE */
+/*
     s = sym_fn(scope, "pocsquare", 9);
     if (s) {
         s->symbol_type = FUNCTION_SYMBOL;
         s->compiler_plugin = plugin_poc_math;
         s->fixed_args = 1;
         s->has_vargs = 0;
-        /* printf("DEBUG: Registered pocsquare\n"); */
     }
+*/
 }

@@ -359,6 +359,9 @@ void validate_ast(Context *context) {
         rxcp_print_ast_recursive(context->ast, 0);
     }
 
+    /* PoC Symbol Init */
+    sym_init(context);
+
     /* Fixed Point Iteration Loop */
     context->iterations = 0;
     context->after_rewrite = 0;
@@ -382,9 +385,6 @@ void validate_ast(Context *context) {
         /* Builds the Symbol Table */
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
-
-        /* PoC Symbol Init */
-        sym_init(context);
 
         /* Mainly resolve symbols - functions */
         context->current_scope = 0;

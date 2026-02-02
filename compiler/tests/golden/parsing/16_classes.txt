@@ -178,7 +178,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -200,8 +200,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -212,16 +212,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -253,7 +251,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -275,8 +273,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -287,16 +285,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -328,7 +324,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -350,8 +346,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -362,16 +358,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -403,7 +397,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -425,8 +419,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -437,16 +431,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -478,7 +470,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -500,8 +492,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -512,16 +504,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -553,7 +543,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -575,8 +565,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -587,16 +577,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -628,7 +616,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -650,8 +638,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -662,16 +650,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -703,7 +689,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -725,8 +711,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -737,16 +723,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -778,7 +762,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -800,8 +784,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -812,16 +796,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -853,7 +835,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -875,8 +857,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -887,16 +869,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -928,7 +908,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -950,8 +930,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -962,16 +942,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -1003,7 +981,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -1025,8 +1003,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -1037,16 +1015,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -1078,7 +1054,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -1100,8 +1076,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -1112,16 +1088,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -1153,7 +1127,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -1175,8 +1149,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -1187,16 +1161,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string
@@ -1228,7 +1200,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           CLASS : ".int" (19:22) [Type: .int]
         ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
-        ASSIGN : "=" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
           FUNCTION : ".myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
@@ -1250,8 +1222,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               STRING : ".int" (8:30) [Type: .string]
         *UNKNOWN* : "factory" (10:4) [Type: .unknown]
           STRING : "*:" (10:4) [Type: .string]
-        ASSIGN : "=" (12:8) [Type: .unknown]
-          VAR_TARGET : "val" (12:8) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .void]
+          VAR_TARGET : "val" (12:8) [Type: .int]
           VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
         RETURN : "return" (13:8) [Type: .unknown]
           STRING : "this" (13:15) [Type: .string]
@@ -1262,16 +1234,14 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           VAR_SYMBOL : "val" (16:15) [Type: .int]
         *UNKNOWN* : "method" (18:4) [Type: .unknown]
           STRING : "setvalue:" (18:4) [Type: .string]
-        ASSIGN : "=" (20:8) [Type: .unknown]
-          VAR_TARGET : "val" (20:8) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .void]
+          VAR_TARGET : "val" (20:8) [Type: .int]
           VAR_SYMBOL : "new_val" (20:14) [Type: .int]
         RETURN : "return" (21:8) [Type: .unknown]
 Scope [0]: Unnamed
   16_classes (Namespace) -> .unknown
   Scope [1]: 16_classes
     main (Function) -> .void
-    pocabs (Function) -> .unknown
-    pocsquare (Function) -> .unknown
     Scope [2]: main
       *: (Constant) -> .string
       .int (Constant) -> .string

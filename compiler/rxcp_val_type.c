@@ -202,7 +202,10 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     ValueType type = promotion[child1->value_type][child2->value_type];
                     type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
-                    set_node_type(node, type);
+                    if (type != TP_UNKNOWN) {
+                        set_node_type(node, type);
+                        context->changed = 1;
+                    }
                 }
                 break;
 
@@ -231,11 +234,14 @@ walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
+            case VAR_TARGET:
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
-
                     ast_svtp(node, node->symbolNode->symbol);
-                    if (child1) {
+                    if (node->value_type != TP_UNKNOWN) {
+                        context->changed = 1;
+                    }
+
+                    if (node->node_type == VAR_SYMBOL && child1) {
                         /* We have array parameters */
                         n1 = child1;
                         while (n1) {
@@ -275,27 +281,36 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case ASSIGN:
                 if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
                     context->changed = 1;
-                    if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet - then determine it */
-                        if (node->parent->node_type == REPEAT) {
-                            /* Special logic for LOOP Assignment - type must be numeric */
-                            child1->symbolNode->symbol->value_dims = 0;
-                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
-                            child1->symbolNode->symbol->value_class = 0;
-                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
-                        } else {
-                            child1->symbolNode->symbol->type =
-                                    node_to_type(child2,
-                                                 &(child1->symbolNode->symbol->value_dims),
-                                                 &(child1->symbolNode->symbol->dim_base),
-                                                 &(child1->symbolNode->symbol->dim_elements),
-                                                 &(child1->symbolNode->symbol->value_class));
+                }
+                if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    if (node->parent->node_type == REPEAT) {
+                        /* Special logic for LOOP Assignment - type must be numeric */
+                        child1->symbolNode->symbol->value_dims = 0;
+                        if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                        child1->symbolNode->symbol->value_class = 0;
+                        child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
+                        if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                            context->changed = 1;
+                            ast_svtp(child1, child1->symbolNode->symbol);
+                        }
+                    } else {
+                        child1->symbolNode->symbol->type =
+                                node_to_type(child2,
+                                             &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base),
+                                             &(child1->symbolNode->symbol->dim_elements),
+                                             &(child1->symbolNode->symbol->value_class));
 
-                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
-                                node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                        if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                            node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
 
+                        if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                            context->changed = 1;
+                            ast_svtp(child1, child1->symbolNode->symbol);
                         }
                     }
                 }
@@ -360,15 +375,19 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case DEFINE:
                 if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
                     context->changed = 1;
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet - then determine it */
-                        child1->symbolNode->symbol->type =
-                                node_to_type(child2,
-                                             &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base),
-                                             &(child1->symbolNode->symbol->dim_elements),
-                                             &(child1->symbolNode->symbol->value_class));
+                }
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    child1->symbolNode->symbol->type =
+                            node_to_type(child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                    if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                        context->changed = 1;
                         ast_svtp(child1, child1->symbolNode->symbol);
                     }
                 }
@@ -955,6 +974,44 @@ walker_result func_type_safety_walker(walker_direction direction,
                         }
                         n2 = n2->sibling;
                     }
+                }
+                break;
+
+            case REXX_UNIVERSE:
+            case PROGRAM_FILE:
+            case IMPORTED_FILE:
+            case INSTRUCTIONS:
+            case PROCEDURE:
+            case EXPOSED:
+            case SAY:
+            case RETURN:
+            case EXIT:
+            case IF:
+            case DO:
+            case FOR:
+            case WHILE:
+            case UNTIL:
+            case REPEAT:
+            case ITERATE:
+            case LEAVE:
+            case NOP:
+            case OPTIONS:
+            case REXX_OPTIONS:
+            case IMPORT:
+            case NAMESPACE:
+            case PARSE:
+            case UPPER:
+            case PULL:
+            case ADDRESS:
+            case ENVIRONMENT:
+            case DEC_DIGITS:
+            case DEC_FORM:
+            case DEC_FUZZ:
+            case DEC_CASE:
+            case DEC_STANDARD:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
+                    context->changed = 1;
                 }
                 break;
 
