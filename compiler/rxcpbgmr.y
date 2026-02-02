@@ -583,6 +583,7 @@ keyword_instruction(I) ::= say(K). { I = K; }
 keyword_instruction(I) ::= numeric(K). { I = K; }
 keyword_instruction(I) ::= factory_def(K). { I = K; }
 keyword_instruction(I) ::= method_def(K). { I = K; }
+keyword_instruction(I) ::= class_def(K). { I = K; }
 
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
@@ -606,8 +607,6 @@ group(I) ::= simple_do(K). { I = K; }
 group(I) ::= do(K) TK_EOC. { I = K; }
 group(I) ::= do(K). { I = K; }
 group(I) ::= if(K). { I = K; }
-group(I) ::= class_def(K) TK_EOC. { I = K; }
-group(I) ::= class_def(K). { I = K; }
 
 /* Groups */
 
@@ -1092,7 +1091,9 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 
 /* Expression terminal nodes */
-term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
+term(F)                ::= var_symbol(S) function_parameters(P).
+                           { F = S; F->node_type = FUNCTION; if (P) add_ast(F,P); }
+term(F)                ::= TK_CLASS_TYPE(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
@@ -1321,12 +1322,11 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 
 /* Classes / Factories / Methods */
 
-class_def(C) ::= TK_LABEL(L) TK_CLASS(K) opt_of(O) TK_EOC instruction_list(I) TK_END.
+class_def(C) ::= TK_LABEL(L) TK_CLASS(K) opt_of(O).
 {
   C = ast_f(context, CLASS_DEF, K);
   add_ast(C, ast_f(context, VAR_SYMBOL, L));
   if (O) add_ast(C, O);
-  add_ast(C, I);
 }
 
 opt_of(O) ::= . { O = NULL; }

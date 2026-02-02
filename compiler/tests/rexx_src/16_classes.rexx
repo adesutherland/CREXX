@@ -1,5 +1,10 @@
 options levelb
 
+var = .myclass(10)
+say var.getvalue()
+
+return;
+
 myclass: class
     val = .int with register.1.int
 
@@ -15,6 +20,3 @@ myclass: class
         arg new_val = .int
         val = new_val
         return
-end
-
-return 0
