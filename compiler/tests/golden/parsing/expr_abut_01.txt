@@ -1,10 +1,446 @@
-[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
-  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
-    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
-      [AST] LITERAL (Type 11) [Line -1] "levelb"
-    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-      [AST] ASSIGN (Type 7) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "a"
-        [AST] OP_SCONCAT (Type 70) [Line -1] ""
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "b"
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "c"
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "a" (-1:-1) [Type: .unknown]
+        OP_SCONCAT : "" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "b" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "c" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "b" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "c" (1:6) [Type: .unknown]
+        RETURN : "" (1:7) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "b" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "c" (1:6) [Type: .unknown]
+        RETURN : "" (1:7) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 2) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 3) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 4) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 5) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 6) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 7) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 8) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 9) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 10) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 11) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 12) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 13) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 14) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_SYMBOLS (Iteration 15) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_SCONCAT : "" (1:4) [Type: .string]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:6) [Type: .string]
+        RETURN : "" (1:7) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_abut_01 (Namespace) -> .unknown
+  Scope [1]: expr_abut_01
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      a (Variable) -> .string
+      b (Constant) -> .string
+      c (Constant) -> .string
+
+--- STAGE_FINAL ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_abut_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        RETURN : "" (1:7) [Type: .void]
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

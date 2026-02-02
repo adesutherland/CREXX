@@ -160,6 +160,18 @@ void prt_unex(FILE* output, const char *ptr, int len);
 void rxcp_val(Context *context);
 void rxcp_bvl(Context *context);
 
+/* Diagnostic Stages */
+typedef enum {
+    STAGE_RAW,
+    STAGE_FIXUP,
+    STAGE_SYMBOLS,
+    STAGE_FINAL
+} DebugStage;
+
+void rxcp_debug_header(const char *stage_name, int iteration);
+void rxcp_print_ast_recursive(ASTNode *node, int indent);
+void rxcp_print_symbol_table(Scope *scope, int depth);
+
 /* Optimise AST Tree */
 void optimise(Context *context);
 

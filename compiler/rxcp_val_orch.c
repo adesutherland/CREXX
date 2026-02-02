@@ -354,11 +354,22 @@ void validate_ast(Context *context) {
         ast_wlkr(context->ast, add_rxsysb_walker, (void *) context);
     }
 
+    if (context->debug_mode && context == context->master_context) {
+        rxcp_debug_header("STAGE_FIXUP", -1);
+        rxcp_print_ast_recursive(context->ast, 0);
+    }
+
     /* Fixed Point Iteration Loop */
     context->iterations = 0;
     context->after_rewrite = 0;
     do {
         context->changed = 0;
+
+        if (context->debug_mode && context == context->master_context) {
+            rxcp_debug_header("STAGE_SYMBOLS", context->iterations);
+            rxcp_print_ast_recursive(context->ast, 0);
+            rxcp_print_symbol_table(context->ast->scope, 0);
+        }
 
         /* Re-write IMPLICIT_CMD Instructions */
         context->current_scope = 0;

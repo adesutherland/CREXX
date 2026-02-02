@@ -712,7 +712,7 @@ ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
 
-    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
+    if (context->debug_mode >= 2) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;
 }
 

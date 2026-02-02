@@ -97,7 +97,7 @@ walker_result rewrite_address_walker(walker_direction direction,
         switch (node->node_type) {
 
             case ADDRESS:
-                if (context->debug_mode) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
+                if (context->debug_mode >= 2) fprintf(stderr, "Lowering ADDRESS Instruction at line %d\n", node->line);
                 /* Rewrite to an assignment from a function */
                 context->changed = 1;
 

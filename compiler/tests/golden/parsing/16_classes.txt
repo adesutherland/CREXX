@@ -1,49 +1,1311 @@
-[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
-  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
-    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
-      [AST] LITERAL (Type 11) [Line -1] "levelb"
-    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-      [AST] ASSIGN (Type 7) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "var"
-        [AST] FUNCTION (Type 25) [Line -1] ".myclass"
-          [AST] INTEGER (Type 35) [Line -1] "10"
-      [AST] SAY (Type 87) [Line -1] "say"
-        [AST] FUNCTION (Type 25) [Line -1] "var"
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "getvalue"
-          [AST] NOVAL (Type 40) [Line -1] ""
-      [AST] RETURN (Type 84) [Line -1] "return"
-      [AST] CLASS_DEF (Type 111) [Line -1] "class"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "myclass:"
-      [AST] DEFINE (Type 18) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "val"
-        [AST] CLASS (Type 10) [Line -1] ".int"
-        [AST] REGISTER (Type 109) [Line -1] "register"
-          [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-            [AST] INTEGER (Type 35) [Line -1] ".1"
-            [AST] VAR_SYMBOL (Type 97) [Line -1] ".int"
-      [AST] FACTORY (Type 106) [Line -1] "factory"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "*:"
-      [AST] ARGS (Type 5) [Line -1] ""
-        [AST] ARG (Type 4) [Line -1] ""
-          [AST] VAR_TARGET (Type 98) [Line -1] "initial_value"
-          [AST] CLASS (Type 10) [Line -1] ".int"
-      [AST] ASSIGN (Type 7) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "val"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "initial_value"
-      [AST] RETURN (Type 84) [Line -1] "return"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "this"
-      [AST] METHOD (Type 107) [Line -1] "method"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "getvalue:"
-        [AST] CLASS (Type 10) [Line -1] ".int"
-      [AST] RETURN (Type 84) [Line -1] "return"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "val"
-      [AST] METHOD (Type 107) [Line -1] "method"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "setvalue:"
-      [AST] ARGS (Type 5) [Line -1] ""
-        [AST] ARG (Type 4) [Line -1] ""
-          [AST] VAR_TARGET (Type 98) [Line -1] "new_val"
-          [AST] CLASS (Type 10) [Line -1] ".int"
-      [AST] ASSIGN (Type 7) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "val"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "new_val"
-      [AST] RETURN (Type 84) [Line -1] "return"
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "var" (-1:-1) [Type: .unknown]
+        FUNCTION : ".myclass" (-1:-1) [Type: .unknown]
+          INTEGER : "10" (-1:-1) [Type: .unknown]
+      SAY : "say" (-1:-1) [Type: .unknown]
+        FUNCTION : "var" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "getvalue" (-1:-1) [Type: .unknown]
+          NOVAL : "" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "class" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "myclass:" (-1:-1) [Type: .unknown]
+      DEFINE : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "val" (-1:-1) [Type: .unknown]
+        CLASS : ".int" (-1:-1) [Type: .unknown]
+        *UNKNOWN* : "register" (-1:-1) [Type: .unknown]
+          INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+            INTEGER : ".1" (-1:-1) [Type: .unknown]
+            VAR_SYMBOL : ".int" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "factory" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "*:" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+        ARG : "" (-1:-1) [Type: .unknown]
+          VAR_TARGET : "initial_value" (-1:-1) [Type: .unknown]
+          CLASS : ".int" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "val" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "initial_value" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "this" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "method" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "getvalue:" (-1:-1) [Type: .unknown]
+        CLASS : ".int" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "val" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "method" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "setvalue:" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+        ARG : "" (-1:-1) [Type: .unknown]
+          VAR_TARGET : "new_val" (-1:-1) [Type: .unknown]
+          CLASS : ".int" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "val" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "new_val" (-1:-1) [Type: .unknown]
+      RETURN : "return" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (2:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .unknown]
+          VAR_TARGET : "initial_value" (11:12) [Type: .unknown]
+          CLASS : ".int" (11:28) [Type: .unknown]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .unknown]
+          VAR_TARGET : "new_val" (19:12) [Type: .unknown]
+          CLASS : ".int" (19:22) [Type: .unknown]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "getvalue" (3:8) [Type: .unknown]
+            NOVAL : "" (3:16) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          VAR_SYMBOL : "myclass:" (7:0) [Type: .unknown]
+        DEFINE : "=" (8:4) [Type: .unknown]
+          VAR_TARGET : "val" (8:4) [Type: .unknown]
+          CLASS : ".int" (8:10) [Type: .unknown]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .unknown]
+              VAR_SYMBOL : ".int" (8:30) [Type: .unknown]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          VAR_SYMBOL : "*:" (10:4) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
+        RETURN : "return" (13:8) [Type: .unknown]
+          VAR_SYMBOL : "this" (13:15) [Type: .unknown]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          VAR_SYMBOL : "getvalue:" (15:4) [Type: .unknown]
+          CLASS : ".int" (15:23) [Type: .unknown]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .unknown]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          VAR_SYMBOL : "setvalue:" (18:4) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .unknown]
+        RETURN : "return" (21:8) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (2:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .unknown]
+          VAR_TARGET : "initial_value" (11:12) [Type: .unknown]
+          CLASS : ".int" (11:28) [Type: .unknown]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .unknown]
+          VAR_TARGET : "new_val" (19:12) [Type: .unknown]
+          CLASS : ".int" (19:22) [Type: .unknown]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "getvalue" (3:8) [Type: .unknown]
+            NOVAL : "" (3:16) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          VAR_SYMBOL : "myclass:" (7:0) [Type: .unknown]
+        DEFINE : "=" (8:4) [Type: .unknown]
+          VAR_TARGET : "val" (8:4) [Type: .unknown]
+          CLASS : ".int" (8:10) [Type: .unknown]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .unknown]
+              VAR_SYMBOL : ".int" (8:30) [Type: .unknown]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          VAR_SYMBOL : "*:" (10:4) [Type: .unknown]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
+        RETURN : "return" (13:8) [Type: .unknown]
+          VAR_SYMBOL : "this" (13:15) [Type: .unknown]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          VAR_SYMBOL : "getvalue:" (15:4) [Type: .unknown]
+          CLASS : ".int" (15:23) [Type: .unknown]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .unknown]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          VAR_SYMBOL : "setvalue:" (18:4) [Type: .unknown]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .unknown]
+        RETURN : "return" (21:8) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 2) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 3) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 4) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 5) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 6) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 7) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 8) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 9) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 10) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 11) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 12) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 13) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 14) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+
+--- STAGE_SYMBOLS (Iteration 15) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "16_classes" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (11:12) [Type: .unknown]
+        ARG : "" (11:12) [Type: .int]
+          VAR_TARGET : "initial_value" (11:12) [Type: .int]
+          CLASS : ".int" (11:28) [Type: .int]
+        ERROR : "ARG_NOT_FIRST_INST" (-1:-1) [Type: .unknown]
+      ARGS : "" (19:12) [Type: .unknown]
+        ARG : "" (19:12) [Type: .int]
+          VAR_TARGET : "new_val" (19:12) [Type: .int]
+          CLASS : ".int" (19:22) [Type: .int]
+        ERROR : "REPEATED_ARG" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (2:0) [Type: .unknown]
+        ASSIGN : "=" (2:0) [Type: .unknown]
+          VAR_TARGET : "var" (2:0) [Type: .unknown]
+          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+            INTEGER : "10" (2:14) [Type: .int]
+            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
+        SAY : "say" (3:0) [Type: .unknown]
+          FUNCTION : "var" (3:4) [Type: .unknown]
+            STRING : "getvalue" (3:8) [Type: .string]
+            NOVAL : "" (3:16) [Type: .void]
+            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+        RETURN : "return" (5:0) [Type: .unknown]
+        *UNKNOWN* : "class" (7:0) [Type: .unknown]
+          STRING : "myclass:" (7:0) [Type: .string]
+        DEFINE : "=" (8:4) [Type: .int]
+          VAR_TARGET : "val" (8:4) [Type: .int]
+          CLASS : ".int" (8:10) [Type: .int]
+          *UNKNOWN* : "register" (8:20) [Type: .unknown]
+            INSTRUCTIONS : "" (8:28) [Type: .unknown]
+              INTEGER : ".1" (8:28) [Type: .int]
+              STRING : ".int" (8:30) [Type: .string]
+        *UNKNOWN* : "factory" (10:4) [Type: .unknown]
+          STRING : "*:" (10:4) [Type: .string]
+        ASSIGN : "=" (12:8) [Type: .unknown]
+          VAR_TARGET : "val" (12:8) [Type: .unknown]
+          VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
+        RETURN : "return" (13:8) [Type: .unknown]
+          STRING : "this" (13:15) [Type: .string]
+        *UNKNOWN* : "method" (15:4) [Type: .unknown]
+          STRING : "getvalue:" (15:4) [Type: .string]
+          CLASS : ".int" (15:23) [Type: .int]
+        RETURN : "return" (16:8) [Type: .unknown]
+          VAR_SYMBOL : "val" (16:15) [Type: .int]
+        *UNKNOWN* : "method" (18:4) [Type: .unknown]
+          STRING : "setvalue:" (18:4) [Type: .string]
+        ASSIGN : "=" (20:8) [Type: .unknown]
+          VAR_TARGET : "val" (20:8) [Type: .unknown]
+          VAR_SYMBOL : "new_val" (20:14) [Type: .int]
+        RETURN : "return" (21:8) [Type: .unknown]
+Scope [0]: Unnamed
+  16_classes (Namespace) -> .unknown
+  Scope [1]: 16_classes
+    main (Function) -> .void
+    pocabs (Function) -> .unknown
+    pocsquare (Function) -> .unknown
+    Scope [2]: main
+      *: (Constant) -> .string
+      .int (Constant) -> .string
+      getvalue (Constant) -> .string
+      getvalue: (Constant) -> .string
+      initial_value (Variable) -> .int
+      myclass: (Constant) -> .string
+      new_val (Variable) -> .int
+      setvalue: (Constant) -> .string
+      this (Constant) -> .string
+      val (Variable) -> .int
+      var (Variable) -> .unknown
+Error in 16_classes.rexx @ 12:13 - #ARG_NOT_FIRST_INST, "initial_value = .int"
+Error in 16_classes.rexx @ 12:13 - #INVALID_MAIN_ARGS, "initial_value = .int"
+Error in 16_classes.rexx @ 20:13 - #REPEATED_ARG, "new_val = .int"
+Error in 16_classes.rexx @ 20:13 - #INVALID_MAIN_ARGS, "new_val = .int"
+Error in 16_classes.rexx @ 3:15 - #UNEXPECTED_ARGUMENT, 1, "(10)"
+Error in 16_classes.rexx @ 3:7 - #FUNCTION_NOT_FOUND, ".myclass(10)"
+Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = .myclass(10)"
+Error in 16_classes.rexx @ 4:9 - #UNEXPECTED_ARGUMENT, 1, "getvalue"
+Error in 16_classes.rexx @ 4:5 - #FUNCTION_NOT_FOUND, "var.getvalue"
+Error in 16_classes.rexx @ 14:16 - #EXTRANEOUS_RETVAL, "this"
+Error in 16_classes.rexx @ 17:16 - #EXTRANEOUS_RETVAL, "val"
+11 error(s) in source file
+Error in 16_classes.rexx @ 12:13 - #ARG_NOT_FIRST_INST, "initial_value = .int"
+Error in 16_classes.rexx @ 12:13 - #INVALID_MAIN_ARGS, "initial_value = .int"
+Error in 16_classes.rexx @ 20:13 - #REPEATED_ARG, "new_val = .int"
+Error in 16_classes.rexx @ 20:13 - #INVALID_MAIN_ARGS, "new_val = .int"
+Error in 16_classes.rexx @ 3:15 - #UNEXPECTED_ARGUMENT, 1, "(10)"
+Error in 16_classes.rexx @ 3:7 - #FUNCTION_NOT_FOUND, ".myclass(10)"
+Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = .myclass(10)"
+Error in 16_classes.rexx @ 4:9 - #UNEXPECTED_ARGUMENT, 1, "getvalue"
+Error in 16_classes.rexx @ 4:5 - #FUNCTION_NOT_FOUND, "var.getvalue"
+Error in 16_classes.rexx @ 14:16 - #EXTRANEOUS_RETVAL, "this"
+Error in 16_classes.rexx @ 17:16 - #EXTRANEOUS_RETVAL, "val"
+11 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

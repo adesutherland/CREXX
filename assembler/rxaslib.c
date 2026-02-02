@@ -134,13 +134,13 @@ int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) 
     if (file_name_includes_type_extension) fp = openfile(scanner->file_name, "", scanner->location, "r");
     else fp = openfile(scanner->file_name, "rxas", scanner->location, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
+        if (!scanner->quiet) fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
         return -1;
     }
 
     scanner->buff = file2buf(fp, &bytes);
     if (scanner->buff == NULL) {
-        fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
+        if (!scanner->quiet) fprintf(stderr, "Can't read input file %s\n", scanner->file_name);
         return -1;
     }
     fclose(fp);

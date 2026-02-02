@@ -48,7 +48,7 @@ int rexbscan(Context* s) {
 
 #define RET(id) do { \
     int tid = (id); \
-    if (s->debug_mode) { \
+    if (s->debug_mode >= 2) { \
         fprintf(stderr, "[LEX] Line %d: Token %d (%s) Value: '%.*s'\n", \
             s->line, tid, token_to_string(tid), (int)(s->cursor - s->top), s->top); \
     } \
