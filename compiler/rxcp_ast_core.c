@@ -1399,10 +1399,11 @@ void ast_svtp(ASTNode* node, Symbol* symbol) {
         strcpy(node->value_class, symbol->value_class);
     } else node->value_class = 0;
 
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0;
-    }
+    if (node->target_class) free(node->target_class);
+    if (symbol->value_class) {
+        node->target_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->target_class, symbol->value_class);
+    } else node->target_class = 0;
 }
 
 /* Set Node Target Value Type from Symbol */
@@ -1523,10 +1524,11 @@ void ast_rttp(ASTNode* node) {
         node->target_dim_elements = 0;
     }
 
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0; /* I.e. assumed to be the same as the value type */
-    }
+    if (node->target_class) free(node->target_class);
+    if (node->value_class) {
+        node->target_class = malloc(strlen(node->value_class) + 1);
+        strcpy(node->target_class, node->value_class);
+    } else node->target_class = 0;
 }
 
 /* Returns the index number of a child of its parent (or -1 on error) */

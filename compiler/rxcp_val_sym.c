@@ -134,6 +134,15 @@ walker_result build_symbols_walker(walker_direction direction,
             /* Move down to the procedure scope */
             context->current_scope = scp_f(context, context->current_scope, node, symbol);
             node->scope = context->current_scope;
+
+            /* Level B Class Instance Support */
+            if (node->node_type == FACTORY) {
+                /* Add instance symbol '*' */
+                Symbol *star = sym_fn(context->current_scope, "*", 1);
+                if (star) {
+                    star->symbol_type = VARIABLE_SYMBOL;
+                }
+            }
         }
 
         else if (node->node_type == IMPORT) {
@@ -524,6 +533,17 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         return;
     }
 
+    if (strcmp(symbol->name, "*") == 0 && scope->defining_node->node_type == FACTORY) {
+        symbol->type = TP_OBJECT;
+        symbol->symbol_type = VARIABLE_SYMBOL;
+        symbol->value_dims = 0;
+        if (scope->parent && scope->parent->defining_node->node_type == CLASS_DEF) {
+            symbol->value_class = malloc(strlen(scope->parent->name) + 1);
+            strcpy(symbol->value_class, scope->parent->name);
+        }
+        return;
+    }
+
     /* This sees if we are looking at exposed (global) variables by looking at the scope defining node type */
     if ( scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
 
@@ -541,15 +561,28 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             proc = p;
 
             /* Ok we are the first usage in this proc */
-            if (defining_node_link->node->node_type == PROCEDURE) {
-                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-                symbol->type = node_to_type(p_type,
-                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
-                                            &(symbol->value_class));
+            if (defining_node_link->node->node_type == PROCEDURE ||
+                defining_node_link->node->node_type == METHOD ||
+                defining_node_link->node->node_type == FACTORY) {
 
-                ast_svtp(defining_node_link->node, symbol);
+                if (defining_node_link->node->node_type == FACTORY) {
+                    symbol->type = TP_OBJECT;
+                    /* The FACTORY symbol is in the CLASS scope */
+                    if (scope->defining_node->node_type == CLASS_DEF) {
+                        if (symbol->value_class) free(symbol->value_class);
+                        symbol->value_class = malloc(strlen(scope->name) + 1);
+                        strcpy(symbol->value_class, scope->name);
+                    }
+                    ast_svtp(defining_node_link->node, symbol);
+                } else {
+                    p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                    symbol->type = node_to_type(p_type,
+                                                &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                                &(symbol->value_class));
 
-                ast_svtp(p_type, symbol);
+                    ast_svtp(defining_node_link->node, symbol);
+                    ast_svtp(p_type, symbol);
+                }
                 break;
             }
 
@@ -590,15 +623,28 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
-        if (defining_node_link->node->node_type == PROCEDURE) {
+        if (defining_node_link->node->node_type == PROCEDURE ||
+            defining_node_link->node->node_type == METHOD ||
+            defining_node_link->node->node_type == FACTORY) {
             /* This sets the procedure symbol type */
-            p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-            symbol->type = node_to_type(p_type,
-                                        &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
-                                        &(symbol->value_class));
+            if (defining_node_link->node->node_type == FACTORY) {
+                symbol->type = TP_OBJECT;
+                /* The FACTORY symbol is in the CLASS scope */
+                if (scope->defining_node->node_type == CLASS_DEF) {
+                    if (symbol->value_class) free(symbol->value_class);
+                    symbol->value_class = malloc(strlen(scope->name) + 1);
+                    strcpy(symbol->value_class, scope->name);
+                }
+                ast_svtp(defining_node_link->node, symbol);
+            } else {
+                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                symbol->type = node_to_type(p_type,
+                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                            &(symbol->value_class));
 
-            ast_svtp(defining_node_link->node, symbol);
-            ast_svtp(p_type, symbol);
+                ast_svtp(defining_node_link->node, symbol);
+                ast_svtp(p_type, symbol);
+            }
         }
 
         else if (defining_node_link->node->node_type == VAR_REFERENCE) {

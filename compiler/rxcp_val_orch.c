@@ -304,9 +304,20 @@ void validate_node_promotion(ASTNode* node) {
 
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
 
-    /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
-        mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    /* Class / Object Support */
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+        if (node->value_type != node->target_type) {
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+        else if (node->value_class && node->target_class) {
+            if (strcmp(node->value_class, node->target_class) != 0) {
+                mknd_err(node, "TYPE_MISMATCH");
+            }
+        }
+        else if (node->value_class || node->target_class) {
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+    }
 }
 
 /*

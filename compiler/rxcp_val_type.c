@@ -55,9 +55,14 @@ void validate_node_promotion_for_ref(ASTNode* node) {
 
     if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
 
-    /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
-        mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    /* Class / Object Support */
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+        if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+        else if (node->value_class && node->target_class) {
+            if (strcmp(node->value_class, node->target_class) != 0) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+        }
+        else if (node->value_class || node->target_class) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+    }
 }
 
 /* Step 4
@@ -229,6 +234,59 @@ walker_result set_node_types_walker(walker_direction direction,
                     if (node->value_type == TP_UNKNOWN) {
                         context->changed = 1;
                         ast_svtp(node, node->symbolNode->symbol);
+                    }
+                }
+                break;
+
+            case MEMBER_CALL:
+                if (ast_chld(node, ERROR, 0)) break;
+                if (node->value_type == TP_UNKNOWN) {
+                    ASTNode *instance = ast_chdn(node, 0);
+                    if (instance->value_type == TP_OBJECT && instance->value_class) {
+                        /* Resolve the Class Symbol from the instance's class name */
+                        Symbol *class_sym = sym_rvfn(context->ast, instance->value_class);
+                        if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                            /* Lookup the Method Name in the Class Scope */
+                            Symbol *method_sym = sym_lrsv(class_sym->defines_scope, node);
+                            if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
+                                sym_adnd(method_sym, node, 1, 0);
+                                ast_svtp(node, method_sym);
+                                context->changed = 1;
+                            } else if (!context->changed) {
+                                mknd_err(node, "METHOD_NOT_FOUND");
+                            }
+                        } else if (!context->changed) {
+                            mknd_err(node, "CLASS_NOT_FOUND");
+                        }
+                    } else if (instance->value_type != TP_UNKNOWN) {
+                        mknd_err(node, "NOT_AN_OBJECT");
+                    }
+                }
+                break;
+
+            case FACTORY_CALL:
+                if (ast_chld(node, ERROR, 0)) break;
+                if (node->value_type == TP_UNKNOWN) {
+                    /* Lookup the Class Name */
+                    Symbol *class_sym = sym_rvfc(context->ast, node);
+                    if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                        /* Resolve the Factory routine '*' within that class */
+                        ASTNode star_node;
+                        star_node.node_string = "*";
+                        star_node.node_string_length = 1;
+                        Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
+                        if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
+                            sym_adnd(factory_sym, node, 1, 0);
+                            node->value_type = TP_OBJECT;
+                            node->value_class = malloc(strlen(class_sym->name) + 1);
+                            strcpy(node->value_class, class_sym->name);
+                            ast_rttp(node);
+                            context->changed = 1;
+                        } else if (!context->changed) {
+                            mknd_err(node, "FACTORY_NOT_FOUND");
+                        }
+                    } else if (!context->changed) {
+                        mknd_err(node, "CLASS_NOT_FOUND");
                     }
                 }
                 break;
@@ -866,12 +924,16 @@ walker_result func_type_safety_walker(walker_direction direction,
         switch (node->node_type) {
 
             case FUNCTION:
+            case MEMBER_CALL:
+            case FACTORY_CALL:
                 /* Process all the arguments */
-                n1 = node->child;
+                if (node->node_type == MEMBER_CALL) n1 = node->child->sibling; /* Skip Instance */
+                else n1 = node->child;
+
                 if  (node->symbolNode) {
                     n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
-                    /* n2 is PROCEDURE. Go to the first arg */
-                    if (n2->node_type == PROCEDURE) {
+                    /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
+                    if (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY) {
                         n2 = ast_chld(n2, ARGS, 0);
                         n2 = n2->child;
                     } else n2 = 0;
@@ -892,7 +954,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         else if (n1->node_type == NOVAL) {
                             /* Prune the unwanted NOVAL - the parser grammar just added it */
-                            ast_del(n1);
+                            ASTNode *to_del = n1;
+                            n1 = n1->sibling;
+                            ast_del(to_del);
+                            break;
                         }
                         break;
                     }
