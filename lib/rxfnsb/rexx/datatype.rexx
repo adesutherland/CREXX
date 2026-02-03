@@ -37,14 +37,15 @@ datatype: procedure=.string
   end
 ## Here we have a type parameter defined
   type=upper(substr(type,1,1))
-
-  if type='A' then return (length(val)>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')=0)
-  if type='B' then return (length(val)=0 | verify(val,'01 ')=0)
-  if type='L' then return (length(val)>0 & verify(val,'abcdefghijklmnopqrstuvwxyz')=0)
-  if type='M' then return (length(val)>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')=0)
-  if type='U' then return (length(val)>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZ')=0)
+  vlen=0
+  assembler strlen vlen,val
+  if type='A' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')=0)
+  if type='B' then return (vlen=0 | verify(val,'01 ')=0)
+  if type='L' then return (vlen>0 & verify(val,'abcdefghijklmnopqrstuvwxyz')=0)
+  if type='M' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')=0)
+  if type='U' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZ')=0)
   if type='W' then do
-     if length(val)=0 then return 0
+     if vlen=0 then return 0
      if verify(val, '0123456789')=0 then return 1   ## handle simple whole numbers
      exp=isExponential(val)
      if exp<1 then do         /* is not an exponential number, further check */
@@ -54,9 +55,9 @@ datatype: procedure=.string
      return exp                /* it was exponential, return result of check  */
   end
   if type='X' then return verify(val,'ABCDEFabcdef0123456789 ')=0 ## allow also blank
-  if type='S' then return (length(val)>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?_@##$')=0)
+  if type='S' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?_@##$')=0)
   if type='N' then do
-     if length(val)=0 then return 0
+     if vlen=0 then return 0
      if verify(val, '0123456789.')>0 then return 0
      else do
         ppi=pos('.', val)
@@ -76,9 +77,10 @@ isExponential: procedure=.int
   number   = substr(val,1,posE-1)
   if verify(number, "0123456789.") > 0 then return 0     ## number part is not a number
   if pos('.',number)\=lastpos('.',number) then return 0  ## invalid number part
-
   exponent = substr(val, posE + 1)
-  if length(exponent) < 1 | length(exponent) > 4 then return 0
+  elen=0
+  assembler strlen elen,exponent
+  if elen < 1 | elen > 4 then return 0
   sign = substr(exponent, 1, 1)
   if sign = "+" | sign = "-" then exponentDigits = substr(exponent, 2)
   else do
@@ -86,7 +88,8 @@ isExponential: procedure=.int
      exponentDigits = exponent
   end
   if verify(exponentDigits, "0123456789") = 0 then do
-     if length(exponentDigits) >= 1 & length(exponentDigits) <= 3 then nop  ## valid exponent
+     assembler strlen elen,exponentDigits
+     if elen >= 1 & elen <= 3 then nop  ## valid exponent
      else return 0  ## invalid exponent can't be a whole number
   end
 /* coming here means we have a valid exponential number */
