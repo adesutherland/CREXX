@@ -85,6 +85,7 @@ struct Context {
     /* Optimiser Options */
     int optimise;
     int iterations;
+    int in_factory;
 
     /* Recursion Guard for Imports */
     char** loading_files;

@@ -7,11 +7,11 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
     INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
       ASSIGN : "=" (-1:-1) [Type: .unknown]
         VAR_TARGET : "var" (-1:-1) [Type: .unknown]
-        FUNCTION : ".myclass" (-1:-1) [Type: .unknown]
+        FACTORY_CALL : "myclass" (-1:-1) [Type: .unknown]
           INTEGER : "10" (-1:-1) [Type: .unknown]
       SAY : "say" (-1:-1) [Type: .unknown]
-        FUNCTION : "var" (-1:-1) [Type: .unknown]
-          VAR_SYMBOL : "getvalue" (-1:-1) [Type: .unknown]
+        MEMBER_CALL : "getvalue" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "var" (-1:-1) [Type: .unknown]
           NOVAL : "" (-1:-1) [Type: .unknown]
       RETURN : "return" (-1:-1) [Type: .unknown]
       CLASS_DEF : "myclass:" (-1:-1) [Type: .unknown]
@@ -32,7 +32,6 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
         VAR_TARGET : "val" (-1:-1) [Type: .unknown]
         VAR_SYMBOL : "initial_value" (-1:-1) [Type: .unknown]
       RETURN : "return" (-1:-1) [Type: .unknown]
-        VAR_SYMBOL : "this" (-1:-1) [Type: .unknown]
       METHOD : "getvalue:" (-1:-1) [Type: .unknown]
         CLASS : ".int" (-1:-1) [Type: .unknown]
       RETURN : "return" (-1:-1) [Type: .unknown]
@@ -59,12 +58,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .unknown]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            VAR_SYMBOL : "getvalue" (3:8) [Type: .unknown]
-            NOVAL : "" (3:16) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .unknown]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass:" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .unknown]
@@ -85,7 +84,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .unknown]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
           RETURN : "return" (13:8) [Type: .unknown]
-            VAR_SYMBOL : "this" (13:15) [Type: .unknown]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
       METHOD : "getvalue:" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .unknown]
         ARGS : "" (15:27) [Type: .unknown]
@@ -115,12 +114,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .unknown]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            VAR_SYMBOL : "getvalue" (3:8) [Type: .unknown]
-            NOVAL : "" (3:16) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .unknown]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass:" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .unknown]
@@ -141,7 +140,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .unknown]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
           RETURN : "return" (13:8) [Type: .unknown]
-            VAR_SYMBOL : "this" (13:15) [Type: .unknown]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
       METHOD : "getvalue:" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .unknown]
         ARGS : "" (15:27) [Type: .unknown]
@@ -171,14 +170,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -199,7 +196,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -223,7 +221,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -233,7 +230,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -249,14 +245,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -277,7 +271,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -301,7 +296,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -311,7 +305,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -327,14 +320,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -355,7 +346,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -379,7 +371,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -389,7 +380,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -405,14 +395,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -433,7 +421,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -457,7 +446,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -467,7 +455,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -483,14 +470,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -511,7 +496,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -535,7 +521,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -545,7 +530,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -561,14 +545,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -589,7 +571,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -613,7 +596,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -623,7 +605,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -639,14 +620,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -667,7 +646,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -691,7 +671,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -701,7 +680,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -717,14 +695,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -745,7 +721,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -769,7 +746,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -779,7 +755,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -795,14 +770,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -823,7 +796,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -847,7 +821,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -857,7 +830,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -873,14 +845,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -901,7 +871,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -925,7 +896,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -935,7 +905,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -951,14 +920,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -979,7 +946,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -1003,7 +971,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -1013,7 +980,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -1029,14 +995,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -1057,7 +1021,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -1081,7 +1046,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -1091,7 +1055,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -1107,14 +1070,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -1135,7 +1096,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -1159,7 +1121,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -1169,7 +1130,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -1185,14 +1145,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -1213,7 +1171,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -1237,7 +1196,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -1247,7 +1205,6 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
@@ -1263,14 +1220,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
       INSTRUCTIONS : "" (2:0) [Type: .unknown]
         ASSIGN : "=" (2:0) [Type: .void]
           VAR_TARGET : "var" (2:0) [Type: .unknown]
-          FUNCTION : ".myclass" (2:6) [Type: .unknown]
+          FACTORY_CALL : "myclass" (2:6) [Type: .unknown]
             INTEGER : "10" (2:14) [Type: .int]
-            ERROR : "FUNCTION_NOT_FOUND" (2:6) [Type: .unknown]
         SAY : "say" (3:0) [Type: .unknown]
-          FUNCTION : "var" (3:4) [Type: .unknown]
-            STRING : "getvalue" (3:8) [Type: .string]
-            NOVAL : "" (3:16) [Type: .void]
-            ERROR : "FUNCTION_NOT_FOUND" (3:4) [Type: .unknown]
+          MEMBER_CALL : "getvalue" (3:4) [Type: .unknown]
+            VAR_SYMBOL : "var" (3:4) [Type: .unknown]
+            NOVAL : "" (3:7) [Type: .void]
         RETURN : "return" (5:0) [Type: .unknown]
     CLASS_DEF : "myclass" (7:0) [Type: .unknown]
       DEFINE : "=" (8:4) [Type: .int]
@@ -1291,7 +1246,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            STRING : "this" (13:15) [Type: .string]
+            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+              ERROR : "IS_A_FUNCTION" (13:14) [Type: .unknown]
       METHOD : "getvalue" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -1315,7 +1271,6 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      getvalue (Constant) -> .string
       var (Variable) -> .unknown
     Scope [2]: myclass
       * (Function) -> .unknown
@@ -1325,22 +1280,19 @@ Scope [0]: Unnamed
       val (Variable) -> .int
       Scope [3]: *
         initial_value (Variable) -> .int
-        this (Constant) -> .string
       Scope [3]: getvalue
       Scope [3]: setvalue
         new_val (Variable) -> .int
-Error in 16_classes.rexx @ 3:15 - #UNEXPECTED_ARGUMENT, 1, "(10)"
-Error in 16_classes.rexx @ 3:7 - #FUNCTION_NOT_FOUND, ".myclass(10)"
-Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = .myclass(10)"
-Error in 16_classes.rexx @ 4:9 - #UNEXPECTED_ARGUMENT, 1, "getvalue"
-Error in 16_classes.rexx @ 4:5 - #FUNCTION_NOT_FOUND, "var.getvalue"
+Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = myclass((10)"
+Error in 16_classes.rexx @ 4:5 - #UNKNOWN_TYPE, "var"
+Error in 16_classes.rexx @ 14:15 - #IS_A_FUNCTION
+Error in 16_classes.rexx @ 14:15 - #UNKNOWN_TYPE
 Error in 16_classes.rexx @ 22:9 - #RETVAL_MISSING, "return"
-6 error(s) in source file
-Error in 16_classes.rexx @ 3:15 - #UNEXPECTED_ARGUMENT, 1, "(10)"
-Error in 16_classes.rexx @ 3:7 - #FUNCTION_NOT_FOUND, ".myclass(10)"
-Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = .myclass(10)"
-Error in 16_classes.rexx @ 4:9 - #UNEXPECTED_ARGUMENT, 1, "getvalue"
-Error in 16_classes.rexx @ 4:5 - #FUNCTION_NOT_FOUND, "var.getvalue"
+5 error(s) in source file
+Error in 16_classes.rexx @ 3:1 - #UNKNOWN_TYPE, "var = myclass((10)"
+Error in 16_classes.rexx @ 4:5 - #UNKNOWN_TYPE, "var"
+Error in 16_classes.rexx @ 14:15 - #IS_A_FUNCTION
+Error in 16_classes.rexx @ 14:15 - #UNKNOWN_TYPE
 Error in 16_classes.rexx @ 22:9 - #RETVAL_MISSING, "return"
-6 error(s) in source file
+5 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

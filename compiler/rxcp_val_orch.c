@@ -333,7 +333,9 @@ void validate_ast(Context *context) {
 
     /* AST fixups */
     context->current_scope = 0;
+    context->in_factory = 0;
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
+    ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
 
     // Initial checks walker will have set the options
     if (context->floats_decimal)  {

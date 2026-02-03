@@ -961,6 +961,10 @@ const char *ast_ndtp(NodeType type) {
             return "OF";
         case CLASS_DEF:
             return "CLASS_DEF";
+        case MEMBER_CALL:
+            return "MEMBER_CALL";
+        case FACTORY_CALL:
+            return "FACTORY_CALL";
         default: return "*UNKNOWN*";
     }
 }

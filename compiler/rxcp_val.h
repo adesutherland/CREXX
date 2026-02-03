@@ -67,6 +67,7 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* n
 walker_result rewrite_address_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result needs_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result add_rxsysb_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result rxcp_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 
 /* check */
 walker_result initial_checks_walker(walker_direction direction, ASTNode* node, void *payload);

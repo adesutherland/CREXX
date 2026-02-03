@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "rxcpmain.h"
 }
 
@@ -1091,10 +1092,43 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
                          { if (L1) L = L1; else L = ast_ft(context, NOVAL); add_sbtr(L, ast_ft(context, NOVAL)); }
 
 /* Expression terminal nodes */
-term(F)                ::= var_symbol(S) function_parameters(P).
-                           { F = S; F->node_type = FUNCTION; if (P) add_ast(F,P); }
-term(F)                ::= TK_CLASS_TYPE(S) function_parameters(P).
+term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
+                           {
+                               ASTNode *last = P;
+                               ASTNode *prev = NULL;
+                               while (last->child) {
+                                   prev = last;
+                                   last = last->child;
+                               }
+
+                               if (prev) {
+                                   prev->child = NULL;
+                               } else {
+                                   P = NULL;
+                               }
+
+                               F = ast_f(context, MEMBER_CALL, last->token);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string_length--;
+                               }
+
+                               ASTNode *lhs = ast_f(context, VAR_SYMBOL, S);
+                               if (P) add_ast(lhs, P);
+                               add_ast(F, lhs);
+                               if (PP) add_ast(F, PP);
+                           }
+term(F)                ::= TK_CLASS_TYPE(S) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string_length--;
+                               }
+                           }
 term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]

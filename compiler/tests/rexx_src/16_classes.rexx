@@ -11,7 +11,7 @@ myclass: class
     *: factory
         arg initial_value = .int
         val = initial_value
-        return this
+        return
 
     getvalue: method = .int
         return val

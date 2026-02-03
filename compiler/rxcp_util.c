@@ -632,5 +632,8 @@ const char* node_type_to_string(NodeType type) {
         case REGISTER: return "REGISTER";
         case OF: return "OF";
         case CLASS_DEF: return "CLASS_DEF";
+        case MEMBER_CALL: return "MEMBER_CALL";
+        case FACTORY_CALL: return "FACTORY_CALL";
     }
+    return "UNKNOWN";
 }
