@@ -148,6 +148,25 @@ walker_result initial_checks_walker(walker_direction direction,
                 }
             }
         }
+        else if (node->node_type == NODE_REGISTER) {
+            ASTNode *index = node->child;
+            if (index && index->node_type == INTEGER) {
+                /* Validate index >= 0 */
+                int idx = node_to_integer(index);
+                if (idx < 0) {
+                    mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
+                }
+            }
+            ASTNode *attr = index ? index->sibling : NULL;
+            if (attr && attr->node_type == VAR_SYMBOL) {
+                if (!nodeis(attr, "int") &&
+                    !nodeis(attr, "string") &&
+                    !nodeis(attr, "object") &&
+                    !nodeis(attr, "float")) {
+                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+                }
+            }
+        }
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
                 mknd_err(node, "CANT_DEFINE_PROC_HERE");

@@ -947,6 +947,8 @@ const char *ast_ndtp(NodeType type) {
             return "VARG";
         case VARG_REFERENCE:
             return "VARG_REFERENCE";
+        case CONSTANT:
+            return "CONSTANT";
         case VOID:
             return "VOID";
         case FACTORY:
@@ -955,8 +957,8 @@ const char *ast_ndtp(NodeType type) {
             return "METHOD";
         case WITH:
             return "WITH";
-        case REGISTER:
-            return "REGISTER";
+        case NODE_REGISTER:
+            return "NODE_REGISTER";
         case OF:
             return "OF";
         case CLASS_DEF:

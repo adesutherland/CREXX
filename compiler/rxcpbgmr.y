@@ -45,7 +45,7 @@
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -1386,24 +1386,26 @@ opt_method_return_type(T) ::= TK_EQUAL TK_VOID(V). { T = ast_f(context, VOID, V)
 opt_with(W) ::= . { W = NULL; }
 opt_with(W) ::= TK_WITH register_mapping(R). { W = R; }
 
-register_mapping(R) ::= TK_REGISTER(K) opt_register_parts(P).
+register_mapping(R) ::= TK_REGISTER(K) register_index(I) opt_register_attribute(A).
 {
-  R = ast_f(context, REGISTER, K);
-  if (P) add_ast(R, P);
+  R = ast_f(context, NODE_REGISTER, K);
+  add_ast(R, I);
+  if (A) add_ast(R, A);
 }
 
-opt_register_parts(P) ::= . { P = NULL; }
-opt_register_parts(P) ::= opt_register_parts(P1) register_part(E).
+register_index(I) ::= TK_STEMINT(T).
 {
-  if (P1) P = P1; else P = ast_ft(context, INSTRUCTIONS);
-  add_ast(P, E);
+  /* Remove leading dot from .index */
+  T->token_string++;
+  T->length--;
+  I = ast_f(context, INTEGER, T);
 }
 
-register_part(E) ::= TK_DOT register_sub_part(S). { E = S; }
-register_part(E) ::= TK_STEMVAR(T). { E = ast_f(context, VAR_SYMBOL, T); }
-register_part(E) ::= TK_STEMINT(T). { E = ast_f(context, INTEGER, T); }
-register_part(E) ::= TK_STEMSTRING(T). { E = ast_f(context, STRING, T); }
-
-register_sub_part(S) ::= TK_INTEGER(T). { S = ast_f(context, INTEGER, T); }
-register_sub_part(S) ::= TK_VAR_SYMBOL(T). { S = ast_f(context, VAR_SYMBOL, T); }
-register_sub_part(S) ::= TK_CLASS_TYPE(T). { S = ast_f(context, CLASS, T); }
+opt_register_attribute(A) ::= . { A = NULL; }
+opt_register_attribute(A) ::= TK_STEMVAR(T).
+{
+  /* Remove leading dot from .attribute */
+  T->token_string++;
+  T->length--;
+  A = ast_f(context, VAR_SYMBOL, T);
+}

@@ -629,7 +629,7 @@ const char* node_type_to_string(NodeType type) {
         case FACTORY: return "FACTORY";
         case METHOD: return "METHOD";
         case WITH: return "WITH";
-        case REGISTER: return "REGISTER";
+        case NODE_REGISTER: return "NODE_REGISTER";
         case OF: return "OF";
         case CLASS_DEF: return "CLASS_DEF";
         case MEMBER_CALL: return "MEMBER_CALL";
