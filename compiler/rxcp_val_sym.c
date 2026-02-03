@@ -243,6 +243,7 @@ walker_result build_symbols_walker(walker_direction direction,
             }
         }
 
+
         else if (node->node_type == VAR_SYMBOL) {
             if (node->symbolNode) {
                 node->scope = context->current_scope;
@@ -288,6 +289,16 @@ walker_result build_symbols_walker(walker_direction direction,
             sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
 
+        else if (node->node_type == NODE_REGISTER) {
+            node->scope = context->current_scope;
+            n = node->child;
+            while (n) {
+                n->scope = context->current_scope;
+                n = n->sibling;
+            }
+            return request_skip;
+        }
+
         else {
             node->scope = context->current_scope;
         }
@@ -316,11 +327,6 @@ walker_result resolve_functions_walker(walker_direction direction,
         /* IN - TOP DOWN */
     }
     else {
-        /* DEBUG PoC */
-        if (is_node_string(node, "POCABS") || is_node_string(node, "POCSQUARE")) {
-             printf("DEBUG: resolve_functions_walker sees %s as type %d\n", node->node_string, node->node_type);
-        }
-
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             if (node->symbolNode) return result_normal; /* Already Processed */
             if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */

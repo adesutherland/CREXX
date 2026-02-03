@@ -145,6 +145,7 @@ walker_result set_node_types_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
+        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -519,6 +520,7 @@ walker_result type_safety_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
+        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */

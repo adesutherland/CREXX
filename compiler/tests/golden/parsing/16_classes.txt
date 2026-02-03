@@ -179,8 +179,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
         VAR_TARGET : "val" (8:4) [Type: .int]
         CLASS : ".int" (8:10) [Type: .int]
         NODE_REGISTER : "register" (8:20) [Type: .unknown]
-          INTEGER : "1" (8:28) [Type: .int]
-          STRING : "int" (8:30) [Type: .string]
+          INTEGER : "1" (8:28) [Type: .unknown]
+          VAR_SYMBOL : "int" (8:30) [Type: .unknown]
       FACTORY : "*" (10:4) [Type: .object]
         VOID : "" (10:6) [Type: .void]
         ARGS : "" (11:12) [Type: .unknown]
@@ -220,7 +220,6 @@ Scope [0]: Unnamed
     Scope [2]: myclass
       * (Function) -> myclass
       getvalue (Function) -> .int
-      int (Constant) -> .string
       setvalue (Function) -> .void
       val (Variable) -> .int
       Scope [3]: *
@@ -252,8 +251,8 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
         VAR_TARGET : "val" (8:4) [Type: .int]
         CLASS : ".int" (8:10) [Type: .int]
         NODE_REGISTER : "register" (8:20) [Type: .unknown]
-          CONSTANT : "1" (8:28) [Type: .int]
-          CONSTANT : "int" (8:30) [Type: .string]
+          CONSTANT : "1" (8:28) [Type: .unknown]
+          VAR_SYMBOL : "int" (8:30) [Type: .unknown]
       FACTORY : "*" (10:4) [Type: .object]
         VOID : "" (10:6) [Type: .void]
         ARGS : "" (11:12) [Type: .unknown]
