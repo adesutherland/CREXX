@@ -54,7 +54,7 @@ qpos: procedure=.int
   qlen = 1
   ch = ''
 
-  do while i <= lenText
+  do while i <= lenText                  ## i is the opening quote within the string
      j = i - 1                           ## setstrpos needs 0-based offset
      assembler SETSTRPOS text, j
      assembler substring ch, text, qlen  ## fetch one byte and test if quote char

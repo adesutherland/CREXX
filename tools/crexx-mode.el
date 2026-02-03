@@ -213,11 +213,19 @@
   '("end")
   "Keywords that close a block and should outdent.")
 
+;; (defun rexx--prev-line-opens-block-p ()
+;;   "Return non-nil if previous code line opens a block."
+;;   (let* ((line (downcase (rexx--previous-code-line-text))))
+;;     (or (string-match-p "\\_<\\(do\\|loop\\|select\\)\\_>" line)
+;;         (string-match-p "\\_<then\\_>" line)
+;;         (string-match-p "^\\s-*else\\_>" line))))
+
 (defun rexx--prev-line-opens-block-p ()
   "Return non-nil if previous code line opens a block."
   (let* ((line (downcase (rexx--previous-code-line-text))))
     (or (string-match-p "\\_<\\(do\\|loop\\|select\\)\\_>" line)
-        (string-match-p "\\_<then\\_>" line)
+        ;; only treat THEN as a block opener if it ends the line
+        (string-match-p "\\_<then\\_>\\s-*$" line)
         (string-match-p "^\\s-*else\\_>" line))))
 
 (defun rexx--current-line-closer-or-mid-p ()

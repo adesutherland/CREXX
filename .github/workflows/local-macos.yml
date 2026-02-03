@@ -1,0 +1,95 @@
+name: Build CREXX (manual, local macOS runner)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos-local:
+    name: Build on self-hosted macOS (manual)
+    runs-on: [self-hosted, macOS]
+
+    steps:
+      - name: Determine Release Name
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+            echo "RELEASE_ID=release_candidate" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+            echo "RELEASE_ID=dev_snapshot" >> "$GITHUB_ENV"
+          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+            echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> "$GITHUB_ENV"
+          else
+            echo "Skip release"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure + Build Release (MinSizeRel)
+        shell: bash
+        run: |
+          cmake -S . -B "${{ runner.temp }}/release" -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake --build "${{ runner.temp }}/release"
+
+      - name: Collect executables
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p "${{ runner.temp }}/exe/bin"
+          mkdir -p "${{ runner.temp }}/exe/lib"
+          mkdir -p "${{ runner.temp }}/exe/lib/rxfnsb"	  
+
+          # Release binaries
+          cp "${{ runner.temp }}/release/compiler/rxc"       "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/assembler/rxas"     "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/disassembler/rxdas" "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/debugger/rxdb"      "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/interpreter/rxvm"   "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/interpreter/rxbvm"  "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/interpreter/rxvme"  "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/interpreter/rxbvme" "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/bin/crexx"          "${{ runner.temp }}/exe/bin/" || true
+          cp "${{ runner.temp }}/release/bin/rxpp"           "${{ runner.temp }}/exe/bin/" || true
+
+          # Release libs BIF
+          cp "${{ runner.temp }}/release/lib/rxfnsb/library.rxbin" "${{ runner.temp }}/exe/lib/rxfnsb" || true
+
+          # Release libs (if present)
+          cp "${{ runner.temp }}/release/interpreter/librxbvml.a" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/interpreter/librxvml.a"  "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/strings/rx_strings.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/getpi/rx_getpi.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/cipher/rx_cipher.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/system/rx_system.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/odbc/rx_odbc.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/arrays/rx_arrays.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/rxmath/rx_rxmath.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo_static.a" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/sysinfo/rx_sysinfo.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess_static.a" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/keyaccess/rx_keyaccess.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/id/rx_id.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/stack/rx_stack.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/recv390/rx_recv390.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/llist/rx_llist_static.a" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/llist/rx_llist.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/plugins/treemap/rx_treemap.rxplugin" "${{ runner.temp }}/exe/lib/" || true
+          cp "${{ runner.temp }}/release/lib/veclib/veclib.rxbin" "${{ runner.temp }}/exe/lib/" || true
+
+          # Docs
+          cp LICENSE     "${{ runner.temp }}/exe/" || true
+          cp README.md   "${{ runner.temp }}/exe/" || true
+          cp SECURITY.md "${{ runner.temp }}/exe/" || true
+          cp history.txt "${{ runner.temp }}/exe/" || true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CREXX-macOS-local
+          path: |
+            ${{ runner.temp }}/exe
