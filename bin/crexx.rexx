@@ -19,101 +19,118 @@
  *
  */           
 
-options levelb comments_dash
-import rxfnsb
-import sysinfo
+ options levelb comments_dash
+ import rxfnsb
+ import sysinfo
+ 
+ /* procedure main is what is run when crexx starts execution */
+ main: procedure = .int
+ arg fn = .string[]
+ module = .string[]
+ 
+ /* defaults for options for this program */
+ native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
+ execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0
+ 
+ esc             = '1b'X
+ ANSI_RESET      = '[0m'
+ ANSI_GREEN      = '[32m'
+ ANSI_BLUE       = '[34m'
+ ANSI_RED        = '[31m'
+ ANSI_YELLOW     = '[33m'
+ ANSI_LINE_CLEAR = '[2K'
+ ANSI_LINE_UP    = '[1A'
+ 
+ /* when there are no commandline arguments found, display help */
+ if fn[0]=0 then do
+   ret = help(nocolor)
+   exit
+ end
+ 
+ /* determine the path for libraries etc */
+ rxpath=''
+ env_wanted='CREXX_HOME'
+ /* honour CREXX_HOME environment variable when set */
+ assembler getenv rxpath,env_wanted
+ 
+ /* if not set, then */
+ rexx_version = ''
+ assembler rxvers rexx_version
+ dirsep = '/'
+ platform = word(rexx_version,1)
+ if  platform = 'windows' then dirsep = '\'
+ if rxpath='' then do
+   rxpath=getLoadPath()
+   lastSegment=lastpos(dirsep,rxpath)
+   rxpath=substr(rxpath,1,lastSegment-1)
+ end
+ rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
+ 
+ libraries='/lib/rxfnsb'
+ 
+ modulenumber=1
+ /* loop through arguments and find options and program files */
+ do i=1 to fn.0
+   if left(fn.i,1)<>'-' then
+     do /* it is not a flag but a filename */
+       filename=fn.i
+       filenames=strip(filenames) strip(filename)
+     end
+     else
+       do
+	 /* allow for single- and double dash options */
+       if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
+       if fn.i = '-help'     then ret = help(nocolor)
+       if fn.i = '-noexec'   then execute=0
+       if fn.i = '-native'   then native=1
+       if fn.i = '-version'  then version=1
+       if fn.i = '-verbose'  then verbose=1
+       if fn.i = '-verbose0' then verbose=0
+       if fn.i = '-verbose1' then verbose=1
+       if fn.i = '-verbose2' then verbose=2
+       if fn.i = '-verbose3' then verbose=3
+       if fn.i = '-verbose4' then verbose=4
+       if fn.i = '-nooptimize' then optimize=0
+       if fn.i = '-nocolor'  then nocolor=1
+       if fn.i = '-nocolour' then nocolor=1
+       if fn.i = '-keep' then keep=1
+       if left(fn.i,2)= '-l' then do
+	 if left(fn.i,1)=' ' then do
+	   fn.i=fn.i||fn.i+1
+	   fn.i+1=''
+	 end
+	 lastSlash = lastpos('/',fn.i)
+	 libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
+	 module[modulenumber] = substr(fn.i, lastSlash + 1)
+	 /* say '---->' module[modulenumber] */
+	 libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
+	 modulenumber = modulenumber+1
+       end
+     end
+   end
 
-/* procedure main is what is run when crexx starts execution */
-main: procedure = .int
-arg fn = .string[]
-module = .string[]
+   if verbose>1 then call logo nocolor  
+   
+   if verbose>2 then     do
+     call banner
+     say 'INVOCATION OPTIONS'
+     
+       say 'Options in effect:'
+       if execute then say '  EXEC'
+       else say 'NOEXEC'
+       if native  then say '  NATIVE'
+       else say 'NONATIVE'
+       if \keep  then say '  KEEP'
+       else say 'NOKEEP'
+       if \color  then say '  COLOR'
+       else say 'NOCOLOR'
+       say 'VERBOSE' verbose
+       -- call formfeed
+     end
+       
+if version then call logo nocolor
 
-/* defaults for options for this program */
-native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
-execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0
-
-esc             = '1b'X
-ANSI_RESET      = '[0m'
-ANSI_GREEN      = '[32m'
-ANSI_BLUE       = '[34m'
-ANSI_RED        = '[31m'
-ANSI_YELLOW     = '[33m'
-ANSI_LINE_CLEAR = '[2K'
-ANSI_LINE_UP    = '[1A'
-
-/* when there are no commandline arguments found, display help */
-if fn[0]=0 then do
-  ret = help(nocolor)
-  exit
-end
-
-/* determine the path for libraries etc */
-rxpath=''
-env_wanted='CREXX_HOME'
-/* honour CREXX_HOME environment variable when set */
-assembler getenv rxpath,env_wanted
-
-/* if not set, then */
-rexx_version = ''
-assembler rxvers rexx_version
-dirsep = '/'
-platform = word(rexx_version,1)
-if  platform = 'windows' then dirsep = '\'
-if rxpath='' then do
-  rxpath=getLoadPath()
-  lastSegment=lastpos(dirsep,rxpath)
-  rxpath=substr(rxpath,1,lastSegment-1)
-end
-rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
-
-libraries='/lib/rxfnsb'
-
-modulenumber=1
-/* loop through arguments and find options and program files */
-do i=1 to fn.0
-  if left(fn.i,1)<>'-' then
-    do /* it is not a flag but a filename */
-      filename=fn.i
-	  filenames=strip(filenames) strip(filename)
-    end
-  else
-    do
-      /* allow for single- and double dash options */
-      if left(fn.i,2) = '--' then fn.i=substr(fn.i,2)
-      if fn.i = '-help'     then ret = help(nocolor)
-      if fn.i = '-noexec'   then execute=0
-      if fn.i = '-native'   then native=1
-      if fn.i = '-version'  then version=1
-      if fn.i = '-verbose'  then verbose=1
-      if fn.i = '-verbose0' then verbose=0
-      if fn.i = '-verbose1' then verbose=1
-      if fn.i = '-verbose2' then verbose=2
-      if fn.i = '-verbose3' then verbose=3
-      if fn.i = '-verbose4' then verbose=4
-      if fn.i = '-noexec'   then execute=0
-      if fn.i = '-nooptimize' then optimize=0
-      if fn.i = '-nocolor'  then nocolor=1
-      if fn.i = '-nocolour' then nocolor=1
-      if fn.i = '-keep' then keep=1
-      if left(fn.i,2)= '-l' then do
-	if left(fn.i,1)=' ' then do
-	  fn.i=fn.i||fn.i+1
-	  fn.i+1=''
-	end
-	lastSlash = lastpos('/',fn.i)
-	libs = libs';'rxpath||substr(fn.i,3) /* for rxvm execution */
-	module[modulenumber] = substr(fn.i, lastSlash + 1)
-	/* say '---->' module[modulenumber] */
-	libraries = libraries';'rxpath||substr(fn.i,3,lastSlash-2) /* for rxc compile */
-	modulenumber = modulenumber+1
-      end
-    end
-end -- do i
-
-
-  if version then call logo nocolor
-  if verbose>1 then call logo nocolor  
-
+    
   if verbose>1 then say esc||ANSI_GREEN'using CREXX_HOME:'esc||ANSI_RESET rxpath
 
 lpath = libraries
@@ -196,7 +213,8 @@ do i=1 to words(filenames)
     if compile then say '[ 'res' ] rxas     - Assembled      ' esc||ANSI_BLUE||filename'.rxas'||esc||ANSI_RESET
   end
   if RC>0 then exit
-  
+
+  if verbose>2 then call banner
   modules = translate(libs,' ',';')
   if native then do
     pack_cmd = 'rxcpack' filename rxpath'/lib/rxfnsb/library' modules
@@ -288,10 +306,10 @@ assembler rxvers rversion
 rvers = word(rversion,1) word(rversion,2) word(rversion,4)
 esc = '1b'x
 if nocolor then do
-  say 'cREXX compiler driver' rvers
+  say 'CREXX compiler driver' rvers
 end
 else do
-  say esc'[33mcREXX compiler driver' esc'[34m'rvers esc'[0m'
+  say esc'[33mCREXX compiler driver' esc'[34m'rvers esc'[0m'
 end
 say 'Copyright (c) Adrian Sutherland 2021,'left(date('j'),4)'. All rights reserved.'
 say 'Copyright (c) RexxLA 2021,'left(date('j'),4)'. All rights reserved.'
@@ -305,16 +323,24 @@ loop i=1 to toprint.0
 end
 return 'printed'
 
+  
+banner: procedure
+esc = '1b'x
+say esc'[34m'||'======> RexxLA cREXX compiler release 0.01                          'date() time() esc'[0m'
+say;say
+
+formfeed: procedure
+say x2c('0C')
+
 printFileToSTDout: procedure
 arg toread = .string
+call banner
+say '  LINENUM' copies('----+',15)
+i=0
 do while lines(toread)
-  say linein(toread)
+  say '   'right(i,6,'0') linein(toread)
 end
 call lineout toread
-  
-
-
-
 
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
