@@ -1322,27 +1322,26 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 
 /* Classes / Factories / Methods */
 
-class_def(C) ::= TK_LABEL(L) TK_CLASS(K) opt_of(O).
+class_def(C) ::= TK_LABEL(L) TK_CLASS opt_of(O).
 {
-  C = ast_f(context, CLASS_DEF, K);
-  add_ast(C, ast_f(context, VAR_SYMBOL, L));
+  C = ast_f(context, CLASS_DEF, L);
   if (O) add_ast(C, O);
 }
 
 opt_of(O) ::= . { O = NULL; }
 opt_of(O) ::= TK_OF type_def(T). { O = T; }
 
-factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY(K).
+factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY.
 {
-  F = ast_f(context, FACTORY, K);
-  add_ast(F, ast_f(context, VAR_SYMBOL, L));
+  F = ast_f(context, FACTORY, L);
+  add_ast(F, ast_ft(context, VOID));
 }
 
-method_def(M) ::= TK_LABEL(L) TK_METHOD(K) opt_method_return_type(T).
+method_def(M) ::= TK_LABEL(L) TK_METHOD opt_method_return_type(T).
 {
-  M = ast_f(context, METHOD, K);
-  add_ast(M, ast_f(context, VAR_SYMBOL, L));
+  M = ast_f(context, METHOD, L);
   if (T) add_ast(M, T);
+  else add_ast(M, ast_ft(context, VOID));
 }
 
 opt_method_return_type(T) ::= . { T = NULL; }

@@ -732,10 +732,10 @@ size_t ast_nchd(ASTNode* node) {
     return n;
 }
 
-/* Returns the PROCEDURE ASTNode procedure of an AST node */
+/* Returns the PROCEDURE, METHOD or FACTORY ASTNode of an AST node */
 ASTNode* ast_proc(ASTNode *node) {
     while (node) {
-        if (node->node_type == PROCEDURE) return node;
+        if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) return node;
         node = node->parent;
     }
     return 0;
@@ -949,6 +949,18 @@ const char *ast_ndtp(NodeType type) {
             return "VARG_REFERENCE";
         case VOID:
             return "VOID";
+        case FACTORY:
+            return "FACTORY";
+        case METHOD:
+            return "METHOD";
+        case WITH:
+            return "WITH";
+        case REGISTER:
+            return "REGISTER";
+        case OF:
+            return "OF";
+        case CLASS_DEF:
+            return "CLASS_DEF";
         default: return "*UNKNOWN*";
     }
 }

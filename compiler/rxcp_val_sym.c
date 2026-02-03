@@ -69,17 +69,49 @@ walker_result build_symbols_walker(walker_direction direction,
             node->scope = context->current_scope;
         }
 
-        else if (node->node_type == PROCEDURE) {
-            node->node_string_length--; /* Remove the ':' */
+        else if (node->node_type == CLASS_DEF) {
+            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
+                node->node_string_length--; /* Remove the ':' */
+            }
+
+            /* Check for duplicated */
+            symbol = sym_rslv(context->current_scope, node);
+            if (symbol) {
+                if (symbol->scope == context->current_scope) {
+                    /* Error */
+                    mknd_err(node, "DUPLICATE_SYMBOL");
+                }
+                else symbol = 0;
+            }
+
+            /* Make a new symbol */
+            if (!symbol) {
+                symbol = sym_f(context->current_scope, node);
+                symbol->symbol_type = CLASS_SYMBOL;
+            }
+
+            sym_adnd(symbol, node, 0, 1);
+
+            /* Move down to the class scope */
+            context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
+                node->node_string_length--; /* Remove the ':' */
+            }
 
             /* Set the return value node value_type */
             n = ast_chld(node, CLASS, VOID);
-            n->value_type = node_to_type(n,
-                                         &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
-                                         &(n->value_class));
+            if (n) {
+                n->value_type = node_to_type(n,
+                                             &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
+                                             &(n->value_class));
 
-            /* Reset node Target Type to be the same as the node Value Type */
-            ast_rttp(n);
+                /* Reset node Target Type to be the same as the node Value Type */
+                ast_rttp(n);
+            }
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
@@ -594,7 +626,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
         }
 
-        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL) {
+        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL && symbol->symbol_type != CLASS_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
             symbol->type = TP_STRING;
