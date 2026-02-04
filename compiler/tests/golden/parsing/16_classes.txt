@@ -82,7 +82,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .unknown]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
           RETURN : "return" (13:8) [Type: .unknown]
-            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+            VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .unknown]
       METHOD : "getvalue:" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .unknown]
         ARGS : "" (15:27) [Type: .unknown]
@@ -137,7 +137,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .unknown]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .unknown]
           RETURN : "return" (13:8) [Type: .unknown]
-            VAR_SYMBOL : "*" (13:14) [Type: .unknown]
+            VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .unknown]
       METHOD : "getvalue:" (15:4) [Type: .unknown]
         CLASS : ".int" (15:23) [Type: .unknown]
         ARGS : "" (15:27) [Type: .unknown]
@@ -192,7 +192,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .unknown]
-            VAR_SYMBOL : "*" (13:14) [Type: .object]
+            VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .object]
       METHOD : "getvalue" (15:4) [Type: .int]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]
@@ -218,16 +218,18 @@ Scope [0]: Unnamed
     Scope [2]: main
       var (Variable) -> myclass
     Scope [2]: myclass
-      * (Function) -> myclass
       getvalue (Function) -> .int
       setvalue (Function) -> .void
       val (Variable) -> .int
-      Scope [3]: *
-        * (Variable) -> myclass
+      §factory (Function) -> myclass
+      Scope [3]: §factory
         initial_value (Variable) -> .int
+        §factory (Variable) -> myclass
       Scope [3]: getvalue
+        §this (Variable) -> myclass
       Scope [3]: setvalue
         new_val (Variable) -> .int
+        §this (Variable) -> myclass
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -264,7 +266,7 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             VAR_TARGET : "val" (12:8) [Type: .int]
             VAR_SYMBOL : "initial_value" (12:14) [Type: .int]
           RETURN : "return" (13:8) [Type: .object]
-            VAR_SYMBOL : "*" (13:14) [Type: .object]
+            VAR_SYMBOL : "\xc2\xa7factory" (13:14) [Type: .object]
       METHOD : "getvalue" (15:4) [Type: .int]
         CLASS : ".int" (15:23) [Type: .int]
         ARGS : "" (15:27) [Type: .unknown]

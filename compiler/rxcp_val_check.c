@@ -150,9 +150,12 @@ walker_result initial_checks_walker(walker_direction direction,
         }
         else if (node->node_type == NODE_REGISTER) {
             ASTNode *index = node->child;
+            /* Handle INSTRUCTIONS wrapper if present */
+            while (index && index->node_type == INSTRUCTIONS) index = index->child;
             if (index && index->node_type == INTEGER) {
                 /* Validate index >= 0 */
                 int idx = node_to_integer(index);
+                node->int_value = idx;
                 if (idx < 0) {
                     mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
                 }

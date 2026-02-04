@@ -39,7 +39,7 @@ walker_result rxcp_fixup_walker(walker_direction direction, ASTNode *node, void 
         if (node->node_type == RETURN && context->in_factory > 0) {
             if (node->child == NULL) {
                 /* Case A: Explicit Return with 0 children or added by initial_checks_walker */
-                add_ast(node, ast_ftt(context, VAR_SYMBOL, "*"));
+                add_ast(node, ast_ftt(context, VAR_SYMBOL, "\xc2\xa7" "factory"));
             }
         }
     } else { /* direction == out */

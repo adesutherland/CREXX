@@ -85,8 +85,15 @@ static int src_func(Context *context, char* fqname, imported_func **func) {
 // Returns 0 if not found
 static int src_nsfu(Context *context, char* namespace, char* name, imported_func **func) {
     struct avl_tree_node *result;
-    struct avl_tree_node *root = context->master_context->importable_function_tree;
+    struct avl_tree_node *root;
     char *fqname;
+
+    if (!context || !context->master_context) return 0;
+    root = context->master_context->importable_function_tree;
+    if (!root) return 0;
+
+    if (!namespace || !name) return 0;
+
     fqname = malloc(strlen(namespace) + strlen(name) + 2);
     strcpy(fqname,namespace);
     strcat(fqname, ".");
@@ -112,16 +119,28 @@ static int src_nsfu(Context *context, char* namespace, char* name, imported_func
 static int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func) {
     char *namespace;
     size_t i;
+    Scope *scope;
+
+    if (!context || !context->ast || !context->ast->scope) return 0;
+    scope = context->ast->scope;
 
     /* Check the module namespace */
-    namespace = scp_chd(context->ast->scope, 0)->name;
-    if (src_nsfu(context, namespace, name, func)) return 1;
+    if (scp_noch(scope) > 0) {
+        Scope *s0 = scp_chd(scope, 0);
+        if (s0) {
+            namespace = s0->name;
+            if (src_nsfu(context, namespace, name, func)) return 1;
+        }
+    }
 
     /* Check imported namespaces */
     if (!only_namespace) {
-        for (i = 1; i < scp_noch(context->ast->scope); i++) {
-            namespace = scp_chd(context->ast->scope, i)->name;
-            if (src_nsfu(context, namespace, name, func)) return 1;
+        for (i = 1; i < scp_noch(scope); i++) {
+            Scope *si = scp_chd(scope, i);
+            if (si) {
+                namespace = si->name;
+                if (src_nsfu(context, namespace, name, func)) return 1;
+            }
         }
     }
 
@@ -786,7 +805,11 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
 /* return 1 if a file was loaded, or 0 if no more files are available */
 static int load_another_file(Context *context) {
     size_t f;
-    Context *master_context = context->master_context;
+    Context *master_context;
+    
+    if (!context) return 0;
+    master_context = context->master_context;
+    if (!master_context) return 0;
 
     /* Load files from the importable_file_list */
     if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);

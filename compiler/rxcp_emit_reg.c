@@ -35,6 +35,9 @@ static int use_symbol_reg(ASTNode* node) {
             && node->symbolNode->symbol->symbol_type != FUNCTION_SYMBOL   // It's not a function
             && node->node_type != OP_ARG_EXISTS // If it's not OP_ARG_EXISTS (if this list becomes long we need a better way ...)
             && !(node->child)           // It's not an array element
+            && !(node->symbolNode->symbol->scope &&
+                 node->symbolNode->symbol->scope->defining_node &&
+                 node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) // It's not an attribute
         ) return 1;
     else return 0;
 }
@@ -66,7 +69,6 @@ static int defer_reg_return(ASTNode* node) {
 walker_result register_walker(walker_direction direction,
                                  ASTNode* node,
                                  void *pl) {
-
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *c;
     int a, i;
@@ -80,6 +82,8 @@ walker_result register_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         switch (node->node_type) {
+            case FACTORY:
+            case METHOD:
             case PROCEDURE:
                 /* Return Type */
                 c = ast_chld(node, CLASS, VOID);
@@ -92,7 +96,8 @@ walker_result register_walker(walker_direction direction,
                  */
                 /* Loop through arguments setting the symbol register */
                 c = node->child;
-                a = 1;
+                if (node->parent->node_type == METHOD) a = 2; /* a1 is reserved for "this" */
+                else a = 1;
                 while (c) {
                     if (c->child->node_type == VAR_TARGET || c->child->node_type == VAR_REFERENCE) {
                         c->register_num = a;
@@ -132,10 +137,17 @@ walker_result register_walker(walker_direction direction,
                     child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
                 break;
 
+            case FACTORY_CALL:
+            case MEMBER_CALL:
             case FUNCTION:
                 /* Additional Registers for Arguments - need to be assigned now */
                 i = 0;
-                c = child1;
+                if (node->node_type == MEMBER_CALL) {
+                    c = child2; /* Skip instance */
+                    i = 1;      /* For instance */
+                } else {
+                    c = child1;
+                }
                 while (c) {
                     i++;
                     c = c->sibling;
@@ -144,8 +156,17 @@ walker_result register_walker(walker_direction direction,
                 node->additional_registers = get_regs(node->scope, node->num_additional_registers);
 
                 /* The children register need to be assigned */
-                c = child1;
-                i = node->additional_registers + 1; /* First one is the number of arguments */
+                if (node->node_type == MEMBER_CALL) {
+                    /* Instance */
+                    if (!use_symbol_reg(child1) || is_constant(child1))
+                        child1->register_num = DONT_ASSIGN_REGISTER;
+                    c = child2;
+                    i = node->additional_registers + 2; /* First is argc, second is instance */
+                } else {
+                    c = child1;
+                    i = node->additional_registers + 1; /* First one is the number of arguments */
+                }
+
                 while (c) {
                     /* DONT_ASSIGN_REGISTER if it makes sense to directly assign
                      * the register later from the call sequence of registers
@@ -379,12 +400,17 @@ walker_result register_walker(walker_direction direction,
             case VAR_TARGET:
             case VAR_REFERENCE:
                 /* Set the symbols register */
-                if (node->symbolNode->symbol->register_num == UNSET_REGISTER) {
+                if (node->symbolNode && node->symbolNode->symbol &&
+                    node->symbolNode->symbol->register_num == UNSET_REGISTER) {
                     if (node->symbolNode->symbol->exposed) {
                         node->symbolNode->symbol->register_num = payload->globals++;
                         node->symbolNode->symbol->register_type = 'g';
                     }
-                    else node->symbolNode->symbol->register_num = get_reg(node->scope);
+                    else if (!(node->symbolNode->symbol->scope &&
+                               node->symbolNode->symbol->scope->defining_node &&
+                               node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF)) {
+                        node->symbolNode->symbol->register_num = get_reg(node->scope);
+                    }
                 }
 
                 /* If we are a define no code is generated so no registers needed */
@@ -450,8 +476,17 @@ walker_result register_walker(walker_direction direction,
                 }
                 else {
                     /* The node uses the symbol register number */
-                    node->register_num = node->symbolNode->symbol->register_num;
-                    node->register_type = node->symbolNode->symbol->register_type;
+                    if (node->symbolNode && node->symbolNode->symbol &&
+                        node->symbolNode->symbol->scope &&
+                        node->symbolNode->symbol->scope->defining_node &&
+                        node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                        /* Attribute - needs a temporary register */
+                        node->register_num = get_reg(node->scope);
+                        node->register_type = 'r';
+                    } else if (node->symbolNode && node->symbolNode->symbol) {
+                        node->register_num = node->symbolNode->symbol->register_num;
+                        node->register_type = node->symbolNode->symbol->register_type;
+                    }
                 }
                 break;
 
@@ -502,6 +537,8 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
                 break;
 
+            case FACTORY_CALL:
+            case MEMBER_CALL:
             case FUNCTION:
                 /* Set result temporary register */
                 if (node->register_num != DONT_ASSIGN_REGISTER)
@@ -509,22 +546,44 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
 
                 /* Assign additional Registers for arguments if assignment was deferred  */
-                i = node->additional_registers + 1; /* First one is the number of arguments */
-                c = child1;
+                if (node->node_type == MEMBER_CALL) {
+                    if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                        child1->register_num = node->additional_registers + 1;
+                        child1->register_type = 'r';
+                    }
+                    c = child2;
+                    i = node->additional_registers + 2;
+                } else {
+                    c = child1;
+                    i = node->additional_registers + 1; /* First one is the number of arguments */
+                }
                 while (c) {
-                    if (c->register_num == DONT_ASSIGN_REGISTER)
+                    if (c->register_num == DONT_ASSIGN_REGISTER) {
                         c->register_num = i;
+                        c->register_type = 'r';
+                    }
                     i++;
                     c = c->sibling;
                 }
 
                 /* Free registers except where it has been given to a symbol */
                 ret_reg(node->scope, node->additional_registers); /* First one is the number of arguments */
-                i = node->additional_registers + 1;
-                c = child1;
+                if (node->node_type == MEMBER_CALL) {
+                    if ( !(use_symbol_reg(child1) &&
+                           child1->symbolNode && child1->symbolNode->symbol &&
+                           child1->symbolNode->symbol->register_num == node->additional_registers + 1 &&
+                           child1->symbolNode->symbol->register_type == 'r') )
+                        ret_reg(node->scope, node->additional_registers + 1);
+                    c = child2;
+                    i = node->additional_registers + 2;
+                } else {
+                    c = child1;
+                    i = node->additional_registers + 1;
+                }
                 while (c) {
                     /* If it is a symbol with the same register as i don't return the register */
                     if ( !(use_symbol_reg(c) &&
+                           c->symbolNode && c->symbolNode->symbol &&
                            c->symbolNode->symbol->register_num == i &&
                            c->symbolNode->symbol->register_type == 'r') )
                         ret_reg(node->scope, i);

@@ -374,17 +374,22 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             if (!new_symbol) {
                 new_symbol = sym_afqn(context->dest, fqname);
             }
-            new_symbol->symbol_type = symbol->symbol_type;
-            new_symbol->type = symbol->type;
-            new_symbol->exposed = symbol->exposed;
-            new_symbol->fixed_args = symbol->fixed_args;
-            new_symbol->has_vargs = symbol->has_vargs;
-            new_symbol->is_arg = symbol->is_arg;
-            new_symbol->is_ref_arg = symbol->is_ref_arg;
-            new_symbol->is_const_arg = symbol->is_const_arg;
-            new_symbol->is_opt_arg = symbol->is_opt_arg;
+            if (new_symbol) {
+                new_symbol->symbol_type = symbol->symbol_type;
+                new_symbol->type = symbol->type;
+                new_symbol->exposed = symbol->exposed;
+                new_symbol->fixed_args = symbol->fixed_args;
+                new_symbol->has_vargs = symbol->has_vargs;
+                new_symbol->is_arg = symbol->is_arg;
+                new_symbol->is_ref_arg = symbol->is_ref_arg;
+                new_symbol->is_const_arg = symbol->is_const_arg;
+                new_symbol->is_opt_arg = symbol->is_opt_arg;
 
-            sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+                sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+            } else {
+                fprintf(stderr, "INTERNAL ERROR: Duplicating AST - Could not find or create symbol %s\n", fqname);
+                /* We can't really recover easily here without leaving the AST in a broken state, but let's at least not crash */
+            }
             free(fqname);
         }
     }

@@ -271,10 +271,11 @@ walker_result set_node_types_walker(walker_direction direction,
                     /* Lookup the Class Name */
                     Symbol *class_sym = sym_rvfc(context->ast, node);
                     if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
-                        /* Resolve the Factory routine '*' within that class */
+                        /* Resolve the Factory routine '§factory' within that class */
                         ASTNode star_node;
-                        star_node.node_string = "*";
-                        star_node.node_string_length = 1;
+                        memset(&star_node, 0, sizeof(ASTNode));
+                        star_node.node_string = "\xc2\xa7" "factory";
+                        star_node.node_string_length = 9;
                         Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
                         if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
                             sym_adnd(factory_sym, node, 1, 0);
@@ -786,7 +787,10 @@ walker_result type_safety_walker(walker_direction direction,
 
             case OP_ARG_VALUE:
             case OP_ARG_IX_EXISTS:
-                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
+                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                }
                 set_node_target_type(child1,TP_INTEGER);
 
                 if (child1->node_type == INTEGER) {
@@ -799,7 +803,10 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_ARGS:
-                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
+                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                }
                 break;
 
             case SAY:
@@ -808,7 +815,12 @@ walker_result type_safety_walker(walker_direction direction,
 
             case RETURN:
                 /* Type is the scope > procedure > type */
-                ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
+                if (context->current_scope->defining_node && context->current_scope->defining_node->symbolNode) {
+                    ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
+                } else {
+                    /* Fallback to VOID if no defining node or symbol */
+                    set_node_type(node, TP_VOID);
+                }
                 if (node->value_type == TP_VOID) {
                     if (child1) mknd_err(child1, "EXTRANEOUS_RETVAL");
                 }
@@ -862,8 +874,8 @@ walker_result type_safety_walker(walker_direction direction,
                             while (n2) {
                                 if (n2->node_type == ASSIGN) {
                                     /* Same Symbol? */
-                                    if (n2->child->symbolNode->symbol ==
-                                        node->child->symbolNode->symbol) {
+                                    if (n2->child->symbolNode && node->child->symbolNode &&
+                                        n2->child->symbolNode->symbol == node->child->symbolNode->symbol) {
                                         node->association = n1;
                                         goto found;
                                     }
@@ -932,12 +944,12 @@ walker_result func_type_safety_walker(walker_direction direction,
                 if (node->node_type == MEMBER_CALL) n1 = node->child->sibling; /* Skip Instance */
                 else n1 = node->child;
 
-                if  (node->symbolNode) {
+                if  (node->symbolNode && sym_nond(node->symbolNode->symbol) > 0) {
                     n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
                     /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
-                    if (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY) {
+                    if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY)) {
                         n2 = ast_chld(n2, ARGS, 0);
-                        n2 = n2->child;
+                        if (n2) n2 = n2->child;
                     } else n2 = 0;
                 }
                 else n2 = 0;

@@ -51,11 +51,21 @@ int is_node_string(ASTNode* node, const char* value) {
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
 int node_to_integer(ASTNode* node) {
     int result;
-    char *buffer = malloc(node->node_string_length + 1);
+    if (!node) return 0;
+    char *s = node->node_string;
+    size_t l = node->node_string_length;
+
+    /* Skip leading dot or spaces */
+    while (l && (*s == '.' || *s == ' ')) {
+        s++;
+        l--;
+    }
+
+    char *buffer = malloc(l + 1);
 
     /* Null terminated buffer - {sigh} */
-    buffer[node->node_string_length] = 0;
-    memcpy(buffer, node->node_string, node->node_string_length);
+    buffer[l] = 0;
+    memcpy(buffer, s, l);
 
     result = atoi(buffer);
 

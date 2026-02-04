@@ -97,32 +97,58 @@ void emit_proc(ASTNode *node, void *pl) {
         }
         break;
 
+        case CLASS_DEF:
+            if (!node->output) node->output = output_f();
+            n = child1;
+            while (n) {
+                if (n->output) output_concat(node->output, n->output);
+                if (n->cleanup) output_concat(node->output, n->cleanup);
+                n = n->sibling;
+            }
+            break;
+
+        case FACTORY:
+        case METHOD:
         case PROCEDURE:
             if (ast_chld(node, INSTRUCTIONS, NOP)->node_type == NOP) {
                 /* A declaration - external */
                 char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
-                char* proc_symbol= sym_frnm(node->symbolNode->symbol);
+                char *proc_label, *proc_expose, *proc_fqn;
+                if (node->node_type == PROCEDURE) {
+                    if (node->node_string) {
+                        proc_label = malloc(node->node_string_length + 1);
+                        memcpy(proc_label, node->node_string, node->node_string_length);
+                        proc_label[node->node_string_length] = 0;
+                        if (proc_label[node->node_string_length - 1] == ':') proc_label[node->node_string_length - 1] = 0;
+                    } else proc_label = strdup(node->symbolNode->symbol->name);
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
+                    proc_fqn = sym_frnm(node->symbolNode->symbol);
+                } else {
+                    proc_label = sym_mngd_frnm(node->symbolNode->symbol);
+                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    proc_fqn = sym_frnm(node->symbolNode->symbol);
+                }
                 char* buf;
                 if (node->symbolNode->symbol->exposed) {
-                    buf = mprintf("\n%.*s() .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
-                                  (int) node->node_string_length, node->node_string,
-                                  proc_symbol, /* FQ Symbol Name */
-                                  proc_symbol, /* FQ Symbol Name */
-                                  type, /* Type */
-                                  (int) node->node_string_length, node->node_string, /* Func Name */
-                                  args /* Args */
+                    buf = mprintf("\n%s() .expose=%s\n"
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                                  proc_label,
+                                  proc_expose,
+                                  proc_fqn,
+                                  type,
+                                  proc_label,
+                                  args
                     );
                 }
                 else {
-                    buf = mprintf("\n%.*s()\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\"\n",
-                                  (int) node->node_string_length, node->node_string,
-                                  proc_symbol, /* FQ Symbol Name */
-                                  type, /* Type */
-                                  (int) node->node_string_length, node->node_string, /* Func Name */
-                                  args /* Args */
+                    buf = mprintf("\n%s()\n"
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                                  proc_label,
+                                  proc_fqn,
+                                  type,
+                                  proc_label,
+                                  args
                     );
                 }
                 if (node->output) output_prepend_text(buf, node->output);
@@ -130,41 +156,59 @@ void emit_proc(ASTNode *node, void *pl) {
                 free(type);
                 free(args);
                 free(buf);
-                free(proc_symbol);
+                free(proc_fqn);
+                free(proc_expose);
+                free(proc_label);
             }
             else {
                 /* Definition */
                 char* type = ast_n2tp(ast_chld(node, CLASS, VOID));
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
-                char* proc_symbol= sym_frnm(node->symbolNode->symbol);
+                char *proc_label, *proc_expose, *proc_fqn;
+                if (node->node_type == PROCEDURE) {
+                    if (node->node_string) {
+                        proc_label = malloc(node->node_string_length + 1);
+                        memcpy(proc_label, node->node_string, node->node_string_length);
+                        proc_label[node->node_string_length] = 0;
+                        if (proc_label[node->node_string_length - 1] == ':') proc_label[node->node_string_length - 1] = 0;
+                    } else proc_label = strdup(node->symbolNode->symbol->name);
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
+                    proc_fqn = sym_frnm(node->symbolNode->symbol);
+                } else {
+                    proc_label = sym_mngd_frnm(node->symbolNode->symbol);
+                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    proc_fqn = sym_frnm(node->symbolNode->symbol);
+                }
                 char* buf;
                 if (node->symbolNode->symbol->exposed) {
-                    buf = mprintf("\n%.*s() .locals=%d .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
-                                  (int) node->node_string_length, node->node_string, /* Function name */
-                                  (int) node->scope->num_registers, /* Locals */
-                                  proc_symbol, /* FQ Symbol name */
-                                  proc_symbol, /* FQ Symbol Name */
-                                  type, /* Return Type */
-                                  (int) node->node_string_length, node->node_string, /* Function name */
-                                  args /* Args */);
+                    buf = mprintf("\n%s() .locals=%d .expose=%s\n"
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
+                                  proc_label,
+                                  (int) node->scope->num_registers,
+                                  proc_expose,
+                                  proc_fqn,
+                                  type,
+                                  proc_label,
+                                  args);
                 }
                 else {
-                    buf = mprintf("\n%.*s() .locals=%d\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %.*s() \"%s\" \"\"\n",
-                                  (int) node->node_string_length, node->node_string, /* Function name */
-                                  (int) node->scope->num_registers, /* Locals */
-                                  proc_symbol, /* FQ Symbol Name */
-                                  type, /* Return Type */
-                                  (int) node->node_string_length, node->node_string, /* Function name */
-                                  args /* Args */);
+                    buf = mprintf("\n%s() .locals=%d\n"
+                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\" \"\"\n",
+                                  proc_label,
+                                  (int) node->scope->num_registers,
+                                  proc_fqn,
+                                  type,
+                                  proc_label,
+                                  args);
                 }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
                 free(args);
                 free(buf);
-                free(proc_symbol);
+                free(proc_fqn);
+                free(proc_expose);
+                free(proc_label);
 
                 /* Add source metadata */
                 if (node->token) {
@@ -175,6 +219,49 @@ void emit_proc(ASTNode *node, void *pl) {
 
                 /* Add Global Variables */
                 add_global_variable_metadata(node);
+
+                /* Level B Class Preamble */
+                if (node->node_type == FACTORY) {
+                    int n_attrs = 0;
+                    ASTNode *attr = node->parent->child;
+                    while (attr) {
+                        if (attr->node_type == DEFINE) n_attrs++;
+                        attr = attr->sibling;
+                    }
+
+                    /* Assign r_this from symbol §factory */
+                    ASTNode star_node;
+                    memset(&star_node, 0, sizeof(ASTNode));
+                    star_node.node_string = "\xc2\xa7" "factory";
+                    star_node.node_string_length = 9;
+                    Symbol *star_sym = sym_lrsv(node->scope, &star_node);
+                    int r_this = -1;
+                    if (star_sym) {
+                        r_this = star_sym->register_num;
+                    }
+                    if (r_this == -1) {
+                        r_this = get_reg(node->scope);
+                        if (star_sym) {
+                            star_sym->register_num = r_this;
+                            star_sym->register_type = 'r';
+                        }
+                    }
+
+                    temp1 = mprintf("   setattrs r%d,%d\n", r_this, n_attrs);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                } else if (node->node_type == METHOD) {
+                    /* Associate symbol "§this" with a1 */
+                    ASTNode this_node;
+                    memset(&this_node, 0, sizeof(ASTNode));
+                    this_node.node_string = "\xc2\xa7" "this";
+                    this_node.node_string_length = 6;
+                    Symbol *this_sym = sym_lrsv(node->scope, &this_node);
+                    if (this_sym) {
+                        this_sym->register_num = 1;
+                        this_sym->register_type = 'a';
+                    }
+                }
 
                 /* If numeric options have non-inherited values, set them */
                 if (node->scope->num_context.digits > -1) {

@@ -48,6 +48,8 @@ void emit_expression(ASTNode *node, void *payload) {
 
     switch (node->node_type) {
 
+        case FACTORY_CALL:
+        case MEMBER_CALL:
         case FUNCTION:
             /* Return Registers */
             ret_type = node->register_type;
@@ -110,7 +112,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                     n->register_type,
                                     n->register_num,
                                     j);
-                    output_append_text(n->output, temp1);
+                    output_append_text(node->output, temp1);
                     free(temp1);
                 }
 
@@ -118,7 +120,7 @@ void emit_expression(ASTNode *node, void *payload) {
                     /* We need to swap registers to get it right for the call */
                     temp1 = mprintf("   swap r%d,%c%d\n",
                                     i, n->register_type, n->register_num);
-                    output_append_text(n->output, temp1);
+                    output_append_text(node->output, temp1);
                     free(temp1);
 
                     /* Fix up return register so its swapped correctly */
@@ -133,10 +135,36 @@ void emit_expression(ASTNode *node, void *payload) {
             }
 
             /* Actual Call */
-            temp1 = mprintf("   call %c%d,%.*s(),r%d\n",
-                            ret_type, ret_num,
-                            (int) node->node_string_length, node->node_string,
-                            node->additional_registers);
+            if (node->symbolNode) {
+                char *call_name;
+                int use_mangled = 0;
+                Symbol *fsym = node->symbolNode->symbol;
+                if (fsym && sym_nond(fsym) > 0) {
+                    SymbolNode *defsn = sym_trnd(fsym, 0);
+                    if (defsn && defsn->node && (defsn->node->node_type == METHOD || defsn->node->node_type == FACTORY)) {
+                        use_mangled = 1;
+                    }
+                }
+                if (use_mangled) call_name = sym_mngd_frnm(node->symbolNode->symbol);
+                else {
+                    /* For PROCEDURE, preserve case if possible */
+                    if (node->node_string) {
+                        call_name = malloc(node->node_string_length + 1);
+                        memcpy(call_name, node->node_string, node->node_string_length);
+                        call_name[node->node_string_length] = 0;
+                    } else call_name = strdup(node->symbolNode->symbol->name);
+                }
+                temp1 = mprintf("   call %c%d,%s(),r%d\n",
+                                ret_type, ret_num,
+                                call_name,
+                                node->additional_registers);
+                free(call_name);
+            } else {
+                temp1 = mprintf("   call %c%d,%.*s(),r%d\n",
+                                ret_type, ret_num,
+                                (int) node->node_string_length, node->node_string,
+                                node->additional_registers);
+            }
             output_append_text(node->output, temp1);
             free(temp1);
 

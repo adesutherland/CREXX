@@ -198,6 +198,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname);
 
 /* Returns the fully resolved symbol name in a malloced buffer */
 char* sym_frnm(Symbol *symbol);
+char* sym_mngd_frnm(Symbol *symbol);
 
 /* Returns the type of a symbol as a text string in a malloced buffer */
 char* sym_2tp(Symbol *symbol);

@@ -484,6 +484,8 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
     size_t i;
     Scope *s;
 
+    if (!root || !root->scope) return 0;
+
     /* Process top layer - files */
     for (i = 0; i < scp_noch(root->scope); i++) {
         s = scp_chd(root->scope, i);
@@ -505,9 +507,12 @@ Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
    const char *name = fqname;
    const char *c;
    Symbol *result = 0;
+   if (!root) return 0;
    Scope *scope = root->scope;
    char* search_name;
    size_t len;
+
+   if (!scope) return 0;
 
    while (*name) {
        for (c = name; 1; c++) {
@@ -522,11 +527,13 @@ Symbol *sym_rfqn(ASTNode *root, const char* fqname) {
                if (!result) return 0;
                if (!result->defines_scope) return 0;
                scope = result->defines_scope;
+               if (!scope) return 0;
                name = c + 1;
                break;
            }
            else if (!*c) {
                /* Search for final symbol */
+               if (!scope) return 0;
                return src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
            }
        }
@@ -547,9 +554,12 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     const char *name = fqname;
     const char *c;
     Symbol *result = 0;
+    if (!root) return 0;
     Scope *scope = root->scope;
     char* search_name;
     size_t len;
+
+    if (!scope) return 0;
 
     while (*name) {
         for (c = name; 1; c++) {
@@ -566,19 +576,23 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
                     scope = scp_f(root->context, scope, 0, result);
                     result->symbol_type = NAMESPACE_SYMBOL;
                     result->defines_scope = scope;
-                    free(search_name);
                 }
                 else if (!result->defines_scope) {
                     free(search_name);
                     return 0;
                 }
                 scope = result->defines_scope;
+                if (!scope) {
+                    free(search_name);
+                    return 0;
+                }
                 name = c + 1;
                 free(search_name);
                 break;
             }
             else if (!*c) {
                 /* Search for final symbol */
+                if (!scope) return 0;
                 result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), name);
                 if (!result) {
                     result = sym_fn(scope, name, strlen(name));
@@ -597,6 +611,7 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
  */
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     Symbol *result;
+    char *c;
 
     /* Make a null terminated string */
     char *name = (char*)malloc(node->node_string_length + 1);
@@ -669,6 +684,8 @@ Symbol *sym_lrsv(Scope *scope, ASTNode *node) {
 Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     size_t i;
     SymbolNode *connector;
+
+    if (!new_scope) return symbol;
 
     /* Find or create symbol in new_scope */
     Symbol *new_symbol = src_symbol((struct avl_tree_node *)(new_scope->symbols_tree), symbol->name);
@@ -814,13 +831,25 @@ char* sym_frnm(Symbol *symbol) {
     Scope *s;
     size_t len;
     char *result;
+    int has_namespace = 0;
 
     /* Calculate buffer len */
     len = strlen(symbol->name) + 1; /* +1 for null */
     s = symbol->scope;
     while (s) {
+        if (s->defining_node && s->defining_node->node_type == NAMESPACE) {
+            has_namespace = 1;
+        }
         if (s->name) {
-            len += strlen(s->name) + 1; /* +1 for the "." */
+            /* If it's a file scope */
+            if (s->defining_node && (s->defining_node->node_type == PROGRAM_FILE || s->defining_node->node_type == IMPORTED_FILE)) {
+                if (!has_namespace) {
+                    len += strlen(s->name) + 1;
+                }
+                break; /* File scope is the top */
+            } else {
+                len += strlen(s->name) + 1;
+            }
         }
         s = s->parent;
     }
@@ -828,13 +857,42 @@ char* sym_frnm(Symbol *symbol) {
 
     /* Create name */
     strcpy(result, symbol->name);
+    has_namespace = 0;
     s = symbol->scope;
     while (s) {
+        if (s->defining_node && s->defining_node->node_type == NAMESPACE) {
+            has_namespace = 1;
+        }
         if (s->name) {
-            prepend_scope(result, s->name);
+            /* If it's a file scope */
+            if (s->defining_node && (s->defining_node->node_type == PROGRAM_FILE || s->defining_node->node_type == IMPORTED_FILE)) {
+                if (!has_namespace) {
+                    prepend_scope(result, s->name);
+                }
+                break; /* File scope is the top */
+            } else {
+                prepend_scope(result, s->name);
+            }
         }
         s = s->parent;
     }
+    return result;
+}
+
+/* Returns the fully resolved symbol name (mangled) in a malloced buffer */
+char* sym_mngd_frnm(Symbol *symbol) {
+    char *result = sym_frnm(symbol);
+
+    /* Top level main is not mangled or prefixed */
+    if (strcmp(result, "main") == 0 && symbol->scope && symbol->scope->parent &&
+        symbol->scope->parent->defining_node && symbol->scope->parent->defining_node->node_type == REXX_UNIVERSE)
+        return result;
+
+    /* Prefix with "§" to ensure it's a valid RXAS ID and doesn't collide */
+    result = realloc(result, strlen(result) + 3);
+    memmove(result + 2, result, strlen(result) + 1);
+    memcpy(result, "\xc2\xa7", 2);
+
     return result;
 }
 
@@ -845,7 +903,7 @@ char* scp_frnm(Scope *scope) {
     char *result;
 
     /* Calculate buffer len */
-    len = strlen(scope->name) + 1; /* +1 for null */
+    len = (scope->name ? strlen(scope->name) : 0) + 1; /* +1 for null */
     s = scope->parent;
     while (s) {
         if (s->name) {
@@ -856,7 +914,7 @@ char* scp_frnm(Scope *scope) {
     result = malloc(len);
 
     /* Create name */
-    strcpy(result, scope->name);
+    strcpy(result, scope->name ? scope->name : "");
     s = scope->parent;
     while (s) {
         if (s->name) {
@@ -874,7 +932,7 @@ char* ast_frnm(ASTNode *node) {
     char *result;
 
     /* Calculate buffer len */
-    len = node->node_string_length + 1; /* +1 for null */
+    len = (node->node_string ? node->node_string_length : 0) + 1; /* +1 for null */
     s = node->scope;
     while (s) {
         if (s->name) {
@@ -885,8 +943,12 @@ char* ast_frnm(ASTNode *node) {
     result = malloc(len);
 
     /* Create name */
-    memcpy(result, node->node_string, node->node_string_length);
-    result[node->node_string_length] = 0;
+    if (node->node_string) {
+        memcpy(result, node->node_string, node->node_string_length);
+        result[node->node_string_length] = 0;
+    } else {
+        result[0] = 0;
+    }
     s = node->scope;
     while (s) {
         if (s->name) {
