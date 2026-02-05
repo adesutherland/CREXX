@@ -746,19 +746,23 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Find the program's entry point */
     DEBUG("Find program entry point\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            procedure =
-                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
-                                       i);
-            if (procedure->base.type == PROC_CONST &&
-                strcmp(procedure->name, "main") == 0)
-                break;
-            i = procedure->next;
-            procedure = 0;
+    if (context->ext_proc) {
+        procedure = context->ext_proc;
+    } else {
+        for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+            int i = context->modules[mod_index]->proc_head;
+            while (i != -1) {
+                procedure =
+                        (proc_constant *) (context->modules[mod_index]->segment.const_pool +
+                                           i);
+                if (procedure->base.type == PROC_CONST &&
+                    strcmp(procedure->name, "main") == 0)
+                    break;
+                i = procedure->next;
+                procedure = 0;
+            }
+            if (procedure) break;
         }
-        if (procedure) break;
     }
 
     if (!procedure) {
@@ -767,20 +771,34 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, 1, 0, 0, 0);
-    /* Arguments (passed in an array) */
-    /* a0 is already set by frame_f() */
-    /* a1 is the array  */
-    {
-        int i;
-        int a1 = procedure->binarySpace->globals + procedure->locals + 1;
-        arguments_array = value_f();
-        current_frame->baselocals[a1] = arguments_array;
-        current_frame->locals[a1] = current_frame->baselocals[a1];
-        set_num_attributes(current_frame->baselocals[a1], argc);
+    if (context->ext_proc) {
+        current_frame = frame_f(procedure, context->ext_argc, 0, 0, 0);
+        /* Arguments (passed as individual objects) */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            for (i = 0; i < context->ext_argc; i++) {
+                current_frame->baselocals[a1 + i] = value_f();
+                current_frame->locals[a1 + i] = current_frame->baselocals[a1 + i];
+                copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
+            }
+        }
+    } else {
+        current_frame = frame_f(procedure, 1, 0, 0, 0);
+        /* Arguments (passed in an array) */
+        /* a0 is already set by frame_f() */
+        /* a1 is the array  */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            arguments_array = value_f();
+            current_frame->baselocals[a1] = arguments_array;
+            current_frame->locals[a1] = current_frame->baselocals[a1];
+            set_num_attributes(current_frame->baselocals[a1], argc);
 
-        for (i = 0; i < argc; i++) {
-            set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            for (i = 0; i < argc; i++) {
+                set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            }
         }
     }
 
@@ -2706,6 +2724,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                                    op1R); /* ... the faster move deletes the source which is ok for locals */
                 }
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) copy_value(context->ext_ret, op1R);
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2753,6 +2772,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->int_value = op1I;
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    set_int(context->ext_ret, op1I);
+                    set_type_int(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2803,6 +2826,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    set_float(context->ext_ret, op1F);
+                    set_type_float(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2852,6 +2879,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    string_constant *sc = CONSTSTRING_OP(1);
+                    set_string(context->ext_ret, sc->string, sc->string_len);
+                    set_type_string(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {

@@ -113,3 +113,22 @@ add_crexx_parsing_test(expr_ambig_03 parsing_src/expr_ambig_03.rexx)
 add_crexx_parsing_test(err_struct_01 parsing_src/err_struct_01.rexx)
 add_crexx_parsing_test(err_struct_02 parsing_src/err_struct_02.rexx)
 add_crexx_parsing_test(err_struct_03 parsing_src/err_struct_03.rexx)
+
+# Bridge Connectivity Test
+add_custom_command(
+        OUTPUT stub_plugin.rxbin
+        COMMAND $<TARGET_FILE:rxc> -n -o stub_plugin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.rexx
+        COMMAND $<TARGET_FILE:rxas> -o stub_plugin stub_plugin
+        DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.rexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling stub_plugin.rexx ..."
+)
+
+add_custom_target(stub_plugin_bin DEPENDS stub_plugin.rxbin)
+
+add_executable(test_bridge src/test_bridge.c)
+target_link_libraries(test_bridge rxvml avl_tree platform rxpa mc_decimal_manual m)
+target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+add_dependencies(test_bridge stub_plugin_bin)
+
+add_test(NAME BridgeConnectivity COMMAND test_bridge)

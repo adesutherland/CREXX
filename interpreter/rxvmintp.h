@@ -197,6 +197,12 @@ typedef struct rxvm_context {
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char debug_mode;
+
+    /* Extra fields for direct procedure call */
+    proc_constant *ext_proc;
+    int ext_argc;
+    value **ext_args;
+    value *ext_ret;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */

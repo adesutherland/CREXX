@@ -67,7 +67,7 @@ add_dependencies(rxbvme packed_library)
 # C Library Interpreter -  to be linked to make a standalone CREXX exe
 
 # Threaded Version
-add_library(rxvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
+add_library(rxvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
         ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -77,7 +77,7 @@ target_include_directories(rxvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 
 # Bytecode Version
-add_library(rxbvml STATIC rxvmlib.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
+add_library(rxbvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
 		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c)
 target_link_libraries(rxbvml avl_tree rxpa rxvmplugin mc_decimal_manual platform m)
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin

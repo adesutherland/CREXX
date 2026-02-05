@@ -42,6 +42,10 @@ void rxinimod(rxvm_context *context) {
     context->exposed_reg_tree = 0;
     context->debug_mode = 0;
     context->location = 0;
+    context->ext_proc = 0;
+    context->ext_argc = 0;
+    context->ext_args = 0;
+    context->ext_ret = 0;
 
     /* Support 128 modules initially - this grows automatically */
     context->module_buffer_size = 128;

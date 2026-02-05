@@ -1,0 +1,65 @@
+#ifndef CREXX_RXVML_H
+#define CREXX_RXVML_H
+
+#include <stddef.h>
+#include "rxvalue.h"
+
+#define RXVML_ABI_VERSION 1
+
+typedef struct rxvml_context rxvml_context;
+typedef value   rxvml_value;
+
+/* Hydration: Builds an rxc.token from AST and Symbol info */
+typedef struct rxvml_token_desc {
+    /* Token Info */
+    int type;
+    int subtype;
+    const char* text;
+    size_t text_len;
+    int line;
+    int column;
+    int length;
+    /* AST Info */
+    const char* file;
+    int node_type;
+    int node_number;
+    int ord_low;
+    int ord_high;
+    /* Symbol Info (Optional) */
+    const char* sym_name;
+    int sym_type;
+} rxvml_token_desc;
+
+/* Context lifecycle */
+rxvml_context* rxvml_create(const char* location, unsigned flags);
+void           rxvml_destroy(rxvml_context* ctx);
+
+/* Module management */
+int rxvml_load_module_file(rxvml_context* ctx, const char* rxbin_path);
+int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
+
+/* Object construction */
+rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d);
+rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length);
+int          rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem);
+
+/* Introspection / extraction */
+int      rxvml_to_int      (rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v);
+int      rxvml_to_str      (rxvml_context* ctx, const rxvml_value* v, const char** out_s, size_t* out_len);
+
+/* Invocation */
+int rxvml_call_plugin(
+    rxvml_context* ctx,
+    const char* proc_name,
+    rxvml_value* token_array,
+    rxvml_value** response_out);
+
+/* Result Extraction */
+const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response);
+const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response);
+int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out_new_type, int* out_is_updated);
+
+/* Error reporting */
+int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);
+
+#endif /* CREXX_RXVML_H */
