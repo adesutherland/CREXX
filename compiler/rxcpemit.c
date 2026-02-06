@@ -867,10 +867,16 @@ static walker_result emit_walker(walker_direction direction,
                         Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
                         if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
                     }
-                    temp1 = mprintf("   linktoattr1 %d,%c%d,%c%d\n",
-                                    index,
+                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                    "   %scopy %c%d,%c%d\n"
+                                    "   unlink %c%d\n",
+                                    child1->register_type, child1->register_num,
                                     this_type, this_num,
-                                    child2->register_type, child2->register_num);
+                                    index,
+                                    tp_prefix,
+                                    child1->register_type, child1->register_num,
+                                    child2->register_type, child2->register_num,
+                                    child1->register_type, child1->register_num);
                     output_append_text(node->output, temp1);
                     free(temp1);
                 } else if (child1->register_num != child2->register_num ||

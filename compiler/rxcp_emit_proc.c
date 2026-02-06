@@ -235,32 +235,13 @@ void emit_proc(ASTNode *node, void *pl) {
                     star_node.node_string = "\xc2\xa7" "factory";
                     star_node.node_string_length = 9;
                     Symbol *star_sym = sym_lrsv(node->scope, &star_node);
-                    int r_this = -1;
-                    if (star_sym) {
-                        r_this = star_sym->register_num;
-                    }
-                    if (r_this == -1) {
-                        r_this = get_reg(node->scope);
-                        if (star_sym) {
-                            star_sym->register_num = r_this;
-                            star_sym->register_type = 'r';
-                        }
-                    }
+                    int r_this = star_sym->register_num;
 
                     temp1 = mprintf("   setattrs r%d,%d\n", r_this, n_attrs);
                     output_append_text(node->output, temp1);
                     free(temp1);
                 } else if (node->node_type == METHOD) {
-                    /* Associate symbol "§this" with a1 */
-                    ASTNode this_node;
-                    memset(&this_node, 0, sizeof(ASTNode));
-                    this_node.node_string = "\xc2\xa7" "this";
-                    this_node.node_string_length = 6;
-                    Symbol *this_sym = sym_lrsv(node->scope, &this_node);
-                    if (this_sym) {
-                        this_sym->register_num = 1;
-                        this_sym->register_type = 'a';
-                    }
+                    /* Associated in register_walker */
                 }
 
                 /* If numeric options have non-inherited values, set them */
