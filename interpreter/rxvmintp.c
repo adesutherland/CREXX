@@ -2716,12 +2716,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) >= current_frame->procedure->locals)
+                    if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
+                        current_frame->locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
-                                   op1R); /* Must do a copy from an argument or global because ... */
+                                   op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
                     else
                         move_value(current_frame->return_reg,
-                                   op1R); /* ... the faster move deletes the source which is ok for locals */
+                                   op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
                 }
                 /* back to the parents stack frame */
                 if (!current_frame->parent && context->ext_ret) copy_value(context->ext_ret, op1R);

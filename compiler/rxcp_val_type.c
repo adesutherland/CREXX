@@ -245,7 +245,9 @@ walker_result set_node_types_walker(walker_direction direction,
                     ASTNode *instance = ast_chdn(node, 0);
                     if (instance->value_type == TP_OBJECT && instance->value_class) {
                         /* Resolve the Class Symbol from the instance's class name */
-                        Symbol *class_sym = sym_rvfn(context->ast, instance->value_class);
+                        const char *cname = instance->value_class;
+                        if (cname && cname[0] == '.') cname++;
+                        Symbol *class_sym = sym_rvfn(context->ast, (char*)cname);
                         if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                             /* Lookup the Method Name in the Class Scope */
                             Symbol *method_sym = sym_lrsv(class_sym->defines_scope, node);
@@ -254,6 +256,59 @@ walker_result set_node_types_walker(walker_direction direction,
                                 ast_svtp(node, method_sym);
                                 context->changed = 1;
                             } else if (!context->changed) {
+                                /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
+                                Symbol *index_sym = sym_rslv(context->current_scope, node);
+                                if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
+                                    instance->symbolNode && instance->symbolNode->symbol->value_dims > 0) {
+
+                                    ASTNode *new_index_node = ast_f(context, VAR_SYMBOL, node->token);
+                                    {
+                                        char *s = malloc(node->node_string_length + 1);
+                                        memcpy(s, node->node_string, node->node_string_length);
+                                        s[node->node_string_length] = 0;
+                                        ast_sstr(new_index_node, s, node->node_string_length);
+                                    }
+                                    sym_adnd(index_sym, new_index_node, 1, 0);
+
+                                    /* Transform current node (MEMBER_CALL) into the array's VAR_SYMBOL */
+                                    node->node_type = VAR_SYMBOL;
+                                    {
+                                        char *s = malloc(instance->node_string_length + 1);
+                                        memcpy(s, instance->node_string, instance->node_string_length);
+                                        s[instance->node_string_length] = 0;
+                                        ast_sstr(node, s, instance->node_string_length);
+                                    }
+
+                                    /* Disconnect from any previous symbols if any */
+                                    if (node->symbolNode) sym_dno(node->symbolNode->symbol, node);
+
+                                    /* Link to the same symbol as instance */
+                                    sym_adnd(instance->symbolNode->symbol, node, 1, 0);
+
+                                    /* Set scalar element type */
+                                    node->value_type = instance->symbolNode->symbol->type;
+                                    node->value_dims = 0;
+                                    node->target_dims = 0;
+                                    if (node->value_class) { free(node->value_class); node->value_class = 0; }
+                                    if (instance->symbolNode->symbol->value_class) {
+                                        node->value_class = malloc(strlen(instance->symbolNode->symbol->value_class) + 1);
+                                        strcpy(node->value_class, instance->symbolNode->symbol->value_class);
+                                    }
+                                    ast_rttp(node);
+
+                                    /* Delete children (instance and any args) */
+                                    while (node->child) {
+                                        ASTNode *c = node->child;
+                                        if (c->symbolNode) sym_dno(c->symbolNode->symbol, c);
+                                        ast_del(c);
+                                    }
+
+                                    /* Add the resolved variable as the index child (subscript) */
+                                    add_ast(node, new_index_node);
+
+                                    context->changed = 1;
+                                    return result_normal;
+                                }
                                 mknd_err(node, "METHOD_NOT_FOUND");
                             }
                         } else if (!context->changed) {
@@ -302,7 +357,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     }
 
                     if (node->node_type == VAR_SYMBOL && child1) {
-                        /* We have array parameters */
+                        /* We have array parameters (subscript or stem-style) */
                         n1 = child1;
                         while (n1) {
                             if (n1->value_type == TP_VOID && !ast_nsib(n1)) {
@@ -331,9 +386,25 @@ walker_result set_node_types_walker(walker_direction direction,
                             set_node_type(node, TP_INTEGER);
                         } else {
                             /* We are returning the array element */
+                            /* Ensure the node reflects the element (scalar) type and class */
                             node->value_dims = 0; /* We are 'returning' a single value */
-                            /* Reset Node Target Type to be the same as the node value type */
-                            ast_rttp(node);
+                            node->target_dims = 0;
+                            /* Copy over element value type/class from the symbol if needed */
+                            if (node->symbolNode && node->symbolNode->symbol) {
+                                /* Keep the underlying element ValueType */
+                                node->value_type = node->symbolNode->symbol->type;
+                                if (node->value_class) { free(node->value_class); node->value_class = 0; }
+                                if (node->symbolNode->symbol->value_class) {
+                                    node->value_class = malloc(strlen(node->symbolNode->symbol->value_class) + 1);
+                                    strcpy(node->value_class, node->symbolNode->symbol->value_class);
+                                }
+                                /* Make target match value */
+                                ast_rttp(node);
+                            } else {
+                                /* Reset Node Target Type to be the same as the node value type */
+                                ast_rttp(node);
+                            }
+                            context->changed = 1;
                         }
                     }
                 }

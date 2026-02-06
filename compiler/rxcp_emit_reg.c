@@ -51,6 +51,9 @@ static int defer_reg_return(ASTNode* node) {
     {
         case VAR_SYMBOL:
             if (node->child && node->child->node_type != NOVAL) return 1;
+            if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope &&
+                node->symbolNode->symbol->scope->defining_node &&
+                node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) return 1;
             break;
 
         case VAR_TARGET:
