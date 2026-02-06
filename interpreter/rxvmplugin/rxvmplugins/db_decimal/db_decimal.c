@@ -283,6 +283,9 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
  * getRequiredStringSize() bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     long double value = *(long double*)number->decimal_value;
+#if defined(__APPLE__) 
+    int digits = (int)((dbcontext*)(plugin->base.private_context))->digits;
+#endif    
     // Handle special cases
     if (isnan(value)) {
         strcpy(string, "nan");
@@ -306,7 +309,12 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
+#if defined(__APPLE__)
+    sprintf(string, "%.*LG", digits, value);
+#else
     sprintf(string, "%.*LG", plugin->num_context->digits, value);
+#endif    
+
 }
 
 /* Convert an int to a rxvmplugin number */
