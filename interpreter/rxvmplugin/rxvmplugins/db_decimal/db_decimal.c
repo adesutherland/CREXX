@@ -283,7 +283,7 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
  * getRequiredStringSize() bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     long double value = *(long double*)number->decimal_value;
-#if defined(__APPLE__) 
+#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__)) 
     int digits = (int)((dbcontext*)(plugin->base.private_context))->digits;
 #endif    
     // Handle special cases
@@ -309,7 +309,7 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
-#if defined(__APPLE__)
+#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__))
     sprintf(string, "%.*LG", digits, value);
 #else
     sprintf(string, "%.*LG", plugin->num_context->digits, value);
