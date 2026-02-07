@@ -71,7 +71,7 @@ After the parser builds the initial "raw" AST, the `initial_checks_walker` perfo
 The final stage of the front-end is the Validation Orchestrator. Unlike previous stages, this stage employs a **Fixpoint Iteration Loop** to handle interdependent symbol resolution and code injection.
 
 *   **Fixed Point Iteration**: The orchestrator wraps subsequent validation passes in a `do { ... } while (context->changed)` loop.
-*   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c`).
+*   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c` and [Bridge Plugins](bridge_plugins.md)).
 *   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
 *   **Rewrite Walkers**: Final transformations (like `ADDRESS` and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
