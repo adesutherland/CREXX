@@ -30,6 +30,9 @@
 #define CREXX_RXCP_PLUGIN_H
 
 #include "rxcp_types.h"
+#include "rxvml.h"
+
+rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node);
 
 typedef enum PluginStatus {
     PLUGIN_CONTINUE,

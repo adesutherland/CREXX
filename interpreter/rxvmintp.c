@@ -934,7 +934,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
-                rxpa_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
                 if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
@@ -1633,24 +1633,24 @@ START_OF_INSTRUCTIONS
 	      
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
-            mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 
         START_INSTRUCTION(SAY_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH
 	      
         START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
-            mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 	      
 	START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s", (int) op1S->string_len, op1S->string);
             DISPATCH
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
@@ -2554,7 +2554,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -2582,7 +2582,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -2608,7 +2608,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2646,7 +2646,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -4346,9 +4346,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
 #ifdef __32BIT__
-            mprintf("%ld\n", op1I);
+            rxvm_mprintf("%ld\n", op1I);
 #else
-            mprintf("%lld\n", op1I);
+            rxvm_mprintf("%lld\n", op1I);
 #endif
             DISPATCH
 
@@ -4358,7 +4358,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_CHAR) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \'%c\'\n", (pc + (1))->cconst);
-            mprintf("%c\n", (pc + (1))->cconst);
+            rxvm_mprintf("%c\n", (pc + (1))->cconst);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4367,7 +4367,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %.15g\n", op1F);
-            mprintf("%.15g\n", op1F);
+            rxvm_mprintf("%.15g\n", op1F);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6468,7 +6468,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     }
 
 #ifndef NDEBUG
-    if (context->debug_mode) mprintf("Interpreter Finished with rc=%d\n", rc);
+    if (context->debug_mode) rxvm_mprintf("Interpreter Finished with rc=%d\n", rc);
 #endif
 
     return rc;

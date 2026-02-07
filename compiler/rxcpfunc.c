@@ -35,6 +35,7 @@
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
+#include "rxcp_val.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
@@ -750,6 +751,28 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 }
 
 /* Parse and rxcp_val a rexx program in a string and return the context */
+/* Parse and rxcp_val a rexx program in a string and return the context */
+Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
+    Context *context;
+    size_t bytes = strlen(rexx_source);
+    char *buff = malloc(bytes + 1);
+    memcpy(buff, rexx_source, bytes);
+    buff[bytes] = 0;
+
+    context = cntx_f();
+    cntx_buf(context, buff, bytes);
+
+    /* Initialize context */
+    context->level = LEVELB;
+    context->debug_mode = debug_mode;
+    context->master_context = context;
+    context->file_name = "fragment";
+
+    rexbpars(context);
+
+    return context;
+}
+
 static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
 

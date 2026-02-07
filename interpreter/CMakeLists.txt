@@ -15,14 +15,14 @@ add_executable(rxvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../a
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
-target_link_libraries(rxvm avl_tree rxpa rxvmplugin mc_decimal_manual platform m)
+target_link_libraries(rxvm avl_tree rxpa rxvmplugin mc_decimal_manual platform rxpashim m)
 target_include_directories(rxvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 
 # Bytecode Version
 add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
         ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c)
-target_link_libraries(rxbvm avl_tree rxvmplugin rxpa mc_decimal_manual platform m)
+target_link_libraries(rxbvm avl_tree rxvmplugin rxpa mc_decimal_manual platform rxpashim m)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
@@ -48,7 +48,7 @@ target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
-target_link_libraries(rxvme avl_tree rxpa rxvmplugin mc_decimal_manual platform m)
+target_link_libraries(rxvme avl_tree rxpa rxvmplugin mc_decimal_manual platform rxpashim m)
 target_include_directories(rxvme PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 add_dependencies(rxvme packed_library)
@@ -58,7 +58,7 @@ add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ..
 		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c
 		${CMAKE_CURRENT_BINARY_DIR}/library.c)
 target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
-target_link_libraries(rxbvme avl_tree rxpa rxvmplugin mc_decimal_manual platform m)
+target_link_libraries(rxbvme avl_tree rxpa rxvmplugin mc_decimal_manual platform rxpashim m)
 target_include_directories(rxbvme PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 add_dependencies(rxbvme packed_library)
@@ -83,6 +83,10 @@ target_link_libraries(rxbvml avl_tree rxpa rxvmplugin mc_decimal_manual platform
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
+
+# RXPA Shim Library - Provides standard rxpa_ symbols for standalone targets
+add_library(rxpashim STATIC rxpashim.c)
+target_include_directories(rxpashim PUBLIC . ${CMAKE_SOURCE_DIR}/rxpa)
 
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)

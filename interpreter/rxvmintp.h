@@ -206,10 +206,10 @@ typedef struct rxvm_context {
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */
-char* rxpa_getsignaltext(rxsignal signal);
+char* rxvm_getsignaltext(rxsignal signal);
 
 /* Function to get a signal code from a signal text */
-rxsignal rxpa_getsignalcode(char* signalText);
+rxsignal rxvm_getsignalcode(char* signalText);
 
 int initialz();
 int finalize();
@@ -238,7 +238,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 int rxldmodp(rxvm_context *context);
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
@@ -299,7 +299,7 @@ void arr2redr(value* redirect_reg, value* string_reg);
 void nullredr(value* redirect_reg);
 
 /* EXIT Function Support */
-void mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
+void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**
  * @brief Enables handling for a specific VM interrupt code.

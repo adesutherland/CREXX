@@ -9,6 +9,22 @@
 // RXPA (Plugin Architecture) Support declarations  for this file
 
 /* Context for RXPA Functions / callbacks */
+void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+char* rxvm_getstring(rxpa_attribute_value attributeValue);
+void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
+void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
+rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
+void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);
+double rxvm_getfloat(rxpa_attribute_value attributeValue);
+rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
+void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
+rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
+rxpa_attribute_value rxvm_insertattr(rxpa_attribute_value attributeValue, rxinteger index);
+void rxvm_removeattr(rxpa_attribute_value attributeValue, rxinteger index);
+void rxvm_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2);
+void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_resetsayexit();
+
 typedef  struct rxpa_context {
     rxvm_context *rxvm_context;
     module_file *plugin_being_loaded;
@@ -392,23 +408,23 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
             // Create the rxpa_initctxptr context
             struct rxpa_initctxptr rxpa_functions;
-            rxpa_functions.addfunc = rxpa_addfunc;
-            rxpa_functions.getstring = rxpa_getstring;
-            rxpa_functions.setstring = rxpa_setstring;
-            rxpa_functions.setint = rxpa_setint;
-            rxpa_functions.getint = rxpa_getint;
-            rxpa_functions.setfloat = rxpa_setfloat;
-            rxpa_functions.getfloat = rxpa_getfloat;
-            rxpa_functions.getnumattrs = rxpa_getnumattrs;
-            rxpa_functions.setnumattrs = rxpa_setnumattrs;
-            rxpa_functions.getattr = rxpa_getattr;
-            rxpa_functions.insertattr = rxpa_insertattr;
-            rxpa_functions.removeattr = rxpa_removeattr;
-            rxpa_functions.swapattrs = rxpa_swapattrs;
+            rxpa_functions.addfunc = rxvm_addfunc;
+            rxpa_functions.getstring = rxvm_getstring;
+            rxpa_functions.setstring = rxvm_setstring;
+            rxpa_functions.setint = rxvm_setint;
+            rxpa_functions.getint = rxvm_getint;
+            rxpa_functions.setfloat = rxvm_setfloat;
+            rxpa_functions.getfloat = rxvm_getfloat;
+            rxpa_functions.getnumattrs = rxvm_getnumattrs;
+            rxpa_functions.setnumattrs = rxvm_setnumattrs;
+            rxpa_functions.getattr = rxvm_getattr;
+            rxpa_functions.insertattr = rxvm_insertattr;
+            rxpa_functions.removeattr = rxvm_removeattr;
+            rxpa_functions.swapattrs = rxvm_swapattrs;
 
             // Exit Function Management
-            rxpa_functions.setsayexit = rxpa_setsayexit;
-            rxpa_functions.resetsayexit = rxpa_resetsayexit;
+            rxpa_functions.setsayexit = rxvm_setsayexit;
+            rxpa_functions.resetsayexit = rxvm_resetsayexit;
 
             // Load the plugin - and run the plugin initialization function
             // Create the filename by appending ".rxplugin" to the file name
@@ -599,7 +615,7 @@ void add_proc_to_module(rxpa_context* context , char* index, rxpa_libfunc func) 
 // RXPA Add Function Implementation
 // This is the callback function for rxldmod() when the plugin adds functions,
 // or is called during initialising a statically linked plugin
-void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, __attribute__((unused)) char* type, __attribute__((unused)) char* args) {
+void rxvm_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, __attribute__((unused)) char* type, __attribute__((unused)) char* args) {
 
     if (current_rxpa_context) {
         rxvm_context *context = current_rxpa_context->rxvm_context;
@@ -630,23 +646,23 @@ int rxldmodp(rxvm_context *context) {
 
     // Create the rxpa_initctxptr context
     struct rxpa_initctxptr rxpa_functions;
-    rxpa_functions.addfunc = rxpa_addfunc;
-    rxpa_functions.getstring = rxpa_getstring;
-    rxpa_functions.setstring = rxpa_setstring;
-    rxpa_functions.setint = rxpa_setint;
-    rxpa_functions.getint = rxpa_getint;
-    rxpa_functions.setfloat = rxpa_setfloat;
-    rxpa_functions.getfloat = rxpa_getfloat;
-    rxpa_functions.getnumattrs = rxpa_getnumattrs;
-    rxpa_functions.setnumattrs = rxpa_setnumattrs;
-    rxpa_functions.getattr = rxpa_getattr;
-    rxpa_functions.insertattr = rxpa_insertattr;
-    rxpa_functions.removeattr = rxpa_removeattr;
-    rxpa_functions.swapattrs = rxpa_swapattrs;
+    rxpa_functions.addfunc = rxvm_addfunc;
+    rxpa_functions.getstring = rxvm_getstring;
+    rxpa_functions.setstring = rxvm_setstring;
+    rxpa_functions.setint = rxvm_setint;
+    rxpa_functions.getint = rxvm_getint;
+    rxpa_functions.setfloat = rxvm_setfloat;
+    rxpa_functions.getfloat = rxvm_getfloat;
+    rxpa_functions.getnumattrs = rxvm_getnumattrs;
+    rxpa_functions.setnumattrs = rxvm_setnumattrs;
+    rxpa_functions.getattr = rxvm_getattr;
+    rxpa_functions.insertattr = rxvm_insertattr;
+    rxpa_functions.removeattr = rxvm_removeattr;
+    rxpa_functions.swapattrs = rxvm_swapattrs;
 
     // Exit Function Management
-    rxpa_functions.setsayexit = rxpa_setsayexit;
-    rxpa_functions.resetsayexit = rxpa_resetsayexit;
+    rxpa_functions.setsayexit = rxvm_setsayexit;
+    rxpa_functions.resetsayexit = rxvm_resetsayexit;
 
     // Create rxpa_context and module
     char* dummy_file_name = "statically_linked_plugins";
@@ -667,7 +683,7 @@ int rxldmodp(rxvm_context *context) {
     struct static_linked_function *static_func = static_linked_functions;
     while (static_func) {
         DEBUG("CREXX Statically Linked Native Plugin %s\n", static_func->name);
-        rxpa_addfunc(static_func->func, static_func->name, 0, 0, 0) ;
+        rxvm_addfunc(static_func->func, static_func->name, 0, 0, 0) ;
 
         // Loop to next static function
         static_func = static_func->next;

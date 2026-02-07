@@ -35,6 +35,7 @@
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
+#include "rxvml.h"
 
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
@@ -163,6 +164,14 @@ void fre_cntx(Context *context)  {
         if (context->loading_files) {
             for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);
             free(context->loading_files);
+        }
+        if (context->fragment_contexts) {
+            for (i = 0; i < context->fragment_contexts_count; i++) fre_cntx(context->fragment_contexts[i]);
+            free(context->fragment_contexts);
+        }
+        if (context->rxvml_ctx) {
+            rxvml_destroy(context->rxvml_ctx);
+            context->rxvml_ctx = 0;
         }
     }
 
