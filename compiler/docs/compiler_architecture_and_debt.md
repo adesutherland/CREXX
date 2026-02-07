@@ -82,6 +82,7 @@ The 8-character symbol limit is a legacy constraint rooted in mainframe compatib
 | :--- | :--- | :--- | :--- |
 | **High** | Monolithic Files | `rxcpast.c` and `rxcpemit.c` were too large. | **RESOLVED** |
 | **High** | Optimizer Refactor | `rxcp_opt.c` needs refactoring to support new decimal types. | Pending |
-| **Medium** | Plugin Interface | Implement "Analyze-Consult-Negotiate" loop in `rxcp_val_orch.c`. | Pending |
+| **Medium** | Plugin Interface | Implement "Analyze-Consult-Negotiate" loop in `rxcp_val_orch.c`. | **RESOLVED** |
 | **Medium** | Static Globals | Extensive use of static globals prevents reentrancy. | In Progress |
 | **Low** | Memory Management | Lack of clear ownership model or pool allocation for AST nodes. | Open |
+| **Low** | Bridge Overhead | Compiler now links with `rxvml`, increasing binary size and complexity. | Open |

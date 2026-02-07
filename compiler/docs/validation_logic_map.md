@@ -4,62 +4,71 @@ This document maps the validation passes and "magic" logic within `compiler/rxcp
 
 ## Execution Pipeline
 
-The `rxcp_val` function orchestrates the following sequence of walkers:
+The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following sequence. Passes 5-13 run within a **Fixpoint Iteration Loop** (up to 16 iterations).
 
 1.  **Initial Checks (`initial_checks_walker`)**: 
     *   Sets source location pointers for error reporting.
-    *   Converts `OP_SCONCAT` to `OP_CONCAT` when no whitespace exists between tokens.
-    *   Removes redundant `NOP` instructions and converts empty `INSTRUCTIONS` blocks to `NOP`.
-    *   Validates `ASSEMBLER` instruction mnemonics and operand types.
-    *   Converts `OP_ARG_VALUE` with 0 or `NOVAL` index to `OP_ARGS` (count).
+    *   Restructures procedures and classes into a logical hierarchy.
+    *   Converts `OP_SCONCAT` to `OP_CONCAT` when no physical whitespace exists.
+    *   Removes redundant `NOP` instructions.
+    *   Validates `ASSEMBLER` mnemonics and operands.
 
 2.  **Float/Decimal Conversion (`float2decimal_walker` / `decimal2float_walker`)**: 
-    *   Conditionally converts literal types based on `options levelb numeric_...` settings.
+    *   Literal type normalization based on `OPTIONS` (Classic vs. Common).
 
 3.  **Library Requirement Check (`needs_rxsysb_walker`)**: 
-    *   Flags if the `_rxsysb` system library is needed (used by `ADDRESS` and `EXIT`).
+    *   Flags if the `_rxsysb` system library is needed (for `ADDRESS`, `EXIT`, or `IMPLICIT_CMD`).
 
 4.  **Library Injection (`add_rxsysb_walker`)**: 
-    *   Injects `IMPORT _rxsysb` into the `REXX_UNIVERSE` if needed.
+    *   Injects `IMPORT _rxsysb` into the `PROGRAM_FILE` if needed.
 
-5.  **Symbol Harvesting (`build_symbols_walker`)**: 
-    *   Constructs the Symbol Table and defines Scopes.
+--- 
+### The Fixpoint Loop (`do...while(context->changed)`)
 
-6.  **Function Resolution (`resolve_functions_walker`)**: 
-    *   Links function calls to their definitions.
+5.  **Plugin Dispatch (`plugin_dispatch_walker` - Pass A)**: 
+    *   Consults the Bridge for `IMPLICIT_CMD` nodes. 
+    *   Performs **Code Injection** if the plugin returns a Rexx string.
+    *   Splices injected AST nodes and sets `context->changed = 1`.
 
-7.  **Exposed Symbol Resolution (`exposed_symbols_walker`)**: 
-    *   Handles `EXPOSED` variables in procedures.
+6.  **Implicit Command Transformation (`rewrite_implicit_cmd_walker`)**:
+    *   Rewrites non-handled `IMPLICIT_CMD` nodes.
+    *   If the child is a `MEMBER_CALL`, `FACTORY_CALL`, or `FUNCTION`, it is promoted to a regular instruction.
+    *   Otherwise, it is rewritten to `ADDRESS SYSTEM`.
 
-8.  **Symbol Validation (`validate_symbols`)**: 
-    *   Checks for duplicate definitions and other symbol-level errors.
+7.  **Ordinal Assignment (`set_node_ordinals_walker`)**: 
+    *   Refreshes execution order metadata (low/high range) for all nodes.
 
-9.  **Type Inference (`set_node_types_walker`)**: 
-    *   Determines `value_type` and `target_type` for all AST nodes.
-    *   Implements implicit typing on first assignment.
-    *   Handles array indexing and length intrinsics.
+8.  **Symbol Harvesting (`build_symbols_walker`)**: 
+    *   Constructs the Symbol Table and defines Scopes for the current tree state.
 
-10. **ADDRESS Rewriting (`rewrite_address_walker`)**: 
-    *   Converts `ADDRESS` instructions to `rc = _address(...)`.
-    *   Converts `REDIRECT` nodes to internal function calls (e.g., `_array2redir`).
+9.  **Function Resolution (`resolve_functions_walker`)**: 
+    *   Links function calls to their definitions (including newly injected code).
 
-11. **EXIT Rewriting (`rewrite_exit_walker`)**: 
-    *   Converts `EXIT` instructions to `CALL _exit(...)`.
+10. **Exposed Symbol Resolution (`exposed_symbols_walker`)**: 
+    *   Handles variable exposure across procedure boundaries.
 
-12. **Ordinal Assignment (`set_node_ordinals_walker`)**: 
-    *   Sets execution order metadata (high/low ordinals).
+11. **Symbol Validation (`validate_symbols`)**: 
+    *   Checks for duplicate definitions and semantic symbol errors.
 
-13. **Re-Validation (Repeat of Steps 5-9)**: 
-    *   Re-runs symbol and type passes to handle changes introduced by `rewrite` walkers.
+12. **Plugin Dispatch (`plugin_dispatch_walker` - Pass B)**:
+    *   Allows plugins to react to resolved symbols or types.
 
-14. **Type Safety (`type_safety_walker`)**: 
-    *   Performs final type compatibility checks using the `promotion` matrix.
+13. **Type Inference (`set_node_types_walker`)**: 
+    *   Propagates types through the tree. Handles first-assignment inference.
 
-15. **Function Call Type Safety (`func_type_safety_walker`)**: 
-    *   Validates argument types for function calls, including reference arguments.
+14. **System Instruction Rewriting (`rewrite_address_walker` / `rewrite_exit_walker`)**: 
+    *   Transforms `ADDRESS` and `EXIT` into internal system function calls.
 
-16. **Decimal Configuration (`decimal_parameters_walker`)**: 
-    *   Sets numeric precision and format parameters for each scope.
+---
+
+15. **Type Safety (`type_safety_walker`)**: 
+    *   Final verification of type compatibility using the promotion matrix.
+
+16. **Function Call Type Safety (`func_type_safety_walker`)**: 
+    *   Validates arguments and reference parameters.
+
+17. **Decimal Configuration (`decimal_parameters_walker`)**: 
+    *   Sets precision and format parameters per scope.
 
 ## Business Rule Inventory ("The Magic")
 
