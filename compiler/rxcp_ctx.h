@@ -82,7 +82,6 @@ struct Context {
     char comments_hash_specified;    /* 1 - hash/no hash specified - for checking inconsistent options   */
     /* Plugins */
     void *decimal_plugin; /* Pointer to the decimal plugin */
-    void *rxvml_ctx; /* Pointer to the RXVML context for bridge plugins */
     /* Optimiser Options */
     int optimise;
     int iterations;
@@ -91,9 +90,6 @@ struct Context {
     /* Recursion Guard for Imports */
     char** loading_files;
     size_t loading_files_count;
-    /* Fragment Contexts to keep alive */
-    struct Context **fragment_contexts;
-    size_t fragment_contexts_count;
 };
 
 #include "rxcp_emit.h"
