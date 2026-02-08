@@ -83,9 +83,9 @@ int main(int argc, char *argv[]) {
     char *output_file;
     char *original_source;
     const char *base_name;
-    char temp_source_file[1024];
-    char temp_source_name[1024];
-    char temp_rxas[1024];
+    char temp_source_file[2048];
+    char temp_source_name[2048];
+    char temp_rxas[2100];
     char command[8192];
     int i;
     int ret;
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
         char *dot = strrchr(temp_source_name, '.');
         if (dot) *dot = '\0';
     }
-    sprintf(temp_rxas, "%s.rxas", temp_source_name);
+    snprintf(temp_rxas, sizeof(temp_rxas), "%s.rxas", temp_source_name);
 
     /* Sandbox: Copy original source (last arg) to current directory */
     if (!copy_file(original_source, temp_source_file)) {
