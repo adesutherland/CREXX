@@ -351,3 +351,21 @@ add_custom_command(TARGET rxvmecopy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/interpreter/rxvme${EXE_SUFFIX} ${CMAKE_BINARY_DIR}/bin/
 )
 
+# Re-entrancy Test
+add_custom_command(
+        OUTPUT test_reentrancy.rxbin
+        COMMAND ${CMAKE_BINARY_DIR}/compiler/rxc -o test_reentrancy ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_reentrancy.rexx
+        COMMAND ${CMAKE_BINARY_DIR}/assembler/rxas test_reentrancy
+        DEPENDS tests/rexx/test_reentrancy.rexx rxc rxas
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling test_reentrancy.rexx ..."
+)
+add_custom_target(test_reentrancy_bin ALL DEPENDS test_reentrancy.rxbin)
+
+add_executable(test_reentrancy tests/test_reentrancy.c)
+target_include_directories(test_reentrancy PRIVATE ${CMAKE_SOURCE_DIR}/inc)
+target_link_libraries(test_reentrancy rxvml)
+add_dependencies(test_reentrancy test_reentrancy_bin)
+
+add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+

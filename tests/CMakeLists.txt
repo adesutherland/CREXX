@@ -44,3 +44,4 @@ foreach(_binfile ${REXXTESTBINS})
    add_test(NAME ${_basename}-rxbvm COMMAND rxbvm ${_basename} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
    set(_prev_dependency ${_basename}.rxbin)
 endforeach()
+

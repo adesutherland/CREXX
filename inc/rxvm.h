@@ -7,9 +7,17 @@
 struct rxvm_context;
 struct module;
 
+/* --- Phase 0: Lifecycle --- */
+/* Creates a new VM context. Returns NULL on failure. */
+struct rxvm_context* rxvm_create();
+
+/* Destroys a VM context and frees all associated memory. */
+void rxvm_destroy(struct rxvm_context* ctx);
+
 /* --- Phase 1: Loading --- */
 /* Loads a module from a .rxbin file. Returns module handle or NULL on error. */
 struct module* rxvm_load(struct rxvm_context* ctx, char* filename);
+struct module* rxvm_load_file(struct rxvm_context* ctx, char* filename);
 
 /* --- Phase 2: Linking --- */
 /* Resolves imports/exports across all loaded modules in the context. */
