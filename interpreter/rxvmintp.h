@@ -9,6 +9,8 @@
 
 #define rxversion "crexx-DEV2507"
 
+typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
+
 /* Module Structure */
 typedef struct module {
     bin_space segment;         /* Binary and Constant Pool */
@@ -24,6 +26,7 @@ typedef struct module {
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
     module_file *file;         /* File section the module was loaded from */
+    rxvm_mod_state state;      /* Module lifecycle state */
 } module;
 
 /* Interrupt Response Codes */
@@ -203,6 +206,7 @@ typedef struct rxvm_context {
     int ext_argc;
     value **ext_args;
     value *ext_ret;
+    int prepare_only;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */
@@ -221,6 +225,9 @@ void rxinimod(rxvm_context *context);
 /* Free Module Context */
 void rxfremod(rxvm_context *context);
 void completely_free_frame(stack_frame *frame);
+
+/* Link a loaded module */
+void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
 
 /* Loads a new module
  * returns 0  - Error

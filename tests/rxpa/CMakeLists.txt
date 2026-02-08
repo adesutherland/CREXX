@@ -40,7 +40,8 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -58,7 +59,8 @@ target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
 # Build Dynamic Test Rexx
 add_custom_command(
@@ -128,6 +130,7 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
 )
 # Set the performance properties
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -146,7 +149,8 @@ target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
 # Additional functional tests (of callback functions)
 set(FUNC_TESTS

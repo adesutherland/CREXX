@@ -9,6 +9,7 @@
 #endif
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
+#include "rxvm.h"
 
 /* Program Buffer */
 extern char rx__pg[];
@@ -169,7 +170,7 @@ end_wrapper_args:
     if (context.debug_mode) printf("Starting Execution\n");
 #endif
 
-    rc = run(&context, argc - i, argv + i);
+    rc = rxvm_run(&context, argc - i, argv + i);
 
     /* Free Memory */
     rxfremod(&context);

@@ -2,6 +2,7 @@
 #include <string.h>
 #include "rxvml.h"
 #include "rxvmintp.h"
+#include "rxvm.h"
 #include "rxvmvars.h"
 #include "rxastree.h"
 #include "rxvmplugin.h"
@@ -135,7 +136,7 @@ int rxvml_call_plugin(
     /* Run the VM */
     {
         char* dummy_argv[] = {"rxc_plugin"};
-        run(&ctx->vm, 0, dummy_argv);
+        rxvm_run(&ctx->vm, 0, dummy_argv);
     }
 
     if (response_out) {

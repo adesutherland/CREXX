@@ -124,7 +124,7 @@ void rxfremod(rxvm_context *context) {
 }
 
 /* Link a loaded module */
-static void link_module(rxvm_context *context, size_t module_number_to_link) {
+void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
     size_t i, mod_index;
     chameleon_constant *c_entry;
     proc_constant *p_entry, *p_entry_linked;
@@ -304,10 +304,10 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->duplicated_symbols = 0;
     context->modules[n]->file = file_module_section;
     context->modules[n]->native = file_module_section->native;
+    context->modules[n]->state = RXVM_MOD_LOADED;
 
     context->num_modules = context->modules[n]->module_number = n + 1;
 
-    link_module(context, n);
     return context->num_modules ;
 }
 

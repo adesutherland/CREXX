@@ -729,20 +729,31 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Thread code - we need to do it here because address_map is only valid
      * in this run() function */
-#ifndef NTHREADED
-    DEBUG("Threading\n");
+    DEBUG("Threading/Preparing\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0, j;
+        /* Idempotent check */
+        if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
-        while (i < context->modules[mod_index]->segment.inst_size) {
-            j = i;
-            i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-            context->modules[mod_index]->segment.binary[j].impl_address =
-                    (void *)address_map[context->modules[mod_index]->segment
-                            .binary[j].instruction.opcode];
+#ifndef NTHREADED
+        {
+            size_t i = 0, j;
+            while (i < context->modules[mod_index]->segment.inst_size) {
+                j = i;
+                i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
+                context->modules[mod_index]->segment.binary[j].impl_address =
+                        (void *)address_map[context->modules[mod_index]->segment
+                                .binary[j].instruction.opcode];
+            }
         }
-    }
 #endif
+        context->modules[mod_index]->state = RXVM_MOD_THREADED;
+    }
+
+    if (context->prepare_only) {
+        /* We are only here to thread, return success */
+        rc = 0;
+        goto interprt_finished;
+    }
 
     /* Find the program's entry point */
     DEBUG("Find program entry point\n");
