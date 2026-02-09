@@ -40,7 +40,8 @@ add_executable(testvm
         ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c)
+        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -49,7 +50,7 @@ add_executable(testvm
 configure_linker_for_static_lib(testvm _rxpalink)
 # Add the dependencies and link libraries
 add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin avl_tree rxpa mc_decimal_manual platform _rxpalink_static m)
+target_link_libraries(testvm rxvmplugin avl_tree rxpa mc_decimal_manual platform rxpashim _rxpalink_static m)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -58,7 +59,8 @@ target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
 # Build Dynamic Test Rexx
 add_custom_command(
@@ -128,6 +130,7 @@ add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
         ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
         ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
+        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
 )
 # Set the performance properties
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
@@ -137,7 +140,7 @@ add_executable(funcvm
 configure_linker_for_static_lib(funcvm _testfuncs)
 # Add the dependencies and link libraries
 add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm avl_tree rxpa mc_decimal_manual platform rxvmplugin _testfuncs_static m)
+target_link_libraries(funcvm avl_tree rxpa mc_decimal_manual platform rxvmplugin rxpashim _testfuncs_static m)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -146,7 +149,8 @@ target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/rxpa
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/avl_tree
-        ${CMAKE_SOURCE_DIR}/utf8)
+        ${CMAKE_SOURCE_DIR}/utf8
+        ${CMAKE_SOURCE_DIR}/inc)
 
 # Additional functional tests (of callback functions)
 set(FUNC_TESTS

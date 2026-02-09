@@ -374,17 +374,22 @@ walker_result add_dast_walker_handler1(walker_direction direction,
             if (!new_symbol) {
                 new_symbol = sym_afqn(context->dest, fqname);
             }
-            new_symbol->symbol_type = symbol->symbol_type;
-            new_symbol->type = symbol->type;
-            new_symbol->exposed = symbol->exposed;
-            new_symbol->fixed_args = symbol->fixed_args;
-            new_symbol->has_vargs = symbol->has_vargs;
-            new_symbol->is_arg = symbol->is_arg;
-            new_symbol->is_ref_arg = symbol->is_ref_arg;
-            new_symbol->is_const_arg = symbol->is_const_arg;
-            new_symbol->is_opt_arg = symbol->is_opt_arg;
+            if (new_symbol) {
+                new_symbol->symbol_type = symbol->symbol_type;
+                new_symbol->type = symbol->type;
+                new_symbol->exposed = symbol->exposed;
+                new_symbol->fixed_args = symbol->fixed_args;
+                new_symbol->has_vargs = symbol->has_vargs;
+                new_symbol->is_arg = symbol->is_arg;
+                new_symbol->is_ref_arg = symbol->is_ref_arg;
+                new_symbol->is_const_arg = symbol->is_const_arg;
+                new_symbol->is_opt_arg = symbol->is_opt_arg;
 
-            sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+                sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
+            } else {
+                fprintf(stderr, "INTERNAL ERROR: Duplicating AST - Could not find or create symbol %s\n", fqname);
+                /* We can't really recover easily here without leaving the AST in a broken state, but let's at least not crash */
+            }
             free(fqname);
         }
     }
@@ -410,8 +415,10 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     ast_wlkr(source, add_dast_walker_handler1, &context);
 
     /* Return the added child (the last sibling) */
-    node = context.dest;
-    while (node->child) node = node->child;
+    node = context.dest->child;
+    if (node) {
+        while (node->sibling) node = node->sibling;
+    }
     return node;
 }
 
@@ -712,7 +719,7 @@ ASTNode *ast_errh(Context* context, char *error_string) {
     ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
     add_ast(errorAST, ast_f(context, TOKEN, context->token_tail->token_prev->token_prev));
 
-    if (context->debug_mode) print_error(errorAST, stdout, "DEBUG: Error in");
+    if (context->debug_mode >= 2) print_error(errorAST, stdout, "DEBUG: Error in");
     return errorAST;
 }
 
@@ -732,10 +739,10 @@ size_t ast_nchd(ASTNode* node) {
     return n;
 }
 
-/* Returns the PROCEDURE ASTNode procedure of an AST node */
+/* Returns the PROCEDURE, METHOD or FACTORY ASTNode of an AST node */
 ASTNode* ast_proc(ASTNode *node) {
     while (node) {
-        if (node->node_type == PROCEDURE) return node;
+        if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) return node;
         node = node->parent;
     }
     return 0;
@@ -947,8 +954,26 @@ const char *ast_ndtp(NodeType type) {
             return "VARG";
         case VARG_REFERENCE:
             return "VARG_REFERENCE";
+        case CONSTANT:
+            return "CONSTANT";
         case VOID:
             return "VOID";
+        case FACTORY:
+            return "FACTORY";
+        case METHOD:
+            return "METHOD";
+        case WITH:
+            return "WITH";
+        case NODE_REGISTER:
+            return "NODE_REGISTER";
+        case OF:
+            return "OF";
+        case CLASS_DEF:
+            return "CLASS_DEF";
+        case MEMBER_CALL:
+            return "MEMBER_CALL";
+        case FACTORY_CALL:
+            return "FACTORY_CALL";
         default: return "*UNKNOWN*";
     }
 }
@@ -1383,10 +1408,11 @@ void ast_svtp(ASTNode* node, Symbol* symbol) {
         strcpy(node->value_class, symbol->value_class);
     } else node->value_class = 0;
 
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0;
-    }
+    if (node->target_class) free(node->target_class);
+    if (symbol->value_class) {
+        node->target_class = malloc(strlen(symbol->value_class) + 1);
+        strcpy(node->target_class, symbol->value_class);
+    } else node->target_class = 0;
 }
 
 /* Set Node Target Value Type from Symbol */
@@ -1507,10 +1533,11 @@ void ast_rttp(ASTNode* node) {
         node->target_dim_elements = 0;
     }
 
-    if (node->target_class) {
-        free(node->target_class);
-        node->target_class = 0; /* I.e. assumed to be the same as the value type */
-    }
+    if (node->target_class) free(node->target_class);
+    if (node->value_class) {
+        node->target_class = malloc(strlen(node->value_class) + 1);
+        strcpy(node->target_class, node->value_class);
+    } else node->target_class = 0;
 }
 
 /* Returns the index number of a child of its parent (or -1 on error) */

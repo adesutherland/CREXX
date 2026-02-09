@@ -19,18 +19,18 @@ void say_exit_default(char* message) {
 }
 
 /* Set the say exit function */
-void rxpa_setsayexit(say_exit_func sayExitFunc) {
+void rxvm_setsayexit(say_exit_func sayExitFunc) {
     say_exit = sayExitFunc;
 }
 
 /* Reset the say exit function */
-void rxpa_resetsayexit() {
+void rxvm_resetsayexit() {
     say_exit = say_exit_default;
 }
 
 /* printf replacement - prints to the say exit function (or stdout) */
 #define FIXED_BUFFER_SIZE 100 // Fixed buffer size for small messages
-void mprintf(const char* format, ...) {
+void rxvm_mprintf(const char* format, ...) {
     char *buffer;
     char fixed_buffer[FIXED_BUFFER_SIZE];
     size_t needed_len;

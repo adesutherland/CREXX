@@ -38,6 +38,8 @@ walker_result ast_wlkr(ASTNode *tree, walker_handler handler, void *payload) {
     ASTNode *node;
     walker_result result;
 
+    if (!tree) return result_normal;
+
     result = handler(in, tree, payload);
     if (result == result_abort || result == result_error || result == request_skip) return result;
 

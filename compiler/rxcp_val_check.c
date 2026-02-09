@@ -87,8 +87,8 @@ walker_result initial_checks_walker(walker_direction direction,
             }
             else return result_normal; /* No instructions at all! */
 
-            if (node->child->sibling->node_type != PROCEDURE) {
-                /* If the first instruction is not a PROCEDURE, then we need to
+            if (node->child->sibling && node->child->sibling->node_type != PROCEDURE && node->child->sibling->node_type != CLASS_DEF) {
+                /* If the first instruction is not a PROCEDURE or CLASS, then we need to
                 * add an implicit "main" PROCEDURE */
                 child = ast_ftt(context, PROCEDURE, "main:");
                 child->parent = node;
@@ -96,7 +96,7 @@ walker_result initial_checks_walker(walker_direction direction,
                 node->child->sibling = child;
 
                 /* Add a function return type */
-                /* To work out the return type we walk the tree from here until we find the first return or a procedure */
+                /* To work out the return type we walk the tree from here until we find the first return, a procedure or a class */
                 n = child->sibling;
                 while (1) {
                     if (!n) {
@@ -104,7 +104,7 @@ walker_result initial_checks_walker(walker_direction direction,
                         add_ast(child,ast_ft(context, VOID));
                         break;
                     }
-                    if (n->node_type == PROCEDURE) {
+                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) {
                         /* No return statement so must be returning null */
                         add_ast(child,ast_ft(context, VOID));
                         break;
@@ -132,17 +132,57 @@ walker_result initial_checks_walker(walker_direction direction,
                 }
             }
         }
-        else if (node->node_type == PROCEDURE) {
+        else if (node->node_type == CLASS_DEF) {
             if (node->parent->node_type != PROGRAM_FILE) {
-                /* We can only define procedures in classes */
+                mknd_err(node, "CANT_DEFINE_CLASS_HERE");
+            }
+            else {
+                /* Hoist siblings until next PROCEDURE or CLASS_DEF */
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF) {
+                    /* Disconnect/remove next node from the AST tree */
+                    node->sibling = next->sibling;
+                    next->sibling = 0;
+                    next->parent = 0;
+                    /* add next under CLASS_DEF child */
+                    add_ast(node,next);
+                }
+            }
+        }
+        else if (node->node_type == NODE_REGISTER) {
+            ASTNode *index = node->child;
+            /* Handle INSTRUCTIONS wrapper if present */
+            while (index && index->node_type == INSTRUCTIONS) index = index->child;
+            if (index && index->node_type == INTEGER) {
+                /* Validate index >= 0 */
+                int idx = node_to_integer(index);
+                node->int_value = idx;
+                if (idx < 0) {
+                    mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
+                }
+            }
+            ASTNode *attr = index ? index->sibling : NULL;
+            if (attr && attr->node_type == VAR_SYMBOL) {
+                if (!nodeis(attr, "int") &&
+                    !nodeis(attr, "string") &&
+                    !nodeis(attr, "object") &&
+                    !nodeis(attr, "float")) {
+                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+                }
+            }
+        }
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+            if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
                 mknd_err(node, "CANT_DEFINE_PROC_HERE");
+            }
+            else if ((node->node_type == METHOD || node->node_type == FACTORY) && node->parent->node_type != CLASS_DEF) {
+                mknd_err(node, "CANT_DEFINE_METHOD_HERE");
             }
             else {
                 /* Move node siblings (aka next instructions) until the next procedure to be node
                  * grand-children under a new INSTRUCTIONS node child */
 
                 /* Process ARG, DIGITS, FUZZ and FORM */
-                /* Process each sibling until the next PROCEDURE */
+                /* Process each sibling until the next block */
                 char done_digits = 0;
                 char done_fuzz = 0;
                 char done_form = 0;
@@ -152,7 +192,8 @@ walker_result initial_checks_walker(walker_direction direction,
                 char first_instruction = 1;
                 next = node->sibling;
                 ASTNode *prev = node;
-                while (next && next->node_type != PROCEDURE) {
+                while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                       next->node_type != METHOD && next->node_type != FACTORY) {
                     switch (next->node_type) {
                         case ARGS:
                             if (args_node) {
@@ -249,8 +290,9 @@ walker_result initial_checks_walker(walker_direction direction,
 
                 last = NULL;
 
-                /* For each sibling until the next PROCEDURE */
-                while ( ((next = node->sibling)) && next->node_type != PROCEDURE) {
+                /* For each sibling until the next block */
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                        next->node_type != METHOD && next->node_type != FACTORY) {
                     last = next; /* To check that there is a return */
                     /* 2. Disconnect/remove next node from the AST tree */
                     node->sibling = next->sibling;

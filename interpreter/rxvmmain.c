@@ -9,6 +9,7 @@
 #endif
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
+#include "rxvm.h"
 
 /* Library Buffer */
 #ifdef LINK_CREXX_LIB
@@ -221,7 +222,7 @@ int main(int argc, char *argv[]) {
     if (context.debug_mode) printf("Starting Execution\n");
 #endif
 
-    rc = run(&context, argc - i, argv + i);
+    rc = rxvm_run(&context, argc - i, argv + i);
 
     /* Free Memory */
     rxfremod(&context);

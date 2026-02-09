@@ -1,11 +1,16 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      IF : "if" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
+        TOKEN : "then" (-1:-1) [Type: .unknown]
+          ERROR : "MISSING_END" (-1:-1) [Type: .unknown]
 Error in err_struct_01.rexx @ 2:6 - #MISSING_END, "then"
 1 error(s) in source file
-[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
-  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
-    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
-      [AST] LITERAL (Type 11) [Line -1] "levelb"
-    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-      [AST] IF (Type 27) [Line -1] "if"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "a"
-        [AST] TOKEN (Type 94) [Line -1] "then"
-          [AST] ERROR (Type 21) [Line 1] "MISSING_END"
+Error in err_struct_01.rexx @ 2:6 - #MISSING_END, "then"
+1 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

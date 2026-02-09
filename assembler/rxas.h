@@ -67,6 +67,7 @@ typedef struct Assembler_Context {
     int optimiser_counter;
     FILE *traceFile;
     int debug_mode;
+    int quiet;
 } Assembler_Context;
 
 /* Assembler_Token Functions */

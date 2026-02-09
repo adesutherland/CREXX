@@ -39,7 +39,7 @@ int opt_pars(Context *context) {
     /* Create Options parser to work out required language level */
     parser = Opts_Alloc(malloc);
 #ifndef NDEBUG
-    if (context->debug_mode) Opts_Trace(stderr, "[OPTIONS] ");
+    if (context->debug_mode >= 2) Opts_Trace(stderr, "[OPTIONS] ");
     else Opts_Trace(context->traceFile, "Options parser >> ");
 #endif
     last_token_type = TK_EOC;

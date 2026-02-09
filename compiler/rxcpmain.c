@@ -32,9 +32,11 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxcp_plugin.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
+#include "rxvml.h"
 
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
@@ -48,11 +50,8 @@ static void help() {
             "  -h              Prints help message\n"
             "  -c              Prints Copyright & License Details\n"
             "  -v              Prints Version\n"
-#ifndef NDEBUG
-            "  -d              Debug/Verbose Mode\n"
-            "                    AST diagrams require \"dot\" from\n"
-            "                    https://graphviz.org/download/\n"
-#endif
+            "  -d[level]       Debug Mode (Optional Level)\n"
+            "  -dp             Stop after parsing and validation\n"
             "  -l location     Working Location (directory)\n"
             "  -i import       Locations to import file - \";\" delimited list\n"
             "  -o output_file  REXX Assembler Output File\n"
@@ -198,15 +197,18 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
-        /* Check for -dp flag */
-        if (strcmp(argv[i], "-dp") == 0) {
-            stop_after_parse = 1;
+        if (strncmp(argv[i], "-d", 2) == 0) {
+            if (argv[i][2] == 'p') {
+                stop_after_parse = 1;
+                if (debug_mode == 0) debug_mode = 1;
+            } else if (argv[i][2] != 0) {
+                debug_mode = atoi(argv[i] + 2);
+            } else {
+                debug_mode = 2;
+            }
             continue;
         }
 
-        if (strlen(argv[i]) > 2) {
-            error_and_exit(2, "Invalid argument");
-        }
         switch (tolower((argv[i][1]))) {
             case '-':
                 break;
@@ -252,12 +254,6 @@ int rxcmain(int argc, char *argv[]) {
                 license();
                 exit(0);
 
-#ifndef NDEBUG
-            case 'd': /* Debug Mode */
-                debug_mode = 1;
-                break;
-#endif
-
             default:
                 error_and_exit(2, "Invalid argument");
         }
@@ -286,7 +282,7 @@ int rxcmain(int argc, char *argv[]) {
         file_directory = file_dir(file_name);
     }
 
-    if (debug_mode) fprintf(stderr, "Input file is %s\n", file_name);
+    if (debug_mode >= 2) fprintf(stderr, "Input file is %s\n", file_name);
 
     /* Import location list */
     if (import_locations) {
@@ -360,7 +356,7 @@ int rxcmain(int argc, char *argv[]) {
         printf("PANIC - No default decimal plugin\n");
         exit(255); // Documented 255 is for missing decimal plugin
     }
-    if (context->debug_mode) fprintf(stderr, "Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
+    if (context->debug_mode >= 2) fprintf(stderr, "Using Decimal Plugin %s\n", ((decplugin*)context->decimal_plugin)->base.name);
 
     /* Create Options parser to work out the required language level */
     opt_pars(context);
@@ -384,8 +380,12 @@ int rxcmain(int argc, char *argv[]) {
 
         case LEVELG:
         case LEVELL:
-            if (debug_mode) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
+            if (debug_mode >= 2) fprintf(stderr, "REXX Level B/G/L (cREXX)\n");
             rexbpars(context); // Built AST
+            if (context->debug_mode) {
+                rxcp_debug_header("STAGE_RAW", -1);
+                rxcp_print_ast_recursive(context->ast, 0);
+            }
             break;
 
         default:
@@ -398,53 +398,33 @@ int rxcmain(int argc, char *argv[]) {
         goto finish;
     }
 
-#ifndef __CMS__
-    if (debug_mode) {
-        fprintf(stderr, "--- RAW AST ---\n");
-        ast_dump_text(stderr, context->ast, 0);
-        // pdot_tree(context->ast, "astgraph0", context->file_name);
-    }
-#endif
-
-    if (context->stop_after_parse) {
-        errors = prnterrs(context);
-        if (errors) {
-            fprintf(stderr,"%d error(s) in source file\n", errors);
-        }
-        fflush(stderr);
-        ast_dump_text(stdout, context->ast, 0);
-        fflush(stdout);
-        if (debug_mode) {
-            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup (-dp).\n");
-        }
-        goto finish;
-    }
 
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
+        if (context->stop_after_parse) goto dp_stop;
         goto finish;
     }
 
-    if (debug_mode) fprintf(stderr, "Validating AST Tree\n");
     rxcp_val(context);
 #ifndef __CMS__
-    if (debug_mode) {
+    if (debug_mode >= 2) {
         // pdot_tree(context->ast, "astgraph1", context->file_name);
     }
 #endif
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
+        if (context->stop_after_parse) goto dp_stop;
         goto finish;
     }
 
     /* Optimise AST Tree */
     if (context->optimise) {
-        if (debug_mode) fprintf(stderr, "Optimising AST Tree\n");
+        if (debug_mode >= 2) fprintf(stderr, "Optimising AST Tree\n");
         optimise(context);
 #ifndef __CMS__
-        if (debug_mode) {
+        if (debug_mode >= 2) {
             // pdot_tree(context->ast, "astgraph2", context->file_name);
         }
 #endif
@@ -453,12 +433,27 @@ int rxcmain(int argc, char *argv[]) {
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
+        if (context->stop_after_parse) goto dp_stop;
         goto finish;
     }
 
-    if (debug_mode) {
-        fprintf(stderr, "--- FIXED AST ---\n");
-        ast_dump_text(stderr, context->ast, 0);
+    if (context->debug_mode) {
+        rxcp_debug_header("STAGE_FINAL", -1);
+        rxcp_print_ast_recursive(context->ast, 0);
+    }
+
+    dp_stop:
+    if (context->stop_after_parse) {
+        errors = prnterrs(context);
+        if (errors) {
+            fprintf(stderr,"%d error(s) in source file\n", errors);
+        }
+        fflush(stderr);
+        fflush(stdout);
+        if (debug_mode) {
+            fprintf(stderr, "[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).\n");
+        }
+        goto finish;
     }
 
     /* Generate Assembler */
@@ -467,15 +462,15 @@ int rxcmain(int argc, char *argv[]) {
         fprintf(stderr, "Can't open output file %s\n", output_file_name);
         exit(-1);
     }
-    if (debug_mode) fprintf(stderr, "Generating Assembler file %s\n", output_file_name);
+    if (debug_mode >= 2) fprintf(stderr, "Generating Assembler file %s\n", output_file_name);
     emit(context, outFile);
 
 #ifndef __CMS__
-    if (debug_mode) {
+    if (debug_mode >= 2) {
         // pdot_tree(context->ast, "astgraph3", context->file_name);
     }
 #endif
-    if (debug_mode) fprintf(stderr, "Compiler Exiting - Success\n");
+    if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
 
     finish:
 

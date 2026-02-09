@@ -48,7 +48,7 @@ int rexbscan(Context* s) {
 
 #define RET(id) do { \
     int tid = (id); \
-    if (s->debug_mode) { \
+    if (s->debug_mode >= 2) { \
         fprintf(stderr, "[LEX] Line %d: Token %d (%s) Value: '%.*s'\n", \
             s->line, tid, token_to_string(tid), (int)(s->cursor - s->top), s->top); \
     } \
@@ -159,14 +159,17 @@ int rexbscan(Context* s) {
     'ASSEMBLER' { RET(TK_ASSEMBLER); }
     'ARG' { RET(TK_ARG); }
     'CALL' { RET(TK_CALL); }
+    'CLASS' { RET(TK_CLASS); }
     'DO' { RET(TK_DO); }
     'LOOP' { RET(TK_LOOP); }
+    'METHOD' { RET(TK_METHOD); }
   //  'DROP' { RET(TK_DROP); }
     'ELSE' { RET(TK_ELSE); }
     'ERROR' { RET(TK_ERROR); }
     'END' { RET(TK_END); }
   //  'EXTERNAL' { RET(TK_EXTERNAL); }
     'EXIT' { RET(TK_EXIT); }
+    'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
     'INPUT' { RET(TK_INPUT); }
@@ -174,6 +177,7 @@ int rexbscan(Context* s) {
     'ITERATE' { RET(TK_ITERATE); }
     'LEAVE' { RET(TK_LEAVE); }
     'NAMESPACE' { RET(TK_NAMESPACE); }
+    'OF' { RET(TK_OF); }
     'NOP' { RET(TK_NOP); }
     'NUMERIC' { RET(TK_NUMERIC); }
   'OPTIONS' { RET(TK_OPTIONS); }
@@ -181,6 +185,11 @@ int rexbscan(Context* s) {
   'OUTPUT' { RET(TK_OUTPUT); }
   //  'PARSE' { RET(TK_PARSE); }
     'PROCEDURE' { RET(TK_PROCEDURE); }
+    'REGISTER' / [.] {
+      s->lexer_stem_mode = 1;
+      RET(TK_REGISTER);
+    }
+    'REGISTER' { RET(TK_REGISTER); }
   //  'PULL' { RET(TK_PULL); }
   //  'PUSH' { RET(TK_PUSH); }
   //  'QUEUE' { RET(TK_QUEUE); }
@@ -212,8 +221,8 @@ int rexbscan(Context* s) {
   //  'VERSION' { RET(TK_VERSION); }
     'VOID' { RET(TK_VOID); }
     'WHILE' { RET(TK_WHILE); }
-  //  'WITH' { RET(TK_WITH); }
-    class { RET(TK_CLASS); }
+    'WITH' { RET(TK_WITH); }
+    class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }
     integer { RET(TK_INTEGER); }
@@ -231,6 +240,7 @@ int rexbscan(Context* s) {
     }
     simple { RET(TK_VAR_SYMBOL); }
     simple ob ":" { RET(TK_LABEL); }
+    "*" ob ":" { RET(TK_MULT_LABEL); }
     str { RET(TK_STRING); }
     str [bBxX] / (any\(symchr | [.])) { RET(TK_STRING); }
     eof { RET(TK_EOS); }
@@ -251,6 +261,7 @@ int rexbscan(Context* s) {
        s->linestart = s->cursor+1;
        RET(TK_EOL);
     }
+    "." { RET(TK_DOT); }
     any {
       RET(TK_UNKNOWN);
     }

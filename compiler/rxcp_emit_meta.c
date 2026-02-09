@@ -262,7 +262,6 @@ void add_global_variable_metadata(ASTNode* node) {
 
 /* Clears Symbol metadata */
 void meta_clear_symbol(Symbol *symbol, void *payload) {
-    ASTNode* value_node;
     ASTNode* node = (ASTNode*)payload;
     OutputFragment *output = node->output;
     char* buffer;
@@ -278,7 +277,6 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
         if (symbol->symbol_type == CONSTANT_SYMBOL || symbol->register_num >= 0) {
             symbol_fqn = sym_frnm(symbol);
 
-            value_node = sym_trnd(symbol, 0)->node->sibling;
             buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
 
             free(symbol_fqn);

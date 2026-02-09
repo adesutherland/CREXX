@@ -484,12 +484,37 @@ const char* token_to_string(int token_id) {
         case TK_OPTIONS: return "TK_OPTIONS";
         case TK_NAMESPACE: return "TK_NAMESPACE";
         case TK_IMPORT: return "TK_IMPORT";
-        case TK_CLASS: return "TK_CLASS";
+        case TK_CLASS_TYPE: return "TK_CLASS_TYPE";
         case TK_OPEN_BRACKET: return "TK_OPEN_BRACKET";
         case TK_CLOSE_BRACKET: return "TK_CLOSE_BRACKET";
         case TK_OPEN_SBRACKET: return "TK_OPEN_SBRACKET";
         case TK_CLOSE_SBRACKET: return "TK_CLOSE_SBRACKET";
         case TK_COMMA: return "TK_COMMA";
+        case TK_STEM: return "TK_STEM";
+        case TK_ARG_STEM: return "TK_ARG_STEM";
+        case TK_CLASS_STEM: return "TK_CLASS_STEM";
+        case TK_STEMVAR: return "TK_STEMVAR";
+        case TK_STEMINT: return "TK_STEMINT";
+        case TK_STEMSTRING: return "TK_STEMSTRING";
+        case TK_STEMNOVAL: return "TK_STEMNOVAL";
+        case TK_CLASS: return "TK_CLASS";
+        case TK_FACTORY: return "TK_FACTORY";
+        case TK_METHOD: return "TK_METHOD";
+        case TK_WITH: return "TK_WITH";
+        case TK_REGISTER: return "TK_REGISTER";
+        case TK_OF: return "TK_OF";
+        case TK_MULT_LABEL: return "TK_MULT_LABEL";
+        case TK_DOT: return "TK_DOT";
+        case TK_ARG: return "TK_ARG";
+        case TK_ADDRESS: return "TK_ADDRESS";
+        case TK_OUTPUT: return "TK_OUTPUT";
+        case TK_ERROR: return "TK_ERROR";
+        case TK_INPUT: return "TK_INPUT";
+        case TK_ASSEMBLER: return "TK_ASSEMBLER";
+        case TK_VOID: return "TK_VOID";
+        case TK_ELLIPSIS: return "TK_ELLIPSIS";
+        case TK_OPTIONAL: return "TK_OPTIONAL";
+        case TK_NUMERIC: return "TK_NUMERIC";
         default: return "UNKNOWN";
     }
 }
@@ -601,6 +626,14 @@ const char* node_type_to_string(NodeType type) {
         case WARNING: return "WARNING";
         case WHILE: return "WHILE";
         case UNTIL: return "UNTIL";
-        default: return "UNKNOWN";
+        case FACTORY: return "FACTORY";
+        case METHOD: return "METHOD";
+        case WITH: return "WITH";
+        case NODE_REGISTER: return "NODE_REGISTER";
+        case OF: return "OF";
+        case CLASS_DEF: return "CLASS_DEF";
+        case MEMBER_CALL: return "MEMBER_CALL";
+        case FACTORY_CALL: return "FACTORY_CALL";
     }
+    return "UNKNOWN";
 }

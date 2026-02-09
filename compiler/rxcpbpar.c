@@ -44,7 +44,7 @@ int rexbpars(Context *context) {
     /* Create parser and set up tracing */
     parser = RexxBAlloc(malloc);
 #ifndef NDEBUG
-    if (context->debug_mode) RexxBTrace(stderr, "[PARSER] ");
+    if (context->debug_mode >= 2) RexxBTrace(stderr, "[PARSER] ");
     else RexxBTrace(context->traceFile, "Parser(B) >> ");
 #endif
 
@@ -105,7 +105,7 @@ int rexbpars(Context *context) {
             RexxB(parser, token_type, t, context);
         }
 
-        if (context->debug_mode) fprintf(stderr, "[GLUE] Line %d: Passing Token %d (%s) to Parser\n", context->line, token_type, token_to_string(token_type));
+        if (context->debug_mode >= 2) fprintf(stderr, "[GLUE] Line %d: Passing Token %d (%s) to Parser\n", context->line, token_type, token_to_string(token_type));
         RexxB(parser, token_type, token, context);
         last_token_type = token_type;
     }

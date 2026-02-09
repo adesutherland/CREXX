@@ -523,6 +523,7 @@ walker_result pdot_walker_handler(walker_direction direction,
 }
 
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {
+/*
     char dot_filename[250];
     char command[250];
     FILE *output;
@@ -537,9 +538,10 @@ void pdot_tree(ASTNode *tree, char* output_file, char* prefix) {
     }
     fclose(output);
 
-    /* Get dot from https://graphviz.org/download/ */
+    // Get dot from https://graphviz.org/download/
     snprintf(command, 250, "dot %s.%s.dot -Tpng -o %s.%s.png", prefix, output_file, prefix, output_file);
     system(command);
+*/
 }
 
 void ast_dump_text(FILE* out, ASTNode* node, int indent) {
@@ -560,5 +562,53 @@ void ast_dump_text(FILE* out, ASTNode* node, int indent) {
     while (child) {
         ast_dump_text(out, child, indent + 1);
         child = child->sibling;
+    }
+}
+
+void rxcp_debug_header(const char *stage_name, int iteration) {
+    fprintf(stderr, "\n--- %s ", stage_name);
+    if (iteration >= 0) {
+        fprintf(stderr, "(Iteration %d) ", iteration);
+    }
+    fprintf(stderr, "---\n");
+}
+
+void rxcp_print_ast_recursive(ASTNode *node, int indent) {
+    if (!node) return;
+    int i;
+    for (i = 0; i < indent; i++) fprintf(stderr, "  ");
+    fprintf(stderr, "%s : \"", ast_ndtp(node->node_type));
+    prt_unex(stderr, node->node_string, (int)node->node_string_length);
+    fprintf(stderr, "\" (%d:%d) [Type: %s]\n", node->line, node->column, type_nm(node->value_type));
+
+    ASTNode *child = node->child;
+    while (child) {
+        rxcp_print_ast_recursive(child, indent + 1);
+        child = child->sibling;
+    }
+}
+
+void rxcp_print_symbol_table(Scope *scope, int depth) {
+    if (!scope) return;
+    int i;
+    for (i = 0; i < depth; i++) fprintf(stderr, "  ");
+    fprintf(stderr, "Scope [%d]: %s\n", depth, scope->name ? scope->name : "Unnamed");
+
+    Symbol **symbols = scp_syms(scope);
+    if (symbols) {
+        for (i = 0; symbols[i]; i++) {
+            int j;
+            for (j = 0; j < depth + 1; j++) fprintf(stderr, "  ");
+            char *type_str = sym_2tp(symbols[i]);
+            fprintf(stderr, "%s (%s) -> %s\n", symbols[i]->name, stype_nm(symbols[i]->symbol_type), type_str);
+            free(type_str);
+        }
+        free(symbols);
+    }
+
+    size_t num_children = scp_noch(scope);
+    size_t k;
+    for (k = 0; k < num_children; k++) {
+        rxcp_print_symbol_table(scp_chd(scope, k), depth + 1);
     }
 }

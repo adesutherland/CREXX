@@ -14,7 +14,7 @@ typedef struct rxpa_pool_node {
 static rxpa_pool_node* current_pool_head = NULL;
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
+void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
     rxpa_libfunc native_function = (rxpa_libfunc)function;
     rxpa_attribute_value* arg_values = (rxpa_attribute_value*)argv;
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
@@ -41,7 +41,7 @@ void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* si
 }
 
 /* Function to get signal text from a signal code  */
-char* rxpa_getsignaltext(rxsignal signal) {
+char* rxvm_getsignaltext(rxsignal signal) {
      switch (signal) {
          case SIGNAL_NONE:
              return "OK";
@@ -73,7 +73,7 @@ char* rxpa_getsignaltext(rxsignal signal) {
  }
 
  /* Function to get a signal code from a signal text */
- rxsignal rxpa_getsignalcode(char* signalText) {
+ rxsignal rxvm_getsignalcode(char* signalText) {
         if (strcmp(signalText, "OK") == 0) {
             return SIGNAL_NONE;
         } else if (strcmp(signalText, "ERROR") == 0) {
@@ -103,7 +103,7 @@ char* rxpa_getsignaltext(rxsignal signal) {
  }
 
 /* Get a string from an attribute value */
-char* rxpa_getstring(rxpa_attribute_value attributeValue) {
+char* rxvm_getstring(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
     if (val) {
         char* ret;
@@ -137,19 +137,19 @@ char* rxpa_getstring(rxpa_attribute_value attributeValue) {
 }
 
 /* Set a string in an attribute value */
-void rxpa_setstring(rxpa_attribute_value attributeValue, char* string){
+void rxvm_setstring(rxpa_attribute_value attributeValue, char* string){
     value* val = (value*)attributeValue;
     if (val) set_null_string(val, string);
 }
 
 /* Set an integer in an attribute value */
-void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger int_value) {
+void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value) {
     value* val = (value*)attributeValue;
     if (val) set_int(val, int_value);
 }
 
 /* Get an integer from an attribute value */
-rxinteger rxpa_getint(rxpa_attribute_value attributeValue) {
+rxinteger rxvm_getint(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
 #if pluginDEBUG>0
     printf("Argument INT '%d'\n",val->int_value);
@@ -159,13 +159,13 @@ rxinteger rxpa_getint(rxpa_attribute_value attributeValue) {
 }
 
 /* Set a float in an attribute value */
-void rxpa_setfloat(rxpa_attribute_value attributeValue, double double_value) {
+void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value) {
     value* val = (value*)attributeValue;
     if (val) set_float(val, double_value);
 }
 
 /* Get a float from an attribute value */
-double rxpa_getfloat(rxpa_attribute_value attributeValue) {
+double rxvm_getfloat(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument FLOAT '%g'\n",val->float_value);
@@ -175,7 +175,7 @@ double rxpa_getfloat(rxpa_attribute_value attributeValue) {
 }
 
 /* Get the number of child attributes */
-rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {
+rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument NUMATTRS '%d'\n",(int)val->num_attributes);
@@ -185,7 +185,7 @@ rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {
 }
 
 /* Set the number of child attributes */
-void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs) {
+void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument SETNUMATTRS '%d'\n",(int)numAttrs);
@@ -194,7 +194,7 @@ void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs) {
 }
 
 /* Get the nth child attribute */
-rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index) {
+rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument GETATTR '%d'\n",(int)index);
@@ -206,7 +206,7 @@ rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger
 }
 
 /* Insert a child attribute before the nth position */
-rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinteger index) {
+rxpa_attribute_value rxvm_insertattr(rxpa_attribute_value attributeValue, rxinteger index) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument INSERTATTR '%d'\n",(int)index);
@@ -228,7 +228,7 @@ rxpa_attribute_value rxpa_insertattr(rxpa_attribute_value attributeValue, rxinte
 }
 
 /* Remove the nth child attribute */
-void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
+void rxvm_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument REMOVEATTR '%d'\n",(int)index);
@@ -248,7 +248,7 @@ void rxpa_removeattr(rxpa_attribute_value attributeValue, rxinteger index) {
 }
 
 /* Swap the nth child attribute with the mth child attribute */
-void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2) {
+void rxvm_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxinteger index2) {
     value* val = (value*)attributeValue;
 #ifdef pluginDEBUG
     printf("Argument SWAPATTRS '%d' '%d'\n",(int)index1,(int)index2);

@@ -73,6 +73,6 @@ The register allocation logic is isolated in `rxcp_emit_reg.c`. It performs the 
 | :--- | :--- | :--- |
 | **Memory Leak** | `f_output` only frees a single fragment node, failing to traverse the `after` chain. | Update `f_output` to recursively free or iterate the chain. |
 | **Validator Coupling** | Emitter depends on `target_type` and other fields being correctly set by the Validator. | Add assertions or validation checks in Emitter "in" passes. |
-| **Manual Formatting** | Hardcoded `mprintf` strings for assembly templates are brittle. | Introduce a set of instruction-building macros or functions. |
+| **Manual Formatting** | Hardcoded `mprintf` strings for assembly templates are brittle. | Resolved: Potential bridge collisions avoided by renaming interpreter symbols to `rxvm_mprintf`. |
 | **Label Collisions** | Relies on `node_number` and suffix conventions. | Formalize label generation into a dedicated utility. |
 | **Duplication** | Operator emission is duplicated for constant vs. register cases. | Refactor into a unified `emit_op(op, target, left, right)` helper. |

@@ -1,17 +1,22 @@
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "select" (-1:-1) [Type: .unknown]
+      *UNKNOWN* : "" (-1:-1) [Type: .unknown]
+        OP_SCONCAT : "" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "when" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "a" (-1:-1) [Type: .unknown]
+      SAY : "say" (-1:-1) [Type: .unknown]
+        VAR_SYMBOL : "b" (-1:-1) [Type: .unknown]
+      TOKEN : "end" (-1:-1) [Type: .unknown]
+        ERROR : "UNEXPECTED_END" (-1:-1) [Type: .unknown]
 Error in err_struct_02.rexx @ 2:24 - #UNEXPECTED_END, "end"
 1 error(s) in source file
-[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
-  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
-    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
-      [AST] LITERAL (Type 11) [Line -1] "levelb"
-    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-      [AST] IMPLICIT_CMD (Type 3) [Line -1] ""
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "select"
-      [AST] IMPLICIT_CMD (Type 3) [Line -1] ""
-        [AST] OP_SCONCAT (Type 70) [Line -1] ""
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "when"
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "a"
-      [AST] SAY (Type 87) [Line -1] "say"
-        [AST] VAR_SYMBOL (Type 97) [Line -1] "b"
-      [AST] TOKEN (Type 94) [Line -1] "end"
-        [AST] ERROR (Type 21) [Line 1] "UNEXPECTED_END"
+Error in err_struct_02.rexx @ 2:24 - #UNEXPECTED_END, "end"
+1 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

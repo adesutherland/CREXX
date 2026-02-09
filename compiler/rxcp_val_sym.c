@@ -69,17 +69,49 @@ walker_result build_symbols_walker(walker_direction direction,
             node->scope = context->current_scope;
         }
 
-        else if (node->node_type == PROCEDURE) {
-            node->node_string_length--; /* Remove the ':' */
+        else if (node->node_type == CLASS_DEF) {
+            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
+                node->node_string_length--; /* Remove the ':' */
+            }
+
+            /* Check for duplicated */
+            symbol = sym_rslv(context->current_scope, node);
+            if (symbol) {
+                if (symbol->scope == context->current_scope) {
+                    /* Error */
+                    mknd_err(node, "DUPLICATE_SYMBOL");
+                }
+                else symbol = 0;
+            }
+
+            /* Make a new symbol */
+            if (!symbol) {
+                symbol = sym_f(context->current_scope, node);
+                symbol->symbol_type = CLASS_SYMBOL;
+            }
+
+            sym_adnd(symbol, node, 0, 1);
+
+            /* Move down to the class scope */
+            context->current_scope = scp_f(context, context->current_scope, node, symbol);
+            node->scope = context->current_scope;
+        }
+
+        else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY) {
+            if (node->node_string_length > 0 && node->node_string[node->node_string_length - 1] == ':') {
+                node->node_string_length--; /* Remove the ':' */
+            }
 
             /* Set the return value node value_type */
             n = ast_chld(node, CLASS, VOID);
-            n->value_type = node_to_type(n,
-                                         &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
-                                         &(n->value_class));
+            if (n) {
+                n->value_type = node_to_type(n,
+                                             &(n->value_dims), &(n->value_dim_base), &(n->value_dim_elements),
+                                             &(n->value_class));
 
-            /* Reset node Target Type to be the same as the node Value Type */
-            ast_rttp(n);
+                /* Reset node Target Type to be the same as the node Value Type */
+                ast_rttp(n);
+            }
 
             /* Check for duplicated */
             symbol = sym_rslv(context->current_scope, node);
@@ -93,7 +125,11 @@ walker_result build_symbols_walker(walker_direction direction,
 
             /* Make a new symbol */
             if (!symbol) { /* If there is a symbol we are in an error condition but are pressing on */
-                symbol = sym_f(context->current_scope, node);
+                if (node->node_type == FACTORY) {
+                    symbol = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
+                } else {
+                    symbol = sym_f(context->current_scope, node);
+                }
                 symbol->symbol_type = FUNCTION_SYMBOL;
             }
 
@@ -102,6 +138,31 @@ walker_result build_symbols_walker(walker_direction direction,
             /* Move down to the procedure scope */
             context->current_scope = scp_f(context, context->current_scope, node, symbol);
             node->scope = context->current_scope;
+
+            /* Level B Class Instance Support */
+            if (node->node_type == FACTORY) {
+                /* Add instance symbol '§factory' */
+                Symbol *star = sym_fn(context->current_scope, "\xc2\xa7" "factory", 9);
+                if (star) {
+                    star->symbol_type = VARIABLE_SYMBOL;
+                    star->type = TP_OBJECT;
+                    if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        star->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
+                        strcpy(star->value_class, context->current_scope->parent->name);
+                    }
+                }
+            } else if (node->node_type == METHOD) {
+                /* Add instance symbol '§this' */
+                Symbol *this_sym = sym_fn(context->current_scope, "\xc2\xa7" "this", 6);
+                if (this_sym) {
+                    this_sym->symbol_type = VARIABLE_SYMBOL;
+                    this_sym->type = TP_OBJECT;
+                    if (context->current_scope->parent && context->current_scope->parent->defining_node && context->current_scope->parent->defining_node->node_type == CLASS_DEF) {
+                        this_sym->value_class = malloc(strlen(context->current_scope->parent->name) + 1);
+                        strcpy(this_sym->value_class, context->current_scope->parent->name);
+                    }
+                }
+            }
         }
 
         else if (node->node_type == IMPORT) {
@@ -202,6 +263,7 @@ walker_result build_symbols_walker(walker_direction direction,
             }
         }
 
+
         else if (node->node_type == VAR_SYMBOL) {
             if (node->symbolNode) {
                 node->scope = context->current_scope;
@@ -247,6 +309,16 @@ walker_result build_symbols_walker(walker_direction direction,
             sym_adnd(symbol, node, 1, 1); /* Increment = read & write */
         }
 
+        else if (node->node_type == NODE_REGISTER) {
+            node->scope = context->current_scope;
+            n = node->child;
+            while (n) {
+                n->scope = context->current_scope;
+                n = n->sibling;
+            }
+            return request_skip;
+        }
+
         else {
             node->scope = context->current_scope;
         }
@@ -275,11 +347,6 @@ walker_result resolve_functions_walker(walker_direction direction,
         /* IN - TOP DOWN */
     }
     else {
-        /* DEBUG PoC */
-        if (is_node_string(node, "POCABS") || is_node_string(node, "POCSQUARE")) {
-             printf("DEBUG: resolve_functions_walker sees %s as type %d\n", node->node_string, node->node_type);
-        }
-
         if (node->node_type == FUNCTION || node->node_type == FUNC_SYMBOL) {
             if (node->symbolNode) return result_normal; /* Already Processed */
             if (ast_chld(node,ERROR,0)) return result_normal; /* Has an error - already processed */
@@ -301,7 +368,9 @@ walker_result resolve_functions_walker(walker_direction direction,
             else {
                 symbol = sym_imfn(context, node);
                 if (!symbol) mknd_err(node, "FUNCTION_NOT_FOUND");
-                else sym_adnd(symbol, node, 1, 0);
+                else {
+                    sym_adnd(symbol, node, 1, 0);
+                }
             }
         }
     }
@@ -324,7 +393,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         if (node->node_type == EXPOSED) {
-            if (node->parent->node_type == NAMESPACE) {
+            if (node->parent && node->parent->node_type == NAMESPACE) {
                 /* We are exposing functions / variables globally to user functions */
                 ASTNode* n = node->child;
                 while (n) {
@@ -333,22 +402,25 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         /* Procedure Symbol not found so it "must" be a variable we need to expose from our procedures */
                         found = 0;
                         /* We need to loop through all the procedures in the program_file in order */
-                        for (proc_node = context->ast->child->child; proc_node; proc_node = proc_node->sibling) {
-                            if (proc_node->node_type != PROCEDURE) continue;
+                        if (context->ast && context->ast->child && context->ast->child->child) {
+                            for (proc_node = context->ast->child->child; proc_node; proc_node = proc_node->sibling) {
+                                if (proc_node->node_type != PROCEDURE) continue;
 
-                            /* We might be exposing one of the procedure's variables */
-                            symbol = sym_lrsv(proc_node->scope, n); /* find it */
-                            if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
-                                if (symbol->exposed == 0) { /* Avoid double processing */
-                                    /* We found a variable to expose - so expose it by moving its scope */
-                                    merged_symbol = sym_merg(symbol->scope->parent, symbol);
-                                    /* Link to the exposed node */
-                                    sym_adnd(merged_symbol, n, 1, 1);
-                                    /* Link to the Procedure's INSTRUCTION node */
-                                    sym_adnd(merged_symbol, ast_chld(proc_node, INSTRUCTIONS, NOP), 0, 0);
-                                    merged_symbol->exposed = 1;
+                                /* We might be exposing one of the procedure's variables */
+                                symbol = sym_lrsv(proc_node->scope, n); /* find it */
+                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                                    if (symbol->exposed == 0) { /* Avoid double processing */
+                                        /* We found a variable to expose - so expose it by moving its scope */
+                                        merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
+                                        /* Link to the exposed node */
+                                        sym_adnd(merged_symbol, n, 1, 1);
+                                        /* Link to the Procedure's INSTRUCTION node */
+                                        ASTNode *instr = ast_chld(proc_node, INSTRUCTIONS, NOP);
+                                        if (instr) sym_adnd(merged_symbol, instr, 0, 0);
+                                        merged_symbol->exposed = 1;
+                                    }
+                                    found = 1;
                                 }
-                                found = 1;
                             }
                         }
                         if (!found) {
@@ -359,7 +431,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
                         temp_node = sym_proc(symbol); /* Procedure */
-                        temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
+                        if (temp_node) temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
                         if (temp_node && temp_node->node_type == INSTRUCTIONS) {
                             if (symbol->exposed == 0) {
                                 /* Link and expose - if not already processed */
@@ -387,7 +459,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
                 }
             }
 
-            else if (node->parent->node_type == PROCEDURE) {
+            else if (node->parent && node->parent->node_type == PROCEDURE) {
                 /* We are exposing variables in a procedure */
                 ASTNode* n = node->child;
                 while (n) {
@@ -399,11 +471,12 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
                             if (symbol->exposed == 0) { /* Avoid double processing */
                                 /* We found a variable to expose - so expose it by moving its scope */
-                                merged_symbol = sym_merg(symbol->scope->parent, symbol);
+                                merged_symbol = sym_merg(symbol->scope ? symbol->scope->parent : 0, symbol);
                                 /* Link to the exposed node */
                                 sym_adnd(merged_symbol, n, 1, 1);
                                 /* Link to the Procedure's INSTRUCTION node */
-                                sym_adnd(merged_symbol, ast_chld(node->parent, INSTRUCTIONS, NOP), 0, 0);
+                                ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
+                                if (instr) sym_adnd(merged_symbol, instr, 0, 0);
                                 merged_symbol->exposed = 1;
                             }
                         }
@@ -418,7 +491,7 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
                         /* Already a global symbol - does it exist in the procedure? */
-                        Symbol *proc_symbol = sym_lrsv(node->parent->scope, n);
+                        Symbol *proc_symbol = node->parent ? sym_lrsv(node->parent->scope, n) : 0;
                         if (proc_symbol) {
                             if (proc_symbol->is_arg) {
                                 /* If it is an arg it can't b e exposed */
@@ -492,8 +565,30 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         return;
     }
 
+    if (strcmp(symbol->name, "\xc2\xa7" "factory") == 0 && scope->defining_node && scope->defining_node->node_type == FACTORY) {
+        symbol->type = TP_OBJECT;
+        symbol->symbol_type = VARIABLE_SYMBOL;
+        symbol->value_dims = 0;
+        if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            symbol->value_class = malloc(strlen(scope->parent->name) + 1);
+            strcpy(symbol->value_class, scope->parent->name);
+        }
+        return;
+    }
+
+    if (strcmp(symbol->name, "\xc2\xa7" "this") == 0 && scope->defining_node && scope->defining_node->node_type == METHOD) {
+        symbol->type = TP_OBJECT;
+        symbol->symbol_type = VARIABLE_SYMBOL;
+        symbol->value_dims = 0;
+        if (scope->parent && scope->parent->defining_node && scope->parent->defining_node->node_type == CLASS_DEF) {
+            symbol->value_class = malloc(strlen(scope->parent->name) + 1);
+            strcpy(symbol->value_class, scope->parent->name);
+        }
+        return;
+    }
+
     /* This sees if we are looking at exposed (global) variables by looking at the scope defining node type */
-    if ( scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
+    if (scope->defining_node && scope->defining_node->node_type == PROGRAM_FILE && symbol->symbol_type == VARIABLE_SYMBOL) {
 
         proc = 0;
         /* An Exposed Symbol needs special processing */
@@ -509,15 +604,28 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             proc = p;
 
             /* Ok we are the first usage in this proc */
-            if (defining_node_link->node->node_type == PROCEDURE) {
-                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-                symbol->type = node_to_type(p_type,
-                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
-                                            &(symbol->value_class));
+            if (defining_node_link->node->node_type == PROCEDURE ||
+                defining_node_link->node->node_type == METHOD ||
+                defining_node_link->node->node_type == FACTORY) {
 
-                ast_svtp(defining_node_link->node, symbol);
+                if (defining_node_link->node->node_type == FACTORY) {
+                    symbol->type = TP_OBJECT;
+                    /* The FACTORY symbol is in the CLASS scope */
+                    if (scope->defining_node && scope->defining_node->node_type == CLASS_DEF) {
+                        if (symbol->value_class) free(symbol->value_class);
+                        symbol->value_class = malloc(strlen(scope->name) + 1);
+                        strcpy(symbol->value_class, scope->name);
+                    }
+                    ast_svtp(defining_node_link->node, symbol);
+                } else {
+                    p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                    symbol->type = node_to_type(p_type,
+                                                &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                                &(symbol->value_class));
 
-                ast_svtp(p_type, symbol);
+                    ast_svtp(defining_node_link->node, symbol);
+                    ast_svtp(p_type, symbol);
+                }
                 break;
             }
 
@@ -558,15 +666,28 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
 
         /* For REXX Level B the variable type is defined by its first use */
         defining_node_link = sym_trnd(symbol, 0);
-        if (defining_node_link->node->node_type == PROCEDURE) {
+        if (defining_node_link->node->node_type == PROCEDURE ||
+            defining_node_link->node->node_type == METHOD ||
+            defining_node_link->node->node_type == FACTORY) {
             /* This sets the procedure symbol type */
-            p_type = ast_chld(defining_node_link->node, CLASS, VOID);
-            symbol->type = node_to_type(p_type,
-                                        &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
-                                        &(symbol->value_class));
+            if (defining_node_link->node->node_type == FACTORY) {
+                symbol->type = TP_OBJECT;
+                /* The FACTORY symbol is in the CLASS scope */
+                if (scope->defining_node && scope->defining_node->node_type == CLASS_DEF) {
+                    if (symbol->value_class) free(symbol->value_class);
+                    symbol->value_class = malloc(strlen(scope->name) + 1);
+                    strcpy(symbol->value_class, scope->name);
+                }
+                ast_svtp(defining_node_link->node, symbol);
+            } else {
+                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                symbol->type = node_to_type(p_type,
+                                            &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
+                                            &(symbol->value_class));
 
-            ast_svtp(defining_node_link->node, symbol);
-            ast_svtp(p_type, symbol);
+                ast_svtp(defining_node_link->node, symbol);
+                ast_svtp(p_type, symbol);
+            }
         }
 
         else if (defining_node_link->node->node_type == VAR_REFERENCE) {
@@ -594,7 +715,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
         }
 
-        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL) {
+        else if (symbol->symbol_type != NAMESPACE_SYMBOL && symbol->symbol_type != FUNCTION_SYMBOL && symbol->symbol_type != CLASS_SYMBOL) {
             /* Used without definition/declaration - Taken Constant */
             /* TODO - for Level A/C/D we will need flow analysis to determine taken constant status */
             symbol->type = TP_STRING;
@@ -637,7 +758,7 @@ static void variable_initiation(Symbol *symbol, void *payload) {
     }
 
     /* Is this a global variable? */
-    if ( scope->defining_node->node_type == PROGRAM_FILE) {
+    if (scope->defining_node && scope->defining_node->node_type == PROGRAM_FILE) {
         /* Global variable unlike locals these registers are initialised by the VM
          * and for complex cases (objects) the initialisation is done by the constructor,
          * so this is a NOP */
@@ -651,10 +772,12 @@ static void variable_initiation(Symbol *symbol, void *payload) {
     }
 
     /* An initialiser is needed if the variable is defined not assigned (x = .int) */
-    defining_node_link = sym_trnd(symbol, 0);
-    if (defining_node_link->node->parent->node_type == DEFINE) {
-        symbol->needs_default_initiation = 1;
-        return;
+    if (sym_nond(symbol) > 0) {
+        defining_node_link = sym_trnd(symbol, 0);
+        if (defining_node_link->node->parent->node_type == DEFINE) {
+            symbol->needs_default_initiation = 1;
+            return;
+        }
     }
 }
 

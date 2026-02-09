@@ -35,6 +35,7 @@
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
+#include "rxcp_val.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
@@ -85,8 +86,15 @@ static int src_func(Context *context, char* fqname, imported_func **func) {
 // Returns 0 if not found
 static int src_nsfu(Context *context, char* namespace, char* name, imported_func **func) {
     struct avl_tree_node *result;
-    struct avl_tree_node *root = context->master_context->importable_function_tree;
+    struct avl_tree_node *root;
     char *fqname;
+
+    if (!context || !context->master_context) return 0;
+    root = context->master_context->importable_function_tree;
+    if (!root) return 0;
+
+    if (!namespace || !name) return 0;
+
     fqname = malloc(strlen(namespace) + strlen(name) + 2);
     strcpy(fqname,namespace);
     strcat(fqname, ".");
@@ -112,16 +120,28 @@ static int src_nsfu(Context *context, char* namespace, char* name, imported_func
 static int src_fqfu(Context *context, int only_namespace, char* name, imported_func **func) {
     char *namespace;
     size_t i;
+    Scope *scope;
+
+    if (!context || !context->ast || !context->ast->scope) return 0;
+    scope = context->ast->scope;
 
     /* Check the module namespace */
-    namespace = scp_chd(context->ast->scope, 0)->name;
-    if (src_nsfu(context, namespace, name, func)) return 1;
+    if (scp_noch(scope) > 0) {
+        Scope *s0 = scp_chd(scope, 0);
+        if (s0) {
+            namespace = s0->name;
+            if (src_nsfu(context, namespace, name, func)) return 1;
+        }
+    }
 
     /* Check imported namespaces */
     if (!only_namespace) {
-        for (i = 1; i < scp_noch(context->ast->scope); i++) {
-            namespace = scp_chd(context->ast->scope, i)->name;
-            if (src_nsfu(context, namespace, name, func)) return 1;
+        for (i = 1; i < scp_noch(scope); i++) {
+            Scope *si = scp_chd(scope, i);
+            if (si) {
+                namespace = si->name;
+                if (src_nsfu(context, namespace, name, func)) return 1;
+            }
         }
     }
 
@@ -208,8 +228,8 @@ void fre_ftre(Context *context) {
 
 static void dump_error_ast(Context *context) {
 #ifndef __CMS__
-    if (context->debug_mode) {
-        pdot_tree(context->ast, "error", context->file_name);
+    if (context->debug_mode >= 2) {
+//        pdot_tree(context->ast, "error", context->file_name);
     }
 #endif
 }
@@ -507,12 +527,12 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.setsayexit = rxpa_setsayexit;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
 
-    if (context->debug_mode) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode >= 2) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
 
     // Load the plugin - and run the plugin initialization function
     int rc = load_plugin(&rxpa_context, location, file_name);
     if (!rc) {
-        if (context->debug_mode) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
+        if (context->debug_mode >= 2) printf("Importing Procedures - CREXX Plugin %s loaded successfully\n", file_name);
     }
     else {
         fprintf(stderr, "Importing Procedures - Failed to load plugin %s\n", file_name);
@@ -534,13 +554,14 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
 
     /* scanner context parameter */
     scanner.debug_mode = context->debug_mode;
+    scanner.quiet = 1;
     scanner.traceFile = 0;
     scanner.optimise = 0;
     scanner.file_name = file_name;
     scanner.output_file_name = 0;
     scanner.location = location;
 
-    if (context->debug_mode) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode >= 2) printf("Importing Procedures - Reading RXAS file %s for possible procedure imports\n", file_name);
 
     /* Opening an Assembler file */
     if (rxasinfl(&scanner, 1)) {
@@ -563,11 +584,11 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
     int loaded_rc;
     char *full_file_name;
 
-    if (context->debug_mode) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
+    if (context->debug_mode >= 2) printf("Importing Procedures - Reading RXBIN file %s for possible procedure imports\n", file_name);
 
     fp = openfile(file_name, "", location, "rb");
     if (!fp) {
-        if (context->debug_mode) printf("Importing Procedures - Could not open file\n");
+        if (context->debug_mode >= 2) printf("Importing Procedures - Could not open file\n");
         return;
     }
 
@@ -589,14 +610,14 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
             case 1: /* eof */
                 if (file_module_section) free_module(file_module_section);
                 if (!modules_processed) {
-                    if (context->debug_mode) printf("Importing Procedures - Empty file\n");
+                    if (context->debug_mode >= 2) printf("Importing Procedures - Empty file\n");
                     return;
                 }
                 break;
 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
-                if (context->debug_mode) printf("Importing Procedures - Error reading file\n");
+                if (context->debug_mode >= 2) printf("Importing Procedures - Error reading file\n");
                 return;
         }
     }
@@ -611,7 +632,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     imported_func *global;
     size_t i;
 
-    if (parent_context->debug_mode) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
+    if (parent_context->debug_mode >= 2) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
     /* Context for parsing */
     context = cntx_f();
@@ -660,7 +681,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         case LEVELA:
         case LEVELC:
         case LEVELD:
-            if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            if (parent_context->debug_mode >= 2) fprintf(stderr,"Importing Procedures - REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
             break;
 
         case LEVELB:
@@ -670,18 +691,18 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
             break;
 
         default:
-            if (parent_context->debug_mode) fprintf(stderr, "Importing Procedures - Failed to determine REXX Level of imported rexx file\n");
+            if (parent_context->debug_mode >= 2) fprintf(stderr, "Importing Procedures - Failed to determine REXX Level of imported rexx file\n");
     }
 
     if (!context->ast) {
-        if (parent_context->debug_mode) fprintf(stderr,"Importing Procedures - Failure to create AST of imported rexx file\n");
+        if (parent_context->debug_mode >= 2) fprintf(stderr,"Importing Procedures - Failure to create AST of imported rexx file\n");
         goto finish;
     }
 
     /* Recursion Guard - Check if already loading */
     for (i = 0; i < parent_context->master_context->loading_files_count; i++) {
         if (strcmp(parent_context->master_context->loading_files[i], file_name) == 0) {
-            if (parent_context->debug_mode) printf("Importing Procedures - File %s already being loaded - skipping to avoid recursion\n", file_name);
+            if (parent_context->debug_mode >= 2) printf("Importing Procedures - File %s already being loaded - skipping to avoid recursion\n", file_name);
             return;
         }
     }
@@ -700,8 +721,8 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     /* No need to realloc down, it's fine */
 
 #ifndef __CMS__
-    if (parent_context->debug_mode) {
-        pdot_tree(context->ast, "astimport", context->file_name);
+    if (parent_context->debug_mode >= 2) {
+//        pdot_tree(context->ast, "astimport", context->file_name);
     }
 #endif
 
@@ -730,6 +751,28 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 }
 
 /* Parse and rxcp_val a rexx program in a string and return the context */
+/* Parse and rxcp_val a rexx program in a string and return the context */
+Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
+    Context *context;
+    size_t bytes = strlen(rexx_source);
+    char *buff = malloc(bytes + 1);
+    memcpy(buff, rexx_source, bytes);
+    buff[bytes] = 0;
+
+    context = cntx_f();
+    cntx_buf(context, buff, bytes);
+
+    /* Initialize context */
+    context->level = LEVELB;
+    context->debug_mode = debug_mode;
+    context->master_context = context;
+    context->file_name = "fragment";
+
+    rexbpars(context);
+
+    return context;
+}
+
 static Context *parseRexx(Context* parent_context, char *location, char* file_name, RexxLevel level, int debug_mode, char* rexx_source, size_t bytes) {
     Context *context;
 
@@ -762,14 +805,14 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
     }
 
     if (!context->ast) {
-        if (debug_mode) fprintf(stderr,"INTERNAL ERROR: Importing Procedures - Compiler Exiting - Failure to create AST\n");
+        if (debug_mode >= 2) fprintf(stderr,"INTERNAL ERROR: Importing Procedures - Compiler Exiting - Failure to create AST\n");
         goto finish;
     }
 
     rxcp_bvl(context);
 
 #ifndef __CMS__
-//    if (debug_mode) {
+//    if (debug_mode >= 2) {
 //        pdot_tree(context->ast, "parserexx.dot");
 //        /* Get dot from https://graphviz.org/download/ */
 //        system("dot parserexx.dot -Tpng -o parserexx.png");
@@ -785,7 +828,11 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
 /* return 1 if a file was loaded, or 0 if no more files are available */
 static int load_another_file(Context *context) {
     size_t f;
-    Context *master_context = context->master_context;
+    Context *master_context;
+    
+    if (!context) return 0;
+    master_context = context->master_context;
+    if (!master_context) return 0;
 
     /* Load files from the importable_file_list */
     if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);
@@ -884,20 +931,20 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     utf8lwr(name);
 #endif
 
-    if (context->debug_mode) printf("Importing Procedures for file %s Looking for Procedure %s\n", defining_file, name);
+    if (context->debug_mode >= 2) printf("Importing Procedures for file %s Looking for Procedure %s\n", defining_file, name);
 
     /* Process all the unread files - but we just are interested in the first found variable - duplicates done next */
     do {
         /* Check if the function has been loaded */
         if (src_fqfu(context, 0, name, &func)) {
-            if (context->debug_mode)
+            if (context->debug_mode >= 2)
                 printf("Importing Procedures - Found Procedure %s in file %s\n", func->fqname, func->file_name);
             found_func = func;
             break;
         }
     } while (load_another_file(context));
 
-    if (context->debug_mode) printf("Finished Importing files needed for file %s when Looking for Procedure %s\n", defining_file, name);
+    if (context->debug_mode >= 2) printf("Finished Importing files needed for file %s when Looking for Procedure %s\n", defining_file, name);
 
     if (found_func) {
         /* Compare found variable with the type defined in the master file being compiled */
@@ -947,7 +994,7 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
         }
         if (!error) {
 
-            if (context->debug_mode)
+            if (context->debug_mode >= 2)
                 printf("Importing Procedures - Found Procedure %s\n", found_func->fqname);
 
             /* Splice the ASTs together */
@@ -974,7 +1021,7 @@ void sym_imva(Context *context, Symbol *symbol) {
     char error = 0;
     char* defining_file = 0;
 
-    if (context->debug_mode) printf("Importing Globals - Looking for Global %s\n", symbol->name);
+    if (context->debug_mode >= 2) printf("Importing Globals - Looking for Global %s\n", symbol->name);
 
     defining_file = context->file_name;
 
@@ -983,7 +1030,7 @@ void sym_imva(Context *context, Symbol *symbol) {
         if (!found_var) {
             /* Check if the function has been loaded */
             if (src_fqfu(context, 1, symbol->name, &var)) {
-                if (context->debug_mode) printf("Importing Globals - Found Global Symbol %s\n", var->fqname);
+                if (context->debug_mode >= 2) printf("Importing Globals - Found Global Symbol %s\n", var->fqname);
                 found_var = var;
             }
         }
@@ -1102,7 +1149,7 @@ imported_func *rximpf_f(Context* context, char* file_name, char *fqname, char *o
         // TODO This only does Level B
         buffer = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\narg %s\n", func->namespace, func->name,
                          func->type, func->args);
-        if (context->debug_mode) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
+        if (context->debug_mode >= 2) printf("Importing Procedures - Analysing procedure %s\n", func->fqname);
         func->context = parseRexx(context, context->location, func->file_name, LEVELB, context->debug_mode, buffer,
                                   strlen(buffer));
 

@@ -51,11 +51,21 @@ int is_node_string(ASTNode* node, const char* value) {
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
 int node_to_integer(ASTNode* node) {
     int result;
-    char *buffer = malloc(node->node_string_length + 1);
+    if (!node) return 0;
+    char *s = node->node_string;
+    size_t l = node->node_string_length;
+
+    /* Skip leading dot or spaces */
+    while (l && (*s == '.' || *s == ' ')) {
+        s++;
+        l--;
+    }
+
+    char *buffer = malloc(l + 1);
 
     /* Null terminated buffer - {sigh} */
-    buffer[node->node_string_length] = 0;
-    memcpy(buffer, node->node_string, node->node_string_length);
+    buffer[l] = 0;
+    memcpy(buffer, s, l);
 
     result = atoi(buffer);
 
@@ -304,9 +314,20 @@ void validate_node_promotion(ASTNode* node) {
 
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
 
-    /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
-        mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    /* Class / Object Support */
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+        if (node->value_type != node->target_type) {
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+        else if (node->value_class && node->target_class) {
+            if (strcmp(node->value_class, node->target_class) != 0) {
+                mknd_err(node, "TYPE_MISMATCH");
+            }
+        }
+        else if (node->value_class || node->target_class) {
+            mknd_err(node, "TYPE_MISMATCH");
+        }
+    }
 }
 
 /*
@@ -333,7 +354,9 @@ void validate_ast(Context *context) {
 
     /* AST fixups */
     context->current_scope = 0;
+    context->in_factory = 0;
     ast_wlkr(context->ast, initial_checks_walker, (void *) context);
+    ast_wlkr(context->ast, rxcp_fixup_walker, (void *) context);
 
     // Initial checks walker will have set the options
     if (context->floats_decimal)  {
@@ -354,11 +377,29 @@ void validate_ast(Context *context) {
         ast_wlkr(context->ast, add_rxsysb_walker, (void *) context);
     }
 
+    if (context->debug_mode && context == context->master_context) {
+        rxcp_debug_header("STAGE_FIXUP", -1);
+        rxcp_print_ast_recursive(context->ast, 0);
+    }
+
+    /* PoC Symbol Init */
+    sym_init(context);
+
     /* Fixed Point Iteration Loop */
     context->iterations = 0;
     context->after_rewrite = 0;
     do {
         context->changed = 0;
+
+        if (context->debug_mode && context == context->master_context) {
+            rxcp_debug_header("STAGE_SYMBOLS", context->iterations);
+            rxcp_print_ast_recursive(context->ast, 0);
+            rxcp_print_symbol_table(context->ast->scope, 0);
+        }
+
+        /* Plugin Dispatch */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, plugin_dispatch_walker, (void *) context);
 
         /* Re-write IMPLICIT_CMD Instructions */
         context->current_scope = 0;
@@ -371,9 +412,6 @@ void validate_ast(Context *context) {
         /* Builds the Symbol Table */
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
-
-        /* PoC Symbol Init */
-        sym_init(context);
 
         /* Mainly resolve symbols - functions */
         context->current_scope = 0;

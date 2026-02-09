@@ -38,16 +38,16 @@ add_library(rxclib STATIC
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
-        rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c
+        rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h rxcpfunc.c rxcp_poc_plug.c
+        ../utf8/utf.h rxcpfunc.c rxcp_poc_plug.c rxcp_plugin.c
         rxcp_instr.c
 )
 
 add_dependencies(rxclib re2c lemon avl_tree platform rxaslib rxpa)
 
-target_link_libraries(rxclib avl_tree platform rxaslib rxpa m)
+target_link_libraries(rxclib avl_tree platform rxaslib rxpa rxbvml m)
 
 target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree
@@ -56,7 +56,7 @@ target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CU
         ${CMAKE_SOURCE_DIR}/binutils/include)
 
 add_executable(rxc rxc_main.c)
-target_link_libraries(rxc rxclib avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual m)
+target_link_libraries(rxc rxclib avl_tree platform rxaslib rxpa rxvmplugin mc_decimal_manual rxbvml m)
 
 add_custom_target(rxccopy ALL DEPENDS rxc)
 

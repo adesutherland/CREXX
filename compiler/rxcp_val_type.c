@@ -55,9 +55,14 @@ void validate_node_promotion_for_ref(ASTNode* node) {
 
     if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
 
-    /* TODO Class / Object Support */
-    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT)
-        mknd_err(node, "CLASSES_NOT_SUPPORTED");
+    /* Class / Object Support */
+    if (node->value_type == TP_OBJECT || node->target_type == TP_OBJECT) {
+        if (node->value_type != node->target_type) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+        else if (node->value_class && node->target_class) {
+            if (strcmp(node->value_class, node->target_class) != 0) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+        }
+        else if (node->value_class || node->target_class) mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+    }
 }
 
 /* Step 4
@@ -140,6 +145,7 @@ walker_result set_node_types_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
+        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -202,7 +208,10 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     ValueType type = promotion[child1->value_type][child2->value_type];
                     type = promotion[type][TP_INTEGER]; /* Ensure at least INTEGER */
-                    set_node_type(node, type);
+                    if (type != TP_UNKNOWN) {
+                        set_node_type(node, type);
+                        context->changed = 1;
+                    }
                 }
                 break;
 
@@ -230,13 +239,125 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
-            case VAR_SYMBOL:
+            case MEMBER_CALL:
+                if (ast_chld(node, ERROR, 0)) break;
                 if (node->value_type == TP_UNKNOWN) {
-                    context->changed = 1;
+                    ASTNode *instance = ast_chdn(node, 0);
+                    if (instance->value_type == TP_OBJECT && instance->value_class) {
+                        /* Resolve the Class Symbol from the instance's class name */
+                        const char *cname = instance->value_class;
+                        if (cname && cname[0] == '.') cname++;
+                        Symbol *class_sym = sym_rvfn(context->ast, (char*)cname);
+                        if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                            /* Lookup the Method Name in the Class Scope */
+                            Symbol *method_sym = sym_lrsv(class_sym->defines_scope, node);
+                            if (method_sym && method_sym->symbol_type == FUNCTION_SYMBOL) {
+                                sym_adnd(method_sym, node, 1, 0);
+                                ast_svtp(node, method_sym);
+                                context->changed = 1;
+                            } else if (!context->changed) {
+                                /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
+                                Symbol *index_sym = sym_rslv(context->current_scope, node);
+                                if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
+                                    instance->symbolNode && instance->symbolNode->symbol->value_dims > 0) {
 
+                                    ASTNode *new_index_node = ast_f(context, VAR_SYMBOL, node->token);
+                                    {
+                                        char *s = malloc(node->node_string_length + 1);
+                                        memcpy(s, node->node_string, node->node_string_length);
+                                        s[node->node_string_length] = 0;
+                                        ast_sstr(new_index_node, s, node->node_string_length);
+                                    }
+                                    sym_adnd(index_sym, new_index_node, 1, 0);
+
+                                    /* Transform current node (MEMBER_CALL) into the array's VAR_SYMBOL */
+                                    node->node_type = VAR_SYMBOL;
+                                    {
+                                        char *s = malloc(instance->node_string_length + 1);
+                                        memcpy(s, instance->node_string, instance->node_string_length);
+                                        s[instance->node_string_length] = 0;
+                                        ast_sstr(node, s, instance->node_string_length);
+                                    }
+
+                                    /* Disconnect from any previous symbols if any */
+                                    if (node->symbolNode) sym_dno(node->symbolNode->symbol, node);
+
+                                    /* Link to the same symbol as instance */
+                                    sym_adnd(instance->symbolNode->symbol, node, 1, 0);
+
+                                    /* Set scalar element type */
+                                    node->value_type = instance->symbolNode->symbol->type;
+                                    node->value_dims = 0;
+                                    node->target_dims = 0;
+                                    if (node->value_class) { free(node->value_class); node->value_class = 0; }
+                                    if (instance->symbolNode->symbol->value_class) {
+                                        node->value_class = malloc(strlen(instance->symbolNode->symbol->value_class) + 1);
+                                        strcpy(node->value_class, instance->symbolNode->symbol->value_class);
+                                    }
+                                    ast_rttp(node);
+
+                                    /* Delete children (instance and any args) */
+                                    while (node->child) {
+                                        ASTNode *c = node->child;
+                                        if (c->symbolNode) sym_dno(c->symbolNode->symbol, c);
+                                        ast_del(c);
+                                    }
+
+                                    /* Add the resolved variable as the index child (subscript) */
+                                    add_ast(node, new_index_node);
+
+                                    context->changed = 1;
+                                    return result_normal;
+                                }
+                                mknd_err(node, "METHOD_NOT_FOUND");
+                            }
+                        } else if (!context->changed) {
+                            mknd_err(node, "CLASS_NOT_FOUND");
+                        }
+                    } else if (instance->value_type != TP_UNKNOWN) {
+                        mknd_err(node, "NOT_AN_OBJECT");
+                    }
+                }
+                break;
+
+            case FACTORY_CALL:
+                if (ast_chld(node, ERROR, 0)) break;
+                if (node->value_type == TP_UNKNOWN) {
+                    /* Lookup the Class Name */
+                    Symbol *class_sym = sym_rvfc(context->ast, node);
+                    if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                        /* Resolve the Factory routine '§factory' within that class */
+                        ASTNode star_node;
+                        memset(&star_node, 0, sizeof(ASTNode));
+                        star_node.node_string = "\xc2\xa7" "factory";
+                        star_node.node_string_length = 9;
+                        Symbol *factory_sym = sym_lrsv(class_sym->defines_scope, &star_node);
+                        if (factory_sym && factory_sym->symbol_type == FUNCTION_SYMBOL) {
+                            sym_adnd(factory_sym, node, 1, 0);
+                            node->value_type = TP_OBJECT;
+                            node->value_class = malloc(strlen(class_sym->name) + 1);
+                            strcpy(node->value_class, class_sym->name);
+                            ast_rttp(node);
+                            context->changed = 1;
+                        } else if (!context->changed) {
+                            mknd_err(node, "FACTORY_NOT_FOUND");
+                        }
+                    } else if (!context->changed) {
+                        mknd_err(node, "CLASS_NOT_FOUND");
+                    }
+                }
+                break;
+
+            case VAR_SYMBOL:
+            case VAR_TARGET:
+                if (node->value_type == TP_UNKNOWN) {
                     ast_svtp(node, node->symbolNode->symbol);
-                    if (child1) {
-                        /* We have array parameters */
+                    if (node->value_type != TP_UNKNOWN) {
+                        context->changed = 1;
+                    }
+
+                    if (node->node_type == VAR_SYMBOL && child1) {
+                        /* We have array parameters (subscript or stem-style) */
                         n1 = child1;
                         while (n1) {
                             if (n1->value_type == TP_VOID && !ast_nsib(n1)) {
@@ -265,9 +386,25 @@ walker_result set_node_types_walker(walker_direction direction,
                             set_node_type(node, TP_INTEGER);
                         } else {
                             /* We are returning the array element */
+                            /* Ensure the node reflects the element (scalar) type and class */
                             node->value_dims = 0; /* We are 'returning' a single value */
-                            /* Reset Node Target Type to be the same as the node value type */
-                            ast_rttp(node);
+                            node->target_dims = 0;
+                            /* Copy over element value type/class from the symbol if needed */
+                            if (node->symbolNode && node->symbolNode->symbol) {
+                                /* Keep the underlying element ValueType */
+                                node->value_type = node->symbolNode->symbol->type;
+                                if (node->value_class) { free(node->value_class); node->value_class = 0; }
+                                if (node->symbolNode->symbol->value_class) {
+                                    node->value_class = malloc(strlen(node->symbolNode->symbol->value_class) + 1);
+                                    strcpy(node->value_class, node->symbolNode->symbol->value_class);
+                                }
+                                /* Make target match value */
+                                ast_rttp(node);
+                            } else {
+                                /* Reset Node Target Type to be the same as the node value type */
+                                ast_rttp(node);
+                            }
+                            context->changed = 1;
                         }
                     }
                 }
@@ -275,27 +412,36 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case ASSIGN:
                 if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
                     context->changed = 1;
-                    if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet - then determine it */
-                        if (node->parent->node_type == REPEAT) {
-                            /* Special logic for LOOP Assignment - type must be numeric */
-                            child1->symbolNode->symbol->value_dims = 0;
-                            if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
-                            child1->symbolNode->symbol->value_class = 0;
-                            child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
-                        } else {
-                            child1->symbolNode->symbol->type =
-                                    node_to_type(child2,
-                                                 &(child1->symbolNode->symbol->value_dims),
-                                                 &(child1->symbolNode->symbol->dim_base),
-                                                 &(child1->symbolNode->symbol->dim_elements),
-                                                 &(child1->symbolNode->symbol->value_class));
+                }
+                if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    if (node->parent->node_type == REPEAT) {
+                        /* Special logic for LOOP Assignment - type must be numeric */
+                        child1->symbolNode->symbol->value_dims = 0;
+                        if (child1->symbolNode->symbol->value_class) free(child1->symbolNode->symbol->value_class);
+                        child1->symbolNode->symbol->value_class = 0;
+                        child1->symbolNode->symbol->type = promotion[child2->value_type][TP_INTEGER];
+                        if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                            context->changed = 1;
+                            ast_svtp(child1, child1->symbolNode->symbol);
+                        }
+                    } else {
+                        child1->symbolNode->symbol->type =
+                                node_to_type(child2,
+                                             &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base),
+                                             &(child1->symbolNode->symbol->dim_elements),
+                                             &(child1->symbolNode->symbol->value_class));
 
-                            if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
-                                node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
+                        if (child1->symbolNode->symbol->value_dims == 0 && child2->node_type != CLASS)
+                            node_to_dims(child1, &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base), &(child1->symbolNode->symbol->dim_elements));
 
+                        if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                            context->changed = 1;
+                            ast_svtp(child1, child1->symbolNode->symbol);
                         }
                     }
                 }
@@ -360,15 +506,19 @@ walker_result set_node_types_walker(walker_direction direction,
 
             case DEFINE:
                 if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
                     context->changed = 1;
-                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
-                        /* If the symbol does not have a known type yet - then determine it */
-                        child1->symbolNode->symbol->type =
-                                node_to_type(child2,
-                                             &(child1->symbolNode->symbol->value_dims),
-                                             &(child1->symbolNode->symbol->dim_base),
-                                             &(child1->symbolNode->symbol->dim_elements),
-                                             &(child1->symbolNode->symbol->value_class));
+                }
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    child1->symbolNode->symbol->type =
+                            node_to_type(child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                    if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                        context->changed = 1;
                         ast_svtp(child1, child1->symbolNode->symbol);
                     }
                 }
@@ -442,6 +592,7 @@ walker_result type_safety_walker(walker_direction direction,
     if (direction == in) {
         /* IN - TOP DOWN */
         context->current_scope = node->scope;
+        if (node->node_type == NODE_REGISTER) return request_skip;
     }
     else {
         /* OUT - BOTTOM UP */
@@ -707,7 +858,10 @@ walker_result type_safety_walker(walker_direction direction,
 
             case OP_ARG_VALUE:
             case OP_ARG_IX_EXISTS:
-                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
+                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                }
                 set_node_target_type(child1,TP_INTEGER);
 
                 if (child1->node_type == INTEGER) {
@@ -720,7 +874,10 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case OP_ARGS:
-                if (!ast_proc(node)->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                n1 = ast_proc(node);
+                if (n1 && n1->symbolNode && n1->symbolNode->symbol) {
+                    if (!n1->symbolNode->symbol->has_vargs) mknd_err(node,"NO_PROC_VARGS");
+                }
                 break;
 
             case SAY:
@@ -729,7 +886,12 @@ walker_result type_safety_walker(walker_direction direction,
 
             case RETURN:
                 /* Type is the scope > procedure > type */
-                ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
+                if (context->current_scope->defining_node && context->current_scope->defining_node->symbolNode) {
+                    ast_svtp(node, context->current_scope->defining_node->symbolNode->symbol);
+                } else {
+                    /* Fallback to VOID if no defining node or symbol */
+                    set_node_type(node, TP_VOID);
+                }
                 if (node->value_type == TP_VOID) {
                     if (child1) mknd_err(child1, "EXTRANEOUS_RETVAL");
                 }
@@ -783,8 +945,8 @@ walker_result type_safety_walker(walker_direction direction,
                             while (n2) {
                                 if (n2->node_type == ASSIGN) {
                                     /* Same Symbol? */
-                                    if (n2->child->symbolNode->symbol ==
-                                        node->child->symbolNode->symbol) {
+                                    if (n2->child->symbolNode && node->child->symbolNode &&
+                                        n2->child->symbolNode->symbol == node->child->symbolNode->symbol) {
                                         node->association = n1;
                                         goto found;
                                     }
@@ -847,14 +1009,18 @@ walker_result func_type_safety_walker(walker_direction direction,
         switch (node->node_type) {
 
             case FUNCTION:
+            case MEMBER_CALL:
+            case FACTORY_CALL:
                 /* Process all the arguments */
-                n1 = node->child;
-                if  (node->symbolNode) {
+                if (node->node_type == MEMBER_CALL) n1 = node->child->sibling; /* Skip Instance */
+                else n1 = node->child;
+
+                if  (node->symbolNode && sym_nond(node->symbolNode->symbol) > 0) {
                     n2 = sym_trnd(node->symbolNode->symbol, 0)->node;
-                    /* n2 is PROCEDURE. Go to the first arg */
-                    if (n2->node_type == PROCEDURE) {
+                    /* n2 is PROCEDURE/METHOD/FACTORY. Go to the first arg */
+                    if (n2 && (n2->node_type == PROCEDURE || n2->node_type == METHOD || n2->node_type == FACTORY)) {
                         n2 = ast_chld(n2, ARGS, 0);
-                        n2 = n2->child;
+                        if (n2) n2 = n2->child;
                     } else n2 = 0;
                 }
                 else n2 = 0;
@@ -873,7 +1039,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         else if (n1->node_type == NOVAL) {
                             /* Prune the unwanted NOVAL - the parser grammar just added it */
-                            ast_del(n1);
+                            ASTNode *to_del = n1;
+                            n1 = n1->sibling;
+                            ast_del(to_del);
+                            break;
                         }
                         break;
                     }
@@ -955,6 +1124,47 @@ walker_result func_type_safety_walker(walker_direction direction,
                         }
                         n2 = n2->sibling;
                     }
+                }
+                break;
+
+            case REXX_UNIVERSE:
+            case PROGRAM_FILE:
+            case IMPORTED_FILE:
+            case INSTRUCTIONS:
+            case PROCEDURE:
+            case EXPOSED:
+            case SAY:
+            case RETURN:
+            case EXIT:
+            case IF:
+            case DO:
+            case FOR:
+            case WHILE:
+            case UNTIL:
+            case REPEAT:
+            case ITERATE:
+            case LEAVE:
+            case NOP:
+            case OPTIONS:
+            case REXX_OPTIONS:
+            case IMPORT:
+            case NAMESPACE:
+            case PARSE:
+            case UPPER:
+            case PULL:
+            case ADDRESS:
+            case ENVIRONMENT:
+            case DEC_DIGITS:
+            case DEC_FORM:
+            case DEC_FUZZ:
+            case DEC_CASE:
+            case DEC_STANDARD:
+            case CLASS_DEF:
+            case METHOD:
+            case FACTORY:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
+                    context->changed = 1;
                 }
                 break;
 

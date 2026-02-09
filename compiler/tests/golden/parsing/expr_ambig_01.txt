@@ -1,10 +1,77 @@
-[AST] REXX_UNIVERSE (Type 86) [Line -1] ""
-  [AST] PROGRAM_FILE (Type 75) [Line -1] ""
-    [AST] REXX_OPTIONS (Type 85) [Line -1] "options"
-      [AST] LITERAL (Type 11) [Line -1] "levelb"
-    [AST] INSTRUCTIONS (Type 30) [Line -1] ""
-      [AST] ASSIGN (Type 7) [Line -1] "="
-        [AST] VAR_TARGET (Type 98) [Line -1] "a"
-        [AST] OP_MINUS (Type 42) [Line -1] "-"
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "b"
-          [AST] VAR_SYMBOL (Type 97) [Line -1] "c"
+
+--- STAGE_RAW ---
+REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
+  PROGRAM_FILE : "" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+    INSTRUCTIONS : "" (-1:-1) [Type: .unknown]
+      ASSIGN : "=" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "a" (-1:-1) [Type: .unknown]
+        OP_MINUS : "-" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "b" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "c" (-1:-1) [Type: .unknown]
+
+--- STAGE_FIXUP ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_ambig_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_MINUS : "-" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "b" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "c" (1:8) [Type: .unknown]
+        RETURN : "" (1:9) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 0) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_ambig_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main:" (1:0) [Type: .unknown]
+      VOID : "" (-1:-1) [Type: .unknown]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .unknown]
+          VAR_TARGET : "a" (1:0) [Type: .unknown]
+          OP_MINUS : "-" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "b" (1:4) [Type: .unknown]
+            VAR_SYMBOL : "c" (1:8) [Type: .unknown]
+        RETURN : "" (1:9) [Type: .unknown]
+
+--- STAGE_SYMBOLS (Iteration 1) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "expr_ambig_01" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (1:0) [Type: .void]
+      VOID : "" (-1:-1) [Type: .void]
+      ARGS : "" (-1:-1) [Type: .unknown]
+      INSTRUCTIONS : "" (1:0) [Type: .unknown]
+        ASSIGN : "=" (1:0) [Type: .void]
+          VAR_TARGET : "a" (1:0) [Type: .float]
+          OP_MINUS : "-" (1:4) [Type: .float]
+            STRING : "b" (1:4) [Type: .string]
+            STRING : "c" (1:8) [Type: .string]
+        RETURN : "" (1:9) [Type: .unknown]
+Scope [0]: Unnamed
+  expr_ambig_01 (Namespace) -> .unknown
+  Scope [1]: expr_ambig_01
+    main (Function) -> .void
+    Scope [2]: main
+      a (Variable) -> .float
+      b (Constant) -> .string
+      c (Constant) -> .string
+Error in expr_ambig_01.rexx @ 2:5 - #BAD_CONVERSION, "b"
+Error in expr_ambig_01.rexx @ 2:9 - #BAD_CONVERSION, "c"
+Error in expr_ambig_01.rexx @ 2:5 - #BAD_CONVERSION, "b - c"
+3 error(s) in source file
+Error in expr_ambig_01.rexx @ 2:5 - #BAD_CONVERSION, "b"
+Error in expr_ambig_01.rexx @ 2:9 - #BAD_CONVERSION, "c"
+Error in expr_ambig_01.rexx @ 2:5 - #BAD_CONVERSION, "b - c"
+3 error(s) in source file
+[INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

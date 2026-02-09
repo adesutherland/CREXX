@@ -35,6 +35,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
+#include "rxcp_val.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
@@ -59,7 +60,6 @@
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
-
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
     char *op;
@@ -118,6 +118,9 @@ static walker_result emit_walker(walker_direction direction,
             }
             break;
 
+            case CLASS_DEF:
+            case FACTORY:
+            case METHOD:
             case PROCEDURE:
                 emit_proc(node, pl);
                 break;
@@ -285,6 +288,8 @@ static walker_result emit_walker(walker_direction direction,
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
+            case FACTORY_CALL:
+            case MEMBER_CALL:
             case FUNCTION:
                 emit_expression(node, payload);
                 break;
@@ -515,7 +520,42 @@ static walker_result emit_walker(walker_direction direction,
 
                 if (!node->output) node->output = output_f();
 
-                if (child1) {
+                if (node->node_type == VAR_SYMBOL &&
+                    node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope &&
+                    node->symbolNode->symbol->scope->defining_node &&
+                    node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                    /* Attribute Read */
+                    int index = 0;
+                    if (sym_nond(node->symbolNode->symbol) > 0) {
+                        ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
+                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+                            if (nr) {
+                                index = (int)nr->int_value;
+                            }
+                        }
+                    }
+
+                    ASTNode *proc = ast_proc(node);
+                    char this_type = 'a'; int this_num = 1; /* Default for METHOD */
+                    if (proc && proc->node_type == FACTORY) {
+                        ASTNode star_node;
+                        memset(&star_node, 0, sizeof(ASTNode));
+                        star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
+                        Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
+                        if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
+                    }
+                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
+                                    node->register_type, node->register_num,
+                                    this_type, this_num, index);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+
+                    /* Cleanup */
+                    temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
+                    node->cleanup = output_fs(temp1);
+                    free(temp1);
+                } else if (child1) {
                     /* We are an array */
                     /* Essentially, we are linking the found array element as the nodes result - which will need unlinking later */
                     char from_reg_type = node->symbolNode->symbol->register_type;
@@ -802,7 +842,44 @@ static walker_result emit_walker(walker_direction direction,
                 add_variable_metadata(node);
                 output_concat(node->output, child1->output);
                 output_concat(node->output, child2->output);
-                if (child1->register_num != child2->register_num ||
+
+                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
+                    child1->symbolNode->symbol->scope->defining_node &&
+                    child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
+                    /* Attribute Write */
+                    int index = 0;
+                    if (sym_nond(child1->symbolNode->symbol) > 0) {
+                        ASTNode *def_node = sym_trnd(child1->symbolNode->symbol, 0)->node;
+                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+                            if (nr) {
+                                index = (int)nr->int_value;
+                            }
+                        }
+                    }
+
+                    ASTNode *proc = ast_proc(node);
+                    char this_type = 'a'; int this_num = 1; /* Default for METHOD */
+                    if (proc && proc->node_type == FACTORY) {
+                        ASTNode star_node;
+                        memset(&star_node, 0, sizeof(ASTNode));
+                        star_node.node_string = "\xc2\xa7" "factory"; star_node.node_string_length = 9;
+                        Symbol *star_sym = sym_lrsv(proc->scope, &star_node);
+                        if (star_sym) { this_type = star_sym->register_type; this_num = star_sym->register_num; }
+                    }
+                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                    "   %scopy %c%d,%c%d\n"
+                                    "   unlink %c%d\n",
+                                    child1->register_type, child1->register_num,
+                                    this_type, this_num,
+                                    index,
+                                    tp_prefix,
+                                    child1->register_type, child1->register_num,
+                                    child2->register_type, child2->register_num,
+                                    child1->register_type, child1->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
                     temp1 = mprintf("   %scopy %c%d,%c%d\n",
                                     tp_prefix,

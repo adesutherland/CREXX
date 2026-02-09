@@ -41,14 +41,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "rxcpmain.h"
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT.
 %wildcard ANYTHING.
 
 /* Low precedence */
 %left ANYTHING.
+%left IMPLICIT_CONCAT.
+%left TK_DOT TK_CLASS_TYPE.
 
 /* 0 Sets the stack to grow dynamically! */
 %stack_size 0
@@ -152,7 +155,7 @@ junk(J)          ::= error.
                      { J = ast_errh(context, "SYNTAX_ERROR"); }
 
 /* Classes / Variables */
-class(C)                 ::= TK_CLASS(T).
+class(C)                 ::= TK_CLASS_TYPE(T).
                              { C = ast_f(context, CLASS, T); }
 type_def(A)              ::= class(S).
                              { A = S; }
@@ -361,7 +364,7 @@ assignment(G)     ::= TK_DO(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_LOOP(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-assignment(G)     ::= TK_CLASS(K) TK_EQUAL(T) expression(E).
+assignment(G)     ::= TK_CLASS_TYPE(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 assignment(G)     ::= TK_TO(K) TK_EQUAL(T) expression(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -421,7 +424,7 @@ define(G)     ::= TK_DO(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_LOOP(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
-define(G)     ::= TK_CLASS(K) TK_EQUAL(T) type_def(E).
+define(G)     ::= TK_CLASS_TYPE(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
 define(G)     ::= TK_TO(K) TK_EQUAL(T) type_def(E).
       { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD")); add_ast(G,E);  }
@@ -481,7 +484,7 @@ assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_DO(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_LOOP(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
-assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CLASS(K) error.
+assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_CLASS_TYPE(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
 assignment(G)     ::= var_symbol(V) TK_EQUAL(T) TK_TO(K) error.
     { G = ast_f(context, ASSIGN, T); add_ast(G,V); V->node_type = VAR_TARGET; add_ast(G,mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"));}
@@ -551,9 +554,10 @@ define(G) ::=  TK_INTEGER(K) TK_EQUAL(T) type_def(E).
     { G = ast_f(context, ASSIGN, T); add_ast(G,mknd_err(ast_f(context, INTEGER,K), "INVALID_LHS")); add_ast(G,E);  }
 
 /* Correct Define and Assignment */
-define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E).
+define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E) opt_with(W).
     {
         I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
+        if (W) add_ast(I,W);
         V->node_type = VAR_TARGET;
     }
 
@@ -580,6 +584,9 @@ keyword_instruction(I) ::= return(K). { I = K; }
 keyword_instruction(I) ::= exit(K). { I = K; }
 keyword_instruction(I) ::= say(K). { I = K; }
 keyword_instruction(I) ::= numeric(K). { I = K; }
+keyword_instruction(I) ::= factory_def(K). { I = K; }
+keyword_instruction(I) ::= method_def(K). { I = K; }
+keyword_instruction(I) ::= class_def(K). { I = K; }
 
 /* Note the "error" tokens here (esp for TK_END) - seem to fix a conflict error - I am not
    sure if the error virtual token is only enabled when in error recovery node. If so this
@@ -770,9 +777,9 @@ argument(E)         ::= TK_VAR_SYMBOL(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_EXPOSE TK_VAR_SYMBOL(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
-argument(E)         ::= TK_CLASS(S).
+argument(E)         ::= TK_CLASS_TYPE(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
-argument(E)         ::= TK_EXPOSE TK_CLASS(S).
+argument(E)         ::= TK_EXPOSE TK_CLASS_TYPE(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
 argument(E)         ::= TK_STEM(S).
                       { E = ast_err(context, "MISSING_TYPE", S); }
@@ -1089,6 +1096,32 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
 /* Expression terminal nodes */
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
+                           {
+                               ASTNode *last = P;
+                               ASTNode *prev = NULL;
+                               while (last->sibling) {
+                                   prev = last;
+                                   last = last->sibling;
+                               }
+
+                               if (prev) {
+                                   prev->sibling = NULL;
+                               } else {
+                                   P = NULL;
+                               }
+
+                               F = ast_f(context, MEMBER_CALL, last->token);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string_length--;
+                               }
+
+                               ASTNode *lhs = ast_f(context, VAR_SYMBOL, S);
+                               if (P) add_ast(lhs, P);
+                               add_ast(F, lhs);
+                               if (PP) add_ast(F, PP);
+                           }
 term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
@@ -1155,9 +1188,28 @@ bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
                          { A = B; }
+/* Standalone class factory call as a primary */
+bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string_length--;
+                               }
+                           }
 
 /* These are the normal expression form in unambiguous form */
-prefix_expression(P) ::= bracket(B). { P = B; }
+postfix(P)           ::= bracket(B).
+                         { P = B; }
+postfix(A)           ::= postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+
+prefix_expression(P) ::= postfix(B). [ANYTHING] { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
@@ -1205,7 +1257,16 @@ addition(A)          ::= addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C)
 /* These are for expressions "after" a concat defined by a whitespace to avoid
  * ambiguous issues with prefix operators (i.e. these miss out the +/- prefixes)
  */
-prefix_expression_c(P) ::= bracket(B). { P = B; }
+postfix_c(P)         ::= bracket(B).
+                         { P = B; }
+postfix_c(A)         ::= postfix_c(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+
+prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
@@ -1243,7 +1304,7 @@ concatenation(P)     ::= addition(E).
                          { P = E; }
 concatenation(A)     ::= concatenation(B) TK_CONCAT(O) addition(C).
                          { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
-concatenation(A)     ::= concatenation(B) addition_c(C).  /* Note the addition_c */
+concatenation(A)     ::= concatenation(B) addition_c(C). [IMPLICIT_CONCAT] /* Note the addition_c */
                          { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
 comparison(P)        ::= concatenation(E).
                          { P = E; }
@@ -1313,3 +1374,59 @@ expression_in_list(P) ::= and_expression(E). { P = E; }
 /* Finally set the nodes with the highest precedence */
 %left TK_BADCOMMENT.
 %left TK_EOC.
+
+/* Classes / Factories / Methods */
+
+class_def(C) ::= TK_LABEL(L) TK_CLASS opt_of(O).
+{
+  C = ast_f(context, CLASS_DEF, L);
+  if (O) add_ast(C, O);
+}
+
+opt_of(O) ::= . { O = NULL; }
+opt_of(O) ::= TK_OF type_def(T). { O = T; }
+
+factory_def(F) ::= TK_MULT_LABEL(L) TK_FACTORY.
+{
+  F = ast_f(context, FACTORY, L);
+  add_ast(F, ast_ft(context, VOID));
+}
+
+method_def(M) ::= TK_LABEL(L) TK_METHOD opt_method_return_type(T).
+{
+  M = ast_f(context, METHOD, L);
+  if (T) add_ast(M, T);
+  else add_ast(M, ast_ft(context, VOID));
+}
+
+opt_method_return_type(T) ::= . { T = NULL; }
+opt_method_return_type(T) ::= TK_EQUAL type_def(D). { T = D; }
+opt_method_return_type(T) ::= TK_EQUAL TK_VOID(V). { T = ast_f(context, VOID, V); }
+
+/* Attribute Mapping */
+opt_with(W) ::= . { W = NULL; }
+opt_with(W) ::= TK_WITH register_mapping(R). { W = R; }
+
+register_mapping(R) ::= TK_REGISTER(K) register_index(I) opt_register_attribute(A).
+{
+  R = ast_f(context, NODE_REGISTER, K);
+  add_ast(R, I);
+  if (A) add_ast(R, A);
+}
+
+register_index(I) ::= TK_STEMINT(T).
+{
+  /* Remove leading dot from .index */
+  T->token_string++;
+  T->length--;
+  I = ast_f(context, INTEGER, T);
+}
+
+opt_register_attribute(A) ::= . { A = NULL; }
+opt_register_attribute(A) ::= TK_STEMVAR(T).
+{
+  /* Remove leading dot from .attribute */
+  T->token_string++;
+  T->length--;
+  A = ast_f(context, VAR_SYMBOL, T);
+}
