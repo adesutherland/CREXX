@@ -161,7 +161,15 @@ int rxaspars(Assembler_Context *scanner) {
     /* Parse & Process */
     while((token_type = rx_scan(scanner, scanner->buff_end))) {
         // Skip Scanner Errors
-        if (token_type < 0) continue;
+        if (token_type < 0) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Scanner Error");
+            continue;
+        }
+        if (token_type == ERROR) {
+            rxaserrf(scanner, scanner->line, 0, 1, "Illegal Character");
+            continue;
+        }
+        if (scanner->debug_mode) printf("DEBUG: Token %d (%s) at line %zu\n", token_type, rxas_tpn(token_type), (size_t)scanner->line);
         // EOS Special Processing
         if(token_type == EOS) {
             // Send a NEWLINE

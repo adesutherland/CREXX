@@ -1131,6 +1131,14 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
             rxasmere(context, item->instrToken, item->operand1Token, item->operand2Token,
                      item->operand3Token);
             break;
+        case CLASS_META:
+            /* Queue Class Metadata */
+            rxasmeclss(context, item->instrToken, item->operand1Token, item->operand2Token);
+            break;
+        case ATTR_META:
+            /* Queue Attribute Metadata */
+            rxasmeattr(context, item->instrToken, item->operand1Token, item->operand2Token, item->operand3Token);
+            break;
         case SRC_LINE:
             /* Queue Source Line */
             rxasmesr(context, item->instrToken, item->operand1Token, item->operand2Token);
@@ -1262,6 +1270,22 @@ void rxasqmct(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
         queue_instruction(context, CONST_META, symbol, option, type, constant, 0, 0);
     }
     else rxasmect(context, symbol, option, type, constant);
+}
+
+/* Queue Class Metadata */
+void rxasqmclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type) {
+    if (context->optimise) {
+        queue_instruction(context, CLASS_META, symbol, option, type, 0, 0, 0);
+    }
+    else rxasmeclss(context, symbol, option, type);
+}
+
+/* Queue Attribute Metadata */
+void rxasqmattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *reg) {
+    if (context->optimise) {
+        queue_instruction(context, ATTR_META, symbol, option, type, reg, 0, 0);
+    }
+    else rxasmeattr(context, symbol, option, type, reg);
 }
 
 /* Queue Clear Metadata */
