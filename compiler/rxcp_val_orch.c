@@ -399,7 +399,7 @@ void validate_ast(Context *context) {
 
         /* Plugin Dispatch */
         context->current_scope = 0;
-        ast_wlkr(context->ast, plugin_dispatch_walker, (void *) context);
+        ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
 
         /* Re-write IMPLICIT_CMD Instructions */
         context->current_scope = 0;
@@ -431,7 +431,7 @@ void validate_ast(Context *context) {
 
         /* Plugin Dispatch */
         context->current_scope = 0;
-        ast_wlkr(context->ast, plugin_dispatch_walker, (void *) context);
+        ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
 
         /* Set Node Types */
         context->current_scope = 0;

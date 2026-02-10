@@ -31,7 +31,7 @@
 #include "rxcp_sym.h"
 #include "rxvml.h"
 
-walker_result plugin_dispatch_walker(walker_direction direction, ASTNode *node, void *payload) {
+walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context = (Context *)payload;
 
     if (direction == in) {
