@@ -1,12 +1,12 @@
-name: Release CREXX for Windows
+name: Local Build CREXX for Windows arm64
 
 on:
   workflow_dispatch:
 
 jobs:
   build-windows:
-    name: Build for Windows
-    runs-on: windows-latest
+    name: Local Build for Windows
+    runs-on: [self-hosted, windows]
 
     steps:
       - name: Update Toolchain (MSYS2)
@@ -40,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          fetch-depth: 1 
 
       - name: Build Release
         shell: msys2 {0}

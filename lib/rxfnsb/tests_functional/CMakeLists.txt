@@ -62,6 +62,8 @@ set(REXXBINS
         ts_parse2.rxbin
         ts_datatype.rxbin
         ts_numeric.rxbin
+        ts_splice.rxbin
+        ts_arraydelete.rxbin
 )
 
 set(LIBRPATH ../library)

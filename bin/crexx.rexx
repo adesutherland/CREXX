@@ -30,7 +30,7 @@
  
  /* defaults for options for this program */
  native=0;version=0;help=0;compile=0;filename='';filenames='';verbose=0
- execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0
+ execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=0;decimal=1
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -94,6 +94,10 @@
        if fn.i = '-nocolor'  then nocolor=1
        if fn.i = '-nocolour' then nocolor=1
        if fn.i = '-keep' then keep=1
+       if fn.i = '-nokeep' then keep=0
+       if fn.i = '-nodecimal' then decimal=0
+       if fn.i = '-decimal' then decimal=1
+	     
        if left(fn.i,2)= '-l' then do
 	 if left(fn.i,1)=' ' then do
 	   fn.i=fn.i||fn.i+1
@@ -126,6 +130,7 @@
        else say 'NOCOLOR'
        say 'VERBOSE' verbose
        -- call formfeed
+       say;say;say
      end
        
 if version then call logo nocolor
@@ -165,13 +170,9 @@ do i=1 to words(filenames)
 
     end
   end
-
-  
-  /* this works temporarily with the specified filename extension */
-  
   /* if all is well, we now have a .rexx ready for compilation    */  
 
-/* print the file when verbose ibm style output is requested */
+  /* print the file when verbose ibm style output is requested */
     if verbose>3 then do
       call printFileToSTDout filename'.rexx'
     end
@@ -292,9 +293,11 @@ say '-verbose[0-4]    -- report on progress; default verbose0'
 say '-color           -- use color (default)'
 say '-colour          -- use colour (default)'
 say '-keep            -- keep .rxas source (default nokeep)'
+say '-decimal         -- use decimal arithmetic'
 say '-l[library path] -- use import library'
 say
 say 'all options can also be prefixed with --'
+say 'all options can be prefixed with NO for the inverse value'
 return 'help done'
 
 /*----------------------------------------------------------------------*/
@@ -336,12 +339,26 @@ printFileToSTDout: procedure
 arg toread = .string
 call banner
 say '  LINENUM' copies('----+',15)
-i=0
+i=1
 do while lines(toread)
   say '   'right(i,6,'0') linein(toread)
+  i=i+1
 end
 call lineout toread
 
+deleteFiles: procedure = .string
+arg filename = .string
+
+-- when linux or macos
+'rm' filename'.rxas'
+
+-- when windows
+
+-- cmd.exe
+
+-- terminal/powershell
+
+return 'done'
 /*
   /usr/bin/cc -O3 -DNDEBUG -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  bin/CMakeFiles/crexx.dir/crexx.c.o -o bin/crexx  -Wl,-force_load,"/Users/rvjansen/apps/crexx_release/lib/plugins/sysinfo/rx_sysinfo_static.a"  interpreter/librxvml.a  rxpa/librxpa.a  avl_tree/libavl_tree.a  platform/libplatform.a  -lm  interpreter/rxvmplugin/librxvmplugin.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/rxvm_mc_decimal_manual.a  interpreter/rxvmplugin/rxvmplugins/mc_decimal/libdecnumber.a
   */

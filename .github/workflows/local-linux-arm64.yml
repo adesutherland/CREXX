@@ -1,29 +1,16 @@
-name: Release CREXX for Windows
+name: Local Build CREXX on Linux arm64
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    name: Build for Windows
-    runs-on: windows-latest
+  build-linux-local:
+    name: Build on self-hosted Linux (manual)
+    runs-on: [self-hosted, linux]
 
     steps:
-      - name: Update Toolchain (MSYS2)
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            base-devel
-            git
-            make
-          pacboy: >-
-            toolchain:p
-            cmake:p
-            ninja:p
-
       - name: Determine Release Name
-        shell: msys2 {0}
+        shell: bash
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
@@ -42,20 +29,20 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build Release
-        shell: msys2 {0}
+      - name: Configure + Build Release (MinSizeRel)
+        shell: bash
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/release" -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake -S . -B "${{ runner.temp }}/release" -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
           cmake --build "${{ runner.temp }}/release"
 
       - name: Collect executables
-        shell: msys2 {0}
+        shell: bash
         run: |
           set -euo pipefail
 
           mkdir -p "${{ runner.temp }}/exe/bin"
           mkdir -p "${{ runner.temp }}/exe/lib"
-          mkdir -p "${{ runner.temp }}/exe/lib/rxfnsb"
+          mkdir -p "${{ runner.temp }}/exe/lib/rxfnsb"	  
           mkdir -p "${{ runner.temp }}/exe/examples"
 
           # Helper: copy if the file exists
@@ -153,10 +140,9 @@ jobs:
           cp_if  INSTALL-RUN.md "${{ runner.temp }}/exe/"
           cp_if  history.txt    "${{ runner.temp }}/exe/"
 
-      - name: Upload Executable
-        if: env.RELEASE_ID
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CREXX-Windows
+          name: CREXX-Linux-local
           path: |
             ${{ runner.temp }}/exe
