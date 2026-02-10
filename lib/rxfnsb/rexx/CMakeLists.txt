@@ -89,6 +89,17 @@ set(BIFS
 		parsestring
 		parse
 		datatype
+		arrayfind
+		splice
+		arrayinsert
+		arraydelete
+		arraysort
+		arraycopy
+		arraydrop
+		arrayhi
+		arraymove
+		arraydump
+		arrayformat
 )
 
 foreach (BIF ${BIFS})
