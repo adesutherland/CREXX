@@ -99,6 +99,20 @@ void emit_proc(ASTNode *node, void *pl) {
 
         case CLASS_DEF:
             if (!node->output) node->output = output_f();
+
+            /* Emit class metadata so importers can discover classes from RXAS/RXBIN without source */
+            if (node->symbolNode && node->symbolNode->symbol) {
+                char *cls_fqn = sym_frnm(node->symbolNode->symbol);
+                char *cls_type = type_nm(node->symbolNode->symbol->type);
+                if (cls_fqn && cls_type) {
+                    char *buf = mprintf(".meta \"%s\"=\"b\" \"%s\" .class\n", cls_fqn, cls_type);
+                    /* Prepend to ensure it appears before any method metadata */
+                    output_prepend_text(buf, node->output);
+                    free(buf);
+                }
+                if (cls_fqn) free(cls_fqn);
+            }
+
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);

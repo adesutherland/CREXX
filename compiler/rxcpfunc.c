@@ -692,6 +692,66 @@ static char* get_const_string(void* constpool, size_t ix) {
     return result;
 }
 
+/* Simple aggregator for class stubs extracted from metadata */
+typedef struct class_meta_agg {
+    char *fq;        /* fully-qualified class name: namespace.class */
+    char *ns;        /* namespace */
+    char *name;      /* short class name */
+    char *methods;   /* accumulated method/factory signature lines */
+    struct class_meta_agg *next;
+} class_meta_agg;
+
+static class_meta_agg* agg_find_or_add(class_meta_agg **head, const char *fq) {
+    class_meta_agg *it = *head;
+    while (it) {
+        if (strcmp(it->fq, fq) == 0) return it;
+        it = it->next;
+    }
+    /* Create */
+    class_meta_agg *n = calloc(1, sizeof(class_meta_agg));
+    n->fq = strdup(fq);
+    /* Split namespace and name by last '.' */
+    const char *dot = strrchr(fq, '.');
+    if (dot) {
+        size_t nslen = (size_t)(dot - fq);
+        n->ns = malloc(nslen + 1);
+        memcpy(n->ns, fq, nslen);
+        n->ns[nslen] = 0;
+        n->name = strdup(dot + 1);
+    } else {
+        n->ns = strdup("");
+        n->name = strdup(fq);
+    }
+    n->methods = 0;
+    n->next = *head;
+    *head = n;
+    return n;
+}
+
+static void agg_append_line(class_meta_agg *agg, const char *line) {
+    if (!line || !*line) return;
+    if (!agg->methods) {
+        agg->methods = strdup(line);
+    } else {
+        char *tmp = mprintf("%s%s", agg->methods, line);
+        free(agg->methods);
+        agg->methods = tmp;
+    }
+}
+
+static void agg_free_all(class_meta_agg *head) {
+    class_meta_agg *n = head;
+    while (n) {
+        class_meta_agg *nx = n->next;
+        if (n->fq) free(n->fq);
+        if (n->ns) free(n->ns);
+        if (n->name) free(n->name);
+        if (n->methods) free(n->methods);
+        free(n);
+        n = nx;
+    }
+}
+
 /* Get the global variable type by reading metadata */
 /* name is null terminated fqname of the variable */
 /* returns found meta_reg_constant entry - or 0 if not found */
@@ -734,12 +794,15 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     char* args = 0;
     char* inliner = 0;
 
+    /* Aggregator for class metadata to synthesize class stubs */
+    class_meta_agg *class_aggs = 0;
+
     /* Loop through all the constant entries */
     i = 0;
     while (i < constant_size) {
         entry = (chameleon_constant *) (constant + i);
 
-        /* A function definition */
+        /* A function/method definition */
         if (entry->type == META_FUNC) {
             meta_func_constant *mentry = (meta_func_constant *) entry;
 
@@ -756,7 +819,55 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                     args = get_const_string(constant, mentry->args);
                     inliner = get_const_string(constant, mentry->inliner);
 
+                    /* Always register as importable function (methods too) */
                     rximpf_f(context, full_file_name, fqname, option, type, args, inliner, 0);
+
+                    /* If this looks like a class method (fqname contains namespace.class.method) then
+                     * accumulate a signature line for later class stub synthesis */
+                    if (fqname) {
+                        const char *last_dot = strrchr(fqname, '.');
+                        if (last_dot) {
+                            /* Ensure there is at least another dot before last to separate namespace and class */
+                            char *class_fq = 0;
+                            size_t class_len = (size_t)(last_dot - fqname);
+                            if (memchr(fqname, '.', class_len) != 0) {
+                                class_fq = malloc(class_len + 1);
+                                memcpy(class_fq, fqname, class_len);
+                                class_fq[class_len] = 0;
+                                class_meta_agg *agg = agg_find_or_add(&class_aggs, class_fq);
+
+                                /* method name is after last dot */
+                                const char *mname = last_dot + 1;
+                                if (strcmp(mname, "§factory") == 0) {
+                                    /* Factory: no return type in stub, only optional args */
+                                    if (args && *args) {
+                                        char *ln = mprintf("  *: factory\n  arg %s\n", args);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    } else {
+                                        agg_append_line(agg, "  *: factory\n");
+                                    }
+                                } else {
+                                    /* Normal method with return type */
+                                    if (type && *type) {
+                                        char *ln = mprintf("  %s: method = %s\n", mname, type);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    } else {
+                                        char *ln = mprintf("  %s: method\n", mname);
+                                        agg_append_line(agg, ln);
+                                        free(ln);
+                                    }
+                                    if (args && *args) {
+                                        char *ln2 = mprintf("  arg %s\n", args);
+                                        agg_append_line(agg, ln2);
+                                        free(ln2);
+                                    }
+                                }
+                                free(class_fq);
+                            }
+                        }
+                    }
 
                     if (option) {
                         free(option);
@@ -775,6 +886,15 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
                         inliner = 0;
                     }
                 }
+            }
+        }
+        else if (entry->type == META_CLASS) {
+            /* Record class presence so that a stub is synthesized even if it has no methods */
+            meta_class_constant *mentry = (meta_class_constant *) entry;
+            char *cls_sym = get_const_string(constant, mentry->symbol);
+            if (cls_sym) {
+                agg_find_or_add(&class_aggs, cls_sym);
+                free(cls_sym);
             }
         }
 
@@ -800,6 +920,27 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         }
 
         i += entry->size_in_pool;
+    }
+
+    /* Synthesize and register class stubs from aggregated metadata */
+    if (class_aggs) {
+        class_meta_agg *a = class_aggs;
+        while (a) {
+            if (a->methods && *a->methods) {
+                const char *meth = a->methods;
+                char *stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s", a->ns, a->name, meth);
+                Context *stub_ctx = parseRexx(context, context->location, full_file_name, LEVELB, context->debug_mode, stub_source, strlen(stub_source));
+                if (stub_ctx && stub_ctx->ast && !error_in_node(stub_ctx->ast)) {
+                    if (stub_ctx->ast->child) stub_ctx->ast->child->node_type = IMPORTED_FILE;
+                    rximpcl_f(context, full_file_name, a->fq, stub_ctx);
+                } else {
+                    if (stub_ctx) fre_cntx(stub_ctx);
+                    else free(stub_source);
+                }
+            }
+            a = a->next;
+        }
+        agg_free_all(class_aggs);
     }
 }
 
