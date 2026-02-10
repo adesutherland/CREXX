@@ -110,8 +110,10 @@ RXPPPassOne: procedure = .int
      maxmac=macros_mname.0
   end
 ## clear source array
-  call drop_Array source
-  call drop_Array stype
+##  call drop_Array source
+##  call drop_Array stype
+  assembler SETATTRS source,0
+  assembler SETATTRS stype,0
 
 /* ---- 1b. Load System Macros from MACSYS  */
   macnum=readSource(macsys)
@@ -124,9 +126,10 @@ RXPPPassOne: procedure = .int
      if verbose then say 'CRX0130I ['time('l')'] Macros extracted:     'macros_mname.0-maxmac
   end
 ## clear source array
-  call drop_Array source
-  call drop_Array stype
-
+##  call drop_Array source
+##  call drop_Array stype
+  assembler SETATTRS source,0
+  assembler SETATTRS stype,0
 /* ---- 1c. Load file to compile */
   rexxLines=readSource(infile)
   if rexxLines<0 then do
@@ -140,14 +143,14 @@ RXPPPassOne: procedure = .int
   i=fsearch(source,1,"##CFLAG","","",which)   ## pickup CFLAG
   if i>0 then flagsset=early_flag_pick_up(i)
 
-  linx=ffind(source,1,'options levelb')
-  if linx>0 then stype.linx='X'         /* Skip line */
-  linx=ffind(source,1,'import rxfnsb')
-  if linx>0 then stype.linx='X'         /* Skip line */
-  linx=ffind(source,1,'/* REXX */')
-  if linx>0 then stype.linx='X'         /* Skip line */
-  call insert_array source,1,10         /* insert header, and reserve some lines */
-  call insert_array stype,1,10
+  linx=arrayfind('options levelb',source,1,0)  /* search for string in array (Case insensitive) */
+  if linx>0 then stype.linx='X'            /* Skip line */
+  linx=arrayfind('import rxfnsb',source,1,0)   /* search for string in array (Case insensitive) */
+  if linx>0 then stype.linx='X'            /* Skip line */
+  linx=arrayfind('/* REXX */',source,1,0)      /* search for string in array (Case insensitive) */
+  if linx>0 then stype.linx='X'            /* Skip line */
+  call arrayInsert source,1,10            /* insert header, and reserve some lines */
+  call arrayInsert stype,1,10
   source.1='/* RXPP */'
   source.2='options levelb'
   source.3='import rxfnsb'
@@ -188,8 +191,8 @@ RXPPPassTwo: procedure
      else flagsset=early_flag_pick_up(i) /* <<<!!!!!!!!!!!! ugly construct to pick up potential compiler flags immediately after pass 1 */
      i=fsearch(source,i+1,'##IF ','##IFN ','##ELSE',which)
      if which \=3 then iterate
-     call insert_array source,i,1
-     call insert_array stype,i,1
+     call arrayInsert source,i,1
+     call arrayInsert stype,i,1
      source.i='##endif'
      stype.i='R'
      j=i+1
@@ -209,10 +212,10 @@ RXPPPassTwo: procedure
   end
 
 /* 3. Build OO definition table */
-  i=ffind(source,1,'OOCREATE(')   ## search as first word in the source string
+  i=arrayfind('OOCREATE(',source,1,0)     ## search as first word in the source string
   do while i>0
      call oocreatedefs i
-     i=ffind(source,i+1,'OOCREATE(')   ## search as next word in the source string
+     i=arrayfind('OOCREATE(',source,1,0)   ## search as next word in the source string
   end
 
 /* 4. output ##IF ##IFN / ##ENDIF Reference table */
@@ -379,8 +382,9 @@ return 0
  */
 ReadSource: procedure=.int
   arg file=.string
-  i=readall(source,file,-1)
-return i
+##  i=readall(source,file,-1)
+  rc=_ExecIO('*','DISKR',file,source)
+return source[0]
 /* ------------------------------------------------------------------
  * Scans source for pre-compiler directives and macro definitions,
  * dispatches command handlers.
@@ -600,15 +604,13 @@ CMD_include: procedure
   file=word(incl,2)
   file=normalisepath(syspath'/'file)
   include=.string[]
-  new=readall(include,file,-1)
-  if new<0 then do
-      say 'CRX0950E+['time('l')'] missing include file: 'file
+  /* new=readall(include,file,-1) */
+  new=_ExecIO('*','DISKR',file,include)
+  if new<=0 then do
+     say 'CRX0950E+['time('l')'] missing include file: 'file
      exit 8
   end
-  if search_array(included_files,file,1,1)>0 then return
-  imax=included_files.0
-  if included_files.imax\='' then imax=imax+1
-  included_files.imax=file
+  if push_unique(included_files,file)=0 then return      /* already part of the included list */
 
   if mode=1 then do
      rc= insert_source(lino+1,new)
@@ -1306,8 +1308,8 @@ return 0
 insert_source: Procedure=.int
   arg at=.int,new=.int,expand='',stemlog=0
   stemlog=0
-  rc=insert_array(source,at,new)    ## insert new lines, shift buffer
-  rc=insert_array(stype, at,new)
+  rc=arrayInsert(source,at,new)    ## insert new lines, shift buffer
+  rc=arrayInsert(stype, at,new)
   do i=0 to new-1                   ## in some cases you want special
      source[at+i]='/* reserved 'at+i i' */'
      stype[at+i]=expand             ## treatment of the new entry for
@@ -1720,7 +1722,7 @@ resolveMacro: procedure=.string
        bodyExp = replaceFixArg(bodyExp, name,args,callargcount)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
-       line=insertatc(bodyexp,line,callpos,callLen)
+       line=splice(bodyexp,line,callpos,callLen)  ## line=insertatc(bodyexp,line,callpos,callLen)
        if mspace= 1 then leave        /* nesting for command macros are not permitted */
        uline    = upper(line)         /* update uline for repetition */
        callPos  = callPos - 1         /* set next start point */
@@ -1918,7 +1920,7 @@ replaceArgx: procedure=.string
        iterate        /* no, not a valid variable name */
     end
     if p>length(str) then leave
-    str=insertatc(value,str,p,length(name))    ## use the C-function
+    str=splice(value,str,p,length(name))    ## str=insertatc(value,str,p,length(name))    ## use the C-function
     posn = p + length(value)
     p = pos(name, str, posn)
   end
@@ -1945,7 +1947,7 @@ replaceArg: procedure=.string
   /* ---- Fast path: explicit end-of-param "##" right after name ---- */
      if after2 = '##' then do
         /* replace NAME## with VALUE (consume the hashes) */
-        str  = insertatc(value, str, p, nlen+2)
+        str  = splice(value, str, p, nlen+2)  ## str  = insertatc(value, str, p, nlen+2)
         posn = p + length(value)
         p    = fpos(name, str, posn)
         iterate
@@ -1963,7 +1965,7 @@ replaceArg: procedure=.string
         iterate
      end
      /* ---- Valid standalone `name` ---- */
-     str  = insertatc(value, str, p, nlen)   /* C-function */
+     str  = splice(value, str, p, nlen)   ## str  = insertatc(value, str, p, nlen)   /* C-function */
      posn = p + length(value)
      p    = fpos(name, str, posn)
   end
@@ -2092,6 +2094,21 @@ quote: procedure=.string
   arg line=.string, prefix=''
   if prefix \= '' then return prefix'={'line'}'
 return "'"line"'"
+/* ------------------------------------------------------------------
+ * push_unique(value, array)
+ * Returns 1 if appended, 0 if already present.
+ * ------------------------------------------------------------------
+ */
+push_unique: procedure=.int
+  arg expose array=.string[],value=.string
+  uval = upper(value)
+  do i = 1 to array[0]
+     cur = upper(array[i])
+     if cur = uval then return 0
+  end
+  array[array[0]+1] = value
+return 1
+
 /* ------------------------------------------------------------------------
  * parsevar: Implements ##PARSE by generating runtime parsing code and variable assignments.
  * ##PARSE command, re-parse tokens from template to receive Variable names
