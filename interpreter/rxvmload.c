@@ -328,26 +328,40 @@ int rxldmod(rxvm_context *context, char *file_name) {
     // then if not found try as a relative path from the current working directory ('.')
     char *location = context->location;
     int file_exists = 0;
+
+    /* Determine if provided file_name already contains an extension */
+    int has_ext = 0;
+    if (file_name) {
+        const char *last_slash = strrchr(file_name, '/');
+#ifdef _WIN32
+        const char *last_bsl = strrchr(file_name, '\\');
+        if (!last_slash || (last_bsl && last_bsl > last_slash)) last_slash = last_bsl;
+#endif
+        const char *fname = last_slash ? last_slash + 1 : file_name;
+        if (strchr(fname, '.') != NULL) has_ext = 1;
+    }
+    const char *type_bin = has_ext ? "" : "rxbin";
+
     if (!location) {
         // Check if the file exists as an absolute path
-        if (fileexists(file_name, "rxbin", 0)) {
+        if (fileexists(file_name, (char*)type_bin, 0)) {
             location = 0; // Absolute path, no location needed
             file_exists = 1;
         } else {
             // Try as a relative path from the current working directory
             location = ".";
-            if (fileexists(file_name, "rxbin", location)) {
+            if (fileexists(file_name, (char*)type_bin, location)) {
                 file_exists = 1;
             }
         }
     }
     else {
-        file_exists = fileexists(file_name, "rxbin", location);
+        file_exists = fileexists(file_name, (char*)type_bin, location);
     }
 
     if (file_exists) {
         DEBUG("CREXX Module file\n");
-        fp = openfile(file_name, "rxbin", location, "rb");
+        fp = openfile(file_name, (char*)type_bin, location, "rb");
         if (!fp) return 0;
 
         loaded_rc = 0;
@@ -386,21 +400,23 @@ int rxldmod(rxvm_context *context, char *file_name) {
         // then if not found try as a relative path from the current working directory ('.')
         location = context->location;
         file_exists = 0;
+        /* For plugins, also avoid appending extension if one is already provided */
+        const char *type_plugin = has_ext ? "" : "rxplugin";
         if (!location) {
             // Check if the file exists as an absolute path
-            if (fileexists(file_name, "rxplugin", 0)) {
+            if (fileexists(file_name, (char*)type_plugin, 0)) {
                 location = 0; // Absolute path, no location needed
                 file_exists = 1;
             } else {
                 // Try as a relative path from the current working directory
                 location = ".";
-                if (fileexists(file_name, "rxplugin", location)) {
+                if (fileexists(file_name, (char*)type_plugin, location)) {
                     file_exists = 1;
                 }
             }
         }
         else {
-            file_exists = fileexists(file_name, "rxplugin", location);
+            file_exists = fileexists(file_name, (char*)type_plugin, location);
         }
 
         if (file_exists) {

@@ -126,31 +126,20 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory stubs, expose must use the unmangled fully-qualified name */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;
-                if (node->symbolNode->symbol->exposed) {
-                    buf = mprintf("\n%s() .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_expose,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
-                else {
-                    buf = mprintf("\n%s()\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
+                buf = mprintf("\n%s() .expose=%s\n"
+                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                              proc_label,
+                              proc_expose,
+                              proc_fqn,
+                              type,
+                              proc_label,
+                              args
+                );
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -176,7 +165,8 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory definitions, exposed symbol must use unmangled FQN */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;

@@ -378,6 +378,16 @@ walker_result resolve_functions_walker(walker_direction direction,
     return result_normal;
 }
 
+static void expose_class_symbols_worker(Symbol *symbol, void *payload) {
+    ASTNode *n = (ASTNode*)payload;
+    if (symbol->symbol_type == FUNCTION_SYMBOL) {
+        if (symbol->exposed == 0) {
+            symbol->exposed = 1;
+            sym_adnd(symbol, n, 0, 0);
+        }
+    }
+}
+
 /* Step 2c
  * - Resolve Exposed Namespace Symbols
  */
@@ -443,6 +453,17 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             /* Add an error - if it has not already errored */
                             if (ast_chld(n, ERROR, 0) == 0)
                                 mknd_err(n, "IMPORTED_FUNCTION");
+                        }
+                    }
+                    else if (symbol->symbol_type ==  CLASS_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            /* Requirement: If the class is exposed, then all methods are exposed. */
+                            symbol->exposed = 1;
+                            sym_adnd(symbol, n, 1, 1);
+                            /* Now expose all methods/factories in the class scope */
+                            if (symbol->defines_scope) {
+                                scp_4all(symbol->defines_scope, expose_class_symbols_worker, n);
+                            }
                         }
                     }
                     else if (symbol->symbol_type ==  VARIABLE_SYMBOL) {
