@@ -486,15 +486,13 @@ Symbol *sym_rvfn(ASTNode *root, char* name) {
 
     if (!root || !root->scope) return 0;
 
-    /* Process top layer - files */
+    /* Process top layer - files and imported namespaces */
     for (i = 0; i < scp_noch(root->scope); i++) {
         s = scp_chd(root->scope, i);
 
+        /* Search symbols directly under the file or namespace scope */
         result = src_symbol((struct avl_tree_node *)(s->symbols_tree), name);
-        if (result) {
-            return result;
-        }
-        /* TODO Process second level - Classes */
+        if (result) return result;
     }
     return 0;
 }

@@ -413,6 +413,11 @@ void validate_ast(Context *context) {
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
 
+        /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded */
+        if (rxcp_scan_imports(context)) {
+            context->changed = 1;
+        }
+
         /* Mainly resolve symbols - functions */
         context->current_scope = 0;
         ast_wlkr(context->ast, resolve_functions_walker, (void *) context);

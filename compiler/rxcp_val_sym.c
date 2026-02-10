@@ -56,7 +56,7 @@ walker_result build_symbols_walker(walker_direction direction,
             node->scope = context->current_scope;
         }
 
-        else if (node->node_type == PROGRAM_FILE) {
+        else if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) {
             /* Now create the namespace symbol and scope */
             /* Make the new symbol */
             symbol = sym_f(context->current_scope, node);

@@ -308,11 +308,30 @@ walker_result set_node_types_walker(walker_direction direction,
 
                                     context->changed = 1;
                                     return result_normal;
+                                } else if (!context->changed) {
+                                    /* Try and import the class */
+                                    Symbol *import_cls = sym_imcls(context, node);
+                                    if (import_cls) {
+                                        /* Resolve again - it should be found now */
+                                        class_sym = sym_rvfc(context->ast, node);
+                                    }
                                 }
-                                mknd_err(node, "METHOD_NOT_FOUND");
+                                if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                                    /* continue with method resolution below */
+                                } else if (!context->changed) {
+                                    /* Defer error if imports may provide class stubs */
+                                    int has_import = 0;
+                                    if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
+                                        ASTNode *pfch = context->ast->child->child;
+                                        while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
+                                    }
+                                    if (has_import) {
+                                        context->changed = 1;
+                                    } else {
+                                        mknd_err(node, "CLASS_NOT_FOUND");
+                                    }
+                                }
                             }
-                        } else if (!context->changed) {
-                            mknd_err(node, "CLASS_NOT_FOUND");
                         }
                     } else if (instance->value_type != TP_UNKNOWN) {
                         mknd_err(node, "NOT_AN_OBJECT");
@@ -343,7 +362,23 @@ walker_result set_node_types_walker(walker_direction direction,
                             mknd_err(node, "FACTORY_NOT_FOUND");
                         }
                     } else if (!context->changed) {
-                        mknd_err(node, "CLASS_NOT_FOUND");
+                        /* Try and import the class */
+                        Symbol *import_cls = sym_imcls(context, node);
+                        if (import_cls) {
+                            context->changed = 1;
+                        } else {
+                            /* Defer error if imports may provide class stubs */
+                            int has_import = 0;
+                            if (context->ast && context->ast->child && context->ast->child->node_type == PROGRAM_FILE) {
+                                ASTNode *pfch = context->ast->child->child;
+                                while (pfch) { if (pfch->node_type == IMPORT) { has_import = 1; break; } pfch = pfch->sibling; }
+                            }
+                            if (has_import) {
+                                context->changed = 1;
+                            } else {
+                                mknd_err(node, "CLASS_NOT_FOUND");
+                            }
+                        }
                     }
                 }
                 break;
