@@ -1,5 +1,6 @@
 options levelb
-namespace class2_lib expose Counter
+
+namespace class_import_lib expose Counter
 
 Counter: class
   val = .int with register.1
@@ -8,14 +9,9 @@ Counter: class
     val = 0
     return
 
-  inc: method
+  inc: method = .void
     val = val + 1
     return
 
   value: method = .int
     return val
-
-  set: method = .void
-    arg new_val = .int
-    val = new_val
-    return
