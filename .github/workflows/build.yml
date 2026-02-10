@@ -74,7 +74,6 @@ jobs:
           cp LICENSE     "${{ runner.temp }}/exe"
           cp README.md   "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
-          cp history.txt "${{ runner.temp }}/exe"
         shell: bash
 
       - name: Upload Executable
@@ -226,7 +225,6 @@ jobs:
         cp LICENSE "${{ runner.temp }}/exe"
         cp README.md "${{ runner.temp }}/exe"
         cp SECURITY.md "${{ runner.temp }}/exe"
-        cp history.txt "${{ runner.temp }}/exe"
       shell: bash
 
     - name: Upload Executable
@@ -314,7 +312,6 @@ jobs:
           cp LICENSE "${{ runner.temp }}/exe"
           cp README.md "${{ runner.temp }}/exe"
           cp SECURITY.md "${{ runner.temp }}/exe"
-          cp history.txt "${{ runner.temp }}/exe"
         shell: bash
 
       - name: Upload Executable

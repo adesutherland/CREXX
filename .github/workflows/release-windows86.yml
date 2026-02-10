@@ -151,7 +151,6 @@ jobs:
           cp_if  README.md      "${{ runner.temp }}/exe/"
           cp_if  SECURITY.md    "${{ runner.temp }}/exe/"
           cp_if  INSTALL-RUN.md "${{ runner.temp }}/exe/"
-          cp_if  history.txt    "${{ runner.temp }}/exe/"
 
       - name: Upload Executable
         if: env.RELEASE_ID

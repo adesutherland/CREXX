@@ -138,7 +138,6 @@ jobs:
           cp_if  README.md      "${{ runner.temp }}/exe/"
           cp_if  SECURITY.md    "${{ runner.temp }}/exe/"
           cp_if  INSTALL-RUN.md "${{ runner.temp }}/exe/"
-          cp_if  history.txt    "${{ runner.temp }}/exe/"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
