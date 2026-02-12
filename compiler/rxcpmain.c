@@ -169,6 +169,12 @@ void fre_cntx(Context *context)  {
     /* Deallocate Tokens */
     free_tok(context);
 
+    /* Deallocate VM Bridge */
+    if (context->rxvml_bridge) {
+        rxvml_destroy((rxvml_context*)context->rxvml_bridge);
+        context->rxvml_bridge = 0;
+    }
+
     if (context->master_context && context == context->master_context) {
         if (context->loading_files) {
             for (i = 0; i < context->loading_files_count; i++) free(context->loading_files[i]);

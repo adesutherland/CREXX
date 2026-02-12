@@ -83,6 +83,7 @@ struct Context {
     char comments_hash_specified;    /* 1 - hash/no hash specified - for checking inconsistent options   */
     /* Plugins */
     void *decimal_plugin; /* Pointer to the decimal plugin */
+    void *rxvml_bridge;   /* Pointer to the VM bridge */
     /* Optimiser Options */
     int optimise;
     int iterations;

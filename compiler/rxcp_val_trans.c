@@ -304,13 +304,6 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
     ASTNode *env_node;
  
     if (direction == in && node->node_type == IMPLICIT_CMD) {
-        ASTNode *child = node->child;
-        if (child && (child->node_type == MEMBER_CALL || child->node_type == FACTORY_CALL || child->node_type == FUNCTION)) {
-            /* Don't rewrite to ADDRESS, just treat as a normal instruction */
-            node->node_type = INSTRUCTIONS;
-            return result_normal;
-        }
- 
         /* Create explicit environment "SYSTEM" */
         env_node = ast_ft(context, STRING);
         ast_str(env_node, "SYSTEM");

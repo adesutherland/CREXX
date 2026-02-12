@@ -35,6 +35,12 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
     Context *context = (Context *)payload;
 
     if (direction == in) {
+        if (node->node_type == IMPLICIT_CMD) {
+            if (rxcp_exit_bridge_invoke(context, node) < 0) {
+                return result_error;
+            }
+        }
+
         if (node->node_type == FUNCTION) {
             /* Check if symbol is resolved */
             Symbol *symbol = NULL;
