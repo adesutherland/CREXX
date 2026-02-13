@@ -23,6 +23,8 @@ static proc_constant* find_procedure(rxvm_context* ctx, const char* name) {
     return NULL;
 }
 
+int rxvm_link(rxvm_context* ctx);
+
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
 
@@ -120,8 +122,12 @@ int rxvml_call_plugin(
     rxvml_value* token_array,
     rxvml_value** response_out) {
 
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
     proc_constant* p = find_procedure(&ctx->vm, proc_name);
     if (!p) {
+        fprintf(stderr, "DEBUG: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
         ctx->last_error = "Procedure not found";
         return -1;
     }
@@ -129,14 +135,17 @@ int rxvml_call_plugin(
     /* Set up the external call context */
     ctx->vm.ext_proc = p;
     ctx->vm.ext_argc = 1;
-    ctx->vm.ext_args = (value**)&token_array;
+    /* Allocate ext_args on the heap so rxvm_call can free it */
+    ctx->vm.ext_args = malloc(sizeof(value*));
+    ctx->vm.ext_args[0] = (value*)token_array;
 
     ctx->vm.ext_ret = value_f();
 
     /* Run the VM */
     {
         char* dummy_argv[] = {"rxc_plugin"};
-        rxvm_run(&ctx->vm, 0, dummy_argv);
+        rxvm_prepare(&ctx->vm);
+        run(&ctx->vm, 0, dummy_argv);
     }
 
     if (response_out) {
@@ -154,9 +163,13 @@ int rxvml_call_plugin(
 
 const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response) {
     value* v = (value*)response;
+    if (!v) return NULL;
+    /* If it's a string, return it directly */
+    if (v->status.type_string || (v->string_length > 0 && v->string_value && v->status.all_type_flags == 0)) {
+        return v->string_value;
+    }
     /* Assume rxc.response has code at attribute 1 */
-    if (v && v->num_attributes >= 1 && v->attributes[0]->status.type_string) {
-        null_terminate_string_buffer(v->attributes[0]);
+    if (v->num_attributes >= 1 && (v->attributes[0]->status.type_string || (v->attributes[0]->string_length > 0 && v->attributes[0]->string_value))) {
         return v->attributes[0]->string_value;
     }
     return NULL;
@@ -166,7 +179,6 @@ const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response) {
     value* v = (value*)response;
     /* Assume rxc.response has error at attribute 2 */
     if (v && v->num_attributes >= 2 && v->attributes[1]->status.type_string) {
-        null_terminate_string_buffer(v->attributes[1]);
         return v->attributes[1]->string_value;
     }
     return NULL;

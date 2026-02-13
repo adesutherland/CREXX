@@ -342,21 +342,18 @@ int rxldmod(rxvm_context *context, char *file_name) {
     }
     const char *type_bin = has_ext ? "" : "rxbin";
 
-    if (!location) {
-        // Check if the file exists as an absolute path
-        if (fileexists(file_name, (char*)type_bin, 0)) {
-            location = 0; // Absolute path, no location needed
-            file_exists = 1;
-        } else {
-            // Try as a relative path from the current working directory
-            location = ".";
-            if (fileexists(file_name, (char*)type_bin, location)) {
-                file_exists = 1;
-            }
-        }
-    }
-    else {
+    // Check if the file exists as an absolute path
+    if (fileexists(file_name, (char*)type_bin, 0)) {
+        location = 0; // Absolute path, no location needed
+        file_exists = 1;
+    } else if (location) {
         file_exists = fileexists(file_name, (char*)type_bin, location);
+    } else {
+        // Try as a relative path from the current working directory
+        location = ".";
+        if (fileexists(file_name, (char*)type_bin, location)) {
+            file_exists = 1;
+        }
     }
 
     if (file_exists) {

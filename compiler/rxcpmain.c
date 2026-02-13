@@ -359,8 +359,8 @@ int rxcmain(int argc, char *argv[]) {
     context->debug_mode = debug_mode;
     context->stop_after_parse = stop_after_parse;
     context->optimise = do_optimise;
-    if (file_directory) context->location = file_directory;
-    else context->location = location;
+    if (file_directory) context->location = strdup(file_directory);
+    else context->location = location ? strdup(location) : 0;
 
     /* Load VM Plugins */
     // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)

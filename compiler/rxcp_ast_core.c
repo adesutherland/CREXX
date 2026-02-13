@@ -754,6 +754,8 @@ const char *ast_ndtp(NodeType type) {
             return "ABS_POS";
         case ADDRESS:
             return "ADDRESS";
+        case IMPLICIT_CMD:
+            return "IMPLICIT_CMD";
         case ARG:
             return "ARG";
         case ARGS:

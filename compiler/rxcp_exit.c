@@ -4,7 +4,6 @@
 #include "rxcpbgmr.h"
 #include "rxvml.h"
 
-/* Forward declaration if needed */
 static void count_tokens(ASTNode *node, size_t *count) {
     if (!node) return;
     if (node->node_type == OP_CONCAT || node->node_type == OP_SCONCAT) {
@@ -40,6 +39,8 @@ static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token
             d.column = node->token->column;
             d.length = node->token->length;
         } else {
+            d.text = node->node_string;
+            d.text_len = node->node_string_length;
             d.line = node->line;
             d.column = node->column;
         }
@@ -91,71 +92,151 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     rxvml_context* vctx = rxvml_create(root->location, root->debug_mode ? 1 : 0);
     if (!vctx) return NULL;
 
+    /* Load library.rxbin */
+    rxvml_load_module_file(vctx, "library");
+
     const char* mod = getenv("RXCP_EXIT_MODULE");
     if (!mod) mod = "compiler_exit";
 
-    if (rxvml_load_module_file(vctx, mod) <= 0) {
-        /* Note: could log error here */
-    }
+    rxvml_load_module_file(vctx, mod);
 
     root->rxvml_bridge = vctx;
     return vctx;
 }
 
+static ASTNode* find_node(ASTNode* node, NodeType type) {
+    if (!node) return NULL;
+    if (node->node_type == type) return node;
+    ASTNode* found = find_node(node->child, type);
+    if (found) return found;
+    return find_node(node->sibling, type);
+}
+
+static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *node, void *payload) {
+    if (direction == in) {
+        if (node->node_string && !node->free_node_string) {
+            char *s = malloc(node->node_string_length + 1);
+            memcpy(s, node->node_string, node->node_string_length);
+            s[node->node_string_length] = 0;
+            node->node_string = s;
+            node->free_node_string = 1;
+        }
+    }
+    return result_normal;
+}
+
 int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
+    if (ctx->in_exit_bridge) return 0;
+    ctx->in_exit_bridge = 1;
+
     rxvml_context* vctx = rxcp_init_bridge(ctx);
     if (!vctx) {
-        /* Silent Fallback */
+        ctx->in_exit_bridge = 0;
         return 0;
     }
 
     rxvml_value* tok_array = rxcp_marshal_implicit_cmd(vctx, node);
     if (!tok_array) {
-        /* Silent Fallback */
+        ctx->in_exit_bridge = 0;
         return 0;
     }
 
     rxvml_value* response = NULL;
-    if (rxvml_call_plugin(vctx, "rxcp.exit_dispatch", tok_array, &response) != 0) {
-        /* Silent Fallback (e.g. Procedure not found) */
+    int rc = rxvml_call_plugin(vctx, "rxcp.exit_dispatch", tok_array, &response);
+    if (rc != 0) {
+        ctx->in_exit_bridge = 0;
         return 0;
     }
 
     const char* replacement_code = rxvml_get_replacement_code(vctx, response);
     if (!replacement_code) {
-        /* Check for explicit error message in response */
         const char* err_msg = rxvml_get_error_message(vctx, response);
         if (err_msg) {
             mknd_err(node, (char*)err_msg);
+            ctx->in_exit_bridge = 0;
             return -1;
         }
-        /* No replacement and no error -> silent fallback */
+        ctx->in_exit_bridge = 0;
         return 0;
     }
 
     /* Parse replacement code */
     Context* frag = cntx_f();
-    if (!frag) return -1;
-    cntx_buf(frag, (char*)replacement_code, strlen(replacement_code));
-    if (rexbscan(frag) || rexbpars(frag)) {
-        mknd_err(node, "EXIT_BRIDGE_PARSE_FAILED");
-        fre_cntx(frag);
+    if (!frag) {
+        ctx->in_exit_bridge = 0;
         return -1;
     }
-    rxcp_bvl(frag);
+    frag->in_exit_bridge = 1;
+    frag->master_context = ctx->master_context;
+    frag->location = ctx->location;
+    frag->file_name = "exit_fragment";
+    frag->level = LEVELB;
+    frag->debug_mode = ctx->debug_mode;
+
+    char* code_copy = strdup(replacement_code);
+    cntx_buf(frag, code_copy, strlen(code_copy));
+    if (rexbpars(frag)) {
+        mknd_err(node, "EXIT_BRIDGE_PARSE_FAILED");
+        fre_cntx(frag);
+        ctx->in_exit_bridge = 0;
+        return -1;
+    }
+    ast_wlkr(frag->ast, fragment_fixup_walker, NULL);
 
     if (frag->ast) {
-        /* TODO: Source Location Patching */
-        /* Grafting */
-        /* Copy the new AST into the main context */
-        ASTNode* graft = add_dast(node->parent, frag->ast);
-        if (graft) {
-            ast_del(graft); /* Remove from the end where add_dast put it */
-            ast_rpl(node, graft); /* Replace original node with graft */
-            ctx->changed = 1;
+        /* Find the instructions list in the parsed fragment */
+        ASTNode *search = find_node(frag->ast, INSTRUCTIONS);
+
+        if (search && search->child) {
+            /* Replace the IMPLICIT_CMD with the instructions from fragment */
+            ASTNode *instr = search->child;
+            ASTNode *first_graft = NULL;
+            ASTNode *prev_graft = NULL;
+
+            while (instr) {
+                ASTNode *next_instr = instr->sibling;
+                ASTNode *graft = add_dast(node->parent, instr);
+                if (graft) {
+                    ast_del(graft); /* Detach from end of parent's child list */
+                    if (prev_graft) {
+                        /* Link to previous graft */
+                        prev_graft->sibling = graft;
+                        graft->parent = node->parent;
+                    } else {
+                        first_graft = graft;
+                    }
+                    prev_graft = graft;
+                }
+                instr = next_instr;
+            }
+
+            if (first_graft) {
+                /* Ensure the end of the new chain is linked to original siblings */
+                prev_graft->sibling = node->sibling;
+                /* Replace the original node with the head of our new chain */
+                ast_rpl(node, first_graft);
+                ctx->changed = 1;
+            }
         }
+        /* Avoid double free when frag is destroyed */
+        frag->ast = NULL;
+    }
+
+    /* Move tokens from frag to ctx to keep them alive */
+    if (frag->token_head) {
+        if (ctx->token_tail) {
+            ctx->token_tail->token_next = frag->token_head;
+            ctx->token_tail = frag->token_tail;
+        } else {
+            ctx->token_head = frag->token_head;
+            ctx->token_tail = frag->token_tail;
+        }
+        ctx->token_counter += frag->token_counter;
+        frag->token_head = frag->token_tail = NULL;
+        frag->token_counter = 0;
     }
 
     fre_cntx(frag);
+    ctx->in_exit_bridge = 0;
     return 0;
 }
