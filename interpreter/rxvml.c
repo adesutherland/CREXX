@@ -35,7 +35,7 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     if (!ctx) return NULL;
     rxinimod(&ctx->vm);
     if (location) ctx->vm.location = strdup(location);
-    ctx->vm.debug_mode = (flags & 1);
+    ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
     return ctx;
 }
@@ -127,7 +127,7 @@ int rxvml_call_plugin(
     }
     proc_constant* p = find_procedure(&ctx->vm, proc_name);
     if (!p) {
-        if (ctx->vm.debug_mode) fprintf(stderr, "DEBUG: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
+        if (ctx->vm.debug_mode) fprintf(stderr, "DEBUG_EXIT: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
         ctx->last_error = "Procedure not found";
         return -1;
     }
@@ -215,4 +215,9 @@ int rxvml_to_str(rxvml_context* ctx, const rxvml_value* v, const char** out_s, s
 int rxvml_last_error(rxvml_context* ctx, const char** out_msg) {
     if (out_msg) *out_msg = ctx->last_error;
     return ctx->last_error ? -1 : 0;
+}
+
+unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
+    if (!ctx) return 0;
+    return ctx->vm.debug_mode;
 }

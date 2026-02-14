@@ -3,6 +3,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxvml.h"
+#include "platform.h"
 
 static void count_tokens(ASTNode *node, size_t *count) {
     if (!node) return;
@@ -59,6 +60,10 @@ static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token
         rxvml_value *tok_obj = rxvml_make_token(ctx, &d);
         if (tok_obj) {
             (*count)++;
+            if (rxvml_get_debug_mode(ctx) >= 2) {
+                fprintf(stderr, "DEBUG_EXIT: Marshaled token %zu: type=%d, text=\"%.*s\"\n",
+                        *count, d.type, (int)d.text_len, d.text);
+            }
             rxvml_array_set(ctx, token_array, *count, tok_obj);
         }
     }
@@ -68,16 +73,28 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node) {
     size_t num_tokens = 0;
     size_t count = 0;
     rxvml_value *token_array;
+    ASTNode *command_expression = cmd_node->child;
 
     if (!cmd_node) return NULL;
 
-    /* Count tokens in the expression (the first child of IMPLICIT_CMD) */
-    count_tokens(cmd_node->child, &num_tokens);
+    if (cmd_node->node_type == ADDRESS) {
+        // First child is environment, second is command
+        if (command_expression) command_expression = command_expression->sibling;
+    }
+
+    if (!command_expression) return NULL;
+
+    /* Count tokens in the expression */
+    count_tokens(command_expression, &num_tokens);
+
+    if (cmd_node->context->debug_mode >= 2) {
+        fprintf(stderr, "DEBUG_EXIT: Marshaling %zu tokens for node type %d\n", num_tokens, cmd_node->node_type);
+    }
 
     token_array = rxvml_array_new(ctx, num_tokens);
     if (!token_array) return NULL;
 
-    collect_tokens(ctx, cmd_node->child, token_array, &count);
+    collect_tokens(ctx, command_expression, token_array, &count);
 
     return token_array;
 }
@@ -89,16 +106,48 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
     Context* root = ctx->master_context ? ctx->master_context : ctx;
     if (root->rxvml_bridge) return (rxvml_context*)root->rxvml_bridge;
 
-    rxvml_context* vctx = rxvml_create(root->location, root->debug_mode ? 1 : 0);
-    if (!vctx) return NULL;
+    if (root->debug_mode >= 2) {
+        fprintf(stderr, "DEBUG_EXIT: Initializing compiler exit bridge, location=%s\n", root->location ? root->location : "NULL");
+    }
+
+    rxvml_context* vctx = rxvml_create(root->location, root->debug_mode);
+    if (!vctx) {
+        if (root->debug_mode) fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");
+        return NULL;
+    }
 
     /* Load library.rxbin */
-    rxvml_load_module_file(vctx, "library");
+    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");
+    if (rxvml_load_module_file(vctx, "library") <= 0) {
+        char *exe_path = exepath();
+        if (exe_path && *exe_path) {
+            char path[MAXFILEPATH];
+            snprintf(path, sizeof(path), "%s/library", exe_path);
+            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading library from %s\n", path);
+            rxvml_load_module_file(vctx, path);
+        }
+        if (exe_path) free(exe_path);
+    }
 
     const char* mod = getenv("RXCP_EXIT_MODULE");
     if (!mod) mod = "compiler_exit";
 
-    rxvml_load_module_file(vctx, mod);
+    if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading %s into bridge VM\n", mod);
+    int rc = rxvml_load_module_file(vctx, mod);
+    if (rc <= 0) {
+        char *exe_path = exepath();
+        if (exe_path && *exe_path) {
+            char path[MAXFILEPATH];
+            snprintf(path, sizeof(path), "%s/%s", exe_path, mod);
+            if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Fallback: Loading %s from %s\n", mod, path);
+            rc = rxvml_load_module_file(vctx, path);
+        }
+        if (exe_path) free(exe_path);
+    }
+
+    if (rc <= 0) {
+        if (root->debug_mode) fprintf(stderr, "DEBUG_EXIT: Failed to load %s into bridge VM (rc=%d)\n", mod, rc);
+    }
 
     root->rxvml_bridge = vctx;
     return vctx;
@@ -126,6 +175,7 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
 }
 
 int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
+    if (ctx->debug_mode) fprintf(stderr, "DEBUG_EXIT: rxcp_exit_bridge_invoke called for node type %d\n", node->node_type);
     if (ctx->in_exit_bridge) return 0;
     ctx->in_exit_bridge = 1;
 
@@ -142,13 +192,18 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     }
 
     rxvml_value* response = NULL;
+    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Calling rxcp.exit_dispatch in bridge VM\n");
     int rc = rxvml_call_plugin(vctx, "rxcp.exit_dispatch", tok_array, &response);
     if (rc != 0) {
+        if (ctx->debug_mode) fprintf(stderr, "DEBUG_EXIT: Call to rxcp.exit_dispatch failed (rc=%d)\n", rc);
         ctx->in_exit_bridge = 0;
         return 0;
     }
 
     const char* replacement_code = rxvml_get_replacement_code(vctx, response);
+    if (ctx->debug_mode >= 2) {
+        fprintf(stderr, "DEBUG_EXIT: Replacement code: %s\n", replacement_code ? replacement_code : "NULL");
+    }
     if (!replacement_code) {
         const char* err_msg = rxvml_get_error_message(vctx, response);
         if (err_msg) {

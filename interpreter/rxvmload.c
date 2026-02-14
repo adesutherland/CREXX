@@ -344,12 +344,15 @@ int rxldmod(rxvm_context *context, char *file_name) {
 
     // Check if the file exists as an absolute path
     if (fileexists(file_name, (char*)type_bin, 0)) {
+        if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found module %s (as absolute path)\n", file_name);
         location = 0; // Absolute path, no location needed
         file_exists = 1;
     } else if (location) {
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in location %s\n", file_name, location);
         file_exists = fileexists(file_name, (char*)type_bin, location);
     } else {
         // Try as a relative path from the current working directory
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for module %s in current directory\n", file_name);
         location = ".";
         if (fileexists(file_name, (char*)type_bin, location)) {
             file_exists = 1;
@@ -402,10 +405,12 @@ int rxldmod(rxvm_context *context, char *file_name) {
         if (!location) {
             // Check if the file exists as an absolute path
             if (fileexists(file_name, (char*)type_plugin, 0)) {
+                if (context->debug_mode) fprintf(stderr, "DEBUG_EXIT: Found plugin %s (as absolute path)\n", file_name);
                 location = 0; // Absolute path, no location needed
                 file_exists = 1;
             } else {
                 // Try as a relative path from the current working directory
+                if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in current directory\n", file_name);
                 location = ".";
                 if (fileexists(file_name, (char*)type_plugin, location)) {
                     file_exists = 1;
@@ -413,6 +418,7 @@ int rxldmod(rxvm_context *context, char *file_name) {
             }
         }
         else {
+            if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Checking for plugin %s in location %s\n", file_name, location);
             file_exists = fileexists(file_name, (char*)type_plugin, location);
         }
 

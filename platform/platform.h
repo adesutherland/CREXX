@@ -4,6 +4,7 @@
 
 #ifndef CREXX_PLATFORM_H
 #define CREXX_PLATFORM_H
+#define MAXFILEPATH 4096
 
 #include <stdio.h>
 

@@ -62,4 +62,7 @@ int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out
 /* Error reporting */
 int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);
 
+/* Introspection */
+unsigned int rxvml_get_debug_mode(rxvml_context* ctx);
+
 #endif /* CREXX_RXVML_H */

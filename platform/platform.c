@@ -28,8 +28,6 @@
 
 #include "platform.h"
 
-#define MAXFILEPATH 4096
-
 /*
  * Read a file into a returned buffer
  *
