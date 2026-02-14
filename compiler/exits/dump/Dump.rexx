@@ -1,7 +1,7 @@
 options levelb
-namespace rxcp expose DumpExit
+namespace rxcp expose dumpexit
 
-DumpExit: class
+dumpexit: class
     *: factory
         return
 

@@ -2,8 +2,8 @@ options levelb
 namespace rxcp expose token
 
 token: class
-    val_type = .int    with register.1.int
-    val_text = .string with register.3.string
+    val_type = .int    with register.1
+    val_text = .string with register.3
 
     *: factory
         return

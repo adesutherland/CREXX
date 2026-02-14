@@ -316,6 +316,13 @@ int rxcmain(int argc, char *argv[]) {
             context->import_locations[num_import_locations] = import_locations + ix + 1;
         }
         context->import_locations[++num_import_locations] = 0;
+        if (debug_mode >= 2) {
+            // for debugging print the import locations
+            int di;
+            for (di = 0; di < num_import_locations; di++) {
+                fprintf(stderr, "Import location %d: %s\n", di, context->import_locations[di]);
+            }
+        }
     }
 
     /* Open input file */

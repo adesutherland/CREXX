@@ -14,10 +14,10 @@ add_custom_target(token_bin DEPENDS token.rxbin)
 add_subdirectory(dump)
 
 # Build ExitMain.rxbin
-# Needs token.rexx and Dump.rexx for class metadata
+# Needs token.rexx and Dump.rexx for class metadata - this is tech debt to be addressed by changing the exit loading approach
 add_custom_command(
     OUTPUT ExitMain.rxbin
-    COMMAND $<TARGET_FILE:rxc> -n -i ${CMAKE_CURRENT_SOURCE_DIR} -i ${CMAKE_CURRENT_SOURCE_DIR}/dump -o ExitMain ${CMAKE_CURRENT_SOURCE_DIR}/ExitMain.rexx
+    COMMAND $<TARGET_FILE:rxc> -n -i "${CMAKE_CURRENT_SOURCE_DIR}\;${CMAKE_CURRENT_SOURCE_DIR}/dump" -o ExitMain ${CMAKE_CURRENT_SOURCE_DIR}/ExitMain.rexx
     COMMAND $<TARGET_FILE:rxas> -o ExitMain.rxbin ExitMain.rxas
     DEPENDS rxc rxas ${CMAKE_CURRENT_SOURCE_DIR}/ExitMain.rexx token_bin exit_dump_bin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
