@@ -7,7 +7,9 @@
 #include "rxvalue.h"
 #include "rxsignal.h"
 
-#define rxversion "crexx-DEV2507"
+#define rxversion "crexx-dev-260110"
+
+typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 
 /* Module Structure */
 typedef struct module {
@@ -24,6 +26,7 @@ typedef struct module {
     size_t unresolved_symbols; /* Number of symbols not yet resolved by linking */
     size_t duplicated_symbols; /* Number of duplicated symbols ignored in module */
     module_file *file;         /* File section the module was loaded from */
+    rxvm_mod_state state;      /* Module lifecycle state */
 } module;
 
 /* Interrupt Response Codes */
@@ -197,13 +200,20 @@ typedef struct rxvm_context {
     struct avl_tree_node *exposed_proc_tree;
     struct avl_tree_node *exposed_reg_tree;
     char debug_mode;
+
+    /* Extra fields for direct procedure call */
+    proc_constant *ext_proc;
+    int ext_argc;
+    value **ext_args;
+    value *ext_ret;
+    int prepare_only;
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */
-char* rxpa_getsignaltext(rxsignal signal);
+char* rxvm_getsignaltext(rxsignal signal);
 
 /* Function to get a signal code from a signal text */
-rxsignal rxpa_getsignalcode(char* signalText);
+rxsignal rxvm_getsignalcode(char* signalText);
 
 int initialz();
 int finalize();
@@ -215,6 +225,9 @@ void rxinimod(rxvm_context *context);
 /* Free Module Context */
 void rxfremod(rxvm_context *context);
 void completely_free_frame(stack_frame *frame);
+
+/* Link a loaded module */
+void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
 
 /* Loads a new module
  * returns 0  - Error
@@ -232,7 +245,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length);
 int rxldmodp(rxvm_context *context);
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxpa_callfunc(void* function, int args, value** argv, value* ret, value* signal);
+void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
@@ -293,7 +306,7 @@ void arr2redr(value* redirect_reg, value* string_reg);
 void nullredr(value* redirect_reg);
 
 /* EXIT Function Support */
-void mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
+void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**
  * @brief Enables handling for a specific VM interrupt code.

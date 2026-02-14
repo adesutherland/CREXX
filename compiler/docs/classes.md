@@ -1,7 +1,7 @@
 # cREXX Level B: Class & Interop Reference
 
-**Version:** 1.1 (Draft)  
-**Status:** Approved for Implementation  
+**Version:** 1.2
+**Status:** Phase 1 Implemented
 **Authority:** CREXX Architect
 
 ---
@@ -170,15 +170,16 @@ stem: class
 
 ## 4. Implementation Phasing
 
-### Phase 1: Physical Interop (Immediate Priority)
+### Phase 1: Physical Interop (COMPLETED)
 
 **Goal:** Enable Compiler Plugins (Tokens, AST Nodes).
+**Status:** Integrated via the Bridge Plugin and `plugin_dispatch_walker`.
 **Scope:**
 
 1. `CLASS`, `FACTORY`, `METHOD` keywords.
 2. `WITH register[.index][.field]` (Numeric/Field mapping).
 3. Basic Method Dispatch (`obj.method()`).
-4. **Exclusions:** No Implicit registers, no Dynamic String mapping, no Syntactic Sugar.
+4. **Usage**: Successfully used to map `token` objects for Rexx plugins.
 
 ### Phase 2: Dynamic & Sugar (Follow-up)
 

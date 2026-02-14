@@ -47,6 +47,7 @@ void validate_node_promotion_for_ref(ASTNode* node);
 void validate_ast(Context *context);
 void rxcp_val(Context *context); /* legacy name */
 void rxcp_bvl(Context *context);
+Context* rxcp_parse_buffer(char* source_string, int options);
 
 /* sym */
 walker_result build_symbols_walker(walker_direction direction, ASTNode* node, void *payload);

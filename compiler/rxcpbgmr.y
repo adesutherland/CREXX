@@ -50,6 +50,8 @@
 
 /* Low precedence */
 %left ANYTHING.
+%left IMPLICIT_CONCAT.
+%left TK_DOT TK_CLASS_TYPE.
 
 /* 0 Sets the stack to grow dynamically! */
 %stack_size 0
@@ -1098,13 +1100,13 @@ term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
                            {
                                ASTNode *last = P;
                                ASTNode *prev = NULL;
-                               while (last->child) {
+                               while (last->sibling) {
                                    prev = last;
-                                   last = last->child;
+                                   last = last->sibling;
                                }
 
                                if (prev) {
-                                   prev->child = NULL;
+                                   prev->sibling = NULL;
                                } else {
                                    P = NULL;
                                }
@@ -1119,15 +1121,6 @@ term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
                                if (P) add_ast(lhs, P);
                                add_ast(F, lhs);
                                if (PP) add_ast(F, PP);
-                           }
-term(F)                ::= TK_CLASS_TYPE(S) function_parameters(P).
-                           {
-                               F = ast_f(context, FACTORY_CALL, S);
-                               if (P) add_ast(F,P);
-                               if (F->node_string && F->node_string[0] == '.') {
-                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
-                                   F->node_string_length--;
-                               }
                            }
 term(F)                ::= TK_STRING(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
@@ -1195,9 +1188,28 @@ bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
                          { A = B; }
+/* Standalone class factory call as a primary */
+bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
+                           {
+                               F = ast_f(context, FACTORY_CALL, S);
+                               if (P) add_ast(F,P);
+                               if (F->node_string && F->node_string[0] == '.') {
+                                   memmove(F->node_string, F->node_string + 1, F->node_string_length);
+                                   F->node_string_length--;
+                               }
+                           }
 
 /* These are the normal expression form in unambiguous form */
-prefix_expression(P) ::= bracket(B). { P = B; }
+postfix(P)           ::= bracket(B).
+                         { P = B; }
+postfix(A)           ::= postfix(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+
+prefix_expression(P) ::= postfix(B). [ANYTHING] { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
@@ -1245,7 +1257,16 @@ addition(A)          ::= addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C)
 /* These are for expressions "after" a concat defined by a whitespace to avoid
  * ambiguous issues with prefix operators (i.e. these miss out the +/- prefixes)
  */
-prefix_expression_c(P) ::= bracket(B). { P = B; }
+postfix_c(P)         ::= bracket(B).
+                         { P = B; }
+postfix_c(A)         ::= postfix_c(B) TK_CLASS_TYPE(S) function_parameters(PP). [TK_CLASS_TYPE]
+                         { A = ast_f(context, MEMBER_CALL, S);
+                           if (A->node_string && A->node_string[0] == '.') {
+                               memmove(A->node_string, A->node_string + 1, A->node_string_length);
+                               A->node_string_length--; }
+                           add_ast(A,B); if (PP) add_ast(A,PP); }
+
+prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
@@ -1283,7 +1304,7 @@ concatenation(P)     ::= addition(E).
                          { P = E; }
 concatenation(A)     ::= concatenation(B) TK_CONCAT(O) addition(C).
                          { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
-concatenation(A)     ::= concatenation(B) addition_c(C).  /* Note the addition_c */
+concatenation(A)     ::= concatenation(B) addition_c(C). [IMPLICIT_CONCAT] /* Note the addition_c */
                          { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
 comparison(P)        ::= concatenation(E).
                          { P = E; }

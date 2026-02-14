@@ -397,6 +397,10 @@ void validate_ast(Context *context) {
             rxcp_print_symbol_table(context->ast->scope, 0);
         }
 
+        /* Plugin Dispatch */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, plugin_dispatch_walker, (void *) context);
+
         /* Re-write IMPLICIT_CMD Instructions */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_implicit_cmd_walker, (void *) context);
@@ -408,6 +412,11 @@ void validate_ast(Context *context) {
         /* Builds the Symbol Table */
         context->current_scope = 0;
         ast_wlkr(context->ast, build_symbols_walker, (void *) context);
+
+        /* Scan imports now that namespaces are materialized; mark changed to rebuild symbols if any file loaded */
+        if (rxcp_scan_imports(context)) {
+            context->changed = 1;
+        }
 
         /* Mainly resolve symbols - functions */
         context->current_scope = 0;

@@ -52,7 +52,7 @@ struct bin_space {
 
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
-    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR
+    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR, META_CLASS, META_ATTR
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -157,6 +157,21 @@ typedef struct meta_clear_constant {
     meta_entry base;
     size_t symbol;
 } meta_clear_constant;
+
+typedef struct meta_class_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+} meta_class_constant;
+
+typedef struct meta_attr_constant {
+    meta_entry base;
+    size_t symbol;
+    size_t option;
+    size_t type;
+    size_t reg;
+} meta_attr_constant;
 
 typedef struct module_header {
     char FILE_HEADER[sizeof(BIN_HEADER)];

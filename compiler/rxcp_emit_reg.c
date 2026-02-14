@@ -26,6 +26,7 @@
  * Code Generator / RXAS Emitter - Register Allocation
  */
 
+#include <string.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 
@@ -51,6 +52,9 @@ static int defer_reg_return(ASTNode* node) {
     {
         case VAR_SYMBOL:
             if (node->child && node->child->node_type != NOVAL) return 1;
+            if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->scope &&
+                node->symbolNode->symbol->scope->defining_node &&
+                node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) return 1;
             break;
 
         case VAR_TARGET:
@@ -88,6 +92,30 @@ walker_result register_walker(walker_direction direction,
                 /* Return Type */
                 c = ast_chld(node, CLASS, VOID);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
+
+                if (node->node_type == FACTORY) {
+                    /* Assign r_this from symbol §factory */
+                    ASTNode star_node;
+                    memset(&star_node, 0, sizeof(ASTNode));
+                    star_node.node_string = "\xc2\xa7" "factory";
+                    star_node.node_string_length = 9;
+                    Symbol *star_sym = sym_lrsv(node->scope, &star_node);
+                    if (star_sym && star_sym->register_num == UNSET_REGISTER) {
+                        star_sym->register_num = get_reg(node->scope);
+                        star_sym->register_type = 'r';
+                    }
+                } else if (node->node_type == METHOD) {
+                    /* Associate symbol "§this" with a1 */
+                    ASTNode this_node;
+                    memset(&this_node, 0, sizeof(ASTNode));
+                    this_node.node_string = "\xc2\xa7" "this";
+                    this_node.node_string_length = 6;
+                    Symbol *this_sym = sym_lrsv(node->scope, &this_node);
+                    if (this_sym) {
+                        this_sym->register_num = 1;
+                        this_sym->register_type = 'a';
+                    }
+                }
                 break;
 
             case ARGS:

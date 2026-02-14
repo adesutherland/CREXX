@@ -415,8 +415,10 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     ast_wlkr(source, add_dast_walker_handler1, &context);
 
     /* Return the added child (the last sibling) */
-    node = context.dest;
-    while (node->child) node = node->child;
+    node = context.dest->child;
+    if (node) {
+        while (node->sibling) node = node->sibling;
+    }
     return node;
 }
 

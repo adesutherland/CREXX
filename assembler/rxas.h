@@ -17,7 +17,7 @@ struct avl_tree_node;
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
-enum queue_item_type {EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, FUNC_META, REG_META, CONST_META, CLEAR_META};
+enum queue_item_type {EMPTY, ASM_LABEL, OP_CODE, SRC_FILE, SRC_LINE, FUNC_META, REG_META, CONST_META, CLEAR_META, CLASS_META, ATTR_META};
 
 /* Keyhole Queue Item  */
 typedef struct instruction_queue {

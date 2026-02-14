@@ -32,9 +32,11 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxcp_plugin.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
+#include "rxvml.h"
 
 // Static Linked Functions
 struct static_linked_function *static_linked_functions;
@@ -125,6 +127,10 @@ void cntx_buf(Context *context, char* buff_start, size_t bytes) {
         fre_ftre(context);
         context->importable_function_tree  = 0;
     }
+    if (context->importable_class_tree) {
+        fre_ctre(context);
+        context->importable_class_tree  = 0;
+    }
 
     /* Reset importable_file_list */
     if (context->importable_file_list) {
@@ -149,6 +155,10 @@ void fre_cntx(Context *context)  {
     /* Deallocate importable_function_tree */
     fre_ftre(context);
     context->importable_function_tree  = 0;
+
+    /* Deallocate importable_class_tree */
+    if (context->importable_class_tree) fre_ctre(context);
+    context->importable_class_tree  = 0;
 
     /* Deallocate importable_file_list */
     if (context->importable_file_list) {

@@ -59,6 +59,7 @@ struct Context {
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
     void* importable_function_tree;
+    void* importable_class_tree;
     char after_rewrite; /* To avoid duplicate processing / warnings after the compiler rewrites */
     char changed; /* Flag Used to see if a walker has made a change */
     /* Do we need to import _rxsysb */
@@ -110,6 +111,16 @@ struct imported_func {
     struct imported_func *duplicate;
 };
 
+/*  Importable Classes */
+struct imported_class {
+    char *namespace;
+    char *file_name;
+    char *fqname;
+    char *name;
+    Context *context; /* parsed import context providing the AST */
+    ASTNode *class_node; /* pointer into import AST for signature extraction */
+};
+
 /*  Importable Files */
 struct importable_file {
     char *name;
@@ -150,6 +161,8 @@ char* encdstrg(const char* string, size_t length);
 
 /* Try and import an external function - return its symbol if successful */
 Symbol *sym_imfn(Context *context, ASTNode *node);
+/* Try and import an external class - return its symbol if successful */
+Symbol *sym_imcls(Context *context, ASTNode *node);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);
@@ -195,6 +208,9 @@ imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *
 
 /* Free Func Tree and functions */
 void fre_ftre(Context *context);
+
+/* Free Class Tree and classes */
+void fre_ctre(Context *context);
 
 /* Free an imported_func */
 void freimpfc(imported_func *func);

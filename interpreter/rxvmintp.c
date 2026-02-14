@@ -729,36 +729,51 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Thread code - we need to do it here because address_map is only valid
      * in this run() function */
-#ifndef NTHREADED
-    DEBUG("Threading\n");
+    DEBUG("Threading/Preparing\n");
     for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        size_t i = 0, j;
+        /* Idempotent check */
+        if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
-        while (i < context->modules[mod_index]->segment.inst_size) {
-            j = i;
-            i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-            context->modules[mod_index]->segment.binary[j].impl_address =
-                    (void *)address_map[context->modules[mod_index]->segment
-                            .binary[j].instruction.opcode];
+#ifndef NTHREADED
+        {
+            size_t i = 0, j;
+            while (i < context->modules[mod_index]->segment.inst_size) {
+                j = i;
+                i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
+                context->modules[mod_index]->segment.binary[j].impl_address =
+                        (void *)address_map[context->modules[mod_index]->segment
+                                .binary[j].instruction.opcode];
+            }
         }
-    }
 #endif
+        context->modules[mod_index]->state = RXVM_MOD_THREADED;
+    }
+
+    if (context->prepare_only) {
+        /* We are only here to thread, return success */
+        rc = 0;
+        goto interprt_finished;
+    }
 
     /* Find the program's entry point */
     DEBUG("Find program entry point\n");
-    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
-        int i = context->modules[mod_index]->proc_head;
-        while (i != -1) {
-            procedure =
-                    (proc_constant *) (context->modules[mod_index]->segment.const_pool +
-                                       i);
-            if (procedure->base.type == PROC_CONST &&
-                strcmp(procedure->name, "main") == 0)
-                break;
-            i = procedure->next;
-            procedure = 0;
+    if (context->ext_proc) {
+        procedure = context->ext_proc;
+    } else {
+        for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+            int i = context->modules[mod_index]->proc_head;
+            while (i != -1) {
+                procedure =
+                        (proc_constant *) (context->modules[mod_index]->segment.const_pool +
+                                           i);
+                if (procedure->base.type == PROC_CONST &&
+                    strcmp(procedure->name, "main") == 0)
+                    break;
+                i = procedure->next;
+                procedure = 0;
+            }
+            if (procedure) break;
         }
-        if (procedure) break;
     }
 
     if (!procedure) {
@@ -767,20 +782,34 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     }
 
     DEBUG("Create first Stack Frame\n");
-    current_frame = frame_f(procedure, 1, 0, 0, 0);
-    /* Arguments (passed in an array) */
-    /* a0 is already set by frame_f() */
-    /* a1 is the array  */
-    {
-        int i;
-        int a1 = procedure->binarySpace->globals + procedure->locals + 1;
-        arguments_array = value_f();
-        current_frame->baselocals[a1] = arguments_array;
-        current_frame->locals[a1] = current_frame->baselocals[a1];
-        set_num_attributes(current_frame->baselocals[a1], argc);
+    if (context->ext_proc) {
+        current_frame = frame_f(procedure, context->ext_argc, 0, 0, 0);
+        /* Arguments (passed as individual objects) */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            for (i = 0; i < context->ext_argc; i++) {
+                current_frame->baselocals[a1 + i] = value_f();
+                current_frame->locals[a1 + i] = current_frame->baselocals[a1 + i];
+                copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
+            }
+        }
+    } else {
+        current_frame = frame_f(procedure, 1, 0, 0, 0);
+        /* Arguments (passed in an array) */
+        /* a0 is already set by frame_f() */
+        /* a1 is the array  */
+        {
+            int i;
+            int a1 = procedure->binarySpace->globals + procedure->locals + 1;
+            arguments_array = value_f();
+            current_frame->baselocals[a1] = arguments_array;
+            current_frame->locals[a1] = current_frame->baselocals[a1];
+            set_num_attributes(current_frame->baselocals[a1], argc);
 
-        for (i = 0; i < argc; i++) {
-            set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            for (i = 0; i < argc; i++) {
+                set_null_string(current_frame->baselocals[a1]->attributes[i], argv[i]);
+            }
         }
     }
 
@@ -916,7 +945,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
-                rxpa_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
                 if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
@@ -1615,24 +1644,24 @@ START_OF_INSTRUCTIONS
 	      
         START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
-            mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 
         START_INSTRUCTION(SAY_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
             DISPATCH
 	      
         START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
-            mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
+            rxvm_mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
             DISPATCH
 	      
 	START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
-            mprintf("%.*s", (int) op1S->string_len, op1S->string);
+            rxvm_mprintf("%.*s", (int) op1S->string_len, op1S->string);
             DISPATCH
 
         START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
@@ -2536,7 +2565,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -2564,7 +2593,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
+                    rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -2590,7 +2619,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2628,7 +2657,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
-                    rxpa_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
+                    rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
@@ -2698,14 +2727,16 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 unsigned char is_interrupt = current_frame->is_interrupt;
                 /* Set the result register */
                 if (current_frame->return_reg) {
-                    if (REG_IDX(1) >= current_frame->procedure->locals)
+                    if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
+                        current_frame->locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
-                                   op1R); /* Must do a copy from an argument or global because ... */
+                                   op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
                     else
                         move_value(current_frame->return_reg,
-                                   op1R); /* ... the faster move deletes the source which is ok for locals */
+                                   op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
                 }
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) copy_value(context->ext_ret, op1R);
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2753,6 +2784,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->int_value = op1I;
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    set_int(context->ext_ret, op1I);
+                    set_type_int(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2803,6 +2838,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    set_float(context->ext_ret, op1F);
+                    set_type_float(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -2852,6 +2891,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 if (current_frame->return_reg)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
+                if (!current_frame->parent && context->ext_ret) {
+                    string_constant *sc = CONSTSTRING_OP(1);
+                    set_string(context->ext_ret, sc->string, sc->string_len);
+                    set_type_string(context->ext_ret);
+                }
                 temp_frame = current_frame;
                 current_frame = current_frame->parent;
                 if (!current_frame) {
@@ -4313,9 +4357,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
 #ifdef __32BIT__
-            mprintf("%ld\n", op1I);
+            rxvm_mprintf("%ld\n", op1I);
 #else
-            mprintf("%lld\n", op1I);
+            rxvm_mprintf("%lld\n", op1I);
 #endif
             DISPATCH
 
@@ -4325,7 +4369,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_CHAR) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY \'%c\'\n", (pc + (1))->cconst);
-            mprintf("%c\n", (pc + (1))->cconst);
+            rxvm_mprintf("%c\n", (pc + (1))->cconst);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -4334,7 +4378,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %.15g\n", op1F);
-            mprintf("%.15g\n", op1F);
+            rxvm_mprintf("%.15g\n", op1F);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6435,7 +6479,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     }
 
 #ifndef NDEBUG
-    if (context->debug_mode) mprintf("Interpreter Finished with rc=%d\n", rc);
+    if (context->debug_mode) rxvm_mprintf("Interpreter Finished with rc=%d\n", rc);
 #endif
 
     return rc;

@@ -71,6 +71,8 @@ global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {rxaseaft(context, T, "Expecting
 global_meta ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,I);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,0);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
 global_meta ::= KW_META STRING(E) NEWLINE. {rxaserat(context, E, "Cannot clear metadata here");}
 global_meta ::= KW_META STRING(E) EQUAL STRING STRING STRING NEWLINE. {rxaserat(context, E, "Cannot set constant metadata here");}
 global_meta ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
@@ -110,6 +112,8 @@ instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rx
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) STRING(I) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,I);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A,0);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {rxasqmct(context,V,OP,T,C);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
 instruction ::= KW_META STRING(V) NEWLINE. {rxasqmcl(context,V);}
 instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. {rxasqmfl(context,F);}
 instruction ::= NEWLINE.

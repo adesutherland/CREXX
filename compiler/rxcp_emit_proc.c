@@ -99,6 +99,20 @@ void emit_proc(ASTNode *node, void *pl) {
 
         case CLASS_DEF:
             if (!node->output) node->output = output_f();
+
+            /* Emit class metadata so importers can discover classes from RXAS/RXBIN without source */
+            if (node->symbolNode && node->symbolNode->symbol) {
+                char *cls_fqn = sym_frnm(node->symbolNode->symbol);
+                char *cls_type = type_nm(node->symbolNode->symbol->type);
+                if (cls_fqn && cls_type) {
+                    char *buf = mprintf(".meta \"%s\"=\"b\" \"%s\" .class\n", cls_fqn, cls_type);
+                    /* Prepend to ensure it appears before any method metadata */
+                    output_prepend_text(buf, node->output);
+                    free(buf);
+                }
+                if (cls_fqn) free(cls_fqn);
+            }
+
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
@@ -126,31 +140,20 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory stubs, expose must use the unmangled fully-qualified name */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;
-                if (node->symbolNode->symbol->exposed) {
-                    buf = mprintf("\n%s() .expose=%s\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_expose,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
-                else {
-                    buf = mprintf("\n%s()\n"
-                                  "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
-                                  proc_label,
-                                  proc_fqn,
-                                  type,
-                                  proc_label,
-                                  args
-                    );
-                }
+                buf = mprintf("\n%s() .expose=%s\n"
+                              "   .meta \"%s\"=\"b\" \"%s\" %s() \"%s\"\n",
+                              proc_label,
+                              proc_expose,
+                              proc_fqn,
+                              type,
+                              proc_label,
+                              args
+                );
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -176,7 +179,8 @@ void emit_proc(ASTNode *node, void *pl) {
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 } else {
                     proc_label = sym_mngd_frnm(node->symbolNode->symbol);
-                    proc_expose = sym_mngd_frnm(node->symbolNode->symbol);
+                    /* For class methods/factory definitions, exposed symbol must use unmangled FQN */
+                    proc_expose = sym_frnm(node->symbolNode->symbol);
                     proc_fqn = sym_frnm(node->symbolNode->symbol);
                 }
                 char* buf;
@@ -235,32 +239,13 @@ void emit_proc(ASTNode *node, void *pl) {
                     star_node.node_string = "\xc2\xa7" "factory";
                     star_node.node_string_length = 9;
                     Symbol *star_sym = sym_lrsv(node->scope, &star_node);
-                    int r_this = -1;
-                    if (star_sym) {
-                        r_this = star_sym->register_num;
-                    }
-                    if (r_this == -1) {
-                        r_this = get_reg(node->scope);
-                        if (star_sym) {
-                            star_sym->register_num = r_this;
-                            star_sym->register_type = 'r';
-                        }
-                    }
+                    int r_this = star_sym->register_num;
 
                     temp1 = mprintf("   setattrs r%d,%d\n", r_this, n_attrs);
                     output_append_text(node->output, temp1);
                     free(temp1);
                 } else if (node->node_type == METHOD) {
-                    /* Associate symbol "§this" with a1 */
-                    ASTNode this_node;
-                    memset(&this_node, 0, sizeof(ASTNode));
-                    this_node.node_string = "\xc2\xa7" "this";
-                    this_node.node_string_length = 6;
-                    Symbol *this_sym = sym_lrsv(node->scope, &this_node);
-                    if (this_sym) {
-                        this_sym->register_num = 1;
-                        this_sym->register_type = 'a';
-                    }
+                    /* Associated in register_walker */
                 }
 
                 /* If numeric options have non-inherited values, set them */

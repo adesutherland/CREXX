@@ -53,7 +53,7 @@ The parser defines the structural grammar of the language.
     *   At this stage, the AST is relatively flat; procedure bodies are not yet nested under their procedure nodes.
     *   *Example*: `if(I) ::= TK_IF ... else(F). { I = ast_f(...); add_ast(I, F); }`
 
-### 3.4 Semantic Analysis & AST Stitching (Walker)
+### 3.4 Semantic Analysis & AST Stitching (Initial Walker)
 **Source**: `compiler/rxcp_val_check.c` (`initial_checks_walker`)
 
 After the parser builds the initial "raw" AST, the `initial_checks_walker` performs a critical pass to restructure and validate the tree. This is where the flat list of instructions is transformed into a true logical hierarchy.
@@ -64,6 +64,16 @@ After the parser builds the initial "raw" AST, the `initial_checks_walker` perfo
 *   **Source Location Stitching**: Calculates precise source code ranges (line/column) for all nodes by propagating token information up from the leaves. It also "stitches" parentheses back into the source range for accurate error reporting.
 *   **Loop Correction**: In `DO` loops, if an assignment is present without a `BY` clause, the walker injects an implicit `BY` to prevent infinite loops.
 *   **Assembler Validation**: Validates `ASSEMBLER` blocks against the target architecture's instruction set (Level B specific).
+
+### 3.5 Validation Orchestrator & Fixpoint Loop
+**Source**: `compiler/rxcp_val_orch.c` (`validate_ast`)
+
+The final stage of the front-end is the Validation Orchestrator. Unlike previous stages, this stage employs a **Fixpoint Iteration Loop** to handle interdependent symbol resolution and code injection.
+
+*   **Fixed Point Iteration**: The orchestrator wraps subsequent validation passes in a `do { ... } while (context->changed)` loop.
+*   **Plugin Dispatch**: Intercepts `IMPLICIT_CMD` nodes and consults the **Bridge Plugin** (see `rxcp_val_plugin.c` and [Bridge Plugins](bridge_plugins.md)).
+*   **Code Injection**: Plugins can return Rexx source strings which are parsed into AST fragments and grafted into the main tree. This sets the `changed` flag, triggering another loop iteration to resolve symbols in the new code.
+*   **Rewrite Walkers**: Final transformations (like `ADDRESS` and `EXIT` rewriting) occur within the loop to ensure they interact correctly with injected code.
 
 ## 4. Syntax Rules Implemented by Step
 
