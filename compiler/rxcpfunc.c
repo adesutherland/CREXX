@@ -198,11 +198,14 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
     if (!context || !context->ast || !context->ast->scope) return 0;
     scope = context->ast->scope;
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Searching for Class %s in namespaces (context file: %s):\n", name, context->file_name);
+
     /* Check the module namespace */
     if (scp_noch(scope) > 0) {
         Scope *s0 = scp_chd(scope, 0);
         if (s0) {
             namespace = s0->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
             if (src_nscl(context, namespace, name, cls)) return 1;
         }
     }
@@ -212,6 +215,7 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
         Scope *si = scp_chd(scope, i);
         if (si) {
             namespace = si->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
             if (src_nscl(context, namespace, name, cls)) return 1;
         }
     }
@@ -232,11 +236,14 @@ static int src_fqfu(Context *context, int only_namespace, char* name, imported_f
     if (!context || !context->ast || !context->ast->scope) return 0;
     scope = context->ast->scope;
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Searching for Procedure %s in namespaces (context file: %s):\n", name, context->file_name);
+
     /* Check the module namespace */
     if (scp_noch(scope) > 0) {
         Scope *s0 = scp_chd(scope, 0);
         if (s0) {
             namespace = s0->name;
+            if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
             if (src_nsfu(context, namespace, name, func)) return 1;
         }
     }
@@ -247,6 +254,7 @@ static int src_fqfu(Context *context, int only_namespace, char* name, imported_f
             Scope *si = scp_chd(scope, i);
             if (si) {
                 namespace = si->name;
+                if (context->debug_mode >= 2) fprintf(stderr, " - namespace: %s\n", namespace);
                 if (src_nsfu(context, namespace, name, func)) return 1;
             }
         }
@@ -277,6 +285,7 @@ static int safe_strcmp(const char *s1, const char* s2) {
  * If it is a duplicate this function either calls freimpfc(func) or stashes it in the duplicate list
  * (the caller does not need to worry (should not worry) about freeing it if it is a duplicate) */
 static int add_func(Context *context, imported_func *func) {
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure %s from %s (into context file: %s)\n", func->fqname, func->file_name, context->file_name);
     struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_function_tree);
     imported_func *existing_func;
     /* Does the function already exist? */
@@ -323,6 +332,7 @@ static int add_func(Context *context, imported_func *func) {
 /* Adds a class to the master context*/
 /* Returns 0 on success, 1 on duplicate */
 static int add_class(Context *context, struct imported_class *cls) {
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Class %s from %s (into context file: %s)\n", cls->fqname, cls->file_name, context->file_name);
     struct avl_tree_node **root = (struct avl_tree_node **)&(context->master_context->importable_class_tree);
     struct imported_class *existing_cls;
     /* Does the class already exist? */
@@ -1351,7 +1361,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
 static int load_another_file(Context *context) {
     size_t f;
     Context *master_context;
-    
+
     if (!context) return 0;
     master_context = context->master_context;
     if (!master_context) return 0;
@@ -1363,12 +1373,22 @@ static int load_another_file(Context *context) {
         return 0;
     }
 
+    if (context->debug_mode >= 2) {
+        fprintf(stderr, "Importable file list state (context file: %s):\n", context->file_name);
+        for (f = 0; master_context->importable_file_list[f]; f++) {
+            fprintf(stderr, " - file %zu: %s (imported: %d)\n", f, master_context->importable_file_list[f]->name, master_context->importable_file_list[f]->imported);
+        }
+    }
+
     for (f = 0; master_context->importable_file_list[f]; f++) {
         /* Already imported? */
         if (!master_context->importable_file_list[f]->imported) {
             master_context->importable_file_list[f]->imported = 1;
 
             /* Import File */
+            if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure/Classes - Loading file %s from %s\n",
+                                                  master_context->importable_file_list[f]->name,
+                                                  master_context->importable_file_list[f]->location);
             switch (master_context->importable_file_list[f]->type) {
                 case REXX_FILE:
                     parseRexxFileForFunctions(context,
@@ -1411,6 +1431,7 @@ static int load_another_file(Context *context) {
         return 1;
     }
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Procedure/Classes - No more files to load\n");
     return 0; /* No file was loaded */
 }
 
@@ -1459,13 +1480,19 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
         return found_symbol;
     }
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Importing Class for file %s Looking for Class %s\n", context->file_name, name);
+
     /* Process all the unread files */
     do {
         /* Check if the class has been loaded */
         if (src_fqcl(context, name, &found_cls)) {
+            if (context->debug_mode >= 2)
+                fprintf(stderr, "Importing Classes - Found Class %s in file %s\n", found_cls->fqname, found_cls->file_name);
             break;
         }
     } while (load_another_file(context));
+
+    if (context->debug_mode >= 2) fprintf(stderr, "Finished Importing files needed for file %s when Looking for Class %s\n", context->file_name, name);
 
     if (found_cls) {
         ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
@@ -1819,7 +1846,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
 }
 
 /* Get a list of files if a type in a directory (can be null), skipping skip_name (can be null) */
-static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number) {
+static void list_files_in_dir(char *directory, file_type type, char* skip_name, importable_file ***list, size_t *number, int debug_mode) {
 
     void *dir_ptr;
     char* name;
@@ -1846,6 +1873,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     name = dirfstfl(directory,  file_prefix, type_name, &dir_ptr);
     if (name) {
         if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+            if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
             file = importable_file_f(name, type, directory);
             add_file_to_list(file, number, list);
         }
@@ -1853,6 +1881,7 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
             name = dirnxtfl(&dir_ptr);
             if (name) {
                 if (!skip_name || strcmp(name, skip_name) != 0 ) { // Skip if the same name as the file
+                    if (debug_mode >= 2) fprintf(stderr, "Found importable %s file: %s in %s\n", type_name, name, directory);
                     file = importable_file_f(name, type, directory);
                     add_file_to_list(file, number, list);
                 }
@@ -1874,51 +1903,55 @@ importable_file **rxfl_lst(Context *context) {
     list[0] = 0;
     exe_dir = exepath();
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in current location: %s\n", context->location ? context->location : ".");
     /* Read REXX files in the current directory */
-    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number);
+    list_files_in_dir(context->location, REXX_FILE, context->file_name, &list, &number, context->debug_mode);
 
     /* Read RXAS files in the current directory */
-    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, RXAS_FILE, 0, &list, &number, context->debug_mode);
 
     /* Read RXBIN files in the current directory */
-    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
     /* Read in native plugins  in the current directory */
-    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number);
+    list_files_in_dir(context->location, NATIVE_FILE, 0, &list, &number, context->debug_mode);
 
     /* Look in the imported location */
     if (context->import_locations) {
         for (d = 0; context->import_locations[d]; d++) {
+            if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in: %s\n", context->import_locations[d]);
             /* Read in REXX files in the directory */
-            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], REXX_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in RXAS files in the directory */
-            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], RXAS_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in RXBIN files in the directory */
-            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
             /* Read in native plugins in the directory */
-            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number);
+            list_files_in_dir(context->import_locations[d], NATIVE_FILE, 0, &list, &number, context->debug_mode);
         }
     }
 
     if (exe_dir) {
+        if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files in compiler location: %s\n", exe_dir);
         /* Read in REXX files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, REXX_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in RXAS files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, RXAS_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in RXBIN files in the directory holding the compiler */
-        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, RXBIN_FILE, 0, &list, &number, context->debug_mode);
 
         /* Read in native plugins in the directory holding the compiler */
-        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number);
+        list_files_in_dir(exe_dir, NATIVE_FILE, 0, &list, &number, context->debug_mode);
 
         free(exe_dir);
     }
 
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning for importable files finished. Found %zu files.\n", number);
     return list;
 }
 
@@ -1937,6 +1970,7 @@ int rxcp_scan_imports(Context *context)
 {
     int loaded = 0;
     if (!context) return 0;
+    if (context->debug_mode >= 2) fprintf(stderr, "Scanning all imports for file: %s\n", context->file_name);
     while (load_another_file(context)) { /* keep loading until exhausted */ loaded = 1; }
     return loaded;
 }
