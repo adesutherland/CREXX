@@ -306,6 +306,8 @@ void arr2redr(value* redirect_reg, value* string_reg);
 void nullredr(value* redirect_reg);
 
 /* EXIT Function Support */
+void rxvm_setsayexit(say_exit_func sayExitFunc);
+void rxvm_resetsayexit();
 void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**

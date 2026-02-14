@@ -221,3 +221,7 @@ unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
     if (!ctx) return 0;
     return ctx->vm.debug_mode;
 }
+
+void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
+    rxvm_setsayexit((say_exit_func)say_exit);
+}

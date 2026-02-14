@@ -99,6 +99,11 @@ rxvml_value* rxcp_marshal_implicit_cmd(rxvml_context *ctx, ASTNode *cmd_node) {
     return token_array;
 }
 
+static void rxcp_say_exit(char* message) {
+    fprintf(stderr, "%s", message);
+    fflush(stderr);
+}
+
 static rxvml_context* rxcp_init_bridge(Context* ctx) {
     if (ctx->rxvml_bridge) return (rxvml_context*)ctx->rxvml_bridge;
 
@@ -115,6 +120,9 @@ static rxvml_context* rxcp_init_bridge(Context* ctx) {
         if (root->debug_mode) fprintf(stderr, "DEBUG_EXIT: Failed to create bridge VM context\n");
         return NULL;
     }
+
+    /* Set say exit to print to stderr */
+    rxvml_set_say_exit(rxcp_say_exit);
 
     /* Load library.rxbin */
     if (root->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Loading library.rxbin into bridge VM\n");

@@ -59,6 +59,10 @@ const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response
 const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response);
 int rxvml_get_token_negotiation(rxvml_context* ctx, rxvml_value* token, int* out_new_type, int* out_is_updated);
 
+/* Say Exit */
+typedef void (*rxvml_say_exit_func)(char* message);
+void rxvml_set_say_exit(rxvml_say_exit_func say_exit);
+
 /* Error reporting */
 int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);
 
