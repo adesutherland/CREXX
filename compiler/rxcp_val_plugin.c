@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxcp_val.h"
-#include "rxcp_plugin.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
 #include "rxvml.h"
@@ -43,31 +42,6 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
             }
             if (context->changed > old_changed) {
                 return request_skip;
-            }
-        }
-
-        if (node->node_type == FUNCTION) {
-            /* Check if symbol is resolved */
-            Symbol *symbol = NULL;
-            if (node->symbolNode && node->symbolNode->symbol) {
-                symbol = node->symbolNode->symbol;
-            }
-
-            if (symbol && symbol->compiler_plugin) {
-                PluginContext pctx;
-                pctx.node = node;
-                pctx.scope = node->scope ? node->scope : context->current_scope;
-                pctx.context = context;
-                pctx.iteration = context->iterations;
-
-                PluginStatus status = symbol->compiler_plugin(&pctx, node);
-
-                if (status == PLUGIN_DIRTY) {
-                    context->changed = 1;
-                } else if (status == PLUGIN_ERROR) {
-                    mknd_err(node, "PLUGIN_ERROR");
-                    return result_error;
-                }
             }
         }
     }

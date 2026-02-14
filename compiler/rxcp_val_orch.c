@@ -397,9 +397,6 @@ void validate_ast(Context *context) {
         rxcp_print_ast_recursive(context->ast, 0);
     }
 
-    /* PoC Symbol Init */
-    sym_init(context);
-
     /* Fixed Point Iteration Loop */
     context->iterations = 0;
     context->after_rewrite = 0;
@@ -412,7 +409,7 @@ void validate_ast(Context *context) {
             rxcp_print_symbol_table(context->ast->scope, 0);
         }
 
-        /* Plugin Dispatch */
+        /* Exit Dispatch */
         context->current_scope = 0;
         ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
 
@@ -444,7 +441,7 @@ void validate_ast(Context *context) {
         /* Validate Symbols */
         validate_symbols(context, context->ast->scope);
 
-        /* Plugin Dispatch */
+        /* Exit Dispatch */
         context->current_scope = 0;
         ast_wlkr(context->ast, exit_dispatch_walker, (void *) context);
 

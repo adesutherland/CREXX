@@ -32,7 +32,6 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcp_plugin.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"

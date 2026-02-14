@@ -31,7 +31,6 @@
 #include <ctype.h>
 #include "platform.h"
 #include "rxcpmain.h"
-#include "rxcp_poc_plug.h"
 #include "../avl_tree/avl_tree.h"
 #include "rxcpdary.h"
 
@@ -455,7 +454,6 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_ref_arg = 0;
     symbol->is_const_arg = 0;
     symbol->is_opt_arg = 0;
-    symbol->compiler_plugin = 0;
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -975,48 +973,3 @@ char* ast_frnm(ASTNode *node) {
     return result;
 }
 
-/* PoC Plugins */
-void sym_init(Context *context) {
-/*
-    ASTNode *file_node;
-    Scope *scope;
-    Symbol *s;
-
-    if (!context->ast || !context->ast->child) return;
-*/
-    /* Target the first file scope */
-/*
-    file_node = context->ast->child;
-    if (!file_node) {
-        printf("DEBUG: sym_init - No file node\n");
-        return;
-    }
-    scope = file_node->scope;
-
-    if (!scope) {
-        printf("DEBUG: sym_init - No scope for file node\n");
-        return;
-    }
-*/
-    /* Register POCABS */
-/*
-    s = sym_fn(scope, "pocabs", 6);
-    if (s) {
-        s->symbol_type = FUNCTION_SYMBOL;
-        s->compiler_plugin = plugin_poc_math;
-        s->fixed_args = 1;
-        s->has_vargs = 0;
-    } else {
-    }
-*/
-    /* Register POCSQUARE */
-/*
-    s = sym_fn(scope, "pocsquare", 9);
-    if (s) {
-        s->symbol_type = FUNCTION_SYMBOL;
-        s->compiler_plugin = plugin_poc_math;
-        s->fixed_args = 1;
-        s->has_vargs = 0;
-    }
-*/
-}

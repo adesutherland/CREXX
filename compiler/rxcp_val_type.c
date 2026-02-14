@@ -1091,12 +1091,6 @@ walker_result func_type_safety_walker(walker_direction direction,
                 while (n1) {
                     arg_num++;
                     if (!n2) {
-                        /* Allow arguments for plugins/BIFs that don't have PROCEDURE definitions */
-                        if (node->symbolNode && node->symbolNode->symbol->compiler_plugin) {
-                             n1 = n1->sibling;
-                             continue;
-                        }
-
                         /* Its not an error for the first NOVAL argument */
                         if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
                         else if (n1->node_type == NOVAL) {

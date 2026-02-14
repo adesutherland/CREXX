@@ -7,7 +7,7 @@ dumpexit: class
 
     process: method = .string
         arg tokens = .token[]
-        say "IN DUMP EXIT"
+
         if tokens.0 < 1 then return ""
         t = tokens.1
 
