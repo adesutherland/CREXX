@@ -127,7 +127,7 @@ int rxvml_call_plugin(
     }
     proc_constant* p = find_procedure(&ctx->vm, proc_name);
     if (!p) {
-        fprintf(stderr, "DEBUG: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
+        if (ctx->vm.debug_mode) fprintf(stderr, "DEBUG: Procedure %s not found in bridge VM (%zu modules)\n", proc_name, ctx->vm.num_modules);
         ctx->last_error = "Procedure not found";
         return -1;
     }

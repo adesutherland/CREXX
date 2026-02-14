@@ -1506,12 +1506,14 @@ void ast_svtn(ASTNode* node, ASTNode* from_node) {
     }
 
     if (node->value_class) free(node->value_class);
+    if (node->target_class) free(node->target_class);
     if (from_node->target_class) {
         node->value_class = malloc(strlen(from_node->target_class) + 1);
         strcpy(node->value_class, from_node->target_class);
-    } else node->value_class = 0;
-    if (node->target_class) {
-        free(node->target_class);
+        node->target_class = malloc(strlen(from_node->target_class) + 1);
+        strcpy(node->target_class, from_node->target_class);
+    } else {
+        node->value_class = 0;
         node->target_class = 0;
     }
 }

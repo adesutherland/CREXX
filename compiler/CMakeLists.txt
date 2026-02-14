@@ -65,3 +65,4 @@ add_custom_command(TARGET rxccopy POST_BUILD
 )
 
 add_subdirectory(tests)
+add_subdirectory(exits)

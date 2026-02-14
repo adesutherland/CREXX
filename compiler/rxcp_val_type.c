@@ -259,7 +259,7 @@ walker_result set_node_types_walker(walker_direction direction,
                                 /* DOT-AS-INDEX MUTATION: transform tokens.i -> tokens[i] */
                                 Symbol *index_sym = sym_rslv(context->current_scope, node);
                                 if (index_sym && index_sym->symbol_type == VARIABLE_SYMBOL &&
-                                    instance->symbolNode && instance->symbolNode->symbol->value_dims > 0) {
+                                    instance->value_dims > 0) {
 
                                     ASTNode *new_index_node = ast_f(context, VAR_SYMBOL, node->token);
                                     {
@@ -342,7 +342,6 @@ walker_result set_node_types_walker(walker_direction direction,
             case FACTORY_CALL:
                 if (ast_chld(node, ERROR, 0)) break;
                 if (node->value_type == TP_UNKNOWN) {
-                    /* Lookup the Class Name */
                     Symbol *class_sym = sym_rvfc(context->ast, node);
                     if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                         /* Resolve the Factory routine '§factory' within that class */
@@ -422,8 +421,13 @@ walker_result set_node_types_walker(walker_direction direction,
                         } else {
                             /* We are returning the array element */
                             /* Ensure the node reflects the element (scalar) type and class */
-                            node->value_dims = 0; /* We are 'returning' a single value */
-                            node->target_dims = 0;
+                            if (node->symbolNode && node->symbolNode->symbol->value_dims > ast_nchd(node)) {
+                                node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
+                            } else {
+                                node->value_dims = 0;
+                            }
+                            node->target_dims = node->value_dims;
+                            ast_rttp(node);
                             /* Copy over element value type/class from the symbol if needed */
                             if (node->symbolNode && node->symbolNode->symbol) {
                                 /* Keep the underlying element ValueType */
@@ -464,7 +468,7 @@ walker_result set_node_types_walker(walker_direction direction,
                         }
                     } else {
                         child1->symbolNode->symbol->type =
-                                node_to_type(child2,
+                                node_to_type(context, child2,
                                              &(child1->symbolNode->symbol->value_dims),
                                              &(child1->symbolNode->symbol->dim_base),
                                              &(child1->symbolNode->symbol->dim_elements),
@@ -530,7 +534,7 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     context->changed = 1;
 
-                    node->value_type = node_to_type(node, &(node->value_dims),
+                    node->value_type = node_to_type(context, node, &(node->value_dims),
                                                     &(node->value_dim_base), &(node->value_dim_elements),
                                                     &(node->value_class));
 
@@ -547,7 +551,7 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
                     child1->symbolNode->symbol->type =
-                            node_to_type(child2,
+                            node_to_type(context, child2,
                                          &(child1->symbolNode->symbol->value_dims),
                                          &(child1->symbolNode->symbol->dim_base),
                                          &(child1->symbolNode->symbol->dim_elements),
@@ -564,7 +568,7 @@ walker_result set_node_types_walker(walker_direction direction,
                     if (node->child->node_type == VARG || node->child->node_type == VARG_REFERENCE) {
                         /* Ellipse */
                         context->changed = 1;
-                        child1->value_type = node_to_type(child2,
+                        child1->value_type = node_to_type(context, child2,
                                                           &(child1->value_dims),
                                                           &(child1->value_dim_base),
                                                           &(child1->value_dim_elements),
@@ -578,7 +582,7 @@ walker_result set_node_types_walker(walker_direction direction,
                             context->changed = 1;
                             if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                                 /* If the symbol does not have a known type yet */
-                                child1->symbolNode->symbol->type = node_to_type(child2,
+                                child1->symbolNode->symbol->type = node_to_type(context, child2,
                                                                                 &(child1->symbolNode->symbol->value_dims),
                                                                                 &(child1->symbolNode->symbol->dim_base),
                                                                                 &(child1->symbolNode->symbol->dim_elements),
@@ -741,8 +745,16 @@ walker_result type_safety_walker(walker_direction direction,
 
                     else {
                         /* We are returning the array element */
-                        if (node->symbolNode->symbol->value_dims != ast_nchd(node))
+                        if (node->symbolNode->symbol->value_dims < ast_nchd(node))
                             mknd_err(node, "ARRAY_DIMS_MISMATCH");
+
+                        if (node->symbolNode->symbol->value_dims > ast_nchd(node)) {
+                            node->value_dims = node->symbolNode->symbol->value_dims - ast_nchd(node);
+                        } else {
+                            node->value_dims = 0;
+                        }
+                        node->target_dims = node->value_dims;
+                        ast_rttp(node);
                     }
                 }
                 break;
@@ -767,7 +779,7 @@ walker_result type_safety_walker(walker_direction direction,
                 if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
                     /* If the symbol does not have a known type yet - then determine it */
                     child1->symbolNode->symbol->type =
-                            node_to_type(child2,
+                            node_to_type(context, child2,
                                          &(child1->symbolNode->symbol->value_dims),
                                          &(child1->symbolNode->symbol->dim_base),
                                          &(child1->symbolNode->symbol->dim_elements),
@@ -785,6 +797,7 @@ walker_result type_safety_walker(walker_direction direction,
                 ast_sttn(child2, child1);
                 validate_node_promotion(child2);
                 ast_svtn(node, child1);
+                ast_rttp(node);
                 break;
 
             case ASSIGN:
@@ -795,7 +808,7 @@ walker_result type_safety_walker(walker_direction direction,
                     if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
                         /* If the symbol does not have a known type yet - then determine it */
                         child1->symbolNode->symbol->type =
-                                node_to_type(child2,
+                                node_to_type(context, child2,
                                              &(child1->symbolNode->symbol->value_dims),
                                              &(child1->symbolNode->symbol->dim_base),
                                              &(child1->symbolNode->symbol->dim_elements),
@@ -879,6 +892,20 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case ARG:
+                if (child1->symbolNode && child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    /* If the symbol does not have a known type yet - then determine it */
+                    child1->symbolNode->symbol->type =
+                            node_to_type(context, child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                }
+                if (child1->symbolNode) ast_svtp(child1, child1->symbolNode->symbol);
+
+                ast_svtn(node, child1);
+                ast_rttp(node);
+
                 if (ast_chld(node->parent->parent, INSTRUCTIONS, NOP)->node_type == INSTRUCTIONS) {
                     /* In a function implementation - in this case the optional flag '?' is invalid for a class type as a
                      * definition needs to know the default value that can only be defined by the expression on the

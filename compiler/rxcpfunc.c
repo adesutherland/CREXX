@@ -1431,9 +1431,18 @@ static ValueType type_from_string(char* type) {
 Symbol *sym_imcls(Context *context, ASTNode *node) {
     struct imported_class *found_cls = 0;
     Symbol *found_symbol = 0;
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    char *name;
+
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1442,6 +1451,13 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
 #else
     utf8lwr(name);
 #endif
+
+    /* Check if the class is already in the master AST */
+    found_symbol = sym_rvfn(context->ast, name);
+    if (found_symbol && found_symbol->symbol_type == CLASS_SYMBOL && found_symbol->exposed) {
+        free(name);
+        return found_symbol;
+    }
 
     /* Process all the unread files */
     do {
@@ -1452,13 +1468,13 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     } while (load_another_file(context));
 
     if (found_cls) {
-        add_dast(context->ast, found_cls->context->ast->child);
+        ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
         context->changed = 1;
 
         /* Build symbols for the new stub immediately so it can be resolved */
         Scope *old_scope = context->current_scope;
         context->current_scope = context->ast->scope;
-        ast_wlkr(found_cls->context->ast->child, build_symbols_walker, context);
+        ast_wlkr(new_stub, build_symbols_walker, context);
         context->current_scope = old_scope;
 
         /* Resolution of the FQN in the main AST should now work */
@@ -1483,10 +1499,18 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
     ValueType tp;
     char error = 0;
     char* defining_file = context->file_name;
+    char *name;
 
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    /* Make a null terminated string */
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -1495,6 +1519,13 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
 #else
     utf8lwr(name);
 #endif
+
+    /* Check if the function is already in the master AST */
+    found_symbol = sym_rvfn(context->ast, name);
+    if (found_symbol && found_symbol->symbol_type == FUNCTION_SYMBOL && found_symbol->exposed) {
+        free(name);
+        return found_symbol;
+    }
 
     if (context->debug_mode >= 2) printf("Importing Procedures for file %s Looking for Procedure %s\n", defining_file, name);
 

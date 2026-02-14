@@ -102,7 +102,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol) {
         scope->name = malloc(strlen(name) + 1);
         strcpy(scope->name, name);
         /* Update Symbol */
-        symbol->defines_scope = scope;
+        if (!symbol->defines_scope) symbol->defines_scope = scope;
     }
     else scope->name = 0;
     if (node) node->scope = scope;
@@ -463,8 +463,9 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     /* Returns 1 on duplicate */
     if (add_symbol_to_tree((struct avl_tree_node **)&(scope->symbols_tree),
                            symbol)) {
+        Symbol *existing = src_symbol((struct avl_tree_node *)(scope->symbols_tree), symbol->name);
         free_sym(symbol);
-        return NULL;
+        return existing;
     }
 
     return symbol;
@@ -610,11 +611,18 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
 Symbol *sym_rvfc(ASTNode *root, ASTNode *node) {
     Symbol *result;
     char *c;
+    char *name;
 
     /* Make a null terminated string */
-    char *name = (char*)malloc(node->node_string_length + 1);
-    memcpy(name, node->node_string, node->node_string_length);
-    name[node->node_string_length] = 0;
+    if (node->node_string[0] == '.') {
+        name = (char*)malloc(node->node_string_length);
+        memcpy(name, node->node_string + 1, node->node_string_length - 1);
+        name[node->node_string_length - 1] = 0;
+    } else {
+        name = (char*)malloc(node->node_string_length + 1);
+        memcpy(name, node->node_string, node->node_string_length);
+        name[node->node_string_length] = 0;
+    }
 
     /* Lowercase symbol name */
 #ifdef NUTF8
@@ -776,7 +784,12 @@ int symislnk(ASTNode *node, Symbol *symbol) {
 /* Connect a ASTNode to a Symbol */
 void sym_adnd(Symbol *symbol, ASTNode* node, unsigned int readAccess,
               unsigned int writeAccess) {
-    SymbolNode *connector = malloc(sizeof(SymbolNode));
+    SymbolNode *connector;
+
+    /* Check if already added */
+    if (node->symbolNode && node->symbolNode->symbol == symbol) return;
+
+    connector = malloc(sizeof(SymbolNode));
     connector->symbol = symbol;
     connector->node = node;
     connector->readUsage = readAccess;

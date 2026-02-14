@@ -154,7 +154,7 @@ void node_to_dims(ASTNode* node, size_t *dims, int** dim_base, int** dim_element
  *                 So if it is not zero it needs to be free()d
  *      dim_base and dim_elements are malloced and set as appropriately
  */
-ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name) {
+ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name) {
     int i;
     ASTNode *n;
     ASTNode* min;
@@ -249,9 +249,24 @@ ValueType node_to_type(ASTNode *node, size_t *dims, int **dim_base, int **dim_el
         if (is_node_string(node, ".void")) return TP_VOID;
 
         /* TODO Class Support */
-        *class_name = malloc(node->node_string_length + 1);
-        memcpy(*class_name, node->node_string, node->node_string_length);
-        (*class_name)[node->node_string_length] = 0;
+        if (node->node_string[0] == '.') {
+            *class_name = malloc(node->node_string_length);
+            for (i = 1; i < (int)node->node_string_length; i++) {
+                (*class_name)[i-1] = (char)tolower(node->node_string[i]);
+            }
+            (*class_name)[node->node_string_length - 1] = 0;
+        } else {
+            *class_name = malloc(node->node_string_length + 1);
+            for (i = 0; i < (int)node->node_string_length; i++) {
+                (*class_name)[i] = (char)tolower(node->node_string[i]);
+            }
+            (*class_name)[node->node_string_length] = 0;
+        }
+
+        /* Try and import the class on-demand if it's not already known */
+        if (context->ast && !sym_rvfn(context->ast, *class_name)) {
+            sym_imcls(context, node);
+        }
 
         return TP_OBJECT;
     }
@@ -427,7 +442,7 @@ void validate_ast(Context *context) {
         ast_wlkr(context->ast, exposed_symbols_walker, (void *) context);
 
         /* Validate Symbols */
-        validate_symbols(context->ast->scope);
+        validate_symbols(context, context->ast->scope);
 
         /* Plugin Dispatch */
         context->current_scope = 0;
