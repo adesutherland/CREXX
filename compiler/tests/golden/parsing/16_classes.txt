@@ -216,20 +216,20 @@ Scope [0]: Unnamed
     main (Function) -> .void
     myclass (Class) -> .unknown
     Scope [2]: main
-      var (Variable) -> myclass
+      var (Variable) -> .myclass
     Scope [2]: myclass
       getvalue (Function) -> .int
       setvalue (Function) -> .void
       val (Variable) -> .int
-      §factory (Function) -> myclass
+      §factory (Function) -> .myclass
       Scope [3]: §factory
         initial_value (Variable) -> .int
-        §factory (Variable) -> myclass
+        §factory (Variable) -> .myclass
       Scope [3]: getvalue
-        §this (Variable) -> myclass
+        §this (Variable) -> .myclass
       Scope [3]: setvalue
         new_val (Variable) -> .int
-        §this (Variable) -> myclass
+        §this (Variable) -> .myclass
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]

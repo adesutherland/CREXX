@@ -1185,7 +1185,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 
     /* Initialize context */
     cntx_buf(context, buff_start, bytes);
-    context->debug_mode = 0;
+    context->debug_mode = parent_context->debug_mode;
     context->location = parent_context->location;
     context->file_name = (char*) filename(file_name);
 

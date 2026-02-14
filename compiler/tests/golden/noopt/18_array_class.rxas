@@ -3,7 +3,7 @@
  * SOURCE                 : 18_array_class_main.rexx
  * BUILT                  : 2026-02-14 09:43:47
  */
-
+.meta "array_class_lib.item"="b" ".unknown" .class
 .srcfile="18_array_class_main.rexx"
 .globals=0
 
@@ -14,7 +14,7 @@ main() .locals=5
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .meta "18_array_class_main.main.ary"="b" "item[1]" r2
+   .meta "18_array_class_main.main.ary"="b" ".item[1]" r2
    .src 8:1="ary = .Item[1"
    null r2
    .src 4:1="say \"Start\""
@@ -22,7 +22,7 @@ main() .locals=5
    .src 5:1="say \"Main\""
    say "Main"
    .src 6:1="it1 = Item((\"Hello\")"
-   .meta "18_array_class_main.main.it1"="b" "item" r0
+   .meta "18_array_class_main.main.it1"="b" ".item" r0
    load r1,1
    load r2,"Hello"
    settp r2,2
@@ -55,7 +55,7 @@ main() .locals=5
    .meta "18_array_class_main.main.it1"
 
 process() .locals=10
-   .meta "18_array_class_main.process"="b" ".string" process() "items=item[*]" ""
+   .meta "18_array_class_main.process"="b" ".string" process() "items=.item[*]" ""
    .src 17:1="process: procedure = .string"
    setnumdgts 18
    setnumfuz 0
@@ -63,7 +63,7 @@ process() .locals=10
    setnumcas 1
    setnumstd 1
    .src 18:9="items = .Item"
-   .meta "18_array_class_main.process.items"="b" "item[*]" r0
+   .meta "18_array_class_main.process.items"="b" ".item[*]" r0
    brtpandt l41c,a1,2
    copy r0,a1
    br l41d
@@ -84,7 +84,7 @@ l41d:
    ret ""
 l59iffalse:
    .src 22:5="it = items.1"
-   .meta "18_array_class_main.process.it"="b" "item" r2
+   .meta "18_array_class_main.process.it"="b" ".item" r2
    minattrs r0,1
    linkattr1 r1,r0,1
    copy r2,r1
@@ -107,7 +107,7 @@ l70dostart:
    igt r3,r4,r5
    brt l70doend,r3
    .src 26:9="it_i = items[i"
-   .meta "18_array_class_main.process.it_i"="b" "item" r6
+   .meta "18_array_class_main.process.it_i"="b" ".item" r6
    minattrs r0,r4,0
    linkattr1 r7,r0,r4
    copy r6,r7
@@ -136,8 +136,7 @@ l70doend:
    .meta "18_array_class_main.process.val"
    .meta "18_array_class_main.process.val_i"
 
-/* Imported Declaration from file: array_class_lib.rexx */.meta "array_class_lib.item"="b" ".unknown" .class
-
+/* Imported Declaration from file: array_class_lib.rexx */
 §array_class_lib.item.§factory() .expose=array_class_lib.item.§factory
    .meta "array_class_lib.item.§factory"="b" ".void" §array_class_lib.item.§factory() "v=.string"
 

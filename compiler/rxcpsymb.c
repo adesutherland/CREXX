@@ -386,8 +386,12 @@ char* sym_2tp(Symbol *symbol) {
     char *buffer = 0;
     char *array;
     char *result;
+    int free_buffer = 0;
 
-    if (symbol->value_class) buffer = symbol->value_class;
+    if (symbol->value_class) {
+        buffer = mprintf(".%s", symbol->value_class);
+        free_buffer = 1;
+    }
     else buffer = type_nm(symbol->type);
 
     array = ast_astr(symbol->value_dims, symbol->dim_base, symbol->dim_elements);
@@ -397,6 +401,7 @@ char* sym_2tp(Symbol *symbol) {
     strcat(result, array);
 
     free(array);
+    if (free_buffer) free(buffer);
 
     return result;
 }

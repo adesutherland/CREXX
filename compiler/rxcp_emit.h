@@ -93,6 +93,7 @@ void add_global_symbol(Symbol *symbol, void *payload);
 void add_exposed_global_variable(ASTNode* node);
 void meta_set_global_symbol(Symbol *symbol, void *payload);
 void add_global_variable_metadata(ASTNode* node);
+void add_all_class_metadata(ASTNode* scope_node, ASTNode* output_node);
 void meta_clear_symbol(Symbol *symbol, void *payload);
 void meta_clear_global_symbol(Symbol *symbol, void *payload);
 char *meta_narg(ASTNode *node);

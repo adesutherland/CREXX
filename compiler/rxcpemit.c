@@ -102,7 +102,7 @@ static walker_result emit_walker(walker_direction direction,
 
             case IMPORTED_FILE:
             {
-                char *buf = mprintf("\n/* Imported Declaration from file: %s */",
+                char *buf = mprintf("\n/* Imported Declaration from file: %s */\n",
                                     node->file_name);
 
                 if (node->output) output_prepend_text(buf, node->output);

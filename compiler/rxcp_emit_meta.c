@@ -31,6 +31,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
+#include "rxcp_val.h"
 
 #define REGTP_VAL 1
 #define REGTP_NOTSYM 2
@@ -349,6 +350,71 @@ void clear_global_variable_metadata(ASTNode* node) {
 
 /* Returns Argument definition from the ARG Node as a malloced string to be used in meta-data */
 /* Node should be an ARGS node else the program aborts */
+/* Adds Class Symbol metadata */
+void add_class_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == CLASS_SYMBOL) {
+        symbol_fqn = sym_frnm(symbol);
+        buffer = mprintf(".meta \"%s\"=\"b\" \"%s\" .class\n",
+                         symbol_fqn,
+                         type_nm(symbol->type)
+        );
+        free(symbol_fqn);
+
+        /* Add the metadata to the output fragment */
+        output_append_text(output, buffer);
+        free(buffer);
+
+        /* Add attribute metadata by walking class scope symbols */
+        if (symbol->defines_scope) {
+            Symbol **symbols = scp_syms(symbol->defines_scope);
+            int i, j;
+            for (i = 0; symbols[i]; i++) {
+                Symbol *s = symbols[i];
+                if (s->symbol_type == VARIABLE_SYMBOL) {
+                    /* Look for NODE_REGISTER in the AST linked to the symbol */
+                    for (j = 0; j < (int)sym_nond(s); j++) {
+                        ASTNode *sn = sym_trnd(s, j)->node;
+                        if (sn->parent && sn->parent->node_type == DEFINE) {
+                            ASTNode *nr = ast_chld(sn->parent, NODE_REGISTER, 0);
+                            if (nr) {
+                                int reg_index = (int)nr->int_value;
+                                char *attr_fqn = sym_frnm(s);
+                                char *type_str = type_nm(s->type);
+                                char *buf2 = mprintf(".meta \"%s\"=\"b\" \"%s\" .attr %d\n",
+                                                     attr_fqn, type_str, reg_index);
+                                output_append_text(output, buf2);
+                                free(buf2);
+                                free(attr_fqn);
+                                break; /* Found it */
+                            }
+                        }
+                    }
+                }
+            }
+            free(symbols);
+        }
+    }
+}
+
+/* Add all class metadata in a scope */
+void add_all_class_metadata(ASTNode* scope_node, ASTNode* output_node) {
+    Scope *scope = scope_node->scope;
+    if (!scope) return;
+
+    /* Avoid duplication using the namespace symbol's meta_emitted flag */
+    if (scope_node->symbolNode && scope_node->symbolNode->symbol) {
+        if (scope_node->symbolNode->symbol->meta_emitted) return;
+        scope_node->symbolNode->symbol->meta_emitted = 1;
+    }
+
+    scp_4all(scope, add_class_symbol, output_node);
+}
+
 char *meta_narg(ASTNode *node) {
     size_t args;
     size_t i;

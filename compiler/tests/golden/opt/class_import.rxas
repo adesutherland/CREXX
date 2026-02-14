@@ -3,7 +3,7 @@
  * SOURCE                 : class_import_main.rexx
  * BUILT                  : 2026-02-12 18:32:23
  */
-
+.meta "class_import_lib.counter"="b" ".unknown" .class
 .srcfile="class_import_main.rexx"
 .globals=0
 
@@ -15,7 +15,7 @@ main() .locals=5
    setnumcas 1
    setnumstd 1
    .src 5:1="c = Counter("
-   .meta "class_import_main.main.c"="b" "counter" r0
+   .meta "class_import_main.main.c"="b" ".counter" r0
    load r1,0
    call r0,§class_import_lib.counter.§factory(),r1
    .src 6:1="call c.inc"
@@ -36,8 +36,7 @@ main() .locals=5
    ret 0
    .meta "class_import_main.main.c"
 
-/* Imported Declaration from file: class_import_lib.rexx */.meta "class_import_lib.counter"="b" ".unknown" .class
-
+/* Imported Declaration from file: class_import_lib.rexx */
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
    .meta "class_import_lib.counter.§factory"="b" ".void" §class_import_lib.counter.§factory() ""
 
