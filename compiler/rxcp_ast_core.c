@@ -186,6 +186,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->bool_value = 0;
     node->float_value = 0;
     node->decimal_value = 0; /* Decimal value as a string - malloced */
+    node->exit_obj_reg = -1;
     node->register_num = -1;
     node->register_type = 'r';
     node->additional_registers = -1;

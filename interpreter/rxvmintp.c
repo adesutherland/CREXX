@@ -323,8 +323,13 @@ RX_INLINE stack_frame *frame_f(
     size_t frame_size;
     value *value_buffer;
 
-    num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
-    nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    if (procedure->binarySpace == 0) {
+        num_locals = procedure->locals + no_args + 1;
+        nominal_num_locals = procedure->locals + NOMINAL_NUM_ARGS + 1;
+    } else {
+        num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
+        nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    }
 
     /* Do we need an oversized block */
     if (num_locals > nominal_num_locals) nominal_num_locals = num_locals;
@@ -345,8 +350,10 @@ RX_INLINE stack_frame *frame_f(
 #endif
         }
         /* Make sure global registers are linked correctly */
-        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
-            this->locals[i] = this->baselocals[i];
+        if (procedure->binarySpace) {
+            for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
+                this->locals[i] = this->baselocals[i];
+            }
         }
         /* Reset register a0 - number of arguments */
         this->locals[i] = this->baselocals[i];
@@ -374,9 +381,11 @@ RX_INLINE stack_frame *frame_f(
         }
 
         /* Link Globals */
-        for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
-            this->baselocals[i] =  procedure->binarySpace->module->globals[j];
-            this->locals[i] = procedure->binarySpace->module->globals[j];
+        if (procedure->binarySpace) {
+            for (j = 0; j < procedure->binarySpace->globals; i++, j++) {
+                this->baselocals[i] =  procedure->binarySpace->module->globals[j];
+                this->locals[i] = procedure->binarySpace->module->globals[j];
+            }
         }
 
         /* Link a0 */

@@ -34,7 +34,7 @@ walker_result exit_dispatch_walker(walker_direction direction, ASTNode *node, vo
     Context *context = (Context *)payload;
 
     if (direction == in) {
-        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: exit_dispatch_walker visiting node type %d\n", node->node_type);
+        if (context->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: exit_dispatch_walker visiting node type %d (%s)\n", node->node_type, ast_ndtp(node->node_type));
         if (node->node_type == IMPLICIT_CMD || node->node_type == ADDRESS) {
             int old_changed = context->changed;
             if (rxcp_exit_bridge_invoke(context, node) < 0) {

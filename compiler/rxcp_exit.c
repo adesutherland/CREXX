@@ -183,34 +183,7 @@ static walker_result fragment_fixup_walker(walker_direction direction, ASTNode *
     return result_normal;
 }
 
-int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
-    if (ctx->debug_mode) fprintf(stderr, "DEBUG_EXIT: rxcp_exit_bridge_invoke called for node type %d\n", node->node_type);
-    if (ctx->in_exit_bridge) return 0;
-    ctx->in_exit_bridge = 1;
-
-    rxvml_context* vctx = rxcp_init_bridge(ctx);
-    if (!vctx) {
-        ctx->in_exit_bridge = 0;
-        return 0;
-    }
-
-    rxvml_value* tok_array = rxcp_marshal_implicit_cmd(vctx, node);
-    if (!tok_array) {
-        ctx->in_exit_bridge = 0;
-        return 0;
-    }
-
-    rxvml_value* response = NULL;
-    if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Calling rxcp.exit_dispatch in bridge VM\n");
-    int rc = rxvml_call_plugin(vctx, "rxcp.exit_dispatch", tok_array, &response);
-    rxvml_value_free(tok_array);
-    if (rc != 0) {
-        if (ctx->debug_mode) fprintf(stderr, "DEBUG_EXIT: Call to rxcp.exit_dispatch failed (rc=%d)\n", rc);
-        if (response) rxvml_value_free(response);
-        ctx->in_exit_bridge = 0;
-        return 0;
-    }
-
+static int rxcp_exit_handle_response(Context* ctx, ASTNode* node, rxvml_context* vctx, rxvml_value* response) {
     const char* replacement_code = rxvml_get_replacement_code(vctx, response);
     if (ctx->debug_mode >= 2) {
         fprintf(stderr, "DEBUG_EXIT: Replacement code: %s\n", replacement_code ? replacement_code : "NULL");
@@ -219,20 +192,14 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         const char* err_msg = rxvml_get_error_message(vctx, response);
         if (err_msg) {
             mknd_err(node, (char*)err_msg);
-            if (response) rxvml_value_free(response);
-            ctx->in_exit_bridge = 0;
             return -1;
         }
-        if (response) rxvml_value_free(response);
-        ctx->in_exit_bridge = 0;
         return 0;
     }
 
     /* Parse replacement code */
     Context* frag = cntx_f();
     if (!frag) {
-        if (response) rxvml_value_free(response);
-        ctx->in_exit_bridge = 0;
         return -1;
     }
     frag->in_exit_bridge = 1;
@@ -247,7 +214,6 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     if (rexbpars(frag)) {
         mknd_err(node, "EXIT_BRIDGE_PARSE_FAILED");
         fre_cntx(frag);
-        ctx->in_exit_bridge = 0;
         return -1;
     }
     ast_wlkr(frag->ast, fragment_fixup_walker, NULL);
@@ -314,7 +280,79 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     }
 
     fre_cntx(frag);
-    if (response) rxvml_value_free(response);
+    return 1;
+}
+
+int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
+    rxvml_context* vctx;
+    rxvml_value* tok_array;
+    rxvml_value* response = NULL;
+    int handled = 0;
+
+    if (ctx->in_exit_bridge) return 0;
+    ctx->in_exit_bridge = 1;
+
+    vctx = rxcp_init_bridge(ctx);
+    if (!vctx) {
+        ctx->in_exit_bridge = 0;
+        return 0;
+    }
+
+    tok_array = rxcp_marshal_implicit_cmd(vctx, node);
+    if (!tok_array) {
+        ctx->in_exit_bridge = 0;
+        return 0;
+    }
+
+    /* 1. Check Attachment */
+    if (node->exit_obj_reg != -1) {
+        char class_name[256];
+        rxvml_value* obj = rxvml_reg_get(vctx, node->exit_obj_reg, class_name);
+        if (obj) {
+            if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Using attached exit object (class=%s)\n", class_name);
+            if (rxvml_call_method(vctx, obj, class_name, "process", tok_array, &response) == 0) {
+                handled = rxcp_exit_handle_response(ctx, node, vctx, response);
+                if (response) rxvml_value_free(response);
+            }
+        }
+    }
+
+    /* 2. Discovery Loop (if not handled) */
+    if (!handled) {
+        rxvml_class_info* classes = NULL;
+        size_t class_count = 0;
+        rxvml_discover_classes(vctx, "rxcp", &classes, &class_count);
+
+        if (classes) {
+            size_t i;
+            for (i = 0; i < class_count; i++) {
+                rxvml_value* obj = NULL;
+                
+                if (rxvml_call_plugin(vctx, classes[i].factory_proc, NULL, &obj) == 0 && obj) {
+                    if (rxvml_call_method(vctx, obj, classes[i].class_name, "process", tok_array, &response) == 0) {
+                        handled = rxcp_exit_handle_response(ctx, node, vctx, response);
+                        if (handled > 0) {
+                            /* Accept/Pending: Attach object */
+                            if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Exit class %s ACCEPTED node\n", classes[i].class_name);
+                            node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, classes[i].class_name);
+                            if (response) rxvml_value_free(response);
+                            break;
+                        } else {
+                            /* Reject: Destroy object */
+                            rxvml_value_free(obj);
+                            if (response) rxvml_value_free(response);
+                            response = NULL;
+                        }
+                    } else {
+                        rxvml_value_free(obj);
+                    }
+                }
+            }
+            free(classes);
+        }
+    }
+
+    rxvml_value_free(tok_array);
     ctx->in_exit_bridge = 0;
-    return 0;
+    return handled;
 }
