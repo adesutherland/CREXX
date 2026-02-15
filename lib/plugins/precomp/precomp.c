@@ -840,25 +840,25 @@ FINALIZER(precomp_fin)
 }
 
 LOADFUNCS
-    ADDPROC(insert_array, "precomp.insert_array", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
-    ADDPROC(shell_sort,   "precomp.shell_sort",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
-    ADDPROC(sort_bylen,   "precomp.sort_bylen",   "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[],expose d = .int[]");
-    ADDPROC(drop_array,   "precomp.drop_array",   "b",  ".int",   "expose a = .string[]");
-    ADDPROC(search_array, "precomp.search_array", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
-    ADDPROC(copy_array,   "precomp.copy_array",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
-    ADDPROC(list_array,   "precomp.list_array",   "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
-    ADDPROC(hasmacro,     "precomp.hasmacro",     "b",  ".int",   "line=.string,maclist=.string[],from=.int");
-    ADDPROC(readall,      "precomp.readall",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
+    ADDPROC(fpos,         "precomp.fpos",          "b",  ".int","string = .string,substring=.string,offset=.int");
+    ADDPROC(splitargs,    "precomp.splitargs",     "b",  ".int",   "string=.string, expose tokens=.string[]");
+    ADDPROC(sort_bylen,   "precomp.sort_bylen",    "b",  ".void",  "expose a = .string[],expose b = .string[],expose c = .string[],expose d = .int[]");
+    ADDPROC(list_array,   "precomp.list_array",    "b",  ".void",  "expose a = .string[],from=.int,tto=.int,hdr=.string");
+    ADDPROC(hasmacro,     "precomp.hasmacro",      "b",  ".int",   "line=.string,maclist=.string[],from=.int");
+    ADDPROC(fsearch,      "precomp.fsearch",       "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
+    ADDPROC(safe_quote,   "precomp.safe_quote",    "b",  ".string","expose string=.string");
+    ADDPROC(insert_array, "precomp.insert_arrayX", "b",  ".int",   "expose a = .string[],from=.int,new=.int");
+    ADDPROC(shell_sort,   "precomp.shell_sortX",   "b",  ".void",  "expose a = .string[], offset=.int, order=.string");
+    ADDPROC(drop_array,   "precomp.drop_arrayX",   "b",  ".int",   "expose a = .string[]");
+    ADDPROC(search_array, "precomp.search_arrayx", "b",  ".int",   "expose a = .string[],needle=.string,startrow=.int,match=.int");
+    ADDPROC(copy_array,   "precomp.copy_arrayx",   "b",  ".int",   "expose a = .string[],b=.string[],from=.int,tto=.int");
+     ADDPROC(readall,      "precomp.readallx",      "b",  ".int",   "expose array=.string[],expose file=.string,arg2=.int");
     ADDPROC(writeall,     "precomp.writeall",     "b",  ".int",   "expose array=.string[],file=.string,arg2=.int");
-    ADDPROC(insertat,     "precomp.insertatc",    "b",  ".string","haystack = .string,needle=.string,offset=.int,len=.int");
-    ADDPROC(fsearch,      "precomp.fsearch",      "b",  ".int",   "expose array=.string[],pos=.int,str1=.string,str2=.string,str3=.string,expose item=.int");
-    ADDPROC(ffind,        "precomp.ffind",        "b",  ".int",   "expose array=.string[],pos=.int,str1=.string");
-    ADDPROC(fquoted,      "precomp.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
-    ADDPROC(splitargs,    "precomp.splitargs",    "b",  ".int",   "string=.string, expose tokens=.string[]");
-    ADDPROC(xlog,         "precomp.xlog",         "b",  ".void",  "string = .string");
-    ADDPROC(safe_quote,   "precomp.safe_quote",   "b",  ".string","string = .string");
-    ADDPROC(fpos,         "precomp.fpos",         "b",  ".int","string = .string,substring=.string,offset=.int");
-    ADDPROC(templist,     "precomp.templist",     "b",  ".string","mode=.string,index=.int,string=.string");
+    ADDPROC(insertat,     "precomp.insertatcx",    "b",  ".string","haystack = .string,needle=.string,offset=.int,len=.int");
+    ADDPROC(ffind,        "precomp.ffindx",        "b",  ".int",   "expose array=.string[],pos=.int,str1=.string");
+    ADDPROC(fquoted,      "precomp.find_quotedx",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
+    ADDPROC(xlog,         "precomp.xlogx",         "b",  ".void",  "string = .string");
+    ADDPROC(templist,     "precomp.templistx",     "b",  ".string","mode=.string,index=.int,string=.string");
     ADDPROC(stemquote,    "precomp.stemquote",    "b",  ".string","path=.string");
 ENDLOADFUNCS
 

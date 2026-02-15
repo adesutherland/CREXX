@@ -8,7 +8,7 @@
 options levelb
 
 import precomp
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count stem_scount stem_tempvar rxpp_lrc
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count
 import rxfnsb
 
 /* ------------------------------------------------------------------
@@ -211,12 +211,7 @@ RXPPPassTwo: procedure
      i=fsearch(source,i+1,'##IF ','##IFN ','',which)
   end
 
-/* 3. Build OO definition table */
-  i=arrayfind('OOCREATE(',source,1,0)     ## search as first word in the source string
-  do while i>0
-     call oocreatedefs i
-     i=arrayfind('OOCREATE(',source,1,0)   ## search as next word in the source string
-  end
+/* 3. Build OO definition table OO support dropped */
 
 /* 4. output ##IF ##IFN / ##ENDIF Reference table */
   if verbose=0 then return
@@ -312,34 +307,6 @@ RXPPPassThree: procedure
   if verbose then say 'CRX0300I ['time('l')'] Pre-Compiled REXX generated '
 return
 /* ------------------------------------------------------------------
- * Create the OOCreate definition
- * ------------------------------------------------------------------
- */
-oocreatedefs: procedure
-  arg lino=.int
-  ipi=pos('=',source.lino)
-  if ipi<=1 then return           ## no valid pointer=OOCREATE() statement
-  lhs=strip(substr(source.lino,1,ipi-1))
-  rhs=strip(substr(source.lino,ipi+1))
-  parenPos = POS("(", rhs)        ## Find the opening parenthesis
-  funcName = STRIP(SUBSTR(rhs, 1, parenPos-1))
-  ## Extract parameter list (between parentheses)
-  paramStr = STRIP(SUBSTR(rhs,parenPos + 1))
-  paramStr = LEFT(paramStr, LENGTH(paramStr)- 1)    ## Remove closing ')'
-/* drop first parameter, it's the prefix for the function calls */
-  ppi=pos(',',paramStr)
-  if ppi=0 then do
-     prefix=paramstr
-     paramstr=''
-  end
-  else do
-     prefix=substr(paramstr,1,ppi-1)
-     paramstr=substr(paramstr,ppi+1)
-  end
-  call setvar lhs'_prefix',prefix                 ## save the object handle: e.g. map=OOCREATE(tm) it will be map_prefix=tm
-  source.lino=lhs'='prefix'CREATE('paramstr')'    ## for now the call function must be CREATE with the provided prefix
-return
-/* ------------------------------------------------------------------
  * Early_flag_pick_up: Reads ##CFLAG early and updates runtime flags used during subsequent passes.
  * ------------------------------------------------------------------
  */
@@ -416,20 +383,9 @@ GetPrecomp: procedure
       if ucmd='' then iterate
       ucmd=upper(ucmd)
 
-      if \(ucmd='##STEM' | ucmd='##DEFINE') then do
-         if pos('.',line) then do
-             if cmd_isstem(lineNo,line)>0 then iterate    ## deeper check if stem, if so start stem handling
-         end
-      end
       if ucmd = 'PARSE' then stype.LineNo='PARSE'                      ## short cut although it is a precompiler instruction
       else if ucmd = 'IMPORT' then stype.LineNo='IMPORT'               ## keep track of all imported functions plugins
-      else if ucmd = 'SELECT' then call cmd_select lineNo,line,1
-      else if ucmd = 'SWITCH' then call cmd_select lineNo,line,2
       else if ucmd = 'FOR'    then call cmd_for lineNo,line
-      else if ucmd = 'WHEN'   then call cmd_when lineNo,line,1
-      else if ucmd = 'OTHERWISE' then call cmd_when lineNo,line,2
-      else if ucmd = 'CASE'    then call cmd_when lineNo,line,3
-      else if ucmd = 'DEFAULT' then call cmd_when lineNo,line,2       ## same as OTHERWISE
       if substr(ucmd,1,2)\='##' then iterate
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
@@ -439,7 +395,6 @@ GetPrecomp: procedure
       else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
-      else if ucmd = '##STEM'    then call cmd_stem lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
@@ -673,273 +628,7 @@ CMD_global: procedure
       globaldef=globaldef' 'ivar
    end
 return
-/* ------------------------------------------------------------------
- * CMD_isstem: Fast detector to decide whether a line should be processed for stem expansion.
- * ------------------------------------------------------------------
- */
-CMD_isstem: procedure=.int
-   arg lino=.int,line=.string
-   candidate=0
-   tline=qstripComment('##','',line)
-   tline=qstripComment('/*','*/',tline)
-   tline=translate(tline,,'=;,')
-   if pos(' dotisstem',cflags)>0 then mtails=1
-   else mtails=2
 
-   do i=1 to qwords(tline)
-      tw=qword(tline,i)
-      if countstr('.',tw)>=mtails then do
-         if left(tw,1)\='.' & right(tw,1)\='.' then do
-            candidate=1
-            leave
-         end
-      end
-   end
-   if candidate=1 then call cmd_stem lino,line, mode=1
-return candidate
-/* ------------------------------------------------------------------
- * CMD_stem: Main stem preprocessor: rewrites stem reads/writes into getstem()/putstem() and temp variables.
- * Identifies a line containing stem operations (temporary for testing)
- * ------------------------------------------------------------------
- */
-CMD_stem: procedure
-   arg lino=.int,line=.string,mode=0
-   stemlog=0
-   oldhi=source.0
-   oldlino=lino
-   stype.lino= 'STEM'
-   rxpp_lrc=''
-
-   if isStemCandidate(line)=0 then return
-   wrd1=upper(word(line,1))
-   if wrd1='##DEFINE' then return
-   assembler SETATTRS stem_tempvar,0
-/* if we are called via the ##stem prefix, we need to drop it */
-   if wrd1='##STEM' then line=subword(line,2)
-   else do  /* else we need to comment out the stem line */
-      source[lino]='/* 'copies('+',16)' 'line' */'
-   end
-/* now strip block comments from the line */
-   nstmt=qstripComment("/*","*/",line)
-   nstmt=qstripComment("##",,nstmt)
-   if stemlog=1 then do
-      say copies('-',72)
-      say "Stem line   "right(lino,4,'0') line
-      say "     line+1 "right(lino+1,4,'0') source[lino+1]
-      say copies('-',72)
-   end
-/* identify the type of statement, if, say, call else it is a normal set statement */
-   wrd1=upper(word(nstmt,1))
-   lhs=''
-   if wrd1='IF' | wrd1='SAY' | wrd1='CALL' then rhs=nstmt
-   else do                      ## else it is a normal set statement
-      stmts=qsplit(nstmt,"=")   ## split the set at = sign
-      lhs=stmts.1               ## you get LHS and RHS
-      rhs=stmts.2
-   end
-   if stemlog=1 then say 1 lino "'"stype[lino]"'" "'"line"'"
-/* here we have a single RHS which is not a STEM */
-   if words(rhs)=1 & isStemCandidate(rhs)=0 then lino=lhsStem(lhs,rhs,lino,line,stemlog)   ## moves single string or number to a stem
-   else do               ## here we we do what need to be done */
-     rhs=splitRHS(rhs,lino,stemlog)   ## Split RHS, if possible
-     if stemlog=1 then say 2.1 line' LHS 'lhs' RHS 'rhs
-     if rhs\=''  then do
-        if oldlino=lino then call insert_source lino+1,1,'noexp',stemlog   ## insert new lines, if RHSsplit hasn't done it
-        lhscan=isStemCandidate(lhs)
-        if lhs='' | lhsCan=0 then lino=lhsnoStem(lhs,rhs,lino,line,stemlog)
-        else if pos('.',lhs)>0 &  lhsCan>0 then lino=lhsisStem(lhs,rhs,lino,line,stemlog)
-        else do
-           if stemlog=1 then say 2.4 lhs rhs
-           lino=insert_line(lino+1,lhs'='rhs)
-        end
-     end
-     else if stemlog=1 then say "Should not happen"
-   end
-   if stemlog=1 then do
-      do i=oldlino to lino
-         if i=oldLino then say '9.'i' == "'stype[i]'"' source[i]
-         else say '9.'i' ++ "'stype[i]'"' source[i]
-      end
-      do i=lino+1 to lino+3
-         say '9.'i' >> "'stype[i]'"' source[i]
-      end
-   end
-   if rxpp_lrc\='' then do
-      say '\\\\\ Stem expansion warning: 'rxpp_lrc
-      rc=  insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
-      lino=insert_line(lino+1,'/* \\\\\ Stem expansion warning: 'rxpp_lrc' */') ## place identified stem in putstem function
-   end
-return
-/* ------------------------------------------------------------------
- * lhsStem: Handles assignments where LHS may be a stem and RHS is a single non-stem token.
- * ------------------------------------------------------------------
- */
-lhsStem: procedure=.int
-   arg lhs=.string,rhs=.string,lino=.int,line=.string,stemlog=.int
-   if stemlog=1 then say 1.1 line
-   if isStem(lhs)=0 then source[lino]=line  ## LHS & RHS are not a stems, just keep the line
-   else do                                  ## LHS is a stem / RHS not
-      if stemlog=1 then say 1.2 line
-      lhs=resolveStem(lhs,lino,stemlog)
-      lhs=stemquote(lhs)                        ## represent LHS as "root."tail1"."tail2 ...
-      if stemlog=1 then say 1.2.1 lhs
-      rc= insert_source(lino+1,1,'noexp',stemlog)       ## insert new lines, shift buffer
-      lino=insert_line(lino+1,'src=putstem('lhs','rhs')') ## place identified stem in putstem function
-   end
-return lino
-
-/* ------------------------------------------------------------------
- * lhsnoStem: Handles assignments where LHS is not a stem and RHS may contain a stem or scalar value.
- * ------------------------------------------------------------------
- */
-lhsnoStem: procedure=.int
-   arg lhs=.string,rhs1=.string,lino=.int,line=.string,stemlog=.int
-   if stemlog=1 then say 2.2 line' LHS 'lhs' RHS 'rhs
-   if isStem(rhs1)=1 then do                  /* RHS is a stem */
-      rhs2=resolveStem(rhs1,lino,stemlog)
-      rhs3=stemquote(rhs2)
-      if lhs='' then lino=insert_line(lino+1,rhs3)
-      else lino=insert_line(lino+1,lhs'='rhs3)
-      if stemlog=1 then do
-         say 2.2.1 rhs1 lino
-         say 2.2.2 rhs2 lino
-         say 2.2.3 rhs3 lino "*** "lhs
-      end
-      return lino
-   end
-/* RHS is not a stem */
-   if stemlog=1 then say 2.2.9 "'"lhs"'" lino "*** ""'"rhs1"'"
-   if line=rhs1 then source[lino]=line
-   else do
-      call insert_source lino+1,1,'noexp',stemlog
-      if lhs='' then lino=insert_line(lino+1,rhs1)
-      else lino=insert_line(lino+1,lhs'='rhs1)
-   end
-return lino
-/* ------------------------------------------------------------------
- * lhsisStem: Handles assignments where LHS is a stem and RHS is an expression/value.
- * ------------------------------------------------------------------
- */
-lhsisStem: procedure=.int
-  arg lhs=.string,rhs=.string,lino=.int,line=.string,stemlog=.int
-  if stemlog=1 then say 2.3 lhs
-  lhs=resolveStem(lhs,lino,stemlog)
-  lhs=stemquote(lhs)
-  lino=insert_line(lino+1,'src=putstem('lhs','rhs')')
-return lino
-/* ------------------------------------------------------------------
- * splitRHS: Splits RHS containing multiple stems into temporaries and returns the rewritten RHS.
- * ------------------------------------------------------------------
- */
-splitRHS: procedure=.string
-   arg rhs=.string,expose lino=.int,stemlog=.int
-   position=.int[]
-   start=1
-   nstem=findstem(rhs,start,position)
-   if nstem.0=0 then return rhs
-   new=nstem.0+1        ## add line for each rhs + 1 for final replacement line
-   call insert_source lino+1,new,'noexp',stemlog        ## insert new lines, shift buffer
-   tempvar=.string[]
-   foundstem=.string[]
-   do i=1 to nstem.0
-      foundstem.i=nstem.i
-      nstem.i=resolveStem(nstem.i,lino,stemlog)
-      temp=stemquote(nstem.i)
-      lino=lino+1
-      stem_scount=stem_scount+1
-      tempvar[i]=stem_scount
-      stem_tempvar[stem_tempvar[0]+1]="_tmp_rxpp_"tempvar[i]
-      lino=insert_line(lino,"_tmp_rxpp_"tempvar[i]'=getstem('temp')')
-      ## in case of debug results ##source[lino]=source[lino]  ##   source[lino]=source[lino]'; say "VX <"_tmp_rxpp_'temp[i]"'>'"
-   end
-   lino=lino+1
-   do i = nstem.0 to 1 by -1
-      rhs = replaceOnce(foundstem.i, rhs, "_tmp_rxpp_"tempvar[i], position.i)
-   end
-   /* lino refers at the last added line */
-return rhs
-/* ------------------------------------------------------------------
- * ResolveStem: Resolves computed stem tails (.()) by evaluating expressions first and substituting placeholders.
- * ------------------------------------------------------------------
- */
-ResolveStem: procedure=.string
-  arg stemstring=.string, expose lino=.int, stemlog=.int
-/* lino current line number will be maintained here */
-  expressions = qextractall_dotparen_flat(stemstring)
-
-  if stemlog=1 then say "Resolve 1 "stemstring lino
-  if expressions.0=0 then return stemstring
-
-  if stemlog=1 then do
-     say "Resolve 2, expressions found "expressions.0
-     do j=1 to expressions.0
-        say "Expression: "j expressions.j
-     end
-  end
-
-  /* reserve lines: 1 per expression + 1 extra */
-  call insert_source lino+1, expressions.0+1, 'noexp', stemlog
-
-  anchor = lino     /* all inserts go AFTER anchor */
-
-  do i = 1 to expressions.0
-     stem_tempvar[stem_tempvar[0]+1] = "_expr_"i
-
-     /* rewrite stems inside this expression FIRST,
-        inserting _tmp_rxpp_* lines immediately after anchor */
-     changed.i = rewriteStemsInExpr(expressions.i, anchor, stemlog)
-
-     /* now insert _expr_i AFTER those tmp lines */
-     anchor = anchor + 1
-     anchor = insert_line(anchor, '_expr_'i'='changed.i'""')   /* ++ use brute force to ensure result is a string */
-
-     /* replace original ( ... ) with _expr_i in the stemstring */
-     stemstring = replaceOnce('('expressions.i')', stemstring, '_expr_'i)
-  end
-
-  /* move lino to last inserted line */
-  lino = anchor
-
-  if stemlog=1 then say "Resolve 3, current lino "lino stemstring
-return stemstring
-
-/* ------------------------------------------------------------------
- * rewriteStemsInExpr: Rewrites stems inside an expression into temporaries inserted after an anchor line.
- * Inserts required _tmp_rxpp_N lines immediately AFTER `anchor`,
- * and returns expr with stem tokens replaced by those tmp vars.
- * ------------------------------------------------------------------ */
-rewriteStemsInExpr: procedure=.string
-  arg expr=.string, expose anchor=.int, stemlog=.int
-
-  position = .int[]
-  stems = findStem(expr, 1, position)
-
-  if stems.0 = 0 then return expr
-
-  tempvar = .int[]
-  found   = .string[]
-
-  do i = 1 to stems.0
-     found[i] = stems[i]
-     temp = stemquote(stems[i])
-
-     stem_scount = stem_scount + 1
-     tempvar[i] = stem_scount
-     stem_tempvar[stem_tempvar[0]+1] = "_tmp_rxpp_"tempvar[i]
-
-     /* insert BEFORE _expr_i: right after anchor */
-     anchor = anchor + 1
-     anchor = insert_line(anchor, "_tmp_rxpp_"tempvar[i]'=getstem('temp')')
-
-     if stemlog=1 then say 'ExprStem: 'stems[i]' -> _tmp_rxpp_'tempvar[i]
-  end
-
-  /* replace from right to left to keep positions stable */
-  do i = stems.0 to 1 by -1
-     expr = replaceOnce(found[i], expr, "_tmp_rxpp_"tempvar[i], position[i])
-  end
-
-return expr
 /* ------------------------------------------------------------------
  * replaceOnce: Replaces one occurrence of a substring at a given position (or first occurrence).
  * ------------------------------------------------------------------
@@ -949,331 +638,6 @@ replaceOnce: procedure=.string
   if position=0 then position=pos(needle,haystack)
   if position<=0 then return haystack
 return substr(haystack,1,position-1) || newstring || substr(haystack,position+length(needle))
-
-/* ------------------------------------------------------------------
- * qextractall_dotparen_flat(text)
- * Collect ALL nested .( ... ) inner expressions, deepest-first.
- * Strategy:
- *   - find the RIGHTMOST unquoted ".(" in the current work string
- *   - match its ')' with qextractpair (nest/quote aware)
- *   - record its inner expression
- *   - replace that whole "(...)" with a hole and repeat
- * ------------------------------------------------------------------ */
-qextractall_dotparen_flat: procedure=.string[]
-  arg text=.string,delim='.('
-  flat = .string[]
-  work = text
-  dlen=length(delim)
-
-  do forever
-     /* find rightmost ".(" outside quotes */
-     p = qpos(delim, work, 1)
-     if p = 0 then leave
-     lastp = p
-     do forever
-        p2 = qpos(delim, work, lastp + dlen)
-        if p2 = 0 then leave
-        lastp = p2
-     end
-  /* lastp points to '.' of ".(" ; '(' is at lastp+1 */
-     inner = qextractpair('(', ')', work, lastp+1, 'X')   /* exclusive: returns inside only */
-     if inner = '' then leave   /* unmatched, should not happen if grammar is correct */
-     indx=flat[0]+1
-  /* add deepest-rightmost */
-     flat[indx] = inner
-  /* replace this "(inner...)" occurrence with hole */
-     work = replaceOnce('('inner')', work, '_expr_'indx)
-  end
-return flat
-
-/* ---------------------------------------------------------------
- * isstem: Validates whether a string is a syntactically valid stem.
- * Returns:
- *   1  -> string looks like a stem
- *   0  -> not a stem
- * ---------------------------------------------------------------
- */
-isstem:procedure=.int
-  arg s=.string
-  irc=isStemX(s)
- ## say "ISSTEM '"s"' is RC="irc
-return irc
-
-/* ------------------------------------------------------------------
- * isStemx: Full stem grammar validation including computed segments and tail count policy.
- * ------------------------------------------------------------------
- */
-isStemx: procedure=.int
-  arg s=.string
-  s = strip(s)
-  if s = '' then return 0
-  if left(s,1)='.' | right(s,1)='.' then return 0
- ## if pos(' ', s) > 0 then return 0
-  if pos('..', s) > 0 then return 0
-  len = length(s)
-
-  /* ROOT first char: not numeric; must be A-Z/a-z/_/$ */
-  c = substr(s,1,1)
-  if datatype(c,'N') > 0 then return 0
-  if \ (datatype(c,'M') > 0 | c='_' | c='$') then return 0
-  /* consume ROOT name chars (no dots here) */
-  i = 2
-  do while i <= len
-    ch = substr(s,i,1)
-    if ch='.' then leave
-    if isStemNameChar(ch)=0 then return 0
-    i = i + 1
-  end
-  if i > len | substr(s,i,1) \= '.' then return 0
-  tails = 0
-
-  /* parse .SEGMENT repeating */
-  do while i <= len
-    if substr(s,i,1) \= '.' then return 0
-    i = i + 1
-    if i > len then return 0
-    ch = substr(s,i,1)
-
-    /* computed segment */
-    if ch='(' then do
-      close = matchParen(s, i)
-      if close = 0 then return 0
-      tails = tails + 1
-
-      /* after ')': must be '.' or end (reject bare '(...)' following) */
-      if close < len then do
-        if substr(s, close+1, 1) \= '.' then return 0
-      end
-      i = close + 1
-      iterate
-    end
-   /* name segment: one or more name chars (no '.') */
-    if isStemNameChar(ch)=0 then return 0
-
-    do while i <= len
-      ch = substr(s,i,1)
-      if ch='.' then leave
-     if isStemNameChar(ch)=0 then return 0
-      i = i + 1
-    end
-
-    tails = tails + 1
-    /* loop continues; if i<=len, next must be '.' (it is, due to leave) */
-  end
- /* based on definition stems may have 2 or at least 2 tails */
-   if pos(' dotisstem',cflags) > 0 then do
-     if tails < 1 then return 0
-     else return 1
-   end
-   else if tails < 2 then return 0
-return 1
-
-/* ---------------------------------------------------------------
- * isStemCandidate: Heuristic filter: quickly decides if a string is worth attempting stem parsing.
- * Relaxed stem candidate detector for TOP-LEVEL routing.
- * Does NOT fully validate; just says "worth trying stemEndBySplit()".
- * --------------------------------------------------------------- */
-isStemCandidate: procedure=.int
-  arg s=.string
-  s = strip(s)
-  if s = '' then return 0
-
-  /* fast dot presence */
-  if qpos('.', s) = 0 then return 0
-  if left(s,1)='.' then return 0
-
-  /* root first char */
-  c = substr(s,1,1)
-  if datatype(c,'N') > 0 then return 0
-  if \ (datatype(c,'M') > 0 | c='_' | c='$') then return 0
-
-  /* DOT_IS_STEM gating: need >=1 or >=2 dots */
-  dots = countstr('.', s)
-  if pos(' dotisstem', cflags) > 0 then do
-     if dots < 1 then return 0
-  end
-  else if dots < 2 then return 0
-
-  /* allow anything else here (operators, parentheses, etc.) */
-return 1
-
-/* ------------------------------------------------------------------
- *isStemNameChar: Returns true if a character is valid within a stem name segment.
- *
- * Purpose (GRAMMAR / SEGMENT VALIDATION):
- *   Returns 1 if `c` is allowed inside a *name segment* (ROOT or .name).
- *
- *   IMPORTANT: does NOT include '.'.
- *   Dots are handled structurally by the stem grammar parser:
- *     ROOT '.' SEGMENT '.' SEGMENT ...
- *
- * Typical usage:
- *   - Validate ROOT characters (excluding the first-char special rules).
- *   - Consume/validate ".name" segments.
- *
- * NOT for:
- *   - Token boundary scanning (it would stop at '.' and break chains).
- * ------------------------------------------------------------------ */
-isStemNameChar: procedure=.int
-  arg c=.string
-  if c='' then return 0
-  if c='_' then return 1
-  if datatype(c,'A') then return 1
-  if datatype(c,'N') then return 1
-return 0
-
-/* ------------------------------------------------------------------
- * findStem: Finds stem tokens in an expression and returns stems + start positions.
- *
- * Strategy:
- *  1) Use qpos to locate '.' outside quotes and parentheses.
- *  2) Expand LEFT to find start of ROOT.
- *  3) Use stemEndBySplit() (QSPLITSAFE-based) to find token end.
- *  4) Validate with IsStem() and store stem + position.
- * ------------------------------------------------------------------ */
-findStem: procedure=.string[]
-  arg s=.string, start=1, expose position=.int[]
-  len = length(s)
-  rstem=.string[]
-  stemdebug=0
-  indx=0
-  rxpp_lrc=''
-  do forever
-     p = qpos('.',s, start)
-     if stemdebug=1 then say "stem Locate "indx s p start
-     if p = 0 then leave
-
-     /* dot must have plausible stem-root char to the left */
-     if p=1 | \isStemNameChar(substr(s,p-1,1)) then do
-        start = p + 1
-        iterate
-     end
-
-     /* expand LEFT: find start of ROOT */
-     l = p - 1
-     do while l >= 1 & isStemNameChar(substr(s,l,1))
-        l = l - 1
-     end
-     l = l + 1
-
-     /* determine RIGHT end via QSPLITSAFE */
-     r = stemEndBySplit(s, l,stemdebug)
-     if stemdebug=1 then say "stemEndBySplit l="l" -> r="r 'MSG 'rxpp_lrc
-
-     if r = 0 then do          /* not a stem chain from this root; continue search */
-        start = p + 1
-        iterate
-     end
-
-     stem = substr(s, l, r-l+1)
-     if stemdebug=1 then say "stem candidate '"stem"'"
-
-     if IsStem(stem) > 0 then do
-        indx = indx + 1
-        rstem[indx] = stem
-        position[indx] = l
-        if stemdebug=1 then say "New stem found "stem
-     end
-     start = r + 1
-  end
-return rstem
-
-/* ------------------------------------------------------------------
- * stemEndBySplit: Determines the end of a stem token using safe split on '.' (quote/paren aware).
- * Determine the end position of a stem token starting at root position l.
- *
- * Uses QSPLITSAFE on the substring from l, splitting by '.' while ignoring
- * dots inside quotes and balanced ().
- *
- * Returns:
- *   absolute end position r (>=l) of stem token
- *   or 0 if it cannot form a valid stem chain shape.
- *
- * Behavior:
- * - Accepts computed segments if the segment (after strip) is exactly "(...)".
- * - Accepts name segments consisting of isStemNameChar().
- * - Stops the token at the first non-name char in a name segment (e.g. "\=''" etc).
- * - Requires at least ROOT + 2 tails (>= 3 split parts) to match your IsStem policy.
- * ------------------------------------------------------------------ */
-stemEndBySplit: procedure=.int
-  arg s=.string, l=.int,stemlog=.int
-  rxpp_lrc = ''          /* clear */
-
-  if stemlog=1 then say 'stemEndSplit 's l
-  tail = substr(s, l)
-  if tail = '' then do
-     rxpp_lrc = rxpp_lrc' empty-tail: 's
-     return 0
-  end
-
-  parts = qsplitsafe(tail, '.', 1, '()')
-
-  if pos(' dotisstem',cflags) > 0 then mintails=1
-  else mintails=2
-
-  if parts.0 <= mintails then do
-     rxpp_lrc = rxpp_lrc' too-few-tails: 's
-     return 0
-  end
-
-  if isPlainStemName(parts[1]) = 0 then do
-     rxpp_lrc = rxpp_lrc' bad-root: 's
-     return 0
-  end
-
-  rrel = length(parts[1])
-
-  do i = 2 to parts.0
-     seg = parts[i]
-     segs = strip(seg, 'L')
-
-     if left(segs,1) = '(' then do
-        block = qextractpair('(', ')', segs, 1, 'I')
-        if block = '' then do
-           rxpp_lrc = rxpp_lrc' unmatched-paren: 's
-           return 0
-        end
-
-        rrel = rrel + 1 + (pos(block, segs) + length(block) - 1)
-
-        afterPos = (pos(block, segs) + length(block))
-        if afterPos <= length(segs) then do
-           nextch = substr(segs, afterPos, 1)
-           if nextch = '(' then do
-              rxpp_lrc = rxpp_lrc' bare-parens-after-computed: 's
-              return 0
-           end
-           if nextch \= '.' then leave
-        end
-        iterate
-     end
-
-     j = 1
-     do while j <= length(seg) & isStemNameChar(substr(seg,j,1))
-        j = j + 1
-     end
-
-     if j = 1 then do
-        rxpp_lrc = rxpp_lrc' bad-name-segment: 's
-        return 0
-     end
-
-     rrel = rrel + 1 + (j-1)
-     if j <= length(seg) then leave
-  end
-
-return l + rrel - 1
-/* ------------------------------------------------------------------
- * isPlainStemName: Validates that a segment contains only stem-name characters.
- * True if every character is a stem-name char (no dots, no spaces, etc.)
- * ------------------------------------------------------------------ */
-isPlainStemName: procedure=.int
-  arg t=.string
-  if t = '' then return 0
-  do i = 1 to length(t)
-     if isStemNameChar(substr(t,i,1)) = 0 then return 0
-  end
-return 1
 
 /* ------------------------------------------------------------------
  * matchParen: Finds the matching ')' for an opening '(' with nesting support.
@@ -1382,45 +746,6 @@ CMD_for: procedure
   end
 return
 /* ------------------------------------------------------------------
- * CMD_when: Expands WHEN / OTHERWISE / CASE(DEFAULT) into corresponding REXX clauses.
- * This applies the REXX syntax
- * ------------------------------------------------------------------
- */
-CMD_when: procedure
-  arg lino=.int,line=.string,mode=.int
-  stype.lino= 'WHEN'
-  nlino=lino+1
-  rc= insert_source(nlino,1)    ## insert new lines, shift buffer
-  ifpart2=subword(line,2)
-/* save some vars for CASE and CASEX */
-  vvalue=word(line,2)
-  action=subword(line,4)
-/* check which type is CASE/WHEN */
-  if mode=1      then source[nlino]='  else if 'ifpart2
-  else if mode=2 then source[nlino]='  else 'ifpart2
-  else if mode=3 then source[nlino]='  else if __select_'select_count'='vvalue' then 'action
-  stype[nlino]=' '
-return
-/* ------------------------------------------------------------------
- * CMD_select: Expands SELECT / SWITCH constructs and initializes selector state.
- * This applies the C syntax
- * ------------------------------------------------------------------
- */
-CMD_select: procedure
-  arg lino=.int,line=.string, mode=.int
-  stype.lino= 'SELECT'
-  rc= insert_source(lino+1,1)    ## insert new lines, shift buffer
-  if mode=2 then do         /* switch instruction */
-     select_count=select_count+1
-     variable=word(line,2)
-     source[lino+1]='__select_'select_count'='variable'; do 1; if 1=0 then nop'
-  end
-  else do
-     source[lino+1]='do 1; if 1=0 then nop'
-  end
-  stype[lino+1]=' '
-return
-/* ------------------------------------------------------------------
  * CMD_data: Implements ##DATA blocks: converts lines into array assignments until ##END.
  * ------------------------------------------------------------------
  */
@@ -1444,25 +769,6 @@ return
 writeline: procedure
   arg oline=.string
   oline=injectVariable(oline)
-  ## if pos('~',oline) then oline=oo_translate(oline)
-   if qpos('.',oline) then oline=ooTranslate(oline)
-/* not necessary - I hope
-  do while oline \= ''
-     oline=injectVariable(oline)
-     ppi = pos('\', oline)
-     if ppi > 0 then do    /* Write part before the backslash */
-        lino = lino + 1
-        outbuf.lino = substr(oline, 1, ppi - 1)
-     /* Continue with the rest of the line */
-        oline = substr(oline, ppi + 1)
-     end
-     else do   /* Write the remaining content */
-        lino = lino + 1
-        outbuf.lino = oline
-        leave
-     end
-  end
-  */
 ## just insert line to buffer
    if lino=1 then do
       lino = lino + 1
@@ -1478,161 +784,6 @@ writeline: procedure
    lino = lino + 1
    outbuf.lino = oline
   return
-/* ------------------------------------------------------------------
- * oo_translate_tilde: Legacy translator for object~method(...) syntax
- * ------------------------------------------------------------------
- */
-oo_translate_tilde: procedure=.string
-arg line=.string
-line = strip(line)
-result = ''
-posStart = 1
-
-do forever
-    tildePos = pos('~', line, posStart)   ## Find object (left of ~)
-    if tildePos=0 then leave
-
-    i = tildePos - 1
-    do while i > 0
-       char = substr(line, i, 1)
-       if verify(char, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') \= 0 then leave
-       i = i - 1
-    end
-    objectStart = i + 1
-    object = strip(substr(line, objectStart, tildePos - objectStart))
-
-    ## Find method_name and args
-    parenOpen = pos('(', line, tildePos)
-    if parenOpen = 0 then leave  ## malformed, skip
-
-    ## Find matching closing parent
-    parenCount = 1
-    j = parenOpen + 1
-    do while j <= length(line) & parenCount > 0
-        ch = substr(line, j, 1)
-        if ch = '(' then parenCount = parenCount + 1
-        if ch = ')' then parenCount = parenCount - 1
-        j = j + 1
-    end
-    parenClose = j - 1
-
-    method_name = strip(substr(line, tildePos + 1, parenOpen - tildePos - 1))
-    args   = strip(substr(line, parenOpen + 1, parenClose - parenOpen - 1))
-
-    ## Build transformed call
-    upperMethod = translate(method_name)
-    upperObject = translate(object)
- ##   callText = upperMethod || '_' || upperObject || '(' || object
-    callText = upperMethod'(' || object
-    if args \= '' then callText = callText || ',' || args
-    callText = callText || ')'
-
-    ## Append everything before the object~method and the transformed call
-    result = result || substr(line, posStart, objectStart - posStart) || callText
-
-    ## Move cursor past current match
-    posStart = parenClose + 1
-end
-
-## Append remainder of line
-if posStart <= length(line) then
-    result = result || substr(line, posStart)
-
-if verbose then say "Original:   " line
-if verbose then say "Transformed:" result
-
-return result
-
-/* ------------------------------------------------------------------
- * ooTranslate: Translates object.method(...) calls into prefixed function calls.
- * ------------------------------------------------------------------
- */
-ooTranslate: procedure=.string
-arg oline=.string
-line = strip(oline)
-if upper(word(line,1))='ARG' then return oline
-prf=substr(line,1,2)
-if prf='##' | prf='/*'  then return oline
-if stype[curlino]='cmt' | stype[curlino]='noexp' then return oline
-result = ''
-posStart = 1
-oocall=0
-do forever
-    dotPos = qpos('.', line, posStart)
-    if dotPos<=0 then leave
-    ##Detect method name after the dot
-    methodStart = dotPos + 1
-    methodEnd = methodStart
-    do while methodEnd <= length(line) & verify(substr(line, methodEnd, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
-        methodEnd = methodEnd + 1
-    end
-  ## If not followed by a '(', this is a stem access
-    if substr(line, methodEnd, 1) \= '(' | substr(line, methodEnd-1, 2)='.(' then do
-        stemAccess = substr(line, posStart, methodEnd - posStart)
-        ##Preserve the stem text
-        result = result || substr(line, posStart, methodEnd - posStart)
-        posStart = methodEnd
-        iterate
-    end
-    oocall=1
-    ##Backtrack to extract the object name
-    objEnd = dotPos - 1
-    objStart = objEnd
-
-    do while objStart > 0 & ,
-        verify(substr(line, objStart, 1), 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_') = 0
-        objStart = objStart - 1
-    end
-    objStart = objStart + 1
-
-    object = substr(line, objStart, objEnd - objStart + 1)
-    method_name = substr(line, methodStart, methodEnd - methodStart)
-
-    ##Extract argument list, handle nested parentheses
-    parenStart = methodEnd
-    parenCount = 1
-    p = parenStart + 1
-
-    do while p <= length(line) & parenCount > 0
-        c = substr(line, p, 1)
-        if c = '(' then parenCount = parenCount + 1
-        if c = ')' then parenCount = parenCount - 1
-        p = p + 1
-    end
-    parenEnd = p - 1
-    args = strip(substr(line, parenStart + 1, parenEnd - parenStart - 1))
-    ##Build the transformed function call
-    upperMethod = translate(method_name)
-    upperObject = translate(object)
-  ##  callText = upperMethod || '_' || upperObject || '(' || object
-
-    ooprefix=getvar(object'_prefix')
-    if fpos(ooprefix,'stem',1)=1 then do
-       if upperMethod='GET'| upperMethod='PUT' then do
-          ppi=pos(',',args)
-          if ppi=0 then args=changestr(".",args,"'.'")
-          else do
-             arg1=substr(args,1,ppi-1)
-             arg1=changestr(".",arg1,"'.'")
-             args=arg1','substr(args,ppi+1)
-          end
-       end
-    end
-    callText = ooprefix||upperMethod'('object
-    if args \= '' then callText = callText || ',' || args
-    callText = callText || ')'
-
-    ##Append unchanged part before object, then transformed call
-    result = result || substr(line, posStart, objStart - posStart) || callText
-
-    ##Continue after the transformed expression
-    posStart = parenEnd + 1
-end
-
-##Append any remaining text
-if posStart <= length(line) then result = result || substr(line, posStart)
-return result
-
 /* ------------------------------------------------------------------
  * expandRecursive: Expands a line repeatedly until no further macro substitutions occur.
  * ------------------------------------------------------------------
@@ -2525,12 +1676,10 @@ rxppinit: procedure=.string
   macros_varname=.string[]
   macros_varvalue=.string[]
   included_files=.string[]
-  stem_tempvar=.string[]
   imported_funcs=""
   globaldef=''
   lino=0
   select_count=0
-  stem_scount=0
   outbuf=.string[]
   mexpanded=0
   rxmodule=translate(rexxname,,'/\')
@@ -2542,7 +1691,7 @@ rxppinit: procedure=.string
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse ndotisstem'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse '
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
