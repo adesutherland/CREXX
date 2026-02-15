@@ -93,6 +93,10 @@ struct Context {
     /* Recursion Guard for Imports */
     char** loading_files;
     size_t loading_files_count;
+
+    /* Extra buffers to be freed with the context */
+    char** extra_buffers;
+    size_t extra_buffers_count;
 };
 
 #include "rxcp_emit.h"

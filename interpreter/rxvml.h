@@ -42,6 +42,7 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len);
 rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d);
 rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length);
 int          rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem);
+void         rxvml_value_free(rxvml_value* v);
 
 /* Introspection / extraction */
 int      rxvml_to_int      (rxvml_context* ctx, const rxvml_value* v, rxinteger* out_v);

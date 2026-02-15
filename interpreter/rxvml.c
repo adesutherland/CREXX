@@ -73,6 +73,13 @@ int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_v
     return 0;
 }
 
+void rxvml_value_free(rxvml_value* v) {
+    if (v) {
+        clear_value((value*)v);
+        free(v);
+    }
+}
+
 rxvml_value* rxvml_make_token(rxvml_context* ctx, const rxvml_token_desc* d) {
     value* v = value_f();
     /* Attributes: 1..12 per reasoning note */
@@ -150,11 +157,14 @@ int rxvml_call_plugin(
 
     if (response_out) {
         *response_out = (rxvml_value*)ctx->vm.ext_ret;
+    } else {
+        rxvml_value_free((rxvml_value*)ctx->vm.ext_ret);
     }
 
     /* Clear the ext call fields */
     ctx->vm.ext_proc = 0;
     ctx->vm.ext_argc = 0;
+    if (ctx->vm.ext_args) free(ctx->vm.ext_args);
     ctx->vm.ext_args = 0;
     ctx->vm.ext_ret = 0;
 
@@ -166,10 +176,12 @@ const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response
     if (!v) return NULL;
     /* If it's a string, return it directly */
     if (v->status.type_string || (v->string_length > 0 && v->string_value && v->status.all_type_flags == 0)) {
+        null_terminate_string_buffer(v);
         return v->string_value;
     }
     /* Assume rxc.response has code at attribute 1 */
     if (v->num_attributes >= 1 && (v->attributes[0]->status.type_string || (v->attributes[0]->string_length > 0 && v->attributes[0]->string_value))) {
+        null_terminate_string_buffer(v->attributes[0]);
         return v->attributes[0]->string_value;
     }
     return NULL;
@@ -178,7 +190,8 @@ const char* rxvml_get_replacement_code(rxvml_context* ctx, rxvml_value* response
 const char* rxvml_get_error_message(rxvml_context* ctx, rxvml_value* response) {
     value* v = (value*)response;
     /* Assume rxc.response has error at attribute 2 */
-    if (v && v->num_attributes >= 2 && v->attributes[1]->status.type_string) {
+    if (v && v->num_attributes >= 2 && (v->attributes[1]->status.type_string || (v->attributes[1]->string_length > 0 && v->attributes[1]->string_value))) {
+        null_terminate_string_buffer(v->attributes[1]);
         return v->attributes[1]->string_value;
     }
     return NULL;

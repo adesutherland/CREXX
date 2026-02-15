@@ -65,6 +65,7 @@ static void collect_tokens(rxvml_context *ctx, ASTNode *node, rxvml_value *token
                         *count, d.type, (int)d.text_len, d.text);
             }
             rxvml_array_set(ctx, token_array, *count, tok_obj);
+            rxvml_value_free(tok_obj);
         }
     }
 }
@@ -202,8 +203,10 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     rxvml_value* response = NULL;
     if (ctx->debug_mode >= 2) fprintf(stderr, "DEBUG_EXIT: Calling rxcp.exit_dispatch in bridge VM\n");
     int rc = rxvml_call_plugin(vctx, "rxcp.exit_dispatch", tok_array, &response);
+    rxvml_value_free(tok_array);
     if (rc != 0) {
         if (ctx->debug_mode) fprintf(stderr, "DEBUG_EXIT: Call to rxcp.exit_dispatch failed (rc=%d)\n", rc);
+        if (response) rxvml_value_free(response);
         ctx->in_exit_bridge = 0;
         return 0;
     }
@@ -216,9 +219,11 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         const char* err_msg = rxvml_get_error_message(vctx, response);
         if (err_msg) {
             mknd_err(node, (char*)err_msg);
+            if (response) rxvml_value_free(response);
             ctx->in_exit_bridge = 0;
             return -1;
         }
+        if (response) rxvml_value_free(response);
         ctx->in_exit_bridge = 0;
         return 0;
     }
@@ -226,6 +231,7 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
     /* Parse replacement code */
     Context* frag = cntx_f();
     if (!frag) {
+        if (response) rxvml_value_free(response);
         ctx->in_exit_bridge = 0;
         return -1;
     }
@@ -299,7 +305,16 @@ int rxcp_exit_bridge_invoke(Context* ctx, ASTNode* node) {
         frag->token_counter = 0;
     }
 
+    /* Transfer buffer ownership to ctx */
+    if (frag->buff_start) {
+        ctx->extra_buffers_count++;
+        ctx->extra_buffers = realloc(ctx->extra_buffers, sizeof(char*) * ctx->extra_buffers_count);
+        ctx->extra_buffers[ctx->extra_buffers_count - 1] = frag->buff_start;
+        frag->buff_start = NULL;
+    }
+
     fre_cntx(frag);
+    if (response) rxvml_value_free(response);
     ctx->in_exit_bridge = 0;
     return 0;
 }

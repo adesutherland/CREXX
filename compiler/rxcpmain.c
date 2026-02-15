@@ -183,6 +183,11 @@ void fre_cntx(Context *context)  {
 
     free(context->buff_start);
 
+    if (context->extra_buffers) {
+        for (i = 0; i < context->extra_buffers_count; i++) free(context->extra_buffers[i]);
+        free(context->extra_buffers);
+    }
+
     if (context->traceFile) fclose(context->traceFile);
 
     free(context);
@@ -503,7 +508,8 @@ int rxcmain(int argc, char *argv[]) {
     if (outFile) fclose(outFile);
 
     /* Free context */
-    free(context->file_name);
+    if (context->file_name) free(context->file_name);
+    if (context->location) free(context->location);
     fre_cntx(context);
 
     if (file_directory) free(file_directory);

@@ -206,4 +206,5 @@ void ast_sttn(ASTNode* node, ASTNode* from_node);
 /* Set Node Value (and Target) Type from the from_node target type */
 void ast_svtn(ASTNode* node, ASTNode* from_node);
 
+void ast_set_file_name(Context *context, char *file_name);
 #endif //CREXX_RXCP_AST_H

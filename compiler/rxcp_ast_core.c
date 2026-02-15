@@ -1590,3 +1590,12 @@ ASTNode* ast_nsib(ASTNode* node) {
 
     return 0;
 }
+
+
+void ast_set_file_name(Context *context, char *file_name) {
+    ASTNode *t = context->free_list;
+    while (t) {
+        t->file_name = file_name;
+        t = t->free_list;
+    }
+}

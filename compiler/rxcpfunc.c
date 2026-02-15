@@ -342,6 +342,7 @@ static int add_class(Context *context, struct imported_class *cls) {
         free(cls->fqname);
         free(cls->namespace);
         free(cls->file_name);
+        if (cls->context) fre_cntx(cls->context);
         free(cls);
         return 1;
     }
@@ -356,6 +357,7 @@ static int add_class(Context *context, struct imported_class *cls) {
         free(cls->fqname);
         free(cls->namespace);
         free(cls->file_name);
+        if (cls->context) fre_cntx(cls->context);
         free(cls);
         return 1;
     }
@@ -393,6 +395,10 @@ static struct imported_class *rximpcl_f(Context* context, char* file_name, char 
     cls->file_name = strdup(file_name);
     cls->fqname = strdup(fqname);
     cls->context = stub_ctx;
+    if (stub_ctx) {
+        stub_ctx->file_name = cls->file_name;
+        ast_set_file_name(stub_ctx, cls->file_name);
+    }
     cls->class_node = 0;
 
     dot = strrchr(cls->fqname, '.');
@@ -1135,6 +1141,7 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
                 if (file_module_section) free_module(file_module_section);
                 if (!modules_processed) {
                     if (context->debug_mode >= 2) printf("Importing Procedures - Empty file\n");
+                    fclose(fp);
                     return;
                 }
                 break;
@@ -1142,6 +1149,7 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
                 if (context->debug_mode >= 2) printf("Importing Procedures - Error reading file\n");
+                fclose(fp);
                 return;
         }
     }
@@ -1227,7 +1235,7 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     for (i = 0; i < parent_context->master_context->loading_files_count; i++) {
         if (strcmp(parent_context->master_context->loading_files[i], file_name) == 0) {
             if (parent_context->debug_mode >= 2) printf("Importing Procedures - File %s already being loaded - skipping to avoid recursion\n", file_name);
-            return;
+            goto finish;
         }
     }
 

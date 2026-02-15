@@ -36,6 +36,7 @@
  */
 char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
+    size_t n;
 
     /* Get file size */
     fseek(file, 0, SEEK_END);
@@ -44,10 +45,12 @@ char* file2buf(FILE *file, size_t *bytes) {
 
     /* Allocate buffer and read */
     buff = (char*) malloc((*bytes + 2) * sizeof(char) );
-    *bytes = fread(buff, 1, *bytes, file);
-    if (!*bytes) {
+    n = fread(buff, 1, *bytes, file);
+    if (n == 0 && *bytes > 0) {
+        free(buff);
         return 0;
     }
+    *bytes = n;
     buff[*bytes] = 0;
     buff[*bytes+1] = 0; /* Add an extra byte for the token peak */
     return buff;
