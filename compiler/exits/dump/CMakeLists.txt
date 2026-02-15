@@ -16,7 +16,7 @@ add_custom_target(exit_dump_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Dump.rxbin)
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_dump.rxas
     COMMAND $<TARGET_FILE:rxc> -o test_dump ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx
-    DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx ${CMAKE_CURRENT_BINARY_DIR}/../compiler_exit.rxbin
+    DEPENDS rxc ${CMAKE_CURRENT_SOURCE_DIR}/test_dump.rexx compiler_exit_bin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Compiling test_dump.rexx with exit"
 )
